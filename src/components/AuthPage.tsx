@@ -33,15 +33,27 @@ const AuthPage = () => {
         } else {
           toast({
             title: "Success",
-            description: "Please check your email to verify your account."
+            description: "Please check your email to verify your account before signing in."
           });
+          // Switch to sign in mode after successful signup
+          setIsSignUp(false);
+          setPassword("");
         }
       } else {
         const { error } = await signIn(email, password);
         if (error) {
+          let errorMessage = error.message;
+          
+          // Provide more helpful error messages
+          if (error.message.includes("Email not confirmed")) {
+            errorMessage = "Please check your email and click the confirmation link before signing in. If you haven't received the email, try signing up again.";
+          } else if (error.message.includes("Invalid login credentials")) {
+            errorMessage = "Invalid email or password. Please check your credentials and try again.";
+          }
+          
           toast({
-            title: "Error",
-            description: error.message,
+            title: "Sign In Error",
+            description: errorMessage,
             variant: "destructive"
           });
         }
@@ -136,12 +148,24 @@ const AuthPage = () => {
             <div className="mt-4 text-center">
               <button
                 type="button"
-                onClick={() => setIsSignUp(!isSignUp)}
+                onClick={() => {
+                  setIsSignUp(!isSignUp);
+                  setPassword("");
+                  setUserType(null);
+                }}
                 className="text-gray-400 hover:text-white transition-colors"
               >
                 {isSignUp ? "Already have an account? Sign in" : "Don't have an account? Sign up"}
               </button>
             </div>
+
+            {!isSignUp && (
+              <div className="mt-4 text-center">
+                <p className="text-gray-500 text-sm">
+                  Having trouble signing in? Make sure you've confirmed your email address.
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
