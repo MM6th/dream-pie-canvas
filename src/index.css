@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -94,7 +95,7 @@
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-border font-clash;
   }
 
   body {
