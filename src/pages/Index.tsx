@@ -11,17 +11,23 @@ import BackgroundUpload from "@/components/BackgroundUpload";
 const Index = () => {
   const { user, loading, signOut } = useAuth();
   const [userProfile, setUserProfile] = useState<any>(null);
-  const [profileLoading, setProfileLoading] = useState(true);
+  const [profileLoading, setProfileLoading] = useState(false);
 
   useEffect(() => {
-    if (user) {
+    console.log('Index component mounted, user:', user, 'loading:', loading);
+    if (user && !loading) {
       fetchUserProfile();
+    } else if (!user && !loading) {
+      // Reset profile state when no user
+      setUserProfile(null);
+      setProfileLoading(false);
     }
-  }, [user]);
+  }, [user, loading]);
 
   const fetchUserProfile = async () => {
     if (!user) return;
     
+    console.log('Fetching user profile for:', user.id);
     setProfileLoading(true);
     try {
       const { data, error } = await supabase
@@ -33,6 +39,7 @@ const Index = () => {
       if (error) {
         console.error('Error fetching profile:', error);
       } else {
+        console.log('Profile fetched:', data);
         setUserProfile(data);
       }
     } catch (error) {
@@ -50,7 +57,8 @@ const Index = () => {
     setUserProfile(prev => ({ ...prev, background_image_url: url }));
   };
 
-  if (loading || profileLoading) {
+  // Show loading only when auth is loading, not when profile is loading
+  if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800 flex items-center justify-center">
         <div className="text-white text-xl">Loading...</div>
@@ -58,6 +66,7 @@ const Index = () => {
     );
   }
 
+  // Show auth page if no user
   if (!user) {
     return <AuthPage />;
   }
@@ -116,7 +125,15 @@ const Index = () => {
           </Button>
         </div>
         
-        {userProfile?.user_type === "merchant" ? <MerchantDashboard /> : <SupporterDashboard />}
+        {profileLoading ? (
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="text-white text-xl">Loading profile...</div>
+          </div>
+        ) : (
+          <>
+            {userProfile?.user_type === "merchant" ? <MerchantDashboard /> : <SupporterDashboard />}
+          </>
+        )}
       </div>
     );
   };
