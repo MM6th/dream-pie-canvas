@@ -142,12 +142,9 @@ Deno.serve(async (req) => {
       intent: 'CAPTURE',
       application_context: {
         brand_name: 'PIE Base',
-        landing_page: 'GUEST_CHECKOUT', // Changed from 'NO_PREFERENCE' to encourage guest checkout
+        landing_page: 'NO_PREFERENCE',
         shipping_preference: 'NO_SHIPPING',
         user_action: 'PAY_NOW',
-        payment_method: {
-          preferred: 'INSTANT_FUNDING_SOURCE'
-        },
         return_url: returnUrl,
         cancel_url: cancelUrl
       },
