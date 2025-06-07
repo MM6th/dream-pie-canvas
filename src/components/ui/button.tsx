@@ -45,18 +45,21 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : "button"
     
-    // Add specific styling for white/light colored buttons to ensure black text
-    const lightButtonClass = className && (
+    // Check if this is a white/light button and force black text
+    const isLightButton = className && (
       className.includes('bg-white') || 
       className.includes('bg-gray-100') || 
       className.includes('bg-gray-50') ||
       className.includes('hover:bg-white') ||
       className.includes('hover:bg-gray-100')
-    ) ? 'text-black hover:text-black' : '';
+    );
     
     return (
       <Comp
-        className={cn(buttonVariants({ variant, size, className }), lightButtonClass)}
+        className={cn(
+          buttonVariants({ variant, size, className }),
+          isLightButton && "!text-black hover:!text-black"
+        )}
         ref={ref}
         {...props}
       />
