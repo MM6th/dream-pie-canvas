@@ -93,7 +93,7 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Get PayPal credentials from environment
+    // Get PayPal credentials from environment - using the correct secret names
     const clientId = Deno.env.get('PAYPAL_CLIENT_ID')
     const clientSecret = Deno.env.get('PAYPAL_CLIENT_SECRET')
 
