@@ -57,7 +57,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       <Comp
         className={cn(
           buttonVariants({ variant, size, className }),
-          isLightButton && "!text-black !hover:text-black"
+          isLightButton && "!text-black"
         )}
         ref={ref}
         {...props}
