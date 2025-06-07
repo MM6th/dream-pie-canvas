@@ -62,7 +62,7 @@ Deno.serve(async (req) => {
 
     const { orderId } = await req.json()
 
-    // Get PayPal access token
+    // Get PayPal access token - using live credentials
     const clientId = Deno.env.get('PAYPAL_CLIENT_ID')
     const clientSecret = Deno.env.get('PAYPAL_CLIENT_SECRET')
 
@@ -73,7 +73,8 @@ Deno.serve(async (req) => {
       )
     }
 
-    const tokenResponse = await fetch('https://api-m.sandbox.paypal.com/v1/oauth2/token', {
+    // Get PayPal access token - UPDATED TO LIVE URL
+    const tokenResponse = await fetch('https://api-m.paypal.com/v1/oauth2/token', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -92,8 +93,8 @@ Deno.serve(async (req) => {
 
     const tokenData: PayPalAccessTokenResponse = await tokenResponse.json()
 
-    // Capture the payment
-    const captureResponse = await fetch(`https://api-m.sandbox.paypal.com/v2/checkout/orders/${orderId}/capture`, {
+    // Capture the payment - UPDATED TO LIVE URL
+    const captureResponse = await fetch(`https://api-m.paypal.com/v2/checkout/orders/${orderId}/capture`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

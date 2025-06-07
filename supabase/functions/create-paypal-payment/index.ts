@@ -108,9 +108,9 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Get PayPal access token
+    // Get PayPal access token - UPDATED TO LIVE URL
     console.log('Requesting PayPal access token...')
-    const tokenResponse = await fetch('https://api-m.sandbox.paypal.com/v1/oauth2/token', {
+    const tokenResponse = await fetch('https://api-m.paypal.com/v1/oauth2/token', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -160,7 +160,8 @@ Deno.serve(async (req) => {
 
     console.log('Creating PayPal order with data:', JSON.stringify(orderData, null, 2))
 
-    const orderResponse = await fetch('https://api-m.sandbox.paypal.com/v2/checkout/orders', {
+    // Create PayPal order - UPDATED TO LIVE URL
+    const orderResponse = await fetch('https://api-m.paypal.com/v2/checkout/orders', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
