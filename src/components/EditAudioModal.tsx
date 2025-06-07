@@ -1,34 +1,48 @@
 
-import React, { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import React, { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Upload, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 
-interface AudioUploadModalProps {
-  onSuccess: () => void;
+interface AudioProduct {
+  id: string;
+  title: string;
+  artist_name: string | null;
+  audio_type: string;
+  thumbnail_url: string | null;
+  audio_file_url: string;
+  album_id: string | null;
+  is_free: boolean;
+  price: number | null;
+  albums?: {
+    name: string;
+  };
 }
 
-const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
+interface EditAudioModalProps {
+  product: AudioProduct;
+  onSuccess: () => void;
+  onClose: () => void;
+}
+
+const EditAudioModal = ({ product, onSuccess, onClose }: EditAudioModalProps) => {
   const { user } = useAuth();
-  const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    title: "",
-    artistName: "",
-    audioType: "",
+    title: product.title,
+    artistName: product.artist_name || "",
+    audioType: product.audio_type,
     thumbnail: null as File | null,
-    audioFile: null as File | null,
-    albumName: "",
-    hasAlbum: false,
-    isFree: true,
-    price: ""
+    albumName: product.albums?.name || "",
+    hasAlbum: !!product.album_id,
+    isFree: product.is_free,
+    price: product.price?.toString() || ""
   });
   const [albums, setAlbums] = useState<any[]>([]);
 
@@ -47,6 +61,10 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
       console.error('Error fetching albums:', error);
     }
   };
+
+  useEffect(() => {
+    fetchAlbums();
+  }, [user]);
 
   const uploadFile = async (file: File, bucket: string, folder: string = '') => {
     const fileExt = file.name.split('.').pop();
@@ -69,7 +87,7 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
     e.preventDefault();
     if (!user) return;
     
-    if (!formData.title || !formData.audioType || !formData.audioFile) {
+    if (!formData.title || !formData.audioType) {
       toast({
         title: "Error",
         description: "Please fill in all required fields",
@@ -81,15 +99,8 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
     setLoading(true);
     
     try {
-      // Upload audio file
-      const audioUrl = await uploadFile(
-        formData.audioFile, 
-        'audio-files', 
-        `${user.id}/`
-      );
-      
-      // Upload thumbnail if provided
-      let thumbnailUrl = null;
+      // Upload new thumbnail if provided
+      let thumbnailUrl = product.thumbnail_url;
       if (formData.thumbnail) {
         thumbnailUrl = await uploadFile(
           formData.thumbnail, 
@@ -124,47 +135,34 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
         }
       }
       
-      // Create audio product
+      // Update audio product
       const { error: productError } = await supabase
         .from('audio_products')
-        .insert({
-          merchant_id: user.id,
+        .update({
           title: formData.title,
           artist_name: formData.artistName || null,
           audio_type: formData.audioType,
           thumbnail_url: thumbnailUrl,
-          audio_file_url: audioUrl,
           album_id: albumId,
           is_free: formData.isFree,
           price: formData.isFree ? null : parseFloat(formData.price)
-        });
+        })
+        .eq('id', product.id);
       
       if (productError) throw productError;
       
       toast({
         title: "Success",
-        description: "Audio product uploaded successfully!"
+        description: "Audio product updated successfully!"
       });
       
-      setOpen(false);
-      setFormData({
-        title: "",
-        artistName: "",
-        audioType: "",
-        thumbnail: null,
-        audioFile: null,
-        albumName: "",
-        hasAlbum: false,
-        isFree: true,
-        price: ""
-      });
       onSuccess();
       
     } catch (error: any) {
-      console.error('Error uploading audio:', error);
+      console.error('Error updating audio:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to upload audio product",
+        description: error.message || "Failed to update audio product",
         variant: "destructive"
       });
     } finally {
@@ -172,24 +170,11 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
     }
   };
 
-  const handleOpenChange = (newOpen: boolean) => {
-    setOpen(newOpen);
-    if (newOpen) {
-      fetchAlbums();
-    }
-  };
-
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
-        <Button className="bg-primary hover:bg-primary/90">
-          <Plus className="w-4 h-4 mr-2" />
-          Upload Audio
-        </Button>
-      </DialogTrigger>
+    <Dialog open={true} onOpenChange={() => onClose()}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Upload Audio Product</DialogTitle>
+          <DialogTitle>Edit Audio Product</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -232,21 +217,7 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
           </div>
           
           <div>
-            <Label htmlFor="audioFile">Audio File *</Label>
-            <Input
-              id="audioFile"
-              type="file"
-              accept="audio/*"
-              onChange={(e) => setFormData(prev => ({ 
-                ...prev, 
-                audioFile: e.target.files?.[0] || null 
-              }))}
-              required
-            />
-          </div>
-          
-          <div>
-            <Label htmlFor="thumbnail">Thumbnail Image</Label>
+            <Label htmlFor="thumbnail">Update Thumbnail Image</Label>
             <Input
               id="thumbnail"
               type="file"
@@ -309,13 +280,18 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
             </div>
           )}
           
-          <Button type="submit" disabled={loading} className="w-full">
-            {loading ? "Uploading..." : "Create Product"}
-          </Button>
+          <div className="flex gap-2">
+            <Button type="button" variant="outline" onClick={onClose} className="flex-1">
+              Cancel
+            </Button>
+            <Button type="submit" disabled={loading} className="flex-1">
+              {loading ? "Updating..." : "Update Product"}
+            </Button>
+          </div>
         </form>
       </DialogContent>
     </Dialog>
   );
 };
 
-export default AudioUploadModal;
+export default EditAudioModal;

@@ -8,6 +8,7 @@ import AuthPage from "@/components/AuthPage";
 import BackgroundUpload from "@/components/BackgroundUpload";
 import AudioUploadModal from "@/components/AudioUploadModal";
 import StorePage from "@/components/StorePage";
+import AudioProductManager from "@/components/AudioProductManager";
 
 const Index = () => {
   const { user, loading, signOut } = useAuth();
@@ -230,6 +231,14 @@ const Index = () => {
           <CardContent className="p-6">
             <h3 className="text-xl font-bold text-white mb-4">Upload Background</h3>
             <BackgroundUpload onUploadSuccess={handleBackgroundUpload} />
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="mb-8">
+        <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+          <CardContent className="p-6">
+            <AudioProductManager />
           </CardContent>
         </Card>
       </div>
