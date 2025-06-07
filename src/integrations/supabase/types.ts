@@ -116,6 +116,44 @@ export type Database = {
         }
         Relationships: []
       }
+      user_purchases: {
+        Row: {
+          amount_paid: number | null
+          audio_product_id: string
+          created_at: string
+          id: string
+          paypal_transaction_id: string | null
+          purchase_date: string
+          user_id: string
+        }
+        Insert: {
+          amount_paid?: number | null
+          audio_product_id: string
+          created_at?: string
+          id?: string
+          paypal_transaction_id?: string | null
+          purchase_date?: string
+          user_id: string
+        }
+        Update: {
+          amount_paid?: number | null
+          audio_product_id?: string
+          created_at?: string
+          id?: string
+          paypal_transaction_id?: string | null
+          purchase_date?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_purchases_audio_product_id_fkey"
+            columns: ["audio_product_id"]
+            isOneToOne: false
+            referencedRelation: "audio_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

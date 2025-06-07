@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,7 @@ const StorePage = () => {
   const { user } = useAuth();
   const [products, setProducts] = useState<AudioProduct[]>([]);
   const [loading, setLoading] = useState(true);
+  const [purchasingId, setPurchasingId] = useState<string | null>(null);
 
   const fetchProducts = async () => {
     try {
@@ -75,6 +77,51 @@ const StorePage = () => {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+    }
+  };
+
+  const handlePurchase = async (product: AudioProduct) => {
+    if (!user) {
+      toast({
+        title: "Please sign in",
+        description: "You need to be logged in to make a purchase",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (product.is_free) {
+      handleDownload(product);
+      return;
+    }
+
+    setPurchasingId(product.id);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('create-paypal-payment', {
+        body: { audioProductId: product.id },
+        headers: {
+          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data.approvalUrl) {
+        // Redirect to PayPal
+        window.location.href = data.approvalUrl;
+      } else {
+        throw new Error('No approval URL received');
+      }
+    } catch (error: any) {
+      console.error('Error creating payment:', error);
+      toast({
+        title: "Payment Error",
+        description: "Failed to initiate payment. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setPurchasingId(null);
     }
   };
 
@@ -152,11 +199,18 @@ const StorePage = () => {
                       
                       <Button
                         size="sm"
-                        onClick={() => handleDownload(product)}
+                        onClick={() => handlePurchase(product)}
+                        disabled={purchasingId === product.id}
                         className="bg-primary hover:bg-primary/90"
                       >
-                        <Download className="w-4 h-4 mr-1" />
-                        {product.is_free ? "Download" : "Buy"}
+                        {purchasingId === product.id ? (
+                          "Processing..."
+                        ) : (
+                          <>
+                            {product.is_free ? <Download className="w-4 h-4 mr-1" /> : <DollarSign className="w-4 h-4 mr-1" />}
+                            {product.is_free ? "Download" : "Buy"}
+                          </>
+                        )}
                       </Button>
                     </div>
                   </div>
