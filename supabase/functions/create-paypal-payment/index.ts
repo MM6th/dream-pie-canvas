@@ -95,7 +95,7 @@ Deno.serve(async (req) => {
 
     // Get PayPal credentials from environment
     const clientId = Deno.env.get('PAYPAL_CLIENT_ID')
-    const clientSecret = Deno.env.get('PIE_BASE')
+    const clientSecret = Deno.env.get('PAYPAL_CLIENT_SECRET')
 
     console.log('PayPal Client ID exists:', !!clientId)
     console.log('PayPal Secret exists:', !!clientSecret)
