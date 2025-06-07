@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -88,8 +87,7 @@ const Index = () => {
           </Button>
           <Button
             onClick={handleSignOut}
-            variant="outline"
-            className="border-gray-600 text-black bg-white hover:bg-gray-100"
+            className="bg-white text-black hover:bg-gray-100 hover:text-black"
           >
             <LogOut className="w-4 h-4 mr-2" />
             Sign Out
@@ -156,8 +154,7 @@ const Index = () => {
           </Button>
           <Button
             onClick={handleSignOut}
-            variant="outline"
-            className="border-gray-600 text-black bg-white hover:bg-gray-100"
+            className="bg-white text-black hover:bg-gray-100 hover:text-black"
           >
             <LogOut className="w-4 h-4 mr-2" />
             Sign Out
