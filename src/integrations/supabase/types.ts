@@ -9,6 +9,83 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      albums: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          merchant_id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          merchant_id: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          merchant_id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      audio_products: {
+        Row: {
+          album_id: string | null
+          audio_file_url: string
+          audio_type: string
+          created_at: string
+          id: string
+          is_free: boolean
+          merchant_id: string
+          price: number | null
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          album_id?: string | null
+          audio_file_url: string
+          audio_type: string
+          created_at?: string
+          id?: string
+          is_free?: boolean
+          merchant_id: string
+          price?: number | null
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          album_id?: string | null
+          audio_file_url?: string
+          audio_type?: string
+          created_at?: string
+          id?: string
+          is_free?: boolean
+          merchant_id?: string
+          price?: number | null
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audio_products_album_id_fkey"
+            columns: ["album_id"]
+            isOneToOne: false
+            referencedRelation: "albums"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           background_image_url: string | null

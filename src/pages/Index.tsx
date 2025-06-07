@@ -2,23 +2,25 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Music, Video, LogOut } from "lucide-react";
+import { Music, Video, LogOut, Store } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import AuthPage from "@/components/AuthPage";
 import BackgroundUpload from "@/components/BackgroundUpload";
+import AudioUploadModal from "@/components/AudioUploadModal";
+import StorePage from "@/components/StorePage";
 
 const Index = () => {
   const { user, loading, signOut } = useAuth();
   const [userProfile, setUserProfile] = useState<any>(null);
   const [profileLoading, setProfileLoading] = useState(false);
+  const [currentView, setCurrentView] = useState<"dashboard" | "store">("dashboard");
 
   useEffect(() => {
     console.log('Index component mounted, user:', user, 'loading:', loading);
     if (user && !loading) {
       fetchUserProfile();
     } else if (!user && !loading) {
-      // Reset profile state when no user
       setUserProfile(null);
       setProfileLoading(false);
     }
@@ -71,6 +73,35 @@ const Index = () => {
     return <AuthPage />;
   }
 
+  // Show store page if selected
+  if (currentView === "store") {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800">
+        {/* Navigation */}
+        <div className="absolute top-4 left-4 right-4 z-20 flex justify-between">
+          <Button
+            onClick={() => setCurrentView("dashboard")}
+            variant="outline"
+            className="border-gray-600 text-white hover:bg-gray-800"
+          >
+            Back to Dashboard
+          </Button>
+          <Button
+            onClick={handleSignOut}
+            variant="outline"
+            className="border-gray-600 text-black bg-white hover:bg-gray-100"
+          >
+            <LogOut className="w-4 h-4 mr-2" />
+            Sign Out
+          </Button>
+        </div>
+        <div className="pt-20">
+          <StorePage />
+        </div>
+      </div>
+    );
+  }
+
   const LandingPage = () => (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800 flex flex-col items-center justify-center relative overflow-hidden">
       {/* Dreamy background effects */}
@@ -113,12 +144,20 @@ const Index = () => {
 
     return (
       <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800" style={backgroundStyle}>
-        {/* Sign out button */}
-        <div className="absolute top-4 right-4 z-20">
+        {/* Navigation */}
+        <div className="absolute top-4 left-4 right-4 z-20 flex justify-between">
+          <Button
+            onClick={() => setCurrentView("store")}
+            variant="outline"
+            className="border-gray-600 text-white hover:bg-gray-800"
+          >
+            <Store className="w-4 h-4 mr-2" />
+            Browse Store
+          </Button>
           <Button
             onClick={handleSignOut}
             variant="outline"
-            className="border-gray-600 text-white hover:bg-gray-800"
+            className="border-gray-600 text-black bg-white hover:bg-gray-100"
           >
             <LogOut className="w-4 h-4 mr-2" />
             Sign Out
@@ -139,7 +178,7 @@ const Index = () => {
   };
 
   const MerchantDashboard = () => (
-    <div className="p-6">
+    <div className="p-6 pt-20">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-white mb-2">Merchant Dashboard</h1>
         <p className="text-gray-300">Manage your media content and connect with supporters</p>
@@ -148,8 +187,27 @@ const Index = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         <Card className="lg:col-span-2 bg-gray-800/50 border-gray-700 backdrop-blur-sm">
           <CardContent className="p-6">
-            <h3 className="text-xl font-bold text-white mb-4">Upload Background</h3>
-            <BackgroundUpload onUploadSuccess={handleBackgroundUpload} />
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-white">Audio Products</h3>
+              <AudioUploadModal onSuccess={fetchUserProfile} />
+            </div>
+            <p className="text-gray-400 mb-4">Upload and manage your audio content</p>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg">
+                <div>
+                  <p className="text-white font-medium">Total Audio Products</p>
+                  <p className="text-gray-400 text-sm">Manage your audio library</p>
+                </div>
+                <Button
+                  onClick={() => setCurrentView("store")}
+                  variant="outline"
+                  size="sm"
+                  className="border-gray-600 text-white hover:bg-gray-800"
+                >
+                  View in Store
+                </Button>
+              </div>
+            </div>
           </CardContent>
         </Card>
         
@@ -170,12 +228,21 @@ const Index = () => {
         </Card>
       </div>
 
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+          <CardContent className="p-6">
+            <h3 className="text-xl font-bold text-white mb-4">Upload Background</h3>
+            <BackgroundUpload onUploadSuccess={handleBackgroundUpload} />
+          </CardContent>
+        </Card>
+      </div>
+
       <MediaPlayers />
     </div>
   );
 
   const SupporterDashboard = () => (
-    <div className="p-6">
+    <div className="p-6 pt-20">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-white mb-2">Supporter Dashboard</h1>
         <p className="text-gray-300">Discover and enjoy amazing content from creators</p>
