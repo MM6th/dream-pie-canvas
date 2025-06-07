@@ -39,6 +39,7 @@ export type Database = {
       audio_products: {
         Row: {
           album_id: string | null
+          artist_name: string | null
           audio_file_url: string
           audio_type: string
           created_at: string
@@ -52,6 +53,7 @@ export type Database = {
         }
         Insert: {
           album_id?: string | null
+          artist_name?: string | null
           audio_file_url: string
           audio_type: string
           created_at?: string
@@ -65,6 +67,7 @@ export type Database = {
         }
         Update: {
           album_id?: string | null
+          artist_name?: string | null
           audio_file_url?: string
           audio_type?: string
           created_at?: string

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -38,7 +37,16 @@ const AudioProductManager = () => {
       const { data, error } = await supabase
         .from('audio_products')
         .select(`
-          *,
+          id,
+          title,
+          artist_name,
+          audio_type,
+          thumbnail_url,
+          audio_file_url,
+          album_id,
+          is_free,
+          price,
+          created_at,
           albums (
             name
           )
