@@ -81,7 +81,7 @@ const Index = () => {
           <Button
             onClick={() => setCurrentView("dashboard")}
             variant="outline"
-            className="border-gray-600 text-white hover:bg-gray-800"
+            className="border-gray-600 text-white hover:bg-white hover:text-black"
           >
             Back to Dashboard
           </Button>
@@ -147,7 +147,7 @@ const Index = () => {
           <Button
             onClick={() => setCurrentView("store")}
             variant="outline"
-            className="border-gray-600 text-white hover:bg-gray-800"
+            className="border-gray-600 text-white hover:bg-white hover:text-black"
           >
             <Store className="w-4 h-4 mr-2" />
             Browse Store
@@ -199,7 +199,7 @@ const Index = () => {
                   onClick={() => setCurrentView("store")}
                   variant="outline"
                   size="sm"
-                  className="border-gray-600 text-white hover:bg-gray-800"
+                  className="border-gray-600 text-white hover:bg-white hover:text-black"
                 >
                   View in Store
                 </Button>
