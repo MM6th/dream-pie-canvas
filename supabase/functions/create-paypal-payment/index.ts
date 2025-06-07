@@ -30,9 +30,16 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Create client for user authentication
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+    )
+
+    // Create admin client for database queries
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
     const authHeader = req.headers.get('Authorization')
@@ -61,8 +68,8 @@ Deno.serve(async (req) => {
     const { audioProductId } = await req.json()
     console.log('Audio product ID:', audioProductId)
 
-    // Get audio product details
-    const { data: product, error: productError } = await supabase
+    // Get audio product details using admin client to bypass RLS
+    const { data: product, error: productError } = await supabaseAdmin
       .from('audio_products')
       .select('*')
       .eq('id', audioProductId)
@@ -88,7 +95,7 @@ Deno.serve(async (req) => {
 
     // Get PayPal credentials from environment
     const clientId = Deno.env.get('PAYPAL_CLIENT_ID')
-    const clientSecret = Deno.env.get('PIE_BASE') // This should be your PayPal secret
+    const clientSecret = Deno.env.get('PIE_BASE')
 
     console.log('PayPal Client ID exists:', !!clientId)
     console.log('PayPal Secret exists:', !!clientSecret)
