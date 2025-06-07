@@ -31,18 +31,28 @@ interface PayPalCaptureResponse {
 }
 
 Deno.serve(async (req) => {
+  console.log('PayPal payment capture function called')
+  
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
   try {
+    // Create client for user authentication
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? ''
     )
 
+    // Create admin client for database operations
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
+
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
+      console.error('No authorization header provided')
       return new Response(
         JSON.stringify({ error: 'No authorization header' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -54,19 +64,24 @@ Deno.serve(async (req) => {
     )
 
     if (authError || !user) {
+      console.error('Authentication failed:', authError)
       return new Response(
         JSON.stringify({ error: 'Invalid authentication' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
+    console.log('User authenticated:', user.id)
+
     const { orderId } = await req.json()
+    console.log('Capturing PayPal order:', orderId)
 
     // Get PayPal access token - using live credentials
     const clientId = Deno.env.get('PAYPAL_CLIENT_ID')
     const clientSecret = Deno.env.get('PAYPAL_CLIENT_SECRET')
 
     if (!clientId || !clientSecret) {
+      console.error('PayPal credentials missing')
       return new Response(
         JSON.stringify({ error: 'PayPal credentials not configured' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -74,6 +89,7 @@ Deno.serve(async (req) => {
     }
 
     // Get PayPal access token - UPDATED TO LIVE URL
+    console.log('Requesting PayPal access token...')
     const tokenResponse = await fetch('https://api-m.paypal.com/v1/oauth2/token', {
       method: 'POST',
       headers: {
@@ -84,16 +100,19 @@ Deno.serve(async (req) => {
     })
 
     if (!tokenResponse.ok) {
-      console.error('PayPal token error:', await tokenResponse.text())
+      const tokenErrorText = await tokenResponse.text()
+      console.error('PayPal token error:', tokenResponse.status, tokenErrorText)
       return new Response(
-        JSON.stringify({ error: 'Failed to get PayPal access token' }),
+        JSON.stringify({ error: 'Failed to get PayPal access token', details: tokenErrorText }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
     const tokenData: PayPalAccessTokenResponse = await tokenResponse.json()
+    console.log('PayPal access token obtained successfully')
 
     // Capture the payment - UPDATED TO LIVE URL
+    console.log('Capturing PayPal payment...')
     const captureResponse = await fetch(`https://api-m.paypal.com/v2/checkout/orders/${orderId}/capture`, {
       method: 'POST',
       headers: {
@@ -103,21 +122,29 @@ Deno.serve(async (req) => {
     })
 
     if (!captureResponse.ok) {
-      console.error('PayPal capture error:', await captureResponse.text())
+      const captureErrorText = await captureResponse.text()
+      console.error('PayPal capture error:', captureResponse.status, captureErrorText)
       return new Response(
-        JSON.stringify({ error: 'Failed to capture PayPal payment' }),
+        JSON.stringify({ error: 'Failed to capture PayPal payment', details: captureErrorText }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
     const captureData: PayPalCaptureResponse = await captureResponse.json()
+    console.log('PayPal capture response:', JSON.stringify(captureData, null, 2))
 
     if (captureData.status === 'COMPLETED') {
       const purchaseUnit = captureData.purchase_units[0]
       const capture = purchaseUnit.payments.captures[0]
       
-      // Record the purchase in our database
-      const { error: insertError } = await supabase
+      console.log('Recording purchase in database...')
+      console.log('User ID:', user.id)
+      console.log('Product ID:', purchaseUnit.reference_id)
+      console.log('Transaction ID:', capture.id)
+      console.log('Amount:', capture.amount.value)
+      
+      // Record the purchase in our database using admin client
+      const { data: insertedPurchase, error: insertError } = await supabaseAdmin
         .from('user_purchases')
         .insert({
           user_id: user.id,
@@ -125,34 +152,43 @@ Deno.serve(async (req) => {
           paypal_transaction_id: capture.id,
           amount_paid: parseFloat(capture.amount.value)
         })
+        .select()
 
       if (insertError) {
         console.error('Database insert error:', insertError)
         return new Response(
-          JSON.stringify({ error: 'Failed to record purchase' }),
+          JSON.stringify({ 
+            error: 'Failed to record purchase in database', 
+            details: insertError.message,
+            code: insertError.code 
+          }),
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
       }
+
+      console.log('Purchase recorded successfully:', insertedPurchase)
 
       return new Response(
         JSON.stringify({ 
           success: true,
           transactionId: capture.id,
-          audioProductId: purchaseUnit.reference_id
+          audioProductId: purchaseUnit.reference_id,
+          amountPaid: capture.amount.value
         }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     } else {
+      console.error('Payment not completed. Status:', captureData.status)
       return new Response(
-        JSON.stringify({ error: 'Payment not completed' }),
+        JSON.stringify({ error: `Payment not completed. Status: ${captureData.status}` }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
   } catch (error) {
-    console.error('Error capturing PayPal payment:', error)
+    console.error('Unexpected error in PayPal payment capture:', error)
     return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
+      JSON.stringify({ error: 'Internal server error', details: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }

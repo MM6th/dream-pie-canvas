@@ -14,6 +14,10 @@ const PaymentSuccess = () => {
   const { user } = useAuth();
   const [processing, setProcessing] = useState(true);
   const [success, setSuccess] = useState(false);
+  const [paymentDetails, setPaymentDetails] = useState<{
+    transactionId?: string;
+    amountPaid?: string;
+  }>({});
 
   const orderId = searchParams.get('token');
   const productId = searchParams.get('product_id');
@@ -21,11 +25,14 @@ const PaymentSuccess = () => {
   useEffect(() => {
     const capturePayment = async () => {
       if (!orderId || !user) {
+        console.error('Missing orderId or user:', { orderId, user });
         setProcessing(false);
         return;
       }
 
       try {
+        console.log('Capturing payment for order:', orderId);
+        
         const { data, error } = await supabase.functions.invoke('capture-paypal-payment', {
           body: { orderId },
           headers: {
@@ -33,24 +40,48 @@ const PaymentSuccess = () => {
           },
         });
 
-        if (error) throw error;
+        console.log('Capture response:', data, 'Error:', error);
 
-        if (data.success) {
+        if (error) {
+          console.error('Supabase function error:', error);
+          throw error;
+        }
+
+        if (data?.success) {
           setSuccess(true);
+          setPaymentDetails({
+            transactionId: data.transactionId,
+            amountPaid: data.amountPaid
+          });
+          
           toast({
             title: "Payment Successful!",
-            description: "Your audio has been added to your library.",
+            description: `Your audio has been added to your library. Amount paid: $${data.amountPaid}`,
           });
+
+          // Refresh the page data to show the new purchase
+          setTimeout(() => {
+            window.location.href = '/';
+          }, 3000);
         } else {
-          throw new Error('Payment capture failed');
+          throw new Error(data?.error || 'Payment capture failed');
         }
       } catch (error: any) {
         console.error('Payment capture error:', error);
+        
+        let errorMessage = "There was an issue processing your payment. Please contact support.";
+        
+        if (error.details) {
+          errorMessage += ` Details: ${error.details}`;
+        }
+        
         toast({
           title: "Payment Error",
-          description: "There was an issue processing your payment. Please contact support.",
+          description: errorMessage,
           variant: "destructive"
         });
+        
+        setSuccess(false);
       } finally {
         setProcessing(false);
       }
@@ -102,8 +133,18 @@ const PaymentSuccess = () => {
               <p className="text-gray-300">
                 Thank you for your purchase! Your audio has been added to your music library.
               </p>
+              {paymentDetails.amountPaid && (
+                <p className="text-gray-400 text-sm">
+                  Amount paid: ${paymentDetails.amountPaid}
+                </p>
+              )}
+              {paymentDetails.transactionId && (
+                <p className="text-gray-400 text-xs">
+                  Transaction ID: {paymentDetails.transactionId}
+                </p>
+              )}
               <p className="text-gray-400 text-sm">
-                You can now listen to your purchased audio in your dashboard.
+                Redirecting to dashboard in a few seconds...
               </p>
             </>
           ) : (
