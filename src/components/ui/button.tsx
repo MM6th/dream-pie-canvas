@@ -1,4 +1,5 @@
 
+
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
@@ -45,11 +46,17 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const Comp = asChild ? Slot : "button"
     
     // Add specific styling for white/light colored buttons to ensure black text
-    const whiteButtonClass = className?.includes('bg-white') ? 'text-black hover:text-black' : '';
+    const lightButtonClass = className && (
+      className.includes('bg-white') || 
+      className.includes('bg-gray-100') || 
+      className.includes('bg-gray-50') ||
+      className.includes('hover:bg-white') ||
+      className.includes('hover:bg-gray-100')
+    ) ? 'text-black hover:text-black' : '';
     
     return (
       <Comp
-        className={cn(buttonVariants({ variant, size, className }), whiteButtonClass)}
+        className={cn(buttonVariants({ variant, size, className }), lightButtonClass)}
         ref={ref}
         {...props}
       />
@@ -59,3 +66,4 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 Button.displayName = "Button"
 
 export { Button, buttonVariants }
+
