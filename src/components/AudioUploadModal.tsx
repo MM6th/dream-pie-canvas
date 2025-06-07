@@ -1,19 +1,18 @@
 
-import { useState } from "react";
+import React, { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Upload, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 
 interface AudioUploadModalProps {
-  onSuccess?: () => void;
+  onSuccess: () => void;
 }
 
 const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
@@ -25,37 +24,32 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
     audioType: "",
     thumbnail: null as File | null,
     audioFile: null as File | null,
-    isPartOfAlbum: false,
     albumName: "",
+    hasAlbum: false,
     isFree: true,
     price: ""
   });
   const [albums, setAlbums] = useState<any[]>([]);
-  const [selectedAlbum, setSelectedAlbum] = useState("");
 
   const fetchAlbums = async () => {
     if (!user) return;
     
-    const { data, error } = await supabase
-      .from('albums')
-      .select('*')
-      .eq('merchant_id', user.id);
-    
-    if (!error && data) {
-      setAlbums(data);
+    try {
+      const { data, error } = await supabase
+        .from('albums')
+        .select('*')
+        .eq('merchant_id', user.id);
+      
+      if (error) throw error;
+      setAlbums(data || []);
+    } catch (error) {
+      console.error('Error fetching albums:', error);
     }
   };
 
-  const handleOpen = (isOpen: boolean) => {
-    setOpen(isOpen);
-    if (isOpen) {
-      fetchAlbums();
-    }
-  };
-
-  const uploadFile = async (file: File, bucket: string, folder: string) => {
+  const uploadFile = async (file: File, bucket: string, folder: string = '') => {
     const fileExt = file.name.split('.').pop();
-    const fileName = `${folder}/${user!.id}/${Date.now()}.${fileExt}`;
+    const fileName = `${folder}${Date.now()}.${fileExt}`;
     
     const { data, error } = await supabase.storage
       .from(bucket)
@@ -63,43 +57,59 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
     
     if (error) throw error;
     
-    const { data: publicUrl } = supabase.storage
+    const { data: { publicUrl } } = supabase.storage
       .from(bucket)
       .getPublicUrl(fileName);
     
-    return publicUrl.publicUrl;
+    return publicUrl;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !formData.audioFile || !formData.title || !formData.audioType) {
+    if (!user) return;
+    
+    if (!formData.title || !formData.audioType || !formData.audioFile) {
       toast({
         title: "Error",
-        description: "Please fill in all required fields and select an audio file.",
+        description: "Please fill in all required fields",
         variant: "destructive"
       });
       return;
     }
 
     setLoading(true);
+    
     try {
       // Upload audio file
-      const audioUrl = await uploadFile(formData.audioFile, 'audio-files', 'tracks');
+      const audioUrl = await uploadFile(
+        formData.audioFile, 
+        'audio-files', 
+        `${user.id}/`
+      );
       
       // Upload thumbnail if provided
       let thumbnailUrl = null;
       if (formData.thumbnail) {
-        thumbnailUrl = await uploadFile(formData.thumbnail, 'thumbnails', 'audio');
+        thumbnailUrl = await uploadFile(
+          formData.thumbnail, 
+          'thumbnails', 
+          `${user.id}/`
+        );
       }
-
+      
       // Handle album creation/selection
       let albumId = null;
-      if (formData.isPartOfAlbum) {
-        if (selectedAlbum) {
-          albumId = selectedAlbum;
-        } else if (formData.albumName) {
+      if (formData.hasAlbum && formData.albumName) {
+        // Check if album exists
+        const existingAlbum = albums.find(album => 
+          album.name.toLowerCase() === formData.albumName.toLowerCase()
+        );
+        
+        if (existingAlbum) {
+          albumId = existingAlbum.id;
+        } else {
           // Create new album
-          const { data: albumData, error: albumError } = await supabase
+          const { data: newAlbum, error: albumError } = await supabase
             .from('albums')
             .insert({
               merchant_id: user.id,
@@ -109,10 +119,10 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
             .single();
           
           if (albumError) throw albumError;
-          albumId = albumData.id;
+          albumId = newAlbum.id;
         }
       }
-
+      
       // Create audio product
       const { error: productError } = await supabase
         .from('audio_products')
@@ -124,35 +134,34 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
           audio_file_url: audioUrl,
           album_id: albumId,
           is_free: formData.isFree,
-          price: formData.isFree ? null : parseFloat(formData.price) || null
+          price: formData.isFree ? null : parseFloat(formData.price)
         });
-
+      
       if (productError) throw productError;
-
+      
       toast({
         title: "Success",
-        description: "Audio product created successfully!"
+        description: "Audio product uploaded successfully!"
       });
-
-      // Reset form
+      
+      setOpen(false);
       setFormData({
         title: "",
         audioType: "",
         thumbnail: null,
         audioFile: null,
-        isPartOfAlbum: false,
         albumName: "",
+        hasAlbum: false,
         isFree: true,
         price: ""
       });
-      setSelectedAlbum("");
-      setOpen(false);
-      onSuccess?.();
+      onSuccess();
+      
     } catch (error: any) {
       console.error('Error uploading audio:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to create audio product",
+        description: error.message || "Failed to upload audio product",
         variant: "destructive"
       });
     } finally {
@@ -160,19 +169,25 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
     }
   };
 
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen);
+    if (newOpen) {
+      fetchAlbums();
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={handleOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button className="bg-primary hover:bg-primary/90">
           <Plus className="w-4 h-4 mr-2" />
           Upload Audio
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Upload Audio Product</DialogTitle>
         </DialogHeader>
-        
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Label htmlFor="title">Title *</Label>
@@ -180,13 +195,17 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
               id="title"
               value={formData.title}
               onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+              placeholder="Enter audio title"
               required
             />
           </div>
-
+          
           <div>
             <Label htmlFor="audioType">Audio Type *</Label>
-            <Select value={formData.audioType} onValueChange={(value) => setFormData(prev => ({ ...prev, audioType: value }))}>
+            <Select 
+              value={formData.audioType} 
+              onValueChange={(value) => setFormData(prev => ({ ...prev, audioType: value }))}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select audio type" />
               </SelectTrigger>
@@ -198,77 +217,70 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
               </SelectContent>
             </Select>
           </div>
-
+          
           <div>
             <Label htmlFor="audioFile">Audio File *</Label>
             <Input
               id="audioFile"
               type="file"
               accept="audio/*"
-              onChange={(e) => setFormData(prev => ({ ...prev, audioFile: e.target.files?.[0] || null }))}
+              onChange={(e) => setFormData(prev => ({ 
+                ...prev, 
+                audioFile: e.target.files?.[0] || null 
+              }))}
               required
             />
           </div>
-
+          
           <div>
-            <Label htmlFor="thumbnail">Thumbnail</Label>
+            <Label htmlFor="thumbnail">Thumbnail Image</Label>
             <Input
               id="thumbnail"
               type="file"
               accept="image/*"
-              onChange={(e) => setFormData(prev => ({ ...prev, thumbnail: e.target.files?.[0] || null }))}
+              onChange={(e) => setFormData(prev => ({ 
+                ...prev, 
+                thumbnail: e.target.files?.[0] || null 
+              }))}
             />
           </div>
-
+          
           <div className="flex items-center space-x-2">
             <Checkbox
-              id="isPartOfAlbum"
-              checked={formData.isPartOfAlbum}
-              onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isPartOfAlbum: checked as boolean }))}
+              id="hasAlbum"
+              checked={formData.hasAlbum}
+              onCheckedChange={(checked) => setFormData(prev => ({ 
+                ...prev, 
+                hasAlbum: checked as boolean 
+              }))}
             />
-            <Label htmlFor="isPartOfAlbum">Part of Album/Collection</Label>
+            <Label htmlFor="hasAlbum">Part of an album/collection</Label>
           </div>
-
-          {formData.isPartOfAlbum && (
-            <div className="space-y-2">
-              {albums.length > 0 && (
-                <div>
-                  <Label>Select Existing Album</Label>
-                  <Select value={selectedAlbum} onValueChange={setSelectedAlbum}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select an album" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {albums.map((album) => (
-                        <SelectItem key={album.id} value={album.id}>
-                          {album.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-              <div>
-                <Label htmlFor="albumName">Or Create New Album</Label>
-                <Input
-                  id="albumName"
-                  value={formData.albumName}
-                  onChange={(e) => setFormData(prev => ({ ...prev, albumName: e.target.value }))}
-                  placeholder="Album name"
-                />
-              </div>
+          
+          {formData.hasAlbum && (
+            <div>
+              <Label htmlFor="albumName">Album/Collection Name</Label>
+              <Input
+                id="albumName"
+                value={formData.albumName}
+                onChange={(e) => setFormData(prev => ({ ...prev, albumName: e.target.value }))}
+                placeholder="Enter album name"
+              />
             </div>
           )}
-
+          
           <div className="flex items-center space-x-2">
             <Checkbox
               id="isFree"
               checked={formData.isFree}
-              onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isFree: checked as boolean }))}
+              onCheckedChange={(checked) => setFormData(prev => ({ 
+                ...prev, 
+                isFree: checked as boolean 
+              }))}
             />
-            <Label htmlFor="isFree">Free Download</Label>
+            <Label htmlFor="isFree">Free download</Label>
           </div>
-
+          
           {!formData.isFree && (
             <div>
               <Label htmlFor="price">Price ($)</Label>
@@ -283,9 +295,9 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
               />
             </div>
           )}
-
+          
           <Button type="submit" disabled={loading} className="w-full">
-            {loading ? "Creating..." : "Create Product"}
+            {loading ? "Uploading..." : "Create Product"}
           </Button>
         </form>
       </DialogContent>
