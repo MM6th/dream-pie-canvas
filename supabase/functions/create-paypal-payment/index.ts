@@ -23,6 +23,8 @@ interface PayPalOrderResponse {
 }
 
 Deno.serve(async (req) => {
+  console.log('PayPal payment creation function called')
+  
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
@@ -35,6 +37,7 @@ Deno.serve(async (req) => {
 
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
+      console.error('No authorization header provided')
       return new Response(
         JSON.stringify({ error: 'No authorization header' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -46,13 +49,17 @@ Deno.serve(async (req) => {
     )
 
     if (authError || !user) {
+      console.error('Authentication failed:', authError)
       return new Response(
         JSON.stringify({ error: 'Invalid authentication' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
+    console.log('User authenticated:', user.id)
+
     const { audioProductId } = await req.json()
+    console.log('Audio product ID:', audioProductId)
 
     // Get audio product details
     const { data: product, error: productError } = await supabase
@@ -62,30 +69,40 @@ Deno.serve(async (req) => {
       .single()
 
     if (productError || !product) {
+      console.error('Product not found:', productError)
       return new Response(
         JSON.stringify({ error: 'Product not found' }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
+    console.log('Product found:', product.title, 'Price:', product.price)
+
     if (product.is_free) {
+      console.log('Product is free, no payment needed')
       return new Response(
         JSON.stringify({ error: 'This product is free' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    // Get PayPal access token
+    // Get PayPal credentials from environment
     const clientId = Deno.env.get('PAYPAL_CLIENT_ID')
-    const clientSecret = Deno.env.get('PAYPAL_CLIENT_SECRET')
+    const clientSecret = Deno.env.get('PIE_BASE') // This should be your PayPal secret
+
+    console.log('PayPal Client ID exists:', !!clientId)
+    console.log('PayPal Secret exists:', !!clientSecret)
 
     if (!clientId || !clientSecret) {
+      console.error('PayPal credentials missing - Client ID:', !!clientId, 'Secret:', !!clientSecret)
       return new Response(
         JSON.stringify({ error: 'PayPal credentials not configured' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
+    // Get PayPal access token
+    console.log('Requesting PayPal access token...')
     const tokenResponse = await fetch('https://api-m.sandbox.paypal.com/v1/oauth2/token', {
       method: 'POST',
       headers: {
@@ -96,16 +113,24 @@ Deno.serve(async (req) => {
     })
 
     if (!tokenResponse.ok) {
-      console.error('PayPal token error:', await tokenResponse.text())
+      const tokenErrorText = await tokenResponse.text()
+      console.error('PayPal token error:', tokenResponse.status, tokenErrorText)
       return new Response(
-        JSON.stringify({ error: 'Failed to get PayPal access token' }),
+        JSON.stringify({ error: 'Failed to get PayPal access token', details: tokenErrorText }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
     const tokenData: PayPalAccessTokenResponse = await tokenResponse.json()
+    console.log('PayPal access token obtained successfully')
 
     // Create PayPal order
+    const returnUrl = `${req.headers.get('origin')}/payment-success?product_id=${audioProductId}`
+    const cancelUrl = `${req.headers.get('origin')}/payment-cancelled`
+    
+    console.log('Return URL:', returnUrl)
+    console.log('Cancel URL:', cancelUrl)
+
     const orderData = {
       intent: 'CAPTURE',
       application_context: {
@@ -113,8 +138,8 @@ Deno.serve(async (req) => {
         landing_page: 'NO_PREFERENCE',
         shipping_preference: 'NO_SHIPPING',
         user_action: 'PAY_NOW',
-        return_url: `${req.headers.get('origin')}/payment-success?product_id=${audioProductId}`,
-        cancel_url: `${req.headers.get('origin')}/payment-cancelled`
+        return_url: returnUrl,
+        cancel_url: cancelUrl
       },
       purchase_units: [{
         reference_id: audioProductId,
@@ -125,6 +150,8 @@ Deno.serve(async (req) => {
         description: `${product.title} by ${product.artist_name || 'Unknown Artist'}`
       }]
     }
+
+    console.log('Creating PayPal order with data:', JSON.stringify(orderData, null, 2))
 
     const orderResponse = await fetch('https://api-m.sandbox.paypal.com/v2/checkout/orders', {
       method: 'POST',
@@ -137,23 +164,29 @@ Deno.serve(async (req) => {
     })
 
     if (!orderResponse.ok) {
-      console.error('PayPal order error:', await orderResponse.text())
+      const orderErrorText = await orderResponse.text()
+      console.error('PayPal order creation error:', orderResponse.status, orderErrorText)
       return new Response(
-        JSON.stringify({ error: 'Failed to create PayPal order' }),
+        JSON.stringify({ error: 'Failed to create PayPal order', details: orderErrorText }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
     const order: PayPalOrderResponse = await orderResponse.json()
+    console.log('PayPal order created successfully:', order.id)
+    
     const approvalUrl = order.links.find(link => link.rel === 'approve')?.href
 
     if (!approvalUrl) {
+      console.error('No approval URL found in PayPal response')
       return new Response(
         JSON.stringify({ error: 'No approval URL found' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
+    console.log('Payment URL generated successfully:', approvalUrl)
+    
     return new Response(
       JSON.stringify({ 
         orderId: order.id,
@@ -163,9 +196,9 @@ Deno.serve(async (req) => {
     )
 
   } catch (error) {
-    console.error('Error creating PayPal payment:', error)
+    console.error('Unexpected error in PayPal payment creation:', error)
     return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
+      JSON.stringify({ error: 'Internal server error', details: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }

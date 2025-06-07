@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -32,6 +31,7 @@ const StorePage = () => {
 
   const fetchProducts = async () => {
     try {
+      // Fetch ALL products for the store, not just current user's products
       const { data, error } = await supabase
         .from('audio_products')
         .select(`
@@ -98,6 +98,8 @@ const StorePage = () => {
     setPurchasingId(product.id);
 
     try {
+      console.log('Starting payment process for product:', product.id);
+      
       const { data, error } = await supabase.functions.invoke('create-paypal-payment', {
         body: { audioProductId: product.id },
         headers: {
@@ -105,19 +107,25 @@ const StorePage = () => {
         },
       });
 
-      if (error) throw error;
+      console.log('Payment response:', data, 'Error:', error);
 
-      if (data.approvalUrl) {
+      if (error) {
+        console.error('Payment creation error:', error);
+        throw error;
+      }
+
+      if (data?.approvalUrl) {
+        console.log('Redirecting to PayPal:', data.approvalUrl);
         // Redirect to PayPal
         window.location.href = data.approvalUrl;
       } else {
-        throw new Error('No approval URL received');
+        throw new Error('No approval URL received from PayPal');
       }
     } catch (error: any) {
       console.error('Error creating payment:', error);
       toast({
         title: "Payment Error",
-        description: "Failed to initiate payment. Please try again.",
+        description: error.message || "Failed to initiate payment. Please try again.",
         variant: "destructive"
       });
     } finally {
