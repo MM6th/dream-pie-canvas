@@ -1,9 +1,8 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { Music, Play, Pause, Volume2, VolumeX, SkipBack, SkipForward } from "lucide-react";
+import { AudioLines, Play, Pause, Volume2, VolumeX, SkipBack, SkipForward } from "lucide-react";
 
 interface AudioTrack {
   id: string;
@@ -127,7 +126,7 @@ const AudioPlayer = ({ tracks }: AudioPlayerProps) => {
       <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
         <CardContent className="p-6">
           <div className="flex items-center gap-3 mb-4">
-            <Music className="text-gray-400" size={24} />
+            <AudioLines className="text-gray-400" size={24} />
             <h3 className="text-xl font-bold text-white">Audio Player</h3>
           </div>
           <div className="bg-gray-900/50 rounded-lg p-4">
@@ -156,12 +155,11 @@ const AudioPlayer = ({ tracks }: AudioPlayerProps) => {
     <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
       <CardContent className="p-6">
         <div className="flex items-center gap-3 mb-4">
-          <Music className="text-gray-400" size={24} />
+          <AudioLines className="text-gray-400" size={24} />
           <h3 className="text-xl font-bold text-white">Audio Player</h3>
         </div>
         
         <div className="bg-gray-900/50 rounded-lg p-4">
-          {/* Track Info */}
           <div className="flex items-center gap-4 mb-4">
             {currentTrack?.thumbnail_url ? (
               <img
@@ -171,7 +169,7 @@ const AudioPlayer = ({ tracks }: AudioPlayerProps) => {
               />
             ) : (
               <div className="w-16 h-16 bg-gray-700 rounded-lg flex items-center justify-center">
-                <Music className="w-8 h-8 text-gray-400" />
+                <AudioLines className="w-8 h-8 text-gray-400" />
               </div>
             )}
             <div className="flex-1">
@@ -185,7 +183,6 @@ const AudioPlayer = ({ tracks }: AudioPlayerProps) => {
             </div>
           </div>
 
-          {/* Progress Bar */}
           <div className="mb-4">
             <Slider
               value={[duration ? (currentTime / duration) * 100 : 0]}
@@ -200,7 +197,6 @@ const AudioPlayer = ({ tracks }: AudioPlayerProps) => {
             </div>
           </div>
 
-          {/* Controls */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Button
@@ -233,7 +229,6 @@ const AudioPlayer = ({ tracks }: AudioPlayerProps) => {
               </Button>
             </div>
 
-            {/* Volume Control */}
             <div className="flex items-center gap-2 w-32">
               <Button
                 size="sm"

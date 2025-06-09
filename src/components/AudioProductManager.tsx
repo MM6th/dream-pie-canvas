@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Music, Edit, Trash2, DollarSign } from "lucide-react";
+import { AudioLines, Edit, Trash2, DollarSign } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
@@ -123,7 +123,7 @@ const AudioProductManager = () => {
         {products.length === 0 ? (
           <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
             <CardContent className="p-8 text-center">
-              <Music className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <AudioLines className="w-12 h-12 text-gray-400 mx-auto mb-4" />
               <h4 className="text-lg font-semibold text-white mb-2">No Audio Products</h4>
               <p className="text-gray-400">Upload your first audio product to get started!</p>
             </CardContent>
@@ -141,7 +141,7 @@ const AudioProductManager = () => {
                     />
                   ) : (
                     <div className="w-full h-32 bg-gray-700 rounded-lg mb-3 flex items-center justify-center">
-                      <Music className="w-8 h-8 text-gray-400" />
+                      <AudioLines className="w-8 h-8 text-gray-400" />
                     </div>
                   )}
                   <CardTitle className="text-white text-base line-clamp-2">{product.title}</CardTitle>

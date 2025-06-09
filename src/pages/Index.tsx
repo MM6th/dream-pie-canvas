@@ -1,15 +1,16 @@
-
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Music, Video, LogOut, Store } from "lucide-react";
+import { AudioLines, Video, LogOut, Store } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import AuthPage from "@/components/AuthPage";
 import BackgroundUpload from "@/components/BackgroundUpload";
 import AudioUploadModal from "@/components/AudioUploadModal";
+import VideoUploadModal from "@/components/VideoUploadModal";
 import StorePage from "@/components/StorePage";
 import AudioProductManager from "@/components/AudioProductManager";
+import VideoProductManager from "@/components/VideoProductManager";
 import AudioPlayer from "@/components/AudioPlayer";
 
 interface AudioTrack {
@@ -39,7 +40,6 @@ const Index = () => {
     }
   }, [user, loading]);
 
-  // Refresh purchased tracks when switching back to dashboard from store
   useEffect(() => {
     if (currentView === "dashboard" && user) {
       fetchPurchasedTracks();
@@ -112,7 +112,6 @@ const Index = () => {
     setUserProfile(prev => ({ ...prev, background_image_url: url }));
   };
 
-  // Show loading only when auth is loading, not when profile is loading
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800 flex items-center justify-center">
@@ -121,16 +120,13 @@ const Index = () => {
     );
   }
 
-  // Show auth page if no user
   if (!user) {
     return <AuthPage />;
   }
 
-  // Show store page if selected
   if (currentView === "store") {
     return (
       <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800">
-        {/* Navigation */}
         <div className="absolute top-4 left-4 right-4 z-20 flex justify-between">
           <Button
             onClick={() => setCurrentView("dashboard")}
@@ -166,7 +162,6 @@ const Index = () => {
 
     return (
       <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800" style={backgroundStyle}>
-        {/* Navigation */}
         <div className="absolute top-4 left-4 right-4 z-20 flex justify-between">
           <Button
             onClick={() => setCurrentView("store")}
@@ -256,12 +251,38 @@ const Index = () => {
             <BackgroundUpload onUploadSuccess={handleBackgroundUpload} />
           </CardContent>
         </Card>
+        
+        <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-white">Video Products</h3>
+              <VideoUploadModal onSuccess={fetchUserProfile} />
+            </div>
+            <p className="text-gray-400 mb-4">Upload and manage your video content</p>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg">
+                <div>
+                  <p className="text-white font-medium">Total Video Products</p>
+                  <p className="text-gray-400 text-sm">Manage your video library</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <div className="mb-8">
         <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
           <CardContent className="p-6">
             <AudioProductManager />
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="mb-8">
+        <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+          <CardContent className="p-6">
+            <VideoProductManager />
           </CardContent>
         </Card>
       </div>
