@@ -157,6 +157,48 @@ export type Database = {
           },
         ]
       }
+      video_products: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_free: boolean
+          merchant_id: string
+          price: number | null
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+          video_file_url: string
+          video_type: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_free?: boolean
+          merchant_id: string
+          price?: number | null
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string
+          video_file_url: string
+          video_type: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_free?: boolean
+          merchant_id?: string
+          price?: number | null
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
+          video_file_url?: string
+          video_type?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
