@@ -76,7 +76,7 @@ Deno.serve(async (req) => {
     const { orderId } = await req.json()
     console.log('Capturing PayPal order:', orderId)
 
-    // Get PayPal access token - using live credentials
+    // Get PayPal access token
     const clientId = Deno.env.get('PAYPAL_CLIENT_ID')
     const clientSecret = Deno.env.get('PAYPAL_CLIENT_SECRET')
 
@@ -88,7 +88,7 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Get PayPal access token - UPDATED TO LIVE URL
+    // Get PayPal access token
     console.log('Requesting PayPal access token...')
     const tokenResponse = await fetch('https://api-m.paypal.com/v1/oauth2/token', {
       method: 'POST',
@@ -111,7 +111,7 @@ Deno.serve(async (req) => {
     const tokenData: PayPalAccessTokenResponse = await tokenResponse.json()
     console.log('PayPal access token obtained successfully')
 
-    // Capture the payment - UPDATED TO LIVE URL
+    // Capture the payment
     console.log('Capturing PayPal payment...')
     const captureResponse = await fetch(`https://api-m.paypal.com/v2/checkout/orders/${orderId}/capture`, {
       method: 'POST',
@@ -143,6 +143,29 @@ Deno.serve(async (req) => {
       console.log('Transaction ID:', capture.id)
       console.log('Amount:', capture.amount.value)
       
+      // Check if this purchase already exists to prevent duplicates
+      const { data: existingPurchase } = await supabaseAdmin
+        .from('user_purchases')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('audio_product_id', purchaseUnit.reference_id)
+        .eq('paypal_transaction_id', capture.id)
+        .single()
+
+      if (existingPurchase) {
+        console.log('Purchase already exists, returning success')
+        return new Response(
+          JSON.stringify({ 
+            success: true,
+            transactionId: capture.id,
+            audioProductId: purchaseUnit.reference_id,
+            amountPaid: capture.amount.value,
+            message: 'Purchase already recorded'
+          }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
       // Record the purchase in our database using admin client
       const { data: insertedPurchase, error: insertError } = await supabaseAdmin
         .from('user_purchases')
@@ -150,7 +173,8 @@ Deno.serve(async (req) => {
           user_id: user.id,
           audio_product_id: purchaseUnit.reference_id,
           paypal_transaction_id: capture.id,
-          amount_paid: parseFloat(capture.amount.value)
+          amount_paid: parseFloat(capture.amount.value),
+          is_free_download: false
         })
         .select()
 

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -81,13 +80,20 @@ const StorePage = () => {
     }
 
     try {
+      console.log('Processing free download for product:', product.id);
+      
       // Check if user already has this free audio
-      const { data: existingPurchase } = await supabase
+      const { data: existingPurchase, error: checkError } = await supabase
         .from('user_purchases')
         .select('id')
         .eq('user_id', user.id)
         .eq('audio_product_id', product.id)
-        .single();
+        .maybeSingle();
+
+      if (checkError) {
+        console.error('Error checking existing purchases:', checkError);
+        throw new Error('Failed to check existing downloads');
+      }
 
       if (existingPurchase) {
         toast({
@@ -97,17 +103,27 @@ const StorePage = () => {
         return;
       }
 
-      // Record the free download
-      const { error } = await supabase
+      console.log('Recording free download in database...');
+      
+      // Record the free download with the new column
+      const { data: insertedPurchase, error: insertError } = await supabase
         .from('user_purchases')
         .insert({
           user_id: user.id,
           audio_product_id: product.id,
           is_free_download: true,
           amount_paid: 0,
-        });
+          paypal_transaction_id: null
+        })
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (insertError) {
+        console.error('Error inserting free download:', insertError);
+        throw new Error(`Database error: ${insertError.message}`);
+      }
+
+      console.log('Free download recorded successfully:', insertedPurchase);
 
       toast({
         title: "Audio added to library!",
@@ -118,7 +134,7 @@ const StorePage = () => {
       console.error('Error recording free download:', error);
       toast({
         title: "Error",
-        description: "Failed to add audio to your library. Please try again.",
+        description: error.message || "Failed to add audio to your library. Please try again.",
         variant: "destructive"
       });
     }

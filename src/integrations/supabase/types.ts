@@ -122,6 +122,7 @@ export type Database = {
           audio_product_id: string
           created_at: string
           id: string
+          is_free_download: boolean | null
           paypal_transaction_id: string | null
           purchase_date: string
           user_id: string
@@ -131,6 +132,7 @@ export type Database = {
           audio_product_id: string
           created_at?: string
           id?: string
+          is_free_download?: boolean | null
           paypal_transaction_id?: string | null
           purchase_date?: string
           user_id: string
@@ -140,6 +142,7 @@ export type Database = {
           audio_product_id?: string
           created_at?: string
           id?: string
+          is_free_download?: boolean | null
           paypal_transaction_id?: string | null
           purchase_date?: string
           user_id?: string
