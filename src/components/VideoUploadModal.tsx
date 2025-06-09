@@ -221,7 +221,11 @@ const VideoUploadModal = ({ onSuccess }: VideoUploadModalProps) => {
           )}
 
           <div className="flex gap-2">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)} className="flex-1">
+            <Button 
+              type="button" 
+              onClick={() => setOpen(false)} 
+              className="flex-1 bg-primary hover:bg-primary/90 text-white"
+            >
               Cancel
             </Button>
             <Button type="submit" disabled={loading} className="flex-1">

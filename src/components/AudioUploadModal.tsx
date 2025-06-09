@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -6,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Upload, Plus } from "lucide-react";
+import { Upload, Plus, AudioLines } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
@@ -183,13 +182,16 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button className="bg-primary hover:bg-primary/90">
-          <Plus className="w-4 h-4 mr-2" />
+          <Upload className="w-4 h-4 mr-2" />
           Upload Audio
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-md">
+      <DialogContent className="sm:max-w-md bg-gray-800 border-gray-700 text-white">
         <DialogHeader>
-          <DialogTitle>Upload Audio Product</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <AudioLines className="w-5 h-5" />
+            Upload Audio Content
+          </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -309,9 +311,18 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
             </div>
           )}
           
-          <Button type="submit" disabled={loading} className="w-full">
-            {loading ? "Uploading..." : "Create Product"}
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              type="button" 
+              onClick={() => setOpen(false)} 
+              className="flex-1 bg-primary hover:bg-primary/90 text-white"
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={loading} className="flex-1">
+              {loading ? "Uploading..." : "Upload Audio"}
+            </Button>
+          </div>
         </form>
       </DialogContent>
     </Dialog>
