@@ -10,7 +10,7 @@ import BackgroundUpload from "@/components/BackgroundUpload";
 import AudioUploadModal from "@/components/AudioUploadModal";
 import StorePage from "@/components/StorePage";
 import AudioProductManager from "@/components/AudioProductManager";
-import MusicPlayer from "@/components/MusicPlayer";
+import AudioPlayer from "@/components/AudioPlayer";
 
 interface AudioTrack {
   id: string;
@@ -38,6 +38,13 @@ const Index = () => {
       setPurchasedTracks([]);
     }
   }, [user, loading]);
+
+  // Refresh purchased tracks when switching back to dashboard from store
+  useEffect(() => {
+    if (currentView === "dashboard" && user) {
+      fetchPurchasedTracks();
+    }
+  }, [currentView, user]);
 
   const fetchUserProfile = async () => {
     if (!user) return;
@@ -283,7 +290,7 @@ const Index = () => {
             <h3 className="text-xl font-bold text-white mb-4">My Library</h3>
             <div className="space-y-4">
               <div>
-                <p className="text-gray-400">Music Tracks</p>
+                <p className="text-gray-400">Audio Tracks</p>
                 <p className="text-2xl font-bold text-white">{purchasedTracks.length}</p>
               </div>
               <div>
@@ -301,7 +308,7 @@ const Index = () => {
 
   const MediaPlayers = () => (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <MusicPlayer tracks={purchasedTracks} />
+      <AudioPlayer tracks={purchasedTracks} />
 
       <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
         <CardContent className="p-6">

@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -69,14 +70,57 @@ const StorePage = () => {
     fetchProducts();
   }, []);
 
-  const handleDownload = (product: AudioProduct) => {
-    if (product.audio_file_url) {
-      const link = document.createElement('a');
-      link.href = product.audio_file_url;
-      link.download = product.title;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+  const handleFreeDownload = async (product: AudioProduct) => {
+    if (!user) {
+      toast({
+        title: "Please sign in",
+        description: "You need to be logged in to download audio",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      // Check if user already has this free audio
+      const { data: existingPurchase } = await supabase
+        .from('user_purchases')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('audio_product_id', product.id)
+        .single();
+
+      if (existingPurchase) {
+        toast({
+          title: "Already in your library",
+          description: "This audio is already available in your audio player",
+        });
+        return;
+      }
+
+      // Record the free download
+      const { error } = await supabase
+        .from('user_purchases')
+        .insert({
+          user_id: user.id,
+          audio_product_id: product.id,
+          is_free_download: true,
+          amount_paid: 0,
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Audio added to library!",
+        description: "The audio has been added to your audio player in the dashboard",
+      });
+
+    } catch (error: any) {
+      console.error('Error recording free download:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add audio to your library. Please try again.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -91,7 +135,7 @@ const StorePage = () => {
     }
 
     if (product.is_free) {
-      handleDownload(product);
+      await handleFreeDownload(product);
       return;
     }
 
@@ -216,7 +260,7 @@ const StorePage = () => {
                         ) : (
                           <>
                             {product.is_free ? <Download className="w-4 h-4 mr-1" /> : <DollarSign className="w-4 h-4 mr-1" />}
-                            {product.is_free ? "Download" : "Buy"}
+                            {product.is_free ? "Add to Library" : "Buy"}
                           </>
                         )}
                       </Button>
