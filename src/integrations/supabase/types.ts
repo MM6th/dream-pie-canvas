@@ -159,6 +159,7 @@ export type Database = {
       }
       video_products: {
         Row: {
+          background_music_url: string | null
           created_at: string
           description: string | null
           id: string
@@ -172,6 +173,7 @@ export type Database = {
           video_type: string
         }
         Insert: {
+          background_music_url?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -185,6 +187,7 @@ export type Database = {
           video_type: string
         }
         Update: {
+          background_music_url?: string | null
           created_at?: string
           description?: string | null
           id?: string

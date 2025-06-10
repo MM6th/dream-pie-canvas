@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { Upload, Video } from "lucide-react";
+import { Upload, Video, Music } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
@@ -16,10 +16,18 @@ interface VideoUploadModalProps {
   onSuccess?: () => void;
 }
 
+interface AudioTrack {
+  id: string;
+  title: string;
+  artist_name: string | null;
+  audio_file_url: string;
+}
+
 const VideoUploadModal = ({ onSuccess }: VideoUploadModalProps) => {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [ownedTracks, setOwnedTracks] = useState<AudioTrack[]>([]);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -28,13 +36,53 @@ const VideoUploadModal = ({ onSuccess }: VideoUploadModalProps) => {
     price: "",
     videoFile: null as File | null,
     thumbnailFile: null as File | null,
+    backgroundMusicId: "",
   });
 
   const videoTypes = ["music", "dance", "influence", "model", "podcast"];
-  const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500MB in bytes
+  const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB in bytes
+  const MAX_THUMBNAIL_SIZE = 10 * 1024 * 1024; // 10MB for thumbnails
+
+  useEffect(() => {
+    if (open && user) {
+      fetchOwnedTracks();
+    }
+  }, [open, user]);
+
+  const fetchOwnedTracks = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('user_purchases')
+        .select(`
+          audio_product_id,
+          audio_products (
+            id,
+            title,
+            artist_name,
+            audio_file_url
+          )
+        `)
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('Error fetching owned tracks:', error);
+        return;
+      }
+
+      const tracks = data
+        ?.filter(purchase => purchase.audio_products)
+        .map(purchase => purchase.audio_products as AudioTrack) || [];
+
+      setOwnedTracks(tracks);
+    } catch (error) {
+      console.error('Error fetching owned tracks:', error);
+    }
+  };
 
   const validateFileSize = (file: File, type: 'video' | 'thumbnail') => {
-    const maxSize = type === 'video' ? MAX_FILE_SIZE : 50 * 1024 * 1024; // 50MB for thumbnails
+    const maxSize = type === 'video' ? MAX_VIDEO_SIZE : MAX_THUMBNAIL_SIZE;
     if (file.size > maxSize) {
       const maxSizeMB = Math.round(maxSize / (1024 * 1024));
       toast({
@@ -109,6 +157,15 @@ const VideoUploadModal = ({ onSuccess }: VideoUploadModalProps) => {
         .from('videos')
         .getPublicUrl(videoData.path);
 
+      // Get background music URL if selected
+      let backgroundMusicUrl = null;
+      if (formData.backgroundMusicId) {
+        const selectedTrack = ownedTracks.find(track => track.id === formData.backgroundMusicId);
+        if (selectedTrack) {
+          backgroundMusicUrl = selectedTrack.audio_file_url;
+        }
+      }
+
       // Insert video product
       const { error: insertError } = await supabase
         .from('video_products')
@@ -118,6 +175,7 @@ const VideoUploadModal = ({ onSuccess }: VideoUploadModalProps) => {
           video_type: formData.videoType,
           video_file_url: videoPublicUrl,
           thumbnail_url: thumbnailUrl,
+          background_music_url: backgroundMusicUrl,
           merchant_id: user.id,
           is_free: formData.isFree,
           price: formData.isFree ? null : parseFloat(formData.price),
@@ -138,6 +196,7 @@ const VideoUploadModal = ({ onSuccess }: VideoUploadModalProps) => {
         price: "",
         videoFile: null,
         thumbnailFile: null,
+        backgroundMusicId: "",
       });
       setOpen(false);
       onSuccess?.();
@@ -161,7 +220,7 @@ const VideoUploadModal = ({ onSuccess }: VideoUploadModalProps) => {
           Upload Video
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md bg-gray-800 border-gray-700 text-white">
+      <DialogContent className="sm:max-w-md bg-gray-800 border-gray-700 text-white max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Video className="w-5 h-5" />
@@ -210,7 +269,7 @@ const VideoUploadModal = ({ onSuccess }: VideoUploadModalProps) => {
           </div>
 
           <div>
-            <Label htmlFor="videoFile">Video File * (Max 500MB)</Label>
+            <Label htmlFor="videoFile">Video File * (Max 50MB)</Label>
             <Input
               id="videoFile"
               type="file"
@@ -220,12 +279,12 @@ const VideoUploadModal = ({ onSuccess }: VideoUploadModalProps) => {
               required
             />
             <p className="text-xs text-gray-400 mt-1">
-              Recommended formats: MP4, MOV, AVI. Max size: 500MB
+              Recommended formats: MP4, MOV, AVI. Maximum size: 50MB
             </p>
           </div>
 
           <div>
-            <Label htmlFor="thumbnailFile">Thumbnail (Optional, Max 50MB)</Label>
+            <Label htmlFor="thumbnailFile">Thumbnail (Optional, Max 10MB)</Label>
             <Input
               id="thumbnailFile"
               type="file"
@@ -234,9 +293,33 @@ const VideoUploadModal = ({ onSuccess }: VideoUploadModalProps) => {
               className="bg-gray-700 border-gray-600 text-white"
             />
             <p className="text-xs text-gray-400 mt-1">
-              Recommended formats: JPG, PNG. Max size: 50MB
+              Recommended formats: JPG, PNG. Maximum size: 10MB
             </p>
           </div>
+
+          {ownedTracks.length > 0 && (
+            <div>
+              <Label htmlFor="backgroundMusic" className="flex items-center gap-2">
+                <Music className="w-4 h-4" />
+                Background Music (Optional)
+              </Label>
+              <Select value={formData.backgroundMusicId} onValueChange={(value) => setFormData({ ...formData, backgroundMusicId: value })}>
+                <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
+                  <SelectValue placeholder="Select from your owned music" />
+                </SelectTrigger>
+                <SelectContent className="bg-gray-700 border-gray-600">
+                  {ownedTracks.map((track) => (
+                    <SelectItem key={track.id} value={track.id} className="text-white hover:bg-gray-600">
+                      {track.title} {track.artist_name && `- ${track.artist_name}`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-gray-400 mt-1">
+                Select background music from tracks you own
+              </p>
+            </div>
+          )}
 
           <div className="flex items-center space-x-2">
             <Switch
@@ -268,7 +351,7 @@ const VideoUploadModal = ({ onSuccess }: VideoUploadModalProps) => {
             <Button 
               type="button" 
               onClick={() => setOpen(false)} 
-              className="flex-1 bg-primary hover:bg-primary/90 text-white"
+              className="flex-1 bg-gray-600 hover:bg-gray-700 text-white"
             >
               Cancel
             </Button>
