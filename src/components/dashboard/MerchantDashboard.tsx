@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,13 +13,15 @@ interface MerchantDashboardProps {
   onViewStore: () => void;
   onBackgroundUpload: (url: string) => void;
   purchasedTracks: any[];
+  purchasedVideos: any[];
 }
 
 const MerchantDashboard = ({ 
   onSuccess, 
   onViewStore, 
   onBackgroundUpload, 
-  purchasedTracks 
+  purchasedTracks,
+  purchasedVideos
 }: MerchantDashboardProps) => {
   return (
     <div className="p-6 pt-20">
@@ -116,7 +117,7 @@ const MerchantDashboard = ({
         </Card>
       </div>
 
-      <MediaPlayers purchasedTracks={purchasedTracks} />
+      <MediaPlayers purchasedTracks={purchasedTracks} purchasedVideos={purchasedVideos} />
     </div>
   );
 };
