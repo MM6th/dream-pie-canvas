@@ -31,6 +31,41 @@ const VideoUploadModal = ({ onSuccess }: VideoUploadModalProps) => {
   });
 
   const videoTypes = ["music", "dance", "influence", "model", "podcast"];
+  const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500MB in bytes
+
+  const validateFileSize = (file: File, type: 'video' | 'thumbnail') => {
+    const maxSize = type === 'video' ? MAX_FILE_SIZE : 50 * 1024 * 1024; // 50MB for thumbnails
+    if (file.size > maxSize) {
+      const maxSizeMB = Math.round(maxSize / (1024 * 1024));
+      toast({
+        title: "File too large",
+        description: `${type === 'video' ? 'Video' : 'Thumbnail'} file must be smaller than ${maxSizeMB}MB`,
+        variant: "destructive"
+      });
+      return false;
+    }
+    return true;
+  };
+
+  const handleVideoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && validateFileSize(file, 'video')) {
+      setFormData({ ...formData, videoFile: file });
+    } else {
+      e.target.value = '';
+      setFormData({ ...formData, videoFile: null });
+    }
+  };
+
+  const handleThumbnailFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && validateFileSize(file, 'thumbnail')) {
+      setFormData({ ...formData, thumbnailFile: file });
+    } else {
+      e.target.value = '';
+      setFormData({ ...formData, thumbnailFile: null });
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -141,6 +176,7 @@ const VideoUploadModal = ({ onSuccess }: VideoUploadModalProps) => {
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               className="bg-gray-700 border-gray-600 text-white"
+              placeholder="Enter video title"
               required
             />
           </div>
@@ -152,6 +188,7 @@ const VideoUploadModal = ({ onSuccess }: VideoUploadModalProps) => {
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               className="bg-gray-700 border-gray-600 text-white"
+              placeholder="Enter video description"
               rows={3}
             />
           </div>
@@ -173,26 +210,32 @@ const VideoUploadModal = ({ onSuccess }: VideoUploadModalProps) => {
           </div>
 
           <div>
-            <Label htmlFor="videoFile">Video File *</Label>
+            <Label htmlFor="videoFile">Video File * (Max 500MB)</Label>
             <Input
               id="videoFile"
               type="file"
               accept="video/*"
-              onChange={(e) => setFormData({ ...formData, videoFile: e.target.files?.[0] || null })}
+              onChange={handleVideoFileChange}
               className="bg-gray-700 border-gray-600 text-white"
               required
             />
+            <p className="text-xs text-gray-400 mt-1">
+              Recommended formats: MP4, MOV, AVI. Max size: 500MB
+            </p>
           </div>
 
           <div>
-            <Label htmlFor="thumbnailFile">Thumbnail (Optional)</Label>
+            <Label htmlFor="thumbnailFile">Thumbnail (Optional, Max 50MB)</Label>
             <Input
               id="thumbnailFile"
               type="file"
               accept="image/*"
-              onChange={(e) => setFormData({ ...formData, thumbnailFile: e.target.files?.[0] || null })}
+              onChange={handleThumbnailFileChange}
               className="bg-gray-700 border-gray-600 text-white"
             />
+            <p className="text-xs text-gray-400 mt-1">
+              Recommended formats: JPG, PNG. Max size: 50MB
+            </p>
           </div>
 
           <div className="flex items-center space-x-2">
@@ -215,6 +258,7 @@ const VideoUploadModal = ({ onSuccess }: VideoUploadModalProps) => {
                 value={formData.price}
                 onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                 className="bg-gray-700 border-gray-600 text-white"
+                placeholder="0.00"
                 required={!formData.isFree}
               />
             </div>
@@ -228,7 +272,7 @@ const VideoUploadModal = ({ onSuccess }: VideoUploadModalProps) => {
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={loading} className="flex-1">
+            <Button type="submit" disabled={loading} className="flex-1 bg-primary hover:bg-primary/90">
               {loading ? "Uploading..." : "Upload Video"}
             </Button>
           </div>

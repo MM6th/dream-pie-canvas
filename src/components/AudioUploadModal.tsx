@@ -1,11 +1,12 @@
+
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Upload, Plus, AudioLines } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Upload, AudioLines } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
@@ -30,6 +31,43 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
     price: ""
   });
   const [albums, setAlbums] = useState<any[]>([]);
+
+  const MAX_AUDIO_SIZE = 200 * 1024 * 1024; // 200MB for audio files
+  const MAX_THUMBNAIL_SIZE = 50 * 1024 * 1024; // 50MB for thumbnails
+
+  const validateFileSize = (file: File, type: 'audio' | 'thumbnail') => {
+    const maxSize = type === 'audio' ? MAX_AUDIO_SIZE : MAX_THUMBNAIL_SIZE;
+    if (file.size > maxSize) {
+      const maxSizeMB = Math.round(maxSize / (1024 * 1024));
+      toast({
+        title: "File too large",
+        description: `${type === 'audio' ? 'Audio' : 'Thumbnail'} file must be smaller than ${maxSizeMB}MB`,
+        variant: "destructive"
+      });
+      return false;
+    }
+    return true;
+  };
+
+  const handleAudioFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && validateFileSize(file, 'audio')) {
+      setFormData(prev => ({ ...prev, audioFile: file }));
+    } else {
+      e.target.value = '';
+      setFormData(prev => ({ ...prev, audioFile: null }));
+    }
+  };
+
+  const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && validateFileSize(file, 'thumbnail')) {
+      setFormData(prev => ({ ...prev, thumbnail: file }));
+    } else {
+      e.target.value = '';
+      setFormData(prev => ({ ...prev, thumbnail: null }));
+    }
+  };
 
   const fetchAlbums = async () => {
     if (!user) return;
@@ -200,6 +238,7 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
               id="title"
               value={formData.title}
               onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+              className="bg-gray-700 border-gray-600 text-white"
               placeholder="Enter audio title"
               required
             />
@@ -211,6 +250,7 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
               id="artistName"
               value={formData.artistName}
               onChange={(e) => setFormData(prev => ({ ...prev, artistName: e.target.value }))}
+              className="bg-gray-700 border-gray-600 text-white"
               placeholder="Enter artist name"
             />
           </div>
@@ -221,47 +261,49 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
               value={formData.audioType} 
               onValueChange={(value) => setFormData(prev => ({ ...prev, audioType: value }))}
             >
-              <SelectTrigger>
+              <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
                 <SelectValue placeholder="Select audio type" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="music">Music</SelectItem>
-                <SelectItem value="podcast">Podcast</SelectItem>
-                <SelectItem value="spoken">Spoken</SelectItem>
-                <SelectItem value="asmr">ASMR</SelectItem>
+              <SelectContent className="bg-gray-700 border-gray-600">
+                <SelectItem value="music" className="text-white hover:bg-gray-600">Music</SelectItem>
+                <SelectItem value="podcast" className="text-white hover:bg-gray-600">Podcast</SelectItem>
+                <SelectItem value="spoken" className="text-white hover:bg-gray-600">Spoken</SelectItem>
+                <SelectItem value="asmr" className="text-white hover:bg-gray-600">ASMR</SelectItem>
               </SelectContent>
             </Select>
           </div>
           
           <div>
-            <Label htmlFor="audioFile">Audio File *</Label>
+            <Label htmlFor="audioFile">Audio File * (Max 200MB)</Label>
             <Input
               id="audioFile"
               type="file"
               accept="audio/*"
-              onChange={(e) => setFormData(prev => ({ 
-                ...prev, 
-                audioFile: e.target.files?.[0] || null 
-              }))}
+              onChange={handleAudioFileChange}
+              className="bg-gray-700 border-gray-600 text-white"
               required
             />
+            <p className="text-xs text-gray-400 mt-1">
+              Recommended formats: MP3, WAV, M4A. Max size: 200MB
+            </p>
           </div>
           
           <div>
-            <Label htmlFor="thumbnail">Thumbnail Image</Label>
+            <Label htmlFor="thumbnail">Thumbnail Image (Optional, Max 50MB)</Label>
             <Input
               id="thumbnail"
               type="file"
               accept="image/*"
-              onChange={(e) => setFormData(prev => ({ 
-                ...prev, 
-                thumbnail: e.target.files?.[0] || null 
-              }))}
+              onChange={handleThumbnailChange}
+              className="bg-gray-700 border-gray-600 text-white"
             />
+            <p className="text-xs text-gray-400 mt-1">
+              Recommended formats: JPG, PNG. Max size: 50MB
+            </p>
           </div>
           
           <div className="flex items-center space-x-2">
-            <Checkbox
+            <Switch
               id="hasAlbum"
               checked={formData.hasAlbum}
               onCheckedChange={(checked) => setFormData(prev => ({ 
@@ -279,13 +321,14 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
                 id="albumName"
                 value={formData.albumName}
                 onChange={(e) => setFormData(prev => ({ ...prev, albumName: e.target.value }))}
+                className="bg-gray-700 border-gray-600 text-white"
                 placeholder="Enter album name"
               />
             </div>
           )}
           
           <div className="flex items-center space-x-2">
-            <Checkbox
+            <Switch
               id="isFree"
               checked={formData.isFree}
               onCheckedChange={(checked) => setFormData(prev => ({ 
@@ -293,7 +336,7 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
                 isFree: checked as boolean 
               }))}
             />
-            <Label htmlFor="isFree">Free download</Label>
+            <Label htmlFor="isFree">Free Content</Label>
           </div>
           
           {!formData.isFree && (
@@ -306,6 +349,7 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
                 min="0"
                 value={formData.price}
                 onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
+                className="bg-gray-700 border-gray-600 text-white"
                 placeholder="0.00"
               />
             </div>
@@ -319,7 +363,7 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={loading} className="flex-1">
+            <Button type="submit" disabled={loading} className="flex-1 bg-primary hover:bg-primary/90">
               {loading ? "Uploading..." : "Upload Audio"}
             </Button>
           </div>
