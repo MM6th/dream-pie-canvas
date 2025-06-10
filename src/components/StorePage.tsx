@@ -1,8 +1,9 @@
+
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Music, Download, DollarSign, Video } from "lucide-react";
+import { AudioLines, Download, DollarSign, Video } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
@@ -304,14 +305,14 @@ const StorePage = () => {
         {/* Audio Products Section */}
         <div className="mb-12">
           <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
-            <Music className="w-6 h-6" />
+            <AudioLines className="w-6 h-6" />
             Audio Content
           </h2>
           
           {audioProducts.length === 0 ? (
             <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
               <CardContent className="p-8 text-center">
-                <Music className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <AudioLines className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold text-white mb-2">No Audio Products Available</h3>
                 <p className="text-gray-400">Be the first to upload some audio content!</p>
               </CardContent>
@@ -329,7 +330,7 @@ const StorePage = () => {
                       />
                     ) : (
                       <div className="w-full h-40 bg-gray-700 rounded-lg mb-3 flex items-center justify-center">
-                        <Music className="w-12 h-12 text-gray-400" />
+                        <AudioLines className="w-12 h-12 text-gray-400" />
                       </div>
                     )}
                     <CardTitle className="text-white text-lg line-clamp-2">{product.title}</CardTitle>
