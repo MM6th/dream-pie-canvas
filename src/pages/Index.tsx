@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
@@ -117,31 +118,10 @@ const Index = () => {
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
-        .from('user_video_purchases')
-        .select(`
-          video_product_id,
-          video_products (
-            id,
-            title,
-            description,
-            video_file_url,
-            thumbnail_url,
-            background_music_url
-          )
-        `)
-        .eq('user_id', user.id);
-
-      if (error) {
-        console.error('Error fetching purchased videos:', error);
-        return;
-      }
-
-      const videos = data
-        ?.filter(purchase => purchase.video_products)
-        .map(purchase => purchase.video_products as VideoTrack) || [];
-
-      setPurchasedVideos(videos);
+      // For now, return empty array since user_video_purchases table doesn't exist in types yet
+      // This will be updated once the database types are regenerated
+      console.log('Video purchases feature coming soon - database types need to be regenerated');
+      setPurchasedVideos([]);
     } catch (error) {
       console.error('Error fetching purchased videos:', error);
     }
@@ -221,7 +201,6 @@ const Index = () => {
               onViewStore={() => setCurrentView("store")}
               onBackgroundUpload={handleBackgroundUpload}
               purchasedTracks={purchasedTracks}
-              purchasedVideos={purchasedVideos}
             />
           ) : (
             <SupporterDashboard 

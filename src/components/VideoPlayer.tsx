@@ -18,7 +18,7 @@ interface VideoPlayerProps {
   videos: VideoTrack[];
 }
 
-const VideoPlayer = ({ videos }: VideoPlayerProps) => {
+const VideoPlayer = ({ videos = [] }: VideoPlayerProps) => {
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -27,10 +27,11 @@ const VideoPlayer = ({ videos }: VideoPlayerProps) => {
   const [isMuted, setIsMuted] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  const currentVideo = videos[currentVideoIndex];
+  // Safely get current video with fallback
+  const currentVideo = videos && videos.length > 0 ? videos[currentVideoIndex] : null;
 
   const handlePlayPause = () => {
-    if (videoRef.current) {
+    if (videoRef.current && currentVideo) {
       if (isPlaying) {
         videoRef.current.pause();
       } else {
@@ -81,7 +82,7 @@ const VideoPlayer = ({ videos }: VideoPlayerProps) => {
   };
 
   const playNext = () => {
-    if (currentVideoIndex < videos.length - 1) {
+    if (videos && currentVideoIndex < videos.length - 1) {
       setCurrentVideoIndex(currentVideoIndex + 1);
       setIsPlaying(false);
       setCurrentTime(0);
@@ -102,7 +103,7 @@ const VideoPlayer = ({ videos }: VideoPlayerProps) => {
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  if (videos.length === 0) {
+  if (!videos || videos.length === 0) {
     return (
       <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
         <CardContent className="p-6">
@@ -198,7 +199,7 @@ const VideoPlayer = ({ videos }: VideoPlayerProps) => {
                 size="sm"
                 variant="ghost"
                 onClick={playNext}
-                disabled={currentVideoIndex === videos.length - 1}
+                disabled={!videos || currentVideoIndex === videos.length - 1}
                 className="text-white hover:bg-gray-700"
               >
                 <SkipForward className="w-4 h-4" />
@@ -225,7 +226,7 @@ const VideoPlayer = ({ videos }: VideoPlayerProps) => {
             </div>
 
             <span className="text-gray-400 text-sm">
-              {currentVideoIndex + 1} of {videos.length}
+              {videos.length > 0 ? `${currentVideoIndex + 1} of ${videos.length}` : '0 of 0'}
             </span>
           </div>
 
