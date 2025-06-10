@@ -7,9 +7,10 @@ import MediaPlayers from "./MediaPlayers";
 interface SupporterDashboardProps {
   onBackgroundUpload: (url: string) => void;
   purchasedTracks: any[];
+  purchasedVideos: any[];
 }
 
-const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks }: SupporterDashboardProps) => {
+const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedVideos }: SupporterDashboardProps) => {
   return (
     <div className="p-6 pt-20">
       <div className="mb-8">
@@ -35,14 +36,14 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks }: SupporterDa
               </div>
               <div>
                 <p className="text-gray-400">Videos</p>
-                <p className="text-2xl font-bold text-white">0</p>
+                <p className="text-2xl font-bold text-white">{purchasedVideos.length}</p>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <MediaPlayers purchasedTracks={purchasedTracks} />
+      <MediaPlayers purchasedTracks={purchasedTracks} purchasedVideos={purchasedVideos} />
     </div>
   );
 };

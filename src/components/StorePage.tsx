@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Music, Download, DollarSign } from "lucide-react";
+import { Music, Download, DollarSign, Video } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
@@ -23,16 +23,30 @@ interface AudioProduct {
   };
 }
 
+interface VideoProduct {
+  id: string;
+  title: string;
+  description: string | null;
+  video_type: string;
+  thumbnail_url: string | null;
+  video_file_url: string;
+  background_music_url: string | null;
+  is_free: boolean;
+  price: number | null;
+  created_at: string;
+}
+
 const StorePage = () => {
   const { user } = useAuth();
-  const [products, setProducts] = useState<AudioProduct[]>([]);
+  const [audioProducts, setAudioProducts] = useState<AudioProduct[]>([]);
+  const [videoProducts, setVideoProducts] = useState<VideoProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [purchasingId, setPurchasingId] = useState<string | null>(null);
 
   const fetchProducts = async () => {
     try {
-      // Fetch ALL products for the store, not just current user's products
-      const { data, error } = await supabase
+      // Fetch audio products
+      const { data: audioData, error: audioError } = await supabase
         .from('audio_products')
         .select(`
           id,
@@ -51,8 +65,18 @@ const StorePage = () => {
         `)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setProducts(data || []);
+      if (audioError) throw audioError;
+
+      // Fetch video products
+      const { data: videoData, error: videoError } = await supabase
+        .from('video_products')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (videoError) throw videoError;
+
+      setAudioProducts(audioData || []);
+      setVideoProducts(videoData || []);
     } catch (error: any) {
       console.error('Error fetching products:', error);
       toast({
@@ -69,7 +93,7 @@ const StorePage = () => {
     fetchProducts();
   }, []);
 
-  const handleFreeDownload = async (product: AudioProduct) => {
+  const handleFreeAudioDownload = async (product: AudioProduct) => {
     if (!user) {
       toast({
         title: "Please sign in",
@@ -140,7 +164,76 @@ const StorePage = () => {
     }
   };
 
-  const handlePurchase = async (product: AudioProduct) => {
+  const handleFreeVideoDownload = async (product: VideoProduct) => {
+    if (!user) {
+      toast({
+        title: "Please sign in",
+        description: "You need to be logged in to download video",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      console.log('Processing free video download for product:', product.id);
+      
+      const { data: existingPurchase, error: checkError } = await supabase
+        .from('user_video_purchases')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('video_product_id', product.id)
+        .maybeSingle();
+
+      if (checkError) {
+        console.error('Error checking existing video purchases:', checkError);
+        throw new Error('Failed to check existing downloads');
+      }
+
+      if (existingPurchase) {
+        toast({
+          title: "Already in your library",
+          description: "This video is already available in your video player",
+        });
+        return;
+      }
+
+      console.log('Recording free video download in database...');
+      
+      const { data: insertedPurchase, error: insertError } = await supabase
+        .from('user_video_purchases')
+        .insert({
+          user_id: user.id,
+          video_product_id: product.id,
+          is_free_download: true,
+          amount_paid: 0,
+          paypal_transaction_id: null
+        })
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error('Error inserting free video download:', insertError);
+        throw new Error(`Database error: ${insertError.message}`);
+      }
+
+      console.log('Free video download recorded successfully:', insertedPurchase);
+
+      toast({
+        title: "Video added to library!",
+        description: "The video has been added to your video player in the dashboard",
+      });
+
+    } catch (error: any) {
+      console.error('Error recording free video download:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add video to your library. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleAudioPurchase = async (product: AudioProduct) => {
     if (!user) {
       toast({
         title: "Please sign in",
@@ -151,7 +244,7 @@ const StorePage = () => {
     }
 
     if (product.is_free) {
-      await handleFreeDownload(product);
+      await handleFreeAudioDownload(product);
       return;
     }
 
@@ -176,13 +269,52 @@ const StorePage = () => {
 
       if (data?.approvalUrl) {
         console.log('Redirecting to PayPal:', data.approvalUrl);
-        // Redirect to PayPal
         window.location.href = data.approvalUrl;
       } else {
         throw new Error('No approval URL received from PayPal');
       }
     } catch (error: any) {
       console.error('Error creating payment:', error);
+      toast({
+        title: "Payment Error",
+        description: error.message || "Failed to initiate payment. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setPurchasingId(null);
+    }
+  };
+
+  const handleVideoPurchase = async (product: VideoProduct) => {
+    if (!user) {
+      toast({
+        title: "Please sign in",
+        description: "You need to be logged in to make a purchase",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (product.is_free) {
+      await handleFreeVideoDownload(product);
+      return;
+    }
+
+    setPurchasingId(product.id);
+
+    try {
+      console.log('Starting video payment process for product:', product.id);
+      
+      // For now, we'll use a simple approach - extend the existing payment function
+      // In a real implementation, you'd want to create a separate video payment function
+      toast({
+        title: "Video Purchases",
+        description: "Paid video purchases will be implemented soon. Free videos work now!",
+        variant: "default"
+      });
+
+    } catch (error: any) {
+      console.error('Error creating video payment:', error);
       toast({
         title: "Payment Error",
         description: error.message || "Failed to initiate payment. Please try again.",
@@ -205,88 +337,178 @@ const StorePage = () => {
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800 p-6">
       <div className="max-w-6xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">Audio Store</h1>
-          <p className="text-gray-300">Discover amazing audio content from creators</p>
+          <h1 className="text-4xl font-bold text-white mb-2">Content Store</h1>
+          <p className="text-gray-300">Discover amazing audio and video content from creators</p>
         </div>
 
-        {products.length === 0 ? (
-          <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
-            <CardContent className="p-12 text-center">
-              <Music className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-white mb-2">No Products Available</h3>
-              <p className="text-gray-400">Be the first to upload some audio content!</p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {products.map((product) => (
-              <Card key={product.id} className="bg-gray-800/50 border-gray-700 backdrop-blur-sm hover:bg-gray-800/70 transition-colors">
-                <CardHeader className="p-4">
-                  {product.thumbnail_url ? (
-                    <img
-                      src={product.thumbnail_url}
-                      alt={product.title}
-                      className="w-full h-40 object-cover rounded-lg mb-3"
-                    />
-                  ) : (
-                    <div className="w-full h-40 bg-gray-700 rounded-lg mb-3 flex items-center justify-center">
-                      <Music className="w-12 h-12 text-gray-400" />
-                    </div>
-                  )}
-                  <CardTitle className="text-white text-lg line-clamp-2">{product.title}</CardTitle>
-                  {product.artist_name && (
-                    <p className="text-gray-400 text-sm">by {product.artist_name}</p>
-                  )}
-                </CardHeader>
-                <CardContent className="p-4 pt-0">
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <Badge variant="secondary" className="capitalize">
-                        {product.audio_type}
-                      </Badge>
-                      {product.albums && (
-                        <Badge variant="outline" className="text-xs bg-white text-black border-white">
-                          {product.albums.name}
+        {/* Audio Products Section */}
+        <div className="mb-12">
+          <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+            <Music className="w-6 h-6" />
+            Audio Content
+          </h2>
+          
+          {audioProducts.length === 0 ? (
+            <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+              <CardContent className="p-8 text-center">
+                <Music className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-white mb-2">No Audio Products Available</h3>
+                <p className="text-gray-400">Be the first to upload some audio content!</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {audioProducts.map((product) => (
+                <Card key={product.id} className="bg-gray-800/50 border-gray-700 backdrop-blur-sm hover:bg-gray-800/70 transition-colors">
+                  <CardHeader className="p-4">
+                    {product.thumbnail_url ? (
+                      <img
+                        src={product.thumbnail_url}
+                        alt={product.title}
+                        className="w-full h-40 object-cover rounded-lg mb-3"
+                      />
+                    ) : (
+                      <div className="w-full h-40 bg-gray-700 rounded-lg mb-3 flex items-center justify-center">
+                        <Music className="w-12 h-12 text-gray-400" />
+                      </div>
+                    )}
+                    <CardTitle className="text-white text-lg line-clamp-2">{product.title}</CardTitle>
+                    {product.artist_name && (
+                      <p className="text-gray-400 text-sm">by {product.artist_name}</p>
+                    )}
+                  </CardHeader>
+                  <CardContent className="p-4 pt-0">
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <Badge variant="secondary" className="capitalize">
+                          {product.audio_type}
                         </Badge>
-                      )}
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        {product.is_free ? (
-                          <Badge className="bg-green-600 hover:bg-green-700">
-                            Free
-                          </Badge>
-                        ) : (
-                          <Badge className="bg-blue-600 hover:bg-blue-700 flex items-center gap-1">
-                            <DollarSign className="w-3 h-3" />
-                            {product.price?.toFixed(2)}
+                        {product.albums && (
+                          <Badge variant="outline" className="text-xs bg-white text-black border-white">
+                            {product.albums.name}
                           </Badge>
                         )}
                       </div>
                       
-                      <Button
-                        size="sm"
-                        onClick={() => handlePurchase(product)}
-                        disabled={purchasingId === product.id}
-                        className="bg-primary hover:bg-primary/90"
-                      >
-                        {purchasingId === product.id ? (
-                          "Processing..."
-                        ) : (
-                          <>
-                            {product.is_free ? <Download className="w-4 h-4 mr-1" /> : <DollarSign className="w-4 h-4 mr-1" />}
-                            {product.is_free ? "Add to Library" : "Buy"}
-                          </>
-                        )}
-                      </Button>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          {product.is_free ? (
+                            <Badge className="bg-green-600 hover:bg-green-700">
+                              Free
+                            </Badge>
+                          ) : (
+                            <Badge className="bg-blue-600 hover:bg-blue-700 flex items-center gap-1">
+                              <DollarSign className="w-3 h-3" />
+                              {product.price?.toFixed(2)}
+                            </Badge>
+                          )}
+                        </div>
+                        
+                        <Button
+                          size="sm"
+                          onClick={() => handleAudioPurchase(product)}
+                          disabled={purchasingId === product.id}
+                          className="bg-primary hover:bg-primary/90"
+                        >
+                          {purchasingId === product.id ? (
+                            "Processing..."
+                          ) : (
+                            <>
+                              {product.is_free ? <Download className="w-4 h-4 mr-1" /> : <DollarSign className="w-4 h-4 mr-1" />}
+                              {product.is_free ? "Add to Library" : "Buy"}
+                            </>
+                          )}
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Video Products Section */}
+        <div>
+          <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+            <Video className="w-6 h-6" />
+            Video Content
+          </h2>
+          
+          {videoProducts.length === 0 ? (
+            <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+              <CardContent className="p-8 text-center">
+                <Video className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-white mb-2">No Video Products Available</h3>
+                <p className="text-gray-400">Be the first to upload some video content!</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {videoProducts.map((product) => (
+                <Card key={product.id} className="bg-gray-800/50 border-gray-700 backdrop-blur-sm hover:bg-gray-800/70 transition-colors">
+                  <CardHeader className="p-4">
+                    {product.thumbnail_url ? (
+                      <img
+                        src={product.thumbnail_url}
+                        alt={product.title}
+                        className="w-full h-40 object-cover rounded-lg mb-3"
+                      />
+                    ) : (
+                      <div className="w-full h-40 bg-gray-700 rounded-lg mb-3 flex items-center justify-center">
+                        <Video className="w-12 h-12 text-gray-400" />
+                      </div>
+                    )}
+                    <CardTitle className="text-white text-lg line-clamp-2">{product.title}</CardTitle>
+                    {product.description && (
+                      <p className="text-gray-400 text-sm line-clamp-2">{product.description}</p>
+                    )}
+                  </CardHeader>
+                  <CardContent className="p-4 pt-0">
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <Badge variant="secondary" className="capitalize">
+                          {product.video_type}
+                        </Badge>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          {product.is_free ? (
+                            <Badge className="bg-green-600 hover:bg-green-700">
+                              Free
+                            </Badge>
+                          ) : (
+                            <Badge className="bg-blue-600 hover:bg-blue-700 flex items-center gap-1">
+                              <DollarSign className="w-3 h-3" />
+                              {product.price?.toFixed(2)}
+                            </Badge>
+                          )}
+                        </div>
+                        
+                        <Button
+                          size="sm"
+                          onClick={() => handleVideoPurchase(product)}
+                          disabled={purchasingId === product.id}
+                          className="bg-primary hover:bg-primary/90"
+                        >
+                          {purchasingId === product.id ? (
+                            "Processing..."
+                          ) : (
+                            <>
+                              {product.is_free ? <Download className="w-4 h-4 mr-1" /> : <DollarSign className="w-4 h-4 mr-1" />}
+                              {product.is_free ? "Add to Library" : "Buy"}
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

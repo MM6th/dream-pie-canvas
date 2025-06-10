@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
@@ -18,28 +17,41 @@ interface AudioTrack {
   thumbnail_url: string | null;
 }
 
+interface VideoTrack {
+  id: string;
+  title: string;
+  description: string | null;
+  video_file_url: string;
+  thumbnail_url: string | null;
+  background_music_url: string | null;
+}
+
 const Index = () => {
   const { user, loading, signOut } = useAuth();
   const [userProfile, setUserProfile] = useState<any>(null);
   const [profileLoading, setProfileLoading] = useState(false);
   const [currentView, setCurrentView] = useState<"dashboard" | "store">("dashboard");
   const [purchasedTracks, setPurchasedTracks] = useState<AudioTrack[]>([]);
+  const [purchasedVideos, setPurchasedVideos] = useState<VideoTrack[]>([]);
 
   useEffect(() => {
     console.log('Index component mounted, user:', user, 'loading:', loading);
     if (user && !loading) {
       fetchUserProfile();
       fetchPurchasedTracks();
+      fetchPurchasedVideos();
     } else if (!user && !loading) {
       setUserProfile(null);
       setProfileLoading(false);
       setPurchasedTracks([]);
+      setPurchasedVideos([]);
     }
   }, [user, loading]);
 
   useEffect(() => {
     if (currentView === "dashboard" && user) {
       fetchPurchasedTracks();
+      fetchPurchasedVideos();
     }
   }, [currentView, user]);
 
@@ -98,6 +110,40 @@ const Index = () => {
       setPurchasedTracks(tracks);
     } catch (error) {
       console.error('Error fetching purchased tracks:', error);
+    }
+  };
+
+  const fetchPurchasedVideos = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('user_video_purchases')
+        .select(`
+          video_product_id,
+          video_products (
+            id,
+            title,
+            description,
+            video_file_url,
+            thumbnail_url,
+            background_music_url
+          )
+        `)
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('Error fetching purchased videos:', error);
+        return;
+      }
+
+      const videos = data
+        ?.filter(purchase => purchase.video_products)
+        .map(purchase => purchase.video_products as VideoTrack) || [];
+
+      setPurchasedVideos(videos);
+    } catch (error) {
+      console.error('Error fetching purchased videos:', error);
     }
   };
 
@@ -175,11 +221,13 @@ const Index = () => {
               onViewStore={() => setCurrentView("store")}
               onBackgroundUpload={handleBackgroundUpload}
               purchasedTracks={purchasedTracks}
+              purchasedVideos={purchasedVideos}
             />
           ) : (
             <SupporterDashboard 
               onBackgroundUpload={handleBackgroundUpload}
               purchasedTracks={purchasedTracks}
+              purchasedVideos={purchasedVideos}
             />
           )}
         </>
