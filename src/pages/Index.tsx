@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { LogOut, Film } from "lucide-react";
+import { LogOut, Film, MessageSquare } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import AuthPage from "@/components/AuthPage";
@@ -141,6 +141,10 @@ const Index = () => {
     navigate('/films');
   };
 
+  const handleBulletinView = () => {
+    navigate('/bulletin');
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800 flex items-center justify-center">
@@ -173,6 +177,14 @@ const Index = () => {
               <Film className="w-4 h-4 mr-2" />
               Browse Films
             </Button>
+            <Button
+              onClick={handleBulletinView}
+              variant="outline"
+              className="border-gray-600 text-white hover:bg-white hover:text-black"
+            >
+              <MessageSquare className="w-4 h-4 mr-2" />
+              Browse Bulletin
+            </Button>
           </div>
           <Button
             onClick={handleSignOut}
@@ -203,6 +215,7 @@ const Index = () => {
       <DashboardHeader 
         onStoreView={() => setCurrentView("store")} 
         onFilmsView={handleFilmsView}
+        onBulletinView={handleBulletinView}
         onSignOut={handleSignOut} 
       />
       
