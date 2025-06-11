@@ -1,6 +1,7 @@
+
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
+import { LogOut, Film } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import AuthPage from "@/components/AuthPage";
@@ -8,6 +9,7 @@ import StorePage from "@/components/StorePage";
 import MerchantDashboard from "@/components/dashboard/MerchantDashboard";
 import SupporterDashboard from "@/components/dashboard/SupporterDashboard";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
+import { useNavigate } from "react-router-dom";
 
 interface AudioTrack {
   id: string;
@@ -28,6 +30,7 @@ interface VideoTrack {
 
 const Index = () => {
   const { user, loading, signOut } = useAuth();
+  const navigate = useNavigate();
   const [userProfile, setUserProfile] = useState<any>(null);
   const [profileLoading, setProfileLoading] = useState(false);
   const [currentView, setCurrentView] = useState<"dashboard" | "store">("dashboard");
@@ -134,6 +137,10 @@ const Index = () => {
     setUserProfile(prev => ({ ...prev, background_image_url: url }));
   };
 
+  const handleFilmsView = () => {
+    navigate('/films');
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800 flex items-center justify-center">
@@ -150,13 +157,23 @@ const Index = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800">
         <div className="absolute top-4 left-4 right-4 z-20 flex justify-between">
-          <Button
-            onClick={() => setCurrentView("dashboard")}
-            variant="outline"
-            className="border-gray-600 text-white hover:bg-white hover:text-black"
-          >
-            Back to Dashboard
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={() => setCurrentView("dashboard")}
+              variant="outline"
+              className="border-gray-600 text-white hover:bg-white hover:text-black"
+            >
+              Back to Dashboard
+            </Button>
+            <Button
+              onClick={handleFilmsView}
+              variant="outline"
+              className="border-gray-600 text-white hover:bg-white hover:text-black"
+            >
+              <Film className="w-4 h-4 mr-2" />
+              Browse Films
+            </Button>
+          </div>
           <Button
             onClick={handleSignOut}
             className="bg-white text-black hover:bg-gray-100 hover:text-black"
@@ -185,6 +202,7 @@ const Index = () => {
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800" style={backgroundStyle}>
       <DashboardHeader 
         onStoreView={() => setCurrentView("store")} 
+        onFilmsView={handleFilmsView}
         onSignOut={handleSignOut} 
       />
       
