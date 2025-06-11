@@ -33,7 +33,14 @@ const BulletinBoard = () => {
   };
 
   const handleSignOut = async () => {
-    await signOut();
+    try {
+      await signOut();
+      navigate('/');
+    } catch (error) {
+      console.error('Error signing out:', error);
+      // Even if there's an error, try to navigate back
+      navigate('/');
+    }
   };
 
   const fetchPosts = async () => {
