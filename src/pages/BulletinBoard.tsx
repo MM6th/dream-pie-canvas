@@ -36,11 +36,6 @@ const BulletinBoard = () => {
     await signOut();
   };
 
-  useEffect(() => {
-    fetchPosts();
-    setupRealtimeSubscription();
-  }, []);
-
   const fetchPosts = async () => {
     try {
       const { data, error } = await supabase
@@ -72,7 +67,10 @@ const BulletinBoard = () => {
     }
   };
 
-  const setupRealtimeSubscription = () => {
+  useEffect(() => {
+    fetchPosts();
+
+    // Set up realtime subscription
     const channel = supabase
       .channel('bulletin-posts-changes')
       .on(
@@ -83,15 +81,18 @@ const BulletinBoard = () => {
           table: 'bulletin_posts'
         },
         () => {
+          console.log('Realtime update received, fetching posts...');
           fetchPosts();
         }
       )
       .subscribe();
 
+    // Cleanup function
     return () => {
+      console.log('Cleaning up realtime subscription...');
       supabase.removeChannel(channel);
     };
-  };
+  }, []); // Empty dependency array to run only once
 
   // Dummy data for initial display
   const dummyPosts: BulletinPost[] = [
