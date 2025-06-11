@@ -1,9 +1,10 @@
-
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Film, Play, Star, Calendar, Clock } from "lucide-react";
+import { Film, Play, Star, Calendar, Clock, ArrowLeft, LogOut } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 
 interface FilmData {
   id: string;
@@ -20,6 +21,17 @@ interface FilmData {
 }
 
 const Films = () => {
+  const navigate = useNavigate();
+  const { signOut } = useAuth();
+
+  const handleBackToDashboard = () => {
+    navigate('/');
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+  };
+
   // Dummy film data
   const films: FilmData[] = [
     {
@@ -107,6 +119,25 @@ const Films = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800">
+      {/* Navigation Header */}
+      <div className="absolute top-4 left-4 right-4 z-20 flex justify-between">
+        <Button
+          onClick={handleBackToDashboard}
+          variant="outline"
+          className="border-gray-600 text-white hover:bg-white hover:text-black"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back to Dashboard
+        </Button>
+        <Button
+          onClick={handleSignOut}
+          className="bg-white text-black hover:bg-gray-100 hover:text-black"
+        >
+          <LogOut className="w-4 h-4 mr-2" />
+          Sign Out
+        </Button>
+      </div>
+
       {/* Hero Section */}
       <div 
         className="relative h-96 bg-cover bg-center bg-no-repeat flex items-center justify-center"
