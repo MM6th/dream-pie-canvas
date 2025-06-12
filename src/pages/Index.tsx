@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { LogOut, Film, MessageSquare } from "lucide-react";
@@ -145,6 +144,10 @@ const Index = () => {
     navigate('/bulletin');
   };
 
+  const handleProfileUpdate = () => {
+    fetchUserProfile();
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800 flex items-center justify-center">
@@ -216,7 +219,9 @@ const Index = () => {
         onStoreView={() => setCurrentView("store")} 
         onFilmsView={handleFilmsView}
         onBulletinView={handleBulletinView}
-        onSignOut={handleSignOut} 
+        onSignOut={handleSignOut}
+        userType={userProfile?.user_type}
+        onProfileUpdate={handleProfileUpdate}
       />
       
       {profileLoading ? (

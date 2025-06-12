@@ -1,19 +1,40 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Store, LogOut, Film, MessageSquare } from "lucide-react";
+import { Store, LogOut, Film, MessageSquare, User } from "lucide-react";
+import MerchantProfileModal from "@/components/profile/MerchantProfileModal";
 
 interface DashboardHeaderProps {
   onStoreView: () => void;
   onFilmsView: () => void;
   onBulletinView: () => void;
   onSignOut: () => void;
+  userType?: string;
+  onProfileUpdate?: () => void;
 }
 
-const DashboardHeader = ({ onStoreView, onFilmsView, onBulletinView, onSignOut }: DashboardHeaderProps) => {
+const DashboardHeader = ({ 
+  onStoreView, 
+  onFilmsView, 
+  onBulletinView, 
+  onSignOut, 
+  userType,
+  onProfileUpdate 
+}: DashboardHeaderProps) => {
   return (
     <div className="absolute top-4 left-4 right-4 z-20 flex justify-between">
       <div className="flex gap-2">
+        {userType === "merchant" && (
+          <MerchantProfileModal onProfileUpdate={onProfileUpdate}>
+            <Button
+              variant="outline"
+              className="border-gray-600 text-white hover:bg-white hover:text-black"
+            >
+              <User className="w-4 h-4 mr-2" />
+              Profile
+            </Button>
+          </MerchantProfileModal>
+        )}
         <Button
           onClick={onStoreView}
           variant="outline"

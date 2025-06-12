@@ -132,28 +132,55 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_url: string | null
           background_image_url: string | null
           created_at: string | null
+          display_name: string | null
           email: string
+          facebook_url: string | null
           id: string
+          instagram_url: string | null
+          onlyfans_url: string | null
+          paypal_email: string | null
+          pinterest_url: string | null
+          snapchat_url: string | null
           updated_at: string | null
           user_type: string
+          youtube_url: string | null
         }
         Insert: {
+          avatar_url?: string | null
           background_image_url?: string | null
           created_at?: string | null
+          display_name?: string | null
           email: string
+          facebook_url?: string | null
           id: string
+          instagram_url?: string | null
+          onlyfans_url?: string | null
+          paypal_email?: string | null
+          pinterest_url?: string | null
+          snapchat_url?: string | null
           updated_at?: string | null
           user_type: string
+          youtube_url?: string | null
         }
         Update: {
+          avatar_url?: string | null
           background_image_url?: string | null
           created_at?: string | null
+          display_name?: string | null
           email?: string
+          facebook_url?: string | null
           id?: string
+          instagram_url?: string | null
+          onlyfans_url?: string | null
+          paypal_email?: string | null
+          pinterest_url?: string | null
+          snapchat_url?: string | null
           updated_at?: string | null
           user_type?: string
+          youtube_url?: string | null
         }
         Relationships: []
       }

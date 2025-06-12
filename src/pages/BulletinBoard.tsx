@@ -18,6 +18,8 @@ interface BulletinPost {
   merchant_id: string;
   profiles?: {
     email: string;
+    display_name?: string;
+    avatar_url?: string;
   };
 }
 
@@ -50,7 +52,9 @@ const BulletinBoard = () => {
         .select(`
           *,
           profiles (
-            email
+            email,
+            display_name,
+            avatar_url
           )
         `)
         .order('created_at', { ascending: false });
@@ -221,9 +225,17 @@ const BulletinBoard = () => {
               <p className="text-gray-200 text-lg mb-4 leading-relaxed">{displayFeaturedPost.content}</p>
               
               <div className="flex items-center gap-4 text-sm text-gray-300">
-                <div className="flex items-center gap-1">
-                  <User className="w-4 h-4" />
-                  {displayFeaturedPost.profiles?.email || 'Community'}
+                <div className="flex items-center gap-2">
+                  {displayFeaturedPost.profiles?.avatar_url ? (
+                    <img
+                      src={displayFeaturedPost.profiles.avatar_url}
+                      alt="Avatar"
+                      className="w-6 h-6 rounded-full object-cover"
+                    />
+                  ) : (
+                    <User className="w-4 h-4" />
+                  )}
+                  {displayFeaturedPost.profiles?.display_name || displayFeaturedPost.profiles?.email || 'Community'}
                 </div>
                 <div className="flex items-center gap-1">
                   <Calendar className="w-4 h-4" />
@@ -264,9 +276,17 @@ const BulletinBoard = () => {
                     <p className="text-gray-400 text-sm mb-4 line-clamp-3">{post.content}</p>
                     
                     <div className="flex items-center gap-4 text-xs text-gray-400">
-                      <div className="flex items-center gap-1">
-                        <User className="w-3 h-3" />
-                        {post.profiles?.email || 'Community'}
+                      <div className="flex items-center gap-2">
+                        {post.profiles?.avatar_url ? (
+                          <img
+                            src={post.profiles.avatar_url}
+                            alt="Avatar"
+                            className="w-4 h-4 rounded-full object-cover"
+                          />
+                        ) : (
+                          <User className="w-3 h-3" />
+                        )}
+                        {post.profiles?.display_name || post.profiles?.email || 'Community'}
                       </div>
                       <div className="flex items-center gap-1">
                         <Calendar className="w-3 h-3" />
