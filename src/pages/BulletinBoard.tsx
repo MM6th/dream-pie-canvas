@@ -153,27 +153,27 @@ const BulletinBoard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-green-800 flex items-center justify-center">
-        <div className="text-white text-xl">Loading bulletin board...</div>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-foreground text-xl">Loading bulletin board...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-green-800">
+    <div className="min-h-screen bg-background">
       {/* Navigation Header */}
       <div className="absolute top-4 left-4 right-4 z-20 flex justify-between">
         <Button
           onClick={handleBackToDashboard}
           variant="outline"
-          className="border-blue-400 text-white hover:bg-white hover:text-black"
+          className="border-border bg-background text-foreground hover:bg-accent hover:text-accent-foreground"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Dashboard
         </Button>
         <Button
           onClick={handleSignOut}
-          className="bg-white text-black hover:bg-gray-100 hover:text-black"
+          className="bg-primary text-primary-foreground hover:bg-primary/90"
         >
           <LogOut className="w-4 h-4 mr-2" />
           Sign Out
@@ -198,12 +198,12 @@ const BulletinBoard = () => {
       <div className="max-w-6xl mx-auto p-6">
         {/* Today's Featured Post */}
         <div className="mb-12">
-          <h2 className="text-3xl font-bold text-white mb-6 flex items-center gap-2">
+          <h2 className="text-3xl font-bold text-foreground mb-6 flex items-center gap-2">
             <Star className="w-8 h-8 text-yellow-400" />
             Today's Featured Post
           </h2>
           
-          <Card className="bg-gradient-to-r from-blue-800/50 to-purple-800/50 border-blue-400 backdrop-blur-sm">
+          <Card className="bg-card border-border">
             <CardHeader className="p-0">
               {displayFeaturedPost.image_url && (
                 <div className="relative">
@@ -221,19 +221,19 @@ const BulletinBoard = () => {
               )}
             </CardHeader>
             <CardContent className="p-6">
-              <CardTitle className="text-white text-2xl mb-4">{displayFeaturedPost.title}</CardTitle>
-              <p className="text-gray-200 text-lg mb-4 leading-relaxed">{displayFeaturedPost.content}</p>
+              <CardTitle className="text-card-foreground text-2xl mb-4">{displayFeaturedPost.title}</CardTitle>
+              <p className="text-muted-foreground text-lg mb-4 leading-relaxed">{displayFeaturedPost.content}</p>
               
-              <div className="flex items-center gap-4 text-sm text-gray-300">
+              <div className="flex items-center gap-4 text-sm text-muted-foreground">
                 <div className="flex items-center gap-2">
                   {displayFeaturedPost.profiles?.avatar_url ? (
                     <img
                       src={displayFeaturedPost.profiles.avatar_url}
                       alt="Avatar"
-                      className="w-6 h-6 rounded-full object-cover"
+                      className="w-8 h-8 rounded-full object-cover"
                     />
                   ) : (
-                    <User className="w-4 h-4" />
+                    <User className="w-6 h-6" />
                   )}
                   {displayFeaturedPost.profiles?.display_name || displayFeaturedPost.profiles?.email || 'Community'}
                 </div>
@@ -248,48 +248,50 @@ const BulletinBoard = () => {
 
         {/* All Posts Section */}
         <div>
-          <h2 className="text-3xl font-bold text-white mb-6">
+          <h2 className="text-3xl font-bold text-foreground mb-6">
             Recent Posts
           </h2>
           
           {displayPosts.length === 0 ? (
-            <Card className="bg-gray-800/50 border-gray-600 backdrop-blur-sm">
+            <Card className="bg-card border-border">
               <CardContent className="p-8 text-center">
-                <p className="text-gray-400 text-lg">No posts yet. Check back soon for updates from our community!</p>
+                <p className="text-muted-foreground text-lg">No posts yet. Check back soon for updates from our community!</p>
               </CardContent>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {displayPosts.map((post) => (
-                <Card key={post.id} className="bg-gray-800/50 border-gray-600 backdrop-blur-sm hover:bg-gray-800/70 transition-all duration-300">
+                <Card key={post.id} className="bg-card border-border hover:shadow-lg transition-all duration-300">
                   <CardHeader className="p-0">
                     {post.image_url && (
                       <img
                         src={post.image_url}
                         alt={post.title}
-                        className="w-full h-48 object-cover rounded-t-lg"
+                        className="w-full h-56 object-cover rounded-t-lg"
                       />
                     )}
                   </CardHeader>
-                  <CardContent className="p-4">
-                    <CardTitle className="text-white text-lg mb-2">{post.title}</CardTitle>
-                    <p className="text-gray-400 text-sm mb-4 line-clamp-3">{post.content}</p>
+                  <CardContent className="p-6">
+                    <CardTitle className="text-card-foreground text-xl mb-3">{post.title}</CardTitle>
+                    <p className="text-muted-foreground text-base mb-6 leading-relaxed line-clamp-4">{post.content}</p>
                     
-                    <div className="flex items-center gap-4 text-xs text-gray-400">
-                      <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-3">
                         {post.profiles?.avatar_url ? (
                           <img
                             src={post.profiles.avatar_url}
                             alt="Avatar"
-                            className="w-4 h-4 rounded-full object-cover"
+                            className="w-10 h-10 rounded-full object-cover"
                           />
                         ) : (
-                          <User className="w-3 h-3" />
+                          <User className="w-8 h-8" />
                         )}
-                        {post.profiles?.display_name || post.profiles?.email || 'Community'}
+                        <span className="font-medium">
+                          {post.profiles?.display_name || post.profiles?.email || 'Community'}
+                        </span>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <Calendar className="w-3 h-3" />
+                      <div className="flex items-center gap-1 ml-auto">
+                        <Calendar className="w-4 h-4" />
                         {new Date(post.created_at).toLocaleDateString()}
                       </div>
                     </div>
