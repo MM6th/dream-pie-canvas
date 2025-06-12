@@ -1,9 +1,8 @@
-
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, LogOut, Calendar, User, Star } from "lucide-react";
+import { ArrowLeft, LogOut, Calendar, User, Star, ExternalLink } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,6 +12,7 @@ interface BulletinPost {
   title: string;
   content: string;
   image_url?: string;
+  link_url?: string;
   is_featured: boolean;
   created_at: string;
   merchant_id: string;
@@ -42,6 +42,16 @@ const BulletinBoard = () => {
       console.error('Error signing out:', error);
       // Even if there's an error, try to navigate back
       navigate('/');
+    }
+  };
+
+  const handleLinkClick = (url: string) => {
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      // External link
+      window.open(url, '_blank', 'noopener,noreferrer');
+    } else {
+      // Internal link
+      navigate(url);
     }
   };
 
@@ -153,14 +163,14 @@ const BulletinBoard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black flex items-center justify-center">
         <div className="text-white text-xl">Loading bulletin board...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black">
       {/* Navigation Header */}
       <div className="absolute top-4 left-4 right-4 z-20 flex justify-between">
         <Button
@@ -224,6 +234,16 @@ const BulletinBoard = () => {
               <CardTitle className="text-white text-2xl mb-4">{displayFeaturedPost.title}</CardTitle>
               <p className="text-gray-300 text-lg mb-4 leading-relaxed">{displayFeaturedPost.content}</p>
               
+              {displayFeaturedPost.link_url && (
+                <Button
+                  onClick={() => handleLinkClick(displayFeaturedPost.link_url!)}
+                  className="mb-4 bg-blue-600 hover:bg-blue-700"
+                >
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  Visit Link
+                </Button>
+              )}
+              
               <div className="flex items-center gap-4 text-sm text-gray-400">
                 <div className="flex items-center gap-2">
                   {displayFeaturedPost.profiles?.avatar_url ? (
@@ -261,7 +281,7 @@ const BulletinBoard = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {displayPosts.map((post) => (
-                <Card key={post.id} className="bg-gray-800 border-gray-700 hover:shadow-lg transition-all duration-300">
+                <Card key={post.id} className="bg-gray-800 border-gray-700 hover:shadow-lg transition-all duration-300 h-fit">
                   <CardHeader className="p-0">
                     {post.image_url && (
                       <img
@@ -274,6 +294,17 @@ const BulletinBoard = () => {
                   <CardContent className="p-6">
                     <CardTitle className="text-white text-xl mb-3">{post.title}</CardTitle>
                     <p className="text-gray-300 text-base mb-6 leading-relaxed line-clamp-4">{post.content}</p>
+                    
+                    {post.link_url && (
+                      <Button
+                        onClick={() => handleLinkClick(post.link_url!)}
+                        size="sm"
+                        className="mb-4 bg-blue-600 hover:bg-blue-700"
+                      >
+                        <ExternalLink className="w-4 h-4 mr-2" />
+                        Visit Link
+                      </Button>
+                    )}
                     
                     <div className="flex items-center gap-4 text-sm text-gray-400">
                       <div className="flex items-center gap-3">

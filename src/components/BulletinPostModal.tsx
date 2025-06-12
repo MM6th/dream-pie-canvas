@@ -19,6 +19,7 @@ interface BulletinPostModalProps {
     content: string;
     image_url?: string;
     is_featured: boolean;
+    link_url?: string;
   };
   mode?: 'create' | 'edit';
 }
@@ -30,6 +31,7 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create' }: BulletinPostMod
   const [title, setTitle] = useState(post?.title || '');
   const [content, setContent] = useState(post?.content || '');
   const [imageUrl, setImageUrl] = useState(post?.image_url || '');
+  const [linkUrl, setLinkUrl] = useState(post?.link_url || '');
   const [isFeatured, setIsFeatured] = useState(post?.is_featured || false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -43,6 +45,7 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create' }: BulletinPostMod
         title,
         content,
         image_url: imageUrl || null,
+        link_url: linkUrl || null,
         is_featured: isFeatured,
         merchant_id: user.id,
         updated_at: new Date().toISOString()
@@ -81,6 +84,7 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create' }: BulletinPostMod
       setTitle('');
       setContent('');
       setImageUrl('');
+      setLinkUrl('');
       setIsFeatured(false);
       setOpen(false);
       onSuccess();
@@ -152,6 +156,20 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create' }: BulletinPostMod
               placeholder="https://example.com/image.jpg"
               className="bg-gray-700 border-gray-600 text-white"
             />
+          </div>
+
+          <div>
+            <Label htmlFor="linkUrl" className="text-white">Link URL (Optional)</Label>
+            <Input
+              id="linkUrl"
+              value={linkUrl}
+              onChange={(e) => setLinkUrl(e.target.value)}
+              placeholder="https://example.com or /store or /films"
+              className="bg-gray-700 border-gray-600 text-white"
+            />
+            <p className="text-xs text-gray-400 mt-1">
+              Add a link to another page (internal like /store or external like https://example.com)
+            </p>
           </div>
           
           <div className="flex items-center space-x-2">

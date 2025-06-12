@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Trash2, Calendar, Star } from "lucide-react";
+import { Edit, Trash2, Calendar, Star, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/components/ui/use-toast";
@@ -25,6 +25,7 @@ interface BulletinPost {
   title: string;
   content: string;
   image_url?: string;
+  link_url?: string;
   is_featured: boolean;
   created_at: string;
   updated_at: string;
@@ -130,6 +131,12 @@ const BulletinPostManager = () => {
                         Featured
                       </Badge>
                     )}
+                    {post.link_url && (
+                      <Badge variant="outline" className="border-blue-400 text-blue-400">
+                        <ExternalLink className="w-3 h-3 mr-1" />
+                        Has Link
+                      </Badge>
+                    )}
                   </CardTitle>
                   <div className="flex gap-2">
                     <BulletinPostModal
@@ -168,6 +175,11 @@ const BulletinPostManager = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-gray-300 mb-3 line-clamp-2">{post.content}</p>
+                {post.link_url && (
+                  <div className="mb-3">
+                    <p className="text-sm text-blue-400">Link: {post.link_url}</p>
+                  </div>
+                )}
                 {post.image_url && (
                   <div className="mb-3">
                     <img
