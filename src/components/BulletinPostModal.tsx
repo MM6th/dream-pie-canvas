@@ -103,7 +103,7 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create' }: BulletinPostMod
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="bg-blue-600 hover:bg-blue-700">
+        <Button className="bg-white hover:bg-gray-100 text-black">
           {mode === 'edit' ? (
             <>Edit Post</>
           ) : (
@@ -188,14 +188,14 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create' }: BulletinPostMod
               type="button"
               variant="outline"
               onClick={() => setOpen(false)}
-              className="border-gray-600 text-white hover:bg-gray-700"
+              className="bg-white hover:bg-gray-100 text-black border-gray-600"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={loading}
-              className="bg-blue-600 hover:bg-blue-700"
+              className="bg-white hover:bg-gray-100 text-black"
             >
               {loading ? 'Saving...' : (mode === 'edit' ? 'Update Post' : 'Create Post')}
             </Button>
