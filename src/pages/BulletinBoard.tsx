@@ -153,27 +153,27 @@ const BulletinBoard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-foreground text-xl">Loading bulletin board...</div>
+      <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800 flex items-center justify-center">
+        <div className="text-white text-xl">Loading bulletin board...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800">
       {/* Navigation Header */}
       <div className="absolute top-4 left-4 right-4 z-20 flex justify-between">
         <Button
           onClick={handleBackToDashboard}
           variant="outline"
-          className="border-border bg-background text-foreground hover:bg-accent hover:text-accent-foreground"
+          className="border-gray-600 text-white hover:bg-white hover:text-black"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Dashboard
         </Button>
         <Button
           onClick={handleSignOut}
-          className="bg-primary text-primary-foreground hover:bg-primary/90"
+          className="bg-white text-black hover:bg-gray-100 hover:text-black"
         >
           <LogOut className="w-4 h-4 mr-2" />
           Sign Out
@@ -198,12 +198,12 @@ const BulletinBoard = () => {
       <div className="max-w-6xl mx-auto p-6">
         {/* Today's Featured Post */}
         <div className="mb-12">
-          <h2 className="text-3xl font-bold text-foreground mb-6 flex items-center gap-2">
+          <h2 className="text-3xl font-bold text-white mb-6 flex items-center gap-2">
             <Star className="w-8 h-8 text-yellow-400" />
             Today's Featured Post
           </h2>
           
-          <Card className="bg-card border-border">
+          <Card className="bg-gray-800 border-gray-700">
             <CardHeader className="p-0">
               {displayFeaturedPost.image_url && (
                 <div className="relative">
@@ -221,10 +221,10 @@ const BulletinBoard = () => {
               )}
             </CardHeader>
             <CardContent className="p-6">
-              <CardTitle className="text-card-foreground text-2xl mb-4">{displayFeaturedPost.title}</CardTitle>
-              <p className="text-muted-foreground text-lg mb-4 leading-relaxed">{displayFeaturedPost.content}</p>
+              <CardTitle className="text-white text-2xl mb-4">{displayFeaturedPost.title}</CardTitle>
+              <p className="text-gray-300 text-lg mb-4 leading-relaxed">{displayFeaturedPost.content}</p>
               
-              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+              <div className="flex items-center gap-4 text-sm text-gray-400">
                 <div className="flex items-center gap-2">
                   {displayFeaturedPost.profiles?.avatar_url ? (
                     <img
@@ -248,20 +248,20 @@ const BulletinBoard = () => {
 
         {/* All Posts Section */}
         <div>
-          <h2 className="text-3xl font-bold text-foreground mb-6">
+          <h2 className="text-3xl font-bold text-white mb-6">
             Recent Posts
           </h2>
           
           {displayPosts.length === 0 ? (
-            <Card className="bg-card border-border">
+            <Card className="bg-gray-800 border-gray-700">
               <CardContent className="p-8 text-center">
-                <p className="text-muted-foreground text-lg">No posts yet. Check back soon for updates from our community!</p>
+                <p className="text-gray-300 text-lg">No posts yet. Check back soon for updates from our community!</p>
               </CardContent>
             </Card>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {displayPosts.map((post) => (
-                <Card key={post.id} className="bg-card border-border hover:shadow-lg transition-all duration-300">
+                <Card key={post.id} className="bg-gray-800 border-gray-700 hover:shadow-lg transition-all duration-300">
                   <CardHeader className="p-0">
                     {post.image_url && (
                       <img
@@ -272,10 +272,10 @@ const BulletinBoard = () => {
                     )}
                   </CardHeader>
                   <CardContent className="p-6">
-                    <CardTitle className="text-card-foreground text-xl mb-3">{post.title}</CardTitle>
-                    <p className="text-muted-foreground text-base mb-6 leading-relaxed line-clamp-4">{post.content}</p>
+                    <CardTitle className="text-white text-xl mb-3">{post.title}</CardTitle>
+                    <p className="text-gray-300 text-base mb-6 leading-relaxed line-clamp-4">{post.content}</p>
                     
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-4 text-sm text-gray-400">
                       <div className="flex items-center gap-3">
                         {post.profiles?.avatar_url ? (
                           <img
