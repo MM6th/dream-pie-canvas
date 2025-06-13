@@ -133,7 +133,7 @@ const BulletinBoard = () => {
     id: 'featured-dummy',
     title: "Welcome to Our Community Thoughts!",
     content: 'Share your current thoughts and connect with others in our community. This space is for meaningful conversations and staying connected with what matters to you.',
-    image_url: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=800&h=400&fit=crop',
+    image_url: '/lovable-uploads/8a8289fd-017b-4c07-9e5a-03d19c081cb0.png',
     is_featured: true,
     post_type: 'current_thoughts',
     created_at: new Date().toISOString(),
@@ -179,7 +179,7 @@ const BulletinBoard = () => {
       <div 
         className="relative h-96 bg-cover bg-center bg-no-repeat flex items-center justify-center"
         style={{
-          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://images.unsplash.com/photo-1557804506-669a67965ba0?w=1200&h=400&fit=crop')`
+          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('/lovable-uploads/8a8289fd-017b-4c07-9e5a-03d19c081cb0.png')`
         }}
       >
         <div className="text-center text-white z-10">

@@ -218,7 +218,7 @@ const PhotoGallery = () => {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="flex-1 border-gray-600 text-white hover:bg-gray-600"
+                    className="flex-1 border-gray-600 text-white bg-gray-700"
                     onClick={() => window.open(getImageUrl(upload.file_path), '_blank')}
                   >
                     <Eye className="w-3 h-3 mr-1" />
@@ -229,7 +229,7 @@ const PhotoGallery = () => {
                       <Button
                         size="sm"
                         variant="outline"
-                        className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white"
+                        className="border-red-600 text-red-400 bg-gray-700"
                       >
                         <Trash2 className="w-3 h-3" />
                       </Button>
