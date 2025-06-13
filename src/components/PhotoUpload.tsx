@@ -85,15 +85,24 @@ const PhotoUpload = ({ onSuccess, trigger }: PhotoUploadProps) => {
       const fileExt = file.name.split('.').pop();
       const fileName = `${user.id}/${Date.now()}.${fileExt}`;
 
+      // Simulate progress for better UX
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return prev;
+          }
+          return prev + 10;
+        });
+      }, 200);
+
       // Upload file to storage
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('user-media')
-        .upload(fileName, file, {
-          onUploadProgress: (progress) => {
-            const percent = (progress.loaded / progress.total) * 100;
-            setUploadProgress(percent);
-          }
-        });
+        .upload(fileName, file);
+
+      clearInterval(progressInterval);
+      setUploadProgress(100);
 
       if (uploadError) throw uploadError;
 
