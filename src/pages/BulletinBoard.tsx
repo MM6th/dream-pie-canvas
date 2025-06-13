@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -184,9 +183,6 @@ const BulletinBoard = () => {
       >
         <div className="text-center text-white z-10">
           <h1 className="text-6xl font-bold mb-4">Community Bulletin</h1>
-          <p className="text-xl text-gray-200 max-w-2xl mx-auto px-4">
-            Share thoughts, connect with others, and stay updated with our community
-          </p>
         </div>
       </div>
 
@@ -198,49 +194,51 @@ const BulletinBoard = () => {
             Today's Featured Thought
           </h2>
           
-          <Card className="bg-gray-800 border-gray-700">
-            <CardHeader className="p-0">
-              {displayFeaturedPost.image_url && (
-                <div className="relative">
-                  <img
-                    src={displayFeaturedPost.image_url}
-                    alt={displayFeaturedPost.title}
-                    className="w-full h-64 object-cover rounded-t-lg"
-                  />
-                  <div className="absolute top-4 right-4">
-                    <Badge className="bg-yellow-500 text-black font-bold">
-                      Featured
-                    </Badge>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card className="bg-gray-800 border-gray-700" style={{ width: '722px', height: '821px' }}>
+              <CardHeader className="p-0">
+                {displayFeaturedPost.image_url && (
+                  <div className="relative">
+                    <img
+                      src={displayFeaturedPost.image_url}
+                      alt={displayFeaturedPost.title}
+                      className="w-full h-64 object-cover rounded-t-lg"
+                    />
+                    <div className="absolute top-4 right-4">
+                      <Badge className="bg-yellow-500 text-black font-bold">
+                        Featured
+                      </Badge>
+                    </div>
+                  </div>
+                )}
+              </CardHeader>
+              <CardContent className="p-6 flex flex-col h-full">
+                <CardTitle className="text-white text-2xl mb-4">{displayFeaturedPost.title}</CardTitle>
+                <p className="text-gray-300 text-lg mb-6 leading-relaxed flex-grow">{displayFeaturedPost.content}</p>
+                
+                <div className="flex items-center gap-4 text-sm text-gray-400 mb-6">
+                  <div className="flex items-center gap-2">
+                    {displayFeaturedPost.profiles?.avatar_url ? (
+                      <img
+                        src={displayFeaturedPost.profiles.avatar_url}
+                        alt="Avatar"
+                        className="w-8 h-8 rounded-full object-cover"
+                      />
+                    ) : (
+                      <User className="w-6 h-6" />
+                    )}
+                    {displayFeaturedPost.profiles?.display_name || displayFeaturedPost.profiles?.email || 'Community'}
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Calendar className="w-4 h-4" />
+                    {new Date(displayFeaturedPost.created_at).toLocaleDateString()}
                   </div>
                 </div>
-              )}
-            </CardHeader>
-            <CardContent className="p-6">
-              <CardTitle className="text-white text-2xl mb-4">{displayFeaturedPost.title}</CardTitle>
-              <p className="text-gray-300 text-lg mb-6 leading-relaxed">{displayFeaturedPost.content}</p>
-              
-              <div className="flex items-center gap-4 text-sm text-gray-400 mb-6">
-                <div className="flex items-center gap-2">
-                  {displayFeaturedPost.profiles?.avatar_url ? (
-                    <img
-                      src={displayFeaturedPost.profiles.avatar_url}
-                      alt="Avatar"
-                      className="w-8 h-8 rounded-full object-cover"
-                    />
-                  ) : (
-                    <User className="w-6 h-6" />
-                  )}
-                  {displayFeaturedPost.profiles?.display_name || displayFeaturedPost.profiles?.email || 'Community'}
-                </div>
-                <div className="flex items-center gap-1">
-                  <Calendar className="w-4 h-4" />
-                  {new Date(displayFeaturedPost.created_at).toLocaleDateString()}
-                </div>
-              </div>
 
-              <PostInteractions postId={displayFeaturedPost.id} />
-            </CardContent>
-          </Card>
+                <PostInteractions postId={displayFeaturedPost.id} />
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
         {/* Current Thoughts Section */}

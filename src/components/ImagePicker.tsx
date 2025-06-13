@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -85,7 +84,7 @@ const ImagePicker = ({ onImageSelect, currentImageUrl, trigger }: ImagePickerPro
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger || (
-          <Button variant="outline" className="border-gray-600 text-white hover:bg-gray-600">
+          <Button variant="outline" className="border-gray-600 text-white bg-gray-700">
             <Image className="w-4 h-4 mr-2" />
             Select Image
           </Button>
@@ -178,7 +177,6 @@ const ImagePicker = ({ onImageSelect, currentImageUrl, trigger }: ImagePickerPro
                           alt={upload.file_name}
                           className="w-full h-full object-cover"
                         />
-                        <div className="absolute inset-0 bg-black/0 hover:bg-black/20 transition-colors" />
                         <div className="absolute bottom-1 left-1 right-1">
                           <p className="text-xs text-white bg-black/50 px-2 py-1 rounded truncate">
                             {upload.file_name}
