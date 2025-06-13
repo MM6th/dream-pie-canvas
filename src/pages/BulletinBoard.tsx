@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -199,7 +198,7 @@ const BulletinBoard = () => {
                     <img
                       src={displayFeaturedPost.image_url}
                       alt={displayFeaturedPost.title}
-                      className="w-full h-80 object-cover rounded-t-lg"
+                      className="w-full object-contain rounded-t-lg"
                     />
                     <div className="absolute top-4 right-4">
                       <Badge className="bg-yellow-500 text-black font-bold">
