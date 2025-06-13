@@ -202,6 +202,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          approval_status: string | null
           avatar_url: string | null
           background_image_url: string | null
           created_at: string | null
@@ -210,6 +211,7 @@ export type Database = {
           facebook_url: string | null
           id: string
           instagram_url: string | null
+          is_admin: boolean | null
           onlyfans_url: string | null
           paypal_email: string | null
           pinterest_url: string | null
@@ -219,6 +221,7 @@ export type Database = {
           youtube_url: string | null
         }
         Insert: {
+          approval_status?: string | null
           avatar_url?: string | null
           background_image_url?: string | null
           created_at?: string | null
@@ -227,6 +230,7 @@ export type Database = {
           facebook_url?: string | null
           id: string
           instagram_url?: string | null
+          is_admin?: boolean | null
           onlyfans_url?: string | null
           paypal_email?: string | null
           pinterest_url?: string | null
@@ -236,6 +240,7 @@ export type Database = {
           youtube_url?: string | null
         }
         Update: {
+          approval_status?: string | null
           avatar_url?: string | null
           background_image_url?: string | null
           created_at?: string | null
@@ -244,6 +249,7 @@ export type Database = {
           facebook_url?: string | null
           id?: string
           instagram_url?: string | null
+          is_admin?: boolean | null
           onlyfans_url?: string | null
           paypal_email?: string | null
           pinterest_url?: string | null
@@ -385,6 +391,18 @@ export type Database = {
       get_user_storage_usage: {
         Args: { user_uuid: string }
         Returns: number
+      }
+      is_admin: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
+      is_approved_merchant: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
+      update_merchant_approval: {
+        Args: { merchant_id: string; new_status: string }
+        Returns: boolean
       }
     }
     Enums: {

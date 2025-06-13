@@ -174,17 +174,13 @@ const BulletinBoard = () => {
         </Button>
       </div>
 
-      {/* Hero Section */}
+      {/* Hero Section - Remove heading and keep only background */}
       <div 
-        className="relative h-96 bg-cover bg-center bg-no-repeat flex items-center justify-center"
+        className="relative h-96 bg-cover bg-center bg-no-repeat"
         style={{
-          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('/lovable-uploads/8a8289fd-017b-4c07-9e5a-03d19c081cb0.png')`
+          backgroundImage: `url('/lovable-uploads/8a8289fd-017b-4c07-9e5a-03d19c081cb0.png')`
         }}
-      >
-        <div className="text-center text-white z-10">
-          <h1 className="text-6xl font-bold mb-4">Community Bulletin</h1>
-        </div>
-      </div>
+      />
 
       <div className="max-w-6xl mx-auto p-6">
         {/* Today's Featured Thought */}
