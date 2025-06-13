@@ -295,6 +295,39 @@ export type Database = {
           },
         ]
       }
+      user_uploads: {
+        Row: {
+          created_at: string | null
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id: string
+          storage_bucket: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id?: string
+          storage_bucket?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          file_type?: string
+          id?: string
+          storage_bucket?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       video_products: {
         Row: {
           background_music_url: string | null
@@ -345,7 +378,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      can_user_upload: {
+        Args: { user_uuid: string; new_file_size: number }
+        Returns: boolean
+      }
+      get_user_storage_usage: {
+        Args: { user_uuid: string }
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never

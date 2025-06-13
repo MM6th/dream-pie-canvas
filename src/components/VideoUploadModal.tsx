@@ -11,6 +11,7 @@ import { Upload, Video, Music } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
+import ImagePicker from "./ImagePicker";
 
 interface VideoUploadModalProps {
   onSuccess?: () => void;
@@ -28,6 +29,7 @@ const VideoUploadModal = ({ onSuccess }: VideoUploadModalProps) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [ownedTracks, setOwnedTracks] = useState<AudioTrack[]>([]);
+  const [storageUsage, setStorageUsage] = useState<number>(0);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -35,19 +37,38 @@ const VideoUploadModal = ({ onSuccess }: VideoUploadModalProps) => {
     isFree: true,
     price: "",
     videoFile: null as File | null,
-    thumbnailFile: null as File | null,
+    thumbnailUrl: "",
     backgroundMusicId: "",
   });
 
   const videoTypes = ["music", "dance", "influence", "model", "podcast"];
   const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB in bytes
-  const MAX_THUMBNAIL_SIZE = 10 * 1024 * 1024; // 10MB for thumbnails
 
   useEffect(() => {
     if (open && user) {
       fetchOwnedTracks();
+      checkStorageUsage();
     }
   }, [open, user]);
+
+  const checkStorageUsage = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase.rpc('get_user_storage_usage', {
+        user_uuid: user.id
+      });
+
+      if (error) {
+        console.error('Error checking storage usage:', error);
+        return;
+      }
+
+      setStorageUsage(data || 0);
+    } catch (error) {
+      console.error('Error checking storage usage:', error);
+    }
+  };
 
   const fetchOwnedTracks = async () => {
     if (!user) return;
@@ -81,13 +102,11 @@ const VideoUploadModal = ({ onSuccess }: VideoUploadModalProps) => {
     }
   };
 
-  const validateFileSize = (file: File, type: 'video' | 'thumbnail') => {
-    const maxSize = type === 'video' ? MAX_VIDEO_SIZE : MAX_THUMBNAIL_SIZE;
-    if (file.size > maxSize) {
-      const maxSizeMB = Math.round(maxSize / (1024 * 1024));
+  const validateFileSize = (file: File) => {
+    if (file.size > MAX_VIDEO_SIZE) {
       toast({
         title: "File too large",
-        description: `${type === 'video' ? 'Video' : 'Thumbnail'} file must be smaller than ${maxSizeMB}MB`,
+        description: "Video file must be smaller than 50MB",
         variant: "destructive"
       });
       return false;
@@ -97,21 +116,11 @@ const VideoUploadModal = ({ onSuccess }: VideoUploadModalProps) => {
 
   const handleVideoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file && validateFileSize(file, 'video')) {
+    if (file && validateFileSize(file)) {
       setFormData({ ...formData, videoFile: file });
     } else {
       e.target.value = '';
       setFormData({ ...formData, videoFile: null });
-    }
-  };
-
-  const handleThumbnailFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file && validateFileSize(file, 'thumbnail')) {
-      setFormData({ ...formData, thumbnailFile: file });
-    } else {
-      e.target.value = '';
-      setFormData({ ...formData, thumbnailFile: null });
     }
   };
 
@@ -126,36 +135,46 @@ const VideoUploadModal = ({ onSuccess }: VideoUploadModalProps) => {
       return;
     }
 
+    // Check storage limit
+    const { data: canUpload, error: checkError } = await supabase.rpc('can_user_upload', {
+      user_uuid: user.id,
+      new_file_size: formData.videoFile.size
+    });
+
+    if (checkError || !canUpload) {
+      toast({
+        title: "Storage limit exceeded",
+        description: "You've reached your 2GB storage limit. Please delete some files first.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setLoading(true);
     try {
-      // Upload video file
+      // Upload video file to new storage system
       const videoFileExt = formData.videoFile.name.split('.').pop();
-      const videoFileName = `${Date.now()}.${videoFileExt}`;
+      const videoFileName = `${user.id}/${Date.now()}.${videoFileExt}`;
       const { data: videoData, error: videoError } = await supabase.storage
-        .from('videos')
+        .from('user-media')
         .upload(videoFileName, formData.videoFile);
 
       if (videoError) throw videoError;
 
-      let thumbnailUrl = null;
-      if (formData.thumbnailFile) {
-        const thumbnailFileExt = formData.thumbnailFile.name.split('.').pop();
-        const thumbnailFileName = `${Date.now()}_thumb.${thumbnailFileExt}`;
-        const { data: thumbnailData, error: thumbnailError } = await supabase.storage
-          .from('thumbnails')
-          .upload(thumbnailFileName, formData.thumbnailFile);
-
-        if (thumbnailError) throw thumbnailError;
-
-        const { data: { publicUrl: thumbnailPublicUrl } } = supabase.storage
-          .from('thumbnails')
-          .getPublicUrl(thumbnailData.path);
-        thumbnailUrl = thumbnailPublicUrl;
-      }
-
       const { data: { publicUrl: videoPublicUrl } } = supabase.storage
-        .from('videos')
+        .from('user-media')
         .getPublicUrl(videoData.path);
+
+      // Record upload in database
+      await supabase
+        .from('user_uploads')
+        .insert({
+          user_id: user.id,
+          file_name: formData.videoFile.name,
+          file_path: videoData.path,
+          file_size: formData.videoFile.size,
+          file_type: formData.videoFile.type
+        });
 
       // Get background music URL if selected
       let backgroundMusicUrl = null;
@@ -174,7 +193,7 @@ const VideoUploadModal = ({ onSuccess }: VideoUploadModalProps) => {
           description: formData.description,
           video_type: formData.videoType,
           video_file_url: videoPublicUrl,
-          thumbnail_url: thumbnailUrl,
+          thumbnail_url: formData.thumbnailUrl || null,
           background_music_url: backgroundMusicUrl,
           merchant_id: user.id,
           is_free: formData.isFree,
@@ -195,7 +214,7 @@ const VideoUploadModal = ({ onSuccess }: VideoUploadModalProps) => {
         isFree: true,
         price: "",
         videoFile: null,
-        thumbnailFile: null,
+        thumbnailUrl: "",
         backgroundMusicId: "",
       });
       setOpen(false);
@@ -212,6 +231,16 @@ const VideoUploadModal = ({ onSuccess }: VideoUploadModalProps) => {
     }
   };
 
+  const formatBytes = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const storagePercentage = (storageUsage / (2 * 1024 * 1024 * 1024)) * 100;
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -227,6 +256,26 @@ const VideoUploadModal = ({ onSuccess }: VideoUploadModalProps) => {
             Upload Video Content
           </DialogTitle>
         </DialogHeader>
+
+        {/* Storage Usage */}
+        <div className="bg-gray-700/50 p-3 rounded-lg mb-4">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-sm text-gray-300">Storage Used</span>
+            <span className="text-sm text-gray-300">
+              {formatBytes(storageUsage)} / 2GB
+            </span>
+          </div>
+          <div className="w-full bg-gray-600 rounded-full h-2">
+            <div 
+              className={`h-2 rounded-full ${
+                storagePercentage > 90 ? 'bg-red-500' : 
+                storagePercentage > 70 ? 'bg-yellow-500' : 'bg-blue-500'
+              }`}
+              style={{ width: `${Math.min(storagePercentage, 100)}%` }}
+            />
+          </div>
+        </div>
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Label htmlFor="title">Title *</Label>
@@ -284,17 +333,19 @@ const VideoUploadModal = ({ onSuccess }: VideoUploadModalProps) => {
           </div>
 
           <div>
-            <Label htmlFor="thumbnailFile">Thumbnail (Optional, Max 10MB)</Label>
-            <Input
-              id="thumbnailFile"
-              type="file"
-              accept="image/*"
-              onChange={handleThumbnailFileChange}
-              className="bg-gray-700 border-gray-600 text-white"
-            />
-            <p className="text-xs text-gray-400 mt-1">
-              Recommended formats: JPG, PNG. Maximum size: 10MB
-            </p>
+            <Label>Thumbnail (Optional)</Label>
+            <div className="flex gap-2 mt-1">
+              <Input
+                value={formData.thumbnailUrl}
+                onChange={(e) => setFormData({ ...formData, thumbnailUrl: e.target.value })}
+                placeholder="Thumbnail URL or select from gallery"
+                className="bg-gray-700 border-gray-600 text-white flex-1"
+              />
+              <ImagePicker
+                onImageSelect={(url) => setFormData({ ...formData, thumbnailUrl: url })}
+                currentImageUrl={formData.thumbnailUrl}
+              />
+            </div>
           </div>
 
           {ownedTracks.length > 0 && (

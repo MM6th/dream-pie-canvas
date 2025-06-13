@@ -2,6 +2,7 @@
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import BackgroundUpload from "@/components/BackgroundUpload";
+import PhotoGallery from "@/components/PhotoGallery";
 import MediaPlayers from "./MediaPlayers";
 
 interface SupporterDashboardProps {
@@ -39,6 +40,14 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedVide
                 <p className="text-2xl font-bold text-white">{purchasedVideos.length}</p>
               </div>
             </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="mb-8">
+        <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+          <CardContent className="p-6">
+            <PhotoGallery />
           </CardContent>
         </Card>
       </div>

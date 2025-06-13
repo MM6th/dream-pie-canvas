@@ -8,6 +8,7 @@ import VideoUploadModal from "@/components/VideoUploadModal";
 import AudioProductManager from "@/components/AudioProductManager";
 import VideoProductManager from "@/components/VideoProductManager";
 import BulletinPostManager from "@/components/BulletinPostManager";
+import PhotoGallery from "@/components/PhotoGallery";
 import MediaPlayers from "./MediaPlayers";
 
 interface MerchantDashboardProps {
@@ -99,6 +100,14 @@ const MerchantDashboard = ({
                 </div>
               </div>
             </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="mb-8">
+        <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+          <CardContent className="p-6">
+            <PhotoGallery />
           </CardContent>
         </Card>
       </div>
