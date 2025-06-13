@@ -2,10 +2,12 @@ import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, LogOut, Calendar, User, Star, ExternalLink } from "lucide-react";
+import { ArrowLeft, LogOut, Calendar, User, Star, ExternalLink, MessageCircle, ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import PostInteractions from "@/components/PostInteractions";
+import CurrentThoughtsModal from "@/components/CurrentThoughtsModal";
 
 interface BulletinPost {
   id: string;
@@ -14,6 +16,7 @@ interface BulletinPost {
   image_url?: string;
   link_url?: string;
   is_featured: boolean;
+  post_type?: string;
   created_at: string;
   merchant_id: string;
   profiles?: {
@@ -25,9 +28,12 @@ interface BulletinPost {
 
 const BulletinBoard = () => {
   const navigate = useNavigate();
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   const [posts, setPosts] = useState<BulletinPost[]>([]);
   const [featuredPost, setFeaturedPost] = useState<BulletinPost | null>(null);
+  const [currentThoughts, setCurrentThoughts] = useState<BulletinPost[]>([]);
+  const [tvGuidePosts, setTvGuidePosts] = useState<BulletinPost[]>([]);
+  const [displayedPosts, setDisplayedPosts] = useState(6);
   const [loading, setLoading] = useState(true);
 
   const handleBackToDashboard = () => {
@@ -40,17 +46,14 @@ const BulletinBoard = () => {
       navigate('/');
     } catch (error) {
       console.error('Error signing out:', error);
-      // Even if there's an error, try to navigate back
       navigate('/');
     }
   };
 
   const handleLinkClick = (url: string) => {
     if (url.startsWith('http://') || url.startsWith('https://')) {
-      // External link
       window.open(url, '_blank', 'noopener,noreferrer');
     } else {
-      // Internal link
       navigate(url);
     }
   };
@@ -75,17 +78,28 @@ const BulletinBoard = () => {
       }
 
       if (data) {
-        const featured = data.find(post => post.is_featured);
-        const regular = data.filter(post => !post.is_featured);
+        // Separate current thoughts and TV guide posts
+        const thoughts = data.filter(post => post.post_type === 'current_thoughts');
+        const tvGuide = data.filter(post => post.post_type === 'tv_guide' || !post.post_type);
+        
+        // Find featured current thought
+        const featured = thoughts.find(post => post.is_featured);
+        const regularThoughts = thoughts.filter(post => !post.is_featured);
         
         setFeaturedPost(featured || null);
-        setPosts(regular);
+        setCurrentThoughts(regularThoughts);
+        setTvGuidePosts(tvGuide);
+        setPosts(data);
       }
     } catch (error) {
       console.error('Error fetching posts:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadMorePosts = () => {
+    setDisplayedPosts(prev => prev + 6);
   };
 
   useEffect(() => {
@@ -108,52 +122,19 @@ const BulletinBoard = () => {
       )
       .subscribe();
 
-    // Cleanup function
     return () => {
       console.log('Cleaning up realtime subscription...');
       supabase.removeChannel(channel);
     };
-  }, []); // Empty dependency array to run only once
-
-  // Dummy data for initial display
-  const dummyPosts: BulletinPost[] = [
-    {
-      id: 'dummy-1',
-      title: 'Welcome to Our Community!',
-      content: 'We are excited to share this new bulletin board where merchants can connect with supporters. Stay tuned for amazing content and announcements!',
-      is_featured: false,
-      created_at: new Date(Date.now() - 86400000).toISOString(),
-      merchant_id: 'dummy',
-      profiles: { email: 'community@example.com' }
-    },
-    {
-      id: 'dummy-2',
-      title: 'New Features Coming Soon',
-      content: 'We are working on exciting new features to enhance your experience. Thank you for being part of our community!',
-      is_featured: false,
-      created_at: new Date(Date.now() - 172800000).toISOString(),
-      merchant_id: 'dummy',
-      profiles: { email: 'updates@example.com' }
-    },
-    {
-      id: 'dummy-3',
-      title: 'Community Guidelines',
-      content: 'Please be respectful and supportive of all community members. This is a space for creativity and collaboration.',
-      is_featured: false,
-      created_at: new Date(Date.now() - 259200000).toISOString(),
-      merchant_id: 'dummy',
-      profiles: { email: 'admin@example.com' }
-    }
-  ];
-
-  const displayPosts = posts.length > 0 ? posts : dummyPosts;
+  }, []);
 
   const defaultFeaturedPost: BulletinPost = {
     id: 'featured-dummy',
-    title: "Today's Featured: Community Launch!",
-    content: 'Welcome to our brand new community bulletin board! This is where merchants will share their latest updates, announcements, and connect with supporters. We are thrilled to have you here and look forward to building an amazing creative community together.',
+    title: "Welcome to Our Community Thoughts!",
+    content: 'Share your current thoughts and connect with others in our community. This space is for meaningful conversations and staying connected with what matters to you.',
     image_url: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=800&h=400&fit=crop',
     is_featured: true,
+    post_type: 'current_thoughts',
     created_at: new Date().toISOString(),
     merchant_id: 'featured-dummy',
     profiles: { email: 'community@example.com' }
@@ -173,14 +154,17 @@ const BulletinBoard = () => {
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black">
       {/* Navigation Header */}
       <div className="absolute top-4 left-4 right-4 z-20 flex justify-between">
-        <Button
-          onClick={handleBackToDashboard}
-          variant="outline"
-          className="border-gray-600 text-white hover:bg-white hover:text-black"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Dashboard
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={handleBackToDashboard}
+            variant="outline"
+            className="border-gray-600 text-white hover:bg-white hover:text-black"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Dashboard
+          </Button>
+          {user && <CurrentThoughtsModal onSuccess={fetchPosts} />}
+        </div>
         <Button
           onClick={handleSignOut}
           className="bg-white text-black hover:bg-gray-100 hover:text-black"
@@ -200,17 +184,17 @@ const BulletinBoard = () => {
         <div className="text-center text-white z-10">
           <h1 className="text-6xl font-bold mb-4">Community Bulletin</h1>
           <p className="text-xl text-gray-200 max-w-2xl mx-auto px-4">
-            Stay connected with updates, announcements, and stories from our creative community
+            Share thoughts, connect with others, and stay updated with our community
           </p>
         </div>
       </div>
 
       <div className="max-w-6xl mx-auto p-6">
-        {/* Today's Featured Post */}
+        {/* Today's Featured Thought */}
         <div className="mb-12">
           <h2 className="text-3xl font-bold text-white mb-6 flex items-center gap-2">
             <Star className="w-8 h-8 text-yellow-400" />
-            Today's Featured Post
+            Today's Featured Thought
           </h2>
           
           <Card className="bg-gray-800 border-gray-700">
@@ -232,19 +216,9 @@ const BulletinBoard = () => {
             </CardHeader>
             <CardContent className="p-6">
               <CardTitle className="text-white text-2xl mb-4">{displayFeaturedPost.title}</CardTitle>
-              <p className="text-gray-300 text-lg mb-4 leading-relaxed">{displayFeaturedPost.content}</p>
+              <p className="text-gray-300 text-lg mb-6 leading-relaxed">{displayFeaturedPost.content}</p>
               
-              {displayFeaturedPost.link_url && (
-                <Button
-                  onClick={() => handleLinkClick(displayFeaturedPost.link_url!)}
-                  className="mb-4 bg-blue-600 hover:bg-blue-700"
-                >
-                  <ExternalLink className="w-4 h-4 mr-2" />
-                  Visit Link
-                </Button>
-              )}
-              
-              <div className="flex items-center gap-4 text-sm text-gray-400">
+              <div className="flex items-center gap-4 text-sm text-gray-400 mb-6">
                 <div className="flex items-center gap-2">
                   {displayFeaturedPost.profiles?.avatar_url ? (
                     <img
@@ -262,26 +236,23 @@ const BulletinBoard = () => {
                   {new Date(displayFeaturedPost.created_at).toLocaleDateString()}
                 </div>
               </div>
+
+              <PostInteractions postId={displayFeaturedPost.id} />
             </CardContent>
           </Card>
         </div>
 
-        {/* All Posts Section */}
-        <div>
-          <h2 className="text-3xl font-bold text-white mb-6">
-            Recent Posts
-          </h2>
-          
-          {displayPosts.length === 0 ? (
-            <Card className="bg-gray-800 border-gray-700">
-              <CardContent className="p-8 text-center">
-                <p className="text-gray-300 text-lg">No posts yet. Check back soon for updates from our community!</p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {displayPosts.map((post) => (
-                <Card key={post.id} className="bg-gray-800 border-gray-700 hover:shadow-lg transition-all duration-300 h-fit">
+        {/* Current Thoughts Section */}
+        {currentThoughts.length > 0 && (
+          <div className="mb-12">
+            <h2 className="text-3xl font-bold text-white mb-6 flex items-center gap-2">
+              <MessageCircle className="w-8 h-8 text-blue-400" />
+              Community Thoughts
+            </h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {currentThoughts.slice(0, displayedPosts).map((post) => (
+                <Card key={post.id} className="bg-gray-800 border-gray-700 hover:shadow-lg transition-all duration-300">
                   <CardHeader className="p-0">
                     {post.image_url && (
                       <img
@@ -293,20 +264,9 @@ const BulletinBoard = () => {
                   </CardHeader>
                   <CardContent className="p-6">
                     <CardTitle className="text-white text-xl mb-3">{post.title}</CardTitle>
-                    <p className="text-gray-300 text-base mb-6 leading-relaxed line-clamp-4">{post.content}</p>
+                    <p className="text-gray-300 text-base mb-6 leading-relaxed line-clamp-3">{post.content}</p>
                     
-                    {post.link_url && (
-                      <Button
-                        onClick={() => handleLinkClick(post.link_url!)}
-                        size="sm"
-                        className="mb-4 bg-blue-600 hover:bg-blue-700"
-                      >
-                        <ExternalLink className="w-4 h-4 mr-2" />
-                        Visit Link
-                      </Button>
-                    )}
-                    
-                    <div className="flex items-center gap-4 text-sm text-gray-400">
+                    <div className="flex items-center gap-4 text-sm text-gray-400 mb-4">
                       <div className="flex items-center gap-3">
                         {post.profiles?.avatar_url ? (
                           <img
@@ -326,12 +286,90 @@ const BulletinBoard = () => {
                         {new Date(post.created_at).toLocaleDateString()}
                       </div>
                     </div>
+
+                    <PostInteractions postId={post.id} />
                   </CardContent>
                 </Card>
               ))}
             </div>
-          )}
-        </div>
+
+            {currentThoughts.length > displayedPosts && (
+              <div className="text-center mt-6">
+                <Button onClick={loadMorePosts} variant="outline" className="border-gray-600 text-white hover:bg-gray-700">
+                  <ChevronDown className="w-4 h-4 mr-2" />
+                  Load More Thoughts
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TV Guide Section */}
+        {tvGuidePosts.length > 0 && (
+          <div>
+            <h2 className="text-3xl font-bold text-white mb-6 flex items-center gap-2">
+              <Calendar className="w-8 h-8 text-purple-400" />
+              TV Guide Schedule
+            </h2>
+            
+            <div className="space-y-4">
+              {tvGuidePosts.map((post) => (
+                <Card key={post.id} className="bg-gray-800 border-gray-700 hover:shadow-lg transition-all duration-300">
+                  <div className="flex">
+                    {post.image_url && (
+                      <div className="w-48 h-32">
+                        <img
+                          src={post.image_url}
+                          alt={post.title}
+                          className="w-full h-full object-cover rounded-l-lg"
+                        />
+                      </div>
+                    )}
+                    <CardContent className="flex-1 p-6">
+                      <div className="flex justify-between items-start mb-3">
+                        <CardTitle className="text-white text-xl">{post.title}</CardTitle>
+                        <div className="text-sm text-gray-400">
+                          {new Date(post.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                      </div>
+                      <p className="text-gray-300 text-base mb-4 leading-relaxed">{post.content}</p>
+                      
+                      {post.link_url && (
+                        <Button
+                          onClick={() => handleLinkClick(post.link_url!)}
+                          size="sm"
+                          className="mb-4 bg-purple-600 hover:bg-purple-700"
+                        >
+                          <ExternalLink className="w-4 h-4 mr-2" />
+                          Watch Now
+                        </Button>
+                      )}
+                      
+                      <div className="flex items-center gap-4 text-sm text-gray-400">
+                        <div className="flex items-center gap-2">
+                          {post.profiles?.avatar_url ? (
+                            <img
+                              src={post.profiles.avatar_url}
+                              alt="Avatar"
+                              className="w-8 h-8 rounded-full object-cover"
+                            />
+                          ) : (
+                            <User className="w-6 h-6" />
+                          )}
+                          {post.profiles?.display_name || post.profiles?.email || 'Community'}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Calendar className="w-4 h-4" />
+                          {new Date(post.created_at).toLocaleDateString()}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
