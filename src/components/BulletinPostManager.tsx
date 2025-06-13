@@ -198,7 +198,7 @@ const BulletinPostManager = () => {
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
-                                <AlertDialogCancel className="border-gray-600 text-white hover:bg-gray-700">
+                                <AlertDialogCancel className="border-gray-600 text-white bg-transparent">
                                   Cancel
                                 </AlertDialogCancel>
                                 <AlertDialogAction
@@ -252,7 +252,7 @@ const BulletinPostManager = () => {
           {tvGuidePosts.length > 0 && (
             <div>
               <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                <Calendar className="w-5 h-5" />
+                <Calendar className="w-5 h-5 text-blue-400" />
                 TV Guide Schedule
               </h4>
               <div className="space-y-4">
@@ -295,7 +295,7 @@ const BulletinPostManager = () => {
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
-                                <AlertDialogCancel className="border-gray-600 text-white hover:bg-gray-700">
+                                <AlertDialogCancel className="border-gray-600 text-white bg-transparent">
                                   Cancel
                                 </AlertDialogCancel>
                                 <AlertDialogAction

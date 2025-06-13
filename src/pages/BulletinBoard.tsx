@@ -1,8 +1,9 @@
+
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, LogOut, Calendar, User, Star, ExternalLink, MessageCircle, ChevronDown } from "lucide-react";
+import { ArrowLeft, LogOut, Calendar, User, Cloud, ExternalLink, MessageCircle, ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -193,7 +194,7 @@ const BulletinBoard = () => {
         {/* Today's Featured Thought */}
         <div className="mb-12">
           <h2 className="text-3xl font-bold text-white mb-6 flex items-center gap-2">
-            <Star className="w-8 h-8 text-yellow-400" />
+            <Cloud className="w-8 h-8 text-white" />
             Today's Featured Thought
           </h2>
           
@@ -308,7 +309,7 @@ const BulletinBoard = () => {
         {tvGuidePosts.length > 0 && (
           <div>
             <h2 className="text-3xl font-bold text-white mb-6 flex items-center gap-2">
-              <Calendar className="w-8 h-8 text-purple-400" />
+              <Calendar className="w-8 h-8 text-blue-400" />
               TV Guide Schedule
             </h2>
             
@@ -338,7 +339,7 @@ const BulletinBoard = () => {
                         <Button
                           onClick={() => handleLinkClick(post.link_url!)}
                           size="sm"
-                          className="mb-4 bg-purple-600 hover:bg-purple-700"
+                          className="mb-4 bg-blue-600 hover:bg-blue-700"
                         >
                           <ExternalLink className="w-4 h-4 mr-2" />
                           Watch Now

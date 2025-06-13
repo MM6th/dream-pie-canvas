@@ -17,7 +17,7 @@ interface Comment {
     display_name?: string;
     email: string;
     avatar_url?: string;
-  };
+  } | null;
 }
 
 interface PostInteractionsProps {
@@ -80,8 +80,11 @@ const PostInteractions = ({ postId }: PostInteractionsProps) => {
       const { data, error } = await supabase
         .from('post_comments')
         .select(`
-          *,
-          profiles (
+          id,
+          content,
+          created_at,
+          user_id,
+          profiles!post_comments_user_id_fkey (
             display_name,
             email,
             avatar_url
