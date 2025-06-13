@@ -192,14 +192,14 @@ const BulletinBoard = () => {
           </h2>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card className="bg-gray-800 border-gray-700" style={{ width: '722px', height: '821px' }}>
+            <Card className="bg-gray-800 border-gray-700 max-w-2xl">
               <CardHeader className="p-0">
                 {displayFeaturedPost.image_url && (
                   <div className="relative">
                     <img
                       src={displayFeaturedPost.image_url}
                       alt={displayFeaturedPost.title}
-                      className="w-full h-96 object-cover rounded-t-lg"
+                      className="w-full h-80 object-cover rounded-t-lg"
                     />
                     <div className="absolute top-4 right-4">
                       <Badge className="bg-yellow-500 text-black font-bold">
@@ -209,9 +209,9 @@ const BulletinBoard = () => {
                   </div>
                 )}
               </CardHeader>
-              <CardContent className="p-6 flex flex-col h-full">
+              <CardContent className="p-6">
                 <CardTitle className="text-white text-2xl mb-4">{displayFeaturedPost.title}</CardTitle>
-                <p className="text-gray-300 text-lg mb-6 leading-relaxed flex-grow">{displayFeaturedPost.content}</p>
+                <p className="text-gray-300 text-lg mb-6 leading-relaxed">{displayFeaturedPost.content}</p>
                 
                 <div className="flex items-center gap-4 text-sm text-gray-400 mb-6">
                   <div className="flex items-center gap-2">
