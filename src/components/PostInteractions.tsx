@@ -77,30 +77,48 @@ const PostInteractions = ({ postId }: PostInteractionsProps) => {
 
   const fetchComments = async () => {
     try {
-      const { data, error } = await supabase
+      // First get comments
+      const { data: commentsData, error: commentsError } = await supabase
         .from('post_comments')
-        .select(`
-          id,
-          content,
-          created_at,
-          user_id,
-          profiles!post_comments_user_id_fkey (
-            display_name,
-            email,
-            avatar_url
-          )
-        `)
+        .select('id, content, created_at, user_id')
         .eq('post_id', postId)
         .order('created_at', { ascending: true });
 
-      if (error) {
-        console.error('Error fetching comments:', error);
+      if (commentsError) {
+        console.error('Error fetching comments:', commentsError);
         return;
       }
 
-      setComments(data || []);
+      // Then get profiles for each comment
+      if (commentsData && commentsData.length > 0) {
+        const userIds = commentsData.map(comment => comment.user_id);
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, display_name, email, avatar_url')
+          .in('id', userIds);
+
+        if (profilesError) {
+          console.error('Error fetching profiles:', profilesError);
+          setComments(commentsData.map(comment => ({ ...comment, profiles: null })));
+          return;
+        }
+
+        // Combine comments with their profiles
+        const commentsWithProfiles = commentsData.map(comment => {
+          const profile = profilesData?.find(p => p.id === comment.user_id);
+          return {
+            ...comment,
+            profiles: profile || null
+          };
+        });
+
+        setComments(commentsWithProfiles);
+      } else {
+        setComments([]);
+      }
     } catch (error) {
       console.error('Error fetching comments:', error);
+      setComments([]);
     }
   };
 
