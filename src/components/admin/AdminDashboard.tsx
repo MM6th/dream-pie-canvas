@@ -166,7 +166,7 @@ const AdminDashboard = () => {
       <div className="mb-8">
         <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
           <Users className="w-6 h-6 text-yellow-500" />
-          Independent Contractors - Pending Approval
+          Merchants - Pending Approval
         </h3>
         
         {pendingMerchants.length === 0 ? (
