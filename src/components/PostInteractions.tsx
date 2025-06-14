@@ -160,13 +160,22 @@ const PostInteractions = ({ postId }: PostInteractionsProps) => {
 
     setLoading(true);
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('post_comments')
         .insert({
           post_id: postId,
           user_id: user.id,
           content: newComment.trim()
-        });
+        })
+        .select(`
+          *,
+          profiles (
+            display_name,
+            email,
+            avatar_url
+          )
+        `)
+        .single();
 
       if (error) {
         console.error('Error adding comment:', error);
@@ -178,9 +187,17 @@ const PostInteractions = ({ postId }: PostInteractionsProps) => {
         return;
       }
 
+      if (data) {
+        setComments(currentComments => [...currentComments, data as unknown as Comment]);
+      }
       setNewComment("");
     } catch (error) {
       console.error('Error adding comment:', error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred while adding your comment.",
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
@@ -205,10 +222,10 @@ const PostInteractions = ({ postId }: PostInteractionsProps) => {
       
       if (error) throw error;
 
+      setComments(prev => prev.map(c => c.id === editingCommentId ? {...c, content: editedContent.trim()} : c));
       toast({ title: "Success", description: "Comment updated." });
       setEditingCommentId(null);
       setEditedContent("");
-      // Realtime will trigger fetchComments
     } catch (error: any) {
       toast({ title: "Error", description: error.message || "Failed to update comment.", variant: "destructive" });
     } finally {
@@ -227,8 +244,8 @@ const PostInteractions = ({ postId }: PostInteractionsProps) => {
 
       if (error) throw error;
       
+      setComments(prev => prev.filter(c => c.id !== commentId));
       toast({ title: "Success", description: "Comment deleted." });
-      // Realtime will trigger fetchComments
     } catch (error: any) {
       toast({ title: "Error", description: error.message || "Failed to delete comment.", variant: "destructive" });
     }
@@ -236,19 +253,27 @@ const PostInteractions = ({ postId }: PostInteractionsProps) => {
 
   const handleToggleLike = async () => {
     if (!user) return;
+    
+    const originalHasLiked = hasLiked;
+    const originalLikes = likes;
+
+    // Optimistic update
+    setHasLiked(!originalHasLiked);
+    if (!originalHasLiked) {
+      setLikes([...originalLikes, user.id]);
+    } else {
+      setLikes(originalLikes.filter(id => id !== user.id));
+    }
 
     try {
-      if (hasLiked) {
+      if (originalHasLiked) {
         const { error } = await supabase
           .from('post_likes')
           .delete()
           .eq('post_id', postId)
           .eq('user_id', user.id);
 
-        if (error) {
-          console.error('Error removing like:', error);
-          return;
-        }
+        if (error) throw error;
       } else {
         const { error } = await supabase
           .from('post_likes')
@@ -257,13 +282,14 @@ const PostInteractions = ({ postId }: PostInteractionsProps) => {
             user_id: user.id
           });
 
-        if (error) {
-          console.error('Error adding like:', error);
-          return;
-        }
+        if (error) throw error;
       }
     } catch (error) {
       console.error('Error toggling like:', error);
+      // Revert on error
+      setHasLiked(originalHasLiked);
+      setLikes(originalLikes);
+      toast({ title: "Error", description: "Could not update like status.", variant: "destructive" });
     }
   };
 
