@@ -1,33 +1,36 @@
-
-import React, { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useEffect, useState, useCallback } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Clock, CheckCircle, XCircle } from "lucide-react";
+import { Users, Clock, CheckCircle, XCircle, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import PendingMerchantCard from "./PendingMerchantCard";
+import ApprovedMerchantCard from "./ApprovedMerchantCard";
+import { Button } from "../ui/button";
 
-interface PendingMerchant {
+interface Merchant {
   id: string;
   email: string;
-  display_name?: string;
-  avatar_url?: string;
-  facebook_url?: string;
-  instagram_url?: string;
-  youtube_url?: string;
-  pinterest_url?: string;
-  onlyfans_url?: string;
-  snapchat_url?: string;
+  display_name?: string | null;
+  avatar_url?: string | null;
+  facebook_url?: string | null;
+  instagram_url?: string | null;
+  youtube_url?: string | null;
+  pinterest_url?: string | null;
+  onlyfans_url?: string | null;
+  snapchat_url?: string | null;
+  paypal_email?: string | null;
   approval_status: string;
   created_at: string;
 }
 
 const AdminDashboard = () => {
-  const [pendingMerchants, setPendingMerchants] = useState<PendingMerchant[]>([]);
-  const [approvedMerchants, setApprovedMerchants] = useState<PendingMerchant[]>([]);
-  const [rejectedMerchants, setRejectedMerchants] = useState<PendingMerchant[]>([]);
+  const [pendingMerchants, setPendingMerchants] = useState<Merchant[]>([]);
+  const [approvedMerchants, setApprovedMerchants] = useState<Merchant[]>([]);
+  const [rejectedMerchants, setRejectedMerchants] = useState<Merchant[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchMerchants = async () => {
+  const fetchMerchants = useCallback(async () => {
+    setLoading(true);
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -55,7 +58,7 @@ const AdminDashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchMerchants();
@@ -80,7 +83,7 @@ const AdminDashboard = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [fetchMerchants]);
 
   const handleApprovalChange = async (merchantId: string, newStatus: string) => {
     try {
@@ -101,7 +104,7 @@ const AdminDashboard = () => {
     }
   };
 
-  if (loading) {
+  if (loading && !pendingMerchants.length && !approvedMerchants.length) {
     return (
       <div className="text-white">Loading admin dashboard...</div>
     );
@@ -109,9 +112,15 @@ const AdminDashboard = () => {
 
   return (
     <div className="space-y-8">
-      <div className="mb-8">
-        <h2 className="text-3xl font-bold text-white mb-2">Admin Dashboard</h2>
-        <p className="text-gray-300">Manage merchant applications and approvals</p>
+      <div className="flex justify-between items-center mb-8">
+        <div>
+            <h2 className="text-3xl font-bold text-white mb-2">Admin Dashboard</h2>
+            <p className="text-gray-300">Manage merchant applications and approvals</p>
+        </div>
+        <Button onClick={fetchMerchants} disabled={loading} variant="outline" className="border-gray-600 text-white hover:bg-white hover:text-black">
+          <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+          Refresh
+        </Button>
       </div>
 
       {/* Statistics Cards */}
@@ -186,34 +195,19 @@ const AdminDashboard = () => {
           Approved Merchants ({approvedMerchants.length})
         </h3>
         
-        {approvedMerchants.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {approvedMerchants.slice(0, 8).map((merchant) => (
-              <Card key={merchant.id} className="bg-gray-800/50 border-gray-700">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    {merchant.avatar_url ? (
-                      <img
-                        src={merchant.avatar_url}
-                        alt="Avatar"
-                        className="w-10 h-10 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center">
-                        <Users className="w-5 h-5 text-gray-400" />
-                      </div>
-                    )}
-                    <div className="flex-1">
-                      <p className="text-white font-medium">
-                        {merchant.display_name || merchant.email}
-                      </p>
-                      <Badge className="bg-green-500 text-white text-xs">
-                        Approved
-                      </Badge>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+        {approvedMerchants.length === 0 ? (
+          <Card className="bg-gray-800/50 border-gray-700">
+            <CardContent className="p-6 text-center">
+              <p className="text-gray-400">No approved merchants yet.</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {approvedMerchants.map((merchant) => (
+              <ApprovedMerchantCard
+                key={merchant.id}
+                merchant={merchant}
+              />
             ))}
           </div>
         )}
