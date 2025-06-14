@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -34,6 +35,10 @@ const ImagePicker = ({ onImageSelect, currentImageUrl, trigger }: ImagePickerPro
       fetchUploads();
     }
   }, [open, user]);
+
+  useEffect(() => {
+    setSelectedImageUrl(currentImageUrl || "");
+  }, [currentImageUrl]);
 
   const fetchUploads = async () => {
     if (!user) return;

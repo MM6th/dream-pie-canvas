@@ -102,7 +102,7 @@ const CurrentThoughtsModal = ({ onSuccess }: CurrentThoughtsModalProps) => {
             <Input
               id="title"
               value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
               className="bg-gray-700 border-gray-600 text-white"
               placeholder="What's on your mind?"
               required
@@ -114,7 +114,7 @@ const CurrentThoughtsModal = ({ onSuccess }: CurrentThoughtsModalProps) => {
             <Textarea
               id="content"
               value={formData.content}
-              onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+              onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
               className="bg-gray-700 border-gray-600 text-white"
               placeholder="Share your thoughts..."
               rows={4}
@@ -127,12 +127,12 @@ const CurrentThoughtsModal = ({ onSuccess }: CurrentThoughtsModalProps) => {
             <div className="flex gap-2 mt-1">
               <Input
                 value={formData.imageUrl}
-                onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                onChange={(e) => setFormData(prev => ({ ...prev, imageUrl: e.target.value }))}
                 placeholder="Image URL or select from gallery"
                 className="bg-gray-700 border-gray-600 text-white flex-1"
               />
               <ImagePicker
-                onImageSelect={(url) => setFormData({ ...formData, imageUrl: url })}
+                onImageSelect={(url) => setFormData(prev => ({ ...prev, imageUrl: url }))}
                 currentImageUrl={formData.imageUrl}
               />
             </div>
@@ -143,7 +143,7 @@ const CurrentThoughtsModal = ({ onSuccess }: CurrentThoughtsModalProps) => {
             <Input
               id="linkUrl"
               value={formData.linkUrl}
-              onChange={(e) => setFormData({ ...formData, linkUrl: e.target.value })}
+              onChange={(e) => setFormData(prev => ({ ...prev, linkUrl: e.target.value }))}
               className="bg-gray-700 border-gray-600 text-white"
               placeholder="https://example.com"
             />
@@ -153,7 +153,7 @@ const CurrentThoughtsModal = ({ onSuccess }: CurrentThoughtsModalProps) => {
             <Switch
               id="isFeatured"
               checked={formData.isFeatured}
-              onCheckedChange={(checked) => setFormData({ ...formData, isFeatured: checked })}
+              onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isFeatured: checked }))}
             />
             <Label htmlFor="isFeatured">Feature this post</Label>
           </div>
