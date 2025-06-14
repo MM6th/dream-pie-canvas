@@ -199,7 +199,7 @@ const BulletinBoard = () => {
                       <img
                         src={post.image_url}
                         alt={post.title}
-                        className="w-full h-64 object-cover rounded-t-lg"
+                        className="w-full object-contain rounded-t-lg"
                       />
                       <div className="absolute top-4 right-4">
                         <Badge className="bg-yellow-500 text-black font-bold">
