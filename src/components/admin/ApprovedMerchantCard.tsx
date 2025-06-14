@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +9,6 @@ import {
   Instagram,
   Youtube,
   Link,
-  Pinterest,
   Calendar,
   DollarSign
 } from "lucide-react";
@@ -79,7 +77,7 @@ const ApprovedMerchantCard = ({ merchant }: ApprovedMerchantCardProps) => {
             <SocialLink url={merchant.facebook_url} icon={<Facebook className="w-4 h-4" />} label="Facebook" />
             <SocialLink url={merchant.instagram_url} icon={<Instagram className="w-4 h-4" />} label="Instagram" />
             <SocialLink url={merchant.youtube_url} icon={<Youtube className="w-4 h-4" />} label="YouTube" />
-            <SocialLink url={merchant.pinterest_url} icon={<Pinterest className="w-4 h-4" />} label="Pinterest" />
+            <SocialLink url={merchant.pinterest_url} icon={<Link className="w-4 h-4" />} label="Pinterest" />
             <SocialLink url={merchant.onlyfans_url} icon={<Link className="w-4 h-4" />} label="OnlyFans" />
             <SocialLink url={merchant.snapchat_url} icon={<Link className="w-4 h-4" />} label="Snapchat" />
           </div>
