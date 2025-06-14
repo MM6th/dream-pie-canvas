@@ -1,5 +1,5 @@
 import React from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import BackgroundUpload from "@/components/BackgroundUpload";
 import AudioUploadModal from "@/components/AudioUploadModal";
@@ -14,6 +14,9 @@ import ApprovalStatusBanner from "@/components/ApprovalStatusBanner";
 import { useApprovalStatus } from "@/hooks/useApprovalStatus";
 import MerchantProfileModal from "@/components/profile/MerchantProfileModal";
 import MerchantBenefitsModal from "@/components/profile/MerchantBenefitsModal";
+import TunecoreRoyaltyModal from "@/components/profile/TunecoreRoyaltyModal";
+import { toast } from "@/hooks/use-toast";
+import { AlertCircle, CheckCircle } from "lucide-react";
 
 interface MerchantDashboardProps {
   onSuccess: () => void;
@@ -21,6 +24,7 @@ interface MerchantDashboardProps {
   onBackgroundUpload: (url: string) => void;
   purchasedTracks: any[];
   purchasedVideos: any[];
+  userProfile: any;
 }
 
 const MerchantDashboard = ({ 
@@ -28,9 +32,17 @@ const MerchantDashboard = ({
   onViewStore, 
   onBackgroundUpload, 
   purchasedTracks,
-  purchasedVideos
+  purchasedVideos,
+  userProfile
 }: MerchantDashboardProps) => {
   const { isAdmin, isApproved, approvalStatus, loading } = useApprovalStatus();
+
+  const handleComingSoon = () => {
+    toast({
+      title: "Coming Soon!",
+      description: "This feature is currently under development. Stay tuned!",
+    });
+  };
 
   if (loading) {
     return (
@@ -67,6 +79,51 @@ const MerchantDashboard = ({
       {/* Standard Merchant Content - Only show if approved or admin */}
       {(isApproved || isAdmin) && (
         <>
+          {isApproved && !isAdmin && (
+            <Card className="mb-8 bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="text-white text-xl">Account Setup & Agreements</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center gap-4 p-4 bg-gray-700/50 rounded-lg">
+                  {userProfile?.paypal_email ? (
+                    <>
+                      <CheckCircle className="h-6 w-6 text-green-400 flex-shrink-0" />
+                      <div>
+                        <p className="text-white font-medium">Payment Information Complete</p>
+                        <p className="text-gray-400 text-sm">Your PayPal email is on file for payouts.</p>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <AlertCircle className="h-6 w-6 text-yellow-400 flex-shrink-0" />
+                      <div>
+                        <p className="text-white font-medium">Action Required: Add Payment Information</p>
+                        <p className="text-gray-400 text-sm">Please add your PayPal email to receive payments.</p>
+                      </div>
+                      <MerchantProfileModal onProfileUpdate={onSuccess}>
+                        <Button size="sm" className="ml-auto">Update Profile</Button>
+                      </MerchantProfileModal>
+                    </>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-4 p-4 bg-gray-700/50 rounded-lg">
+                  <div className="flex flex-col items-start space-y-2">
+                    <Button 
+                      variant="link" 
+                      className="text-blue-400 hover:text-blue-300 p-0 h-auto justify-start"
+                      onClick={handleComingSoon}
+                    >
+                      Independent Contractor Agreement (Coming Soon)
+                    </Button>
+                    <TunecoreRoyaltyModal />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
             <Card className="lg:col-span-2 bg-gray-800/50 border-gray-700 backdrop-blur-sm">
               <CardContent className="p-6">

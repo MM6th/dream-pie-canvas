@@ -267,6 +267,7 @@ const Index = () => {
               onBackgroundUpload={handleBackgroundUpload}
               purchasedTracks={purchasedTracks}
               purchasedVideos={purchasedVideos}
+              userProfile={userProfile}
             />
           ) : (
             <SupporterDashboard 
