@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -69,11 +68,6 @@ const MerchantBenefitsModal = () => {
                 </div>
               ))}
             </div>
-          </div>
-          
-          <div className="text-center text-sm text-gray-500 pt-4 border-t border-gray-700">
-            <p>We approach the hiring process from a word of mouth or scouting perspective.</p>
-            <p>That is why we have the approval process put into place.</p>
           </div>
         </div>
       </DialogContent>
