@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import EditAudioModal from "./EditAudioModal";
+import { useApprovalStatus } from "@/hooks/useApprovalStatus";
 
 interface AudioProduct {
   id: string;
@@ -26,6 +28,7 @@ interface AudioProduct {
 
 const AudioProductManager = () => {
   const { user } = useAuth();
+  const { isAdmin, loading: adminStatusLoading } = useApprovalStatus();
   const [products, setProducts] = useState<AudioProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingProduct, setEditingProduct] = useState<AudioProduct | null>(null);
@@ -69,8 +72,14 @@ const AudioProductManager = () => {
   };
 
   useEffect(() => {
-    fetchProducts();
-  }, [user]);
+    if (!adminStatusLoading) {
+      if (isAdmin) {
+        fetchProducts();
+      } else {
+        setLoading(false);
+      }
+    }
+  }, [user, isAdmin, adminStatusLoading]);
 
   const handleDelete = async (productId: string) => {
     if (!confirm("Are you sure you want to delete this audio product?")) {
@@ -105,6 +114,14 @@ const AudioProductManager = () => {
     setEditingProduct(null);
     fetchProducts();
   };
+
+  if (adminStatusLoading) {
+    return null;
+  }
+
+  if (!isAdmin) {
+    return null;
+  }
 
   if (loading) {
     return (
@@ -217,3 +234,4 @@ const AudioProductManager = () => {
 };
 
 export default AudioProductManager;
+
