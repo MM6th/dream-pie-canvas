@@ -18,7 +18,7 @@ const benefits = [
   {
     icon: Mic,
     title: "Influencer Shows",
-    description: "Inquire about podcast, spoken, asmr, and other influencer shows that we can product behind the scenes before launch on major platforms."
+    description: "Inquire about podcast, spoken, asmr, and other influencer shows that we can produce behind the scenes before launch on major platforms."
   },
   {
     icon: Camera,
