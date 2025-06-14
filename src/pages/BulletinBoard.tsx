@@ -30,7 +30,7 @@ const BulletinBoard = () => {
   const navigate = useNavigate();
   const { signOut, user } = useAuth();
   const [posts, setPosts] = useState<BulletinPost[]>([]);
-  const [featuredPost, setFeaturedPost] = useState<BulletinPost | null>(null);
+  const [featuredPosts, setFeaturedPosts] = useState<BulletinPost[]>([]);
   const [currentThoughts, setCurrentThoughts] = useState<BulletinPost[]>([]);
   const [tvGuidePosts, setTvGuidePosts] = useState<BulletinPost[]>([]);
   const [displayedPosts, setDisplayedPosts] = useState(6);
@@ -82,11 +82,11 @@ const BulletinBoard = () => {
         const thoughts = data.filter(post => post.post_type === 'current_thoughts');
         const tvGuide = data.filter(post => post.post_type === 'tv_guide' || !post.post_type);
         
-        // Find featured current thought
-        const featured = thoughts.find(post => post.is_featured);
+        // Find featured and regular current thoughts
+        const featured = thoughts.filter(post => post.is_featured);
         const regularThoughts = thoughts.filter(post => !post.is_featured);
         
-        setFeaturedPost(featured || null);
+        setFeaturedPosts(featured);
         setCurrentThoughts(regularThoughts);
         setTvGuidePosts(tvGuide);
         setPosts(data);
@@ -140,7 +140,7 @@ const BulletinBoard = () => {
     profiles: { email: 'community@example.com' }
   };
 
-  const displayFeaturedPost = featuredPost || defaultFeaturedPost;
+  const displayFeaturedPosts = featuredPosts.length > 0 ? featuredPosts : [defaultFeaturedPost];
 
   if (loading) {
     return (
@@ -183,57 +183,59 @@ const BulletinBoard = () => {
       />
 
       <div className="max-w-6xl mx-auto p-6">
-        {/* Today's Featured Thought */}
+        {/* Featured Thoughts */}
         <div className="mb-12">
           <h2 className="text-3xl font-bold text-white mb-6 flex items-center gap-2">
             <Cloud className="w-8 h-8 text-white" />
-            Today's Featured Thought
+            Featured Thoughts
           </h2>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card className="bg-gray-800 border-gray-700 max-w-2xl">
-              <CardHeader className="p-0">
-                {displayFeaturedPost.image_url && (
-                  <div className="relative">
-                    <img
-                      src={displayFeaturedPost.image_url}
-                      alt={displayFeaturedPost.title}
-                      className="w-full object-contain rounded-t-lg"
-                    />
-                    <div className="absolute top-4 right-4">
-                      <Badge className="bg-yellow-500 text-black font-bold">
-                        Featured
-                      </Badge>
+            {displayFeaturedPosts.map((post) => (
+              <Card key={post.id} className="bg-gray-800 border-gray-700 max-w-2xl">
+                <CardHeader className="p-0">
+                  {post.image_url && (
+                    <div className="relative">
+                      <img
+                        src={post.image_url}
+                        alt={post.title}
+                        className="w-full object-contain rounded-t-lg"
+                      />
+                      <div className="absolute top-4 right-4">
+                        <Badge className="bg-yellow-500 text-black font-bold">
+                          Featured
+                        </Badge>
+                      </div>
+                    </div>
+                  )}
+                </CardHeader>
+                <CardContent className="p-6">
+                  <CardTitle className="text-white text-2xl mb-4">{post.title}</CardTitle>
+                  <p className="text-gray-300 text-lg mb-6 leading-relaxed">{post.content}</p>
+                  
+                  <div className="flex items-center gap-4 text-sm text-gray-400 mb-6">
+                    <div className="flex items-center gap-2">
+                      {post.profiles?.avatar_url ? (
+                        <img
+                          src={post.profiles.avatar_url}
+                          alt="Avatar"
+                          className="w-8 h-8 rounded-full object-cover"
+                        />
+                      ) : (
+                        <User className="w-6 h-6" />
+                      )}
+                      {post.profiles?.display_name || post.profiles?.email || 'Community'}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Calendar className="w-4 h-4" />
+                      {new Date(post.created_at).toLocaleDateString()}
                     </div>
                   </div>
-                )}
-              </CardHeader>
-              <CardContent className="p-6">
-                <CardTitle className="text-white text-2xl mb-4">{displayFeaturedPost.title}</CardTitle>
-                <p className="text-gray-300 text-lg mb-6 leading-relaxed">{displayFeaturedPost.content}</p>
-                
-                <div className="flex items-center gap-4 text-sm text-gray-400 mb-6">
-                  <div className="flex items-center gap-2">
-                    {displayFeaturedPost.profiles?.avatar_url ? (
-                      <img
-                        src={displayFeaturedPost.profiles.avatar_url}
-                        alt="Avatar"
-                        className="w-8 h-8 rounded-full object-cover"
-                      />
-                    ) : (
-                      <User className="w-6 h-6" />
-                    )}
-                    {displayFeaturedPost.profiles?.display_name || displayFeaturedPost.profiles?.email || 'Community'}
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Calendar className="w-4 h-4" />
-                    {new Date(displayFeaturedPost.created_at).toLocaleDateString()}
-                  </div>
-                </div>
 
-                <PostInteractions postId={displayFeaturedPost.id} />
-              </CardContent>
-            </Card>
+                  <PostInteractions postId={post.id} />
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
 
@@ -278,7 +280,7 @@ const BulletinBoard = () => {
                       </div>
                       <div className="flex items-center gap-1 ml-auto">
                         <Calendar className="w-4 h-4" />
-                        {new Date(post.created_at).toLocaleDateString()}
+                        {new Date(post.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </div>
                     </div>
 

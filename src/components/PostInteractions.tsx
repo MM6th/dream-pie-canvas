@@ -1,12 +1,23 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { ThumbsUp, MessageCircle, Send, User } from "lucide-react";
+import { ThumbsUp, MessageCircle, Send, User, Edit, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/components/ui/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Textarea } from "@/components/ui/textarea";
 
 interface Comment {
   id: string;
@@ -31,6 +42,8 @@ const PostInteractions = ({ postId }: PostInteractionsProps) => {
   const [newComment, setNewComment] = useState("");
   const [loading, setLoading] = useState(false);
   const [hasLiked, setHasLiked] = useState(false);
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [editedContent, setEditedContent] = useState("");
 
   useEffect(() => {
     fetchComments();
@@ -174,6 +187,54 @@ const PostInteractions = ({ postId }: PostInteractionsProps) => {
     }
   };
 
+  const handleUpdateComment = async () => {
+    if (!user || !editedContent.trim() || !editingCommentId) return;
+
+    const originalComment = comments.find(c => c.id === editingCommentId);
+    if (originalComment?.content === editedContent.trim()) {
+      setEditingCommentId(null);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from('post_comments')
+        .update({ content: editedContent.trim(), updated_at: new Date().toISOString() })
+        .eq('id', editingCommentId)
+        .eq('user_id', user.id);
+      
+      if (error) throw error;
+
+      toast({ title: "Success", description: "Comment updated." });
+      setEditingCommentId(null);
+      setEditedContent("");
+      // Realtime will trigger fetchComments
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Failed to update comment.", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    if (!user) return;
+    try {
+      const { error } = await supabase
+        .from('post_comments')
+        .delete()
+        .eq('id', commentId)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      
+      toast({ title: "Success", description: "Comment deleted." });
+      // Realtime will trigger fetchComments
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Failed to delete comment.", variant: "destructive" });
+    }
+  };
+
   const handleToggleLike = async () => {
     if (!user) return;
 
@@ -205,6 +266,11 @@ const PostInteractions = ({ postId }: PostInteractionsProps) => {
     } catch (error) {
       console.error('Error toggling like:', error);
     }
+  };
+
+  const startEditing = (comment: Comment) => {
+    setEditingCommentId(comment.id);
+    setEditedContent(comment.content);
   };
 
   return (
@@ -243,15 +309,60 @@ const PostInteractions = ({ postId }: PostInteractionsProps) => {
                   <User className="w-8 h-8 text-gray-400" />
                 )}
                 <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-sm font-medium text-white">
-                      {comment.profiles?.display_name || comment.profiles?.email || 'Anonymous'}
-                    </span>
-                    <span className="text-xs text-gray-400">
-                      {new Date(comment.created_at).toLocaleDateString()}
-                    </span>
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-white">
+                        {comment.profiles?.display_name || comment.profiles?.email || 'Anonymous'}
+                      </span>
+                      <span className="text-xs text-gray-400">
+                        {new Date(comment.created_at).toLocaleDateString()}
+                      </span>
+                    </div>
+                    {user?.id === comment.user_id && editingCommentId !== comment.id && (
+                      <div className="flex items-center gap-1">
+                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => startEditing(comment)}>
+                          <Edit className="w-3 h-3 text-gray-400 hover:text-white" />
+                        </Button>
+                         <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-6 w-6">
+                              <Trash2 className="w-3 h-3 text-gray-400 hover:text-red-400" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent className="bg-gray-800 border-gray-700">
+                            <AlertDialogHeader>
+                              <AlertDialogTitle className="text-white">Delete Comment</AlertDialogTitle>
+                              <AlertDialogDescription className="text-gray-400">
+                                Are you sure you want to delete this comment? This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel className="border-gray-600 text-white bg-transparent">Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDeleteComment(comment.id)} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    )}
                   </div>
-                  <p className="text-gray-300 text-sm">{comment.content}</p>
+                  {editingCommentId === comment.id ? (
+                    <div className="space-y-2">
+                      <Textarea
+                        value={editedContent}
+                        onChange={(e) => setEditedContent(e.target.value)}
+                        className="bg-gray-800 border-gray-600 text-white text-sm"
+                        rows={2}
+                      />
+                      <div className="flex gap-2 justify-end">
+                        <Button size="sm" variant="ghost" onClick={() => setEditingCommentId(null)}>Cancel</Button>
+                        <Button size="sm" onClick={handleUpdateComment} disabled={loading || editedContent.trim() === ''}>
+                          {loading ? 'Saving...' : 'Save'}
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-gray-300 text-sm">{comment.content}</p>
+                  )}
                 </div>
               </div>
             </CardContent>
