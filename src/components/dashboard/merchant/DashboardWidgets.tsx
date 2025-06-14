@@ -10,39 +10,42 @@ interface DashboardWidgetsProps {
   onSuccess: () => void;
   onViewStore: () => void;
   onBackgroundUpload: (url: string) => void;
+  isAdmin: boolean;
 }
 
-const DashboardWidgets = ({ onSuccess, onViewStore, onBackgroundUpload }: DashboardWidgetsProps) => {
+const DashboardWidgets = ({ onSuccess, onViewStore, onBackgroundUpload, isAdmin }: DashboardWidgetsProps) => {
   return (
     <>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        <Card className="lg:col-span-2 bg-gray-800/50 border-gray-700 backdrop-blur-sm">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-white">Audio Products</h3>
-              <AudioUploadModal onSuccess={onSuccess} />
-            </div>
-            <p className="text-gray-400 mb-4">Upload and manage your audio content</p>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg">
-                <div>
-                  <p className="text-white font-medium">Total Audio Products</p>
-                  <p className="text-gray-400 text-sm">Manage your audio library</p>
-                </div>
-                <Button
-                  onClick={onViewStore}
-                  variant="outline"
-                  size="sm"
-                  className="border-gray-600 text-white hover:bg-white hover:text-black"
-                >
-                  View in Store
-                </Button>
+        {isAdmin && (
+          <Card className="lg:col-span-2 bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-bold text-white">Audio Products</h3>
+                <AudioUploadModal onSuccess={onSuccess} />
               </div>
-            </div>
-          </CardContent>
-        </Card>
+              <p className="text-gray-400 mb-4">Upload and manage your audio content</p>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg">
+                  <div>
+                    <p className="text-white font-medium">Total Audio Products</p>
+                    <p className="text-gray-400 text-sm">Manage your audio library</p>
+                  </div>
+                  <Button
+                    onClick={onViewStore}
+                    variant="outline"
+                    size="sm"
+                    className="border-gray-600 text-white hover:bg-white hover:text-black"
+                  >
+                    View in Store
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
         
-        <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+        <Card className={`bg-gray-800/50 border-gray-700 backdrop-blur-sm ${!isAdmin ? 'lg:col-span-3' : ''}`}>
           <CardContent className="p-6">
             <h3 className="text-xl font-bold text-white mb-4">Quick Stats</h3>
             <div className="space-y-4">
@@ -90,3 +93,4 @@ const DashboardWidgets = ({ onSuccess, onViewStore, onBackgroundUpload }: Dashbo
 };
 
 export default DashboardWidgets;
+

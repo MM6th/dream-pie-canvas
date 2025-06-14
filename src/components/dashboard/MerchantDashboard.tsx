@@ -1,4 +1,3 @@
-
 import React from "react";
 import MediaPlayers from "./MediaPlayers";
 import AdminDashboard from "@/components/admin/AdminDashboard";
@@ -68,6 +67,7 @@ const MerchantDashboard = ({
             onSuccess={onSuccess} 
             onViewStore={onViewStore} 
             onBackgroundUpload={onBackgroundUpload} 
+            isAdmin={isAdmin}
           />
           
           <ContentManagement />
