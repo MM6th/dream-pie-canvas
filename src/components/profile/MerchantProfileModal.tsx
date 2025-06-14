@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -10,9 +9,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useApprovalStatus } from "@/hooks/useApprovalStatus";
 import { toast } from "@/hooks/use-toast";
 import AvatarUpload from "./AvatarUpload";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 
 const profileSchema = z.object({
   display_name: z.string().min(1, "Display name is required"),
@@ -22,7 +22,7 @@ const profileSchema = z.object({
   snapchat_url: z.string().url().optional().or(z.literal("")),
   pinterest_url: z.string().url().optional().or(z.literal("")),
   onlyfans_url: z.string().url().optional().or(z.literal("")),
-  paypal_email: z.string().email("Please enter a valid email address").optional().or(z.literal(""))
+  paypal_email: z.string().min(1, "An email is required").email("Please enter a valid email address")
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
@@ -34,6 +34,7 @@ interface MerchantProfileModalProps {
 
 const MerchantProfileModal = ({ children, onProfileUpdate }: MerchantProfileModalProps) => {
   const { user } = useAuth();
+  const { isApproved } = useApprovalStatus();
   const [open, setOpen] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string>("");
   const [loading, setLoading] = useState(false);
@@ -309,15 +310,22 @@ const MerchantProfileModal = ({ children, onProfileUpdate }: MerchantProfileModa
               name="paypal_email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-white">PayPal Email *</FormLabel>
+                  <FormLabel className="text-white">
+                    {isApproved ? "PayPal Email" : "Primary Contact Email"} *
+                  </FormLabel>
                   <FormControl>
-                    <Input 
-                      {...field} 
+                    <Input
+                      {...field}
                       type="email"
                       className="bg-gray-700 border-gray-600 text-white"
-                      placeholder="your.paypal@email.com"
+                      placeholder={isApproved ? "your.paypal@email.com" : "your.email@address.com"}
                     />
                   </FormControl>
+                  <FormDescription className="text-gray-400">
+                    {isApproved
+                      ? "This email will be used for receiving payments."
+                      : "We'll use this email for updates on your application status."}
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
