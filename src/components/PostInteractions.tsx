@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { ThumbsUp, MessageCircle, Send, User, Edit, Trash2 } from "lucide-react";
+import { ThumbsUp, MessageCircle, Send, User, Edit, Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/components/ui/use-toast";
@@ -46,6 +46,9 @@ const PostInteractions = ({ postId }: PostInteractionsProps) => {
   const [hasLiked, setHasLiked] = useState(false);
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editedContent, setEditedContent] = useState("");
+  const [areCommentsExpanded, setAreCommentsExpanded] = useState(false);
+  
+  const initialCommentCount = 2;
 
   useEffect(() => {
     if (user) {
@@ -317,6 +320,8 @@ const PostInteractions = ({ postId }: PostInteractionsProps) => {
     setEditedContent(comment.content);
   };
 
+  const visibleComments = areCommentsExpanded ? comments : comments.slice(0, initialCommentCount);
+
   return (
     <div className="space-y-4">
       {/* Like and Comment Stats */}
@@ -340,7 +345,7 @@ const PostInteractions = ({ postId }: PostInteractionsProps) => {
       {/* Comments Section */}
       <ScrollArea className="max-h-80 w-full pr-4 border border-gray-600 rounded-md p-2 bg-black/20">
         <div className="space-y-3">
-          {comments.map((comment) => (
+          {visibleComments.map((comment) => (
             <Card key={comment.id} className="bg-gray-700/50 border-gray-600">
               <CardContent className="p-3">
                 <div className="flex items-start gap-3">
@@ -417,6 +422,27 @@ const PostInteractions = ({ postId }: PostInteractionsProps) => {
           ))}
         </div>
       </ScrollArea>
+
+      {comments.length > initialCommentCount && (
+        <Button 
+          variant="link" 
+          size="sm" 
+          onClick={() => setAreCommentsExpanded(!areCommentsExpanded)}
+          className="text-gray-400 hover:text-white p-0 h-auto"
+        >
+          {areCommentsExpanded ? (
+            <div className="flex items-center">
+              <ChevronUp className="w-4 h-4 mr-1" />
+              Show Less
+            </div>
+          ) : (
+            <div className="flex items-center">
+              <ChevronDown className="w-4 h-4 mr-1" />
+              View {comments.length - initialCommentCount} More Comments
+            </div>
+          )}
+        </Button>
+      )}
 
       {/* Add Comment Form */}
       {user && (

@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, LogOut, Calendar, User, Cloud, ExternalLink, ChevronDown } from "lucide-react";
+import { ArrowLeft, LogOut, Calendar, User, Cloud, ExternalLink, ChevronDown, Tv } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import PostInteractions from "@/components/PostInteractions";
 import CurrentThoughtsModal from "@/components/CurrentThoughtsModal";
+import TVGuideSection from "@/components/TVGuideSection";
 
 interface BulletinPost {
   id: string;
@@ -111,6 +112,9 @@ const BulletinBoard = () => {
     };
   }, []);
 
+  const tvGuidePosts = posts.filter(post => post.post_type === 'tv_guide');
+  const otherPosts = posts.filter(post => post.post_type !== 'tv_guide');
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black flex items-center justify-center">
@@ -152,6 +156,9 @@ const BulletinBoard = () => {
       />
 
       <div className="max-w-6xl mx-auto p-6">
+        {/* TV Guide Section */}
+        <TVGuideSection posts={tvGuidePosts} />
+
         {/* Unified Posts Section */}
         <div className="mb-12">
           <h2 className="text-3xl font-bold text-white mb-6 flex items-center gap-2">
@@ -159,9 +166,9 @@ const BulletinBoard = () => {
             Community Bulletin
           </h2>
           
-          {posts.length > 0 ? (
+          {otherPosts.length > 0 ? (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {posts.slice(0, displayedPosts).map((post) => (
+              {otherPosts.slice(0, displayedPosts).map((post) => (
                 <Card key={post.id} className="bg-gray-800 border-gray-700 max-w-2xl">
                   <CardHeader className="p-0">
                     {post.image_url && (
@@ -204,7 +211,7 @@ const BulletinBoard = () => {
                           className="mb-4 bg-blue-600 hover:bg-blue-700"
                         >
                           <ExternalLink className="w-4 h-4 mr-2" />
-                          {post.post_type === 'tv_guide' ? 'Watch Now' : 'Learn More'}
+                          Learn More
                         </Button>
                       )}
 
@@ -216,12 +223,12 @@ const BulletinBoard = () => {
           ) : (
             <Card className="bg-gray-800 border-gray-700 max-w-2xl">
               <CardContent className="p-6">
-                 <p className="text-gray-300 text-lg text-center">No posts on the bulletin board yet. Be the first to share!</p>
+                 <p className="text-gray-300 text-lg text-center">No community posts on the bulletin board yet. Be the first to share!</p>
               </CardContent>
             </Card>
           )}
 
-          {posts.length > displayedPosts && (
+          {otherPosts.length > displayedPosts && (
             <div className="text-center mt-6">
               <Button onClick={loadMorePosts} variant="outline" className="border-gray-600 text-white hover:bg-gray-700">
                 <ChevronDown className="w-4 h-4 mr-2" />
