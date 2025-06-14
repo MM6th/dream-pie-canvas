@@ -343,85 +343,90 @@ const PostInteractions = ({ postId }: PostInteractionsProps) => {
       </div>
 
       {/* Comments Section */}
-      <ScrollArea className="max-h-80 w-full pr-4 border border-gray-600 rounded-md p-2 bg-black/20" thumbClassName="bg-blue-600">
-        <div className="space-y-3">
-          {visibleComments.map((comment) => (
-            <Card key={comment.id} className="bg-gray-700/50 border-gray-600">
-              <CardContent className="p-3">
-                <div className="flex items-start gap-3">
-                  {comment.profiles?.avatar_url ? (
-                    <img
-                      src={comment.profiles.avatar_url}
-                      alt="Avatar"
-                      className="w-8 h-8 rounded-full object-cover"
-                    />
-                  ) : (
-                    <User className="w-8 h-8 text-gray-400" />
-                  )}
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between gap-2 mb-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-white">
-                          {comment.profiles?.display_name || comment.profiles?.email || 'Anonymous'}
-                        </span>
-                        <span className="text-xs text-gray-400">
-                          {new Date(comment.created_at).toLocaleDateString()}
-                        </span>
-                      </div>
-                      {(user?.id === comment.user_id || userProfile?.is_admin) && editingCommentId !== comment.id && (
-                        <div className="flex items-center gap-1">
-                          {user?.id === comment.user_id && (
-                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => startEditing(comment)}>
-                              <Edit className="w-3 h-3 text-gray-400 hover:text-white" />
-                            </Button>
-                          )}
-                           <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-6 w-6">
-                                <Trash2 className="w-3 h-3 text-gray-400 hover:text-red-400" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent className="bg-gray-800 border-gray-700">
-                              <AlertDialogHeader>
-                                <AlertDialogTitle className="text-white">Delete Comment</AlertDialogTitle>
-                                <AlertDialogDescription className="text-gray-400">
-                                  Are you sure you want to delete this comment? This action cannot be undone.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel className="border-gray-600 text-white bg-transparent">Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => handleDeleteComment(comment.id)} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
+      <div className="relative">
+        <ScrollArea 
+          className="max-h-80 w-full pr-4 border border-gray-600 rounded-md p-2 bg-black/20"
+          thumbClassName="bg-blue-600"
+        >
+          <div className="space-y-3">
+            {visibleComments.map((comment) => (
+              <Card key={comment.id} className="bg-gray-700/50 border-gray-600">
+                <CardContent className="p-3">
+                  <div className="flex items-start gap-3">
+                    {comment.profiles?.avatar_url ? (
+                      <img
+                        src={comment.profiles.avatar_url}
+                        alt="Avatar"
+                        className="w-8 h-8 rounded-full object-cover"
+                      />
+                    ) : (
+                      <User className="w-8 h-8 text-gray-400" />
+                    )}
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-white">
+                            {comment.profiles?.display_name || comment.profiles?.email || 'Anonymous'}
+                          </span>
+                          <span className="text-xs text-gray-400">
+                            {new Date(comment.created_at).toLocaleDateString()}
+                          </span>
                         </div>
+                        {(user?.id === comment.user_id || userProfile?.is_admin) && editingCommentId !== comment.id && (
+                          <div className="flex items-center gap-1">
+                            {user?.id === comment.user_id && (
+                              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => startEditing(comment)}>
+                                <Edit className="w-3 h-3 text-gray-400 hover:text-white" />
+                              </Button>
+                            )}
+                             <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-6 w-6">
+                                  <Trash2 className="w-3 h-3 text-gray-400 hover:text-red-400" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent className="bg-gray-800 border-gray-700">
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle className="text-white">Delete Comment</AlertDialogTitle>
+                                  <AlertDialogDescription className="text-gray-400">
+                                    Are you sure you want to delete this comment? This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel className="border-gray-600 text-white bg-transparent">Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleDeleteComment(comment.id)} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        )}
+                      </div>
+                      {editingCommentId === comment.id ? (
+                        <div className="space-y-2">
+                          <Textarea
+                            value={editedContent}
+                            onChange={(e) => setEditedContent(e.target.value)}
+                            className="bg-gray-800 border-gray-600 text-white text-sm"
+                            rows={2}
+                          />
+                          <div className="flex gap-2 justify-end">
+                            <Button size="sm" variant="outline" className="bg-white text-black hover:bg-gray-100" onClick={() => setEditingCommentId(null)}>Cancel</Button>
+                            <Button size="sm" onClick={handleUpdateComment} disabled={loading || editedContent.trim() === ''}>
+                              {loading ? 'Saving...' : 'Save'}
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-gray-300 text-sm">{comment.content}</p>
                       )}
                     </div>
-                    {editingCommentId === comment.id ? (
-                      <div className="space-y-2">
-                        <Textarea
-                          value={editedContent}
-                          onChange={(e) => setEditedContent(e.target.value)}
-                          className="bg-gray-800 border-gray-600 text-white text-sm"
-                          rows={2}
-                        />
-                        <div className="flex gap-2 justify-end">
-                          <Button size="sm" variant="outline" className="bg-white text-black hover:bg-gray-100" onClick={() => setEditingCommentId(null)}>Cancel</Button>
-                          <Button size="sm" onClick={handleUpdateComment} disabled={loading || editedContent.trim() === ''}>
-                            {loading ? 'Saving...' : 'Save'}
-                          </Button>
-                        </div>
-                      </div>
-                    ) : (
-                      <p className="text-gray-300 text-sm">{comment.content}</p>
-                    )}
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </ScrollArea>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </ScrollArea>
+      </div>
 
       {comments.length > initialCommentCount && (
         <Button 
