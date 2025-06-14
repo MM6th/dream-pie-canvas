@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +19,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface Comment {
   id: string;
@@ -90,47 +92,45 @@ const PostInteractions = ({ postId }: PostInteractionsProps) => {
 
   const fetchComments = async () => {
     try {
-      // First get comments
-      const { data: commentsData, error: commentsError } = await supabase
+      const { data, error } = await supabase
         .from('post_comments')
-        .select('id, content, created_at, user_id')
+        .select(`
+          id,
+          content,
+          created_at,
+          user_id,
+          profiles (
+            display_name,
+            email,
+            avatar_url
+          )
+        `)
         .eq('post_id', postId)
         .order('created_at', { ascending: true });
 
-      if (commentsError) {
-        console.error('Error fetching comments:', commentsError);
+      if (error) {
+        console.error('Error fetching comments with profiles:', error);
+        toast({
+          title: "Error",
+          description: "Could not fetch comments.",
+          variant: "destructive",
+        });
+        setComments([]);
         return;
       }
 
-      // Then get profiles for each comment
-      if (commentsData && commentsData.length > 0) {
-        const userIds = commentsData.map(comment => comment.user_id);
-        const { data: profilesData, error: profilesError } = await supabase
-          .from('profiles')
-          .select('id, display_name, email, avatar_url')
-          .in('id', userIds);
-
-        if (profilesError) {
-          console.error('Error fetching profiles:', profilesError);
-          setComments(commentsData.map(comment => ({ ...comment, profiles: null })));
-          return;
-        }
-
-        // Combine comments with their profiles
-        const commentsWithProfiles = commentsData.map(comment => {
-          const profile = profilesData?.find(p => p.id === comment.user_id);
-          return {
-            ...comment,
-            profiles: profile || null
-          };
-        });
-
-        setComments(commentsWithProfiles);
+      if (data) {
+        setComments(data as Comment[]);
       } else {
         setComments([]);
       }
     } catch (error) {
-      console.error('Error fetching comments:', error);
+      console.error('Error in fetchComments:', error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred while fetching comments.",
+        variant: "destructive",
+      });
       setComments([]);
     }
   };
@@ -294,81 +294,83 @@ const PostInteractions = ({ postId }: PostInteractionsProps) => {
       </div>
 
       {/* Comments Section */}
-      <div className="space-y-3">
-        {comments.map((comment) => (
-          <Card key={comment.id} className="bg-gray-700/50 border-gray-600">
-            <CardContent className="p-3">
-              <div className="flex items-start gap-3">
-                {comment.profiles?.avatar_url ? (
-                  <img
-                    src={comment.profiles.avatar_url}
-                    alt="Avatar"
-                    className="w-8 h-8 rounded-full object-cover"
-                  />
-                ) : (
-                  <User className="w-8 h-8 text-gray-400" />
-                )}
-                <div className="flex-1">
-                  <div className="flex items-center justify-between gap-2 mb-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-white">
-                        {comment.profiles?.display_name || comment.profiles?.email || 'Anonymous'}
-                      </span>
-                      <span className="text-xs text-gray-400">
-                        {new Date(comment.created_at).toLocaleDateString()}
-                      </span>
-                    </div>
-                    {user?.id === comment.user_id && editingCommentId !== comment.id && (
-                      <div className="flex items-center gap-1">
-                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => startEditing(comment)}>
-                          <Edit className="w-3 h-3 text-gray-400 hover:text-white" />
-                        </Button>
-                         <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-6 w-6">
-                              <Trash2 className="w-3 h-3 text-gray-400 hover:text-red-400" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent className="bg-gray-800 border-gray-700">
-                            <AlertDialogHeader>
-                              <AlertDialogTitle className="text-white">Delete Comment</AlertDialogTitle>
-                              <AlertDialogDescription className="text-gray-400">
-                                Are you sure you want to delete this comment? This action cannot be undone.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel className="border-gray-600 text-white bg-transparent">Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDeleteComment(comment.id)} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
+      <ScrollArea className="max-h-60 w-full pr-4">
+        <div className="space-y-3">
+          {comments.map((comment) => (
+            <Card key={comment.id} className="bg-gray-700/50 border-gray-600">
+              <CardContent className="p-3">
+                <div className="flex items-start gap-3">
+                  {comment.profiles?.avatar_url ? (
+                    <img
+                      src={comment.profiles.avatar_url}
+                      alt="Avatar"
+                      className="w-8 h-8 rounded-full object-cover"
+                    />
+                  ) : (
+                    <User className="w-8 h-8 text-gray-400" />
+                  )}
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between gap-2 mb-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-white">
+                          {comment.profiles?.display_name || comment.profiles?.email || 'Anonymous'}
+                        </span>
+                        <span className="text-xs text-gray-400">
+                          {new Date(comment.created_at).toLocaleDateString()}
+                        </span>
                       </div>
+                      {user?.id === comment.user_id && editingCommentId !== comment.id && (
+                        <div className="flex items-center gap-1">
+                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => startEditing(comment)}>
+                            <Edit className="w-3 h-3 text-gray-400 hover:text-white" />
+                          </Button>
+                           <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-6 w-6">
+                                <Trash2 className="w-3 h-3 text-gray-400 hover:text-red-400" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent className="bg-gray-800 border-gray-700">
+                              <AlertDialogHeader>
+                                <AlertDialogTitle className="text-white">Delete Comment</AlertDialogTitle>
+                                <AlertDialogDescription className="text-gray-400">
+                                  Are you sure you want to delete this comment? This action cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel className="border-gray-600 text-white bg-transparent">Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDeleteComment(comment.id)} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      )}
+                    </div>
+                    {editingCommentId === comment.id ? (
+                      <div className="space-y-2">
+                        <Textarea
+                          value={editedContent}
+                          onChange={(e) => setEditedContent(e.target.value)}
+                          className="bg-gray-800 border-gray-600 text-white text-sm"
+                          rows={2}
+                        />
+                        <div className="flex gap-2 justify-end">
+                          <Button size="sm" variant="ghost" onClick={() => setEditingCommentId(null)}>Cancel</Button>
+                          <Button size="sm" onClick={handleUpdateComment} disabled={loading || editedContent.trim() === ''}>
+                            {loading ? 'Saving...' : 'Save'}
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-gray-300 text-sm">{comment.content}</p>
                     )}
                   </div>
-                  {editingCommentId === comment.id ? (
-                    <div className="space-y-2">
-                      <Textarea
-                        value={editedContent}
-                        onChange={(e) => setEditedContent(e.target.value)}
-                        className="bg-gray-800 border-gray-600 text-white text-sm"
-                        rows={2}
-                      />
-                      <div className="flex gap-2 justify-end">
-                        <Button size="sm" variant="ghost" onClick={() => setEditingCommentId(null)}>Cancel</Button>
-                        <Button size="sm" onClick={handleUpdateComment} disabled={loading || editedContent.trim() === ''}>
-                          {loading ? 'Saving...' : 'Save'}
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <p className="text-gray-300 text-sm">{comment.content}</p>
-                  )}
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </ScrollArea>
 
       {/* Add Comment Form */}
       {user && (
