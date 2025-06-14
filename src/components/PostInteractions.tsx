@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -338,7 +339,7 @@ const PostInteractions = ({ postId }: PostInteractionsProps) => {
       </div>
 
       {/* Comments Section */}
-      <ScrollArea className="max-h-60 w-full pr-4">
+      <ScrollArea className="max-h-80 w-full pr-4">
         <div className="space-y-3">
           {comments.map((comment) => (
             <Card key={comment.id} className="bg-gray-700/50 border-gray-600">
