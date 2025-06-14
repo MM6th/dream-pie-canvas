@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +19,7 @@ interface Merchant {
   pinterest_url?: string | null;
   onlyfans_url?: string | null;
   snapchat_url?: string | null;
+  contact_email?: string | null;
   paypal_email?: string | null;
   approval_status: string;
   created_at: string;

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -10,11 +11,11 @@ import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useApprovalStatus } from "@/hooks/useApprovalStatus";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "@/components/ui/use-toast";
 import AvatarUpload from "./AvatarUpload";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 
-const profileSchema = z.object({
+const profileFormSchemaBase = z.object({
   display_name: z.string().min(1, "Display name is required"),
   facebook_url: z.string().url().optional().or(z.literal("")),
   instagram_url: z.string().url().optional().or(z.literal("")),
@@ -22,10 +23,11 @@ const profileSchema = z.object({
   snapchat_url: z.string().url().optional().or(z.literal("")),
   pinterest_url: z.string().url().optional().or(z.literal("")),
   onlyfans_url: z.string().url().optional().or(z.literal("")),
-  paypal_email: z.string().min(1, "An email is required").email("Please enter a valid email address")
+  contact_email: z.string().email("Please enter a valid email address.").optional().or(z.literal("")),
+  paypal_email: z.string().email("Please enter a valid email address.").optional().or(z.literal("")),
 });
 
-type ProfileFormData = z.infer<typeof profileSchema>;
+type ProfileFormData = z.infer<typeof profileFormSchemaBase>;
 
 interface MerchantProfileModalProps {
   children: React.ReactNode;
@@ -39,6 +41,26 @@ const MerchantProfileModal = ({ children, onProfileUpdate }: MerchantProfileModa
   const [avatarUrl, setAvatarUrl] = useState<string>("");
   const [loading, setLoading] = useState(false);
 
+  const profileSchema = profileFormSchemaBase.superRefine((data, ctx) => {
+    if (!isApproved) {
+      if (!data.contact_email) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Primary Contact Email is required.",
+          path: ['contact_email'],
+        });
+      }
+    } else {
+      if (!data.paypal_email) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'PayPal Email is required.',
+          path: ['paypal_email'],
+        });
+      }
+    }
+  });
+
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
@@ -49,6 +71,7 @@ const MerchantProfileModal = ({ children, onProfileUpdate }: MerchantProfileModa
       snapchat_url: "",
       pinterest_url: "",
       onlyfans_url: "",
+      contact_email: "",
       paypal_email: ""
     }
   });
@@ -83,6 +106,7 @@ const MerchantProfileModal = ({ children, onProfileUpdate }: MerchantProfileModa
           snapchat_url: data.snapchat_url || "",
           pinterest_url: data.pinterest_url || "",
           onlyfans_url: data.onlyfans_url || "",
+          contact_email: data.contact_email || "",
           paypal_email: data.paypal_email || ""
         });
         setAvatarUrl(data.avatar_url || "");
@@ -97,9 +121,7 @@ const MerchantProfileModal = ({ children, onProfileUpdate }: MerchantProfileModa
 
     setLoading(true);
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({
+      const updateData: Partial<ProfileFormData> & { avatar_url: string; updated_at: string } = {
           display_name: data.display_name,
           avatar_url: avatarUrl,
           facebook_url: data.facebook_url || null,
@@ -108,9 +130,18 @@ const MerchantProfileModal = ({ children, onProfileUpdate }: MerchantProfileModa
           snapchat_url: data.snapchat_url || null,
           pinterest_url: data.pinterest_url || null,
           onlyfans_url: data.onlyfans_url || null,
-          paypal_email: data.paypal_email || null,
           updated_at: new Date().toISOString()
-        })
+      };
+      
+      if (isApproved) {
+        updateData.paypal_email = data.paypal_email || null;
+      } else {
+        updateData.contact_email = data.contact_email || null;
+      }
+
+      const { error } = await supabase
+        .from('profiles')
+        .update(updateData)
         .eq('id', user.id);
 
       if (error) {
@@ -305,31 +336,53 @@ const MerchantProfileModal = ({ children, onProfileUpdate }: MerchantProfileModa
               />
             </div>
 
-            <FormField
-              control={form.control}
-              name="paypal_email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-white">
-                    {isApproved ? "PayPal Email" : "Primary Contact Email"} *
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      type="email"
-                      className="bg-gray-700 border-gray-600 text-white"
-                      placeholder={isApproved ? "your.paypal@email.com" : "your.email@address.com"}
-                    />
-                  </FormControl>
-                  <FormDescription className="text-gray-400">
-                    {isApproved
-                      ? "This email will be used for receiving payments."
-                      : "We'll use this email for updates on your application status."}
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {!isApproved && (
+              <FormField
+                control={form.control}
+                name="contact_email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-white">Primary Contact Email *</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        type="email"
+                        className="bg-gray-700 border-gray-600 text-white"
+                        placeholder="your.email@address.com"
+                      />
+                    </FormControl>
+                    <FormDescription className="text-gray-400">
+                      We'll use this email for updates on your application status.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+            
+            {isApproved && (
+               <FormField
+                control={form.control}
+                name="paypal_email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-white">PayPal Email *</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        type="email"
+                        className="bg-gray-700 border-gray-600 text-white"
+                        placeholder="your.paypal@email.com"
+                      />
+                    </FormControl>
+                    <FormDescription className="text-gray-400">
+                      This email will be used for receiving payments.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <div className="flex justify-end space-x-4">
               <Button

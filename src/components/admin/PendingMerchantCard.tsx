@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,6 +17,7 @@ interface PendingMerchant {
   onlyfans_url?: string;
   snapchat_url?: string;
   paypal_email?: string;
+  contact_email?: string;
   approval_status: string;
   created_at: string;
 }
@@ -79,10 +79,10 @@ const PendingMerchantCard = ({ merchant, onApprovalChange }: PendingMerchantCard
             <div>
               <CardTitle className="text-white text-lg">{merchant.display_name || 'No Display Name'}</CardTitle>
               <div className="mt-1 space-y-1">
-                 <p className="text-sm text-gray-300 font-normal flex items-center gap-2" title={merchant.paypal_email || 'Primary contact email not provided'}>
+                 <p className="text-sm text-gray-300 font-normal flex items-center gap-2" title={merchant.contact_email || 'Primary contact email not provided'}>
                   <Mail className="w-4 h-4 text-blue-400 flex-shrink-0" />
                   <span className="truncate">
-                    {merchant.paypal_email || <span className="text-yellow-400 italic">No Contact Email</span>}
+                    {merchant.contact_email || <span className="text-yellow-400 italic">No Contact Email</span>}
                   </span>
                 </p>
                 <p className="text-xs text-gray-500 font-normal truncate" title={merchant.email}>Login: {merchant.email}</p>

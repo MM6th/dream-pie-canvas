@@ -205,6 +205,7 @@ export type Database = {
           approval_status: string | null
           avatar_url: string | null
           background_image_url: string | null
+          contact_email: string | null
           created_at: string | null
           display_name: string | null
           email: string
@@ -224,6 +225,7 @@ export type Database = {
           approval_status?: string | null
           avatar_url?: string | null
           background_image_url?: string | null
+          contact_email?: string | null
           created_at?: string | null
           display_name?: string | null
           email: string
@@ -243,6 +245,7 @@ export type Database = {
           approval_status?: string | null
           avatar_url?: string | null
           background_image_url?: string | null
+          contact_email?: string | null
           created_at?: string | null
           display_name?: string | null
           email?: string
