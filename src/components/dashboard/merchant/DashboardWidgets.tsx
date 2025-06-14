@@ -18,7 +18,7 @@ const DashboardWidgets = ({ onSuccess, onViewStore, onBackgroundUpload, isAdmin 
     <>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         {isAdmin && (
-          <Card className="lg:col-span-2 bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+          <Card className="lg:col-span-3 bg-gray-800/50 border-gray-700 backdrop-blur-sm">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-xl font-bold text-white">Audio Products</h3>
@@ -44,22 +44,6 @@ const DashboardWidgets = ({ onSuccess, onViewStore, onBackgroundUpload, isAdmin 
             </CardContent>
           </Card>
         )}
-        
-        <Card className={`bg-gray-800/50 border-gray-700 backdrop-blur-sm ${!isAdmin ? 'lg:col-span-3' : ''}`}>
-          <CardContent className="p-6">
-            <h3 className="text-xl font-bold text-white mb-4">Quick Stats</h3>
-            <div className="space-y-4">
-              <div>
-                <p className="text-gray-400">Total Uploads</p>
-                <p className="text-2xl font-bold text-white">0</p>
-              </div>
-              <div>
-                <p className="text-gray-400">Supporters</p>
-                <p className="text-2xl font-bold text-white">0</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
@@ -74,7 +58,7 @@ const DashboardWidgets = ({ onSuccess, onViewStore, onBackgroundUpload, isAdmin 
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-bold text-white">Video Products</h3>
-              <VideoUploadModal onSuccess={onSuccess} />
+              <VideoUploadModal onSuccess={onSuccess} isAdmin={isAdmin} />
             </div>
             <p className="text-gray-400 mb-4">Upload and manage your video content</p>
             <div className="space-y-4">
@@ -93,4 +77,3 @@ const DashboardWidgets = ({ onSuccess, onViewStore, onBackgroundUpload, isAdmin 
 };
 
 export default DashboardWidgets;
-

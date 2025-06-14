@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -15,6 +14,7 @@ import ImagePicker from "./ImagePicker";
 
 interface VideoUploadModalProps {
   onSuccess?: () => void;
+  isAdmin: boolean;
 }
 
 interface AudioTrack {
@@ -24,7 +24,7 @@ interface AudioTrack {
   audio_file_url: string;
 }
 
-const VideoUploadModal = ({ onSuccess }: VideoUploadModalProps) => {
+const VideoUploadModal = ({ onSuccess, isAdmin }: VideoUploadModalProps) => {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -45,11 +45,28 @@ const VideoUploadModal = ({ onSuccess }: VideoUploadModalProps) => {
   const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB in bytes
 
   useEffect(() => {
+    if (!isAdmin) return;
     if (open && user) {
       fetchOwnedTracks();
       checkStorageUsage();
     }
-  }, [open, user]);
+  }, [open, user, isAdmin]);
+
+  if (!isAdmin) {
+    const showComingSoonToast = () => {
+      toast({
+        title: "Feature Coming Soon",
+        description: "Video uploads will be available for merchants shortly.",
+      });
+    };
+
+    return (
+      <Button className="bg-primary hover:bg-primary/90" onClick={showComingSoonToast}>
+        <Upload className="w-4 h-4 mr-2" />
+        Upload Video
+      </Button>
+    );
+  }
 
   const checkStorageUsage = async () => {
     if (!user) return;
