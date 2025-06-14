@@ -18,23 +18,35 @@ const TunecoreRoyaltyModal = () => {
             Music Publishing Royalties
           </DialogTitle>
         </DialogHeader>
-        <div className="py-6 space-y-4 text-gray-300">
+        <div className="py-6 space-y-6 text-gray-300">
           <p>
-            We partner with Tunecore for publishing administration to help you collect all the royalties you've earned from your music.
+            We partner with Tunecore for publishing administration to help artists collect all the royalties they've earned from their music. Here's how it works for artists and how you, as a merchant, can benefit.
           </p>
-          <h3 className="font-semibold text-white text-lg">Royalty Rate</h3>
+
+          <h3 className="font-semibold text-white text-lg">Platform Royalty Sharing for Cover Models</h3>
           <p>
-            Tunecore allows you to keep <strong className="text-white">100% of your royalties</strong> from digital stores and streaming services. They operate on a subscription model where you pay an annual fee to keep your music available on platforms.
+            On our platform, the 'main artist' (audio producer) receives 100% of their royalties directly from services like Tunecore. When a merchant models for a track's cover art, they are eligible to receive <strong className="text-white">20% of the main artist's publishing royalties</strong> for that specific track. This is part of a separate agreement facilitated through our site.
           </p>
-          <h3 className="font-semibold text-white text-lg">How it works</h3>
+
+          <h3 className="font-semibold text-white text-lg">How The Deal Is Solidified</h3>
           <ul className="list-disc list-inside space-y-2">
-            <li>You upload your music through Tunecore.</li>
-            <li>They distribute it to over 150 digital stores and streaming services worldwide.</li>
-            <li>You receive 100% of the revenue and rights from your music.</li>
+            <li>Once you agree to model for a cover, the deal is solidified within our platform.</li>
+            <li>The audio producer will require your <strong className="text-white">first and last name</strong> to register the royalty split with their publisher.</li>
+            <li>After registration, a screenshot of the official publishing royalty split will be sent to your contact email on file as confirmation.</li>
           </ul>
-          <p>
-            This ensures you get paid for every stream, download, and use of your music across all major platforms.
-          </p>
+          
+          <div className="border-t border-gray-700 pt-6">
+            <h3 className="font-semibold text-white text-lg">General Info: How Tunecore Works for Artists</h3>
+            <p className="mt-2">
+              Tunecore allows artists to keep <strong className="text-white">100% of their royalties</strong> from digital stores and streaming services. They operate on a subscription model where the artist pays an annual fee.
+            </p>
+            <ul className="list-disc list-inside space-y-2 mt-4">
+              <li>The artist uploads their music through Tunecore.</li>
+              <li>Tunecore distributes it to over 150 digital stores and streaming services worldwide.</li>
+              <li>The artist receives 100% of the revenue and rights from their music sales and streams.</li>
+            </ul>
+          </div>
+          
         </div>
         <div className="flex justify-center">
             <Button asChild variant="outline" className="border-gray-600 text-white hover:bg-white hover:text-black">
