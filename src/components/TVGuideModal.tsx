@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
 import { Calendar } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -25,7 +24,6 @@ const TVGuideModal = ({ onSuccess }: TVGuideModalProps) => {
     content: "",
     imageUrl: "",
     linkUrl: "",
-    isFeatured: false,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -48,7 +46,6 @@ const TVGuideModal = ({ onSuccess }: TVGuideModalProps) => {
           content: formData.content.trim(),
           image_url: formData.imageUrl.trim() || null,
           link_url: formData.linkUrl.trim() || null,
-          is_featured: formData.isFeatured,
           post_type: 'tv_guide',
           merchant_id: user.id
         });
@@ -65,7 +62,6 @@ const TVGuideModal = ({ onSuccess }: TVGuideModalProps) => {
         content: "",
         imageUrl: "",
         linkUrl: "",
-        isFeatured: false,
       });
       setOpen(false);
       onSuccess?.();
@@ -147,15 +143,6 @@ const TVGuideModal = ({ onSuccess }: TVGuideModalProps) => {
               className="bg-gray-700 border-gray-600 text-white"
               placeholder="https://example.com"
             />
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="isFeatured"
-              checked={formData.isFeatured}
-              onCheckedChange={(checked) => setFormData({ ...formData, isFeatured: checked })}
-            />
-            <Label htmlFor="isFeatured">Feature this entry</Label>
           </div>
 
           <div className="flex gap-2">

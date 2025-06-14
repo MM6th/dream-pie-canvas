@@ -95,7 +95,6 @@ export type Database = {
           created_at: string
           id: string
           image_url: string | null
-          is_featured: boolean
           link_url: string | null
           merchant_id: string
           post_type: string | null
@@ -107,7 +106,6 @@ export type Database = {
           created_at?: string
           id?: string
           image_url?: string | null
-          is_featured?: boolean
           link_url?: string | null
           merchant_id: string
           post_type?: string | null
@@ -119,7 +117,6 @@ export type Database = {
           created_at?: string
           id?: string
           image_url?: string | null
-          is_featured?: boolean
           link_url?: string | null
           merchant_id?: string
           post_type?: string | null

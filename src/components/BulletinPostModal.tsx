@@ -5,8 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Upload } from "lucide-react";
+import { Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/components/ui/use-toast";
@@ -18,7 +17,6 @@ interface BulletinPostModalProps {
     title: string;
     content: string;
     image_url?: string;
-    is_featured: boolean;
     link_url?: string;
   };
   mode?: 'create' | 'edit';
@@ -32,7 +30,6 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create' }: BulletinPostMod
   const [content, setContent] = useState(post?.content || '');
   const [imageUrl, setImageUrl] = useState(post?.image_url || '');
   const [linkUrl, setLinkUrl] = useState(post?.link_url || '');
-  const [isFeatured, setIsFeatured] = useState(post?.is_featured || false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,7 +43,6 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create' }: BulletinPostMod
         content,
         image_url: imageUrl || null,
         link_url: linkUrl || null,
-        is_featured: isFeatured,
         merchant_id: user.id,
         updated_at: new Date().toISOString()
       };
@@ -85,7 +81,6 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create' }: BulletinPostMod
       setContent('');
       setImageUrl('');
       setLinkUrl('');
-      setIsFeatured(false);
       setOpen(false);
       onSuccess();
     } catch (error) {
@@ -170,17 +165,6 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create' }: BulletinPostMod
             <p className="text-xs text-gray-400 mt-1">
               Add a link to another page (internal like /store or external like https://example.com)
             </p>
-          </div>
-          
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="featured"
-              checked={isFeatured}
-              onCheckedChange={(checked) => setIsFeatured(checked as boolean)}
-            />
-            <Label htmlFor="featured" className="text-white">
-              Featured Post (Today's Post)
-            </Label>
           </div>
           
           <div className="flex justify-end gap-2">

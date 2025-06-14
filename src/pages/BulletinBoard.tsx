@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, LogOut, Calendar, User, Cloud, ExternalLink, MessageCircle, ChevronDown } from "lucide-react";
+import { ArrowLeft, LogOut, Calendar, User, Cloud, ExternalLink, ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,7 +14,6 @@ interface BulletinPost {
   content: string;
   image_url?: string;
   link_url?: string;
-  is_featured: boolean;
   post_type?: string;
   created_at: string;
   merchant_id: string;
@@ -30,9 +28,6 @@ const BulletinBoard = () => {
   const navigate = useNavigate();
   const { signOut, user } = useAuth();
   const [posts, setPosts] = useState<BulletinPost[]>([]);
-  const [featuredPosts, setFeaturedPosts] = useState<BulletinPost[]>([]);
-  const [currentThoughts, setCurrentThoughts] = useState<BulletinPost[]>([]);
-  const [tvGuidePosts, setTvGuidePosts] = useState<BulletinPost[]>([]);
   const [displayedPosts, setDisplayedPosts] = useState(6);
   const [loading, setLoading] = useState(true);
 
@@ -78,17 +73,6 @@ const BulletinBoard = () => {
       }
 
       if (data) {
-        // Separate current thoughts and TV guide posts
-        const thoughts = data.filter(post => post.post_type === 'current_thoughts');
-        const tvGuide = data.filter(post => post.post_type === 'tv_guide' || !post.post_type);
-        
-        // Find featured and regular current thoughts
-        const featured = thoughts.filter(post => post.is_featured);
-        const regularThoughts = thoughts.filter(post => !post.is_featured);
-        
-        setFeaturedPosts(featured);
-        setCurrentThoughts(regularThoughts);
-        setTvGuidePosts(tvGuide);
         setPosts(data);
       }
     } catch (error) {
@@ -105,7 +89,6 @@ const BulletinBoard = () => {
   useEffect(() => {
     fetchPosts();
 
-    // Set up realtime subscription
     const channel = supabase
       .channel('bulletin-posts-changes')
       .on(
@@ -127,20 +110,6 @@ const BulletinBoard = () => {
       supabase.removeChannel(channel);
     };
   }, []);
-
-  const defaultFeaturedPost: BulletinPost = {
-    id: 'featured-dummy',
-    title: "Welcome to Our Community Thoughts!",
-    content: 'Share your current thoughts and connect with others in our community. This space is for meaningful conversations and staying connected with what matters to you.',
-    image_url: '/lovable-uploads/8a8289fd-017b-4c07-9e5a-03d19c081cb0.png',
-    is_featured: true,
-    post_type: 'current_thoughts',
-    created_at: new Date().toISOString(),
-    merchant_id: 'featured-dummy',
-    profiles: { email: 'community@example.com' }
-  };
-
-  const displayFeaturedPosts = featuredPosts.length > 0 ? featuredPosts : [defaultFeaturedPost];
 
   if (loading) {
     return (
@@ -183,190 +152,84 @@ const BulletinBoard = () => {
       />
 
       <div className="max-w-6xl mx-auto p-6">
-        {/* Featured Thoughts */}
+        {/* Unified Posts Section */}
         <div className="mb-12">
           <h2 className="text-3xl font-bold text-white mb-6 flex items-center gap-2">
             <Cloud className="w-8 h-8 text-white" />
-            Featured Thoughts
+            Community Bulletin
           </h2>
           
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {displayFeaturedPosts.map((post) => (
-              <Card key={post.id} className="bg-gray-800 border-gray-700 max-w-2xl">
-                <CardHeader className="p-0">
-                  {post.image_url && (
-                    <div className="relative">
-                      <img
-                        src={post.image_url}
-                        alt={post.title}
-                        className="w-full object-contain rounded-t-lg"
-                      />
-                      <div className="absolute top-4 right-4">
-                        <Badge className="bg-yellow-500 text-black font-bold">
-                          Featured
-                        </Badge>
-                      </div>
-                    </div>
-                  )}
-                </CardHeader>
-                <CardContent className="p-6">
-                  <CardTitle className="text-white text-2xl mb-4">{post.title}</CardTitle>
-                  <p className="text-gray-300 text-lg mb-6 leading-relaxed">{post.content}</p>
-                  
-                  <div className="flex items-center gap-4 text-sm text-gray-400 mb-6">
-                    <div className="flex items-center gap-2">
-                      {post.profiles?.avatar_url ? (
-                        <img
-                          src={post.profiles.avatar_url}
-                          alt="Avatar"
-                          className="w-8 h-8 rounded-full object-cover"
-                        />
-                      ) : (
-                        <User className="w-6 h-6" />
-                      )}
-                      {post.profiles?.display_name || post.profiles?.email || 'Community'}
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Calendar className="w-4 h-4" />
-                      {new Date(post.created_at).toLocaleDateString()}
-                    </div>
-                  </div>
-
-                  <PostInteractions postId={post.id} />
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-
-        {/* Current Thoughts Section */}
-        {currentThoughts.length > 0 && (
-          <div className="mb-12">
-            <h2 className="text-3xl font-bold text-white mb-6 flex items-center gap-2">
-              <MessageCircle className="w-8 h-8 text-blue-400" />
-              Community Thoughts
-            </h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {currentThoughts.slice(0, displayedPosts).map((post) => (
-                <Card key={post.id} className="bg-gray-800 border-gray-700 hover:shadow-lg transition-all duration-300">
+          {posts.length > 0 ? (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {posts.slice(0, displayedPosts).map((post) => (
+                <Card key={post.id} className="bg-gray-800 border-gray-700 max-w-2xl">
                   <CardHeader className="p-0">
                     {post.image_url && (
-                      <img
-                        src={post.image_url}
-                        alt={post.title}
-                        className="w-full h-56 object-cover rounded-t-lg"
-                      />
+                      <div className="relative">
+                        <img
+                          src={post.image_url}
+                          alt={post.title}
+                          className="w-full object-contain rounded-t-lg"
+                        />
+                      </div>
                     )}
                   </CardHeader>
                   <CardContent className="p-6">
-                    <CardTitle className="text-white text-xl mb-3">{post.title}</CardTitle>
-                    <p className="text-gray-300 text-base mb-6 leading-relaxed line-clamp-3">{post.content}</p>
+                    <CardTitle className="text-white text-2xl mb-4">{post.title}</CardTitle>
+                    <p className="text-gray-300 text-lg mb-6 leading-relaxed">{post.content}</p>
                     
-                    <div className="flex items-center gap-4 text-sm text-gray-400 mb-4">
-                      <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-4 text-sm text-gray-400 mb-6">
+                      <div className="flex items-center gap-2">
                         {post.profiles?.avatar_url ? (
                           <img
                             src={post.profiles.avatar_url}
                             alt="Avatar"
-                            className="w-10 h-10 rounded-full object-cover"
+                            className="w-8 h-8 rounded-full object-cover"
                           />
                         ) : (
-                          <User className="w-8 h-8" />
+                          <User className="w-6 h-6" />
                         )}
-                        <span className="font-medium">
-                          {post.profiles?.display_name || post.profiles?.email || 'Community'}
-                        </span>
+                        {post.profiles?.display_name || post.profiles?.email || 'Community'}
                       </div>
-                      <div className="flex items-center gap-1 ml-auto">
+                      <div className="flex items-center gap-1">
                         <Calendar className="w-4 h-4" />
-                        {new Date(post.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {new Date(post.created_at).toLocaleDateString()}
                       </div>
                     </div>
 
-                    <PostInteractions postId={post.id} />
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
-            {currentThoughts.length > displayedPosts && (
-              <div className="text-center mt-6">
-                <Button onClick={loadMorePosts} variant="outline" className="border-gray-600 text-white hover:bg-gray-700">
-                  <ChevronDown className="w-4 h-4 mr-2" />
-                  Load More Thoughts
-                </Button>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* TV Guide Section */}
-        {tvGuidePosts.length > 0 && (
-          <div>
-            <h2 className="text-3xl font-bold text-white mb-6 flex items-center gap-2">
-              <Calendar className="w-8 h-8 text-blue-400" />
-              TV Guide Schedule
-            </h2>
-            
-            <div className="space-y-4">
-              {tvGuidePosts.map((post) => (
-                <Card key={post.id} className="bg-gray-800 border-gray-700 hover:shadow-lg transition-all duration-300">
-                  <div className="flex">
-                    {post.image_url && (
-                      <div className="w-48 h-32">
-                        <img
-                          src={post.image_url}
-                          alt={post.title}
-                          className="w-full h-full object-cover rounded-l-lg"
-                        />
-                      </div>
-                    )}
-                    <CardContent className="flex-1 p-6">
-                      <div className="flex justify-between items-start mb-3">
-                        <CardTitle className="text-white text-xl">{post.title}</CardTitle>
-                        <div className="text-sm text-gray-400">
-                          {new Date(post.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </div>
-                      </div>
-                      <p className="text-gray-300 text-base mb-4 leading-relaxed">{post.content}</p>
-                      
-                      {post.link_url && (
+                    {post.link_url && (
                         <Button
                           onClick={() => handleLinkClick(post.link_url!)}
                           size="sm"
                           className="mb-4 bg-blue-600 hover:bg-blue-700"
                         >
                           <ExternalLink className="w-4 h-4 mr-2" />
-                          Watch Now
+                          {post.post_type === 'tv_guide' ? 'Watch Now' : 'Learn More'}
                         </Button>
                       )}
-                      
-                      <div className="flex items-center gap-4 text-sm text-gray-400">
-                        <div className="flex items-center gap-2">
-                          {post.profiles?.avatar_url ? (
-                            <img
-                              src={post.profiles.avatar_url}
-                              alt="Avatar"
-                              className="w-8 h-8 rounded-full object-cover"
-                            />
-                          ) : (
-                            <User className="w-6 h-6" />
-                          )}
-                          {post.profiles?.display_name || post.profiles?.email || 'Community'}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Calendar className="w-4 h-4" />
-                          {new Date(post.created_at).toLocaleDateString()}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </div>
+
+                    <PostInteractions postId={post.id} />
+                  </CardContent>
                 </Card>
               ))}
             </div>
-          </div>
-        )}
+          ) : (
+            <Card className="bg-gray-800 border-gray-700 max-w-2xl">
+              <CardContent className="p-6">
+                 <p className="text-gray-300 text-lg text-center">No posts on the bulletin board yet. Be the first to share!</p>
+              </CardContent>
+            </Card>
+          )}
+
+          {posts.length > displayedPosts && (
+            <div className="text-center mt-6">
+              <Button onClick={loadMorePosts} variant="outline" className="border-gray-600 text-white hover:bg-gray-700">
+                <ChevronDown className="w-4 h-4 mr-2" />
+                Load More Posts
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
