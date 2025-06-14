@@ -8,6 +8,7 @@ interface ApprovalStatus {
   isApproved: boolean;
   approvalStatus: string;
   loading: boolean;
+  userType: string;
 }
 
 export const useApprovalStatus = (): ApprovalStatus => {
@@ -16,7 +17,8 @@ export const useApprovalStatus = (): ApprovalStatus => {
     isAdmin: false,
     isApproved: false,
     approvalStatus: 'pending',
-    loading: true
+    loading: true,
+    userType: ''
   });
 
   useEffect(() => {
@@ -26,7 +28,8 @@ export const useApprovalStatus = (): ApprovalStatus => {
           isAdmin: false,
           isApproved: false,
           approvalStatus: 'pending',
-          loading: false
+          loading: false,
+          userType: ''
         });
         return;
       }
@@ -48,6 +51,7 @@ export const useApprovalStatus = (): ApprovalStatus => {
             isAdmin: data.is_admin || false,
             isApproved: data.approval_status === 'approved',
             approvalStatus: data.approval_status || 'pending',
+            userType: data.user_type || '',
             loading: false
           });
         }

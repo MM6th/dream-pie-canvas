@@ -31,13 +31,21 @@ const AuthPage = () => {
             variant: "destructive"
           });
         } else {
-          toast({
-            title: "Success",
-            description: "Please check your email to verify your account before signing in."
-          });
+          if (userType === 'merchant') {
+            toast({
+                title: "Account Created!",
+                description: "Please check your email to verify your account. After verification, sign in and complete your merchant profile for admin review."
+            });
+          } else {
+            toast({
+              title: "Success",
+              description: "Please check your email to verify your account before signing in."
+            });
+          }
           // Switch to sign in mode after successful signup
           setIsSignUp(false);
           setPassword("");
+          setUserType(null);
         }
       } else {
         const { error } = await signIn(email, password);

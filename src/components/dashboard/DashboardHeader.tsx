@@ -11,6 +11,8 @@ interface DashboardHeaderProps {
   onSignOut: () => void;
   userType?: string;
   onProfileUpdate?: () => void;
+  isApproved?: boolean;
+  isAdmin?: boolean;
 }
 
 const DashboardHeader = ({ 
@@ -19,8 +21,12 @@ const DashboardHeader = ({
   onBulletinView, 
   onSignOut, 
   userType,
-  onProfileUpdate 
+  onProfileUpdate,
+  isApproved,
+  isAdmin,
 }: DashboardHeaderProps) => {
+  const showNavigation = userType === 'supporter' || isApproved || isAdmin;
+
   return (
     <div className="absolute top-4 left-4 right-4 z-20 flex justify-between">
       <div className="flex gap-2">
@@ -35,30 +41,34 @@ const DashboardHeader = ({
             </Button>
           </MerchantProfileModal>
         )}
-        <Button
-          onClick={onStoreView}
-          variant="outline"
-          className="border-gray-600 text-white hover:bg-white hover:text-black"
-        >
-          <Store className="w-4 h-4 mr-2" />
-          Browse Store
-        </Button>
-        <Button
-          onClick={onFilmsView}
-          variant="outline"
-          className="border-gray-600 text-white hover:bg-white hover:text-black"
-        >
-          <Film className="w-4 h-4 mr-2" />
-          Browse Films
-        </Button>
-        <Button
-          onClick={onBulletinView}
-          variant="outline"
-          className="border-gray-600 text-white hover:bg-white hover:text-black"
-        >
-          <MessageSquare className="w-4 h-4 mr-2" />
-          Browse Bulletin
-        </Button>
+        {showNavigation && (
+          <>
+            <Button
+              onClick={onStoreView}
+              variant="outline"
+              className="border-gray-600 text-white hover:bg-white hover:text-black"
+            >
+              <Store className="w-4 h-4 mr-2" />
+              Browse Store
+            </Button>
+            <Button
+              onClick={onFilmsView}
+              variant="outline"
+              className="border-gray-600 text-white hover:bg-white hover:text-black"
+            >
+              <Film className="w-4 h-4 mr-2" />
+              Browse Films
+            </Button>
+            <Button
+              onClick={onBulletinView}
+              variant="outline"
+              className="border-gray-600 text-white hover:bg-white hover:text-black"
+            >
+              <MessageSquare className="w-4 h-4 mr-2" />
+              Browse Bulletin
+            </Button>
+          </>
+        )}
       </div>
       <Button
         onClick={onSignOut}

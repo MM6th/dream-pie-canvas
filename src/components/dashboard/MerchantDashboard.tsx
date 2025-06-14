@@ -13,6 +13,7 @@ import MediaPlayers from "./MediaPlayers";
 import AdminDashboard from "@/components/admin/AdminDashboard";
 import ApprovalStatusBanner from "@/components/ApprovalStatusBanner";
 import { useApprovalStatus } from "@/hooks/useApprovalStatus";
+import MerchantProfileModal from "@/components/profile/MerchantProfileModal";
 
 interface MerchantDashboardProps {
   onSuccess: () => void;
@@ -181,9 +182,12 @@ const MerchantDashboard = ({
             <p className="text-gray-300 mb-4">
               Upload and posting features are restricted until your merchant application is approved.
             </p>
-            <p className="text-gray-400">
-              Please wait for admin approval to access all merchant features.
+            <p className="text-gray-400 mb-6">
+              Please complete your merchant profile for admin review.
             </p>
+            <MerchantProfileModal onProfileUpdate={onSuccess}>
+                <Button>Complete Profile</Button>
+            </MerchantProfileModal>
           </CardContent>
         </Card>
       )}

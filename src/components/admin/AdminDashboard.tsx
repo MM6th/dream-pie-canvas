@@ -41,6 +41,7 @@ const AdminDashboard = () => {
       }
 
       if (data) {
+        console.log('Fetched merchants data:', data); // Added for debugging
         const pending = data.filter(merchant => merchant.approval_status === 'pending');
         const approved = data.filter(merchant => merchant.approval_status === 'approved');
         const rejected = data.filter(merchant => merchant.approval_status === 'rejected');

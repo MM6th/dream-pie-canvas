@@ -19,7 +19,7 @@ const ApprovalStatusBanner = ({ approvalStatus, isAdmin }: ApprovalStatusBannerP
         return {
           icon: <Clock className="w-5 h-5" />,
           title: "Pending Approval",
-          description: "Your merchant application is under review. You'll be able to upload content once approved by an admin.",
+          description: "Your merchant application is under review. Please complete your profile for the admin to review. You'll be able to upload content once approved.",
           className: "border-yellow-500 bg-yellow-500/10 text-yellow-500"
         };
       case 'rejected':

@@ -9,6 +9,8 @@ import MerchantDashboard from "@/components/dashboard/MerchantDashboard";
 import SupporterDashboard from "@/components/dashboard/SupporterDashboard";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import { useNavigate } from "react-router-dom";
+import { useApprovalStatus } from "@/hooks/useApprovalStatus";
+import { toast } from "@/hooks/use-toast";
 
 interface AudioTrack {
   id: string;
@@ -29,6 +31,7 @@ interface VideoTrack {
 
 const Index = () => {
   const { user, loading, signOut } = useAuth();
+  const { isAdmin, isApproved } = useApprovalStatus();
   const navigate = useNavigate();
   const [userProfile, setUserProfile] = useState<any>(null);
   const [profileLoading, setProfileLoading] = useState(false);
@@ -137,10 +140,26 @@ const Index = () => {
   };
 
   const handleFilmsView = () => {
+    if (!isApproved && !isAdmin) {
+        toast({
+            title: "Access Denied",
+            description: "You must be an approved merchant to access this page.",
+            variant: "destructive"
+        });
+        return;
+    }
     navigate('/films');
   };
 
   const handleBulletinView = () => {
+    if (!isApproved && !isAdmin) {
+        toast({
+            title: "Access Denied",
+            description: "You must be an approved merchant to access this page.",
+            variant: "destructive"
+        });
+        return;
+    }
     navigate('/bulletin');
   };
 
@@ -161,6 +180,15 @@ const Index = () => {
   }
 
   if (currentView === "store") {
+    if (!isApproved && !isAdmin) {
+        setCurrentView("dashboard");
+        toast({
+            title: "Access Denied",
+            description: "You must be an approved merchant to access the store.",
+            variant: "destructive"
+        });
+        return null; 
+    }
     return (
       <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800">
         <div className="absolute top-4 left-4 right-4 z-20 flex justify-between">
@@ -222,6 +250,8 @@ const Index = () => {
         onSignOut={handleSignOut}
         userType={userProfile?.user_type}
         onProfileUpdate={handleProfileUpdate}
+        isApproved={isApproved}
+        isAdmin={isAdmin}
       />
       
       {profileLoading ? (
