@@ -38,6 +38,7 @@ interface PostInteractionsProps {
 
 const PostInteractions = ({ postId }: PostInteractionsProps) => {
   const { user } = useAuth();
+  const [userProfile, setUserProfile] = useState<{ is_admin: boolean } | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [likes, setLikes] = useState<string[]>([]);
   const [newComment, setNewComment] = useState("");
@@ -45,6 +46,25 @@ const PostInteractions = ({ postId }: PostInteractionsProps) => {
   const [hasLiked, setHasLiked] = useState(false);
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editedContent, setEditedContent] = useState("");
+
+  useEffect(() => {
+    if (user) {
+      const fetchUserProfile = async () => {
+        try {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('is_admin')
+            .eq('id', user.id)
+            .single();
+          if (error) throw error;
+          setUserProfile(data);
+        } catch (error) {
+          console.error("Error fetching user profile for interactions:", error);
+        }
+      };
+      fetchUserProfile();
+    }
+  }, [user]);
 
   useEffect(() => {
     fetchComments();
@@ -239,8 +259,7 @@ const PostInteractions = ({ postId }: PostInteractionsProps) => {
       const { error } = await supabase
         .from('post_comments')
         .delete()
-        .eq('id', commentId)
-        .eq('user_id', user.id);
+        .eq('id', commentId);
 
       if (error) throw error;
       
@@ -344,11 +363,13 @@ const PostInteractions = ({ postId }: PostInteractionsProps) => {
                           {new Date(comment.created_at).toLocaleDateString()}
                         </span>
                       </div>
-                      {user?.id === comment.user_id && editingCommentId !== comment.id && (
+                      {(user?.id === comment.user_id || userProfile?.is_admin) && editingCommentId !== comment.id && (
                         <div className="flex items-center gap-1">
-                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => startEditing(comment)}>
-                            <Edit className="w-3 h-3 text-gray-400 hover:text-white" />
-                          </Button>
+                          {user?.id === comment.user_id && (
+                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => startEditing(comment)}>
+                              <Edit className="w-3 h-3 text-gray-400 hover:text-white" />
+                            </Button>
+                          )}
                            <AlertDialog>
                             <AlertDialogTrigger asChild>
                               <Button variant="ghost" size="icon" className="h-6 w-6">
@@ -380,7 +401,7 @@ const PostInteractions = ({ postId }: PostInteractionsProps) => {
                           rows={2}
                         />
                         <div className="flex gap-2 justify-end">
-                          <Button size="sm" variant="ghost" onClick={() => setEditingCommentId(null)}>Cancel</Button>
+                          <Button size="sm" variant="outline" className="bg-white text-black hover:bg-gray-100" onClick={() => setEditingCommentId(null)}>Cancel</Button>
                           <Button size="sm" onClick={handleUpdateComment} disabled={loading || editedContent.trim() === ''}>
                             {loading ? 'Saving...' : 'Save'}
                           </Button>

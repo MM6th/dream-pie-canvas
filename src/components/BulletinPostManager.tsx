@@ -160,7 +160,14 @@ const BulletinPostManager = () => {
               </h4>
               <div className="space-y-4">
                 {currentThoughtsPosts.map((post) => (
-                  <Card key={post.id} className="bg-gray-700/50 border-gray-600">
+                  <Card key={post.id} className="bg-gray-700/50 border-gray-600 overflow-hidden">
+                    {post.image_url && (
+                        <img
+                          src={post.image_url}
+                          alt={post.title}
+                          className="w-full h-48 object-cover"
+                        />
+                    )}
                     <CardHeader>
                       <div className="flex items-center justify-between">
                         <CardTitle className="text-white flex items-center gap-2">
@@ -220,15 +227,6 @@ const BulletinPostManager = () => {
                           <p className="text-sm text-blue-400">Link: {post.link_url}</p>
                         </div>
                       )}
-                      {post.image_url && (
-                        <div className="mb-3">
-                          <img
-                            src={post.image_url}
-                            alt={post.title}
-                            className="w-24 h-16 object-cover rounded"
-                          />
-                        </div>
-                      )}
                       <div className="flex items-center gap-4 text-sm text-gray-400">
                         <div className="flex items-center gap-1">
                           <Calendar className="w-4 h-4" />
@@ -257,7 +255,14 @@ const BulletinPostManager = () => {
               </h4>
               <div className="space-y-4">
                 {tvGuidePosts.map((post) => (
-                  <Card key={post.id} className="bg-gray-700/50 border-gray-600">
+                  <Card key={post.id} className="bg-gray-700/50 border-gray-600 overflow-hidden">
+                    {post.image_url && (
+                        <img
+                          src={post.image_url}
+                          alt={post.title}
+                          className="w-full h-48 object-cover"
+                        />
+                    )}
                     <CardHeader>
                       <div className="flex items-center justify-between">
                         <CardTitle className="text-white flex items-center gap-2">
