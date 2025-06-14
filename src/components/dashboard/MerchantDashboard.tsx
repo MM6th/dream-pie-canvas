@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,6 +13,7 @@ import AdminDashboard from "@/components/admin/AdminDashboard";
 import ApprovalStatusBanner from "@/components/ApprovalStatusBanner";
 import { useApprovalStatus } from "@/hooks/useApprovalStatus";
 import MerchantProfileModal from "@/components/profile/MerchantProfileModal";
+import MerchantBenefitsModal from "@/components/profile/MerchantBenefitsModal";
 
 interface MerchantDashboardProps {
   onSuccess: () => void;
@@ -185,9 +185,12 @@ const MerchantDashboard = ({
             <p className="text-gray-400 mb-6">
               Please complete your merchant profile for admin review.
             </p>
-            <MerchantProfileModal onProfileUpdate={onSuccess}>
-                <Button>Complete Profile</Button>
-            </MerchantProfileModal>
+            <div className="flex flex-col items-center gap-2">
+              <MerchantProfileModal onProfileUpdate={onSuccess}>
+                  <Button>Complete Profile</Button>
+              </MerchantProfileModal>
+              <MerchantBenefitsModal />
+            </div>
           </CardContent>
         </Card>
       )}
