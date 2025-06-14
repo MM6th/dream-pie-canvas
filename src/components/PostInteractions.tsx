@@ -343,7 +343,7 @@ const PostInteractions = ({ postId }: PostInteractionsProps) => {
       </div>
 
       {/* Comments Section */}
-      <ScrollArea className="max-h-80 w-full pr-4 border border-gray-600 rounded-md p-2 bg-black/20">
+      <ScrollArea className="max-h-80 w-full pr-4 border border-gray-600 rounded-md p-2 bg-black/20" thumbClassName="bg-blue-600">
         <div className="space-y-3">
           {visibleComments.map((comment) => (
             <Card key={comment.id} className="bg-gray-700/50 border-gray-600">
