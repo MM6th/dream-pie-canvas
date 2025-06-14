@@ -3,7 +3,7 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { User, CheckCircle, XCircle, ExternalLink, Calendar } from "lucide-react";
+import { User, CheckCircle, XCircle, ExternalLink, Calendar, Mail } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 
 interface PendingMerchant {
@@ -17,6 +17,7 @@ interface PendingMerchant {
   pinterest_url?: string;
   onlyfans_url?: string;
   snapchat_url?: string;
+  paypal_email?: string;
   approval_status: string;
   created_at: string;
 }
@@ -64,8 +65,8 @@ const PendingMerchantCard = ({ merchant, onApprovalChange }: PendingMerchantCard
   return (
     <Card className="bg-gray-800/50 border-gray-700 hover:shadow-lg transition-all duration-300">
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-white flex items-center gap-2">
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-3">
             {merchant.avatar_url ? (
               <img
                 src={merchant.avatar_url}
@@ -76,17 +77,25 @@ const PendingMerchantCard = ({ merchant, onApprovalChange }: PendingMerchantCard
               <User className="w-10 h-10 text-gray-400" />
             )}
             <div>
-              <p className="text-lg">{merchant.display_name || 'No Display Name'}</p>
-              <p className="text-sm text-gray-400 font-normal">{merchant.email}</p>
+              <CardTitle className="text-white text-lg">{merchant.display_name || 'No Display Name'}</CardTitle>
+              <div className="mt-1 space-y-1">
+                 <p className="text-sm text-gray-300 font-normal flex items-center gap-2" title={merchant.paypal_email || 'Primary contact email not provided'}>
+                  <Mail className="w-4 h-4 text-blue-400 flex-shrink-0" />
+                  <span className="truncate">
+                    {merchant.paypal_email || <span className="text-yellow-400 italic">No Contact Email</span>}
+                  </span>
+                </p>
+                <p className="text-xs text-gray-500 font-normal truncate" title={merchant.email}>Login: {merchant.email}</p>
+              </div>
             </div>
-          </CardTitle>
+          </div>
           <Badge className="bg-yellow-500 text-black">
             Pending
           </Badge>
         </div>
       </CardHeader>
       
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 pt-4 mt-4 border-t border-gray-700">
         {/* Application Date */}
         <div className="flex items-center gap-2 text-sm text-gray-400">
           <Calendar className="w-4 h-4" />
