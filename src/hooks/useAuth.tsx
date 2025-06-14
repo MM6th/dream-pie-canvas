@@ -54,6 +54,9 @@ export const useAuth = () => {
 
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
+    // Manually clear the session and user state as a fallback
+    setSession(null);
+    setUser(null);
     return { error };
   };
 
