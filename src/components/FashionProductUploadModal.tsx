@@ -5,8 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
-import { Upload, X, Plus, Minus } from "lucide-react";
+import { Plus, Minus, Upload, Save } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
@@ -18,122 +17,158 @@ interface FashionProductUploadModalProps {
   onSuccess: () => void;
 }
 
-interface ProductImage {
-  url: string;
-  order: number;
-}
-
-interface SizeVariant {
-  size: string;
-  colors: {
-    [color: string]: number;
-  };
-}
-
-const SIZES = ['XS', 'S', 'M', 'L', 'XL', '2XL'];
-const COLORS = ['black', 'white', 'nude', 'red', 'blue', 'pink', 'green'];
+const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+const COLORS = ['black', 'white', 'red', 'blue', 'green', 'yellow', 'pink', 'purple', 'gray', 'brown'];
 
 const FashionProductUploadModal = ({ isOpen, onClose, onSuccess }: FashionProductUploadModalProps) => {
   const { user } = useAuth();
+  const [loading, setLoading] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [materials, setMaterials] = useState("");
   const [price, setPrice] = useState("");
-  const [shippingCost, setShippingCost] = useState("");
-  const [images, setImages] = useState<ProductImage[]>([]);
-  const [variants, setVariants] = useState<SizeVariant[]>(
-    SIZES.map(size => ({
-      size,
-      colors: COLORS.reduce((acc, color) => ({ ...acc, [color]: 0 }), {})
-    }))
-  );
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [shippingCost, setShippingCost] = useState("0");
+  const [accessLevel, setAccessLevel] = useState("public");
+  const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const [variants, setVariants] = useState<Array<{
+    size: string;
+    color: string;
+    stock_quantity: number;
+  }>>([]);
+  const [newColor, setNewColor] = useState("");
 
-  const handleImagesSelected = (urls: string[]) => {
-    const newImages = urls.map((url, index) => ({
-      url,
-      order: images.length + index
-    }));
-    setImages(prev => [...prev, ...newImages]);
+  const handleClose = () => {
+    setTitle("");
+    setDescription("");
+    setMaterials("");
+    setPrice("");
+    setShippingCost("0");
+    setAccessLevel("public");
+    setSelectedImages([]);
+    setVariants([]);
+    setNewColor("");
+    onClose();
   };
 
-  const handleRemoveImage = (index: number) => {
-    setImages(prev => prev.filter((_, i) => i !== index).map((img, i) => ({ ...img, order: i })));
-  };
-
-  const handleStockChange = (sizeIndex: number, color: string, stock: number) => {
-    setVariants(prev => prev.map((variant, index) => 
-      index === sizeIndex 
-        ? { ...variant, colors: { ...variant.colors, [color]: Math.max(0, stock) } }
+  const updateVariantStock = (index: number, delta: number) => {
+    setVariants(prev => prev.map((variant, i) => 
+      i === index 
+        ? { ...variant, stock_quantity: Math.max(0, variant.stock_quantity + delta) }
         : variant
     ));
   };
 
-  const handleSubmit = async () => {
-    if (!user || !title.trim() || !price || images.length === 0) {
+  const addNewColorVariants = () => {
+    if (!newColor.trim()) return;
+    
+    const newVariants = SIZES.map(size => ({
+      size,
+      color: newColor.toLowerCase(),
+      stock_quantity: 0
+    }));
+    
+    setVariants(prev => [...prev, ...newVariants]);
+    setNewColor("");
+  };
+
+  const uploadImages = async (): Promise<string[]> => {
+    const imageUrls: string[] = [];
+    
+    for (const image of selectedImages) {
+      const fileExt = image.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `fashion-products/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('fashion-images')
+        .upload(filePath, image);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('fashion-images')
+        .getPublicUrl(filePath);
+
+      imageUrls.push(publicUrl);
+    }
+
+    return imageUrls;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+
+    if (selectedImages.length === 0) {
       toast({
         title: "Error",
-        description: "Please fill in all required fields and add at least one image",
+        description: "Please select at least one product image",
         variant: "destructive"
       });
       return;
     }
 
-    setIsSubmitting(true);
+    if (variants.length === 0) {
+      toast({
+        title: "Error",
+        description: "Please add at least one size/color variant",
+        variant: "destructive"
+      });
+      return;
+    }
 
+    setLoading(true);
     try {
+      // Upload images
+      const imageUrls = await uploadImages();
+
       // Create fashion product
       const { data: product, error: productError } = await supabase
         .from('fashion_products')
         .insert({
+          admin_id: user.id,
           title: title.trim(),
           description: description.trim() || null,
           materials: materials.trim() || null,
           price: parseFloat(price),
-          shipping_cost: parseFloat(shippingCost) || 0,
-          admin_id: user.id
+          shipping_cost: parseFloat(shippingCost),
+          access_level: accessLevel
         })
         .select()
         .single();
 
       if (productError) throw productError;
 
-      // Insert images
-      const imageInserts = images.map(img => ({
-        fashion_product_id: product.id,
-        image_url: img.url,
-        display_order: img.order
-      }));
+      // Create product images
+      for (let i = 0; i < imageUrls.length; i++) {
+        const { error: imageError } = await supabase
+          .from('fashion_product_images')
+          .insert({
+            fashion_product_id: product.id,
+            image_url: imageUrls[i],
+            display_order: i
+          });
 
-      const { error: imagesError } = await supabase
-        .from('fashion_product_images')
-        .insert(imageInserts);
+        if (imageError) throw imageError;
+      }
 
-      if (imagesError) throw imagesError;
-
-      // Insert variants with stock > 0
-      const variantInserts = variants.flatMap(variant =>
-        Object.entries(variant.colors)
-          .filter(([_, stock]) => stock > 0)
-          .map(([color, stock]) => ({
+      // Create variants
+      for (const variant of variants) {
+        const { error: variantError } = await supabase
+          .from('fashion_product_variants')
+          .insert({
             fashion_product_id: product.id,
             size: variant.size as any,
-            color: color as any,
-            stock_quantity: stock
-          }))
-      );
+            color: variant.color as any,
+            stock_quantity: variant.stock_quantity
+          });
 
-      if (variantInserts.length > 0) {
-        const { error: variantsError } = await supabase
-          .from('fashion_product_variants')
-          .insert(variantInserts);
-
-        if (variantsError) throw variantsError;
+        if (variantError) throw variantError;
       }
 
       toast({
         title: "Success",
-        description: "Fashion product uploaded successfully!"
+        description: "Fashion product uploaded successfully"
       });
 
       onSuccess();
@@ -146,193 +181,221 @@ const FashionProductUploadModal = ({ isOpen, onClose, onSuccess }: FashionProduc
         variant: "destructive"
       });
     } finally {
-      setIsSubmitting(false);
+      setLoading(false);
     }
   };
 
-  const handleClose = () => {
-    setTitle("");
-    setDescription("");
-    setMaterials("");
-    setPrice("");
-    setShippingCost("");
-    setImages([]);
-    setVariants(SIZES.map(size => ({
-      size,
-      colors: COLORS.reduce((acc, color) => ({ ...acc, [color]: 0 }), {})
-    })));
-    onClose();
-  };
+  const groupedVariants = variants.reduce((acc, variant, index) => {
+    const key = variant.color;
+    if (!acc[key]) acc[key] = [];
+    acc[key].push({ ...variant, index });
+    return acc;
+  }, {} as Record<string, Array<any>>);
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-4xl bg-gray-800 border-gray-700 text-white max-h-[90vh] overflow-y-auto">
+      <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Upload className="w-5 h-5" />
-            Upload Fashion Product
-          </DialogTitle>
+          <DialogTitle className="text-xl font-bold">Upload Fashion Product</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
-          {/* Basic Information */}
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="title" className="text-sm font-medium">Title *</Label>
+              <Label htmlFor="title">Product Title *</Label>
               <Input
                 id="title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Product title"
-                className="mt-1 bg-gray-700 border-gray-600 text-white"
+                required
+                className="bg-gray-700 border-gray-600 text-white"
               />
             </div>
 
             <div>
-              <Label htmlFor="materials" className="text-sm font-medium">Materials</Label>
+              <Label htmlFor="materials">Materials</Label>
               <Input
                 id="materials"
                 value={materials}
                 onChange={(e) => setMaterials(e.target.value)}
-                placeholder="e.g., 100% Cotton, Polyester blend"
-                className="mt-1 bg-gray-700 border-gray-600 text-white"
+                placeholder="e.g., 100% Cotton"
+                className="bg-gray-700 border-gray-600 text-white"
               />
             </div>
-          </div>
 
-          <div>
-            <Label htmlFor="description" className="text-sm font-medium">Description</Label>
-            <Textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Product description"
-              className="mt-1 bg-gray-700 border-gray-600 text-white"
-              rows={3}
-            />
-          </div>
-
-          {/* Pricing */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="price" className="text-sm font-medium">Price ($) *</Label>
+              <Label htmlFor="price">Price ($) *</Label>
               <Input
                 id="price"
                 type="number"
                 step="0.01"
+                min="0"
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
-                placeholder="29.99"
-                className="mt-1 bg-gray-700 border-gray-600 text-white"
+                required
+                className="bg-gray-700 border-gray-600 text-white"
               />
             </div>
 
             <div>
-              <Label htmlFor="shipping" className="text-sm font-medium">Shipping Cost ($)</Label>
+              <Label htmlFor="shipping">Shipping Cost ($)</Label>
               <Input
                 id="shipping"
                 type="number"
                 step="0.01"
+                min="0"
                 value={shippingCost}
                 onChange={(e) => setShippingCost(e.target.value)}
-                placeholder="5.99 (depends on location, shipped ground USPS)"
-                className="mt-1 bg-gray-700 border-gray-600 text-white"
+                className="bg-gray-700 border-gray-600 text-white"
               />
             </div>
           </div>
 
-          {/* Images */}
           <div>
-            <Label className="text-sm font-medium">Product Images * (Max 8)</Label>
-            <div className="mt-2 space-y-4">
-              <MultiImagePicker
-                onImagesSelected={handleImagesSelected}
-                maxImages={8}
-                currentImageCount={images.length}
-              />
-              
-              {images.length > 0 && (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {images.map((image, index) => (
-                    <div key={index} className="relative">
-                      <img
-                        src={image.url}
-                        alt={`Product ${index + 1}`}
-                        className="w-full h-24 object-cover rounded border border-gray-600"
-                      />
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleRemoveImage(index)}
-                        className="absolute -top-2 -right-2 bg-red-600 hover:bg-red-700 text-white rounded-full w-6 h-6 p-0"
-                      >
-                        <X className="w-3 h-3" />
-                      </Button>
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={3}
+              className="bg-gray-700 border-gray-600 text-white"
+            />
+          </div>
+
+          {/* Access Level Selection */}
+          <div className="space-y-2">
+            <Label>Access Level</Label>
+            <div className="flex gap-4">
+              <label className="flex items-center space-x-2">
+                <input
+                  type="radio"
+                  value="public"
+                  checked={accessLevel === "public"}
+                  onChange={(e) => setAccessLevel(e.target.value)}
+                  className="text-blue-600"
+                />
+                <span className="text-white">Public (All users)</span>
+              </label>
+              <label className="flex items-center space-x-2">
+                <input
+                  type="radio"
+                  value="merchant_only"
+                  checked={accessLevel === "merchant_only"}
+                  onChange={(e) => setAccessLevel(e.target.value)}
+                  className="text-blue-600"
+                />
+                <span className="text-white">Merchant Only</span>
+              </label>
+            </div>
+            {accessLevel === "merchant_only" && (
+              <p className="text-sm text-yellow-400">
+                This product will only be visible and purchasable by approved merchants. Perfect for modeling opportunities!
+              </p>
+            )}
+          </div>
+
+          {/* Product Images */}
+          <div className="space-y-2">
+            <Label>Product Images *</Label>
+            <MultiImagePicker
+              selectedImages={selectedImages}
+              onImagesChange={setSelectedImages}
+              maxImages={5}
+            />
+          </div>
+
+          {/* Inventory Management */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Inventory Management</h3>
+            
+            {Object.entries(groupedVariants).map(([color, colorVariants]) => (
+              <div key={color} className="border border-gray-600 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-medium capitalize text-lg">{color}</h4>
+                </div>
+                
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                  {colorVariants.map(({ size, stock_quantity, index }) => (
+                    <div key={`${color}-${size}`} className="flex items-center justify-between bg-gray-700 p-2 rounded">
+                      <span className="text-sm font-medium">{size}</span>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => updateVariantStock(index, -1)}
+                          className="w-6 h-6 p-0"
+                        >
+                          <Minus className="w-3 h-3" />
+                        </Button>
+                        <span className="w-8 text-center text-sm">{stock_quantity}</span>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => updateVariantStock(index, 1)}
+                          className="w-6 h-6 p-0"
+                        >
+                          <Plus className="w-3 h-3" />
+                        </Button>
+                      </div>
                     </div>
                   ))}
                 </div>
-              )}
+              </div>
+            ))}
+
+            {/* Add New Color */}
+            <div className="border border-gray-600 rounded-lg p-4">
+              <h4 className="font-medium mb-3">Add Color Variants</h4>
+              <div className="flex gap-2">
+                <select
+                  value={newColor}
+                  onChange={(e) => setNewColor(e.target.value)}
+                  className="bg-gray-700 border-gray-600 text-white rounded px-3 py-2 flex-1"
+                >
+                  <option value="">Select a color</option>
+                  {COLORS.filter(color => !Object.keys(groupedVariants).includes(color)).map(color => (
+                    <option key={color} value={color}>{color}</option>
+                  ))}
+                </select>
+                <Button
+                  type="button"
+                  onClick={addNewColorVariants}
+                  disabled={!newColor}
+                  variant="outline"
+                  className="border-blue-500 text-blue-400"
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  Add Color
+                </Button>
+              </div>
             </div>
           </div>
 
-          {/* Size/Color/Stock Matrix */}
-          <div>
-            <Label className="text-sm font-medium">Size, Color & Stock</Label>
-            <div className="mt-2 space-y-4">
-              {variants.map((variant, sizeIndex) => (
-                <Card key={variant.size} className="bg-gray-700 border-gray-600">
-                  <CardContent className="p-4">
-                    <h4 className="font-medium text-white mb-3">Size {variant.size}</h4>
-                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
-                      {COLORS.map(color => (
-                        <div key={color} className="space-y-1">
-                          <Label className="text-xs capitalize">{color}</Label>
-                          <div className="flex items-center space-x-1">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleStockChange(sizeIndex, color, variant.colors[color] - 1)}
-                              className="w-6 h-6 p-0 border-gray-500"
-                            >
-                              <Minus className="w-3 h-3" />
-                            </Button>
-                            <span className="w-8 text-center text-sm">{variant.colors[color]}</span>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleStockChange(sizeIndex, color, variant.colors[color] + 1)}
-                              className="w-6 h-6 p-0 border-gray-500"
-                            >
-                              <Plus className="w-3 h-3" />
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-
-          {/* Submit Actions */}
-          <div className="flex gap-2 pt-4">
+          <div className="flex gap-4 pt-4">
             <Button
+              type="submit"
+              disabled={loading}
+              className="bg-blue-600 text-white flex-1"
+            >
+              {loading ? "Uploading..." : (
+                <>
+                  <Save className="w-4 h-4 mr-2" />
+                  Upload Product
+                </>
+              )}
+            </Button>
+            <Button
+              type="button"
               variant="outline"
               onClick={handleClose}
-              className="flex-1 border-gray-600 text-white bg-gray-700"
+              disabled={loading}
             >
               Cancel
             </Button>
-            <Button
-              onClick={handleSubmit}
-              disabled={isSubmitting}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              {isSubmitting ? "Uploading..." : "Upload Product"}
-            </Button>
           </div>
-        </div>
+        </form>
       </DialogContent>
     </Dialog>
   );

@@ -208,6 +208,7 @@ export type Database = {
       }
       fashion_products: {
         Row: {
+          access_level: string | null
           admin_id: string
           created_at: string
           description: string | null
@@ -220,6 +221,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          access_level?: string | null
           admin_id: string
           created_at?: string
           description?: string | null
@@ -232,6 +234,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          access_level?: string | null
           admin_id?: string
           created_at?: string
           description?: string | null
@@ -304,6 +307,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      modeling_applications: {
+        Row: {
+          admin_notes: string | null
+          application_photos: string[]
+          created_at: string
+          fashion_product_id: string
+          id: string
+          merchant_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          application_photos?: string[]
+          created_at?: string
+          fashion_product_id: string
+          id?: string
+          merchant_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          application_photos?: string[]
+          created_at?: string
+          fashion_product_id?: string
+          id?: string
+          merchant_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       post_comments: {
         Row: {

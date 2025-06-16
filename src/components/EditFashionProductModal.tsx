@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,7 @@ interface FashionProduct {
   materials: string | null;
   price: number;
   shipping_cost: number;
+  access_level?: string | null;
   fashion_product_variants: Array<{
     id: string;
     size: string;
@@ -41,6 +43,7 @@ const EditFashionProductModal = ({ isOpen, onClose, product, onSuccess }: EditFa
   const [materials, setMaterials] = useState("");
   const [price, setPrice] = useState("");
   const [shippingCost, setShippingCost] = useState("");
+  const [accessLevel, setAccessLevel] = useState("public");
   const [variants, setVariants] = useState<Array<{
     id?: string;
     size: string;
@@ -57,6 +60,7 @@ const EditFashionProductModal = ({ isOpen, onClose, product, onSuccess }: EditFa
       setMaterials(product.materials || "");
       setPrice(product.price.toString());
       setShippingCost(product.shipping_cost.toString());
+      setAccessLevel(product.access_level || "public");
       setVariants(product.fashion_product_variants.map(v => ({
         ...v,
         isNew: false
@@ -70,6 +74,7 @@ const EditFashionProductModal = ({ isOpen, onClose, product, onSuccess }: EditFa
     setMaterials("");
     setPrice("");
     setShippingCost("");
+    setAccessLevel("public");
     setVariants([]);
     setNewColor("");
     onClose();
@@ -116,6 +121,7 @@ const EditFashionProductModal = ({ isOpen, onClose, product, onSuccess }: EditFa
           materials: materials.trim() || null,
           price: parseFloat(price),
           shipping_cost: parseFloat(shippingCost),
+          access_level: accessLevel,
           updated_at: new Date().toISOString()
         })
         .eq('id', product.id);
@@ -258,6 +264,38 @@ const EditFashionProductModal = ({ isOpen, onClose, product, onSuccess }: EditFa
             />
           </div>
 
+          {/* Access Level Selection */}
+          <div className="space-y-2">
+            <Label>Access Level</Label>
+            <div className="flex gap-4">
+              <label className="flex items-center space-x-2">
+                <input
+                  type="radio"
+                  value="public"
+                  checked={accessLevel === "public"}
+                  onChange={(e) => setAccessLevel(e.target.value)}
+                  className="text-blue-600"
+                />
+                <span className="text-white">Public (All users)</span>
+              </label>
+              <label className="flex items-center space-x-2">
+                <input
+                  type="radio"
+                  value="merchant_only"
+                  checked={accessLevel === "merchant_only"}
+                  onChange={(e) => setAccessLevel(e.target.value)}
+                  className="text-blue-600"
+                />
+                <span className="text-white">Merchant Only</span>
+              </label>
+            </div>
+            {accessLevel === "merchant_only" && (
+              <p className="text-sm text-yellow-400">
+                This product will only be visible and purchasable by approved merchants.
+              </p>
+            )}
+          </div>
+
           {/* Inventory Management */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Inventory Management</h3>
@@ -274,7 +312,7 @@ const EditFashionProductModal = ({ isOpen, onClose, product, onSuccess }: EditFa
                       const indices = colorVariants.map(v => v.index).sort((a, b) => b - a);
                       setVariants(prev => prev.filter((_, i) => !indices.includes(i)));
                     }}
-                    className="border-red-500 text-red-400 hover:bg-red-500 hover:text-white"
+                    className="border-red-500 text-red-400"
                   >
                     <Trash2 className="w-3 h-3 mr-1" />
                     Remove Color
@@ -331,7 +369,7 @@ const EditFashionProductModal = ({ isOpen, onClose, product, onSuccess }: EditFa
                   onClick={addNewColorVariants}
                   disabled={!newColor}
                   variant="outline"
-                  className="border-blue-500 text-blue-400 hover:bg-blue-500 hover:text-white"
+                  className="border-blue-500 text-blue-400"
                 >
                   <Plus className="w-4 h-4 mr-1" />
                   Add Color
@@ -344,7 +382,7 @@ const EditFashionProductModal = ({ isOpen, onClose, product, onSuccess }: EditFa
             <Button
               type="submit"
               disabled={loading}
-              className="bg-blue-600 hover:bg-blue-700 text-white flex-1"
+              className="bg-blue-600 text-white flex-1"
             >
               {loading ? "Updating..." : (
                 <>
