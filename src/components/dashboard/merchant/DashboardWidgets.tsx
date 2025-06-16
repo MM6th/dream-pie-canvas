@@ -6,6 +6,7 @@ import BackgroundUpload from "@/components/BackgroundUpload";
 import AudioUploadModal from "@/components/AudioUploadModal";
 import VideoUploadModal from "@/components/VideoUploadModal";
 import FashionProductUploadModal from "@/components/FashionProductUploadModal";
+import FashionProductManager from "@/components/FashionProductManager";
 
 interface DashboardWidgetsProps {
   onSuccess: () => void;
@@ -25,7 +26,7 @@ const DashboardWidgets = ({ onSuccess, onViewStore, onBackgroundUpload, isAdmin 
           <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-bold text-white">Fashion Products (Admin Only)</h3>
+                <h3 className="text-xl font-bold text-white">Fashion Products</h3>
                 <Button
                   onClick={() => setIsFashionModalOpen(true)}
                   className="bg-blue-600 hover:bg-blue-700 text-white"
@@ -51,6 +52,13 @@ const DashboardWidgets = ({ onSuccess, onViewStore, onBackgroundUpload, isAdmin 
               </div>
             </CardContent>
           </Card>
+        </div>
+      )}
+
+      {/* Fashion Product Management - Admin Only */}
+      {isAdmin && (
+        <div className="mb-12">
+          <FashionProductManager />
         </div>
       )}
 
