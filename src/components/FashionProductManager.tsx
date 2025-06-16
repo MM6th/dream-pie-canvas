@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -241,7 +240,7 @@ const FashionProductManager = () => {
                             size="sm"
                             variant="outline"
                             onClick={() => handleEdit(product)}
-                            className="flex-1 border-blue-500 text-blue-400"
+                            className="flex-1 border-blue-500 text-blue-400 bg-transparent"
                           >
                             <Edit className="w-3 h-3 mr-1" />
                             Edit
@@ -250,7 +249,7 @@ const FashionProductManager = () => {
                             size="sm"
                             variant="outline"
                             onClick={() => handleDelete(product.id)}
-                            className="border-red-500 text-red-400"
+                            className="border-red-500 text-red-400 bg-transparent"
                           >
                             <Trash2 className="w-3 h-3" />
                           </Button>
