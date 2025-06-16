@@ -6,6 +6,7 @@ import AudioProductManager from "@/components/AudioProductManager";
 import VideoProductManager from "@/components/VideoProductManager";
 import BulletinPostManager from "@/components/BulletinPostManager";
 import SongCoverManager from "@/components/SongCoverManager";
+import FashionProductManager from "@/components/FashionProductManager";
 import { useApprovalStatus } from "@/hooks/useApprovalStatus";
 
 const ContentManagement = () => {
@@ -28,6 +29,16 @@ const ContentManagement = () => {
           </CardContent>
         </Card>
       </div>
+
+      {isAdmin && (
+        <div className="mb-8">
+          <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+            <CardContent className="p-6">
+              <FashionProductManager />
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {!isAdmin && (
         <div className="mb-8">

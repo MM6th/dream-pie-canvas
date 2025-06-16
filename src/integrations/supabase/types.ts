@@ -136,6 +136,175 @@ export type Database = {
           },
         ]
       }
+      fashion_product_images: {
+        Row: {
+          created_at: string
+          display_order: number
+          fashion_product_id: string
+          id: string
+          image_url: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          fashion_product_id: string
+          id?: string
+          image_url: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          fashion_product_id?: string
+          id?: string
+          image_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fashion_product_images_fashion_product_id_fkey"
+            columns: ["fashion_product_id"]
+            isOneToOne: false
+            referencedRelation: "fashion_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fashion_product_variants: {
+        Row: {
+          color: Database["public"]["Enums"]["fashion_color"]
+          created_at: string
+          fashion_product_id: string
+          id: string
+          size: Database["public"]["Enums"]["fashion_size"]
+          stock_quantity: number
+          updated_at: string
+        }
+        Insert: {
+          color: Database["public"]["Enums"]["fashion_color"]
+          created_at?: string
+          fashion_product_id: string
+          id?: string
+          size: Database["public"]["Enums"]["fashion_size"]
+          stock_quantity?: number
+          updated_at?: string
+        }
+        Update: {
+          color?: Database["public"]["Enums"]["fashion_color"]
+          created_at?: string
+          fashion_product_id?: string
+          id?: string
+          size?: Database["public"]["Enums"]["fashion_size"]
+          stock_quantity?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fashion_product_variants_fashion_product_id_fkey"
+            columns: ["fashion_product_id"]
+            isOneToOne: false
+            referencedRelation: "fashion_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fashion_products: {
+        Row: {
+          admin_id: string
+          created_at: string
+          description: string | null
+          id: string
+          materials: string | null
+          price: number
+          shipping_cost: number
+          tax_rate: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          admin_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          materials?: string | null
+          price: number
+          shipping_cost?: number
+          tax_rate?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          admin_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          materials?: string | null
+          price?: number
+          shipping_cost?: number
+          tax_rate?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      fashion_purchases: {
+        Row: {
+          created_at: string
+          fashion_product_id: string
+          id: string
+          paypal_transaction_id: string | null
+          purchase_date: string
+          quantity: number
+          shipping_cost: number
+          tax_amount: number
+          total_amount: number
+          unit_price: number
+          user_id: string
+          variant_id: string
+        }
+        Insert: {
+          created_at?: string
+          fashion_product_id: string
+          id?: string
+          paypal_transaction_id?: string | null
+          purchase_date?: string
+          quantity?: number
+          shipping_cost: number
+          tax_amount: number
+          total_amount: number
+          unit_price: number
+          user_id: string
+          variant_id: string
+        }
+        Update: {
+          created_at?: string
+          fashion_product_id?: string
+          id?: string
+          paypal_transaction_id?: string | null
+          purchase_date?: string
+          quantity?: number
+          shipping_cost?: number
+          tax_amount?: number
+          total_amount?: number
+          unit_price?: number
+          user_id?: string
+          variant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fashion_purchases_fashion_product_id_fkey"
+            columns: ["fashion_product_id"]
+            isOneToOne: false
+            referencedRelation: "fashion_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fashion_purchases_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "fashion_product_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       post_comments: {
         Row: {
           content: string
@@ -467,6 +636,15 @@ export type Database = {
     }
     Enums: {
       access_level: "public" | "merchant_only" | "paid"
+      fashion_color:
+        | "black"
+        | "white"
+        | "nude"
+        | "red"
+        | "blue"
+        | "pink"
+        | "green"
+      fashion_size: "XS" | "S" | "M" | "L" | "XL" | "2XL"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -583,6 +761,8 @@ export const Constants = {
   public: {
     Enums: {
       access_level: ["public", "merchant_only", "paid"],
+      fashion_color: ["black", "white", "nude", "red", "blue", "pink", "green"],
+      fashion_size: ["XS", "S", "M", "L", "XL", "2XL"],
     },
   },
 } as const
