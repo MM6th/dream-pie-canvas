@@ -31,7 +31,6 @@ const AdminDashboard = () => {
   const [approvedMerchants, setApprovedMerchants] = useState<Merchant[]>([]);
   const [rejectedMerchants, setRejectedMerchants] = useState<Merchant[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"merchants" | "covers">("merchants");
 
   const fetchMerchants = useCallback(async () => {
     setLoading(true);
@@ -130,126 +129,111 @@ const AdminDashboard = () => {
       {/* Tab Navigation */}
       <div className="flex gap-2 mb-6">
         <Button
-          onClick={() => setActiveTab("merchants")}
-          variant={activeTab === "merchants" ? "default" : "outline"}
-          className={`flex items-center gap-2 ${
-            activeTab === "merchants" 
-              ? "bg-blue-600 hover:bg-blue-700" 
-              : "bg-black text-white hover:bg-gray-800"
-          }`}
+          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
         >
           <Users className="w-4 h-4" />
           Merchant Management
         </Button>
         <Button
-          onClick={() => setActiveTab("covers")}
-          variant={activeTab === "covers" ? "default" : "outline"}
-          className={`flex items-center gap-2 ${
-            activeTab === "covers" 
-              ? "bg-blue-600 hover:bg-blue-700" 
-              : "bg-black text-white hover:bg-gray-800"
-          }`}
+          className="flex items-center gap-2 bg-black text-white hover:bg-gray-800"
         >
           <Image className="w-4 h-4" />
           Cover Submissions
         </Button>
       </div>
 
-      {activeTab === "merchants" ? (
-        <>
-          {/* Statistics Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <Card className="bg-gray-800/50 border-gray-700">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-4">
-                  <Clock className="w-8 h-8 text-yellow-500" />
-                  <div>
-                    <p className="text-2xl font-bold text-white">{pendingMerchants.length}</p>
-                    <p className="text-gray-400">Pending Applications</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gray-800/50 border-gray-700">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-4">
-                  <CheckCircle className="w-8 h-8 text-green-500" />
-                  <div>
-                    <p className="text-2xl font-bold text-white">{approvedMerchants.length}</p>
-                    <p className="text-gray-400">Approved Merchants</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gray-800/50 border-gray-700">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-4">
-                  <XCircle className="w-8 h-8 text-red-500" />
-                  <div>
-                    <p className="text-2xl font-bold text-white">{rejectedMerchants.length}</p>
-                    <p className="text-gray-400">Rejected Applications</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Pending Applications */}
-          <div className="mb-8">
-            <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
-              <Users className="w-6 h-6 text-yellow-500" />
-              Merchants - Pending Approval
-            </h3>
-            
-            {pendingMerchants.length === 0 ? (
-              <Card className="bg-gray-800/50 border-gray-700">
-                <CardContent className="p-6 text-center">
-                  <p className="text-gray-400">No pending merchant applications</p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {pendingMerchants.map((merchant) => (
-                  <PendingMerchantCard
-                    key={merchant.id}
-                    merchant={merchant}
-                    onApprovalChange={handleApprovalChange}
-                  />
-                ))}
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <Card className="bg-gray-800/50 border-gray-700">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <Clock className="w-8 h-8 text-yellow-500" />
+              <div>
+                <p className="text-2xl font-bold text-white">{pendingMerchants.length}</p>
+                <p className="text-gray-400">Pending Applications</p>
               </div>
-            )}
-          </div>
+            </div>
+          </CardContent>
+        </Card>
 
-          {/* Approved Merchants */}
-          <div className="mb-8">
-            <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-              <CheckCircle className="w-5 h-5 text-green-500" />
-              Approved Merchants ({approvedMerchants.length})
-            </h3>
-            
-            {approvedMerchants.length === 0 ? (
-              <Card className="bg-gray-800/50 border-gray-700">
-                <CardContent className="p-6 text-center">
-                  <p className="text-gray-400">No approved merchants yet.</p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {approvedMerchants.map((merchant) => (
-                  <ApprovedMerchantCard
-                    key={merchant.id}
-                    merchant={merchant}
-                  />
-                ))}
+        <Card className="bg-gray-800/50 border-gray-700">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <CheckCircle className="w-8 h-8 text-green-500" />
+              <div>
+                <p className="text-2xl font-bold text-white">{approvedMerchants.length}</p>
+                <p className="text-gray-400">Approved Merchants</p>
               </div>
-            )}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gray-800/50 border-gray-700">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <XCircle className="w-8 h-8 text-red-500" />
+              <div>
+                <p className="text-2xl font-bold text-white">{rejectedMerchants.length}</p>
+                <p className="text-gray-400">Rejected Applications</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Pending Applications */}
+      <div className="mb-8">
+        <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+          <Users className="w-6 h-6 text-yellow-500" />
+          Merchants - Pending Approval
+        </h3>
+        
+        {pendingMerchants.length === 0 ? (
+          <Card className="bg-gray-800/50 border-gray-700">
+            <CardContent className="p-6 text-center">
+              <p className="text-gray-400">No pending merchant applications</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {pendingMerchants.map((merchant) => (
+              <PendingMerchantCard
+                key={merchant.id}
+                merchant={merchant}
+                onApprovalChange={handleApprovalChange}
+              />
+            ))}
           </div>
-        </>
-      ) : (
-        <CoverSubmissionManager />
-      )}
+        )}
+      </div>
+
+      {/* Approved Merchants */}
+      <div className="mb-8">
+        <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+          <CheckCircle className="w-5 h-5 text-green-500" />
+          Approved Merchants ({approvedMerchants.length})
+        </h3>
+        
+        {approvedMerchants.length === 0 ? (
+          <Card className="bg-gray-800/50 border-gray-700">
+            <CardContent className="p-6 text-center">
+              <p className="text-gray-400">No approved merchants yet.</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {approvedMerchants.map((merchant) => (
+              <ApprovedMerchantCard
+                key={merchant.id}
+                merchant={merchant}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Cover Submissions */}
+      <CoverSubmissionManager />
     </div>
   );
 };

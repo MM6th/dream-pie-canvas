@@ -1,10 +1,11 @@
+
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Plus, Minus, Upload, Save } from "lucide-react";
+import { Plus, Minus, Save } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
@@ -30,7 +31,6 @@ const FashionProductUploadModal = ({ isOpen, onClose, onSuccess }: FashionProduc
   const [materials, setMaterials] = useState("");
   const [price, setPrice] = useState("");
   const [shippingCost, setShippingCost] = useState("0");
-  const [accessLevel, setAccessLevel] = useState("public");
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [variants, setVariants] = useState<Array<{
     size: SizeType;
@@ -45,7 +45,6 @@ const FashionProductUploadModal = ({ isOpen, onClose, onSuccess }: FashionProduc
     setMaterials("");
     setPrice("");
     setShippingCost("0");
-    setAccessLevel("public");
     setSelectedImages([]);
     setVariants([]);
     setNewColor("");
@@ -149,8 +148,7 @@ const FashionProductUploadModal = ({ isOpen, onClose, onSuccess }: FashionProduc
           description: description.trim() || null,
           materials: materials.trim() || null,
           price: parseFloat(price),
-          shipping_cost: parseFloat(shippingCost),
-          access_level: accessLevel
+          shipping_cost: parseFloat(shippingCost)
         })
         .select()
         .single();
@@ -298,38 +296,6 @@ const FashionProductUploadModal = ({ isOpen, onClose, onSuccess }: FashionProduc
               rows={3}
               className="bg-gray-700 border-gray-600 text-white"
             />
-          </div>
-
-          {/* Access Level Selection */}
-          <div className="space-y-2">
-            <Label>Access Level</Label>
-            <div className="flex gap-4">
-              <label className="flex items-center space-x-2">
-                <input
-                  type="radio"
-                  value="public"
-                  checked={accessLevel === "public"}
-                  onChange={(e) => setAccessLevel(e.target.value)}
-                  className="text-blue-600"
-                />
-                <span className="text-white">Public (All users)</span>
-              </label>
-              <label className="flex items-center space-x-2">
-                <input
-                  type="radio"
-                  value="merchant_only"
-                  checked={accessLevel === "merchant_only"}
-                  onChange={(e) => setAccessLevel(e.target.value)}
-                  className="text-blue-600"
-                />
-                <span className="text-white">Merchant Only</span>
-              </label>
-            </div>
-            {accessLevel === "merchant_only" && (
-              <p className="text-sm text-yellow-400">
-                This product will only be visible and purchasable by approved merchants. Perfect for modeling opportunities!
-              </p>
-            )}
           </div>
 
           {/* Product Images */}
