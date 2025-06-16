@@ -8,6 +8,7 @@ import { Upload, X, Image, Plus, FolderOpen } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
+import ImagePicker from "./ImagePicker";
 
 interface MultiImagePickerProps {
   selectedImages: File[];
@@ -17,6 +18,7 @@ interface MultiImagePickerProps {
 
 const MultiImagePicker = ({ selectedImages, onImagesChange, maxImages }: MultiImagePickerProps) => {
   const [uploading, setUploading] = useState(false);
+  const [galleryModalOpen, setGalleryModalOpen] = useState(false);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const remainingSlots = maxImages - selectedImages.length;
@@ -65,6 +67,34 @@ const MultiImagePicker = ({ selectedImages, onImagesChange, maxImages }: MultiIm
     input.click();
   };
 
+  const handleGalleryImageSelect = async (imageUrl: string) => {
+    try {
+      // Convert the gallery image URL to a File object
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      const fileName = imageUrl.split('/').pop() || 'gallery-image.jpg';
+      const file = new File([blob], fileName, { type: blob.type });
+      
+      const remainingSlots = maxImages - selectedImages.length;
+      if (remainingSlots > 0) {
+        onImagesChange([...selectedImages, file]);
+        setGalleryModalOpen(false);
+      } else {
+        toast({
+          title: "No space available",
+          description: "Please remove an image first",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to load image from gallery",
+        variant: "destructive"
+      });
+    }
+  };
+
   const removeFile = (index: number) => {
     onImagesChange(selectedImages.filter((_, i) => i !== index));
   };
@@ -94,8 +124,8 @@ const MultiImagePicker = ({ selectedImages, onImagesChange, maxImages }: MultiIm
         </div>
       </div>
 
-      {/* Gallery Selection Button */}
-      <div className="flex justify-center">
+      {/* Selection Buttons */}
+      <div className="flex gap-2 justify-center">
         <Button
           type="button"
           onClick={handleFileSelect}
@@ -103,8 +133,30 @@ const MultiImagePicker = ({ selectedImages, onImagesChange, maxImages }: MultiIm
           className="bg-blue-600 text-white"
         >
           <FolderOpen className="w-4 h-4 mr-2" />
-          Choose from Gallery
+          Choose from Computer
         </Button>
+        
+        <Dialog open={galleryModalOpen} onOpenChange={setGalleryModalOpen}>
+          <DialogTrigger asChild>
+            <Button
+              type="button"
+              disabled={uploading || remainingSlots === 0}
+              className="bg-green-600 text-white"
+            >
+              <Image className="w-4 h-4 mr-2" />
+              Choose from Gallery
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Select from Your Gallery</DialogTitle>
+            </DialogHeader>
+            <ImagePicker
+              onImageSelect={handleGalleryImageSelect}
+              trigger={<div></div>}
+            />
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Selected Files Preview */}

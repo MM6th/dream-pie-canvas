@@ -34,7 +34,6 @@ const DashboardWidgets = ({ onSuccess, onViewStore, onBackgroundUpload, isAdmin 
                   <Button
                     onClick={onViewStore}
                     variant="outline"
-                    size="sm"
                     className="border-gray-600 text-white bg-transparent"
                   >
                     View in Store
