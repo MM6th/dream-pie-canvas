@@ -6,8 +6,11 @@ import AudioProductManager from "@/components/AudioProductManager";
 import VideoProductManager from "@/components/VideoProductManager";
 import BulletinPostManager from "@/components/BulletinPostManager";
 import SongCoverManager from "@/components/SongCoverManager";
+import { useApprovalStatus } from "@/hooks/useApprovalStatus";
 
 const ContentManagement = () => {
+  const { isAdmin } = useApprovalStatus();
+
   return (
     <>
       <div className="mb-8">
@@ -26,13 +29,15 @@ const ContentManagement = () => {
         </Card>
       </div>
 
-      <div className="mb-8">
-        <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
-          <CardContent className="p-6">
-            <SongCoverManager />
-          </CardContent>
-        </Card>
-      </div>
+      {!isAdmin && (
+        <div className="mb-8">
+          <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+            <CardContent className="p-6">
+              <SongCoverManager />
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       <div className="mb-8">
         <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">

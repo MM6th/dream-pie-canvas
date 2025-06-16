@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -36,20 +35,37 @@ const SongCoverManager = () => {
   const [selectedProduct, setSelectedProduct] = useState<AudioProduct | null>(null);
   const [showSubmissionModal, setShowSubmissionModal] = useState(false);
 
-  const fetchAudioProducts = async () => {
+  const fetchPurchasedMerchantOnlyProducts = async () => {
     if (!user) return;
 
     try {
+      // First get the user's purchases
+      const { data: purchases, error: purchaseError } = await supabase
+        .from('user_purchases')
+        .select('audio_product_id')
+        .eq('user_id', user.id);
+
+      if (purchaseError) throw purchaseError;
+
+      if (!purchases || purchases.length === 0) {
+        setAudioProducts([]);
+        return;
+      }
+
+      const purchasedProductIds = purchases.map(p => p.audio_product_id);
+
+      // Then get audio products that are merchant_only and purchased by the user
       const { data, error } = await supabase
         .from('audio_products')
         .select('id, title, artist_name, thumbnail_url')
-        .eq('merchant_id', user.id)
+        .eq('access_level', 'merchant_only')
+        .in('id', purchasedProductIds)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       setAudioProducts(data || []);
     } catch (error: any) {
-      console.error('Error fetching audio products:', error);
+      console.error('Error fetching purchased merchant-only products:', error);
     }
   };
 
@@ -91,7 +107,7 @@ const SongCoverManager = () => {
 
   useEffect(() => {
     if (user) {
-      Promise.all([fetchAudioProducts(), fetchSubmissions()]).finally(() => {
+      Promise.all([fetchPurchasedMerchantOnlyProducts(), fetchSubmissions()]).finally(() => {
         setLoading(false);
       });
     }
@@ -140,7 +156,7 @@ const SongCoverManager = () => {
       <div className="space-y-6">
         <div>
           <h3 className="text-xl font-bold text-white mb-4">Song Cover Submissions</h3>
-          <p className="text-gray-400 mb-6">Submit custom covers for your songs for admin approval</p>
+          <p className="text-gray-400 mb-6">Submit custom covers for your purchased merchant-only songs for admin approval</p>
         </div>
 
         {/* Audio Products for Cover Submission */}
@@ -149,7 +165,7 @@ const SongCoverManager = () => {
           {audioProducts.length === 0 ? (
             <Card className="bg-gray-800/50 border-gray-700">
               <CardContent className="p-6 text-center">
-                <p className="text-gray-400">No audio products available for cover submission</p>
+                <p className="text-gray-400">No purchased merchant-only tracks available for cover submission</p>
               </CardContent>
             </Card>
           ) : (

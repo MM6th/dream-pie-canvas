@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -165,7 +164,7 @@ const SongCoverSubmissionModal = ({
             <Button
               variant="outline"
               onClick={handleClose}
-              className="flex-1 border-gray-600 text-white hover:bg-gray-700"
+              className="flex-1 border-gray-600 text-white"
             >
               Cancel
             </Button>
