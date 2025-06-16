@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -45,7 +46,7 @@ const ModelingApplicationManager = () => {
         .from('modeling_applications')
         .select(`
           *,
-          profiles (
+          profiles!modeling_applications_merchant_id_fkey (
             display_name,
             email
           ),
