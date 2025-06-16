@@ -2,7 +2,6 @@
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Camera, Send, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,11 +28,9 @@ const ModelingApplicationModal = ({ isOpen, onClose, product, onSuccess }: Model
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
-  const [submissionNotes, setSubmissionNotes] = useState("");
 
   const handleClose = () => {
     setSelectedImages([]);
-    setSubmissionNotes("");
     onClose();
   };
 
@@ -105,8 +102,7 @@ const ModelingApplicationModal = ({ isOpen, onClose, product, onSuccess }: Model
         .insert({
           merchant_id: user.id,
           fashion_product_id: product.id,
-          application_photos: imageUrls,
-          submission_notes: submissionNotes.trim() || null
+          application_photos: imageUrls
         });
 
       if (applicationError) throw applicationError;
@@ -165,18 +161,6 @@ const ModelingApplicationModal = ({ isOpen, onClose, product, onSuccess }: Model
             <p className="text-sm text-gray-400">
               Upload photos of yourself that showcase your modeling abilities (up to 8 photos)
             </p>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="notes">Additional Notes (Optional)</Label>
-            <Textarea
-              id="notes"
-              value={submissionNotes}
-              onChange={(e) => setSubmissionNotes(e.target.value)}
-              rows={4}
-              placeholder="Tell us why you'd be perfect for modeling this product..."
-              className="bg-gray-700 border-gray-600 text-white"
-            />
           </div>
 
           <div className="bg-blue-900/30 border border-blue-600 rounded-lg p-4">

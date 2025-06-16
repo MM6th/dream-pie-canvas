@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import FashionProductSlideshow from "./FashionProductSlideshow";
+import ModelingApplicationModal from "./ModelingApplicationModal";
 
 interface FashionProduct {
   id: string;
@@ -42,6 +43,8 @@ const FashionStoreSection = () => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState<FashionProduct | null>(null);
+  const [modelingModalOpen, setModelingModalOpen] = useState(false);
+  const [selectedProductForModeling, setSelectedProductForModeling] = useState<FashionProduct | null>(null);
 
   const fetchUserProfile = async () => {
     if (!user) return null;
@@ -155,11 +158,8 @@ const FashionStoreSection = () => {
   };
 
   const handleApplyForModeling = (product: FashionProduct) => {
-    // TODO: Open modeling application modal
-    toast({
-      title: "Modeling Application",
-      description: "Modeling application feature coming soon! This will allow merchants to apply for modeling opportunities.",
-    });
+    setSelectedProductForModeling(product);
+    setModelingModalOpen(true);
   };
 
   const handlePurchase = async (product: FashionProduct) => {
@@ -283,11 +283,22 @@ const FashionStoreSection = () => {
 
       {selectedProduct && (
         <FashionProductSlideshow
-          product={selectedProduct}
+          images={selectedProduct.fashion_product_images}
+          productTitle={selectedProduct.title}
           isOpen={!!selectedProduct}
           onClose={() => setSelectedProduct(null)}
         />
       )}
+
+      <ModelingApplicationModal
+        isOpen={modelingModalOpen}
+        onClose={() => {
+          setModelingModalOpen(false);
+          setSelectedProductForModeling(null);
+        }}
+        product={selectedProductForModeling}
+        onSuccess={fetchProducts}
+      />
     </>
   );
 };

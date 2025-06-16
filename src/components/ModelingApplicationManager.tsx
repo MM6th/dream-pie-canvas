@@ -12,7 +12,6 @@ interface ModelingApplication {
   application_photos: string[];
   status: string;
   admin_notes: string | null;
-  submission_notes: string | null;
   created_at: string;
   reviewed_at: string | null;
   fashion_products: {
@@ -37,7 +36,6 @@ const ModelingApplicationManager = () => {
           application_photos,
           status,
           admin_notes,
-          submission_notes,
           created_at,
           reviewed_at,
           fashion_products (
@@ -145,13 +143,6 @@ const ModelingApplicationManager = () => {
                       </p>
                     )}
                   </div>
-
-                  {application.submission_notes && (
-                    <div>
-                      <p className="text-sm font-medium text-white">Your Notes:</p>
-                      <p className="text-sm text-gray-300">{application.submission_notes}</p>
-                    </div>
-                  )}
 
                   {application.admin_notes && (
                     <div className="bg-gray-700/50 p-3 rounded">

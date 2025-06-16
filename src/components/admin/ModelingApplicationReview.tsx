@@ -14,7 +14,6 @@ interface ModelingApplication {
   application_photos: string[];
   status: string;
   admin_notes: string | null;
-  submission_notes: string | null;
   created_at: string;
   merchant_id: string;
   fashion_products: {
@@ -43,7 +42,6 @@ const ModelingApplicationReview = () => {
           application_photos,
           status,
           admin_notes,
-          submission_notes,
           created_at,
           merchant_id,
           fashion_products (
@@ -224,7 +222,7 @@ const ModelingApplicationReview = () => {
         )}
       </div>
 
-      {/* Reviewed Applications */}
+      {/* Recently Reviewed Applications */}
       {reviewedApplications.length > 0 && (
         <div>
           <h4 className="text-lg font-semibold text-white mb-4">
@@ -303,15 +301,6 @@ const ModelingApplicationReview = () => {
                     ))}
                   </div>
                 </div>
-
-                {selectedApplication.submission_notes && (
-                  <div>
-                    <Label className="text-white font-medium">Merchant's Notes</Label>
-                    <div className="bg-gray-700/50 p-3 rounded mt-2">
-                      <p className="text-gray-300">{selectedApplication.submission_notes}</p>
-                    </div>
-                  </div>
-                )}
 
                 <div>
                   <Label htmlFor="adminNotes" className="text-white font-medium">
