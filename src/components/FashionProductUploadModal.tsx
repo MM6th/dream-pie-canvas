@@ -16,8 +16,11 @@ interface FashionProductUploadModalProps {
   onSuccess: () => void;
 }
 
-const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
-const COLORS = ['black', 'white', 'red', 'blue', 'green', 'yellow', 'pink', 'purple', 'gray', 'brown'];
+const SIZES = ['XS', 'S', 'M', 'L', 'XL', '2XL'] as const;
+const COLORS = ['black', 'white', 'red', 'blue', 'green', 'pink', 'nude'] as const;
+
+type SizeType = typeof SIZES[number];
+type ColorType = typeof COLORS[number];
 
 const FashionProductUploadModal = ({ isOpen, onClose, onSuccess }: FashionProductUploadModalProps) => {
   const { user } = useAuth();
@@ -30,11 +33,11 @@ const FashionProductUploadModal = ({ isOpen, onClose, onSuccess }: FashionProduc
   const [accessLevel, setAccessLevel] = useState("public");
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [variants, setVariants] = useState<Array<{
-    size: string;
-    color: string;
+    size: SizeType;
+    color: ColorType;
     stock_quantity: number;
   }>>([]);
-  const [newColor, setNewColor] = useState("");
+  const [newColor, setNewColor] = useState<ColorType | "">("");
 
   const handleClose = () => {
     setTitle("");
@@ -62,7 +65,7 @@ const FashionProductUploadModal = ({ isOpen, onClose, onSuccess }: FashionProduc
     
     const newVariants = SIZES.map(size => ({
       size,
-      color: newColor.toLowerCase(),
+      color: newColor as ColorType,
       stock_quantity: 0
     }));
     
@@ -182,8 +185,8 @@ const FashionProductUploadModal = ({ isOpen, onClose, onSuccess }: FashionProduc
       console.log('Creating product variants...');
       const variantInserts = variants.map(variant => ({
         fashion_product_id: product.id,
-        size: variant.size,
-        color: variant.color,
+        size: variant.size as SizeType,
+        color: variant.color as ColorType,
         stock_quantity: variant.stock_quantity
       }));
 
@@ -386,7 +389,7 @@ const FashionProductUploadModal = ({ isOpen, onClose, onSuccess }: FashionProduc
               <div className="flex gap-2">
                 <select
                   value={newColor}
-                  onChange={(e) => setNewColor(e.target.value)}
+                  onChange={(e) => setNewColor(e.target.value as ColorType)}
                   className="bg-gray-700 border-gray-600 text-white rounded px-3 py-2 flex-1"
                 >
                   <option value="">Select a color</option>

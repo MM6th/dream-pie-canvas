@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -33,8 +32,11 @@ interface EditFashionProductModalProps {
   onSuccess: () => void;
 }
 
-const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
-const COLORS = ['black', 'white', 'red', 'blue', 'green', 'yellow', 'pink', 'purple', 'gray', 'brown'];
+const SIZES = ['XS', 'S', 'M', 'L', 'XL', '2XL'] as const;
+const COLORS = ['black', 'white', 'red', 'blue', 'green', 'pink', 'nude'] as const;
+
+type SizeType = typeof SIZES[number];
+type ColorType = typeof COLORS[number];
 
 const EditFashionProductModal = ({ isOpen, onClose, product, onSuccess }: EditFashionProductModalProps) => {
   const [loading, setLoading] = useState(false);
@@ -46,13 +48,13 @@ const EditFashionProductModal = ({ isOpen, onClose, product, onSuccess }: EditFa
   const [accessLevel, setAccessLevel] = useState("public");
   const [variants, setVariants] = useState<Array<{
     id?: string;
-    size: string;
-    color: string;
+    size: SizeType;
+    color: ColorType;
     stock_quantity: number;
     isNew?: boolean;
     toDelete?: boolean;
   }>>([]);
-  const [newColor, setNewColor] = useState("");
+  const [newColor, setNewColor] = useState<ColorType | "">("");
 
   useEffect(() => {
     if (product && isOpen) {
@@ -64,6 +66,8 @@ const EditFashionProductModal = ({ isOpen, onClose, product, onSuccess }: EditFa
       setAccessLevel(product.access_level || "public");
       setVariants(product.fashion_product_variants.map(v => ({
         ...v,
+        size: v.size as SizeType,
+        color: v.color as ColorType,
         isNew: false,
         toDelete: false
       })));
@@ -103,7 +107,7 @@ const EditFashionProductModal = ({ isOpen, onClose, product, onSuccess }: EditFa
     
     const newVariants = SIZES.map(size => ({
       size,
-      color: newColor.toLowerCase(),
+      color: newColor as ColorType,
       stock_quantity: 0,
       isNew: true,
       toDelete: false
@@ -163,8 +167,8 @@ const EditFashionProductModal = ({ isOpen, onClose, product, onSuccess }: EditFa
       if (newVariants.length > 0) {
         const variantInserts = newVariants.map(variant => ({
           fashion_product_id: product.id,
-          size: variant.size,
-          color: variant.color,
+          size: variant.size as SizeType,
+          color: variant.color as ColorType,
           stock_quantity: variant.stock_quantity
         }));
 
@@ -390,7 +394,7 @@ const EditFashionProductModal = ({ isOpen, onClose, product, onSuccess }: EditFa
               <div className="flex gap-2">
                 <select
                   value={newColor}
-                  onChange={(e) => setNewColor(e.target.value)}
+                  onChange={(e) => setNewColor(e.target.value as ColorType)}
                   className="bg-gray-700 border-gray-600 text-white rounded px-3 py-2 flex-1"
                 >
                   <option value="">Select a color</option>
