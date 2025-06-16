@@ -121,7 +121,7 @@ const AdminDashboard = () => {
             <h2 className="text-3xl font-bold text-white mb-2">Admin Dashboard</h2>
             <p className="text-gray-300">Manage merchant applications and platform content</p>
         </div>
-        <Button onClick={fetchMerchants} disabled={loading} variant="outline" className="border-gray-600 text-white hover:bg-white hover:text-black">
+        <Button onClick={fetchMerchants} disabled={loading} className="bg-black text-white hover:bg-gray-800">
           <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
           Refresh
         </Button>
@@ -135,7 +135,7 @@ const AdminDashboard = () => {
           className={`flex items-center gap-2 ${
             activeTab === "merchants" 
               ? "bg-blue-600 hover:bg-blue-700" 
-              : "border-gray-600 text-white hover:bg-white hover:text-black"
+              : "bg-black text-white hover:bg-gray-800"
           }`}
         >
           <Users className="w-4 h-4" />
@@ -147,7 +147,7 @@ const AdminDashboard = () => {
           className={`flex items-center gap-2 ${
             activeTab === "covers" 
               ? "bg-blue-600 hover:bg-blue-700" 
-              : "border-gray-600 text-white hover:bg-white hover:text-black"
+              : "bg-black text-white hover:bg-gray-800"
           }`}
         >
           <Image className="w-4 h-4" />

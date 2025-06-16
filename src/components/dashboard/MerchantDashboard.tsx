@@ -1,3 +1,4 @@
+
 import React from "react";
 import MediaPlayers from "./MediaPlayers";
 import AdminDashboard from "@/components/admin/AdminDashboard";
@@ -37,18 +38,6 @@ const MerchantDashboard = ({
 
   return (
     <div className="p-6 pt-20">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2">
-          {isAdmin ? 'Admin Dashboard' : 'Merchant Dashboard'}
-        </h1>
-        <p className="text-gray-300">
-          {isAdmin 
-            ? 'Manage merchant applications and platform content' 
-            : 'Manage your media content and connect with supporters'
-          }
-        </p>
-      </div>
-
       <ApprovalStatusBanner approvalStatus={approvalStatus} isAdmin={isAdmin} />
 
       {isAdmin && (
