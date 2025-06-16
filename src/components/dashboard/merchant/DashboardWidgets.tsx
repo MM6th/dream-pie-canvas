@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import BackgroundUpload from "@/components/BackgroundUpload";
@@ -15,6 +15,8 @@ interface DashboardWidgetsProps {
 }
 
 const DashboardWidgets = ({ onSuccess, onViewStore, onBackgroundUpload, isAdmin }: DashboardWidgetsProps) => {
+  const [isFashionModalOpen, setIsFashionModalOpen] = useState(false);
+
   return (
     <>
       {/* Fashion Products - Admin Only */}
@@ -24,11 +26,12 @@ const DashboardWidgets = ({ onSuccess, onViewStore, onBackgroundUpload, isAdmin 
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-xl font-bold text-white">Fashion Products (Admin Only)</h3>
-                <FashionProductUploadModal 
-                  isOpen={false} 
-                  onClose={() => {}} 
-                  onSuccess={onSuccess} 
-                />
+                <Button
+                  onClick={() => setIsFashionModalOpen(true)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  Upload Fashion Product
+                </Button>
               </div>
               <p className="text-gray-400 mb-4">Upload and manage fashion products for the store</p>
               <div className="space-y-4">
@@ -106,6 +109,13 @@ const DashboardWidgets = ({ onSuccess, onViewStore, onBackgroundUpload, isAdmin 
           </CardContent>
         </Card>
       </div>
+
+      {/* Fashion Product Upload Modal */}
+      <FashionProductUploadModal 
+        isOpen={isFashionModalOpen}
+        onClose={() => setIsFashionModalOpen(false)}
+        onSuccess={onSuccess} 
+      />
     </>
   );
 };
