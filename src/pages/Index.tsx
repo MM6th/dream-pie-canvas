@@ -14,6 +14,7 @@ interface AudioTrack {
   artist_name: string | null;
   audio_file_url: string;
   thumbnail_url: string | null;
+  access_level?: "public" | "merchant_only" | "paid" | null;
 }
 
 interface VideoTrack {
@@ -84,6 +85,8 @@ const Index = () => {
   const fetchPurchasedTracks = async () => {
     if (!user) return;
 
+    console.log('Fetching purchased tracks for user:', user.id);
+
     try {
       const { data, error } = await supabase
         .from('user_purchases')
@@ -94,7 +97,8 @@ const Index = () => {
             title,
             artist_name,
             audio_file_url,
-            thumbnail_url
+            thumbnail_url,
+            access_level
           )
         `)
         .eq('user_id', user.id);
@@ -104,9 +108,14 @@ const Index = () => {
         return;
       }
 
+      console.log('Raw purchased tracks data:', data);
+
       const tracks = data
         ?.filter(purchase => purchase.audio_products)
         .map(purchase => purchase.audio_products as AudioTrack) || [];
+
+      console.log('Processed purchased tracks:', tracks);
+      console.log('Number of tracks to set in audio player:', tracks.length);
 
       setPurchasedTracks(tracks);
     } catch (error) {

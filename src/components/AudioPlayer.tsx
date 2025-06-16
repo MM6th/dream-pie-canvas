@@ -10,6 +10,7 @@ interface AudioTrack {
   artist_name: string | null;
   audio_file_url: string;
   thumbnail_url: string | null;
+  access_level?: "public" | "merchant_only" | "paid" | null;
 }
 
 interface AudioPlayerProps {
@@ -26,6 +27,15 @@ const AudioPlayer = ({ tracks }: AudioPlayerProps) => {
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const currentTrack = tracks[currentTrackIndex];
+
+  // Add debugging for tracks
+  useEffect(() => {
+    console.log('AudioPlayer received tracks:', tracks);
+    console.log('Number of tracks in AudioPlayer:', tracks.length);
+    if (tracks.length > 0) {
+      console.log('Sample track:', tracks[0]);
+    }
+  }, [tracks]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -157,6 +167,7 @@ const AudioPlayer = ({ tracks }: AudioPlayerProps) => {
         <div className="flex items-center gap-3 mb-4">
           <AudioLines className="text-gray-400" size={24} />
           <h3 className="text-xl font-bold text-white">Audio Player</h3>
+          <span className="text-gray-400 text-sm">({tracks.length} tracks)</span>
         </div>
         
         <div className="bg-gray-900/50 rounded-lg p-4">
@@ -177,9 +188,16 @@ const AudioPlayer = ({ tracks }: AudioPlayerProps) => {
               <p className="text-gray-400 text-sm">
                 {currentTrack?.artist_name || 'Unknown Artist'}
               </p>
-              <p className="text-gray-500 text-xs">
-                Track {currentTrackIndex + 1} of {tracks.length}
-              </p>
+              <div className="flex items-center gap-2">
+                <p className="text-gray-500 text-xs">
+                  Track {currentTrackIndex + 1} of {tracks.length}
+                </p>
+                {currentTrack?.access_level && (
+                  <span className="text-xs bg-gray-600 px-2 py-1 rounded capitalize">
+                    {currentTrack.access_level.replace('_', ' ')}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
 
