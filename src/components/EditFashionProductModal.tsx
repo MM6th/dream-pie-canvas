@@ -126,7 +126,7 @@ const EditFashionProductModal = ({ isOpen, onClose, product, onSuccess }: EditFa
       // Handle variant updates
       for (const variant of variants) {
         if (variant.isNew) {
-          // Insert new variant
+          // Insert new variant - fix the TypeScript error by properly structuring the insert
           const { error } = await supabase
             .from('fashion_product_variants')
             .insert({
