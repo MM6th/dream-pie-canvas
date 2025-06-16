@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -150,9 +149,8 @@ const VideoProductManager = () => {
                   <div className="flex gap-2">
                     <Button
                       size="sm"
-                      variant="outline"
                       onClick={() => {/* TODO: Add edit functionality */}}
-                      className="flex-1 border-gray-600 text-white hover:bg-white hover:text-black"
+                      className="flex-1 bg-black text-white hover:bg-gray-800"
                     >
                       <Edit className="w-3 h-3 mr-1" />
                       Edit
