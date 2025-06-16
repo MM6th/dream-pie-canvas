@@ -270,6 +270,48 @@ export type Database = {
         }
         Relationships: []
       }
+      song_cover_submissions: {
+        Row: {
+          admin_notes: string | null
+          audio_product_id: string
+          cover_image_url: string
+          created_at: string
+          id: string
+          merchant_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          submission_notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          audio_product_id: string
+          cover_image_url: string
+          created_at?: string
+          id?: string
+          merchant_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submission_notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          audio_product_id?: string
+          cover_image_url?: string
+          created_at?: string
+          id?: string
+          merchant_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submission_notes?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_purchases: {
         Row: {
           amount_paid: number | null
@@ -408,6 +450,14 @@ export type Database = {
       }
       is_approved_merchant: {
         Args: { user_id: string }
+        Returns: boolean
+      }
+      update_cover_submission_status: {
+        Args: {
+          submission_id: string
+          new_status: string
+          admin_notes_text?: string
+        }
         Returns: boolean
       }
       update_merchant_approval: {
