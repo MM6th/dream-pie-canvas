@@ -19,11 +19,11 @@ interface ModelingApplication {
   fashion_products: {
     title: string;
     price: number;
-  };
+  } | null;
   profiles: {
     display_name: string | null;
     email: string;
-  };
+  } | null;
 }
 
 const ModelingApplicationReview = () => {
@@ -44,11 +44,11 @@ const ModelingApplicationReview = () => {
           admin_notes,
           created_at,
           merchant_id,
-          fashion_products (
+          fashion_products!fk_modeling_applications_fashion_product (
             title,
             price
           ),
-          profiles (
+          profiles!fk_modeling_applications_merchant (
             display_name,
             email
           )
@@ -167,10 +167,10 @@ const ModelingApplicationReview = () => {
                   <div className="flex items-start justify-between">
                     <div>
                       <CardTitle className="text-white text-base line-clamp-2">
-                        {application.fashion_products.title}
+                        {application.fashion_products?.title || 'Product Not Found'}
                       </CardTitle>
                       <p className="text-gray-400 text-sm mt-1">
-                        By: {application.profiles.display_name || application.profiles.email}
+                        By: {application.profiles?.display_name || application.profiles?.email || 'Unknown User'}
                       </p>
                       <p className="text-gray-400 text-xs">
                         Applied: {new Date(application.created_at).toLocaleDateString()}
@@ -235,10 +235,10 @@ const ModelingApplicationReview = () => {
                   <div className="flex items-start justify-between">
                     <div>
                       <CardTitle className="text-white text-base line-clamp-2">
-                        {application.fashion_products.title}
+                        {application.fashion_products?.title || 'Product Not Found'}
                       </CardTitle>
                       <p className="text-gray-400 text-sm mt-1">
-                        By: {application.profiles.display_name || application.profiles.email}
+                        By: {application.profiles?.display_name || application.profiles?.email || 'Unknown User'}
                       </p>
                     </div>
                     <Badge className={`${getStatusColor(application.status)} text-xs`}>
@@ -275,7 +275,7 @@ const ModelingApplicationReview = () => {
                     Review Modeling Application
                   </h3>
                   <p className="text-gray-400">
-                    {selectedApplication.fashion_products.title} - {selectedApplication.profiles.display_name || selectedApplication.profiles.email}
+                    {selectedApplication.fashion_products?.title || 'Product Not Found'} - {selectedApplication.profiles?.display_name || selectedApplication.profiles?.email || 'Unknown User'}
                   </p>
                 </div>
                 <Button

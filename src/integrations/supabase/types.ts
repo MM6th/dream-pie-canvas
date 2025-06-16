@@ -345,7 +345,29 @@ export type Database = {
           status?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_modeling_applications_fashion_product"
+            columns: ["fashion_product_id"]
+            isOneToOne: false
+            referencedRelation: "fashion_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_modeling_applications_merchant"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_modeling_applications_reviewer"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       post_comments: {
         Row: {

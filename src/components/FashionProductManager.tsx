@@ -39,6 +39,8 @@ const FashionProductManager = () => {
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<FashionProduct | null>(null);
+  const [slideshowOpen, setSlideshowOpen] = useState(false);
+  const [slideshowProduct, setSlideshowProduct] = useState<FashionProduct | null>(null);
 
   const fetchProducts = async () => {
     try {
@@ -107,6 +109,11 @@ const FashionProductManager = () => {
     }
   };
 
+  const handleImageClick = (product: FashionProduct) => {
+    setSlideshowProduct(product);
+    setSlideshowOpen(true);
+  };
+
   const getTotalStock = (variants: FashionProduct['fashion_product_variants']) => {
     return variants.reduce((total, variant) => total + variant.stock_quantity, 0);
   };
@@ -136,7 +143,7 @@ const FashionProductManager = () => {
             </CardTitle>
             <Button
               onClick={() => setUploadModalOpen(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className="bg-blue-600 text-white"
             >
               <Plus className="w-4 h-4 mr-2" />
               Add Product
@@ -151,7 +158,7 @@ const FashionProductManager = () => {
               <p className="text-gray-400 mb-4">Upload your first fashion product to get started</p>
               <Button
                 onClick={() => setUploadModalOpen(true)}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
+                className="bg-blue-600 text-white"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Add Product
@@ -168,10 +175,18 @@ const FashionProductManager = () => {
                     <CardContent className="p-4">
                       <div className="space-y-4">
                         {/* Product Images */}
-                        <FashionProductSlideshow 
-                          images={product.fashion_product_images}
-                          productTitle={product.title}
-                        />
+                        {product.fashion_product_images.length > 0 ? (
+                          <img
+                            src={product.fashion_product_images[0].image_url}
+                            alt={product.title}
+                            className="w-full h-48 object-cover rounded-lg cursor-pointer"
+                            onClick={() => handleImageClick(product)}
+                          />
+                        ) : (
+                          <div className="w-full h-48 bg-gray-600 rounded-lg flex items-center justify-center">
+                            <Shirt className="w-12 h-12 text-gray-400" />
+                          </div>
+                        )}
 
                         {/* Product Info */}
                         <div>
@@ -226,7 +241,7 @@ const FashionProductManager = () => {
                             size="sm"
                             variant="outline"
                             onClick={() => handleEdit(product)}
-                            className="flex-1 border-blue-500 text-blue-400 hover:bg-blue-500 hover:text-white"
+                            className="flex-1 border-blue-500 text-blue-400"
                           >
                             <Edit className="w-3 h-3 mr-1" />
                             Edit
@@ -235,7 +250,7 @@ const FashionProductManager = () => {
                             size="sm"
                             variant="outline"
                             onClick={() => handleDelete(product.id)}
-                            className="border-red-500 text-red-400 hover:bg-red-500 hover:text-white"
+                            className="border-red-500 text-red-400"
                           >
                             <Trash2 className="w-3 h-3" />
                           </Button>
@@ -265,6 +280,18 @@ const FashionProductManager = () => {
         product={editingProduct}
         onSuccess={handleEditSuccess}
       />
+
+      {slideshowProduct && (
+        <FashionProductSlideshow
+          images={slideshowProduct.fashion_product_images}
+          productTitle={slideshowProduct.title}
+          isOpen={slideshowOpen}
+          onClose={() => {
+            setSlideshowOpen(false);
+            setSlideshowProduct(null);
+          }}
+        />
+      )}
     </>
   );
 };

@@ -17,7 +17,7 @@ interface ModelingApplication {
   fashion_products: {
     title: string;
     price: number;
-  };
+  } | null;
 }
 
 const ModelingApplicationManager = () => {
@@ -38,7 +38,7 @@ const ModelingApplicationManager = () => {
           admin_notes,
           created_at,
           reviewed_at,
-          fashion_products (
+          fashion_products!fk_modeling_applications_fashion_product (
             title,
             price
           )
@@ -119,11 +119,13 @@ const ModelingApplicationManager = () => {
                 <div className="flex items-start justify-between">
                   <div>
                     <CardTitle className="text-white text-lg line-clamp-2">
-                      {application.fashion_products.title}
+                      {application.fashion_products?.title || 'Product Not Found'}
                     </CardTitle>
-                    <p className="text-gray-400 text-sm mt-1">
-                      Product Price: ${application.fashion_products.price.toFixed(2)}
-                    </p>
+                    {application.fashion_products && (
+                      <p className="text-gray-400 text-sm mt-1">
+                        Product Price: ${application.fashion_products.price.toFixed(2)}
+                      </p>
+                    )}
                   </div>
                   <Badge className={`${getStatusColor(application.status)} flex items-center gap-1`}>
                     {getStatusIcon(application.status)}
