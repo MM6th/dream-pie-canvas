@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -6,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Upload, AudioLines } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -27,7 +27,7 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
     audioFile: null as File | null,
     albumName: "",
     hasAlbum: false,
-    isFree: true,
+    accessLevel: "public" as "public" | "merchant_only" | "paid",
     price: ""
   });
   const [albums, setAlbums] = useState<any[]>([]);
@@ -161,7 +161,7 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
         }
       }
       
-      // Create audio product
+      // Create audio product with new access_level field
       const { error: productError } = await supabase
         .from('audio_products')
         .insert({
@@ -172,8 +172,9 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
           thumbnail_url: thumbnailUrl,
           audio_file_url: audioUrl,
           album_id: albumId,
-          is_free: formData.isFree,
-          price: formData.isFree ? null : parseFloat(formData.price)
+          access_level: formData.accessLevel,
+          is_free: formData.accessLevel !== 'paid',
+          price: formData.accessLevel === 'paid' ? parseFloat(formData.price) : null
         });
       
       if (productError) throw productError;
@@ -192,7 +193,7 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
         audioFile: null,
         albumName: "",
         hasAlbum: false,
-        isFree: true,
+        accessLevel: "public",
         price: ""
       });
       onSuccess();
@@ -327,19 +328,35 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
             </div>
           )}
           
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="isFree"
-              checked={formData.isFree}
-              onCheckedChange={(checked) => setFormData(prev => ({ 
+          <div>
+            <Label>Access Level *</Label>
+            <RadioGroup
+              value={formData.accessLevel}
+              onValueChange={(value) => setFormData(prev => ({ 
                 ...prev, 
-                isFree: checked as boolean 
+                accessLevel: value as "public" | "merchant_only" | "paid"
               }))}
-            />
-            <Label htmlFor="isFree">Free Content</Label>
+              className="mt-2"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="public" id="public" className="text-white" />
+                <Label htmlFor="public" className="text-white">Free for Everyone</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="merchant_only" id="merchant_only" className="text-white" />
+                <Label htmlFor="merchant_only" className="text-white">Merchant Download Only</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="paid" id="paid" className="text-white" />
+                <Label htmlFor="paid" className="text-white">Paid Content</Label>
+              </div>
+            </RadioGroup>
+            <p className="text-xs text-gray-400 mt-1">
+              Merchant-only content is visible to all but only downloadable by other merchants
+            </p>
           </div>
           
-          {!formData.isFree && (
+          {formData.accessLevel === 'paid' && (
             <div>
               <Label htmlFor="price">Price ($)</Label>
               <Input

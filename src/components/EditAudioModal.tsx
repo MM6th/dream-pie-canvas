@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -6,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
@@ -20,6 +20,7 @@ interface AudioProduct {
   album_id: string | null;
   is_free: boolean;
   price: number | null;
+  access_level: "public" | "merchant_only" | "paid" | null;
   albums?: {
     name: string;
   };
@@ -41,7 +42,7 @@ const EditAudioModal = ({ product, onSuccess, onClose }: EditAudioModalProps) =>
     thumbnail: null as File | null,
     albumName: product.albums?.name || "",
     hasAlbum: !!product.album_id,
-    isFree: product.is_free,
+    accessLevel: (product.access_level || (product.is_free ? "public" : "paid")) as "public" | "merchant_only" | "paid",
     price: product.price?.toString() || ""
   });
   const [albums, setAlbums] = useState<any[]>([]);
@@ -135,7 +136,7 @@ const EditAudioModal = ({ product, onSuccess, onClose }: EditAudioModalProps) =>
         }
       }
       
-      // Update audio product
+      // Update audio product with new access_level field
       const { error: productError } = await supabase
         .from('audio_products')
         .update({
@@ -144,8 +145,9 @@ const EditAudioModal = ({ product, onSuccess, onClose }: EditAudioModalProps) =>
           audio_type: formData.audioType,
           thumbnail_url: thumbnailUrl,
           album_id: albumId,
-          is_free: formData.isFree,
-          price: formData.isFree ? null : parseFloat(formData.price)
+          access_level: formData.accessLevel,
+          is_free: formData.accessLevel !== 'paid',
+          price: formData.accessLevel === 'paid' ? parseFloat(formData.price) : null
         })
         .eq('id', product.id);
       
@@ -253,19 +255,32 @@ const EditAudioModal = ({ product, onSuccess, onClose }: EditAudioModalProps) =>
             </div>
           )}
           
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="isFree"
-              checked={formData.isFree}
-              onCheckedChange={(checked) => setFormData(prev => ({ 
+          <div>
+            <Label>Access Level *</Label>
+            <RadioGroup
+              value={formData.accessLevel}
+              onValueChange={(value) => setFormData(prev => ({ 
                 ...prev, 
-                isFree: checked as boolean 
+                accessLevel: value as "public" | "merchant_only" | "paid"
               }))}
-            />
-            <Label htmlFor="isFree">Free download</Label>
+              className="mt-2"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="public" id="public" />
+                <Label htmlFor="public">Free for Everyone</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="merchant_only" id="merchant_only" />
+                <Label htmlFor="merchant_only">Merchant Download Only</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="paid" id="paid" />
+                <Label htmlFor="paid">Paid Content</Label>
+              </div>
+            </RadioGroup>
           </div>
           
-          {!formData.isFree && (
+          {formData.accessLevel === 'paid' && (
             <div>
               <Label htmlFor="price">Price ($)</Label>
               <Input

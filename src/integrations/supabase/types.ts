@@ -38,6 +38,7 @@ export type Database = {
       }
       audio_products: {
         Row: {
+          access_level: Database["public"]["Enums"]["access_level"] | null
           album_id: string | null
           artist_name: string | null
           audio_file_url: string
@@ -52,6 +53,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          access_level?: Database["public"]["Enums"]["access_level"] | null
           album_id?: string | null
           artist_name?: string | null
           audio_file_url: string
@@ -66,6 +68,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          access_level?: Database["public"]["Enums"]["access_level"] | null
           album_id?: string | null
           artist_name?: string | null
           audio_file_url?: string
@@ -413,7 +416,7 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      access_level: "public" | "merchant_only" | "paid"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -528,6 +531,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      access_level: ["public", "merchant_only", "paid"],
+    },
   },
 } as const

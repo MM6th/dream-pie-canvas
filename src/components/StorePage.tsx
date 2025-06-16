@@ -1,9 +1,8 @@
-
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { AudioLines, Download, DollarSign, Video } from "lucide-react";
+import { AudioLines, Download, DollarSign, Video, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
@@ -18,6 +17,7 @@ interface AudioProduct {
   album_id: string | null;
   is_free: boolean;
   price: number | null;
+  access_level: "public" | "merchant_only" | "paid" | null;
   created_at: string;
   albums?: {
     name: string;
@@ -37,16 +37,44 @@ interface VideoProduct {
   created_at: string;
 }
 
+interface UserProfile {
+  user_type: string;
+  approval_status: string | null;
+}
+
 const StorePage = () => {
   const { user } = useAuth();
   const [audioProducts, setAudioProducts] = useState<AudioProduct[]>([]);
   const [videoProducts, setVideoProducts] = useState<VideoProduct[]>([]);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [purchasingId, setPurchasingId] = useState<string | null>(null);
 
+  const fetchUserProfile = async () => {
+    if (!user) return null;
+    
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('user_type, approval_status')
+        .eq('id', user.id)
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      return null;
+    }
+  };
+
   const fetchProducts = async () => {
     try {
-      // Fetch audio products
+      // Fetch user profile first
+      const profile = await fetchUserProfile();
+      setUserProfile(profile);
+
+      // Fetch audio products with access_level
       const { data: audioData, error: audioError } = await supabase
         .from('audio_products')
         .select(`
@@ -59,6 +87,7 @@ const StorePage = () => {
           album_id,
           is_free,
           price,
+          access_level,
           created_at,
           albums (
             name
@@ -92,7 +121,77 @@ const StorePage = () => {
 
   useEffect(() => {
     fetchProducts();
-  }, []);
+  }, [user]);
+
+  const canDownloadAudio = (product: AudioProduct) => {
+    if (!user) return false;
+    
+    const accessLevel = product.access_level || (product.is_free ? "public" : "paid");
+    
+    switch (accessLevel) {
+      case "public":
+        return true;
+      case "merchant_only":
+        return userProfile?.user_type === 'merchant' && userProfile?.approval_status === 'approved';
+      case "paid":
+        return false; // Will be handled by purchase flow
+      default:
+        return false;
+    }
+  };
+
+  const getAccessLevelBadge = (product: AudioProduct) => {
+    const accessLevel = product.access_level || (product.is_free ? "public" : "paid");
+    
+    switch (accessLevel) {
+      case "public":
+        return (
+          <Badge className="bg-green-600 hover:bg-green-700">
+            Free
+          </Badge>
+        );
+      case "merchant_only":
+        return (
+          <Badge className="bg-orange-600 hover:bg-orange-700 flex items-center gap-1">
+            <Lock className="w-3 h-3" />
+            Merchants Only
+          </Badge>
+        );
+      case "paid":
+        return (
+          <Badge className="bg-blue-600 hover:bg-blue-700 flex items-center gap-1">
+            <DollarSign className="w-3 h-3" />
+            {product.price?.toFixed(2)}
+          </Badge>
+        );
+      default:
+        return (
+          <Badge className="bg-green-600 hover:bg-green-700">
+            Free
+          </Badge>
+        );
+    }
+  };
+
+  const getDownloadButtonText = (product: AudioProduct) => {
+    if (!user) return "Sign In to Download";
+    
+    const accessLevel = product.access_level || (product.is_free ? "public" : "paid");
+    
+    switch (accessLevel) {
+      case "public":
+        return "Add to Library";
+      case "merchant_only":
+        if (userProfile?.user_type === 'merchant' && userProfile?.approval_status === 'approved') {
+          return "Add to Library";
+        }
+        return "Merchants Only";
+      case "paid":
+        return "Buy";
+      default:
+        return "Add to Library";
+    }
+  };
 
   const handleFreeAudioDownload = async (product: AudioProduct) => {
     if (!user) {
@@ -206,11 +305,29 @@ const StorePage = () => {
       return;
     }
 
-    if (product.is_free) {
+    const accessLevel = product.access_level || (product.is_free ? "public" : "paid");
+
+    // Check if user can download this content
+    if (accessLevel === "merchant_only") {
+      if (!canDownloadAudio(product)) {
+        toast({
+          title: "Access Restricted",
+          description: "This content is only available to approved merchants",
+          variant: "destructive"
+        });
+        return;
+      }
+      // If merchant can download, treat as free download
       await handleFreeAudioDownload(product);
       return;
     }
 
+    if (accessLevel === "public") {
+      await handleFreeAudioDownload(product);
+      return;
+    }
+
+    // Handle paid content
     setPurchasingId(product.id);
 
     try {
@@ -353,30 +470,21 @@ const StorePage = () => {
                       
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          {product.is_free ? (
-                            <Badge className="bg-green-600 hover:bg-green-700">
-                              Free
-                            </Badge>
-                          ) : (
-                            <Badge className="bg-blue-600 hover:bg-blue-700 flex items-center gap-1">
-                              <DollarSign className="w-3 h-3" />
-                              {product.price?.toFixed(2)}
-                            </Badge>
-                          )}
+                          {getAccessLevelBadge(product)}
                         </div>
                         
                         <Button
                           size="sm"
                           onClick={() => handleAudioPurchase(product)}
-                          disabled={purchasingId === product.id}
+                          disabled={purchasingId === product.id || (!canDownloadAudio(product) && (product.access_level === "merchant_only"))}
                           className="bg-primary hover:bg-primary/90"
                         >
                           {purchasingId === product.id ? (
                             "Processing..."
                           ) : (
                             <>
-                              {product.is_free ? <Download className="w-4 h-4 mr-1" /> : <DollarSign className="w-4 h-4 mr-1" />}
-                              {product.is_free ? "Add to Library" : "Buy"}
+                              {(product.access_level === "paid") ? <DollarSign className="w-4 h-4 mr-1" /> : <Download className="w-4 h-4 mr-1" />}
+                              {getDownloadButtonText(product)}
                             </>
                           )}
                         </Button>
