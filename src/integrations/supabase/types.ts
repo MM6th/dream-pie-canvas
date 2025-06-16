@@ -305,6 +305,67 @@ export type Database = {
           },
         ]
       }
+      modeling_applications: {
+        Row: {
+          admin_notes: string | null
+          application_photos: string[]
+          created_at: string
+          fashion_product_id: string
+          id: string
+          merchant_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          application_photos?: string[]
+          created_at?: string
+          fashion_product_id: string
+          id?: string
+          merchant_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          application_photos?: string[]
+          created_at?: string
+          fashion_product_id?: string
+          id?: string
+          merchant_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_modeling_applications_fashion_product"
+            columns: ["fashion_product_id"]
+            isOneToOne: false
+            referencedRelation: "fashion_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_modeling_applications_merchant"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_modeling_applications_reviewer"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       post_comments: {
         Row: {
           content: string

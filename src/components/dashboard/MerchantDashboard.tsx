@@ -1,4 +1,3 @@
-
 import React from "react";
 import MediaPlayers from "./MediaPlayers";
 import AdminDashboard from "@/components/admin/AdminDashboard";
@@ -8,6 +7,7 @@ import AccountSetup from "./merchant/AccountSetup";
 import DashboardWidgets from "./merchant/DashboardWidgets";
 import ContentManagement from "./merchant/ContentManagement";
 import RestrictedAccess from "./merchant/RestrictedAccess";
+import ModelingApplicationSection from "./merchant/ModelingApplicationSection";
 
 interface MerchantDashboardProps {
   onSuccess: () => void;
@@ -58,6 +58,13 @@ const MerchantDashboard = ({
             onBackgroundUpload={onBackgroundUpload} 
             isAdmin={isAdmin}
           />
+          
+          {/* Only show modeling applications for approved merchants (not admins) */}
+          {isApproved && !isAdmin && (
+            <div className="mb-8">
+              <ModelingApplicationSection onSuccess={onSuccess} />
+            </div>
+          )}
           
           <ContentManagement />
 

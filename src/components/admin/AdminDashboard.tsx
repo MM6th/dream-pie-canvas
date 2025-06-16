@@ -2,11 +2,12 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Clock, CheckCircle, XCircle, RefreshCw, Image } from "lucide-react";
+import { Users, Clock, CheckCircle, XCircle, RefreshCw, Image, Camera } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import PendingMerchantCard from "./PendingMerchantCard";
 import ApprovedMerchantCard from "./ApprovedMerchantCard";
 import CoverSubmissionManager from "./CoverSubmissionManager";
+import ModelingApplicationManager from "@/components/ModelingApplicationManager";
 import { Button } from "../ui/button";
 
 interface Merchant {
@@ -31,6 +32,7 @@ const AdminDashboard = () => {
   const [approvedMerchants, setApprovedMerchants] = useState<Merchant[]>([]);
   const [rejectedMerchants, setRejectedMerchants] = useState<Merchant[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'merchants' | 'covers' | 'modeling'>('merchants');
 
   const fetchMerchants = useCallback(async () => {
     setLoading(true);
@@ -113,6 +115,111 @@ const AdminDashboard = () => {
     );
   }
 
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'merchants':
+        return (
+          <>
+            {/* Statistics Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <Card className="bg-gray-800/50 border-gray-700">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-4">
+                    <Clock className="w-8 h-8 text-yellow-500" />
+                    <div>
+                      <p className="text-2xl font-bold text-white">{pendingMerchants.length}</p>
+                      <p className="text-gray-400">Pending Applications</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gray-800/50 border-gray-700">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-4">
+                    <CheckCircle className="w-8 h-8 text-green-500" />
+                    <div>
+                      <p className="text-2xl font-bold text-white">{approvedMerchants.length}</p>
+                      <p className="text-gray-400">Approved Merchants</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gray-800/50 border-gray-700">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-4">
+                    <XCircle className="w-8 h-8 text-red-500" />
+                    <div>
+                      <p className="text-2xl font-bold text-white">{rejectedMerchants.length}</p>
+                      <p className="text-gray-400">Rejected Applications</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Pending Applications */}
+            <div className="mb-8">
+              <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+                <Users className="w-6 h-6 text-yellow-500" />
+                Merchants - Pending Approval
+              </h3>
+              
+              {pendingMerchants.length === 0 ? (
+                <Card className="bg-gray-800/50 border-gray-700">
+                  <CardContent className="p-6 text-center">
+                    <p className="text-gray-400">No pending merchant applications</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {pendingMerchants.map((merchant) => (
+                    <PendingMerchantCard
+                      key={merchant.id}
+                      merchant={merchant}
+                      onApprovalChange={handleApprovalChange}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Approved Merchants */}
+            <div className="mb-8">
+              <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <CheckCircle className="w-5 h-5 text-green-500" />
+                Approved Merchants ({approvedMerchants.length})
+              </h3>
+              
+              {approvedMerchants.length === 0 ? (
+                <Card className="bg-gray-800/50 border-gray-700">
+                  <CardContent className="p-6 text-center">
+                    <p className="text-gray-400">No approved merchants yet.</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {approvedMerchants.map((merchant) => (
+                    <ApprovedMerchantCard
+                      key={merchant.id}
+                      merchant={merchant}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
+        );
+      case 'covers':
+        return <CoverSubmissionManager />;
+      case 'modeling':
+        return <ModelingApplicationManager />;
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center mb-8">
@@ -129,111 +236,29 @@ const AdminDashboard = () => {
       {/* Tab Navigation */}
       <div className="flex gap-2 mb-6">
         <Button
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
+          onClick={() => setActiveTab('merchants')}
+          className={`flex items-center gap-2 ${activeTab === 'merchants' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-black text-white hover:bg-gray-800'}`}
         >
           <Users className="w-4 h-4" />
           Merchant Management
         </Button>
         <Button
-          className="flex items-center gap-2 bg-black text-white hover:bg-gray-800"
+          onClick={() => setActiveTab('covers')}
+          className={`flex items-center gap-2 ${activeTab === 'covers' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-black text-white hover:bg-gray-800'}`}
         >
           <Image className="w-4 h-4" />
           Cover Submissions
         </Button>
+        <Button
+          onClick={() => setActiveTab('modeling')}
+          className={`flex items-center gap-2 ${activeTab === 'modeling' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-black text-white hover:bg-gray-800'}`}
+        >
+          <Camera className="w-4 h-4" />
+          Modeling Applications
+        </Button>
       </div>
 
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <Card className="bg-gray-800/50 border-gray-700">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <Clock className="w-8 h-8 text-yellow-500" />
-              <div>
-                <p className="text-2xl font-bold text-white">{pendingMerchants.length}</p>
-                <p className="text-gray-400">Pending Applications</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gray-800/50 border-gray-700">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <CheckCircle className="w-8 h-8 text-green-500" />
-              <div>
-                <p className="text-2xl font-bold text-white">{approvedMerchants.length}</p>
-                <p className="text-gray-400">Approved Merchants</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gray-800/50 border-gray-700">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <XCircle className="w-8 h-8 text-red-500" />
-              <div>
-                <p className="text-2xl font-bold text-white">{rejectedMerchants.length}</p>
-                <p className="text-gray-400">Rejected Applications</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Pending Applications */}
-      <div className="mb-8">
-        <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
-          <Users className="w-6 h-6 text-yellow-500" />
-          Merchants - Pending Approval
-        </h3>
-        
-        {pendingMerchants.length === 0 ? (
-          <Card className="bg-gray-800/50 border-gray-700">
-            <CardContent className="p-6 text-center">
-              <p className="text-gray-400">No pending merchant applications</p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {pendingMerchants.map((merchant) => (
-              <PendingMerchantCard
-                key={merchant.id}
-                merchant={merchant}
-                onApprovalChange={handleApprovalChange}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Approved Merchants */}
-      <div className="mb-8">
-        <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-          <CheckCircle className="w-5 h-5 text-green-500" />
-          Approved Merchants ({approvedMerchants.length})
-        </h3>
-        
-        {approvedMerchants.length === 0 ? (
-          <Card className="bg-gray-800/50 border-gray-700">
-            <CardContent className="p-6 text-center">
-              <p className="text-gray-400">No approved merchants yet.</p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {approvedMerchants.map((merchant) => (
-              <ApprovedMerchantCard
-                key={merchant.id}
-                merchant={merchant}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Cover Submissions */}
-      <CoverSubmissionManager />
+      {renderTabContent()}
     </div>
   );
 };
