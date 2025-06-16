@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -114,7 +113,7 @@ const ImagePicker = ({ onImageSelect, currentImageUrl, trigger }: ImagePickerPro
             <Button
               variant={useCustomUrl ? "default" : "outline"}
               onClick={() => setUseCustomUrl(true)}
-              className="flex-1 text-white hover:text-white"
+              className="flex-1 text-white bg-gray-700 border-gray-600"
             >
               <LinkIcon className="w-4 h-4 mr-2" />
               Custom URL

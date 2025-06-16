@@ -164,7 +164,7 @@ const SongCoverSubmissionModal = ({
             <Button
               variant="outline"
               onClick={handleClose}
-              className="flex-1 border-gray-600 text-white hover:bg-gray-700 hover:text-white"
+              className="flex-1 border-gray-600 text-white bg-gray-700"
             >
               Cancel
             </Button>

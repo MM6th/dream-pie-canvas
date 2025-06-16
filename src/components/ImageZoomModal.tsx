@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -72,7 +71,7 @@ const ImageZoomModal = ({
             <Button
               onClick={onClose}
               variant="outline"
-              className="border-gray-600 text-white hover:bg-gray-700"
+              className="border-gray-600 text-white bg-gray-700"
             >
               <X className="w-4 h-4 mr-2" />
               Close
