@@ -126,15 +126,15 @@ const EditFashionProductModal = ({ isOpen, onClose, product, onSuccess }: EditFa
       // Handle variant updates
       for (const variant of variants) {
         if (variant.isNew) {
-          // Insert new variant - fix the TypeScript error by properly structuring the insert
+          // Insert new variant with correct column name
           const { error } = await supabase
             .from('fashion_product_variants')
-            .insert({
+            .insert([{
               fashion_product_id: product.id,
               size: variant.size,
               color: variant.color,
               stock_quantity: variant.stock_quantity
-            });
+            }]);
           if (error) throw error;
         } else if (variant.id) {
           // Update existing variant
