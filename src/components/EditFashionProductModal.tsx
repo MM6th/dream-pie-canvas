@@ -5,9 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Minus, Trash2, Save } from "lucide-react";
+import { Plus, Minus, Trash2, Save, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import MultiImagePicker from "./MultiImagePicker";
 
 interface FashionProduct {
   id: string;
@@ -16,7 +17,11 @@ interface FashionProduct {
   materials: string | null;
   price: number;
   shipping_cost: number;
-  access_level?: string | null;
+  fashion_product_images: Array<{
+    id: string;
+    image_url: string;
+    display_order: number;
+  }>;
   fashion_product_variants: Array<{
     id: string;
     size: string;
@@ -45,7 +50,13 @@ const EditFashionProductModal = ({ isOpen, onClose, product, onSuccess }: EditFa
   const [materials, setMaterials] = useState("");
   const [price, setPrice] = useState("");
   const [shippingCost, setShippingCost] = useState("");
-  const [accessLevel, setAccessLevel] = useState("public");
+  const [existingImages, setExistingImages] = useState<Array<{
+    id: string;
+    image_url: string;
+    display_order: number;
+    toDelete?: boolean;
+  }>>([]);
+  const [newImages, setNewImages] = useState<File[]>([]);
   const [variants, setVariants] = useState<Array<{
     id?: string;
     size: SizeType;
@@ -63,7 +74,7 @@ const EditFashionProductModal = ({ isOpen, onClose, product, onSuccess }: EditFa
       setMaterials(product.materials || "");
       setPrice(product.price.toString());
       setShippingCost(product.shipping_cost.toString());
-      setAccessLevel(product.access_level || "public");
+      setExistingImages(product.fashion_product_images.map(img => ({ ...img, toDelete: false })));
       setVariants(product.fashion_product_variants.map(v => ({
         ...v,
         size: v.size as SizeType,
@@ -80,7 +91,8 @@ const EditFashionProductModal = ({ isOpen, onClose, product, onSuccess }: EditFa
     setMaterials("");
     setPrice("");
     setShippingCost("");
-    setAccessLevel("public");
+    setExistingImages([]);
+    setNewImages([]);
     setVariants([]);
     setNewColor("");
     onClose();
@@ -102,6 +114,12 @@ const EditFashionProductModal = ({ isOpen, onClose, product, onSuccess }: EditFa
     ));
   };
 
+  const deleteExistingImage = (index: number) => {
+    setExistingImages(prev => prev.map((img, i) => 
+      i === index ? { ...img, toDelete: true } : img
+    ));
+  };
+
   const addNewColorVariants = () => {
     if (!newColor.trim()) return;
     
@@ -117,9 +135,48 @@ const EditFashionProductModal = ({ isOpen, onClose, product, onSuccess }: EditFa
     setNewColor("");
   };
 
+  const uploadNewImages = async (): Promise<string[]> => {
+    const imageUrls: string[] = [];
+    
+    for (const image of newImages) {
+      const fileExt = image.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `fashion-products/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('fashion-images')
+        .upload(filePath, image);
+
+      if (uploadError) {
+        console.error('Image upload error:', uploadError);
+        throw new Error(`Failed to upload image: ${image.name}`);
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('fashion-images')
+        .getPublicUrl(filePath);
+
+      imageUrls.push(publicUrl);
+    }
+
+    return imageUrls;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!product) return;
+
+    const activeImages = existingImages.filter(img => !img.toDelete);
+    const totalImages = activeImages.length + newImages.length;
+
+    if (totalImages === 0) {
+      toast({
+        title: "Error",
+        description: "At least one product image is required",
+        variant: "destructive"
+      });
+      return;
+    }
 
     setLoading(true);
     try {
@@ -134,7 +191,6 @@ const EditFashionProductModal = ({ isOpen, onClose, product, onSuccess }: EditFa
           materials: materials.trim() || null,
           price: parseFloat(price),
           shipping_cost: parseFloat(shippingCost),
-          access_level: accessLevel,
           updated_at: new Date().toISOString()
         })
         .eq('id', product.id);
@@ -146,7 +202,45 @@ const EditFashionProductModal = ({ isOpen, onClose, product, onSuccess }: EditFa
 
       console.log('Product updated successfully');
 
-      // Handle variant deletions first
+      // Handle image deletions
+      const imagesToDelete = existingImages.filter(img => img.toDelete);
+      if (imagesToDelete.length > 0) {
+        const deleteIds = imagesToDelete.map(img => img.id);
+        const { error: deleteError } = await supabase
+          .from('fashion_product_images')
+          .delete()
+          .in('id', deleteIds);
+        
+        if (deleteError) {
+          console.error('Image deletion error:', deleteError);
+          throw deleteError;
+        }
+        console.log('Deleted images:', deleteIds.length);
+      }
+
+      // Upload and add new images
+      if (newImages.length > 0) {
+        const newImageUrls = await uploadNewImages();
+        const currentMaxOrder = Math.max(...activeImages.map(img => img.display_order), -1);
+        
+        const imageInserts = newImageUrls.map((url, index) => ({
+          fashion_product_id: product.id,
+          image_url: url,
+          display_order: currentMaxOrder + 1 + index
+        }));
+
+        const { error: insertError } = await supabase
+          .from('fashion_product_images')
+          .insert(imageInserts);
+        
+        if (insertError) {
+          console.error('Image insertion error:', insertError);
+          throw insertError;
+        }
+        console.log('Inserted new images:', newImages.length);
+      }
+
+      // Handle variant deletions
       const variantsToDelete = variants.filter(v => v.toDelete && v.id);
       if (variantsToDelete.length > 0) {
         const deleteIds = variantsToDelete.map(v => v.id).filter(Boolean);
@@ -231,6 +325,8 @@ const EditFashionProductModal = ({ isOpen, onClose, product, onSuccess }: EditFa
     return acc;
   }, {} as Record<string, Array<any>>);
 
+  const activeExistingImages = existingImages.filter(img => !img.toDelete);
+
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -302,36 +398,46 @@ const EditFashionProductModal = ({ isOpen, onClose, product, onSuccess }: EditFa
             />
           </div>
 
-          {/* Access Level Selection */}
-          <div className="space-y-2">
-            <Label>Access Level</Label>
-            <div className="flex gap-4">
-              <label className="flex items-center space-x-2">
-                <input
-                  type="radio"
-                  value="public"
-                  checked={accessLevel === "public"}
-                  onChange={(e) => setAccessLevel(e.target.value)}
-                  className="text-blue-600"
-                />
-                <span className="text-white">Public (All users)</span>
-              </label>
-              <label className="flex items-center space-x-2">
-                <input
-                  type="radio"
-                  value="merchant_only"
-                  checked={accessLevel === "merchant_only"}
-                  onChange={(e) => setAccessLevel(e.target.value)}
-                  className="text-blue-600"
-                />
-                <span className="text-white">Merchant Only</span>
-              </label>
-            </div>
-            {accessLevel === "merchant_only" && (
-              <p className="text-sm text-yellow-400">
-                This product will only be visible and purchasable by approved merchants.
-              </p>
+          {/* Image Management */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Product Images</h3>
+            
+            {/* Existing Images */}
+            {activeExistingImages.length > 0 && (
+              <div>
+                <Label>Current Images</Label>
+                <div className="grid grid-cols-3 md:grid-cols-4 gap-3 mt-2">
+                  {activeExistingImages.map((image, index) => (
+                    <div key={image.id} className="relative">
+                      <img
+                        src={image.image_url}
+                        alt={`Product image ${index + 1}`}
+                        className="w-full h-24 object-cover rounded border border-gray-600"
+                      />
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => deleteExistingImage(existingImages.indexOf(image))}
+                        className="absolute -top-2 -right-2 bg-red-600 hover:bg-red-700 text-white rounded-full w-6 h-6 p-0"
+                      >
+                        <X className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
             )}
+
+            {/* Add New Images */}
+            <div>
+              <Label>Add New Images</Label>
+              <MultiImagePicker
+                selectedImages={newImages}
+                onImagesChange={setNewImages}
+                maxImages={8 - activeExistingImages.length}
+              />
+            </div>
           </div>
 
           {/* Inventory Management */}

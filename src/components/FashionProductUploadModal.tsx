@@ -304,7 +304,7 @@ const FashionProductUploadModal = ({ isOpen, onClose, onSuccess }: FashionProduc
             <MultiImagePicker
               selectedImages={selectedImages}
               onImagesChange={setSelectedImages}
-              maxImages={5}
+              maxImages={8}
             />
           </div>
 
