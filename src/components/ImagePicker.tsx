@@ -89,7 +89,7 @@ const ImagePicker = ({ onImageSelect, currentImageUrl, trigger }: ImagePickerPro
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger || (
-          <Button variant="outline" className="border-gray-600 text-white bg-gray-700">
+          <Button variant="outline" className="border-gray-600 text-white bg-gray-700 hover:bg-gray-600 hover:text-white">
             <Image className="w-4 h-4 mr-2" />
             Select Image
           </Button>
@@ -114,7 +114,7 @@ const ImagePicker = ({ onImageSelect, currentImageUrl, trigger }: ImagePickerPro
             <Button
               variant={useCustomUrl ? "default" : "outline"}
               onClick={() => setUseCustomUrl(true)}
-              className="flex-1"
+              className="flex-1 text-white hover:text-white"
             >
               <LinkIcon className="w-4 h-4 mr-2" />
               Custom URL
@@ -137,7 +137,7 @@ const ImagePicker = ({ onImageSelect, currentImageUrl, trigger }: ImagePickerPro
               <Button 
                 onClick={handleCustomUrlSubmit}
                 disabled={!selectedImageUrl.trim()}
-                className="w-full bg-blue-600 hover:bg-blue-700"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
               >
                 Use This URL
               </Button>
@@ -150,7 +150,7 @@ const ImagePicker = ({ onImageSelect, currentImageUrl, trigger }: ImagePickerPro
                 <PhotoUpload 
                   onSuccess={fetchUploads}
                   trigger={
-                    <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                    <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
                       <Upload className="w-4 h-4 mr-1" />
                       Upload New
                     </Button>
