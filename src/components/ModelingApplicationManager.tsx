@@ -61,7 +61,16 @@ const ModelingApplicationManager = () => {
       }
 
       console.log('Fetched modeling applications:', data);
-      setApplications(data || []);
+      
+      // Transform the data to ensure proper typing, especially for status
+      const typedApplications: ModelingApplication[] = (data || []).map(app => ({
+        ...app,
+        status: app.status as 'pending' | 'approved' | 'rejected',
+        profiles: app.profiles || null,
+        fashion_products: app.fashion_products || null
+      }));
+      
+      setApplications(typedApplications);
     } catch (error) {
       console.error('Error fetching modeling applications:', error);
     } finally {
