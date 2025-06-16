@@ -7,6 +7,7 @@ import AudioUploadModal from "@/components/AudioUploadModal";
 import VideoUploadModal from "@/components/VideoUploadModal";
 import FashionProductUploadModal from "@/components/FashionProductUploadModal";
 import FashionProductManager from "@/components/FashionProductManager";
+import AudioProductManager from "@/components/AudioProductManager";
 
 interface DashboardWidgetsProps {
   onSuccess: () => void;
@@ -90,6 +91,13 @@ const DashboardWidgets = ({ onSuccess, onViewStore, onBackgroundUpload, isAdmin 
           </Card>
         )}
       </div>
+
+      {/* Audio Product Management - Admin Only */}
+      {isAdmin && (
+        <div className="mb-12">
+          <AudioProductManager />
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">

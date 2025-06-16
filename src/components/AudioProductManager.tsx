@@ -198,9 +198,8 @@ const AudioProductManager = () => {
                     <div className="flex gap-2">
                       <Button
                         size="sm"
-                        variant="outline"
                         onClick={() => setEditingProduct(product)}
-                        className="flex-1 border-gray-600 text-white hover:bg-white hover:text-black"
+                        className="flex-1 bg-black text-white hover:bg-gray-800"
                       >
                         <Edit className="w-3 h-3 mr-1" />
                         Edit
