@@ -38,16 +38,6 @@ const ContentManagement = () => {
         </Card>
       </div>
 
-      {isAdmin && (
-        <div className="mb-8">
-          <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
-            <CardContent className="p-6">
-              <FashionProductManager />
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
       {!isAdmin && (
         <div className="mb-8">
           <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">

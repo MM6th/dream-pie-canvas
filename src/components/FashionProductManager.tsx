@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import FashionProductUploadModal from "./FashionProductUploadModal";
 import FashionProductSlideshow from "./FashionProductSlideshow";
+import EditFashionProductModal from "./EditFashionProductModal";
 
 interface FashionProduct {
   id: string;
@@ -36,6 +37,8 @@ const FashionProductManager = () => {
   const [products, setProducts] = useState<FashionProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<FashionProduct | null>(null);
 
   const fetchProducts = async () => {
     try {
@@ -65,6 +68,17 @@ const FashionProductManager = () => {
   useEffect(() => {
     fetchProducts();
   }, []);
+
+  const handleEdit = (product: FashionProduct) => {
+    setEditingProduct(product);
+    setEditModalOpen(true);
+  };
+
+  const handleEditSuccess = () => {
+    fetchProducts();
+    setEditModalOpen(false);
+    setEditingProduct(null);
+  };
 
   const handleDelete = async (productId: string) => {
     if (!confirm("Are you sure you want to delete this product?")) return;
@@ -211,8 +225,8 @@ const FashionProductManager = () => {
                           <Button
                             size="sm"
                             variant="outline"
-                            disabled
-                            className="flex-1 border-gray-500 text-gray-400 cursor-not-allowed"
+                            onClick={() => handleEdit(product)}
+                            className="flex-1 border-blue-500 text-blue-400 hover:bg-blue-500 hover:text-white"
                           >
                             <Edit className="w-3 h-3 mr-1" />
                             Edit
@@ -240,6 +254,16 @@ const FashionProductManager = () => {
         isOpen={uploadModalOpen}
         onClose={() => setUploadModalOpen(false)}
         onSuccess={fetchProducts}
+      />
+
+      <EditFashionProductModal
+        isOpen={editModalOpen}
+        onClose={() => {
+          setEditModalOpen(false);
+          setEditingProduct(null);
+        }}
+        product={editingProduct}
+        onSuccess={handleEditSuccess}
       />
     </>
   );
