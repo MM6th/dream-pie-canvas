@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -61,7 +62,8 @@ const ModelingApplicationManager = () => {
       }
 
       console.log('Fetched modeling applications:', data);
-      setApplications(data || []);
+      // Cast the data to ensure proper typing
+      setApplications((data || []) as ModelingApplication[]);
     } catch (error) {
       console.error('Error fetching modeling applications:', error);
     } finally {
@@ -257,12 +259,17 @@ const ModelingApplicationManager = () => {
         </div>
       )}
 
-      {/* Image Zoom Modal */}
-      <ImageZoomModal
-        isOpen={!!selectedImageUrl}
-        onClose={() => setSelectedImageUrl(null)}
-        imageUrl={selectedImageUrl || ''}
-      />
+      {/* Image Zoom Modal - using proper props for the existing ImageZoomModal */}
+      {selectedImageUrl && (
+        <ImageZoomModal
+          isOpen={!!selectedImageUrl}
+          onClose={() => setSelectedImageUrl(null)}
+          submittedImage={selectedImageUrl}
+          currentImage={null}
+          songTitle="Modeling Application Photo"
+          artistName={null}
+        />
+      )}
     </div>
   );
 };
