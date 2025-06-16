@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -46,7 +45,7 @@ const ModelingApplicationManager = () => {
         .from('modeling_applications')
         .select(`
           *,
-          profiles!modeling_applications_merchant_id_fkey (
+          profiles!fk_modeling_applications_merchant (
             display_name,
             email
           ),
@@ -63,7 +62,7 @@ const ModelingApplicationManager = () => {
 
       console.log('Fetched modeling applications:', data);
       
-      // Transform the data to ensure proper typing, especially for status
+      // Transform the data to ensure proper typing
       const typedApplications: ModelingApplication[] = (data || []).map(app => ({
         ...app,
         status: app.status as 'pending' | 'approved' | 'rejected',
