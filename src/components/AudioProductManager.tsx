@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,6 +19,7 @@ interface AudioProduct {
   album_id: string | null;
   is_free: boolean;
   price: number | null;
+  access_level: "public" | "merchant_only" | "paid" | null;
   created_at: string;
   albums?: {
     name: string;
@@ -49,6 +49,7 @@ const AudioProductManager = () => {
           album_id,
           is_free,
           price,
+          access_level,
           created_at,
           albums (
             name
@@ -234,4 +235,3 @@ const AudioProductManager = () => {
 };
 
 export default AudioProductManager;
-
