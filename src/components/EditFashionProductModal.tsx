@@ -50,6 +50,7 @@ const EditFashionProductModal = ({ isOpen, onClose, product, onSuccess }: EditFa
     color: string;
     stock_quantity: number;
     isNew?: boolean;
+    toDelete?: boolean;
   }>>([]);
   const [newColor, setNewColor] = useState("");
 
@@ -63,7 +64,8 @@ const EditFashionProductModal = ({ isOpen, onClose, product, onSuccess }: EditFa
       setAccessLevel(product.access_level || "public");
       setVariants(product.fashion_product_variants.map(v => ({
         ...v,
-        isNew: false
+        isNew: false,
+        toDelete: false
       })));
     }
   }, [product, isOpen]);
@@ -89,7 +91,11 @@ const EditFashionProductModal = ({ isOpen, onClose, product, onSuccess }: EditFa
   };
 
   const deleteVariant = (index: number) => {
-    setVariants(prev => prev.filter((_, i) => i !== index));
+    setVariants(prev => prev.map((variant, i) => 
+      i === index 
+        ? { ...variant, toDelete: true }
+        : variant
+    ));
   };
 
   const addNewColorVariants = () => {
@@ -99,7 +105,8 @@ const EditFashionProductModal = ({ isOpen, onClose, product, onSuccess }: EditFa
       size,
       color: newColor.toLowerCase(),
       stock_quantity: 0,
-      isNew: true
+      isNew: true,
+      toDelete: false
     }));
     
     setVariants(prev => [...prev, ...newVariants]);
@@ -112,6 +119,8 @@ const EditFashionProductModal = ({ isOpen, onClose, product, onSuccess }: EditFa
 
     setLoading(true);
     try {
+      console.log('Starting product update...');
+
       // Update main product details
       const { error: productError } = await supabase
         .from('fashion_products')
@@ -126,46 +135,70 @@ const EditFashionProductModal = ({ isOpen, onClose, product, onSuccess }: EditFa
         })
         .eq('id', product.id);
 
-      if (productError) throw productError;
+      if (productError) {
+        console.error('Product update error:', productError);
+        throw productError;
+      }
 
-      // Handle variant updates
-      for (const variant of variants) {
-        if (variant.isNew) {
-          // Insert new variant - fix TypeScript error by properly casting types
-          const { error } = await supabase
-            .from('fashion_product_variants')
-            .insert({
-              fashion_product_id: product.id,
-              size: variant.size as any,
-              color: variant.color as any,
-              stock_quantity: variant.stock_quantity
-            });
-          if (error) throw error;
-        } else if (variant.id) {
-          // Update existing variant
-          const { error } = await supabase
+      console.log('Product updated successfully');
+
+      // Handle variant deletions first
+      const variantsToDelete = variants.filter(v => v.toDelete && v.id);
+      if (variantsToDelete.length > 0) {
+        const deleteIds = variantsToDelete.map(v => v.id).filter(Boolean);
+        const { error: deleteError } = await supabase
+          .from('fashion_product_variants')
+          .delete()
+          .in('id', deleteIds);
+        
+        if (deleteError) {
+          console.error('Variant deletion error:', deleteError);
+          throw deleteError;
+        }
+        console.log('Deleted variants:', deleteIds.length);
+      }
+
+      // Handle new variants
+      const newVariants = variants.filter(v => v.isNew && !v.toDelete);
+      if (newVariants.length > 0) {
+        const variantInserts = newVariants.map(variant => ({
+          fashion_product_id: product.id,
+          size: variant.size,
+          color: variant.color,
+          stock_quantity: variant.stock_quantity
+        }));
+
+        const { error: insertError } = await supabase
+          .from('fashion_product_variants')
+          .insert(variantInserts);
+        
+        if (insertError) {
+          console.error('Variant insertion error:', insertError);
+          throw insertError;
+        }
+        console.log('Inserted new variants:', newVariants.length);
+      }
+
+      // Handle existing variant updates
+      const existingVariants = variants.filter(v => !v.isNew && !v.toDelete && v.id);
+      for (const variant of existingVariants) {
+        if (variant.id) {
+          const { error: updateError } = await supabase
             .from('fashion_product_variants')
             .update({
               stock_quantity: variant.stock_quantity,
               updated_at: new Date().toISOString()
             })
             .eq('id', variant.id);
-          if (error) throw error;
+          
+          if (updateError) {
+            console.error('Variant update error:', updateError);
+            throw updateError;
+          }
         }
       }
 
-      // Delete variants that were removed
-      const existingIds = product.fashion_product_variants.map(v => v.id);
-      const updatedIds = variants.filter(v => v.id).map(v => v.id);
-      const deletedIds = existingIds.filter(id => !updatedIds.includes(id));
-
-      if (deletedIds.length > 0) {
-        const { error } = await supabase
-          .from('fashion_product_variants')
-          .delete()
-          .in('id', deletedIds);
-        if (error) throw error;
-      }
+      console.log('All variants updated successfully');
 
       toast({
         title: "Success",
@@ -178,7 +211,7 @@ const EditFashionProductModal = ({ isOpen, onClose, product, onSuccess }: EditFa
       console.error('Error updating fashion product:', error);
       toast({
         title: "Error",
-        description: "Failed to update fashion product",
+        description: error.message || "Failed to update fashion product",
         variant: "destructive"
       });
     } finally {
@@ -186,10 +219,11 @@ const EditFashionProductModal = ({ isOpen, onClose, product, onSuccess }: EditFa
     }
   };
 
-  const groupedVariants = variants.reduce((acc, variant, index) => {
+  const activeVariants = variants.filter(v => !v.toDelete);
+  const groupedVariants = activeVariants.reduce((acc, variant, index) => {
     const key = variant.color;
     if (!acc[key]) acc[key] = [];
-    acc[key].push({ ...variant, index });
+    acc[key].push({ ...variant, index: variants.indexOf(variant) });
     return acc;
   }, {} as Record<string, Array<any>>);
 
@@ -309,10 +343,10 @@ const EditFashionProductModal = ({ isOpen, onClose, product, onSuccess }: EditFa
                     variant="outline"
                     size="sm"
                     onClick={() => {
-                      const indices = colorVariants.map(v => v.index).sort((a, b) => b - a);
-                      setVariants(prev => prev.filter((_, i) => !indices.includes(i)));
+                      const indices = colorVariants.map(v => v.index);
+                      indices.forEach(index => deleteVariant(index));
                     }}
-                    className="border-red-500 text-red-400"
+                    className="border-red-500 text-red-400 bg-black hover:bg-gray-800"
                   >
                     <Trash2 className="w-3 h-3 mr-1" />
                     Remove Color
@@ -329,7 +363,7 @@ const EditFashionProductModal = ({ isOpen, onClose, product, onSuccess }: EditFa
                           size="sm"
                           variant="outline"
                           onClick={() => updateVariantStock(index, -1)}
-                          className="w-6 h-6 p-0"
+                          className="w-6 h-6 p-0 bg-black text-white hover:bg-gray-800"
                         >
                           <Minus className="w-3 h-3" />
                         </Button>
@@ -339,7 +373,7 @@ const EditFashionProductModal = ({ isOpen, onClose, product, onSuccess }: EditFa
                           size="sm"
                           variant="outline"
                           onClick={() => updateVariantStock(index, 1)}
-                          className="w-6 h-6 p-0"
+                          className="w-6 h-6 p-0 bg-black text-white hover:bg-gray-800"
                         >
                           <Plus className="w-3 h-3" />
                         </Button>
@@ -369,7 +403,7 @@ const EditFashionProductModal = ({ isOpen, onClose, product, onSuccess }: EditFa
                   onClick={addNewColorVariants}
                   disabled={!newColor}
                   variant="outline"
-                  className="border-blue-500 text-blue-400"
+                  className="border-blue-500 text-blue-400 bg-black hover:bg-gray-800"
                 >
                   <Plus className="w-4 h-4 mr-1" />
                   Add Color
@@ -382,7 +416,7 @@ const EditFashionProductModal = ({ isOpen, onClose, product, onSuccess }: EditFa
             <Button
               type="submit"
               disabled={loading}
-              className="bg-blue-600 text-white flex-1"
+              className="bg-blue-600 text-white flex-1 hover:bg-blue-700"
             >
               {loading ? "Updating..." : (
                 <>
@@ -396,6 +430,7 @@ const EditFashionProductModal = ({ isOpen, onClose, product, onSuccess }: EditFa
               variant="outline"
               onClick={handleClose}
               disabled={loading}
+              className="bg-black text-white hover:bg-gray-800"
             >
               Cancel
             </Button>

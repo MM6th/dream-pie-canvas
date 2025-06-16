@@ -154,52 +154,46 @@ const FashionProductUploadModal = ({ isOpen, onClose, onSuccess }: FashionProduc
 
       if (productError) {
         console.error('Product creation error:', productError);
-        throw new Error('Failed to create fashion product');
+        throw productError;
       }
 
       console.log('Fashion product created successfully:', product.id);
 
       // Create product images
       console.log('Creating product images...');
-      const imagePromises = imageUrls.map((url, index) => 
-        supabase
-          .from('fashion_product_images')
-          .insert({
-            fashion_product_id: product.id,
-            image_url: url,
-            display_order: index
-          })
-      );
+      const imageInserts = imageUrls.map((url, index) => ({
+        fashion_product_id: product.id,
+        image_url: url,
+        display_order: index
+      }));
 
-      const imageResults = await Promise.all(imagePromises);
-      const imageErrors = imageResults.filter(result => result.error);
-      
-      if (imageErrors.length > 0) {
-        console.error('Image creation errors:', imageErrors);
-        throw new Error('Failed to create product images');
+      const { error: imageError } = await supabase
+        .from('fashion_product_images')
+        .insert(imageInserts);
+
+      if (imageError) {
+        console.error('Image creation error:', imageError);
+        throw imageError;
       }
 
       console.log('Product images created successfully');
 
-      // Create variants
+      // Create variants with proper type casting
       console.log('Creating product variants...');
-      const variantPromises = variants.map(variant => 
-        supabase
-          .from('fashion_product_variants')
-          .insert({
-            fashion_product_id: product.id,
-            size: variant.size as any,
-            color: variant.color as any,
-            stock_quantity: variant.stock_quantity
-          })
-      );
+      const variantInserts = variants.map(variant => ({
+        fashion_product_id: product.id,
+        size: variant.size,
+        color: variant.color,
+        stock_quantity: variant.stock_quantity
+      }));
 
-      const variantResults = await Promise.all(variantPromises);
-      const variantErrors = variantResults.filter(result => result.error);
-      
-      if (variantErrors.length > 0) {
-        console.error('Variant creation errors:', variantErrors);
-        throw new Error('Failed to create product variants');
+      const { error: variantError } = await supabase
+        .from('fashion_product_variants')
+        .insert(variantInserts);
+
+      if (variantError) {
+        console.error('Variant creation error:', variantError);
+        throw variantError;
       }
 
       console.log('Product variants created successfully');
@@ -207,7 +201,7 @@ const FashionProductUploadModal = ({ isOpen, onClose, onSuccess }: FashionProduc
       // Success! Show success toast
       toast({
         title: "Success",
-        description: `Fashion product "${title}" uploaded successfully`,
+        description: `Fashion product "${title}" uploaded successfully with ${variants.length} variants`,
       });
 
       // Clean up and close

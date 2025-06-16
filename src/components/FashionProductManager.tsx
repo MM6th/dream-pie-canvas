@@ -1,14 +1,16 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Shirt, Plus, Edit, Trash2, Package } from "lucide-react";
+import { Shirt, Plus, Trash2, Package } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import FashionProductUploadModal from "./FashionProductUploadModal";
 import FashionProductSlideshow from "./FashionProductSlideshow";
 import EditFashionProductModal from "./EditFashionProductModal";
+import EditButton from "./ui/EditButton";
 
 interface FashionProduct {
   id: string;
@@ -142,7 +144,7 @@ const FashionProductManager = () => {
             </CardTitle>
             <Button
               onClick={() => setUploadModalOpen(true)}
-              className="bg-blue-600 text-white"
+              className="bg-blue-600 text-white hover:bg-blue-700"
             >
               <Plus className="w-4 h-4 mr-2" />
               Add Product
@@ -157,7 +159,7 @@ const FashionProductManager = () => {
               <p className="text-gray-400 mb-4">Upload your first fashion product to get started</p>
               <Button
                 onClick={() => setUploadModalOpen(true)}
-                className="bg-blue-600 text-white"
+                className="bg-blue-600 text-white hover:bg-blue-700"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Add Product
@@ -236,20 +238,14 @@ const FashionProductManager = () => {
 
                         {/* Actions */}
                         <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
+                          <EditButton
                             onClick={() => handleEdit(product)}
-                            className="flex-1 border-blue-500 text-blue-400 bg-transparent"
-                          >
-                            <Edit className="w-3 h-3 mr-1" />
-                            Edit
-                          </Button>
+                          />
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() => handleDelete(product.id)}
-                            className="border-red-500 text-red-400 bg-transparent"
+                            className="border-red-500 text-red-400 bg-black hover:bg-gray-800"
                           >
                             <Trash2 className="w-3 h-3" />
                           </Button>
