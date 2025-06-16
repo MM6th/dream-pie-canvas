@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -83,7 +82,10 @@ const FashionProductUploadModal = ({ isOpen, onClose, onSuccess }: FashionProduc
         .from('fashion-images')
         .upload(filePath, image);
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Image upload error:', uploadError);
+        throw new Error(`Failed to upload image: ${image.name}`);
+      }
 
       const { data: { publicUrl } } = supabase.storage
         .from('fashion-images')
@@ -97,7 +99,14 @@ const FashionProductUploadModal = ({ isOpen, onClose, onSuccess }: FashionProduc
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to upload products",
+        variant: "destructive"
+      });
+      return;
+    }
 
     if (selectedImages.length === 0) {
       toast({
@@ -118,11 +127,17 @@ const FashionProductUploadModal = ({ isOpen, onClose, onSuccess }: FashionProduc
     }
 
     setLoading(true);
+    
     try {
-      // Upload images
+      console.log('Starting fashion product upload...');
+      
+      // Upload images first
+      console.log('Uploading images...');
       const imageUrls = await uploadImages();
+      console.log('Images uploaded successfully:', imageUrls.length);
 
       // Create fashion product
+      console.log('Creating fashion product...');
       const { data: product, error: productError } = await supabase
         .from('fashion_products')
         .insert({
@@ -137,47 +152,73 @@ const FashionProductUploadModal = ({ isOpen, onClose, onSuccess }: FashionProduc
         .select()
         .single();
 
-      if (productError) throw productError;
+      if (productError) {
+        console.error('Product creation error:', productError);
+        throw new Error('Failed to create fashion product');
+      }
+
+      console.log('Fashion product created successfully:', product.id);
 
       // Create product images
-      for (let i = 0; i < imageUrls.length; i++) {
-        const { error: imageError } = await supabase
+      console.log('Creating product images...');
+      const imagePromises = imageUrls.map((url, index) => 
+        supabase
           .from('fashion_product_images')
           .insert({
             fashion_product_id: product.id,
-            image_url: imageUrls[i],
-            display_order: i
-          });
+            image_url: url,
+            display_order: index
+          })
+      );
 
-        if (imageError) throw imageError;
+      const imageResults = await Promise.all(imagePromises);
+      const imageErrors = imageResults.filter(result => result.error);
+      
+      if (imageErrors.length > 0) {
+        console.error('Image creation errors:', imageErrors);
+        throw new Error('Failed to create product images');
       }
 
+      console.log('Product images created successfully');
+
       // Create variants
-      for (const variant of variants) {
-        const { error: variantError } = await supabase
+      console.log('Creating product variants...');
+      const variantPromises = variants.map(variant => 
+        supabase
           .from('fashion_product_variants')
           .insert({
             fashion_product_id: product.id,
             size: variant.size as any,
             color: variant.color as any,
             stock_quantity: variant.stock_quantity
-          });
+          })
+      );
 
-        if (variantError) throw variantError;
+      const variantResults = await Promise.all(variantPromises);
+      const variantErrors = variantResults.filter(result => result.error);
+      
+      if (variantErrors.length > 0) {
+        console.error('Variant creation errors:', variantErrors);
+        throw new Error('Failed to create product variants');
       }
 
+      console.log('Product variants created successfully');
+
+      // Success! Show success toast
       toast({
         title: "Success",
-        description: "Fashion product uploaded successfully"
+        description: `Fashion product "${title}" uploaded successfully`,
       });
 
-      onSuccess();
+      // Clean up and close
       handleClose();
+      onSuccess();
+
     } catch (error: any) {
       console.error('Error uploading fashion product:', error);
       toast({
-        title: "Error",
-        description: "Failed to upload fashion product",
+        title: "Upload Failed",
+        description: error.message || "Failed to upload fashion product. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -377,7 +418,7 @@ const FashionProductUploadModal = ({ isOpen, onClose, onSuccess }: FashionProduc
             <Button
               type="submit"
               disabled={loading}
-              className="bg-blue-600 text-white flex-1"
+              className="bg-blue-600 hover:bg-blue-700 text-white flex-1"
             >
               {loading ? "Uploading..." : (
                 <>

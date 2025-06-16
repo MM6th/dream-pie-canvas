@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -181,11 +180,51 @@ const FashionStoreSection = () => {
       return;
     }
 
-    // TODO: Implement fashion product purchase flow
-    toast({
-      title: "Purchase Feature",
-      description: "Fashion product purchases will be implemented soon!",
-    });
+    // Get available variants
+    const availableVariants = product.fashion_product_variants.filter(v => v.stock_quantity > 0);
+    
+    if (availableVariants.length === 0) {
+      toast({
+        title: "Out of Stock",
+        description: "This product is currently out of stock",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // For now, use the first available variant
+    const selectedVariant = availableVariants[0];
+
+    try {
+      const { data, error } = await supabase.functions.invoke('create-fashion-payment', {
+        body: {
+          fashionProductId: product.id,
+          variantId: selectedVariant.id,
+          quantity: 1
+        }
+      });
+
+      if (error) throw error;
+
+      if (data.approvalUrl) {
+        // Open PayPal checkout in a new tab
+        window.open(data.approvalUrl, '_blank');
+        
+        toast({
+          title: "Redirecting to PayPal",
+          description: "Complete your payment in the new tab",
+        });
+      } else {
+        throw new Error('No approval URL received');
+      }
+    } catch (error: any) {
+      console.error('Error creating fashion payment:', error);
+      toast({
+        title: "Payment Error",
+        description: error.message || "Failed to create payment. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   if (loading) {
@@ -247,7 +286,7 @@ const FashionStoreSection = () => {
                         <Button
                           size="sm"
                           onClick={() => handleApplyForModeling(product)}
-                          className="flex-1 bg-purple-600 text-white"
+                          className="flex-1 bg-purple-600 hover:bg-purple-700 text-white"
                         >
                           <Camera className="w-4 h-4 mr-1" />
                           Apply to Model
@@ -256,7 +295,7 @@ const FashionStoreSection = () => {
                           size="sm"
                           onClick={() => handlePurchase(product)}
                           disabled={!canPurchase(product)}
-                          className="flex-1 bg-blue-600 text-white"
+                          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
                         >
                           <ShoppingCart className="w-4 h-4 mr-1" />
                           Buy
@@ -267,7 +306,7 @@ const FashionStoreSection = () => {
                         size="sm"
                         onClick={() => handlePurchase(product)}
                         disabled={!canPurchase(product)}
-                        className="w-full bg-blue-600 text-white"
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                       >
                         <ShoppingCart className="w-4 h-4 mr-1" />
                         {canPurchase(product) ? "Buy Now" : "Restricted"}

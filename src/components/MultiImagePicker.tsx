@@ -8,7 +8,6 @@ import { Upload, X, Image, Plus, FolderOpen } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
-import ImagePicker from "./ImagePicker";
 
 interface MultiImagePickerProps {
   selectedImages: File[];
@@ -16,9 +15,19 @@ interface MultiImagePickerProps {
   maxImages: number;
 }
 
+interface UserUpload {
+  id: string;
+  file_name: string;
+  file_path: string;
+  file_type: string;
+}
+
 const MultiImagePicker = ({ selectedImages, onImagesChange, maxImages }: MultiImagePickerProps) => {
+  const { user } = useAuth();
   const [uploading, setUploading] = useState(false);
   const [galleryModalOpen, setGalleryModalOpen] = useState(false);
+  const [galleryImages, setGalleryImages] = useState<UserUpload[]>([]);
+  const [galleryLoading, setGalleryLoading] = useState(false);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const remainingSlots = maxImages - selectedImages.length;
@@ -67,18 +76,68 @@ const MultiImagePicker = ({ selectedImages, onImagesChange, maxImages }: MultiIm
     input.click();
   };
 
-  const handleGalleryImageSelect = async (imageUrl: string) => {
+  const fetchGalleryImages = async () => {
+    if (!user) return;
+
+    setGalleryLoading(true);
     try {
-      // Convert the gallery image URL to a File object
+      const { data, error } = await supabase
+        .from('user_uploads')
+        .select('id, file_name, file_path, file_type')
+        .eq('user_id', user.id)
+        .like('file_type', 'image%')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching gallery images:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load gallery images",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      setGalleryImages(data || []);
+    } catch (error) {
+      console.error('Error fetching gallery images:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load gallery images",
+        variant: "destructive"
+      });
+    } finally {
+      setGalleryLoading(false);
+    }
+  };
+
+  const handleGalleryOpen = () => {
+    setGalleryModalOpen(true);
+    fetchGalleryImages();
+  };
+
+  const getImageUrl = (filePath: string) => {
+    const { data } = supabase.storage
+      .from('user-media')
+      .getPublicUrl(filePath);
+    return data.publicUrl;
+  };
+
+  const handleGalleryImageSelect = async (upload: UserUpload) => {
+    try {
+      const imageUrl = getImageUrl(upload.file_path);
       const response = await fetch(imageUrl);
       const blob = await response.blob();
-      const fileName = imageUrl.split('/').pop() || 'gallery-image.jpg';
-      const file = new File([blob], fileName, { type: blob.type });
+      const file = new File([blob], upload.file_name, { type: upload.file_type });
       
       const remainingSlots = maxImages - selectedImages.length;
       if (remainingSlots > 0) {
         onImagesChange([...selectedImages, file]);
         setGalleryModalOpen(false);
+        toast({
+          title: "Success",
+          description: "Image added from gallery",
+        });
       } else {
         toast({
           title: "No space available",
@@ -87,6 +146,7 @@ const MultiImagePicker = ({ selectedImages, onImagesChange, maxImages }: MultiIm
         });
       }
     } catch (error) {
+      console.error('Error loading image from gallery:', error);
       toast({
         title: "Error",
         description: "Failed to load image from gallery",
@@ -130,33 +190,21 @@ const MultiImagePicker = ({ selectedImages, onImagesChange, maxImages }: MultiIm
           type="button"
           onClick={handleFileSelect}
           disabled={uploading || remainingSlots === 0}
-          className="bg-blue-600 text-white"
+          className="bg-blue-600 hover:bg-blue-700 text-white"
         >
           <FolderOpen className="w-4 h-4 mr-2" />
           Choose from Computer
         </Button>
         
-        <Dialog open={galleryModalOpen} onOpenChange={setGalleryModalOpen}>
-          <DialogTrigger asChild>
-            <Button
-              type="button"
-              disabled={uploading || remainingSlots === 0}
-              className="bg-green-600 text-white"
-            >
-              <Image className="w-4 h-4 mr-2" />
-              Choose from Gallery
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Select from Your Gallery</DialogTitle>
-            </DialogHeader>
-            <ImagePicker
-              onImageSelect={handleGalleryImageSelect}
-              trigger={<div></div>}
-            />
-          </DialogContent>
-        </Dialog>
+        <Button
+          type="button"
+          onClick={handleGalleryOpen}
+          disabled={uploading || remainingSlots === 0}
+          className="bg-green-600 hover:bg-green-700 text-white"
+        >
+          <Image className="w-4 h-4 mr-2" />
+          Choose from Gallery
+        </Button>
       </div>
 
       {/* Selected Files Preview */}
@@ -182,7 +230,7 @@ const MultiImagePicker = ({ selectedImages, onImagesChange, maxImages }: MultiIm
                     size="sm"
                     variant="ghost"
                     onClick={() => removeFile(index)}
-                    className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-6 h-6 p-0"
+                    className="absolute -top-2 -right-2 bg-red-600 hover:bg-red-700 text-white rounded-full w-6 h-6 p-0"
                   >
                     <X className="w-3 h-3" />
                   </Button>
@@ -195,6 +243,52 @@ const MultiImagePicker = ({ selectedImages, onImagesChange, maxImages }: MultiIm
           </div>
         </div>
       )}
+
+      {/* Gallery Modal */}
+      <Dialog open={galleryModalOpen} onOpenChange={setGalleryModalOpen}>
+        <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Select from Your Gallery</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {galleryLoading ? (
+              <div className="text-center py-8">
+                <p className="text-gray-400">Loading your photos...</p>
+              </div>
+            ) : galleryImages.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-gray-400 mb-4">No photos in your gallery yet.</p>
+                <p className="text-gray-500 text-sm">Upload some photos first to use them in your products.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-96 overflow-y-auto">
+                {galleryImages.map((upload) => {
+                  const imageUrl = getImageUrl(upload.file_path);
+                  return (
+                    <div
+                      key={upload.id}
+                      className="relative aspect-square cursor-pointer rounded-lg overflow-hidden border-2 border-transparent hover:border-blue-400 transition-colors"
+                      onClick={() => handleGalleryImageSelect(upload)}
+                    >
+                      <img
+                        src={imageUrl}
+                        alt={upload.file_name}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute bottom-1 left-1 right-1">
+                        <p className="text-xs text-white bg-black/50 px-2 py-1 rounded truncate">
+                          {upload.file_name}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
