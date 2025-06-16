@@ -26,15 +26,11 @@ interface CoverSubmission {
   status: string;
   admin_notes: string | null;
   created_at: string;
-  audio_products?: {
-    title: string;
-    artist_name: string | null;
-    thumbnail_url: string | null;
-  };
-  profiles?: {
-    display_name: string | null;
-    email: string;
-  };
+  audio_product_title?: string;
+  audio_product_artist?: string | null;
+  audio_product_thumbnail?: string | null;
+  merchant_name?: string | null;
+  merchant_email?: string;
 }
 
 const CoverSubmissionManager = () => {
@@ -45,31 +41,43 @@ const CoverSubmissionManager = () => {
 
   const fetchSubmissions = async () => {
     try {
-      const { data, error } = await supabase
+      // First get all submissions
+      const { data: submissionsData, error: submissionsError } = await supabase
         .from('song_cover_submissions')
-        .select(`
-          id,
-          merchant_id,
-          audio_product_id,
-          cover_image_url,
-          submission_notes,
-          status,
-          admin_notes,
-          created_at,
-          audio_products (
-            title,
-            artist_name,
-            thumbnail_url
-          ),
-          profiles (
-            display_name,
-            email
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setSubmissions(data || []);
+      if (submissionsError) throw submissionsError;
+
+      // Then enrich with audio product and profile data
+      const enrichedSubmissions = await Promise.all(
+        (submissionsData || []).map(async (submission) => {
+          // Get audio product details
+          const { data: audioData } = await supabase
+            .from('audio_products')
+            .select('title, artist_name, thumbnail_url')
+            .eq('id', submission.audio_product_id)
+            .single();
+
+          // Get merchant profile details
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('display_name, email')
+            .eq('id', submission.merchant_id)
+            .single();
+
+          return {
+            ...submission,
+            audio_product_title: audioData?.title || 'Unknown Song',
+            audio_product_artist: audioData?.artist_name || 'Unknown Artist',
+            audio_product_thumbnail: audioData?.thumbnail_url,
+            merchant_name: profileData?.display_name,
+            merchant_email: profileData?.email || 'Unknown'
+          };
+        })
+      );
+
+      setSubmissions(enrichedSubmissions);
     } catch (error: any) {
       console.error('Error fetching cover submissions:', error);
       toast({
@@ -242,15 +250,15 @@ const CoverSubmissionManager = () => {
                         </div>
                         <div className="flex-1">
                           <h5 className="text-lg font-semibold text-white mb-1">
-                            {submission.audio_products?.title || 'Unknown Song'}
+                            {submission.audio_product_title}
                           </h5>
                           <p className="text-gray-400 text-sm mb-2">
-                            by {submission.audio_products?.artist_name || 'Unknown Artist'}
+                            by {submission.audio_product_artist}
                           </p>
                           <div className="flex items-center gap-4 text-xs text-gray-500">
                             <span className="flex items-center gap-1">
                               <User className="w-3 h-3" />
-                              {submission.profiles?.display_name || submission.profiles?.email}
+                              {submission.merchant_name || submission.merchant_email}
                             </span>
                             <span className="flex items-center gap-1">
                               <Calendar className="w-3 h-3" />
@@ -261,11 +269,11 @@ const CoverSubmissionManager = () => {
                       </div>
 
                       {/* Current cover comparison */}
-                      {submission.audio_products?.thumbnail_url && (
+                      {submission.audio_product_thumbnail && (
                         <div>
                           <Label className="text-sm text-gray-400">Current Cover:</Label>
                           <img
-                            src={submission.audio_products.thumbnail_url}
+                            src={submission.audio_product_thumbnail}
                             alt="Current cover"
                             className="w-16 h-16 object-cover rounded mt-1"
                           />
@@ -349,7 +357,7 @@ const CoverSubmissionManager = () => {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <h6 className="text-white font-medium">
-                          {submission.audio_products?.title || 'Unknown Song'}
+                          {submission.audio_product_title}
                         </h6>
                         <Badge className={`${getStatusColor(submission.status)} text-white`}>
                           <span className="flex items-center gap-1">
@@ -359,7 +367,7 @@ const CoverSubmissionManager = () => {
                         </Badge>
                       </div>
                       <p className="text-gray-400 text-sm">
-                        by {submission.profiles?.display_name || submission.profiles?.email}
+                        by {submission.merchant_name || submission.merchant_email}
                       </p>
                       {submission.admin_notes && (
                         <p className="text-gray-300 text-xs mt-1">

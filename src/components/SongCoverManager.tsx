@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,7 +24,8 @@ interface CoverSubmission {
   status: string;
   admin_notes: string | null;
   created_at: string;
-  audio_products?: AudioProduct;
+  audio_product_title?: string;
+  audio_product_artist?: string | null;
 }
 
 const SongCoverManager = () => {
@@ -55,28 +57,33 @@ const SongCoverManager = () => {
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
+      // First get submissions
+      const { data: submissionsData, error: submissionsError } = await supabase
         .from('song_cover_submissions')
-        .select(`
-          id,
-          audio_product_id,
-          cover_image_url,
-          submission_notes,
-          status,
-          admin_notes,
-          created_at,
-          audio_products (
-            id,
-            title,
-            artist_name,
-            thumbnail_url
-          )
-        `)
+        .select('*')
         .eq('merchant_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setSubmissions(data || []);
+      if (submissionsError) throw submissionsError;
+
+      // Then get audio product details for each submission
+      const enrichedSubmissions = await Promise.all(
+        (submissionsData || []).map(async (submission) => {
+          const { data: audioData } = await supabase
+            .from('audio_products')
+            .select('title, artist_name')
+            .eq('id', submission.audio_product_id)
+            .single();
+
+          return {
+            ...submission,
+            audio_product_title: audioData?.title || 'Unknown Song',
+            audio_product_artist: audioData?.artist_name || 'Unknown Artist'
+          };
+        })
+      );
+
+      setSubmissions(enrichedSubmissions);
     } catch (error: any) {
       console.error('Error fetching submissions:', error);
     }
@@ -212,7 +219,7 @@ const SongCoverManager = () => {
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
                           <h5 className="text-white font-medium">
-                            {submission.audio_products?.title || 'Unknown Song'}
+                            {submission.audio_product_title}
                           </h5>
                           <Badge className={`${getStatusColor(submission.status)} text-white`}>
                             <span className="flex items-center gap-1">
@@ -221,6 +228,9 @@ const SongCoverManager = () => {
                             </span>
                           </Badge>
                         </div>
+                        <p className="text-gray-400 text-sm mb-2">
+                          by {submission.audio_product_artist}
+                        </p>
                         <p className="text-gray-400 text-sm mb-2">
                           Submitted {new Date(submission.created_at).toLocaleDateString()}
                         </p>
