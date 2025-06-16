@@ -5,13 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Upload, X, Plus, Minus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
-import ImagePicker from "./ImagePicker";
+import MultiImagePicker from "./MultiImagePicker";
 
 interface FashionProductUploadModalProps {
   isOpen: boolean;
@@ -50,17 +49,12 @@ const FashionProductUploadModal = ({ isOpen, onClose, onSuccess }: FashionProduc
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleAddImage = (url: string) => {
-    if (images.length >= 8) {
-      toast({
-        title: "Image limit reached",
-        description: "You can upload a maximum of 8 images",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    setImages(prev => [...prev, { url, order: prev.length }]);
+  const handleImagesSelected = (urls: string[]) => {
+    const newImages = urls.map((url, index) => ({
+      url,
+      order: images.length + index
+    }));
+    setImages(prev => [...prev, ...newImages]);
   };
 
   const handleRemoveImage = (index: number) => {
@@ -251,18 +245,10 @@ const FashionProductUploadModal = ({ isOpen, onClose, onSuccess }: FashionProduc
           <div>
             <Label className="text-sm font-medium">Product Images * (Max 8)</Label>
             <div className="mt-2 space-y-4">
-              <ImagePicker
-                onImageSelect={handleAddImage}
-                trigger={
-                  <Button 
-                    variant="outline" 
-                    className="w-full border-gray-600 text-white bg-gray-700"
-                    disabled={images.length >= 8}
-                  >
-                    <Upload className="w-4 h-4 mr-2" />
-                    Add Image ({images.length}/8)
-                  </Button>
-                }
+              <MultiImagePicker
+                onImagesSelected={handleImagesSelected}
+                maxImages={8}
+                currentImageCount={images.length}
               />
               
               {images.length > 0 && (

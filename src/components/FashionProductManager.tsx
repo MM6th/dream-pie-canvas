@@ -211,7 +211,8 @@ const FashionProductManager = () => {
                           <Button
                             size="sm"
                             variant="outline"
-                            className="flex-1 border-gray-500 text-white"
+                            disabled
+                            className="flex-1 border-gray-500 text-gray-400 cursor-not-allowed"
                           >
                             <Edit className="w-3 h-3 mr-1" />
                             Edit

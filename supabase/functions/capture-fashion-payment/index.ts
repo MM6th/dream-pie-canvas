@@ -40,9 +40,9 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log('Capturing PayPal fashion payment:', paymentId);
 
-    // Get PayPal access token
+    // Get PayPal access token - USING LIVE ENDPOINTS
     const paypalAuth = btoa(`${paypalClientId}:${paypalClientSecret}`);
-    const tokenResponse = await fetch('https://api-m.sandbox.paypal.com/v1/oauth2/token', {
+    const tokenResponse = await fetch('https://api-m.paypal.com/v1/oauth2/token', {
       method: 'POST',
       headers: {
         'Authorization': `Basic ${paypalAuth}`,
@@ -58,8 +58,8 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('Failed to get PayPal access token');
     }
 
-    // Capture the payment
-    const captureResponse = await fetch(`https://api-m.sandbox.paypal.com/v2/checkout/orders/${paymentId}/capture`, {
+    // Capture the payment - USING LIVE ENDPOINTS
+    const captureResponse = await fetch(`https://api-m.paypal.com/v2/checkout/orders/${paymentId}/capture`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${tokenData.access_token}`,

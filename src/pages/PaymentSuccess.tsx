@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, Music, ArrowLeft } from "lucide-react";
+import { CheckCircle, Music, ArrowLeft, Shirt } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
@@ -20,7 +20,7 @@ const PaymentSuccess = () => {
   }>({});
 
   const orderId = searchParams.get('token');
-  const productId = searchParams.get('product_id');
+  const paymentType = searchParams.get('type') || 'audio';
 
   useEffect(() => {
     const capturePayment = async () => {
@@ -31,10 +31,13 @@ const PaymentSuccess = () => {
       }
 
       try {
-        console.log('Capturing payment for order:', orderId);
+        console.log('Capturing payment for order:', orderId, 'Type:', paymentType);
         
-        const { data, error } = await supabase.functions.invoke('capture-paypal-payment', {
-          body: { orderId },
+        // Choose the appropriate capture function based on payment type
+        const functionName = paymentType === 'fashion' ? 'capture-fashion-payment' : 'capture-paypal-payment';
+        
+        const { data, error } = await supabase.functions.invoke(functionName, {
+          body: { paymentId: orderId },
           headers: {
             Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
           },
@@ -50,13 +53,14 @@ const PaymentSuccess = () => {
         if (data?.success) {
           setSuccess(true);
           setPaymentDetails({
-            transactionId: data.transactionId,
+            transactionId: data.purchaseId || data.transactionId,
             amountPaid: data.amountPaid
           });
           
+          const productType = paymentType === 'fashion' ? 'fashion item' : 'audio';
           toast({
             title: "Payment Successful!",
-            description: `Your audio has been added to your library. Amount paid: $${data.amountPaid}`,
+            description: data.message || `Your ${productType} purchase was completed successfully!`,
           });
 
           // Refresh the page data to show the new purchase
@@ -88,7 +92,7 @@ const PaymentSuccess = () => {
     };
 
     capturePayment();
-  }, [orderId, user]);
+  }, [orderId, user, paymentType]);
 
   const handleBackToDashboard = () => {
     navigate('/');
@@ -96,6 +100,27 @@ const PaymentSuccess = () => {
 
   const handleBackToStore = () => {
     navigate('/?view=store');
+  };
+
+  const getIcon = () => {
+    if (success) {
+      return <CheckCircle className="w-16 h-16 text-green-500" />;
+    }
+    return paymentType === 'fashion' ? 
+      <Shirt className="w-16 h-16 text-red-500" /> : 
+      <Music className="w-16 h-16 text-red-500" />;
+  };
+
+  const getTitle = () => {
+    if (success) return "Payment Successful!";
+    return "Payment Failed";
+  };
+
+  const getSuccessMessage = () => {
+    if (paymentType === 'fashion') {
+      return "Thank you for your purchase! Your fashion item order has been confirmed.";
+    }
+    return "Thank you for your purchase! Your audio has been added to your music library.";
   };
 
   if (processing) {
@@ -117,21 +142,17 @@ const PaymentSuccess = () => {
       <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm max-w-md w-full mx-4">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            {success ? (
-              <CheckCircle className="w-16 h-16 text-green-500" />
-            ) : (
-              <Music className="w-16 h-16 text-red-500" />
-            )}
+            {getIcon()}
           </div>
           <CardTitle className="text-2xl font-bold text-white">
-            {success ? "Payment Successful!" : "Payment Failed"}
+            {getTitle()}
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6 pt-0 text-center space-y-4">
           {success ? (
             <>
               <p className="text-gray-300">
-                Thank you for your purchase! Your audio has been added to your music library.
+                {getSuccessMessage()}
               </p>
               {paymentDetails.amountPaid && (
                 <p className="text-gray-400 text-sm">
@@ -171,7 +192,7 @@ const PaymentSuccess = () => {
               onClick={handleBackToStore}
               className="bg-primary hover:bg-primary/90"
             >
-              <Music className="w-4 h-4 mr-2" />
+              {paymentType === 'fashion' ? <Shirt className="w-4 h-4 mr-2" /> : <Music className="w-4 h-4 mr-2" />}
               Browse Store
             </Button>
           </div>

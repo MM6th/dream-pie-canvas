@@ -78,9 +78,9 @@ const handler = async (req: Request): Promise<Response> => {
       total
     });
 
-    // Get PayPal access token
+    // Get PayPal access token - USING LIVE ENDPOINTS
     const paypalAuth = btoa(`${paypalClientId}:${paypalClientSecret}`);
-    const tokenResponse = await fetch('https://api-m.sandbox.paypal.com/v1/oauth2/token', {
+    const tokenResponse = await fetch('https://api-m.paypal.com/v1/oauth2/token', {
       method: 'POST',
       headers: {
         'Authorization': `Basic ${paypalAuth}`,
@@ -96,7 +96,7 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('Failed to get PayPal access token');
     }
 
-    // Create PayPal payment
+    // Create PayPal payment - USING LIVE ENDPOINTS
     const paymentData = {
       intent: 'CAPTURE',
       purchase_units: [{
@@ -139,7 +139,7 @@ const handler = async (req: Request): Promise<Response> => {
       }
     };
 
-    const paymentResponse = await fetch('https://api-m.sandbox.paypal.com/v2/checkout/orders', {
+    const paymentResponse = await fetch('https://api-m.paypal.com/v2/checkout/orders', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${tokenData.access_token}`,
