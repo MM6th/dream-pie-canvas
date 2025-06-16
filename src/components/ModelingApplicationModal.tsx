@@ -2,14 +2,22 @@
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Camera, Send } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { ShoppingCart, Camera, Upload, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import MultiImagePicker from "./MultiImagePicker";
+
+interface FashionProduct {
+  id: string;
+  title: string;
+  price: number;
+  fashion_product_images: Array<{
+    image_url: string;
+  }>;
+}
 
 interface ModelingApplicationModalProps {
   isOpen: boolean;
@@ -17,18 +25,14 @@ interface ModelingApplicationModalProps {
   onSuccess: () => void;
 }
 
-interface PurchasedProduct {
-  id: string;
-  title: string;
-}
-
 const ModelingApplicationModal = ({ isOpen, onClose, onSuccess }: ModelingApplicationModalProps) => {
   const { user } = useAuth();
+  const [step, setStep] = useState<'products' | 'photos'>('products');
+  const [purchasedProducts, setPurchasedProducts] = useState<FashionProduct[]>([]);
+  const [selectedProduct, setSelectedProduct] = useState<FashionProduct | null>(null);
+  const [selectedPhotos, setSelectedPhotos] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedImages, setSelectedImages] = useState<File[]>([]);
-  const [selectedProductId, setSelectedProductId] = useState("");
-  const [notes, setNotes] = useState("");
-  const [purchasedProducts, setPurchasedProducts] = useState<PurchasedProduct[]>([]);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (isOpen && user) {
@@ -39,6 +43,7 @@ const ModelingApplicationModal = ({ isOpen, onClose, onSuccess }: ModelingApplic
   const fetchPurchasedProducts = async () => {
     if (!user) return;
 
+    setLoading(true);
     try {
       const { data, error } = await supabase
         .from('fashion_purchases')
@@ -46,7 +51,11 @@ const ModelingApplicationModal = ({ isOpen, onClose, onSuccess }: ModelingApplic
           fashion_product_id,
           fashion_products (
             id,
-            title
+            title,
+            price,
+            fashion_product_images (
+              image_url
+            )
           )
         `)
         .eq('user_id', user.id);
@@ -56,232 +65,198 @@ const ModelingApplicationModal = ({ isOpen, onClose, onSuccess }: ModelingApplic
         return;
       }
 
-      const products = data
-        ?.filter(purchase => purchase.fashion_products)
-        .map(purchase => ({
-          id: purchase.fashion_products.id,
-          title: purchase.fashion_products.title
-        })) || [];
+      // Extract unique fashion products
+      const uniqueProducts = new Map<string, FashionProduct>();
+      data?.forEach(purchase => {
+        if (purchase.fashion_products) {
+          const product = purchase.fashion_products as any;
+          uniqueProducts.set(product.id, product);
+        }
+      });
 
-      // Remove duplicates
-      const uniqueProducts = products.filter((product, index, self) => 
-        index === self.findIndex(p => p.id === product.id)
-      );
-
-      setPurchasedProducts(uniqueProducts);
+      setPurchasedProducts(Array.from(uniqueProducts.values()));
     } catch (error) {
       console.error('Error fetching purchased products:', error);
-    }
-  };
-
-  const handleClose = () => {
-    setSelectedImages([]);
-    setSelectedProductId("");
-    setNotes("");
-    onClose();
-  };
-
-  const uploadImages = async (): Promise<string[]> => {
-    const imageUrls: string[] = [];
-    
-    for (const image of selectedImages) {
-      const fileExt = image.name.split('.').pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-      const filePath = `modeling-applications/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('fashion-images')
-        .upload(filePath, image);
-
-      if (uploadError) {
-        console.error('Image upload error:', uploadError);
-        throw new Error(`Failed to upload image: ${image.name}`);
-      }
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('fashion-images')
-        .getPublicUrl(filePath);
-
-      imageUrls.push(publicUrl);
-    }
-
-    return imageUrls;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user) {
-      toast({
-        title: "Error",
-        description: "You must be logged in to submit an application",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (selectedImages.length === 0) {
-      toast({
-        title: "Error",
-        description: "Please upload at least one photo for your modeling application",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (!selectedProductId) {
-      toast({
-        title: "Error",
-        description: "Please select a fashion product you've purchased",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setLoading(true);
-    
-    try {
-      console.log('Starting modeling application submission...');
-      
-      // Upload images first
-      console.log('Uploading images...');
-      const imageUrls = await uploadImages();
-      console.log('Images uploaded successfully:', imageUrls.length);
-
-      // Create modeling application
-      console.log('Creating modeling application...');
-      const { error: applicationError } = await supabase
-        .from('modeling_applications')
-        .insert({
-          merchant_id: user.id,
-          fashion_product_id: selectedProductId,
-          application_photos: imageUrls,
-          status: 'pending'
-        });
-
-      if (applicationError) {
-        console.error('Application creation error:', applicationError);
-        throw applicationError;
-      }
-
-      console.log('Modeling application submitted successfully');
-
-      toast({
-        title: "Success",
-        description: "Your modeling application has been submitted successfully! We'll review it soon.",
-      });
-
-      handleClose();
-      onSuccess();
-
-    } catch (error: any) {
-      console.error('Error submitting modeling application:', error);
-      toast({
-        title: "Submission Failed",
-        description: error.message || "Failed to submit modeling application. Please try again.",
-        variant: "destructive"
-      });
     } finally {
       setLoading(false);
     }
   };
 
-  if (purchasedProducts.length === 0 && isOpen) {
-    return (
-      <Dialog open={isOpen} onOpenChange={handleClose}>
-        <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold">Modeling Application</DialogTitle>
-          </DialogHeader>
-          
-          <div className="text-center py-8">
-            <Camera className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No Fashion Products Purchased</h3>
-            <p className="text-gray-400 mb-6">
-              You need to purchase fashion products from our store before you can apply for modeling opportunities.
-            </p>
-            <Button
-              onClick={handleClose}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              Browse Fashion Store
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    );
-  }
+  const handleProductSelect = (product: FashionProduct) => {
+    setSelectedProduct(product);
+    setStep('photos');
+  };
+
+  const handleSubmitApplication = async () => {
+    if (!user || !selectedProduct || selectedPhotos.length === 0) return;
+
+    setSubmitting(true);
+    try {
+      const { error } = await supabase
+        .from('modeling_applications')
+        .insert({
+          merchant_id: user.id,
+          fashion_product_id: selectedProduct.id,
+          application_photos: selectedPhotos,
+          status: 'pending'
+        });
+
+      if (error) {
+        console.error('Error submitting application:', error);
+        toast({
+          title: "Error",
+          description: "Failed to submit modeling application. Please try again.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      toast({
+        title: "Success",
+        description: "Your modeling application has been submitted successfully!"
+      });
+
+      onSuccess();
+      handleClose();
+    } catch (error) {
+      console.error('Error submitting application:', error);
+      toast({
+        title: "Error",
+        description: "Failed to submit modeling application. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleClose = () => {
+    setStep('products');
+    setSelectedProduct(null);
+    setSelectedPhotos([]);
+    onClose();
+  };
+
+  const handleBrowseStore = () => {
+    handleClose();
+    // This will trigger the parent component to switch to store view
+    window.dispatchEvent(new CustomEvent('navigateToStore'));
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl bg-gray-800 border-gray-700 text-white max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">Submit Modeling Application</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <Camera className="w-5 h-5" />
+            Apply for Modeling
+          </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <Label htmlFor="product">Select Fashion Product *</Label>
-            <Select value={selectedProductId} onValueChange={setSelectedProductId} required>
-              <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
-                <SelectValue placeholder="Choose a product you've purchased" />
-              </SelectTrigger>
-              <SelectContent className="bg-gray-700 border-gray-600">
-                {purchasedProducts.map((product) => (
-                  <SelectItem key={product.id} value={product.id} className="text-white">
-                    {product.title}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Application Photos * (Max 8 photos)</Label>
-            <MultiImagePicker
-              selectedImages={selectedImages}
-              onImagesChange={setSelectedImages}
-              maxImages={8}
-            />
-            <p className="text-sm text-gray-400">
-              Upload high-quality photos showcasing the selected fashion product
+        {step === 'products' && (
+          <div className="space-y-4">
+            <p className="text-gray-400">
+              Select a fashion product you've purchased to apply for modeling:
             </p>
-          </div>
 
-          <div>
-            <Label htmlFor="notes">Additional Notes (Optional)</Label>
-            <Textarea
-              id="notes"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              rows={3}
-              placeholder="Tell us why you'd be perfect for modeling this product..."
-              className="bg-gray-700 border-gray-600 text-white"
+            {loading ? (
+              <div className="text-center py-8">
+                <div className="text-gray-400">Loading your purchased products...</div>
+              </div>
+            ) : purchasedProducts.length === 0 ? (
+              <div className="text-center py-8">
+                <ShoppingCart className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No Fashion Purchases Found</h3>
+                <p className="text-gray-400 mb-4">
+                  You need to purchase fashion products before applying for modeling opportunities.
+                </p>
+                <Button
+                  onClick={handleBrowseStore}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  <ShoppingCart className="w-4 h-4 mr-2" />
+                  Browse Store
+                </Button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {purchasedProducts.map((product) => (
+                  <Card key={product.id} className="bg-gray-700 border-gray-600 cursor-pointer hover:bg-gray-600 transition-colors">
+                    <CardContent className="p-4">
+                      {product.fashion_product_images?.[0] && (
+                        <img
+                          src={product.fashion_product_images[0].image_url}
+                          alt={product.title}
+                          className="w-full h-48 object-cover rounded-lg mb-3"
+                        />
+                      )}
+                      <h3 className="text-white font-medium mb-2 line-clamp-2">{product.title}</h3>
+                      <div className="flex items-center justify-between">
+                        <Badge variant="outline" className="border-green-500 text-green-400">
+                          <Check className="w-3 h-3 mr-1" />
+                          Purchased
+                        </Badge>
+                        <Button
+                          size="sm"
+                          onClick={() => handleProductSelect(product)}
+                          className="bg-purple-600 hover:bg-purple-700"
+                        >
+                          Select
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {step === 'photos' && selectedProduct && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold">Upload Modeling Photos</h3>
+                <p className="text-gray-400">
+                  Upload photos of yourself modeling: {selectedProduct.title}
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                onClick={() => setStep('products')}
+                className="border-gray-600 text-white"
+              >
+                Back
+              </Button>
+            </div>
+
+            <MultiImagePicker
+              onImagesSelected={setSelectedPhotos}
+              maxImages={10}
+              existingImages={selectedPhotos}
             />
-          </div>
 
-          <div className="flex gap-4 pt-4">
-            <Button
-              type="submit"
-              disabled={loading}
-              className="bg-blue-600 hover:bg-blue-700 text-white flex-1"
-            >
-              {loading ? "Submitting..." : (
-                <>
-                  <Send className="w-4 h-4 mr-2" />
-                  Submit Application
-                </>
-              )}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleClose}
-              disabled={loading}
-            >
-              Cancel
-            </Button>
+            {selectedPhotos.length > 0 && (
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={handleClose}
+                  className="border-gray-600 text-white"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSubmitApplication}
+                  disabled={submitting}
+                  className="bg-purple-600 hover:bg-purple-700"
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  {submitting ? "Submitting..." : "Submit Application"}
+                </Button>
+              </div>
+            )}
           </div>
-        </form>
+        )}
       </DialogContent>
     </Dialog>
   );

@@ -57,6 +57,26 @@ const Index = () => {
     }
   }, [currentView, user]);
 
+  // Listen for custom store navigation event
+  useEffect(() => {
+    const handleNavigateToStore = () => {
+      if (isApproved || isAdmin) {
+        setCurrentView("store");
+      } else {
+        toast({
+          title: "Access Denied",
+          description: "You must be an approved merchant to access the store.",
+          variant: "destructive"
+        });
+      }
+    };
+
+    window.addEventListener('navigateToStore', handleNavigateToStore);
+    return () => {
+      window.removeEventListener('navigateToStore', handleNavigateToStore);
+    };
+  }, [isApproved, isAdmin]);
+
   const fetchUserProfile = async () => {
     if (!user) return;
     

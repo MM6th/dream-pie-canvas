@@ -20,7 +20,7 @@ const ModelingApplicationSection = ({ onSuccess }: ModelingApplicationSectionPro
             <h3 className="text-xl font-bold text-white">Modeling Applications</h3>
             <Button
               onClick={() => setIsModalOpen(true)}
-              className="bg-purple-600 hover:bg-purple-700 text-white"
+              className="bg-blue-600 hover:bg-blue-700 text-white"
             >
               <Plus className="w-4 h-4 mr-2" />
               Apply for Modeling

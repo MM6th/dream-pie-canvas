@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -147,13 +148,15 @@ const BulletinBoard = () => {
         </Button>
       </div>
 
-      {/* Hero Section - Remove heading and keep only background */}
-      <div 
-        className="relative h-96 bg-cover bg-center bg-no-repeat"
-        style={{
-          backgroundImage: `url('/lovable-uploads/8a8289fd-017b-4c07-9e5a-03d19c081cb0.png')`
-        }}
-      />
+      {/* Hero Section - Adjusted width to match content */}
+      <div className="pt-20 max-w-6xl mx-auto">
+        <div 
+          className="relative h-96 bg-cover bg-center bg-no-repeat rounded-lg mb-6"
+          style={{
+            backgroundImage: `url('/lovable-uploads/8a8289fd-017b-4c07-9e5a-03d19c081cb0.png')`
+          }}
+        />
+      </div>
 
       <div className="max-w-6xl mx-auto p-6">
         {/* TV Guide Section */}
