@@ -1,12 +1,9 @@
 
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
-import PhotoGallery from "@/components/PhotoGallery";
 import AudioProductManager from "@/components/AudioProductManager";
 import VideoProductManager from "@/components/VideoProductManager";
-import BulletinPostManager from "@/components/BulletinPostManager";
 import SongCoverManager from "@/components/SongCoverManager";
-import FashionProductManager from "@/components/FashionProductManager";
 import { useApprovalStatus } from "@/hooks/useApprovalStatus";
 
 const ContentManagement = () => {
@@ -14,55 +11,22 @@ const ContentManagement = () => {
 
   return (
     <>
-      <div className="mb-8">
-        <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
-          <CardContent className="p-6">
-            <PhotoGallery />
-          </CardContent>
-        </Card>
+      {/* Audio Products Management */}
+      <div className="mb-12">
+        <AudioProductManager />
       </div>
 
-      <div className="mb-8">
-        <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
-          <CardContent className="p-6">
-            <AudioProductManager />
-          </CardContent>
-        </Card>
+      {/* Video Products Management */}
+      <div className="mb-12">
+        <VideoProductManager />
       </div>
 
-      <div className="mb-8">
-        <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
-          <CardContent className="p-6">
-            <FashionProductManager />
-          </CardContent>
-        </Card>
-      </div>
-
+      {/* Song Cover Management - For non-admin merchants only */}
       {!isAdmin && (
-        <div className="mb-8">
-          <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
-            <CardContent className="p-6">
-              <SongCoverManager />
-            </CardContent>
-          </Card>
+        <div className="mb-12">
+          <SongCoverManager />
         </div>
       )}
-
-      <div className="mb-8">
-        <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
-          <CardContent className="p-6">
-            <VideoProductManager />
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="mb-8">
-        <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
-          <CardContent className="p-6">
-            <BulletinPostManager />
-          </CardContent>
-        </Card>
-      </div>
     </>
   );
 };
