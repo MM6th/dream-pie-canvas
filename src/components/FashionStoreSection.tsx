@@ -1,13 +1,13 @@
+
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingCart, Shirt, Lock, Camera } from "lucide-react";
+import { ShoppingCart, Shirt } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import FashionProductSlideshow from "./FashionProductSlideshow";
-import ModelingApplicationModal from "./ModelingApplicationModal";
 
 interface FashionProduct {
   id: string;
@@ -16,7 +16,6 @@ interface FashionProduct {
   materials: string | null;
   price: number;
   shipping_cost: number;
-  access_level: string | null;
   fashion_product_images: Array<{
     id: string;
     image_url: string;
@@ -30,47 +29,15 @@ interface FashionProduct {
   }>;
 }
 
-interface UserProfile {
-  user_type: string;
-  approval_status: string | null;
-  is_admin: boolean | null;
-}
-
 const FashionStoreSection = () => {
   const { user } = useAuth();
   const [products, setProducts] = useState<FashionProduct[]>([]);
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState<FashionProduct | null>(null);
-  const [modelingModalOpen, setModelingModalOpen] = useState(false);
-  const [selectedProductForModeling, setSelectedProductForModeling] = useState<FashionProduct | null>(null);
-
-  const fetchUserProfile = async () => {
-    if (!user) return null;
-    
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('user_type, approval_status, is_admin')
-        .eq('id', user.id)
-        .single();
-
-      if (error) throw error;
-      return data;
-    } catch (error) {
-      console.error('Error fetching user profile:', error);
-      return null;
-    }
-  };
 
   const fetchProducts = async () => {
     try {
-      // Fetch user profile first
-      const profile = await fetchUserProfile();
-      setUserProfile(profile);
-
-      // Determine what products to fetch based on user type
-      let query = supabase
+      const { data, error } = await supabase
         .from('fashion_products')
         .select(`
           id,
@@ -79,7 +46,6 @@ const FashionStoreSection = () => {
           materials,
           price,
           shipping_cost,
-          access_level,
           fashion_product_images (
             id,
             image_url,
@@ -93,15 +59,6 @@ const FashionStoreSection = () => {
           )
         `)
         .order('created_at', { ascending: false });
-
-      // Filter products based on access level and user type
-      if (!profile || profile.user_type !== 'merchant' || profile.approval_status !== 'approved') {
-        // Show only public products to supporters and non-approved users
-        query = query.eq('access_level', 'public');
-      }
-      // For approved merchants, show all products (public and merchant_only)
-
-      const { data, error } = await query;
 
       if (error) throw error;
 
@@ -128,53 +85,11 @@ const FashionStoreSection = () => {
     fetchProducts();
   }, [user]);
 
-  const canPurchase = (product: FashionProduct) => {
-    if (!user) return false;
-    
-    const accessLevel = product.access_level || 'public';
-    
-    if (accessLevel === 'public') return true;
-    if (accessLevel === 'merchant_only') {
-      return userProfile?.user_type === 'merchant' && userProfile?.approval_status === 'approved';
-    }
-    
-    return false;
-  };
-
-  const getAccessLevelBadge = (product: FashionProduct) => {
-    const accessLevel = product.access_level || 'public';
-    
-    if (accessLevel === 'merchant_only') {
-      return (
-        <Badge className="bg-orange-600 flex items-center gap-1">
-          <Lock className="w-3 h-3" />
-          Merchants Only
-        </Badge>
-      );
-    }
-    
-    return null;
-  };
-
-  const handleApplyForModeling = (product: FashionProduct) => {
-    setSelectedProductForModeling(product);
-    setModelingModalOpen(true);
-  };
-
   const handlePurchase = async (product: FashionProduct) => {
     if (!user) {
       toast({
         title: "Please sign in",
         description: "You need to be logged in to make a purchase",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (!canPurchase(product)) {
-      toast({
-        title: "Access Restricted",
-        description: "This product is only available to approved merchants",
         variant: "destructive"
       });
       return;
@@ -271,7 +186,6 @@ const FashionStoreSection = () => {
                     <div className="text-white font-semibold">
                       ${product.price.toFixed(2)}
                     </div>
-                    {getAccessLevelBadge(product)}
                   </div>
                   
                   {product.materials && (
@@ -280,39 +194,14 @@ const FashionStoreSection = () => {
                     </p>
                   )}
                   
-                  <div className="flex gap-2">
-                    {product.access_level === 'merchant_only' && userProfile?.user_type === 'merchant' && userProfile?.approval_status === 'approved' && !userProfile?.is_admin ? (
-                      <>
-                        <Button
-                          size="sm"
-                          onClick={() => handleApplyForModeling(product)}
-                          className="flex-1 bg-purple-600 hover:bg-purple-700 text-white"
-                        >
-                          <Camera className="w-4 h-4 mr-1" />
-                          Apply to Model
-                        </Button>
-                        <Button
-                          size="sm"
-                          onClick={() => handlePurchase(product)}
-                          disabled={!canPurchase(product)}
-                          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
-                        >
-                          <ShoppingCart className="w-4 h-4 mr-1" />
-                          Buy
-                        </Button>
-                      </>
-                    ) : (
-                      <Button
-                        size="sm"
-                        onClick={() => handlePurchase(product)}
-                        disabled={!canPurchase(product)}
-                        className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                      >
-                        <ShoppingCart className="w-4 h-4 mr-1" />
-                        {canPurchase(product) ? "Buy Now" : "Restricted"}
-                      </Button>
-                    )}
-                  </div>
+                  <Button
+                    size="sm"
+                    onClick={() => handlePurchase(product)}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    <ShoppingCart className="w-4 h-4 mr-1" />
+                    Buy Now
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -328,16 +217,6 @@ const FashionStoreSection = () => {
           onClose={() => setSelectedProduct(null)}
         />
       )}
-
-      <ModelingApplicationModal
-        isOpen={modelingModalOpen}
-        onClose={() => {
-          setModelingModalOpen(false);
-          setSelectedProductForModeling(null);
-        }}
-        product={selectedProductForModeling}
-        onSuccess={fetchProducts}
-      />
     </>
   );
 };
