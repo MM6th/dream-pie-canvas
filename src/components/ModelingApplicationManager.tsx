@@ -45,7 +45,7 @@ const ModelingApplicationManager = () => {
         .from('modeling_applications')
         .select(`
           *,
-          profiles!modeling_applications_merchant_id_fkey (
+          profiles (
             display_name,
             email
           ),
@@ -61,8 +61,7 @@ const ModelingApplicationManager = () => {
       }
 
       console.log('Fetched modeling applications:', data);
-      // Cast the data to ensure proper typing
-      setApplications((data || []) as ModelingApplication[]);
+      setApplications(data || []);
     } catch (error) {
       console.error('Error fetching modeling applications:', error);
     } finally {
