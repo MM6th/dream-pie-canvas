@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -126,15 +125,15 @@ const EditFashionProductModal = ({ isOpen, onClose, product, onSuccess }: EditFa
       // Handle variant updates
       for (const variant of variants) {
         if (variant.isNew) {
-          // Insert new variant with correct column name
+          // Insert new variant - fix TypeScript error by properly casting types
           const { error } = await supabase
             .from('fashion_product_variants')
-            .insert([{
+            .insert({
               fashion_product_id: product.id,
-              size: variant.size,
-              color: variant.color,
+              size: variant.size as any,
+              color: variant.color as any,
               stock_quantity: variant.stock_quantity
-            }]);
+            });
           if (error) throw error;
         } else if (variant.id) {
           // Update existing variant
