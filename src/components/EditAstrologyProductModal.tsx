@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -65,7 +65,7 @@ const EditAstrologyProductModal = ({ product, isOpen, onClose, onSuccess }: Edit
     hours_selected: product.hours_selected,
     buyer_email: product.buyer_email || ''
   });
-  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [thumbnailUrl, setThumbnailUrl] = useState(product.thumbnail_url || '');
 
   const calculateTotalPrice = () => {
     if (!formData.product_type || !formData.delivery_type) return 0;
@@ -84,43 +84,20 @@ const EditAstrologyProductModal = ({ product, isOpen, onClose, onSuccess }: Edit
 
     setLoading(true);
     try {
-      let thumbnailUrl = product.thumbnail_url;
-
-      if (thumbnailFile) {
-        const fileExt = thumbnailFile.name.split('.').pop();
-        const fileName = `${Date.now()}-${Math.random()}.${fileExt}`;
-        const filePath = `astrology-products/${fileName}`;
-
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('user-media')
-          .upload(filePath, thumbnailFile);
-
-        if (uploadError) {
-          console.error('Error uploading thumbnail:', uploadError);
-          throw uploadError;
-        }
-
-        const { data: urlData } = supabase.storage
-          .from('user-media')
-          .getPublicUrl(filePath);
-
-        thumbnailUrl = urlData.publicUrl;
-      }
-
       const totalPrice = calculateTotalPrice();
 
       const { error } = await supabase
         .from('astrology_products')
         .update({
-          product_type: formData.product_type,
+          product_type: formData.product_type as any,
           title: formData.title,
           description: formData.description,
-          delivery_type: formData.delivery_type,
+          delivery_type: formData.delivery_type as any,
           base_price: getBasePrice(formData.product_type, formData.delivery_type),
           hours_selected: formData.delivery_type === 'telephone' ? formData.hours_selected : 1,
           total_price: totalPrice,
           buyer_email: formData.delivery_type === 'telephone' ? formData.buyer_email : null,
-          thumbnail_url: thumbnailUrl,
+          thumbnail_url: thumbnailUrl || null,
           updated_at: new Date().toISOString()
         })
         .eq('id', product.id);
@@ -205,9 +182,8 @@ const EditAstrologyProductModal = ({ product, isOpen, onClose, onSuccess }: Edit
           <div>
             <Label>Thumbnail Image</Label>
             <ImagePicker
-              onImageSelected={setThumbnailFile}
-              currentImage={thumbnailFile}
-              existingImageUrl={product.thumbnail_url}
+              onImageSelect={setThumbnailUrl}
+              currentImageUrl={thumbnailUrl}
             />
           </div>
 

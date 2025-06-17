@@ -53,7 +53,7 @@ const AstrologyProductUploadModal = ({ isOpen, onClose, onSuccess }: AstrologyPr
     hours_selected: 1,
     buyer_email: ''
   });
-  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [thumbnailUrl, setThumbnailUrl] = useState('');
 
   const calculateTotalPrice = () => {
     if (!formData.product_type || !formData.delivery_type) return 0;
@@ -73,44 +73,20 @@ const AstrologyProductUploadModal = ({ isOpen, onClose, onSuccess }: AstrologyPr
 
     setLoading(true);
     try {
-      let thumbnailUrl = '';
-
-      if (thumbnailFile) {
-        const fileExt = thumbnailFile.name.split('.').pop();
-        const fileName = `${Date.now()}-${Math.random()}.${fileExt}`;
-        const filePath = `astrology-products/${fileName}`;
-
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('user-media')
-          .upload(filePath, thumbnailFile);
-
-        if (uploadError) {
-          console.error('Error uploading thumbnail:', uploadError);
-          throw uploadError;
-        }
-
-        const { data: urlData } = supabase.storage
-          .from('user-media')
-          .getPublicUrl(filePath);
-
-        thumbnailUrl = urlData.publicUrl;
-      }
-
       const totalPrice = calculateTotalPrice();
 
       const { error } = await supabase
         .from('astrology_products')
         .insert({
-          admin_id: user.id,
-          product_type: formData.product_type,
+          product_type: formData.product_type as any,
           title: formData.title,
           description: formData.description,
-          delivery_type: formData.delivery_type,
+          delivery_type: formData.delivery_type as any,
           base_price: getBasePrice(formData.product_type, formData.delivery_type),
           hours_selected: formData.delivery_type === 'telephone' ? formData.hours_selected : 1,
           total_price: totalPrice,
           buyer_email: formData.delivery_type === 'telephone' ? formData.buyer_email : null,
-          thumbnail_url: thumbnailUrl
+          thumbnail_url: thumbnailUrl || null
         });
 
       if (error) {
@@ -133,7 +109,7 @@ const AstrologyProductUploadModal = ({ isOpen, onClose, onSuccess }: AstrologyPr
         hours_selected: 1,
         buyer_email: ''
       });
-      setThumbnailFile(null);
+      setThumbnailUrl('');
     } catch (error: any) {
       console.error('Error creating astrology product:', error);
       toast({
@@ -203,8 +179,8 @@ const AstrologyProductUploadModal = ({ isOpen, onClose, onSuccess }: AstrologyPr
           <div>
             <Label>Thumbnail Image</Label>
             <ImagePicker
-              onImageSelected={setThumbnailFile}
-              currentImage={thumbnailFile}
+              onImageSelect={setThumbnailUrl}
+              currentImageUrl={thumbnailUrl}
             />
           </div>
 
