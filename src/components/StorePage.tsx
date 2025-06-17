@@ -2,11 +2,12 @@ import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { AudioLines, Download, DollarSign, Video, Lock, Shirt } from "lucide-react";
+import { AudioLines, Download, DollarSign, Video, Lock, Shirt, Star } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import FashionStoreSection from "./FashionStoreSection";
+import AstrologyStoreSection from "./AstrologyStoreSection";
 
 interface AudioProduct {
   id: string;
@@ -417,7 +418,16 @@ const StorePage = () => {
       <div className="max-w-6xl mx-auto">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-white mb-2">Content Store</h1>
-          <p className="text-gray-300">Discover amazing audio, video, and fashion content from creators</p>
+          <p className="text-gray-300">Discover amazing astrology, fashion, audio, and video content from creators</p>
+        </div>
+
+        {/* Astrology Products Section */}
+        <div className="mb-12">
+          <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+            <Star className="w-6 h-6" />
+            Astrology Readings & Consultations
+          </h2>
+          <AstrologyStoreSection />
         </div>
 
         {/* Fashion Products Section */}

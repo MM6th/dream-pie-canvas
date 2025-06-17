@@ -36,6 +36,104 @@ export type Database = {
         }
         Relationships: []
       }
+      astrology_products: {
+        Row: {
+          admin_id: string
+          base_price: number
+          buyer_email: string | null
+          created_at: string
+          delivery_type: Database["public"]["Enums"]["delivery_type"]
+          description: string | null
+          hours_selected: number | null
+          id: string
+          product_type: Database["public"]["Enums"]["astrology_product_type"]
+          thumbnail_url: string | null
+          title: string
+          total_price: number
+          updated_at: string
+        }
+        Insert: {
+          admin_id: string
+          base_price: number
+          buyer_email?: string | null
+          created_at?: string
+          delivery_type: Database["public"]["Enums"]["delivery_type"]
+          description?: string | null
+          hours_selected?: number | null
+          id?: string
+          product_type: Database["public"]["Enums"]["astrology_product_type"]
+          thumbnail_url?: string | null
+          title: string
+          total_price: number
+          updated_at?: string
+        }
+        Update: {
+          admin_id?: string
+          base_price?: number
+          buyer_email?: string | null
+          created_at?: string
+          delivery_type?: Database["public"]["Enums"]["delivery_type"]
+          description?: string | null
+          hours_selected?: number | null
+          id?: string
+          product_type?: Database["public"]["Enums"]["astrology_product_type"]
+          thumbnail_url?: string | null
+          title?: string
+          total_price?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      astrology_purchases: {
+        Row: {
+          amount_paid: number
+          astrology_product_id: string
+          buyer_email: string
+          created_at: string
+          delivery_type: Database["public"]["Enums"]["delivery_type"]
+          hours_purchased: number | null
+          id: string
+          paypal_transaction_id: string | null
+          purchase_date: string
+          status: string | null
+          user_id: string
+        }
+        Insert: {
+          amount_paid: number
+          astrology_product_id: string
+          buyer_email: string
+          created_at?: string
+          delivery_type: Database["public"]["Enums"]["delivery_type"]
+          hours_purchased?: number | null
+          id?: string
+          paypal_transaction_id?: string | null
+          purchase_date?: string
+          status?: string | null
+          user_id: string
+        }
+        Update: {
+          amount_paid?: number
+          astrology_product_id?: string
+          buyer_email?: string
+          created_at?: string
+          delivery_type?: Database["public"]["Enums"]["delivery_type"]
+          hours_purchased?: number | null
+          id?: string
+          paypal_transaction_id?: string | null
+          purchase_date?: string
+          status?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "astrology_purchases_astrology_product_id_fkey"
+            columns: ["astrology_product_id"]
+            isOneToOne: false
+            referencedRelation: "astrology_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audio_products: {
         Row: {
           access_level: Database["public"]["Enums"]["access_level"] | null
@@ -697,6 +795,12 @@ export type Database = {
     }
     Enums: {
       access_level: "public" | "merchant_only" | "paid"
+      astrology_product_type:
+        | "natal_chart_reading"
+        | "solar_return_reading"
+        | "north_node_reading"
+        | "career_path_reading"
+      delivery_type: "telephone" | "audio_file" | "video_file"
       fashion_color:
         | "black"
         | "white"
@@ -822,6 +926,13 @@ export const Constants = {
   public: {
     Enums: {
       access_level: ["public", "merchant_only", "paid"],
+      astrology_product_type: [
+        "natal_chart_reading",
+        "solar_return_reading",
+        "north_node_reading",
+        "career_path_reading",
+      ],
+      delivery_type: ["telephone", "audio_file", "video_file"],
       fashion_color: ["black", "white", "nude", "red", "blue", "pink", "green"],
       fashion_size: ["XS", "S", "M", "L", "XL", "2XL"],
     },

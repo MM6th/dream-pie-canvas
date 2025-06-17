@@ -1,0 +1,216 @@
+
+import React, { useEffect, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Edit, Trash2, Star, Clock, FileAudio, Video } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
+import EditAstrologyProductModal from "./EditAstrologyProductModal";
+
+interface AstrologyProduct {
+  id: string;
+  product_type: string;
+  title: string;
+  description: string | null;
+  thumbnail_url: string | null;
+  delivery_type: string;
+  base_price: number;
+  hours_selected: number;
+  total_price: number;
+  buyer_email: string | null;
+  created_at: string;
+}
+
+const AstrologyProductManager = () => {
+  const [products, setProducts] = useState<AstrologyProduct[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [editingProduct, setEditingProduct] = useState<AstrologyProduct | null>(null);
+
+  const fetchProducts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('astrology_products')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching astrology products:', error);
+        return;
+      }
+
+      setProducts(data || []);
+    } catch (error) {
+      console.error('Error fetching astrology products:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const handleDelete = async (productId: string) => {
+    if (!confirm('Are you sure you want to delete this astrology product?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('astrology_products')
+        .delete()
+        .eq('id', productId);
+
+      if (error) {
+        console.error('Error deleting product:', error);
+        throw error;
+      }
+
+      toast({
+        title: "Success",
+        description: "Astrology product deleted successfully!"
+      });
+
+      fetchProducts();
+    } catch (error: any) {
+      console.error('Error deleting product:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete product. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const getProductTypeLabel = (type: string) => {
+    const labels = {
+      natal_chart_reading: 'Natal Chart Reading',
+      solar_return_reading: 'Solar Return Reading',
+      north_node_reading: 'North Node Reading',
+      career_path_reading: 'Career Path Reading'
+    };
+    return labels[type] || type;
+  };
+
+  const getDeliveryTypeIcon = (type: string) => {
+    switch (type) {
+      case 'telephone':
+        return <Clock className="w-4 h-4" />;
+      case 'audio_file':
+        return <FileAudio className="w-4 h-4" />;
+      case 'video_file':
+        return <Video className="w-4 h-4" />;
+      default:
+        return <Star className="w-4 h-4" />;
+    }
+  };
+
+  const getDeliveryTypeLabel = (type: string) => {
+    const labels = {
+      telephone: 'Telephone',
+      audio_file: 'Audio File',
+      video_file: 'Video File'
+    };
+    return labels[type] || type;
+  };
+
+  if (loading) {
+    return (
+      <div className="text-white">Loading astrology products...</div>
+    );
+  }
+
+  return (
+    <>
+      <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+        <CardHeader>
+          <CardTitle className="text-white flex items-center gap-2">
+            <Star className="w-5 h-5" />
+            Astrology Products Management
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {products.length === 0 ? (
+            <p className="text-gray-400 text-center py-8">No astrology products created yet.</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {products.map((product) => (
+                <Card key={product.id} className="bg-gray-700/50 border-gray-600">
+                  <CardContent className="p-4">
+                    {product.thumbnail_url && (
+                      <img
+                        src={product.thumbnail_url}
+                        alt={product.title}
+                        className="w-full h-32 object-cover rounded-lg mb-3"
+                      />
+                    )}
+                    
+                    <div className="space-y-3">
+                      <div>
+                        <h3 className="text-white font-medium line-clamp-1">{product.title}</h3>
+                        <Badge variant="outline" className="mt-1 text-xs">
+                          {getProductTypeLabel(product.product_type)}
+                        </Badge>
+                      </div>
+
+                      {product.description && (
+                        <p className="text-gray-400 text-sm line-clamp-2">{product.description}</p>
+                      )}
+
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          {getDeliveryTypeIcon(product.delivery_type)}
+                          <span className="text-gray-300 text-sm">
+                            {getDeliveryTypeLabel(product.delivery_type)}
+                          </span>
+                        </div>
+                        <Badge className="bg-green-600">
+                          ${product.total_price}
+                          {product.delivery_type === 'telephone' && product.hours_selected > 1 && (
+                            <span className="text-xs ml-1">({product.hours_selected}h)</span>
+                          )}
+                        </Badge>
+                      </div>
+
+                      <div className="flex justify-between gap-2 pt-2">
+                        <Button
+                          size="sm"
+                          onClick={() => setEditingProduct(product)}
+                          className="bg-black text-white border-0 hover:bg-black"
+                        >
+                          <Edit className="w-3 h-3 mr-1" />
+                          Edit
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={() => handleDelete(product.id)}
+                          className="bg-black text-white border-0 hover:bg-black"
+                        >
+                          <Trash2 className="w-3 h-3 mr-1" />
+                          Delete
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {editingProduct && (
+        <EditAstrologyProductModal
+          product={editingProduct}
+          isOpen={!!editingProduct}
+          onClose={() => setEditingProduct(null)}
+          onSuccess={() => {
+            setEditingProduct(null);
+            fetchProducts();
+          }}
+        />
+      )}
+    </>
+  );
+};
+
+export default AstrologyProductManager;

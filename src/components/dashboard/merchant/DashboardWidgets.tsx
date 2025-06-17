@@ -6,8 +6,10 @@ import BackgroundUpload from "@/components/BackgroundUpload";
 import AudioUploadModal from "@/components/AudioUploadModal";
 import VideoUploadModal from "@/components/VideoUploadModal";
 import FashionProductUploadModal from "@/components/FashionProductUploadModal";
+import AstrologyProductUploadModal from "@/components/AstrologyProductUploadModal";
 import FashionProductManager from "@/components/FashionProductManager";
 import AudioProductManager from "@/components/AudioProductManager";
+import AstrologyProductManager from "@/components/AstrologyProductManager";
 
 interface DashboardWidgetsProps {
   onSuccess: () => void;
@@ -18,9 +20,52 @@ interface DashboardWidgetsProps {
 
 const DashboardWidgets = ({ onSuccess, onViewStore, onBackgroundUpload, isAdmin }: DashboardWidgetsProps) => {
   const [isFashionModalOpen, setIsFashionModalOpen] = useState(false);
+  const [isAstrologyModalOpen, setIsAstrologyModalOpen] = useState(false);
 
   return (
     <>
+      {/* Astrology Products - Admin Only */}
+      {isAdmin && (
+        <div className="grid grid-cols-1 lg:grid-cols-1 gap-6 mb-8">
+          <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-bold text-white">Astrology Products</h3>
+                <Button
+                  onClick={() => setIsAstrologyModalOpen(true)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  Create Astrology Product
+                </Button>
+              </div>
+              <p className="text-gray-400 mb-4">Create and manage astrology readings and consultations</p>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg">
+                  <div>
+                    <p className="text-white font-medium">Total Astrology Products</p>
+                    <p className="text-gray-400 text-sm">Manage astrology services</p>
+                  </div>
+                  <Button
+                    onClick={onViewStore}
+                    variant="outline"
+                    className="border-gray-600 text-white bg-black hover:bg-gray-800"
+                  >
+                    View in Store
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Astrology Product Management - Admin Only */}
+      {isAdmin && (
+        <div className="mb-12">
+          <AstrologyProductManager />
+        </div>
+      )}
+
       {/* Fashion Products - Admin Only */}
       {isAdmin && (
         <div className="grid grid-cols-1 lg:grid-cols-1 gap-6 mb-8">
@@ -130,6 +175,13 @@ const DashboardWidgets = ({ onSuccess, onViewStore, onBackgroundUpload, isAdmin 
       <FashionProductUploadModal 
         isOpen={isFashionModalOpen}
         onClose={() => setIsFashionModalOpen(false)}
+        onSuccess={onSuccess} 
+      />
+
+      {/* Astrology Product Upload Modal */}
+      <AstrologyProductUploadModal 
+        isOpen={isAstrologyModalOpen}
+        onClose={() => setIsAstrologyModalOpen(false)}
         onSuccess={onSuccess} 
       />
     </>

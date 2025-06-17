@@ -2,12 +2,14 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Clock, CheckCircle, XCircle, RefreshCw, Image, Camera } from "lucide-react";
+import { Users, Clock, CheckCircle, XCircle, RefreshCw, Image, Camera, Star } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import PendingMerchantCard from "./PendingMerchantCard";
 import ApprovedMerchantCard from "./ApprovedMerchantCard";
 import CoverSubmissionManager from "./CoverSubmissionManager";
 import ModelingApplicationManager from "@/components/ModelingApplicationManager";
+import AstrologyProductUploadModal from "@/components/AstrologyProductUploadModal";
+import AstrologyProductManager from "@/components/AstrologyProductManager";
 import { Button } from "../ui/button";
 
 interface Merchant {
