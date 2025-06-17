@@ -78,6 +78,7 @@ const AstrologyProductUploadModal = ({ isOpen, onClose, onSuccess }: AstrologyPr
       const { error } = await supabase
         .from('astrology_products')
         .insert({
+          admin_id: user.id,
           product_type: formData.product_type as any,
           title: formData.title,
           description: formData.description,
