@@ -30,7 +30,7 @@ const ModelingApplicationModal = ({ isOpen, onClose, onSuccess }: ModelingApplic
   const [step, setStep] = useState<'products' | 'photos'>('products');
   const [purchasedProducts, setPurchasedProducts] = useState<FashionProduct[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<FashionProduct | null>(null);
-  const [selectedPhotos, setSelectedPhotos] = useState<string[]>([]);
+  const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -87,17 +87,45 @@ const ModelingApplicationModal = ({ isOpen, onClose, onSuccess }: ModelingApplic
     setStep('photos');
   };
 
+  const uploadImagesAndGetUrls = async (images: File[]): Promise<string[]> => {
+    const uploadPromises = images.map(async (image) => {
+      const fileExt = image.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random()}.${fileExt}`;
+      const filePath = `modeling-photos/${user!.id}/${fileName}`;
+
+      const { data, error } = await supabase.storage
+        .from('user-media')
+        .upload(filePath, image);
+
+      if (error) {
+        console.error('Error uploading image:', error);
+        throw error;
+      }
+
+      const { data: publicUrlData } = supabase.storage
+        .from('user-media')
+        .getPublicUrl(filePath);
+
+      return publicUrlData.publicUrl;
+    });
+
+    return Promise.all(uploadPromises);
+  };
+
   const handleSubmitApplication = async () => {
-    if (!user || !selectedProduct || selectedPhotos.length === 0) return;
+    if (!user || !selectedProduct || selectedImages.length === 0) return;
 
     setSubmitting(true);
     try {
+      // Upload images and get URLs
+      const imageUrls = await uploadImagesAndGetUrls(selectedImages);
+
       const { error } = await supabase
         .from('modeling_applications')
         .insert({
           merchant_id: user.id,
           fashion_product_id: selectedProduct.id,
-          application_photos: selectedPhotos,
+          application_photos: imageUrls,
           status: 'pending'
         });
 
@@ -133,7 +161,7 @@ const ModelingApplicationModal = ({ isOpen, onClose, onSuccess }: ModelingApplic
   const handleClose = () => {
     setStep('products');
     setSelectedProduct(null);
-    setSelectedPhotos([]);
+    setSelectedImages([]);
     onClose();
   };
 
@@ -231,12 +259,12 @@ const ModelingApplicationModal = ({ isOpen, onClose, onSuccess }: ModelingApplic
             </div>
 
             <MultiImagePicker
-              onImagesSelected={setSelectedPhotos}
+              selectedImages={selectedImages}
+              onImagesChange={setSelectedImages}
               maxImages={10}
-              existingImages={selectedPhotos}
             />
 
-            {selectedPhotos.length > 0 && (
+            {selectedImages.length > 0 && (
               <div className="flex justify-end gap-2">
                 <Button
                   variant="outline"
