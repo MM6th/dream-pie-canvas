@@ -10,32 +10,53 @@ const UserStatsDisplay = () => {
 
   useEffect(() => {
     fetchUserStats();
+    
+    // Set up real-time subscription for profile changes
+    const channel = supabase
+      .channel('user-stats-changes')
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'profiles' 
+        }, 
+        () => {
+          // Refetch stats when profiles table changes
+          fetchUserStats();
+        }
+      )
+      .subscribe();
+
+    // Cleanup subscription on unmount
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchUserStats = async () => {
     try {
-      // Get supporter count
-      const { data: supporters, error: supporterError } = await supabase
+      // Get supporter count using count
+      const { count: supporterCount, error: supporterError } = await supabase
         .from('profiles')
-        .select('id', { count: 'exact' })
+        .select('*', { count: 'exact', head: true })
         .eq('user_type', 'supporter');
 
       if (supporterError) {
         console.error('Error fetching supporter count:', supporterError);
       } else {
-        setSupporterCount(supporters?.length || 0);
+        setSupporterCount(supporterCount || 0);
       }
 
-      // Get merchant count
-      const { data: merchants, error: merchantError } = await supabase
+      // Get merchant count using count
+      const { count: merchantCount, error: merchantError } = await supabase
         .from('profiles')
-        .select('id', { count: 'exact' })
+        .select('*', { count: 'exact', head: true })
         .eq('user_type', 'merchant');
 
       if (merchantError) {
         console.error('Error fetching merchant count:', merchantError);
       } else {
-        setMerchantCount(merchants?.length || 0);
+        setMerchantCount(merchantCount || 0);
       }
     } catch (error) {
       console.error('Error fetching user stats:', error);

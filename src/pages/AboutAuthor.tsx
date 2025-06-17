@@ -54,19 +54,19 @@ const AboutAuthor = () => {
           <CardContent className="p-8">
             <div className="text-center mb-8">
               <h1 className="text-4xl font-bold text-white mb-4">About the Author</h1>
-              <div className="mb-6">
-                <img
-                  src="/lovable-uploads/8a8289fd-017b-4c07-9e5a-03d19c081cb0.png"
-                  alt="Author"
-                  className="w-64 h-64 mx-auto rounded-lg object-cover"
-                />
-              </div>
             </div>
 
             <div className="space-y-6 text-gray-300 leading-relaxed">
-              <p>
-                I wouldn't call myself a super-human; just someone who after researching and reflecting realized that he's actualized and is still manifesting their natal chart. Yes, astrology and entertainment is a peculiar mix, and I can't it was intended that way, but when man makes plans God laughs.
-              </p>
+              <div className="flex items-start gap-6 mb-6">
+                <img
+                  src="/lovable-uploads/89cec5e6-7542-413d-b5b2-e64de60f0567.png"
+                  alt="Author Portrait"
+                  className="w-64 h-64 rounded-lg object-cover flex-shrink-0"
+                />
+                <p className="flex-1">
+                  I wouldn't call myself a super-human; just someone who after researching and reflecting realized that he's actualized and is still manifesting their natal chart. Yes, astrology and entertainment is a peculiar mix, and I can't it was intended that way, but when man makes plans God laughs.
+                </p>
+              </div>
 
               <p>
                 It was Aquarius season 2016 when I decided to rebrand my entertainment services. My solar return chart that year showed that my sun landed in my 9th house of higher education, publication, long distant travel, and philosophy. The prior fall I enrolled for my doctorate in business, and that January I started classes. The fact of the matter is, the 7 years since branching out on my own after being released from my label consisted of college education and obtaining my masters; therefore, my rebrand was an advancement to further my career.

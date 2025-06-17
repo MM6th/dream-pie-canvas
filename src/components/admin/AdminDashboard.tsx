@@ -1,266 +1,134 @@
 
-import React, { useEffect, useState, useCallback } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Users, Clock, CheckCircle, XCircle, RefreshCw, Image, Camera, Star } from "lucide-react";
+import React from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Users, RefreshCw } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 import PendingMerchantCard from "./PendingMerchantCard";
 import ApprovedMerchantCard from "./ApprovedMerchantCard";
-import CoverSubmissionManager from "./CoverSubmissionManager";
-import ModelingApplicationManager from "@/components/ModelingApplicationManager";
-import AstrologyProductUploadModal from "@/components/AstrologyProductUploadModal";
-import AstrologyProductManager from "@/components/AstrologyProductManager";
-import { Button } from "../ui/button";
-
-interface Merchant {
-  id: string;
-  email: string;
-  display_name?: string | null;
-  avatar_url?: string | null;
-  facebook_url?: string | null;
-  instagram_url?: string | null;
-  youtube_url?: string | null;
-  pinterest_url?: string | null;
-  onlyfans_url?: string | null;
-  snapchat_url?: string | null;
-  contact_email?: string | null;
-  paypal_email?: string | null;
-  approval_status: string;
-  created_at: string;
-}
+import CoverPhotoManager from "./CoverPhotoManager";
+import AdminDashboardButtons from "./AdminDashboardButtons";
 
 const AdminDashboard = () => {
-  const [pendingMerchants, setPendingMerchants] = useState<Merchant[]>([]);
-  const [approvedMerchants, setApprovedMerchants] = useState<Merchant[]>([]);
-  const [rejectedMerchants, setRejectedMerchants] = useState<Merchant[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'merchants' | 'covers' | 'modeling'>('merchants');
+  const queryClient = useQueryClient();
 
-  const fetchMerchants = useCallback(async () => {
-    setLoading(true);
-    try {
+  const { data: pendingMerchants, isLoading: pendingLoading } = useQuery({
+    queryKey: ['pending-merchants'],
+    queryFn: async () => {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('user_type', 'merchant')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching merchants:', error);
-        return;
-      }
-
-      if (data) {
-        console.log('Fetched merchants data:', data);
-        const pending = data.filter(merchant => merchant.approval_status === 'pending');
-        const approved = data.filter(merchant => merchant.approval_status === 'approved');
-        const rejected = data.filter(merchant => merchant.approval_status === 'rejected');
-        
-        setPendingMerchants(pending);
-        setApprovedMerchants(approved);
-        setRejectedMerchants(rejected);
-      }
-    } catch (error) {
-      console.error('Error fetching merchants:', error);
-    } finally {
-      setLoading(false);
+        .eq('approval_status', 'pending');
+      
+      if (error) throw error;
+      return data;
     }
-  }, []);
+  });
 
-  useEffect(() => {
-    fetchMerchants();
-
-    // Set up realtime subscription for profile changes
-    const channel = supabase
-      .channel('profiles-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'profiles'
-        },
-        () => {
-          console.log('Profile update received, fetching merchants...');
-          fetchMerchants();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [fetchMerchants]);
-
-  const handleApprovalChange = async (merchantId: string, newStatus: string) => {
-    try {
-      const { error } = await supabase.rpc('update_merchant_approval', {
-        merchant_id: merchantId,
-        new_status: newStatus
-      });
-
-      if (error) {
-        console.error('Error updating merchant approval:', error);
-        return;
-      }
-
-      // Refresh the merchant list
-      fetchMerchants();
-    } catch (error) {
-      console.error('Error updating merchant approval:', error);
+  const { data: approvedMerchants, isLoading: approvedLoading } = useQuery({
+    queryKey: ['approved-merchants'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_type', 'merchant')
+        .eq('approval_status', 'approved');
+      
+      if (error) throw error;
+      return data;
     }
+  });
+
+  const handleRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: ['pending-merchants'] });
+    queryClient.invalidateQueries({ queryKey: ['approved-merchants'] });
+    toast({
+      title: "Refreshed",
+      description: "Merchant data has been refreshed"
+    });
   };
 
-  if (loading && !pendingMerchants.length && !approvedMerchants.length) {
-    return (
-      <div className="text-white">Loading admin dashboard...</div>
-    );
-  }
-
-  const renderTabContent = () => {
-    switch (activeTab) {
-      case 'merchants':
-        return (
-          <>
-            {/* Statistics Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-              <Card className="bg-gray-800/50 border-gray-700">
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-4">
-                    <Clock className="w-8 h-8 text-yellow-500" />
-                    <div>
-                      <p className="text-2xl font-bold text-white">{pendingMerchants.length}</p>
-                      <p className="text-gray-400">Pending Applications</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-gray-800/50 border-gray-700">
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-4">
-                    <CheckCircle className="w-8 h-8 text-green-500" />
-                    <div>
-                      <p className="text-2xl font-bold text-white">{approvedMerchants.length}</p>
-                      <p className="text-gray-400">Approved Merchants</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-gray-800/50 border-gray-700">
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-4">
-                    <XCircle className="w-8 h-8 text-red-500" />
-                    <div>
-                      <p className="text-2xl font-bold text-white">{rejectedMerchants.length}</p>
-                      <p className="text-gray-400">Rejected Applications</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Pending Applications */}
-            <div className="mb-8">
-              <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
-                <Users className="w-6 h-6 text-yellow-500" />
-                Merchants - Pending Approval
-              </h3>
-              
-              {pendingMerchants.length === 0 ? (
-                <Card className="bg-gray-800/50 border-gray-700">
-                  <CardContent className="p-6 text-center">
-                    <p className="text-gray-400">No pending merchant applications</p>
-                  </CardContent>
-                </Card>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {pendingMerchants.map((merchant) => (
-                    <PendingMerchantCard
-                      key={merchant.id}
-                      merchant={merchant}
-                      onApprovalChange={handleApprovalChange}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Approved Merchants */}
-            <div className="mb-8">
-              <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                <CheckCircle className="w-5 h-5 text-green-500" />
-                Approved Merchants ({approvedMerchants.length})
-              </h3>
-              
-              {approvedMerchants.length === 0 ? (
-                <Card className="bg-gray-800/50 border-gray-700">
-                  <CardContent className="p-6 text-center">
-                    <p className="text-gray-400">No approved merchants yet.</p>
-                  </CardContent>
-                </Card>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {approvedMerchants.map((merchant) => (
-                    <ApprovedMerchantCard
-                      key={merchant.id}
-                      merchant={merchant}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          </>
-        );
-      case 'covers':
-        return <CoverSubmissionManager />;
-      case 'modeling':
-        return <ModelingApplicationManager />;
-      default:
-        return null;
-    }
+  const handleApprovalChange = () => {
+    queryClient.invalidateQueries({ queryKey: ['pending-merchants'] });
+    queryClient.invalidateQueries({ queryKey: ['approved-merchants'] });
   };
 
   return (
     <div className="space-y-8">
-      <div className="flex justify-between items-center mb-8">
-        <div>
-            <h2 className="text-3xl font-bold text-white mb-2">Admin Dashboard</h2>
-            <p className="text-gray-300">Manage merchant applications and platform content</p>
+      <div>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+              <Users className="w-6 h-6" />
+              Admin Dashboard
+            </h2>
+            <p className="text-gray-400">Manage merchants and platform content</p>
+          </div>
+          <Button 
+            onClick={handleRefresh}
+            variant="outline"
+            className="border-gray-600 text-white bg-transparent hover:bg-gray-700"
+          >
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Refresh
+          </Button>
         </div>
-        <Button onClick={fetchMerchants} disabled={loading} className="bg-black text-white hover:bg-gray-800">
-          <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-          Refresh
-        </Button>
+
+        <AdminDashboardButtons />
       </div>
 
-      {/* Tab Navigation */}
-      <div className="flex gap-2 mb-6">
-        <Button
-          onClick={() => setActiveTab('merchants')}
-          className={`flex items-center gap-2 ${activeTab === 'merchants' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-black text-white hover:bg-gray-800'}`}
-        >
-          <Users className="w-4 h-4" />
-          Merchant Management
-        </Button>
-        <Button
-          onClick={() => setActiveTab('covers')}
-          className={`flex items-center gap-2 ${activeTab === 'covers' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-black text-white hover:bg-gray-800'}`}
-        >
-          <Image className="w-4 h-4" />
-          Cover Submissions
-        </Button>
-        <Button
-          onClick={() => setActiveTab('modeling')}
-          className={`flex items-center gap-2 ${activeTab === 'modeling' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-black text-white hover:bg-gray-800'}`}
-        >
-          <Camera className="w-4 h-4" />
-          Modeling Applications
-        </Button>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="text-white">Merchants Pending Approval</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {pendingLoading ? (
+              <p className="text-gray-400">Loading...</p>
+            ) : pendingMerchants?.length === 0 ? (
+              <p className="text-gray-400">No pending merchants</p>
+            ) : (
+              <div className="space-y-4">
+                {pendingMerchants?.map((merchant) => (
+                  <PendingMerchantCard 
+                    key={merchant.id} 
+                    merchant={merchant} 
+                    onApprovalChange={handleApprovalChange}
+                  />
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="text-white">Approved Merchants</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {approvedLoading ? (
+              <p className="text-gray-400">Loading...</p>
+            ) : approvedMerchants?.length === 0 ? (
+              <p className="text-gray-400">No approved merchants</p>
+            ) : (
+              <div className="space-y-4">
+                {approvedMerchants?.map((merchant) => (
+                  <ApprovedMerchantCard 
+                    key={merchant.id} 
+                    merchant={merchant} 
+                    onApprovalChange={handleApprovalChange}
+                  />
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
-      {renderTabContent()}
+      <CoverPhotoManager />
     </div>
   );
 };

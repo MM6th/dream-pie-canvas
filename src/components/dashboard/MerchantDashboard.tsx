@@ -1,3 +1,4 @@
+
 import React from "react";
 import MediaPlayers from "./MediaPlayers";
 import AdminDashboard from "@/components/admin/AdminDashboard";
@@ -30,14 +31,14 @@ const MerchantDashboard = ({
 
   if (loading) {
     return (
-      <div className="p-6 pt-20">
+      <div className="max-w-6xl mx-auto p-6 pt-20">
         <div className="text-white text-xl">Loading dashboard...</div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 pt-20">
+    <div className="max-w-6xl mx-auto p-6 pt-20">
       <ApprovalStatusBanner approvalStatus={approvalStatus} isAdmin={isAdmin} />
 
       {isAdmin && (

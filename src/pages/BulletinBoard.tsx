@@ -1,37 +1,70 @@
 
-import React, { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, LogOut, Calendar, User, Cloud, ExternalLink, ChevronDown, Tv } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { ArrowLeft, LogOut, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useApprovalStatus } from "@/hooks/useApprovalStatus";
 import { supabase } from "@/integrations/supabase/client";
-import PostInteractions from "@/components/PostInteractions";
-import CurrentThoughtsModal from "@/components/CurrentThoughtsModal";
+import BulletinPostModal from "@/components/BulletinPostModal";
 import TVGuideSection from "@/components/TVGuideSection";
+import PostInteractions from "@/components/PostInteractions";
+import CommentsModal from "@/components/CommentsModal";
 
 interface BulletinPost {
   id: string;
   title: string;
   content: string;
-  image_url?: string;
-  link_url?: string;
-  post_type?: string;
   created_at: string;
-  merchant_id: string;
-  profiles?: {
-    email: string;
-    display_name?: string;
-    avatar_url?: string;
+  user_id: string;
+  profiles: {
+    full_name: string;
+    avatar_url: string;
   };
 }
 
 const BulletinBoard = () => {
   const navigate = useNavigate();
   const { signOut, user } = useAuth();
+  const { isApproved, isAdmin } = useApprovalStatus();
   const [posts, setPosts] = useState<BulletinPost[]>([]);
-  const [displayedPosts, setDisplayedPosts] = useState(6);
   const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedPost, setSelectedPost] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchPosts();
+  }, []);
+
+  const fetchPosts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('bulletin_posts')
+        .select(`
+          id,
+          title,
+          content,
+          created_at,
+          user_id,
+          profiles (
+            full_name,
+            avatar_url
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching posts:', error);
+      } else {
+        setPosts(data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching posts:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleBackToDashboard = () => {
     navigate('/');
@@ -47,201 +80,135 @@ const BulletinBoard = () => {
     }
   };
 
-  const handleLinkClick = (url: string) => {
-    if (url.startsWith('http://') || url.startsWith('https://')) {
-      window.open(url, '_blank', 'noopener,noreferrer');
-    } else {
-      navigate(url);
-    }
-  };
-
-  const fetchPosts = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('bulletin_posts')
-        .select(`
-          *,
-          profiles (
-            email,
-            display_name,
-            avatar_url
-          )
-        `)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching posts:', error);
-        return;
-      }
-
-      if (data) {
-        setPosts(data);
-      }
-    } catch (error) {
-      console.error('Error fetching posts:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadMorePosts = () => {
-    setDisplayedPosts(prev => prev + 6);
-  };
-
-  useEffect(() => {
+  const handlePostSuccess = () => {
     fetchPosts();
+    setIsModalOpen(false);
+  };
 
-    const channel = supabase
-      .channel('bulletin-posts-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'bulletin_posts'
-        },
-        () => {
-          console.log('Realtime update received, fetching posts...');
-          fetchPosts();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      console.log('Cleaning up realtime subscription...');
-      supabase.removeChannel(channel);
-    };
-  }, []);
-
-  const tvGuidePosts = posts.filter(post => post.post_type === 'tv_guide');
-  const otherPosts = posts.filter(post => post.post_type !== 'tv_guide');
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black flex items-center justify-center">
-        <div className="text-white text-xl">Loading bulletin board...</div>
-      </div>
-    );
-  }
+  // Allow supporters and approved merchants to create posts
+  const canCreatePost = user && (isApproved || isAdmin);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black">
-      {/* Navigation Header */}
-      <div className="absolute top-4 left-0 right-0 z-20 max-w-6xl mx-auto px-6 flex justify-between">
-        <div className="flex gap-2">
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800">
+      {/* Header with proper alignment */}
+      <div className="max-w-6xl mx-auto px-6 pt-4 pb-4">
+        <div className="flex justify-between items-center">
           <Button
             onClick={handleBackToDashboard}
-            className="bg-black text-white hover:bg-black hover:text-white border-gray-600"
+            variant="outline"
+            className="border-gray-600 text-white bg-black hover:bg-black hover:text-white"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Dashboard
           </Button>
-          {user && <CurrentThoughtsModal onSuccess={fetchPosts} />}
+          <Button
+            onClick={handleSignOut}
+            className="bg-white text-black hover:bg-gray-100"
+          >
+            <LogOut className="w-4 h-4 mr-2" />
+            Sign Out
+          </Button>
         </div>
-        <Button
-          onClick={handleSignOut}
-          className="bg-white text-black hover:bg-gray-100 hover:text-black"
-        >
-          <LogOut className="w-4 h-4 mr-2" />
-          Sign Out
-        </Button>
       </div>
 
-      {/* Hero Section - Fixed to properly fit the image */}
-      <div className="pt-20 max-w-6xl mx-auto px-6">
-        <div 
-          className="relative h-96 bg-cover bg-center bg-no-repeat rounded-lg mb-6"
-          style={{
-            backgroundImage: `url('/lovable-uploads/8a8289fd-017b-4c07-9e5a-03d19c081cb0.png')`,
-            backgroundSize: 'contain',
-            backgroundPosition: 'center'
-          }}
-        />
+      {/* Cover Photo Section with proper fit */}
+      <div className="max-w-6xl mx-auto px-6 mb-8">
+        <div className="w-full h-64 bg-gray-800 rounded-lg overflow-hidden">
+          <img 
+            src="/lovable-uploads/8a8289fd-017b-4c07-9e5a-03d19c081cb0.png" 
+            alt="Bulletin Board Cover" 
+            className="w-full h-full object-cover object-center"
+          />
+        </div>
       </div>
 
-      <div className="max-w-6xl mx-auto p-6">
-        {/* TV Guide Section */}
-        <TVGuideSection posts={tvGuidePosts} />
+      {/* Main Content with aligned containers */}
+      <div className="max-w-6xl mx-auto px-6">
+        <div className="mb-8">
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h1 className="text-4xl font-bold text-white mb-2">Bulletin Board</h1>
+              <p className="text-gray-300">Share your thoughts and connect with the community</p>
+            </div>
+            {canCreatePost && (
+              <Button
+                onClick={() => setIsModalOpen(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Create Post
+              </Button>
+            )}
+          </div>
 
-        {/* Unified Posts Section */}
-        <div className="mb-12">
-          <h2 className="text-3xl font-bold text-white mb-6 flex items-center gap-2">
-            <Cloud className="w-8 h-8 text-white" />
-            Community Bulletin
-          </h2>
-          
-          {otherPosts.length > 0 ? (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {otherPosts.slice(0, displayedPosts).map((post) => (
-                <Card key={post.id} className="bg-gray-800 border-gray-700 max-w-2xl">
-                  <CardHeader className="p-0">
-                    {post.image_url && (
-                      <div className="relative">
-                        <img
-                          src={post.image_url}
-                          alt={post.title}
-                          className="w-full object-contain rounded-t-lg"
-                        />
-                      </div>
-                    )}
-                  </CardHeader>
+          {/* TV Guide Section - only for approved merchants/admins */}
+          {(isApproved || isAdmin) && (
+            <div className="mb-8">
+              <TVGuideSection />
+            </div>
+          )}
+
+          {/* Posts Section */}
+          <div className="space-y-6">
+            {loading ? (
+              <div className="text-center text-white">Loading posts...</div>
+            ) : posts.length === 0 ? (
+              <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+                <CardContent className="p-8 text-center">
+                  <p className="text-gray-400">No posts yet. Be the first to share something!</p>
+                </CardContent>
+              </Card>
+            ) : (
+              posts.map((post) => (
+                <Card key={post.id} className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
                   <CardContent className="p-6">
-                    <CardTitle className="text-white text-2xl mb-4">{post.title}</CardTitle>
-                    <p className="text-gray-300 text-lg mb-6 leading-relaxed">{post.content}</p>
-                    
-                    <div className="flex items-center gap-4 text-sm text-gray-400 mb-6">
-                      <div className="flex items-center gap-2">
-                        {post.profiles?.avatar_url ? (
-                          <img
-                            src={post.profiles.avatar_url}
-                            alt="Avatar"
-                            className="w-8 h-8 rounded-full object-cover"
+                    <div className="flex items-start space-x-4">
+                      <img 
+                        src={post.profiles?.avatar_url || "/placeholder.svg"} 
+                        alt="Author" 
+                        className="w-12 h-12 rounded-full object-cover"
+                      />
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2 mb-2">
+                          <h3 className="text-lg font-semibold text-white">{post.title}</h3>
+                          <span className="text-sm text-gray-400">
+                            by {post.profiles?.full_name || 'Anonymous'}
+                          </span>
+                        </div>
+                        <p className="text-gray-300 mb-4 whitespace-pre-wrap">{post.content}</p>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-500">
+                            {new Date(post.created_at).toLocaleDateString()}
+                          </span>
+                          <PostInteractions 
+                            postId={post.id} 
+                            onCommentsClick={() => setSelectedPost(post.id)}
                           />
-                        ) : (
-                          <User className="w-6 h-6" />
-                        )}
-                        {post.profiles?.display_name || post.profiles?.email || 'Community'}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Calendar className="w-4 h-4" />
-                        {new Date(post.created_at).toLocaleDateString()}
+                        </div>
                       </div>
                     </div>
-
-                    {post.link_url && (
-                        <Button
-                          onClick={() => handleLinkClick(post.link_url!)}
-                          size="sm"
-                          className="mb-4 bg-blue-600 hover:bg-blue-700"
-                        >
-                          <ExternalLink className="w-4 h-4 mr-2" />
-                          Learn More
-                        </Button>
-                      )}
-
-                    <PostInteractions postId={post.id} />
                   </CardContent>
                 </Card>
-              ))}
-            </div>
-          ) : (
-            <Card className="bg-gray-800 border-gray-700 max-w-2xl">
-              <CardContent className="p-6">
-                 <p className="text-gray-300 text-lg text-center">No community posts on the bulletin board yet. Be the first to share!</p>
-              </CardContent>
-            </Card>
-          )}
-
-          {otherPosts.length > displayedPosts && (
-            <div className="text-center mt-6">
-              <Button onClick={loadMorePosts} variant="outline" className="border-gray-600 text-white hover:bg-gray-700">
-                <ChevronDown className="w-4 h-4 mr-2" />
-                Load More Posts
-              </Button>
-            </div>
-          )}
+              ))
+            )}
+          </div>
         </div>
       </div>
+
+      {/* Modals */}
+      <BulletinPostModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={handlePostSuccess}
+      />
+
+      {selectedPost && (
+        <CommentsModal 
+          postId={selectedPost}
+          isOpen={!!selectedPost}
+          onClose={() => setSelectedPost(null)}
+        />
+      )}
     </div>
   );
 };
