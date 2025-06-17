@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,6 +54,16 @@ const AstrologyProductUploadModal = ({ isOpen, onClose, onSuccess }: AstrologyPr
     buyer_email: ''
   });
   const [thumbnailUrl, setThumbnailUrl] = useState('');
+
+  // Auto-populate title when product type changes
+  useEffect(() => {
+    if (formData.product_type) {
+      const selectedType = productTypes.find(type => type.value === formData.product_type);
+      if (selectedType) {
+        setFormData(prev => ({ ...prev, title: selectedType.label }));
+      }
+    }
+  }, [formData.product_type]);
 
   const calculateTotalPrice = () => {
     if (!formData.product_type || !formData.delivery_type) return 0;
@@ -141,7 +151,7 @@ const AstrologyProductUploadModal = ({ isOpen, onClose, onSuccess }: AstrologyPr
               onValueChange={(value) => setFormData(prev => ({ ...prev, product_type: value }))}
             >
               <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
-                <SelectValue placeholder="Select product type" />
+                <SelectValue placeholder="Select product type" className="text-white" />
               </SelectTrigger>
               <SelectContent className="bg-gray-700 border-gray-600">
                 {productTypes.map((type) => (
@@ -159,14 +169,14 @@ const AstrologyProductUploadModal = ({ isOpen, onClose, onSuccess }: AstrologyPr
               id="title"
               value={formData.title}
               onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-              placeholder="Enter product title"
+              placeholder="Product title will be auto-populated"
               className="bg-gray-700 border-gray-600 text-white"
               required
             />
           </div>
 
           <div>
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description">Description*</Label>
             <Textarea
               id="description"
               value={formData.description}
@@ -174,6 +184,7 @@ const AstrologyProductUploadModal = ({ isOpen, onClose, onSuccess }: AstrologyPr
               placeholder="Enter product description"
               className="bg-gray-700 border-gray-600 text-white"
               rows={3}
+              required
             />
           </div>
 
@@ -257,7 +268,7 @@ const AstrologyProductUploadModal = ({ isOpen, onClose, onSuccess }: AstrologyPr
             </Button>
             <Button
               type="submit"
-              disabled={loading || !formData.product_type || !formData.title || !formData.delivery_type}
+              disabled={loading || !formData.product_type || !formData.title || !formData.delivery_type || !formData.description}
               className="bg-blue-600 hover:bg-blue-700"
             >
               {loading ? (

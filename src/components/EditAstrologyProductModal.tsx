@@ -143,7 +143,7 @@ const EditAstrologyProductModal = ({ product, isOpen, onClose, onSuccess }: Edit
               onValueChange={(value) => setFormData(prev => ({ ...prev, product_type: value }))}
             >
               <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
-                <SelectValue placeholder="Select product type" />
+                <SelectValue placeholder="Select product type" className="text-white" />
               </SelectTrigger>
               <SelectContent className="bg-gray-700 border-gray-600">
                 {productTypes.map((type) => (
@@ -168,7 +168,7 @@ const EditAstrologyProductModal = ({ product, isOpen, onClose, onSuccess }: Edit
           </div>
 
           <div>
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description">Description*</Label>
             <Textarea
               id="description"
               value={formData.description}
@@ -176,6 +176,7 @@ const EditAstrologyProductModal = ({ product, isOpen, onClose, onSuccess }: Edit
               placeholder="Enter product description"
               className="bg-gray-700 border-gray-600 text-white"
               rows={3}
+              required
             />
           </div>
 
@@ -259,7 +260,7 @@ const EditAstrologyProductModal = ({ product, isOpen, onClose, onSuccess }: Edit
             </Button>
             <Button
               type="submit"
-              disabled={loading || !formData.product_type || !formData.title || !formData.delivery_type}
+              disabled={loading || !formData.product_type || !formData.title || !formData.delivery_type || !formData.description}
               className="bg-blue-600 hover:bg-blue-700"
             >
               {loading ? (

@@ -120,7 +120,7 @@ const Films = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800">
       {/* Navigation Header */}
-      <div className="absolute top-4 left-4 right-4 z-20 flex justify-between">
+      <div className="absolute top-4 left-0 right-0 z-20 max-w-6xl mx-auto px-6 flex justify-between">
         <Button
           onClick={handleBackToDashboard}
           variant="outline"
@@ -139,17 +139,19 @@ const Films = () => {
       </div>
 
       {/* Hero Section */}
-      <div 
-        className="relative h-96 bg-cover bg-center bg-no-repeat flex items-center justify-center"
-        style={{
-          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=1200&h=400&fit=crop')`
-        }}
-      >
-        <div className="text-center text-white z-10">
-          <h1 className="text-6xl font-bold mb-4 text-shadow-lg">Film Collection</h1>
-          <p className="text-xl text-gray-200 max-w-2xl mx-auto px-4">
-            Discover extraordinary stories from independent filmmakers and acclaimed directors
-          </p>
+      <div className="pt-20 max-w-6xl mx-auto px-6">
+        <div 
+          className="relative h-96 bg-cover bg-center bg-no-repeat rounded-lg mb-6 flex items-center justify-center"
+          style={{
+            backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=1200&h=400&fit=crop')`
+          }}
+        >
+          <div className="text-center text-white z-10">
+            <h1 className="text-6xl font-bold mb-4 text-shadow-lg">Film Collection</h1>
+            <p className="text-xl text-gray-200 max-w-2xl mx-auto px-4">
+              Discover extraordinary stories from independent filmmakers and acclaimed directors
+            </p>
+          </div>
         </div>
       </div>
 

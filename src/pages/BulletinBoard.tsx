@@ -127,7 +127,7 @@ const BulletinBoard = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black">
       {/* Navigation Header */}
-      <div className="absolute top-4 left-4 right-4 z-20 flex justify-between">
+      <div className="absolute top-4 left-0 right-0 z-20 max-w-6xl mx-auto px-6 flex justify-between">
         <div className="flex gap-2">
           <Button
             onClick={handleBackToDashboard}
@@ -148,12 +148,14 @@ const BulletinBoard = () => {
         </Button>
       </div>
 
-      {/* Hero Section - Adjusted width to match content */}
-      <div className="pt-20 max-w-6xl mx-auto">
+      {/* Hero Section - Fixed to properly fit the image */}
+      <div className="pt-20 max-w-6xl mx-auto px-6">
         <div 
           className="relative h-96 bg-cover bg-center bg-no-repeat rounded-lg mb-6"
           style={{
-            backgroundImage: `url('/lovable-uploads/8a8289fd-017b-4c07-9e5a-03d19c081cb0.png')`
+            backgroundImage: `url('/lovable-uploads/8a8289fd-017b-4c07-9e5a-03d19c081cb0.png')`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center'
           }}
         />
       </div>

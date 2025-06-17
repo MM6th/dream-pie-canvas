@@ -28,7 +28,7 @@ const DashboardHeader = ({
   const showNavigation = userType === 'supporter' || isApproved || isAdmin;
 
   return (
-    <div className="absolute top-4 left-4 right-4 z-20 flex justify-between">
+    <div className="absolute top-4 left-0 right-0 z-20 max-w-6xl mx-auto px-6 flex justify-between">
       <div className="flex gap-2">
         {userType === "merchant" && (
           <MerchantProfileModal onProfileUpdate={onProfileUpdate}>
