@@ -131,8 +131,7 @@ const BulletinBoard = () => {
         <div className="flex gap-2">
           <Button
             onClick={handleBackToDashboard}
-            variant="outline"
-            className="border-gray-600 text-white hover:bg-white hover:text-black"
+            className="bg-black text-white hover:bg-black hover:text-white border-gray-600"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Dashboard
@@ -154,7 +153,7 @@ const BulletinBoard = () => {
           className="relative h-96 bg-cover bg-center bg-no-repeat rounded-lg mb-6"
           style={{
             backgroundImage: `url('/lovable-uploads/8a8289fd-017b-4c07-9e5a-03d19c081cb0.png')`,
-            backgroundSize: 'cover',
+            backgroundSize: 'contain',
             backgroundPosition: 'center'
           }}
         />

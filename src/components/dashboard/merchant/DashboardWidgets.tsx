@@ -23,7 +23,7 @@ const DashboardWidgets = ({ onSuccess, onViewStore, onBackgroundUpload, isAdmin 
   const [isAstrologyModalOpen, setIsAstrologyModalOpen] = useState(false);
 
   return (
-    <>
+    <div className="max-w-6xl mx-auto">
       {/* Astrology Products - Admin Only */}
       {isAdmin && (
         <div className="grid grid-cols-1 lg:grid-cols-1 gap-6 mb-8">
@@ -184,7 +184,7 @@ const DashboardWidgets = ({ onSuccess, onViewStore, onBackgroundUpload, isAdmin 
         onClose={() => setIsAstrologyModalOpen(false)}
         onSuccess={onSuccess} 
       />
-    </>
+    </div>
   );
 };
 

@@ -70,6 +70,18 @@ const BackgroundUpload = ({ onUploadSuccess }: BackgroundUploadProps) => {
         throw updateError;
       }
 
+      // Record the upload in user_uploads table to count towards storage limit
+      await supabase
+        .from('user_uploads')
+        .insert({
+          user_id: user.id,
+          file_name: file.name,
+          file_path: fileName,
+          file_size: file.size,
+          file_type: file.type,
+          storage_bucket: 'backgrounds'
+        });
+
       toast({
         title: "Success",
         description: "Background image uploaded successfully!"
@@ -90,7 +102,7 @@ const BackgroundUpload = ({ onUploadSuccess }: BackgroundUploadProps) => {
   return (
     <div className="border-2 border-dashed border-gray-600 rounded-lg p-8 text-center">
       <p className="text-gray-400 mb-2">Drop your background image here</p>
-      <p className="text-sm text-gray-500 mb-4">Recommended: 1920x1080 or 2560x1440 pixels</p>
+      <p className="text-sm text-gray-500 mb-4">Recommended: 1000x864 pixels</p>
       <Button 
         onClick={handleFileSelect}
         disabled={uploading}

@@ -13,7 +13,7 @@ interface SupporterDashboardProps {
 
 const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedVideos }: SupporterDashboardProps) => {
   return (
-    <div className="p-6 pt-20">
+    <div className="max-w-6xl mx-auto p-6 pt-20">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-white mb-2">Supporter Dashboard</h1>
         <p className="text-gray-300">Discover and enjoy amazing content from creators</p>

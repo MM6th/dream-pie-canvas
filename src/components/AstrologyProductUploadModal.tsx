@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
@@ -47,23 +46,11 @@ const AstrologyProductUploadModal = ({ isOpen, onClose, onSuccess }: AstrologyPr
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     product_type: '',
-    title: '',
     description: '',
     delivery_type: '',
-    hours_selected: 1,
-    buyer_email: ''
+    hours_selected: 1
   });
   const [thumbnailUrl, setThumbnailUrl] = useState('');
-
-  // Auto-populate title when product type changes
-  useEffect(() => {
-    if (formData.product_type) {
-      const selectedType = productTypes.find(type => type.value === formData.product_type);
-      if (selectedType) {
-        setFormData(prev => ({ ...prev, title: selectedType.label }));
-      }
-    }
-  }, [formData.product_type]);
 
   const calculateTotalPrice = () => {
     if (!formData.product_type || !formData.delivery_type) return 0;
@@ -77,6 +64,11 @@ const AstrologyProductUploadModal = ({ isOpen, onClose, onSuccess }: AstrologyPr
     return basePrice;
   };
 
+  const getTitle = () => {
+    const selectedType = productTypes.find(type => type.value === formData.product_type);
+    return selectedType ? selectedType.label : '';
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
@@ -84,19 +76,20 @@ const AstrologyProductUploadModal = ({ isOpen, onClose, onSuccess }: AstrologyPr
     setLoading(true);
     try {
       const totalPrice = calculateTotalPrice();
+      const title = getTitle();
 
       const { error } = await supabase
         .from('astrology_products')
         .insert({
           admin_id: user.id,
           product_type: formData.product_type as any,
-          title: formData.title,
+          title: title,
           description: formData.description,
           delivery_type: formData.delivery_type as any,
           base_price: getBasePrice(formData.product_type, formData.delivery_type),
           hours_selected: formData.delivery_type === 'telephone' ? formData.hours_selected : 1,
           total_price: totalPrice,
-          buyer_email: formData.delivery_type === 'telephone' ? formData.buyer_email : null,
+          buyer_email: null,
           thumbnail_url: thumbnailUrl || null
         });
 
@@ -114,11 +107,9 @@ const AstrologyProductUploadModal = ({ isOpen, onClose, onSuccess }: AstrologyPr
       onClose();
       setFormData({
         product_type: '',
-        title: '',
         description: '',
         delivery_type: '',
-        hours_selected: 1,
-        buyer_email: ''
+        hours_selected: 1
       });
       setThumbnailUrl('');
     } catch (error: any) {
@@ -163,17 +154,12 @@ const AstrologyProductUploadModal = ({ isOpen, onClose, onSuccess }: AstrologyPr
             </Select>
           </div>
 
-          <div>
-            <Label htmlFor="title">Title*</Label>
-            <Input
-              id="title"
-              value={formData.title}
-              onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-              placeholder="Product title will be auto-populated"
-              className="bg-gray-700 border-gray-600 text-white"
-              required
-            />
-          </div>
+          {formData.product_type && (
+            <div className="p-3 bg-gray-700 rounded-lg">
+              <p className="text-white font-medium">Product Title: {getTitle()}</p>
+              <p className="text-gray-400 text-sm">This will be displayed in the store</p>
+            </div>
+          )}
 
           <div>
             <Label htmlFor="description">Description*</Label>
@@ -216,32 +202,26 @@ const AstrologyProductUploadModal = ({ isOpen, onClose, onSuccess }: AstrologyPr
           </div>
 
           {formData.delivery_type === 'telephone' && (
-            <>
-              <div>
-                <Label htmlFor="hours">Hours*</Label>
-                <Input
-                  id="hours"
-                  type="number"
-                  min="1"
-                  value={formData.hours_selected}
-                  onChange={(e) => setFormData(prev => ({ ...prev, hours_selected: parseInt(e.target.value) || 1 }))}
-                  className="bg-gray-700 border-gray-600 text-white"
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="buyer_email">Buyer Email (for contact)*</Label>
-                <Input
-                  id="buyer_email"
-                  type="email"
-                  value={formData.buyer_email}
-                  onChange={(e) => setFormData(prev => ({ ...prev, buyer_email: e.target.value }))}
-                  placeholder="Enter buyer's email for contact"
-                  className="bg-gray-700 border-gray-600 text-white"
-                  required
-                />
-              </div>
-            </>
+            <div>
+              <Label htmlFor="hours">Hours*</Label>
+              <input
+                id="hours"
+                type="number"
+                min="1"
+                value={formData.hours_selected}
+                onChange={(e) => setFormData(prev => ({ ...prev, hours_selected: parseInt(e.target.value) || 1 }))}
+                className="w-full bg-gray-700 border border-gray-600 text-white rounded px-3 py-2"
+                required
+              />
+            </div>
+          )}
+
+          {formData.delivery_type && !formData.delivery_type.includes('telephone') && (
+            <div className="p-3 bg-blue-900/20 border border-blue-500/30 rounded-lg">
+              <p className="text-blue-300 text-sm">
+                📧 <strong>Important:</strong> When a customer purchases this product, they will be prompted to provide their email address during checkout for file delivery.
+              </p>
+            </div>
           )}
 
           {formData.product_type && formData.delivery_type && (
@@ -268,7 +248,7 @@ const AstrologyProductUploadModal = ({ isOpen, onClose, onSuccess }: AstrologyPr
             </Button>
             <Button
               type="submit"
-              disabled={loading || !formData.product_type || !formData.title || !formData.delivery_type || !formData.description}
+              disabled={loading || !formData.product_type || !formData.delivery_type || !formData.description}
               className="bg-blue-600 hover:bg-blue-700"
             >
               {loading ? (
