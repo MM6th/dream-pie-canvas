@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,61 +19,64 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("merchants");
 
   const { data: pendingMerchants, isLoading: pendingLoading } = useQuery({
-    queryKey: ['pending-merchants'],
+    queryKey: ['pendingMerchants'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('user_type', 'merchant')
-        .eq('approval_status', 'pending');
-      
+        .eq('approval_status', 'pending')
+        .order('created_at', { ascending: false });
+
       if (error) throw error;
       return data;
     }
   });
 
   const { data: approvedMerchants, isLoading: approvedLoading } = useQuery({
-    queryKey: ['approved-merchants'],
+    queryKey: ['approvedMerchants'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('user_type', 'merchant')
-        .eq('approval_status', 'approved');
-      
+        .eq('approval_status', 'approved')
+        .order('created_at', { ascending: false });
+
       if (error) throw error;
       return data;
     }
   });
 
-  const handleRefresh = () => {
-    queryClient.invalidateQueries({ queryKey: ['pending-merchants'] });
-    queryClient.invalidateQueries({ queryKey: ['approved-merchants'] });
-    toast({
-      title: "Refreshed",
-      description: "Merchant data has been refreshed"
-    });
-  };
-
   const handleApprovalChange = async (merchantId: string, newStatus: string) => {
     try {
-      const { error } = await supabase.rpc('update_merchant_approval', {
-        merchant_id: merchantId,
-        new_status: newStatus
-      });
+      const { error } = await supabase
+        .from('profiles')
+        .update({ approval_status: newStatus })
+        .eq('id', merchantId);
 
       if (error) throw error;
 
-      queryClient.invalidateQueries({ queryKey: ['pending-merchants'] });
-      queryClient.invalidateQueries({ queryKey: ['approved-merchants'] });
+      toast({
+        title: "Success",
+        description: `Merchant ${newStatus} successfully!`
+      });
+
+      queryClient.invalidateQueries({ queryKey: ['pendingMerchants'] });
+      queryClient.invalidateQueries({ queryKey: ['approvedMerchants'] });
     } catch (error) {
       console.error('Error updating approval status:', error);
       toast({
         title: "Error",
-        description: "Failed to update merchant approval status",
+        description: "Failed to update merchant status. Please try again.",
         variant: "destructive"
       });
     }
+  };
+
+  const handleRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: ['pendingMerchants'] });
+    queryClient.invalidateQueries({ queryKey: ['approvedMerchants'] });
   };
 
   return (
@@ -161,7 +165,6 @@ const AdminDashboard = () => {
                     <ApprovedMerchantCard
                       key={merchant.id}
                       merchant={merchant}
-                      onApprovalChange={handleApprovalChange}
                     />
                   ))}
                 </div>

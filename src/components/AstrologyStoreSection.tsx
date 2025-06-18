@@ -12,7 +12,7 @@ interface AstrologyProduct {
   id: string;
   title: string;
   description: string | null;
-  price: number;
+  base_price: number;
   thumbnail_url: string | null;
   delivery_type: string | null;
   total_price: number;
