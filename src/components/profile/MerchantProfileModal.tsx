@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,19 +10,29 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 
 interface MerchantProfileModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSuccess: () => void;
-  profile: any;
+  isOpen?: boolean;
+  onClose?: () => void;
+  onSuccess?: () => void;
+  profile?: any;
+  onProfileUpdate?: () => void;
+  children?: React.ReactNode;
 }
 
-const MerchantProfileModal = ({ isOpen, onClose, onSuccess, profile }: MerchantProfileModalProps) => {
+const MerchantProfileModal = ({ 
+  isOpen, 
+  onClose, 
+  onSuccess, 
+  profile, 
+  onProfileUpdate,
+  children 
+}: MerchantProfileModalProps) => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [displayName, setDisplayName] = useState(profile?.display_name || '');
   const [businessName, setBusinessName] = useState(profile?.business_name || '');
   const [businessDescription, setBusinessDescription] = useState(profile?.business_description || '');
   const [website, setWebsite] = useState(profile?.website || '');
+  const [internalOpen, setInternalOpen] = useState(false);
 
   useEffect(() => {
     if (profile) {
@@ -57,8 +67,10 @@ const MerchantProfileModal = ({ isOpen, onClose, onSuccess, profile }: MerchantP
         description: "Profile updated successfully!"
       });
 
-      onSuccess();
-      onClose();
+      if (onSuccess) onSuccess();
+      if (onProfileUpdate) onProfileUpdate();
+      if (onClose) onClose();
+      setInternalOpen(false);
     } catch (error) {
       console.error('Error updating profile:', error);
       toast({
@@ -71,8 +83,95 @@ const MerchantProfileModal = ({ isOpen, onClose, onSuccess, profile }: MerchantP
     }
   };
 
+  const dialogOpen = isOpen !== undefined ? isOpen : internalOpen;
+  const setDialogOpen = onClose !== undefined ? 
+    (open: boolean) => { if (!open) onClose(); } : 
+    setInternalOpen;
+
+  // If children are provided, use trigger pattern
+  if (children) {
+    return (
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogTrigger asChild>
+          {children}
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-[600px] bg-gray-800 border-gray-700">
+          <DialogHeader>
+            <DialogTitle className="text-white">Update Merchant Profile</DialogTitle>
+          </DialogHeader>
+          
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="displayName" className="text-white">Display Name</Label>
+              <Input
+                id="displayName"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                placeholder="Enter your display name"
+                required
+                className="bg-gray-700 border-gray-600 text-white"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="businessName" className="text-white">Business Name</Label>
+              <Input
+                id="businessName"
+                value={businessName}
+                onChange={(e) => setBusinessName(e.target.value)}
+                placeholder="Enter your business name"
+                className="bg-gray-700 border-gray-600 text-white"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="businessDescription" className="text-white">Business Description</Label>
+              <Textarea
+                id="businessDescription"
+                value={businessDescription}
+                onChange={(e) => setBusinessDescription(e.target.value)}
+                placeholder="Describe your business..."
+                rows={4}
+                className="bg-gray-700 border-gray-600 text-white"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="website" className="text-white">Website</Label>
+              <Input
+                id="website"
+                value={website}
+                onChange={(e) => setWebsite(e.target.value)}
+                placeholder="https://your-website.com"
+                className="bg-gray-700 border-gray-600 text-white"
+              />
+            </div>
+            
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                onClick={() => setDialogOpen(false)}
+                className="bg-black text-white border-0 hover:bg-black"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={loading}
+                className="bg-white hover:bg-gray-100 text-black"
+              >
+                {loading ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  // Original controlled pattern
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
       <DialogContent className="sm:max-w-[600px] bg-gray-800 border-gray-700">
         <DialogHeader>
           <DialogTitle className="text-white">Update Merchant Profile</DialogTitle>
@@ -128,7 +227,7 @@ const MerchantProfileModal = ({ isOpen, onClose, onSuccess, profile }: MerchantP
           <div className="flex justify-end gap-2">
             <Button
               type="button"
-              onClick={onClose}
+              onClick={() => setDialogOpen(false)}
               className="bg-black text-white border-0 hover:bg-black"
             >
               Cancel

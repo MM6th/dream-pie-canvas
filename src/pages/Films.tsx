@@ -175,9 +175,9 @@ const Films = () => {
                       <p className="text-gray-300 mb-4">{video.description}</p>
                     )}
                     <VideoPlayer
-                      src={video.video_file_url}
-                      poster={video.thumbnail_url || undefined}
-                      backgroundMusicSrc={video.background_music_url || undefined}
+                      videoUrl={video.video_file_url}
+                      thumbnailUrl={video.thumbnail_url || undefined}
+                      backgroundMusicUrl={video.background_music_url || undefined}
                     />
                     <div className="mt-4 text-sm text-gray-500">
                       {new Date(video.created_at).toLocaleDateString()}

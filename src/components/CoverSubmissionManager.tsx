@@ -13,22 +13,40 @@ const CoverSubmissionManager = () => {
   const { data: submissions, isLoading } = useQuery({
     queryKey: ['cover-submissions'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Get submissions first
+      const { data: submissionsData, error: submissionsError } = await supabase
         .from('song_cover_submissions')
-        .select(`
-          *,
-          audio_products (
-            title,
-            artist_name
-          ),
-          profiles (
-            display_name
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
       
-      if (error) throw error;
-      return data;
+      if (submissionsError) throw submissionsError;
+
+      // Enrich with audio product and profile data
+      const enrichedSubmissions = await Promise.all(
+        (submissionsData || []).map(async (submission) => {
+          // Get audio product details
+          const { data: audioData } = await supabase
+            .from('audio_products')
+            .select('title, artist_name')
+            .eq('id', submission.audio_product_id)
+            .single();
+
+          // Get profile details
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('display_name')
+            .eq('id', submission.merchant_id)
+            .single();
+
+          return {
+            ...submission,
+            audio_products: audioData,
+            profiles: profileData
+          };
+        })
+      );
+
+      return enrichedSubmissions;
     }
   });
 
