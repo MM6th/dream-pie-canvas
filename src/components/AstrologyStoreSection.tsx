@@ -3,7 +3,7 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Star, Calendar, Clock } from "lucide-react";
+import { Star, Clock } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -81,10 +81,10 @@ const AstrologyStoreSection = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {astrologyProducts.map((product) => (
           <Card key={product.id} className="bg-gray-800 border-gray-700 hover:border-purple-500 transition-colors">
-            {product.image_url && (
+            {product.thumbnail_url && (
               <CardHeader className="p-0">
                 <img
-                  src={product.image_url}
+                  src={product.thumbnail_url}
                   alt={product.title}
                   className="w-full h-48 object-cover rounded-t-lg"
                 />
@@ -97,18 +97,20 @@ const AstrologyStoreSection = () => {
               <div className="flex items-center gap-4 text-sm text-gray-400 mb-4">
                 <div className="flex items-center gap-1">
                   <Clock className="w-4 h-4" />
-                  {product.delivery_time}
+                  {product.delivery_type === 'telephone' ? 'Phone Call' : 
+                   product.delivery_type === 'audio_file' ? 'Audio File' :
+                   product.delivery_type === 'video_file' ? 'Video File' : 'Digital Delivery'}
                 </div>
                 <Badge variant="outline" className="border-purple-400 text-purple-400">
-                  ${product.price}
+                  ${product.total_price}
                 </Badge>
               </div>
 
               <Button
-                onClick={() => handlePurchase(product.id, product.price)}
+                onClick={() => handlePurchase(product.id, product.total_price)}
                 className="w-full bg-purple-600 hover:bg-purple-700 text-white"
               >
-                Purchase Reading - ${product.price}
+                Purchase Reading - ${product.total_price}
               </Button>
             </CardContent>
           </Card>
