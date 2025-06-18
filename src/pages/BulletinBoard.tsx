@@ -11,21 +11,7 @@ import BulletinPostModal from "@/components/BulletinPostModal";
 import TVGuideSection from "@/components/TVGuideSection";
 import PostInteractions from "@/components/PostInteractions";
 import CommentsModal from "@/components/CommentsModal";
-
-interface BulletinPost {
-  id: string;
-  title: string;
-  content: string;
-  image_url?: string;
-  link_url?: string;
-  post_type?: string;
-  created_at: string;
-  merchant_id: string;
-  profiles: {
-    display_name: string;
-    avatar_url: string;
-  };
-}
+import { BulletinPost } from "@/types/bulletin";
 
 const BulletinBoard = () => {
   const navigate = useNavigate();
@@ -34,7 +20,6 @@ const BulletinBoard = () => {
   const [posts, setPosts] = useState<BulletinPost[]>([]);
   const [tvGuidePosts, setTvGuidePosts] = useState<BulletinPost[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPost, setSelectedPost] = useState<string | null>(null);
 
   useEffect(() => {
@@ -94,16 +79,22 @@ const BulletinBoard = () => {
 
   const handlePostSuccess = () => {
     fetchPosts();
-    setIsModalOpen(false);
   };
 
   // Allow supporters and approved merchants to create posts
-  const canCreatePost = user && (isApproved || isAdmin);
+  const canCreatePost = user && (isApproved || isAdmin || user);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800">
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800 bg-fixed bg-cover bg-center relative">
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-fixed opacity-30"
+        style={{
+          backgroundImage: `url('/lovable-uploads/8a8289fd-017b-4c07-9e5a-03d19c081cb0.png')`
+        }}
+      />
+      
       {/* Header with proper alignment */}
-      <div className="max-w-6xl mx-auto px-6 pt-4 pb-4">
+      <div className="relative z-10 max-w-6xl mx-auto px-6 pt-4 pb-4">
         <div className="flex justify-between items-center">
           <Button
             onClick={handleBackToDashboard}
@@ -123,8 +114,8 @@ const BulletinBoard = () => {
         </div>
       </div>
 
-      {/* Cover Photo Section with proper fit */}
-      <div className="max-w-6xl mx-auto px-6 mb-8">
+      {/* Cover Photo Section */}
+      <div className="relative z-10 max-w-6xl mx-auto px-6 mb-8">
         <div className="w-full h-64 bg-gray-800 rounded-lg overflow-hidden">
           <img 
             src="/lovable-uploads/8a8289fd-017b-4c07-9e5a-03d19c081cb0.png" 
@@ -134,8 +125,8 @@ const BulletinBoard = () => {
         </div>
       </div>
 
-      {/* Main Content with aligned containers */}
-      <div className="max-w-6xl mx-auto px-6">
+      {/* Main Content */}
+      <div className="relative z-10 max-w-6xl mx-auto px-6">
         <div className="mb-8">
           <div className="flex justify-between items-center mb-6">
             <div>
@@ -144,7 +135,7 @@ const BulletinBoard = () => {
             </div>
             {canCreatePost && (
               <Button
-                onClick={() => setIsModalOpen(true)}
+                onClick={() => {}}
                 className="bg-blue-600 hover:bg-blue-700 text-white"
               >
                 <Plus className="w-4 h-4 mr-2" />
@@ -205,9 +196,7 @@ const BulletinBoard = () => {
       </div>
 
       {/* Modals */}
-      <BulletinPostModal 
-        onSuccess={handlePostSuccess}
-      />
+      <BulletinPostModal onSuccess={handlePostSuccess} />
 
       {selectedPost && (
         <CommentsModal 

@@ -6,23 +6,7 @@ import { Calendar, ExternalLink, Tv, User } from "lucide-react";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import PostInteractions from "./PostInteractions";
 import { useNavigate } from "react-router-dom";
-
-// This interface is duplicated from BulletinBoard.tsx. Consider moving to a shared types file.
-interface BulletinPost {
-  id: string;
-  title: string;
-  content: string;
-  image_url?: string;
-  link_url?: string;
-  post_type?: string;
-  created_at: string;
-  merchant_id: string;
-  profiles?: {
-    email: string;
-    display_name?: string;
-    avatar_url?: string;
-  };
-}
+import { BulletinPost } from "@/types/bulletin";
 
 interface TVGuideSectionProps {
   posts: BulletinPost[];
@@ -84,7 +68,7 @@ const TVGuideSection = ({ posts }: TVGuideSectionProps) => {
                         ) : (
                           <User className="w-6 h-6" />
                         )}
-                        {post.profiles?.display_name || post.profiles?.email || 'Community'}
+                        {post.profiles?.display_name || 'Community'}
                       </div>
                       <div className="flex items-center gap-1">
                         <Calendar className="w-4 h-4" />
