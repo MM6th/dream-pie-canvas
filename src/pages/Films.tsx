@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -160,31 +159,8 @@ const Films = () => {
           <div className="space-y-6">
             {loading ? (
               <div className="text-center text-white">Loading videos...</div>
-            ) : videos.length === 0 ? (
-              <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
-                <CardContent className="p-8 text-center">
-                  <p className="text-gray-400">No videos available yet. Check back soon!</p>
-                </CardContent>
-              </Card>
             ) : (
-              videos.map((video) => (
-                <Card key={video.id} className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
-                  <CardContent className="p-6">
-                    <h3 className="text-xl font-semibold text-white mb-2">{video.title}</h3>
-                    {video.description && (
-                      <p className="text-gray-300 mb-4">{video.description}</p>
-                    )}
-                    <VideoPlayer
-                      videoUrl={video.video_file_url}
-                      thumbnailUrl={video.thumbnail_url || undefined}
-                      backgroundMusicUrl={video.background_music_url || undefined}
-                    />
-                    <div className="mt-4 text-sm text-gray-500">
-                      {new Date(video.created_at).toLocaleDateString()}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
+              <VideoPlayer videos={videos} />
             )}
           </div>
         </div>
