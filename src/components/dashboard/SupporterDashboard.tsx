@@ -134,7 +134,7 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedVide
               <CardTitle className="text-white">Dashboard Background</CardTitle>
             </CardHeader>
             <CardContent>
-              <BackgroundUpload onBackgroundUpload={onBackgroundUpload} />
+              <BackgroundUpload onUploadSuccess={onBackgroundUpload} />
             </CardContent>
           </Card>
         </TabsContent>

@@ -118,7 +118,7 @@ const FullMerchantProfileModal = ({
           
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="flex justify-center mb-4">
-              <AvatarUpload onAvatarUpdate={setAvatarUrl} currentAvatarUrl={avatarUrl} />
+              <AvatarUpload onAvatarChange={setAvatarUrl} avatarUrl={avatarUrl} />
             </div>
 
             <div>
@@ -247,7 +247,7 @@ const FullMerchantProfileModal = ({
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="flex justify-center mb-4">
-            <AvatarUpload onAvatarUpdate={setAvatarUrl} currentAvatarUrl={avatarUrl} />
+            <AvatarUpload onAvatarChange={setAvatarUrl} avatarUrl={avatarUrl} />
           </div>
 
           <div>
