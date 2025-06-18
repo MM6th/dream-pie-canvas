@@ -9,7 +9,6 @@ import { toast } from "@/hooks/use-toast";
 import PendingMerchantCard from "./PendingMerchantCard";
 import ApprovedMerchantCard from "./ApprovedMerchantCard";
 import CoverPhotoManager from "./CoverPhotoManager";
-import AdminDashboardButtons from "./AdminDashboardButtons";
 
 const AdminDashboard = () => {
   const queryClient = useQueryClient();
@@ -51,13 +50,29 @@ const AdminDashboard = () => {
     });
   };
 
-  const handleApprovalChange = () => {
-    queryClient.invalidateQueries({ queryKey: ['pending-merchants'] });
-    queryClient.invalidateQueries({ queryKey: ['approved-merchants'] });
+  const handleApprovalChange = async (merchantId: string, newStatus: string) => {
+    try {
+      const { error } = await supabase.rpc('update_merchant_approval', {
+        merchant_id: merchantId,
+        new_status: newStatus
+      });
+
+      if (error) throw error;
+
+      queryClient.invalidateQueries({ queryKey: ['pending-merchants'] });
+      queryClient.invalidateQueries({ queryKey: ['approved-merchants'] });
+    } catch (error) {
+      console.error('Error updating approval status:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update merchant approval status",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
-    <div className="space-y-8">
+    <div className="max-w-6xl mx-auto space-y-8">
       <div>
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -76,8 +91,6 @@ const AdminDashboard = () => {
             Refresh
           </Button>
         </div>
-
-        <AdminDashboardButtons />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -119,7 +132,6 @@ const AdminDashboard = () => {
                   <ApprovedMerchantCard 
                     key={merchant.id} 
                     merchant={merchant} 
-                    onApprovalChange={handleApprovalChange}
                   />
                 ))}
               </div>

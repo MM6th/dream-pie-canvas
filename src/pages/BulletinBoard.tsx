@@ -16,10 +16,13 @@ interface BulletinPost {
   id: string;
   title: string;
   content: string;
+  image_url?: string;
+  link_url?: string;
+  post_type?: string;
   created_at: string;
-  user_id: string;
+  merchant_id: string;
   profiles: {
-    full_name: string;
+    display_name: string;
     avatar_url: string;
   };
 }
@@ -29,6 +32,7 @@ const BulletinBoard = () => {
   const { signOut, user } = useAuth();
   const { isApproved, isAdmin } = useApprovalStatus();
   const [posts, setPosts] = useState<BulletinPost[]>([]);
+  const [tvGuidePosts, setTvGuidePosts] = useState<BulletinPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPost, setSelectedPost] = useState<string | null>(null);
@@ -45,10 +49,13 @@ const BulletinBoard = () => {
           id,
           title,
           content,
+          image_url,
+          link_url,
+          post_type,
           created_at,
-          user_id,
+          merchant_id,
           profiles (
-            full_name,
+            display_name,
             avatar_url
           )
         `)
@@ -57,7 +64,12 @@ const BulletinBoard = () => {
       if (error) {
         console.error('Error fetching posts:', error);
       } else {
-        setPosts(data || []);
+        const allPosts = data || [];
+        const regularPosts = allPosts.filter(post => post.post_type !== 'tv_guide');
+        const tvGuideEntries = allPosts.filter(post => post.post_type === 'tv_guide');
+        
+        setPosts(regularPosts);
+        setTvGuidePosts(tvGuideEntries);
       }
     } catch (error) {
       console.error('Error fetching posts:', error);
@@ -144,7 +156,7 @@ const BulletinBoard = () => {
           {/* TV Guide Section - only for approved merchants/admins */}
           {(isApproved || isAdmin) && (
             <div className="mb-8">
-              <TVGuideSection />
+              <TVGuideSection posts={tvGuidePosts} />
             </div>
           )}
 
@@ -172,7 +184,7 @@ const BulletinBoard = () => {
                         <div className="flex items-center space-x-2 mb-2">
                           <h3 className="text-lg font-semibold text-white">{post.title}</h3>
                           <span className="text-sm text-gray-400">
-                            by {post.profiles?.full_name || 'Anonymous'}
+                            by {post.profiles?.display_name || 'Anonymous'}
                           </span>
                         </div>
                         <p className="text-gray-300 mb-4 whitespace-pre-wrap">{post.content}</p>
@@ -180,10 +192,7 @@ const BulletinBoard = () => {
                           <span className="text-sm text-gray-500">
                             {new Date(post.created_at).toLocaleDateString()}
                           </span>
-                          <PostInteractions 
-                            postId={post.id} 
-                            onCommentsClick={() => setSelectedPost(post.id)}
-                          />
+                          <PostInteractions postId={post.id} />
                         </div>
                       </div>
                     </div>
@@ -197,8 +206,6 @@ const BulletinBoard = () => {
 
       {/* Modals */}
       <BulletinPostModal 
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
         onSuccess={handlePostSuccess}
       />
 
@@ -207,6 +214,7 @@ const BulletinBoard = () => {
           postId={selectedPost}
           isOpen={!!selectedPost}
           onClose={() => setSelectedPost(null)}
+          onCommentCountChange={() => {}}
         />
       )}
     </div>

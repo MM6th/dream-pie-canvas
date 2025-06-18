@@ -44,6 +44,7 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create' }: BulletinPostMod
         image_url: imageUrl || null,
         link_url: linkUrl || null,
         merchant_id: user.id,
+        post_type: 'bulletin',
         updated_at: new Date().toISOString()
       };
 
