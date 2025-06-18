@@ -1,271 +1,191 @@
-import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Film, Play, Star, Calendar, Clock, ArrowLeft, LogOut } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { ArrowLeft, LogOut, MessageSquare, ShoppingBag } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useApprovalStatus } from "@/hooks/useApprovalStatus";
+import { supabase } from "@/integrations/supabase/client";
+import VideoPlayer from "@/components/VideoPlayer";
 
-interface FilmData {
+interface VideoProduct {
   id: string;
   title: string;
-  description: string;
-  genre: string;
-  rating: number;
-  releaseYear: number;
-  duration: string;
-  director: string;
-  thumbnailUrl: string;
-  price: number;
-  isFeatured: boolean;
+  description: string | null;
+  video_file_url: string;
+  thumbnail_url: string | null;
+  background_music_url: string | null;
+  created_at: string;
 }
 
 const Films = () => {
   const navigate = useNavigate();
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
+  const { isApproved, isAdmin } = useApprovalStatus();
+  const [videos, setVideos] = useState<VideoProduct[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchVideos();
+  }, []);
+
+  const fetchVideos = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('video_products')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching videos:', error);
+      } else {
+        setVideos(data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching videos:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleBackToDashboard = () => {
     navigate('/');
   };
 
-  const handleSignOut = async () => {
-    await signOut();
+  const handleStoreView = () => {
+    navigate('/');
+    setTimeout(() => {
+      window.dispatchEvent(new Event('navigateToStore'));
+    }, 100);
   };
 
-  // Dummy film data
-  const films: FilmData[] = [
-    {
-      id: "1",
-      title: "Neon Genesis",
-      description: "A cyberpunk thriller set in a dystopian future where reality and virtual worlds collide.",
-      genre: "Sci-Fi",
-      rating: 8.7,
-      releaseYear: 2024,
-      duration: "2h 15m",
-      director: "Alex Chen",
-      thumbnailUrl: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400&h=600&fit=crop",
-      price: 12.99,
-      isFeatured: true
-    },
-    {
-      id: "2",
-      title: "Midnight in Tokyo",
-      description: "A romantic drama following two strangers who meet during a blackout in downtown Tokyo.",
-      genre: "Romance",
-      rating: 7.8,
-      releaseYear: 2023,
-      duration: "1h 45m",
-      director: "Yuki Tanaka",
-      thumbnailUrl: "https://images.unsplash.com/photo-1605810230434-7631ac76ec81?w=400&h=600&fit=crop",
-      price: 9.99,
-      isFeatured: false
-    },
-    {
-      id: "3",
-      title: "The Digital Frontier",
-      description: "Documentary exploring the impact of artificial intelligence on modern society.",
-      genre: "Documentary",
-      rating: 9.1,
-      releaseYear: 2024,
-      duration: "1h 30m",
-      director: "Sarah Mitchell",
-      thumbnailUrl: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400&h=600&fit=crop",
-      price: 7.99,
-      isFeatured: false
-    },
-    {
-      id: "4",
-      title: "Ocean's Echo",
-      description: "An underwater adventure following marine biologists discovering a new species.",
-      genre: "Adventure",
-      rating: 8.2,
-      releaseYear: 2023,
-      duration: "2h 5m",
-      director: "Michael Rodriguez",
-      thumbnailUrl: "https://images.unsplash.com/photo-1605810230434-7631ac76ec81?w=400&h=600&fit=crop",
-      price: 11.99,
-      isFeatured: true
-    },
-    {
-      id: "5",
-      title: "Quantum Dreams",
-      description: "A mind-bending thriller about a physicist who discovers parallel dimensions.",
-      genre: "Thriller",
-      rating: 8.9,
-      releaseYear: 2024,
-      duration: "2h 30m",
-      director: "Emma Watson",
-      thumbnailUrl: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400&h=600&fit=crop",
-      price: 14.99,
-      isFeatured: true
-    },
-    {
-      id: "6",
-      title: "Silent Echoes",
-      description: "A psychological drama about a deaf artist finding her voice through visual art.",
-      genre: "Drama",
-      rating: 7.6,
-      releaseYear: 2023,
-      duration: "1h 55m",
-      director: "David Park",
-      thumbnailUrl: "https://images.unsplash.com/photo-1605810230434-7631ac76ec81?w=400&h=600&fit=crop",
-      price: 8.99,
-      isFeatured: false
-    }
-  ];
+  const handleBulletinView = () => {
+    navigate('/bulletin');
+  };
 
-  const featuredFilms = films.filter(film => film.isFeatured);
-  const regularFilms = films.filter(film => !film.isFeatured);
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      navigate('/');
+    } catch (error) {
+      console.error('Error signing out:', error);
+      navigate('/');
+    }
+  };
+
+  if (!isApproved && !isAdmin) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800 flex items-center justify-center">
+        <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm p-8">
+          <CardContent className="text-center">
+            <h2 className="text-2xl font-bold text-white mb-4">Access Denied</h2>
+            <p className="text-gray-400 mb-6">You must be an approved merchant to access this page.</p>
+            <Button onClick={handleBackToDashboard} className="bg-blue-600 hover:bg-blue-700 text-white">
+              Back to Dashboard
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800">
-      {/* Navigation Header */}
-      <div className="absolute top-4 left-0 right-0 z-20 max-w-6xl mx-auto px-6 flex justify-between">
-        <Button
-          onClick={handleBackToDashboard}
-          variant="outline"
-          className="border-gray-600 text-white hover:bg-white hover:text-black"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Dashboard
-        </Button>
-        <Button
-          onClick={handleSignOut}
-          className="bg-white text-black hover:bg-gray-100 hover:text-black"
-        >
-          <LogOut className="w-4 h-4 mr-2" />
-          Sign Out
-        </Button>
-      </div>
-
-      {/* Hero Section */}
-      <div className="pt-20 max-w-6xl mx-auto px-6">
-        <div 
-          className="relative h-96 bg-cover bg-center bg-no-repeat rounded-lg mb-6 flex items-center justify-center"
-          style={{
-            backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=1200&h=400&fit=crop')`
-          }}
-        >
-          <div className="text-center text-white z-10">
-            <h1 className="text-6xl font-bold mb-4 text-shadow-lg">Film Collection</h1>
-            <p className="text-xl text-gray-200 max-w-2xl mx-auto px-4">
-              Discover extraordinary stories from independent filmmakers and acclaimed directors
-            </p>
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800 bg-fixed bg-cover bg-center relative">
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-fixed opacity-30"
+        style={{
+          backgroundImage: `url('/lovable-uploads/8a8289fd-017b-4c07-9e5a-03d19c081cb0.png')`
+        }}
+      />
+      
+      {/* Header with proper alignment */}
+      <div className="relative z-10 max-w-6xl mx-auto px-6 pt-4 pb-4">
+        <div className="flex justify-between items-center">
+          <div className="flex gap-2">
+            <Button
+              onClick={handleBackToDashboard}
+              className="bg-black text-white border-0 hover:bg-black"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Dashboard
+            </Button>
+            <Button
+              onClick={handleStoreView}
+              variant="outline"
+              className="border-gray-600 text-white bg-transparent hover:bg-gray-700"
+            >
+              <ShoppingBag className="w-4 h-4 mr-2" />
+              Browse Store
+            </Button>
+            <Button
+              onClick={handleBulletinView}
+              variant="outline"
+              className="border-gray-600 text-white bg-transparent hover:bg-gray-700"
+            >
+              <MessageSquare className="w-4 h-4 mr-2" />
+              Browse Bulletin
+            </Button>
           </div>
+          <Button
+            onClick={handleSignOut}
+            className="bg-white text-black hover:bg-gray-100"
+          >
+            <LogOut className="w-4 h-4 mr-2" />
+            Sign Out
+          </Button>
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto p-6">
-        {/* Featured Films Section */}
-        <div className="mb-12">
-          <h2 className="text-3xl font-bold text-white mb-6 flex items-center gap-2">
-            <Star className="w-8 h-8 text-yellow-500" />
-            Featured Films
-          </h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featuredFilms.map((film) => (
-              <Card key={film.id} className="bg-gray-800/50 border-gray-700 backdrop-blur-sm hover:bg-gray-800/70 transition-all duration-300 transform hover:scale-105">
-                <CardHeader className="p-0">
-                  <div className="relative">
-                    <img
-                      src={film.thumbnailUrl}
-                      alt={film.title}
-                      className="w-full h-64 object-cover rounded-t-lg"
-                    />
-                    <div className="absolute top-2 right-2">
-                      <Badge className="bg-yellow-500 text-black font-bold">
-                        Featured
-                      </Badge>
-                    </div>
-                    <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-black/70 px-2 py-1 rounded">
-                      <Star className="w-4 h-4 text-yellow-400" />
-                      <span className="text-white font-semibold">{film.rating}</span>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-4">
-                  <CardTitle className="text-white text-xl mb-2">{film.title}</CardTitle>
-                  <p className="text-gray-400 text-sm mb-3 line-clamp-2">{film.description}</p>
-                  
-                  <div className="space-y-2 mb-4">
-                    <div className="flex items-center gap-4 text-sm text-gray-300">
-                      <Badge variant="outline" className="bg-purple-600/20 text-purple-300 border-purple-600">
-                        {film.genre}
-                      </Badge>
-                      <div className="flex items-center gap-1">
-                        <Calendar className="w-4 h-4" />
-                        {film.releaseYear}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-4 h-4" />
-                        {film.duration}
-                      </div>
-                    </div>
-                    <p className="text-gray-400 text-sm">Directed by {film.director}</p>
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <span className="text-2xl font-bold text-white">${film.price}</span>
-                    <Button className="bg-purple-600 hover:bg-purple-700">
-                      <Play className="w-4 h-4 mr-2" />
-                      Watch Now
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+      {/* Cover Photo Section */}
+      <div className="relative z-10 max-w-6xl mx-auto px-6 mb-8">
+        <div className="w-full h-64 bg-gray-800 rounded-lg overflow-hidden">
+          <img 
+            src="/lovable-uploads/8a8289fd-017b-4c07-9e5a-03d19c081cb0.png" 
+            alt="Films Cover" 
+            className="w-full h-full object-cover object-center"
+          />
         </div>
+      </div>
 
-        {/* All Films Section */}
-        <div>
-          <h2 className="text-3xl font-bold text-white mb-6 flex items-center gap-2">
-            <Film className="w-8 h-8" />
-            All Films
-          </h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {regularFilms.map((film) => (
-              <Card key={film.id} className="bg-gray-800/50 border-gray-700 backdrop-blur-sm hover:bg-gray-800/70 transition-all duration-300">
-                <CardHeader className="p-0">
-                  <div className="relative">
-                    <img
-                      src={film.thumbnailUrl}
-                      alt={film.title}
-                      className="w-full h-48 object-cover rounded-t-lg"
-                    />
-                    <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-black/70 px-2 py-1 rounded">
-                      <Star className="w-3 h-3 text-yellow-400" />
-                      <span className="text-white text-sm font-semibold">{film.rating}</span>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-4">
-                  <CardTitle className="text-white text-lg mb-2 line-clamp-1">{film.title}</CardTitle>
-                  <p className="text-gray-400 text-sm mb-3 line-clamp-2">{film.description}</p>
-                  
-                  <div className="space-y-2 mb-4">
-                    <Badge variant="outline" className="bg-blue-600/20 text-blue-300 border-blue-600 text-xs">
-                      {film.genre}
-                    </Badge>
-                    <div className="flex items-center gap-2 text-xs text-gray-400">
-                      <span>{film.releaseYear}</span>
-                      <span>•</span>
-                      <span>{film.duration}</span>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <span className="text-lg font-bold text-white">${film.price}</span>
-                    <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
-                      <Play className="w-3 h-3 mr-1" />
-                      Watch
-                    </Button>
-                  </div>
+      {/* Main Content */}
+      <div className="relative z-10 max-w-6xl mx-auto px-6">
+        <div className="mb-8">
+          <div className="mb-6">
+            <h1 className="text-4xl font-bold text-white mb-2">Films</h1>
+            <p className="text-gray-300">Discover our collection of videos and films</p>
+          </div>
+
+          {/* Videos Section */}
+          <div className="space-y-6">
+            {loading ? (
+              <div className="text-center text-white">Loading videos...</div>
+            ) : videos.length === 0 ? (
+              <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+                <CardContent className="p-8 text-center">
+                  <p className="text-gray-400">No videos available yet. Check back soon!</p>
                 </CardContent>
               </Card>
-            ))}
+            ) : (
+              videos.map((video) => (
+                <Card key={video.id} className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+                  <CardContent className="p-6">
+                    <h3 className="text-xl font-semibold text-white mb-2">{video.title}</h3>
+                    {video.description && (
+                      <p className="text-gray-300 mb-4">{video.description}</p>
+                    )}
+                    <VideoPlayer
+                      src={video.video_file_url}
+                      poster={video.thumbnail_url || undefined}
+                      backgroundMusicSrc={video.background_music_url || undefined}
+                    />
+                    <div className="mt-4 text-sm text-gray-500">
+                      {new Date(video.created_at).toLocaleDateString()}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
           </div>
         </div>
       </div>

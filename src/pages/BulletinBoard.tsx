@@ -2,12 +2,11 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, LogOut, Plus } from "lucide-react";
+import { ArrowLeft, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useApprovalStatus } from "@/hooks/useApprovalStatus";
 import { supabase } from "@/integrations/supabase/client";
-import BulletinPostModal from "@/components/BulletinPostModal";
 import TVGuideSection from "@/components/TVGuideSection";
 import PostInteractions from "@/components/PostInteractions";
 import CommentsModal from "@/components/CommentsModal";
@@ -77,13 +76,6 @@ const BulletinBoard = () => {
     }
   };
 
-  const handlePostSuccess = () => {
-    fetchPosts();
-  };
-
-  // Allow supporters and approved merchants to create posts
-  const canCreatePost = user && (isApproved || isAdmin || user);
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800 bg-fixed bg-cover bg-center relative">
       <div 
@@ -120,7 +112,7 @@ const BulletinBoard = () => {
           <img 
             src="/lovable-uploads/8a8289fd-017b-4c07-9e5a-03d19c081cb0.png" 
             alt="Bulletin Board Cover" 
-            className="w-full h-full object-cover object-center"
+            className="w-full h-full object-contain object-center"
           />
         </div>
       </div>
@@ -128,20 +120,9 @@ const BulletinBoard = () => {
       {/* Main Content */}
       <div className="relative z-10 max-w-6xl mx-auto px-6">
         <div className="mb-8">
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h1 className="text-4xl font-bold text-white mb-2">Bulletin Board</h1>
-              <p className="text-gray-300">Share your thoughts and connect with the community</p>
-            </div>
-            {canCreatePost && (
-              <Button
-                onClick={() => {}}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Create Post
-              </Button>
-            )}
+          <div className="mb-6">
+            <h1 className="text-4xl font-bold text-white mb-2">Bulletin Board</h1>
+            <p className="text-gray-300">Share your thoughts and connect with the community</p>
           </div>
 
           {/* TV Guide Section - only for approved merchants/admins */}
@@ -178,6 +159,15 @@ const BulletinBoard = () => {
                             by {post.profiles?.display_name || 'Anonymous'}
                           </span>
                         </div>
+                        {post.image_url && (
+                          <div className="mb-4">
+                            <img 
+                              src={post.image_url} 
+                              alt="Post image" 
+                              className="w-full max-w-md rounded-lg object-cover"
+                            />
+                          </div>
+                        )}
                         <p className="text-gray-300 mb-4 whitespace-pre-wrap">{post.content}</p>
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-gray-500">
@@ -194,9 +184,6 @@ const BulletinBoard = () => {
           </div>
         </div>
       </div>
-
-      {/* Modals */}
-      <BulletinPostModal onSuccess={handlePostSuccess} />
 
       {selectedPost && (
         <CommentsModal 

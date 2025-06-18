@@ -35,28 +35,28 @@ const UserStatsDisplay = () => {
 
   const fetchUserStats = async () => {
     try {
-      // Get supporter count using count
-      const { count: supporterCount, error: supporterError } = await supabase
+      // Get supporter count
+      const { data: supporters, error: supporterError } = await supabase
         .from('profiles')
-        .select('*', { count: 'exact', head: true })
+        .select('id')
         .eq('user_type', 'supporter');
 
       if (supporterError) {
         console.error('Error fetching supporter count:', supporterError);
       } else {
-        setSupporterCount(supporterCount || 0);
+        setSupporterCount(supporters?.length || 0);
       }
 
-      // Get merchant count using count
-      const { count: merchantCount, error: merchantError } = await supabase
+      // Get merchant count
+      const { data: merchants, error: merchantError } = await supabase
         .from('profiles')
-        .select('*', { count: 'exact', head: true })
+        .select('id')
         .eq('user_type', 'merchant');
 
       if (merchantError) {
         console.error('Error fetching merchant count:', merchantError);
       } else {
-        setMerchantCount(merchantCount || 0);
+        setMerchantCount(merchants?.length || 0);
       }
     } catch (error) {
       console.error('Error fetching user stats:', error);

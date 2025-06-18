@@ -1,27 +1,37 @@
 
-import React from 'react';
-import { Card, CardContent } from "@/components/ui/card";
-import VideoProductManager from "@/components/VideoProductManager";
-import SongCoverManager from "@/components/SongCoverManager";
-import { useApprovalStatus } from "@/hooks/useApprovalStatus";
+import React from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { MessageSquare, Image } from "lucide-react";
+import BulletinPostManager from "@/components/BulletinPostManager";
+import PhotoGallery from "@/components/PhotoGallery";
 
 const ContentManagement = () => {
-  const { isAdmin } = useApprovalStatus();
-
   return (
-    <>
-      {/* Video Products Management */}
-      <div className="mb-12">
-        <VideoProductManager />
-      </div>
+    <div className="space-y-8">
+      <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-white">
+            <MessageSquare className="w-5 h-5" />
+            Bulletin Post Management
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <BulletinPostManager />
+        </CardContent>
+      </Card>
 
-      {/* Song Cover Management - For non-admin merchants only */}
-      {!isAdmin && (
-        <div className="mb-12">
-          <SongCoverManager />
-        </div>
-      )}
-    </>
+      <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-white">
+            <Image className="w-5 h-5" />
+            Photo Gallery
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <PhotoGallery />
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
