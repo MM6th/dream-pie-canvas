@@ -42,7 +42,7 @@ const TVGuideSection = ({ posts }: TVGuideSectionProps) => {
       >
         <CarouselContent className="-ml-4">
           {posts.map((post) => (
-            <CarouselItem key={post.id} className="pl-4 md:basis-1/2 lg:basis-1/2 xl:basis-1/3">
+            <CarouselItem key={post.id} className="pl-4 md:basis-1/3 lg:basis-1/4 xl:basis-1/4">
               <Card className="bg-gray-800 border-gray-700 h-full flex flex-col">
                 {post.image_url && (
                   <CardHeader className="p-0">

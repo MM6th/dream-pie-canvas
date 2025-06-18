@@ -54,8 +54,8 @@ const DashboardView = ({
 }: DashboardViewProps) => {
   const backgroundStyle = userProfile?.background_image_url 
     ? {
-        backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url(${userProfile.background_image_url})`,
-        backgroundSize: 'cover',
+        backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url(${userProfile.background_image_url})`,
+        backgroundSize: 'contain',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
         backgroundAttachment: 'fixed'

@@ -1,35 +1,57 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Star, Clock } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 
+interface AstrologyProduct {
+  id: string;
+  title: string;
+  description: string | null;
+  price: number;
+  thumbnail_url: string | null;
+  delivery_type: string | null;
+  total_price: number;
+  created_at: string;
+}
+
 const AstrologyStoreSection = () => {
   const { user } = useAuth();
+  const [products, setProducts] = useState<AstrologyProduct[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const { data: astrologyProducts, isLoading } = useQuery({
-    queryKey: ['astrology-products'],
-    queryFn: async () => {
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
       const { data, error } = await supabase
         .from('astrology_products')
         .select('*')
         .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data;
+
+      if (error) {
+        console.error('Error fetching astrology products:', error);
+      } else {
+        setProducts(data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching astrology products:', error);
+    } finally {
+      setLoading(false);
     }
-  });
+  };
 
   const handlePurchase = async (productId: string, price: number) => {
     if (!user) {
       toast({
         title: "Authentication Required",
-        description: "Please sign in to purchase products.",
+        description: "Please sign in to make a purchase",
         variant: "destructive"
       });
       return;
@@ -37,10 +59,10 @@ const AstrologyStoreSection = () => {
 
     try {
       const { data, error } = await supabase.functions.invoke('create-astrology-payment', {
-        body: { 
-          productId, 
-          userId: user.id,
-          amount: price 
+        body: {
+          productId: productId,
+          amount: price,
+          currency: 'USD'
         }
       });
 
@@ -53,34 +75,34 @@ const AstrologyStoreSection = () => {
       console.error('Error creating payment:', error);
       toast({
         title: "Error",
-        description: "Failed to process payment. Please try again.",
+        description: "Failed to create payment. Please try again.",
         variant: "destructive"
       });
     }
   };
 
-  if (isLoading) {
+  if (loading) {
     return (
-      <div className="mb-12">
-        <h2 className="text-3xl font-bold text-white mb-6">Astrology Services</h2>
-        <div className="text-center text-white">Loading astrology products...</div>
-      </div>
+      <div className="text-center text-white">Loading astrology services...</div>
     );
   }
 
-  if (!astrologyProducts || astrologyProducts.length === 0) {
-    return null;
+  if (products.length === 0) {
+    return (
+      <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+        <CardContent className="p-8 text-center">
+          <p className="text-gray-400">No astrology services available yet. Check back soon!</p>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
-    <div className="mb-12">
-      <h2 className="text-3xl font-bold text-white mb-6 flex items-center gap-2">
-        <Star className="w-8 h-8 text-purple-400" />
-        Astrology Services
-      </h2>
+    <div>
+      <h2 className="text-2xl font-bold text-white mb-6">Astrology Services</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {astrologyProducts.map((product) => (
-          <Card key={product.id} className="bg-gray-800 border-gray-700 hover:border-purple-500 transition-colors">
+        {products.map((product) => (
+          <Card key={product.id} className="bg-gray-800/50 border-gray-700 backdrop-blur-sm hover:bg-gray-700/50 transition-colors">
             {product.thumbnail_url && (
               <CardHeader className="p-0">
                 <img
@@ -91,26 +113,35 @@ const AstrologyStoreSection = () => {
               </CardHeader>
             )}
             <CardContent className="p-6">
-              <CardTitle className="text-white text-xl mb-2">{product.title}</CardTitle>
-              <p className="text-gray-300 text-sm mb-4 line-clamp-3">{product.description}</p>
-              
-              <div className="flex items-center gap-4 text-sm text-gray-400 mb-4">
+              <div className="flex items-start justify-between mb-3">
+                <CardTitle className="text-white text-lg">{product.title}</CardTitle>
                 <div className="flex items-center gap-1">
-                  <Clock className="w-4 h-4" />
-                  {product.delivery_type === 'telephone' ? 'Phone Call' : 
-                   product.delivery_type === 'audio_file' ? 'Audio File' :
-                   product.delivery_type === 'video_file' ? 'Video File' : 'Digital Delivery'}
+                  <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                  <Badge variant="outline" className="border-yellow-500 text-yellow-500">
+                    New
+                  </Badge>
                 </div>
-                <Badge variant="outline" className="border-purple-400 text-purple-400">
-                  ${product.total_price}
-                </Badge>
               </div>
-
+              
+              {product.description && (
+                <p className="text-gray-300 text-sm mb-4 line-clamp-3">{product.description}</p>
+              )}
+              
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-2xl font-bold text-white">${product.total_price}</span>
+                {product.delivery_type && (
+                  <div className="flex items-center gap-1 text-gray-400">
+                    <Clock className="w-4 h-4" />
+                    <span className="text-sm capitalize">{product.delivery_type}</span>
+                  </div>
+                )}
+              </div>
+              
               <Button
                 onClick={() => handlePurchase(product.id, product.total_price)}
-                className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
               >
-                Purchase Reading - ${product.total_price}
+                Book Reading
               </Button>
             </CardContent>
           </Card>
