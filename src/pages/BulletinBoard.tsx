@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, LogOut, ShoppingBag, Film } from "lucide-react";
@@ -148,10 +147,10 @@ const BulletinBoard = () => {
 
         <div className="space-y-12">
           {/* Current Thoughts Section */}
-          <CurrentThoughtsSection posts={currentThoughtsPosts} onRefresh={fetchPosts} />
+          <CurrentThoughtsSection posts={currentThoughtsPosts} />
           
           {/* TV Guide Section */}
-          <TVGuideSection posts={tvGuidePosts} onRefresh={fetchPosts} />
+          <TVGuideSection posts={tvGuidePosts} />
         </div>
       </div>
     </div>
