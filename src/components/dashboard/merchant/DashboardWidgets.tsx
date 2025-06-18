@@ -155,14 +155,14 @@ const DashboardWidgets = ({ onSuccess, onViewStore, onBackgroundUpload, isAdmin 
         <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-white">Video Products</h3>
+              <h3 className="text-xl font-bold text-white">Films</h3>
               <VideoUploadModal onSuccess={onSuccess} isAdmin={isAdmin} />
             </div>
-            <p className="text-gray-400 mb-4">Upload and manage your video content</p>
+            <p className="text-gray-400 mb-4">Upload and manage your video content for the films page</p>
             <div className="space-y-4">
               <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg">
                 <div>
-                  <p className="text-white font-medium">Total Video Products</p>
+                  <p className="text-white font-medium">Total Films</p>
                   <p className="text-gray-400 text-sm">Manage your video library</p>
                 </div>
               </div>

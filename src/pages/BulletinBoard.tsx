@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, LogOut, ShoppingBag, Film } from "lucide-react";
@@ -90,16 +91,7 @@ const BulletinBoard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800 bg-fixed bg-cover bg-center relative">
-      {/* Background Image */}
-      <div 
-        className="absolute inset-0 bg-cover bg-center bg-fixed opacity-30"
-        style={{
-          backgroundImage: `url('/lovable-uploads/8a8289fd-017b-4c07-9e5a-03d19c081cb0.png')`,
-          objectFit: 'cover'
-        }}
-      />
-      
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800">
       {/* Header */}
       <div className="relative z-10 max-w-6xl mx-auto px-6 pt-4 pb-4">
         <div className="flex justify-between items-center">

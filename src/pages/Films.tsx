@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -90,14 +91,7 @@ const Films = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800 bg-fixed bg-cover bg-center relative">
-      <div 
-        className="absolute inset-0 bg-cover bg-center bg-fixed opacity-30"
-        style={{
-          backgroundImage: `url('/lovable-uploads/8a8289fd-017b-4c07-9e5a-03d19c081cb0.png')`
-        }}
-      />
-      
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800">
       {/* Header with proper alignment */}
       <div className="relative z-10 max-w-6xl mx-auto px-6 pt-4 pb-4">
         <div className="flex justify-between items-center">
@@ -133,17 +127,6 @@ const Films = () => {
             <LogOut className="w-4 h-4 mr-2" />
             Sign Out
           </Button>
-        </div>
-      </div>
-
-      {/* Cover Photo Section */}
-      <div className="relative z-10 max-w-6xl mx-auto px-6 mb-8">
-        <div className="w-full h-64 bg-gray-800 rounded-lg overflow-hidden">
-          <img 
-            src="/lovable-uploads/8a8289fd-017b-4c07-9e5a-03d19c081cb0.png" 
-            alt="Films Cover" 
-            className="w-full h-full object-cover object-center"
-          />
         </div>
       </div>
 

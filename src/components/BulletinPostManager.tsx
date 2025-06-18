@@ -10,6 +10,7 @@ import { toast } from "@/components/ui/use-toast";
 import BulletinPostModal from "./BulletinPostModal";
 import CurrentThoughtsModal from "./CurrentThoughtsModal";
 import TVGuideModal from "./TVGuideModal";
+import BulletinPostImage from "./BulletinPostImage";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -151,11 +152,11 @@ const BulletinPostManager = () => {
           {posts.map((post) => (
             <Card key={post.id} className="bg-gray-700/50 border-gray-600 overflow-hidden">
               {post.image_url && (
-                  <img
-                    src={post.image_url}
-                    alt={post.title}
-                    className="w-full h-32 object-cover"
-                  />
+                <BulletinPostImage
+                  src={post.image_url}
+                  alt={post.title}
+                  className="w-full h-32"
+                />
               )}
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">

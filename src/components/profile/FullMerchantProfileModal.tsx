@@ -29,15 +29,19 @@ const FullMerchantProfileModal = ({
 }: FullMerchantProfileModalProps) => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [displayName, setDisplayName] = useState(profile?.display_name || '');
-  const [businessName, setBusinessName] = useState(profile?.business_name || '');
-  const [businessDescription, setBusinessDescription] = useState(profile?.business_description || '');
-  const [website, setWebsite] = useState(profile?.website || '');
-  const [instagram, setInstagram] = useState(profile?.instagram_handle || '');
-  const [twitter, setTwitter] = useState(profile?.twitter_handle || '');
-  const [tiktok, setTiktok] = useState(profile?.tiktok_handle || '');
-  const [facebook, setFacebook] = useState(profile?.facebook_handle || '');
-  const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url || '');
+  const [displayName, setDisplayName] = useState('');
+  const [businessName, setBusinessName] = useState('');
+  const [businessDescription, setBusinessDescription] = useState('');
+  const [website, setWebsite] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
+  const [paypalEmail, setPaypalEmail] = useState('');
+  const [instagramUrl, setInstagramUrl] = useState('');
+  const [facebookUrl, setFacebookUrl] = useState('');
+  const [youtubeUrl, setYoutubeUrl] = useState('');
+  const [snapchatUrl, setSnapchatUrl] = useState('');
+  const [pinterestUrl, setPinterestUrl] = useState('');
+  const [onlyfansUrl, setOnlyfansUrl] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState('');
   const [internalOpen, setInternalOpen] = useState(false);
 
   useEffect(() => {
@@ -46,10 +50,14 @@ const FullMerchantProfileModal = ({
       setBusinessName(profile.business_name || '');
       setBusinessDescription(profile.business_description || '');
       setWebsite(profile.website || '');
-      setInstagram(profile.instagram_handle || '');
-      setTwitter(profile.twitter_handle || '');
-      setTiktok(profile.tiktok_handle || '');
-      setFacebook(profile.facebook_handle || '');
+      setContactEmail(profile.contact_email || '');
+      setPaypalEmail(profile.paypal_email || '');
+      setInstagramUrl(profile.instagram_url || '');
+      setFacebookUrl(profile.facebook_url || '');
+      setYoutubeUrl(profile.youtube_url || '');
+      setSnapchatUrl(profile.snapchat_url || '');
+      setPinterestUrl(profile.pinterest_url || '');
+      setOnlyfansUrl(profile.onlyfans_url || '');
       setAvatarUrl(profile.avatar_url || '');
     }
   }, [profile]);
@@ -67,10 +75,14 @@ const FullMerchantProfileModal = ({
           business_name: businessName,
           business_description: businessDescription,
           website: website,
-          instagram_handle: instagram,
-          twitter_handle: twitter,
-          tiktok_handle: tiktok,
-          facebook_handle: facebook,
+          contact_email: contactEmail,
+          paypal_email: paypalEmail,
+          instagram_url: instagramUrl,
+          facebook_url: facebookUrl,
+          youtube_url: youtubeUrl,
+          snapchat_url: snapchatUrl,
+          pinterest_url: pinterestUrl,
+          onlyfans_url: onlyfansUrl,
           avatar_url: avatarUrl,
           updated_at: new Date().toISOString()
         })
@@ -169,23 +181,25 @@ const FullMerchantProfileModal = ({
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="instagram" className="text-white">Instagram</Label>
+                <Label htmlFor="contactEmail" className="text-white">Contact Email</Label>
                 <Input
-                  id="instagram"
-                  value={instagram}
-                  onChange={(e) => setInstagram(e.target.value)}
-                  placeholder="@username"
+                  id="contactEmail"
+                  type="email"
+                  value={contactEmail}
+                  onChange={(e) => setContactEmail(e.target.value)}
+                  placeholder="contact@email.com"
                   className="bg-gray-700 border-gray-600 text-white"
                 />
               </div>
               
               <div>
-                <Label htmlFor="twitter" className="text-white">Twitter</Label>
+                <Label htmlFor="paypalEmail" className="text-white">PayPal Email</Label>
                 <Input
-                  id="twitter"
-                  value={twitter}
-                  onChange={(e) => setTwitter(e.target.value)}
-                  placeholder="@username"
+                  id="paypalEmail"
+                  type="email"
+                  value={paypalEmail}
+                  onChange={(e) => setPaypalEmail(e.target.value)}
+                  placeholder="paypal@email.com"
                   className="bg-gray-700 border-gray-600 text-white"
                 />
               </div>
@@ -193,23 +207,71 @@ const FullMerchantProfileModal = ({
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="tiktok" className="text-white">TikTok</Label>
+                <Label htmlFor="instagramUrl" className="text-white">Instagram URL</Label>
                 <Input
-                  id="tiktok"
-                  value={tiktok}
-                  onChange={(e) => setTiktok(e.target.value)}
-                  placeholder="@username"
+                  id="instagramUrl"
+                  value={instagramUrl}
+                  onChange={(e) => setInstagramUrl(e.target.value)}
+                  placeholder="https://instagram.com/username"
                   className="bg-gray-700 border-gray-600 text-white"
                 />
               </div>
               
               <div>
-                <Label htmlFor="facebook" className="text-white">Facebook</Label>
+                <Label htmlFor="facebookUrl" className="text-white">Facebook URL</Label>
                 <Input
-                  id="facebook"
-                  value={facebook}
-                  onChange={(e) => setFacebook(e.target.value)}
-                  placeholder="Profile URL or handle"
+                  id="facebookUrl"
+                  value={facebookUrl}
+                  onChange={(e) => setFacebookUrl(e.target.value)}
+                  placeholder="https://facebook.com/username"
+                  className="bg-gray-700 border-gray-600 text-white"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="youtubeUrl" className="text-white">YouTube URL</Label>
+                <Input
+                  id="youtubeUrl"
+                  value={youtubeUrl}
+                  onChange={(e) => setYoutubeUrl(e.target.value)}
+                  placeholder="https://youtube.com/channel/..."
+                  className="bg-gray-700 border-gray-600 text-white"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="snapchatUrl" className="text-white">Snapchat URL</Label>
+                <Input
+                  id="snapchatUrl"
+                  value={snapchatUrl}
+                  onChange={(e) => setSnapchatUrl(e.target.value)}
+                  placeholder="https://snapchat.com/add/username"
+                  className="bg-gray-700 border-gray-600 text-white"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="pinterestUrl" className="text-white">Pinterest URL</Label>
+                <Input
+                  id="pinterestUrl"
+                  value={pinterestUrl}
+                  onChange={(e) => setPinterestUrl(e.target.value)}
+                  placeholder="https://pinterest.com/username"
+                  className="bg-gray-700 border-gray-600 text-white"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="onlyfansUrl" className="text-white">OnlyFans URL</Label>
+                <Input
+                  id="onlyfansUrl"
+                  value={onlyfansUrl}
+                  onChange={(e) => setOnlyfansUrl(e.target.value)}
+                  placeholder="https://onlyfans.com/username"
                   className="bg-gray-700 border-gray-600 text-white"
                 />
               </div>
@@ -298,23 +360,25 @@ const FullMerchantProfileModal = ({
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="instagram" className="text-white">Instagram</Label>
+              <Label htmlFor="contactEmail" className="text-white">Contact Email</Label>
               <Input
-                id="instagram"
-                value={instagram}
-                onChange={(e) => setInstagram(e.target.value)}
-                placeholder="@username"
+                id="contactEmail"
+                type="email"
+                value={contactEmail}
+                onChange={(e) => setContactEmail(e.target.value)}
+                placeholder="contact@email.com"
                 className="bg-gray-700 border-gray-600 text-white"
               />
             </div>
             
             <div>
-              <Label htmlFor="twitter" className="text-white">Twitter</Label>
+              <Label htmlFor="paypalEmail" className="text-white">PayPal Email</Label>
               <Input
-                id="twitter"
-                value={twitter}
-                onChange={(e) => setTwitter(e.target.value)}
-                placeholder="@username"
+                id="paypalEmail"
+                type="email"
+                value={paypalEmail}
+                onChange={(e) => setPaypalEmail(e.target.value)}
+                placeholder="paypal@email.com"
                 className="bg-gray-700 border-gray-600 text-white"
               />
             </div>
@@ -322,23 +386,71 @@ const FullMerchantProfileModal = ({
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="tiktok" className="text-white">TikTok</Label>
+              <Label htmlFor="instagramUrl" className="text-white">Instagram URL</Label>
               <Input
-                id="tiktok"
-                value={tiktok}
-                onChange={(e) => setTiktok(e.target.value)}
-                placeholder="@username"
+                id="instagramUrl"
+                value={instagramUrl}
+                onChange={(e) => setInstagramUrl(e.target.value)}
+                placeholder="https://instagram.com/username"
                 className="bg-gray-700 border-gray-600 text-white"
               />
             </div>
             
             <div>
-              <Label htmlFor="facebook" className="text-white">Facebook</Label>
+              <Label htmlFor="facebookUrl" className="text-white">Facebook URL</Label>
               <Input
-                id="facebook"
-                value={facebook}
-                onChange={(e) => setFacebook(e.target.value)}
-                placeholder="Profile URL or handle"
+                id="facebookUrl"
+                value={facebookUrl}
+                onChange={(e) => setFacebookUrl(e.target.value)}
+                placeholder="https://facebook.com/username"
+                className="bg-gray-700 border-gray-600 text-white"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="youtubeUrl" className="text-white">YouTube URL</Label>
+              <Input
+                id="youtubeUrl"
+                value={youtubeUrl}
+                onChange={(e) => setYoutubeUrl(e.target.value)}
+                placeholder="https://youtube.com/channel/..."
+                className="bg-gray-700 border-gray-600 text-white"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="snapchatUrl" className="text-white">Snapchat URL</Label>
+              <Input
+                id="snapchatUrl"
+                value={snapchatUrl}
+                onChange={(e) => setSnapchatUrl(e.target.value)}
+                placeholder="https://snapchat.com/add/username"
+                className="bg-gray-700 border-gray-600 text-white"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="pinterestUrl" className="text-white">Pinterest URL</Label>
+              <Input
+                id="pinterestUrl"
+                value={pinterestUrl}
+                onChange={(e) => setPinterestUrl(e.target.value)}
+                placeholder="https://pinterest.com/username"
+                className="bg-gray-700 border-gray-600 text-white"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="onlyfansUrl" className="text-white">OnlyFans URL</Label>
+              <Input
+                id="onlyfansUrl"
+                value={onlyfansUrl}
+                onChange={(e) => setOnlyfansUrl(e.target.value)}
+                placeholder="https://onlyfans.com/username"
                 className="bg-gray-700 border-gray-600 text-white"
               />
             </div>
