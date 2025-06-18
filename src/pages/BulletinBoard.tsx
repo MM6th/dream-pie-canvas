@@ -8,13 +8,12 @@ import { useApprovalStatus } from "@/hooks/useApprovalStatus";
 import { supabase } from "@/integrations/supabase/client";
 import CurrentThoughtsSection from "@/components/CurrentThoughtsSection";
 import TVGuideSection from "@/components/TVGuideSection";
-import { BulletinPost } from "@/types/bulletin";
 
 const BulletinBoard = () => {
   const navigate = useNavigate();
   const { signOut } = useAuth();
   const { isApproved, isAdmin } = useApprovalStatus();
-  const [posts, setPosts] = useState<BulletinPost[]>([]);
+  const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -46,8 +45,8 @@ const BulletinBoard = () => {
     }
   };
 
-  const currentThoughtsPosts = posts.filter(post => post.post_type === 'current_thoughts');
-  const tvGuidePosts = posts.filter(post => post.post_type === 'tv_guide');
+  const currentThoughtsPosts = posts.filter((post) => post.post_type === 'current_thoughts');
+  const tvGuidePosts = posts.filter((post) => post.post_type === 'tv_guide');
 
   const handleBackToDashboard = () => {
     navigate('/');
@@ -80,7 +79,10 @@ const BulletinBoard = () => {
         <div className="bg-gray-800/50 border border-gray-700 backdrop-blur-sm p-8 rounded-lg text-center">
           <h2 className="text-2xl font-bold text-white mb-4">Access Denied</h2>
           <p className="text-gray-400 mb-6">You must be an approved merchant to access this page.</p>
-          <Button onClick={handleBackToDashboard} className="bg-blue-600 hover:bg-blue-700 text-white">
+          <Button
+            onClick={handleBackToDashboard}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
             Back to Dashboard
           </Button>
         </div>
@@ -90,10 +92,12 @@ const BulletinBoard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800 bg-fixed bg-cover bg-center relative">
+      {/* Background Image */}
       <div 
         className="absolute inset-0 bg-cover bg-center bg-fixed opacity-30"
         style={{
-          backgroundImage: `url('/lovable-uploads/8a8289fd-017b-4c07-9e5a-03d19c081cb0.png')`
+          backgroundImage: `url('/lovable-uploads/8a8289fd-017b-4c07-9e5a-03d19c081cb0.png')`,
+          objectFit: 'cover'
         }}
       />
       
@@ -135,33 +139,19 @@ const BulletinBoard = () => {
         </div>
       </div>
 
-      {/* Cover Photo Section */}
-      <div className="relative z-10 max-w-6xl mx-auto px-6 mb-8">
-        <div className="w-full h-80 bg-gray-800 rounded-lg overflow-hidden">
-          <img 
-            src="/lovable-uploads/8a8289fd-017b-4c07-9e5a-03d19c081cb0.png" 
-            alt="Bulletin Board Cover" 
-            className="w-full h-full object-contain"
-          />
-        </div>
-      </div>
-
       {/* Main Content */}
-      <div className="relative z-10 max-w-6xl mx-auto px-6">
-        <div className="mb-8">
-          <div className="mb-6">
-            <h1 className="text-4xl font-bold text-white mb-2">Community Bulletin</h1>
-            <p className="text-gray-300">Stay connected with community thoughts and entertainment</p>
-          </div>
+      <div className="relative z-10 max-w-6xl mx-auto p-6">
+        <div className="mb-8 text-center">
+          <h1 className="text-4xl font-bold text-white mb-2">Bulletin Board</h1>
+          <p className="text-gray-300">Stay updated with the latest from our community</p>
+        </div>
 
-          {loading ? (
-            <div className="text-center text-white">Loading posts...</div>
-          ) : (
-            <div className="space-y-12">
-              <TVGuideSection posts={tvGuidePosts} />
-              <CurrentThoughtsSection posts={currentThoughtsPosts} />
-            </div>
-          )}
+        <div className="space-y-12">
+          {/* Current Thoughts Section */}
+          <CurrentThoughtsSection posts={currentThoughtsPosts} onRefresh={fetchPosts} />
+          
+          {/* TV Guide Section */}
+          <TVGuideSection posts={tvGuidePosts} onRefresh={fetchPosts} />
         </div>
       </div>
     </div>

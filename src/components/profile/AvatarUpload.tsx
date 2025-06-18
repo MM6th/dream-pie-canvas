@@ -85,7 +85,7 @@ const AvatarUpload = ({ avatarUrl, onAvatarChange }: AvatarUploadProps) => {
         <Button
           variant="outline"
           disabled={uploading}
-          className="border-gray-600 text-white hover:bg-white hover:text-black"
+          className="border-gray-600 text-black bg-white hover:bg-gray-100"
         >
           <Upload className="w-4 h-4 mr-2" />
           {uploading ? "Uploading..." : "Upload Avatar"}
