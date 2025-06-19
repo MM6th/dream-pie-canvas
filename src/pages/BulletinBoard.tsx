@@ -4,15 +4,13 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, LogOut, ShoppingBag, Film } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { useApprovalStatus } from "@/hooks/useApprovalStatus";
 import { supabase } from "@/integrations/supabase/client";
 import CurrentThoughtsSection from "@/components/CurrentThoughtsSection";
 import TVGuideSection from "@/components/TVGuideSection";
 
 const BulletinBoard = () => {
   const navigate = useNavigate();
-  const { signOut } = useAuth();
-  const { isApproved, isAdmin } = useApprovalStatus();
+  const { signOut, user } = useAuth();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -73,12 +71,12 @@ const BulletinBoard = () => {
     }
   };
 
-  if (!isApproved && !isAdmin) {
+  if (!user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800 flex items-center justify-center">
         <div className="bg-gray-800/50 border border-gray-700 backdrop-blur-sm p-8 rounded-lg text-center">
           <h2 className="text-2xl font-bold text-white mb-4">Access Denied</h2>
-          <p className="text-gray-400 mb-6">You must be an approved merchant to access this page.</p>
+          <p className="text-gray-400 mb-6">You must be logged in to access this page.</p>
           <Button
             onClick={handleBackToDashboard}
             className="bg-blue-600 hover:bg-blue-700 text-white"

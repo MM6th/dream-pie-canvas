@@ -540,6 +540,8 @@ export type Database = {
           approval_status: string | null
           avatar_url: string | null
           background_image_url: string | null
+          business_description: string | null
+          business_name: string | null
           contact_email: string | null
           created_at: string | null
           display_name: string | null
@@ -554,12 +556,15 @@ export type Database = {
           snapchat_url: string | null
           updated_at: string | null
           user_type: string
+          website: string | null
           youtube_url: string | null
         }
         Insert: {
           approval_status?: string | null
           avatar_url?: string | null
           background_image_url?: string | null
+          business_description?: string | null
+          business_name?: string | null
           contact_email?: string | null
           created_at?: string | null
           display_name?: string | null
@@ -574,12 +579,15 @@ export type Database = {
           snapchat_url?: string | null
           updated_at?: string | null
           user_type: string
+          website?: string | null
           youtube_url?: string | null
         }
         Update: {
           approval_status?: string | null
           avatar_url?: string | null
           background_image_url?: string | null
+          business_description?: string | null
+          business_name?: string | null
           contact_email?: string | null
           created_at?: string | null
           display_name?: string | null
@@ -594,6 +602,7 @@ export type Database = {
           snapchat_url?: string | null
           updated_at?: string | null
           user_type?: string
+          website?: string | null
           youtube_url?: string | null
         }
         Relationships: []

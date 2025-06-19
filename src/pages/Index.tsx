@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -57,15 +58,15 @@ const Index = () => {
     }
   }, [currentView, user]);
 
-  // Listen for custom store navigation event
+  // Listen for custom store navigation event - allow all authenticated users
   useEffect(() => {
     const handleNavigateToStore = () => {
-      if (isApproved || isAdmin) {
+      if (user) {
         setCurrentView("store");
       } else {
         toast({
           title: "Access Denied",
-          description: "You must be an approved merchant to access the store.",
+          description: "You must be logged in to access the store.",
           variant: "destructive"
         });
       }
@@ -75,7 +76,7 @@ const Index = () => {
     return () => {
       window.removeEventListener('navigateToStore', handleNavigateToStore);
     };
-  }, [isApproved, isAdmin]);
+  }, [user]);
 
   const fetchUserProfile = async () => {
     if (!user) return;
@@ -165,10 +166,10 @@ const Index = () => {
   };
 
   const handleFilmsView = () => {
-    if (!isApproved && !isAdmin) {
+    if (!user) {
         toast({
             title: "Access Denied",
-            description: "You must be an approved merchant to access this page.",
+            description: "You must be logged in to access this page.",
             variant: "destructive"
         });
         return;
@@ -177,10 +178,10 @@ const Index = () => {
   };
 
   const handleBulletinView = () => {
-    if (!isApproved && !isAdmin) {
+    if (!user) {
         toast({
             title: "Access Denied",
-            description: "You must be an approved merchant to access this page.",
+            description: "You must be logged in to access this page.",
             variant: "destructive"
         });
         return;
@@ -205,11 +206,11 @@ const Index = () => {
   }
 
   if (currentView === "store") {
-    if (!isApproved && !isAdmin) {
+    if (!user) {
         setCurrentView("dashboard");
         toast({
             title: "Access Denied",
-            description: "You must be an approved merchant to access the store.",
+            description: "You must be logged in to access the store.",
             variant: "destructive"
         });
         return null; 
