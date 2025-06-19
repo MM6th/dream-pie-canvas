@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -180,7 +179,7 @@ const FashionProductManager = () => {
                           <img
                             src={product.fashion_product_images[0].image_url}
                             alt={product.title}
-                            className="w-full h-48 object-cover rounded-lg cursor-pointer"
+                            className="w-full h-48 object-fill rounded-lg cursor-pointer"
                             onClick={() => handleImageClick(product)}
                           />
                         ) : (

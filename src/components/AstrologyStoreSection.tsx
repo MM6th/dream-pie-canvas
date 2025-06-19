@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -106,7 +105,7 @@ const AstrologyStoreSection = () => {
               <img
                 src={product.thumbnail_url}
                 alt={product.title}
-                className="w-full h-48 object-cover rounded-t-lg"
+                className="w-full h-48 object-fill rounded-t-lg"
               />
             </CardHeader>
           )}

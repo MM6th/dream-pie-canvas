@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -140,7 +139,7 @@ const AstrologyProductManager = () => {
                       <img
                         src={product.thumbnail_url}
                         alt={product.title}
-                        className="w-full h-32 object-cover rounded-lg mb-3"
+                        className="w-full h-32 object-fill rounded-lg mb-3"
                       />
                     )}
                     

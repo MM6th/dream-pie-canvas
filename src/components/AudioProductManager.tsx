@@ -155,7 +155,7 @@ const AudioProductManager = () => {
                     <img
                       src={product.thumbnail_url}
                       alt={product.title}
-                      className="w-full h-32 object-cover rounded-lg mb-3"
+                      className="w-full h-32 object-fill rounded-lg mb-3"
                     />
                   ) : (
                     <div className="w-full h-32 bg-gray-700 rounded-lg mb-3 flex items-center justify-center">
