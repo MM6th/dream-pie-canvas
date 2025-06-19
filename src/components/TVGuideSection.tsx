@@ -49,7 +49,7 @@ const TVGuideSection = ({ posts }: TVGuideSectionProps) => {
                     <img
                       src={post.image_url}
                       alt={post.title}
-                      className="w-full h-48 object-cover rounded-t-lg"
+                      className="w-full h-48 object-fill rounded-t-lg"
                     />
                   </CardHeader>
                 )}

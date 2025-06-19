@@ -12,7 +12,7 @@ const BulletinPostImage = ({ src, alt, className = "" }: BulletinPostImageProps)
     <img
       src={src}
       alt={alt}
-      className={`object-cover ${className}`}
+      className={`object-fill ${className}`}
     />
   );
 };

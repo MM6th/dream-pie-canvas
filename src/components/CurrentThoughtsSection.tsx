@@ -37,7 +37,7 @@ const CurrentThoughtsSection = ({ posts }: CurrentThoughtsSectionProps) => {
                     <img
                       src={post.image_url}
                       alt={post.title}
-                      className="w-full h-32 object-cover rounded-t-lg"
+                      className="w-full h-32 object-fill rounded-t-lg"
                     />
                   </CardHeader>
                 )}
