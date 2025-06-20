@@ -142,10 +142,10 @@ const BulletinPostManager = () => {
           >
             <CarouselContent className="-ml-4">
               {currentThoughtsPosts.map((post) => (
-                <CarouselItem key={post.id} className="pl-4 md:basis-1/3 lg:basis-1/4">
+                <CarouselItem key={post.id} className="pl-4 md:basis-1/2 lg:basis-1/3">
                   <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm h-full flex flex-col">
                     {post.image_url && (
-                      <div className="h-56 overflow-hidden rounded-t-lg">
+                      <div className="h-64 overflow-hidden rounded-t-lg">
                         <img
                           src={post.image_url}
                           alt={post.title}
@@ -209,10 +209,10 @@ const BulletinPostManager = () => {
           >
             <CarouselContent className="-ml-4">
               {tvGuidePosts.map((post) => (
-                <CarouselItem key={post.id} className="pl-4 md:basis-1/3 lg:basis-1/4">
+                <CarouselItem key={post.id} className="pl-4 md:basis-1/2 lg:basis-1/3">
                   <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm h-full flex flex-col">
                     {post.image_url && (
-                      <div className="h-56 overflow-hidden rounded-t-lg">
+                      <div className="h-64 overflow-hidden rounded-t-lg">
                         <img
                           src={post.image_url}
                           alt={post.title}
@@ -277,9 +277,9 @@ const BulletinPostManager = () => {
       {/* Edit Modal */}
       {selectedPost && (
         <BulletinPostModal
-          isOpen={isEditModalOpen}
-          onClose={handleModalClose}
+          onSuccess={handleModalClose}
           post={selectedPost}
+          mode="edit"
         />
       )}
     </div>

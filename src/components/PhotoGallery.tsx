@@ -1,15 +1,55 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
+import { supabase } from "@/integrations/supabase/client";
 import ImageZoomModal from './ImageZoomModal';
 
 interface PhotoGalleryProps {
-  photos: string[];
+  photos?: string[];
   className?: string;
 }
 
-const PhotoGallery = ({ photos, className = "" }: PhotoGalleryProps) => {
+const PhotoGallery = ({ photos: propPhotos, className = "" }: PhotoGalleryProps) => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [photos, setPhotos] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (propPhotos) {
+      setPhotos(propPhotos);
+      setLoading(false);
+    } else {
+      fetchPhotos();
+    }
+  }, [propPhotos]);
+
+  const fetchPhotos = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('user_uploads')
+        .select('file_url')
+        .eq('file_type', 'image')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching photos:', error);
+      } else {
+        setPhotos(data?.map(item => item.file_url) || []);
+      }
+    } catch (error) {
+      console.error('Error fetching photos:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="text-center text-gray-400 py-8">
+        Loading photos...
+      </div>
+    );
+  }
 
   if (!photos || photos.length === 0) {
     return (
@@ -38,7 +78,10 @@ const PhotoGallery = ({ photos, className = "" }: PhotoGalleryProps) => {
       </div>
 
       <ImageZoomModal
-        imageUrl={selectedImage}
+        submittedImage={selectedImage || ''}
+        currentImage={null}
+        songTitle="Photo Gallery"
+        artistName={null}
         isOpen={!!selectedImage}
         onClose={() => setSelectedImage(null)}
       />
