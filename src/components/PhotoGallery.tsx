@@ -71,7 +71,7 @@ const PhotoGallery = ({ photos: propPhotos, className = "" }: PhotoGalleryProps)
             <img
               src={photo}
               alt={`Photo ${index + 1}`}
-              className="w-full h-48 object-cover"
+              className="w-full h-48 object-fill"
             />
           </Card>
         ))}

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Music, Download, ShoppingCart, DollarSign } from "lucide-react";
+import { Music, Download, ShoppingCart, DollarSign, Shirt } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import FashionStoreSection from "./FashionStoreSection";
@@ -220,7 +220,16 @@ const StorePage = () => {
       </div>
 
       {/* Fashion Products Section */}
-      <FashionStoreSection />
+      <div className="space-y-6">
+        <div className="text-center">
+          <h2 className="text-3xl font-bold text-white mb-2 flex items-center justify-center gap-2">
+            <Shirt className="w-8 h-8 text-pink-400" />
+            Fashion Collection
+          </h2>
+          <p className="text-gray-300">Explore our exclusive fashion pieces</p>
+        </div>
+        <FashionStoreSection />
+      </div>
 
       {/* Astrology Services Section */}
       <AstrologyStoreSection />

@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Sparkles, Clock, Mail, Calendar, ExternalLink } from "lucide-react";
@@ -21,10 +22,15 @@ interface AstrologyProduct {
   admin_id: string;
 }
 
-const AstrologyStoreSection = () => {
+interface AstrologyStoreSectionProps {
+  isDashboard?: boolean;
+}
+
+const AstrologyStoreSection = ({ isDashboard = false }: AstrologyStoreSectionProps) => {
   const { user } = useAuth();
   const [products, setProducts] = useState<AstrologyProduct[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedProduct, setSelectedProduct] = useState<AstrologyProduct | null>(null);
 
   useEffect(() => {
     fetchProducts();
@@ -93,6 +99,12 @@ const AstrologyStoreSection = () => {
     }
   };
 
+  const truncateDescription = (description: string | null, maxLength: number = 100) => {
+    if (!description) return null;
+    if (description.length <= maxLength) return description;
+    return description.substring(0, maxLength) + '...';
+  };
+
   if (loading) {
     return (
       <div className="text-center text-white">
@@ -115,13 +127,15 @@ const AstrologyStoreSection = () => {
 
   return (
     <div className="space-y-6">
-      <div className="text-center">
-        <h2 className="text-3xl font-bold text-white mb-2 flex items-center justify-center gap-2">
-          <Sparkles className="w-8 h-8 text-purple-400" />
-          Astrology Services
-        </h2>
-        <p className="text-gray-300">Discover your cosmic journey with personalized readings</p>
-      </div>
+      {!isDashboard && (
+        <div className="text-center">
+          <h2 className="text-3xl font-bold text-white mb-2 flex items-center justify-center gap-2">
+            <Sparkles className="w-8 h-8 text-purple-400" />
+            Astrology Services
+          </h2>
+          <p className="text-gray-300">Discover your cosmic journey with personalized readings</p>
+        </div>
+      )}
 
       <Carousel
         opts={{
@@ -132,10 +146,10 @@ const AstrologyStoreSection = () => {
       >
         <CarouselContent className="-ml-4">
           {products.map((product) => (
-            <CarouselItem key={product.id} className="pl-4 md:basis-1/3 lg:basis-1/4">
+            <CarouselItem key={product.id} className={`pl-4 ${isDashboard ? 'md:basis-1/4 lg:basis-1/5' : 'md:basis-1/3 lg:basis-1/4'}`}>
               <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm h-full flex flex-col">
                 {product.thumbnail_url && (
-                  <div className="relative h-56 overflow-hidden rounded-t-lg">
+                  <div className={`relative overflow-hidden rounded-t-lg ${isDashboard ? 'h-80' : 'h-56'}`}>
                     <img
                       src={product.thumbnail_url}
                       alt={product.title}
@@ -158,7 +172,19 @@ const AstrologyStoreSection = () => {
                   </div>
                   <CardTitle className="text-white text-lg">{product.title}</CardTitle>
                   {product.description && (
-                    <p className="text-gray-400 text-sm line-clamp-3">{product.description}</p>
+                    <div>
+                      <p className="text-gray-400 text-sm line-clamp-3">
+                        {truncateDescription(product.description, isDashboard ? 80 : 100)}
+                      </p>
+                      {product.description.length > (isDashboard ? 80 : 100) && (
+                        <button
+                          onClick={() => setSelectedProduct(product)}
+                          className="text-purple-400 text-sm hover:text-purple-300 mt-1"
+                        >
+                          See more
+                        </button>
+                      )}
+                    </div>
                   )}
                 </CardHeader>
 
@@ -191,6 +217,59 @@ const AstrologyStoreSection = () => {
         <CarouselPrevious className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
         <CarouselNext className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
       </Carousel>
+
+      {/* Product Details Modal */}
+      <Dialog open={!!selectedProduct} onOpenChange={() => setSelectedProduct(null)}>
+        <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl text-purple-400 flex items-center gap-2">
+              <Sparkles className="w-6 h-6" />
+              {selectedProduct?.title}
+            </DialogTitle>
+          </DialogHeader>
+          {selectedProduct && (
+            <div className="space-y-4">
+              {selectedProduct.thumbnail_url && (
+                <img
+                  src={selectedProduct.thumbnail_url}
+                  alt={selectedProduct.title}
+                  className="w-full h-64 object-cover rounded-lg"
+                />
+              )}
+              <div className="flex items-center gap-2">
+                <Badge className="bg-purple-600 text-white">
+                  ${selectedProduct.total_price}
+                </Badge>
+                <Badge variant="outline" className="text-purple-300 border-purple-300">
+                  {selectedProduct.product_type.replace('_', ' ').toUpperCase()}
+                </Badge>
+              </div>
+              {selectedProduct.description && (
+                <p className="text-gray-300">{selectedProduct.description}</p>
+              )}
+              <div className="flex items-center justify-between text-sm text-gray-400">
+                <div className="flex items-center gap-1">
+                  {getDeliveryIcon(selectedProduct.delivery_type)}
+                  <span>{selectedProduct.delivery_type.replace('_', ' ')}</span>
+                </div>
+                {selectedProduct.hours_selected && (
+                  <div className="flex items-center gap-1">
+                    <Clock className="w-4 h-4" />
+                    <span>{selectedProduct.hours_selected}h</span>
+                  </div>
+                )}
+              </div>
+              <Button
+                onClick={() => handlePurchase(selectedProduct)}
+                className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+                disabled={!user}
+              >
+                {!user ? 'Login to Purchase' : `Purchase - $${selectedProduct.total_price}`}
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
