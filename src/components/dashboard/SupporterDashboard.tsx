@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Music, Video, User } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +9,7 @@ import BackgroundUpload from "@/components/BackgroundUpload";
 import { useAuth } from "@/hooks/useAuth";
 import SupporterProfileModal from "@/components/profile/SupporterProfileModal";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
 
 interface AudioTrack {
   id: string;
@@ -36,6 +37,44 @@ interface SupporterDashboardProps {
 const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedVideos }: SupporterDashboardProps) => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("music");
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
+
+  useEffect(() => {
+    if (user) {
+      fetchUserProfile();
+    }
+  }, [user]);
+
+  const fetchUserProfile = async () => {
+    if (!user) return;
+    
+    console.log('Fetching supporter profile for:', user.id);
+    setProfileLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (error) {
+        console.error('Error fetching supporter profile:', error);
+      } else {
+        console.log('Supporter profile fetched:', data);
+        setUserProfile(data);
+      }
+    } catch (error) {
+      console.error('Error fetching supporter profile:', error);
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
+  const handleProfileUpdate = () => {
+    console.log('Profile updated, refetching...');
+    fetchUserProfile();
+  };
 
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-8">
@@ -115,15 +154,43 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedVide
               <CardTitle className="text-white">Profile Settings</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-center">
-                <p className="text-gray-400 mb-4">Update your profile information</p>
-                <SupporterProfileModal onProfileUpdate={() => window.location.reload()}>
-                  <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-                    <User className="w-4 h-4 mr-2" />
-                    Edit Profile
-                  </Button>
-                </SupporterProfileModal>
-              </div>
+              {profileLoading ? (
+                <div className="text-center py-4">
+                  <p className="text-gray-400">Loading profile...</p>
+                </div>
+              ) : (
+                <div className="text-center">
+                  <p className="text-gray-400 mb-4">Update your profile information</p>
+                  {userProfile && (
+                    <div className="mb-4 p-4 bg-gray-700/50 rounded-lg">
+                      <div className="flex items-center gap-4">
+                        {userProfile.avatar_url && (
+                          <img
+                            src={userProfile.avatar_url}
+                            alt="Profile"
+                            className="w-16 h-16 rounded-full object-cover"
+                          />
+                        )}
+                        <div className="text-left">
+                          <p className="text-white font-medium">
+                            {userProfile.display_name || 'No display name set'}
+                          </p>
+                          <p className="text-gray-400 text-sm">{userProfile.email}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  <SupporterProfileModal 
+                    profile={userProfile}
+                    onProfileUpdate={handleProfileUpdate}
+                  >
+                    <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                      <User className="w-4 h-4 mr-2" />
+                      Edit Profile
+                    </Button>
+                  </SupporterProfileModal>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
