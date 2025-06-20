@@ -4,10 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import AvatarUpload from "./AvatarUpload";
+import { Trash2 } from "lucide-react";
 
 interface FullMerchantProfileModalProps {
   isOpen?: boolean;
@@ -26,8 +28,9 @@ const FullMerchantProfileModal = ({
   onProfileUpdate,
   children 
 }: FullMerchantProfileModalProps) => {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [fetchingProfile, setFetchingProfile] = useState(false);
   const [displayName, setDisplayName] = useState('');
   const [businessName, setBusinessName] = useState('');
@@ -149,6 +152,38 @@ const FullMerchantProfileModal = ({
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteProfile = async () => {
+    if (!user) return;
+
+    setDeleteLoading(true);
+    try {
+      // Delete the user's profile
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Profile Deleted",
+        description: "Your profile has been successfully deleted. You will be signed out.",
+      });
+
+      // Sign out the user after successful deletion
+      await signOut();
+    } catch (error) {
+      console.error('Error deleting profile:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete profile. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -323,21 +358,56 @@ const FullMerchantProfileModal = ({
                 </div>
               </div>
               
-              <div className="flex justify-end gap-2">
-                <Button
-                  type="button"
-                  onClick={() => setDialogOpen(false)}
-                  className="bg-black text-white border-0 hover:bg-black"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={loading}
-                  className="bg-white hover:bg-gray-100 text-black"
-                >
-                  {loading ? 'Saving...' : 'Save Changes'}
-                </Button>
+              <div className="flex justify-between items-center gap-2 pt-4">
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      className="bg-red-600 hover:bg-red-700 text-white"
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Delete Profile
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent className="bg-gray-800 border-gray-700">
+                    <AlertDialogHeader>
+                      <AlertDialogTitle className="text-white">Delete Profile</AlertDialogTitle>
+                      <AlertDialogDescription className="text-gray-400">
+                        This action cannot be undone. This will permanently delete your profile and remove all your data from our servers.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel className="bg-gray-700 text-white border-gray-600 hover:bg-gray-600">
+                        Cancel
+                      </AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={handleDeleteProfile}
+                        disabled={deleteLoading}
+                        className="bg-red-600 hover:bg-red-700 text-white"
+                      >
+                        {deleteLoading ? 'Deleting...' : 'Delete Profile'}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    onClick={() => setDialogOpen(false)}
+                    className="bg-black text-white border-0 hover:bg-black"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={loading}
+                    className="bg-white hover:bg-gray-100 text-black"
+                  >
+                    {loading ? 'Saving...' : 'Save Changes'}
+                  </Button>
+                </div>
               </div>
             </form>
           )}
@@ -508,21 +578,56 @@ const FullMerchantProfileModal = ({
               </div>
             </div>
             
-            <div className="flex justify-end gap-2">
-              <Button
-                type="button"
-                onClick={() => setDialogOpen(false)}
-                className="bg-black text-white border-0 hover:bg-black"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={loading}
-                className="bg-white hover:bg-gray-100 text-black"
-              >
-                {loading ? 'Saving...' : 'Save Changes'}
-              </Button>
+            <div className="flex justify-between items-center gap-2 pt-4">
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    className="bg-red-600 hover:bg-red-700 text-white"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete Profile
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent className="bg-gray-800 border-gray-700">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle className="text-white">Delete Profile</AlertDialogTitle>
+                    <AlertDialogDescription className="text-gray-400">
+                      This action cannot be undone. This will permanently delete your profile and remove all your data from our servers.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel className="bg-gray-700 text-white border-gray-600 hover:bg-gray-600">
+                      Cancel
+                    </AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleDeleteProfile}
+                      disabled={deleteLoading}
+                      className="bg-red-600 hover:bg-red-700 text-white"
+                    >
+                      {deleteLoading ? 'Deleting...' : 'Delete Profile'}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  onClick={() => setDialogOpen(false)}
+                  className="bg-black text-white border-0 hover:bg-black"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="bg-white hover:bg-gray-100 text-black"
+                >
+                  {loading ? 'Saving...' : 'Save Changes'}
+                </Button>
+              </div>
             </div>
           </form>
         )}

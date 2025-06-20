@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import FullMerchantProfileModal from "@/components/profile/FullMerchantProfileModal";
 import TunecoreRoyaltyModal from "@/components/profile/TunecoreRoyaltyModal";
 import { toast } from "@/hooks/use-toast";
-import { AlertCircle, CheckCircle, User } from "lucide-react";
+import { AlertCircle, CheckCircle } from "lucide-react";
 
 interface AccountSetupProps {
   userProfile: any;
@@ -51,34 +51,6 @@ const AccountSetup = ({ userProfile, onProfileUpdate }: AccountSetupProps) => {
             </>
           )}
         </div>
-
-        {userProfile && (
-          <div className="p-4 bg-gray-700/50 rounded-lg">
-            <h3 className="text-white font-medium mb-3">Current Profile Information</h3>
-            <div className="flex items-center gap-4 mb-3">
-              {userProfile.avatar_url && (
-                <img
-                  src={userProfile.avatar_url}
-                  alt="Profile"
-                  className="w-12 h-12 rounded-full object-cover"
-                />
-              )}
-              <div>
-                <p className="text-white">{userProfile.display_name || 'No display name set'}</p>
-                <p className="text-gray-400 text-sm">{userProfile.business_name || 'No business name set'}</p>
-              </div>
-            </div>
-            <FullMerchantProfileModal 
-              profile={userProfile}
-              onProfileUpdate={onProfileUpdate}
-            >
-              <Button size="sm" variant="outline" className="text-white border-gray-600">
-                <User className="w-4 h-4 mr-2" />
-                Edit Full Profile
-              </Button>
-            </FullMerchantProfileModal>
-          </div>
-        )}
 
         <div className="flex items-center gap-4 p-4 bg-gray-700/50 rounded-lg">
           <div className="flex flex-col items-start space-y-2">

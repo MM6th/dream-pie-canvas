@@ -1,32 +1,58 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, FileText, Edit } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useNavigate } from "react-router-dom";
+import { Users, UserCheck, FileText, BookOpen } from "lucide-react";
 
 interface AdminDashboardButtonsProps {
-  onRefresh: () => void;
-  onCoverSubmissions: () => void;
+  onManageMerchants: () => void;
+  onManageCoverSubmissions: () => void;
 }
 
-const AdminDashboardButtons = ({ onRefresh, onCoverSubmissions }: AdminDashboardButtonsProps) => {
+const AdminDashboardButtons = ({ onManageMerchants, onManageCoverSubmissions }: AdminDashboardButtonsProps) => {
+  const navigate = useNavigate();
+
+  const handleAboutAuthorClick = () => {
+    navigate('/about-author');
+  };
+
   return (
-    <div className="flex gap-2">
-      <Button
-        onClick={onRefresh}
-        className="bg-black text-white border-0"
-      >
-        <RefreshCw className="w-4 h-4 mr-2" />
-        Refresh
-      </Button>
-      
-      <Button
-        onClick={onCoverSubmissions}
-        className="bg-black text-white border-0"
-      >
-        <FileText className="w-4 h-4 mr-2" />
-        Cover Submissions
-      </Button>
-    </div>
+    <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+      <CardHeader>
+        <CardTitle className="text-white flex items-center gap-2">
+          <Users className="h-5 w-5" />
+          Admin Controls
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Button
+            onClick={onManageMerchants}
+            className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
+          >
+            <UserCheck className="h-4 w-4" />
+            Manage Merchants
+          </Button>
+          
+          <Button
+            onClick={onManageCoverSubmissions}
+            className="bg-purple-600 hover:bg-purple-700 text-white flex items-center gap-2"
+          >
+            <FileText className="h-4 w-4" />
+            Cover Submissions
+          </Button>
+
+          <Button
+            onClick={handleAboutAuthorClick}
+            className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
+          >
+            <BookOpen className="h-4 w-4" />
+            About Author Page
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 
