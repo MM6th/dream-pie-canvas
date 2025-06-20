@@ -109,21 +109,9 @@ const BulletinPostManager = () => {
     <div className="space-y-8">
       {/* Create New Post Buttons */}
       <div className="flex flex-wrap gap-4 justify-center">
-        <CurrentThoughtsModal onSuccess={fetchPosts}>
-          <Button className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2">
-            <MessageSquare className="w-4 h-4" />
-            <Plus className="w-4 h-4" />
-            New Current Thought
-          </Button>
-        </CurrentThoughtsModal>
+        <CurrentThoughtsModal onSuccess={fetchPosts} />
 
-        <TVGuideModal onSuccess={fetchPosts}>
-          <Button className="bg-purple-600 hover:bg-purple-700 text-white flex items-center gap-2">
-            <Tv className="w-4 h-4" />
-            <Plus className="w-4 h-4" />
-            New TV Guide Entry
-          </Button>
-        </TVGuideModal>
+        <TVGuideModal onSuccess={fetchPosts} />
       </div>
 
       {/* Current Thoughts Section */}

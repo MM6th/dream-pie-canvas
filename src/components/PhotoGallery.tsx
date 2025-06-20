@@ -27,14 +27,14 @@ const PhotoGallery = ({ photos: propPhotos, className = "" }: PhotoGalleryProps)
     try {
       const { data, error } = await supabase
         .from('user_uploads')
-        .select('file_url')
+        .select('file_path')
         .eq('file_type', 'image')
         .order('created_at', { ascending: false });
 
       if (error) {
         console.error('Error fetching photos:', error);
       } else {
-        setPhotos(data?.map(item => item.file_url) || []);
+        setPhotos(data?.map(item => item.file_path) || []);
       }
     } catch (error) {
       console.error('Error fetching photos:', error);
