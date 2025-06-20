@@ -1,71 +1,41 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Calendar, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { toast } from "@/components/ui/use-toast";
+import { Plus, Edit2, Trash2, MessageSquare, Tv } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 import BulletinPostModal from "./BulletinPostModal";
 import CurrentThoughtsModal from "./CurrentThoughtsModal";
 import TVGuideModal from "./TVGuideModal";
-import BulletinPostImage from "./BulletinPostImage";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 
 interface BulletinPost {
   id: string;
   title: string;
   content: string;
-  image_url?: string;
-  link_url?: string;
-  post_type?: string;
+  image_url: string | null;
+  link_url: string | null;
+  post_type: string;
   created_at: string;
-  updated_at: string;
+  merchant_id: string;
 }
 
 const BulletinPostManager = () => {
   const { user } = useAuth();
   const [posts, setPosts] = useState<BulletinPost[]>([]);
-  const [userProfile, setUserProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedPost, setSelectedPost] = useState<BulletinPost | null>(null);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
-      fetchUserProfile();
       fetchPosts();
     }
   }, [user]);
-
-  const fetchUserProfile = async () => {
-    if (!user) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-      if (error) {
-        console.error('Error fetching profile:', error);
-      } else {
-        setUserProfile(data);
-      }
-    } catch (error) {
-      console.error('Error fetching profile:', error);
-    }
-  };
 
   const fetchPosts = async () => {
     if (!user) return;
@@ -79,10 +49,9 @@ const BulletinPostManager = () => {
 
       if (error) {
         console.error('Error fetching posts:', error);
-        return;
+      } else {
+        setPosts(data || []);
       }
-
-      setPosts(data || []);
     } catch (error) {
       console.error('Error fetching posts:', error);
     } finally {
@@ -91,21 +60,15 @@ const BulletinPostManager = () => {
   };
 
   const handleDelete = async (postId: string) => {
+    if (!confirm('Are you sure you want to delete this post?')) return;
+
     try {
       const { error } = await supabase
         .from('bulletin_posts')
         .delete()
         .eq('id', postId);
 
-      if (error) {
-        console.error('Error deleting post:', error);
-        toast({
-          title: "Error",
-          description: "Failed to delete post. Please try again.",
-          variant: "destructive"
-        });
-        return;
-      }
+      if (error) throw error;
 
       toast({
         title: "Success",
@@ -117,110 +80,207 @@ const BulletinPostManager = () => {
       console.error('Error deleting post:', error);
       toast({
         title: "Error",
-        description: "Failed to delete post. Please try again.",
+        description: "Failed to delete post.",
         variant: "destructive"
       });
     }
   };
 
+  const handleEdit = (post: BulletinPost) => {
+    setSelectedPost(post);
+    setIsEditModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    setIsCreateModalOpen(false);
+    setIsEditModalOpen(false);
+    setSelectedPost(null);
+    fetchPosts();
+  };
+
+  const currentThoughtsPosts = posts.filter(post => post.post_type === 'current_thoughts');
+  const tvGuidePosts = posts.filter(post => post.post_type === 'tv_guide');
+
   if (loading) {
-    return (
-      <div className="text-white">Loading your posts...</div>
-    );
+    return <div className="text-center text-white">Loading posts...</div>;
   }
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-xl font-bold text-white">Manage Your Posts</h3>
-        <div className="flex gap-2">
-          <CurrentThoughtsModal onSuccess={fetchPosts} />
-          {userProfile?.user_type === "merchant" && (
-            <TVGuideModal onSuccess={fetchPosts} />
-          )}
-        </div>
+    <div className="space-y-8">
+      {/* Create New Post Buttons */}
+      <div className="flex flex-wrap gap-4 justify-center">
+        <CurrentThoughtsModal onSuccess={fetchPosts}>
+          <Button className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2">
+            <MessageSquare className="w-4 h-4" />
+            <Plus className="w-4 h-4" />
+            New Current Thought
+          </Button>
+        </CurrentThoughtsModal>
+
+        <TVGuideModal onSuccess={fetchPosts}>
+          <Button className="bg-purple-600 hover:bg-purple-700 text-white flex items-center gap-2">
+            <Tv className="w-4 h-4" />
+            <Plus className="w-4 h-4" />
+            New TV Guide Entry
+          </Button>
+        </TVGuideModal>
       </div>
 
-      {posts.length === 0 ? (
-        <Card className="bg-gray-700/50 border-gray-600">
-          <CardContent className="p-6 text-center">
-            <p className="text-gray-400">No posts created yet. Share your thoughts or create a TV guide entry!</p>
+      {/* Current Thoughts Section */}
+      {currentThoughtsPosts.length > 0 && (
+        <div className="space-y-4">
+          <h3 className="text-2xl font-bold text-white flex items-center gap-2">
+            <MessageSquare className="w-6 h-6" />
+            Current Thoughts Posts
+          </h3>
+          <Carousel
+            opts={{
+              align: "start",
+              loop: currentThoughtsPosts.length > 3,
+            }}
+            className="w-full"
+          >
+            <CarouselContent className="-ml-4">
+              {currentThoughtsPosts.map((post) => (
+                <CarouselItem key={post.id} className="pl-4 md:basis-1/3 lg:basis-1/4">
+                  <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm h-full flex flex-col">
+                    {post.image_url && (
+                      <div className="h-56 overflow-hidden rounded-t-lg">
+                        <img
+                          src={post.image_url}
+                          alt={post.title}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
+                    
+                    <CardHeader className="flex-grow">
+                      <div className="flex items-center justify-between mb-2">
+                        <Badge className="bg-blue-600 text-white">
+                          Current Thought
+                        </Badge>
+                      </div>
+                      <CardTitle className="text-white text-lg">{post.title}</CardTitle>
+                      <p className="text-gray-400 text-sm line-clamp-3">{post.content}</p>
+                    </CardHeader>
+
+                    <CardContent className="pt-0">
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          onClick={() => handleEdit(post)}
+                          className="flex-1 bg-gray-700 hover:bg-gray-600 text-white"
+                        >
+                          <Edit2 className="w-4 h-4 mr-2" />
+                          Edit
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => handleDelete(post.id)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
+            <CarouselNext className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
+          </Carousel>
+        </div>
+      )}
+
+      {/* TV Guide Section */}
+      {tvGuidePosts.length > 0 && (
+        <div className="space-y-4">
+          <h3 className="text-2xl font-bold text-white flex items-center gap-2">
+            <Tv className="w-6 h-6" />
+            TV Guide Posts
+          </h3>
+          <Carousel
+            opts={{
+              align: "start",
+              loop: tvGuidePosts.length > 3,
+            }}
+            className="w-full"
+          >
+            <CarouselContent className="-ml-4">
+              {tvGuidePosts.map((post) => (
+                <CarouselItem key={post.id} className="pl-4 md:basis-1/3 lg:basis-1/4">
+                  <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm h-full flex flex-col">
+                    {post.image_url && (
+                      <div className="h-56 overflow-hidden rounded-t-lg">
+                        <img
+                          src={post.image_url}
+                          alt={post.title}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
+                    
+                    <CardHeader className="flex-grow">
+                      <div className="flex items-center justify-between mb-2">
+                        <Badge className="bg-purple-600 text-white">
+                          TV Guide
+                        </Badge>
+                      </div>
+                      <CardTitle className="text-white text-lg">{post.title}</CardTitle>
+                      <p className="text-gray-400 text-sm line-clamp-3">{post.content}</p>
+                      {post.link_url && (
+                        <p className="text-blue-400 text-sm truncate">
+                          Link: {post.link_url}
+                        </p>
+                      )}
+                    </CardHeader>
+
+                    <CardContent className="pt-0">
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          onClick={() => handleEdit(post)}
+                          className="flex-1 bg-gray-700 hover:bg-gray-600 text-white"
+                        >
+                          <Edit2 className="w-4 h-4 mr-2" />
+                          Edit
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => handleDelete(post.id)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
+            <CarouselNext className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
+          </Carousel>
+        </div>
+      )}
+
+      {posts.length === 0 && (
+        <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+          <CardContent className="text-center py-8">
+            <MessageSquare className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-400">No posts created yet. Create your first post!</p>
           </CardContent>
         </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {posts.map((post) => (
-            <Card key={post.id} className="bg-gray-700/50 border-gray-600 overflow-hidden">
-              {post.image_url && (
-                <BulletinPostImage
-                  src={post.image_url}
-                  alt={post.title}
-                  className="w-full h-32"
-                />
-              )}
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-white text-lg flex items-center gap-2">
-                    {post.title}
-                    {post.link_url && (
-                      <Badge variant="outline" className="border-blue-400 text-blue-400 text-xs">
-                        <ExternalLink className="w-3 h-3 mr-1" />
-                        Link
-                      </Badge>
-                    )}
-                  </CardTitle>
-                  <div className="flex gap-1">
-                    <BulletinPostModal
-                      post={post}
-                      mode="edit"
-                      onSuccess={fetchPosts}
-                    />
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="outline" size="sm" className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white p-1">
-                          <Trash2 className="w-3 h-3" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent className="bg-gray-800 border-gray-700">
-                        <AlertDialogHeader>
-                          <AlertDialogTitle className="text-white">Delete Post</AlertDialogTitle>
-                          <AlertDialogDescription className="text-gray-400">
-                            Are you sure you want to delete this post? This action cannot be undone.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel className="border-gray-600 text-white bg-transparent">
-                            Cancel
-                          </AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => handleDelete(post.id)}
-                            className="bg-red-600 hover:bg-red-700"
-                          >
-                            Delete
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <p className="text-gray-300 mb-2 text-sm line-clamp-2">{post.content}</p>
-                {post.link_url && (
-                  <div className="mb-2">
-                    <p className="text-xs text-blue-400 truncate">Link: {post.link_url}</p>
-                  </div>
-                )}
-                <div className="flex items-center gap-2 text-xs text-gray-400">
-                  <div className="flex items-center gap-1">
-                    <Calendar className="w-3 h-3" />
-                    {new Date(post.created_at).toLocaleDateString()}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+      )}
+
+      {/* Edit Modal */}
+      {selectedPost && (
+        <BulletinPostModal
+          isOpen={isEditModalOpen}
+          onClose={handleModalClose}
+          post={selectedPost}
+        />
       )}
     </div>
   );

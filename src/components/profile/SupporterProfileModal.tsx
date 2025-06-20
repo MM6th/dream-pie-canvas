@@ -1,12 +1,15 @@
+
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import AvatarUpload from "./AvatarUpload";
+import { Trash2 } from "lucide-react";
 
 interface SupporterProfileModalProps {
   isOpen?: boolean;
@@ -25,8 +28,9 @@ const SupporterProfileModal = ({
   onProfileUpdate,
   children 
 }: SupporterProfileModalProps) => {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [fetchingProfile, setFetchingProfile] = useState(false);
   const [displayName, setDisplayName] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
@@ -115,6 +119,37 @@ const SupporterProfileModal = ({
     }
   };
 
+  const handleDeleteProfile = async () => {
+    if (!user) return;
+
+    setDeleteLoading(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Profile Deleted",
+        description: "Your profile has been permanently deleted."
+      });
+
+      // Sign out the user after successful deletion
+      await signOut();
+    } catch (error) {
+      console.error('Error deleting profile:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete profile. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
   const dialogOpen = isOpen !== undefined ? isOpen : internalOpen;
   const setDialogOpen = onClose !== undefined ? 
     (open: boolean) => { if (!open) onClose(); } : 
@@ -154,21 +189,57 @@ const SupporterProfileModal = ({
                 />
               </div>
               
-              <div className="flex justify-end gap-2">
-                <Button
-                  type="button"
-                  onClick={() => setDialogOpen(false)}
-                  className="bg-black text-white border-0 hover:bg-black"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={loading}
-                  className="bg-white hover:bg-gray-100 text-black"
-                >
-                  {loading ? 'Saving...' : 'Save Changes'}
-                </Button>
+              <div className="flex justify-between gap-2">
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      className="flex items-center gap-2"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Delete Profile
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent className="bg-gray-800 border-gray-700">
+                    <AlertDialogHeader>
+                      <AlertDialogTitle className="text-white">Delete Profile</AlertDialogTitle>
+                      <AlertDialogDescription className="text-gray-400">
+                        Are you sure you want to permanently delete your profile? This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel className="bg-gray-700 text-white border-gray-600 hover:bg-gray-600">
+                        Cancel
+                      </AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={handleDeleteProfile}
+                        disabled={deleteLoading}
+                        className="bg-red-600 hover:bg-red-700 text-white"
+                      >
+                        {deleteLoading ? 'Deleting...' : 'Delete Profile'}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    onClick={() => setDialogOpen(false)}
+                    className="bg-black text-white border-0 hover:bg-black"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={loading}
+                    className="bg-white hover:bg-gray-100 text-black"
+                  >
+                    {loading ? 'Saving...' : 'Save Changes'}
+                  </Button>
+                </div>
               </div>
             </form>
           )}
@@ -207,21 +278,57 @@ const SupporterProfileModal = ({
               />
             </div>
             
-            <div className="flex justify-end gap-2">
-              <Button
-                type="button"
-                onClick={() => setDialogOpen(false)}
-                className="bg-black text-white border-0 hover:bg-black"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={loading}
-                className="bg-white hover:bg-gray-100 text-black"
-              >
-                {loading ? 'Saving...' : 'Save Changes'}
-              </Button>
+            <div className="flex justify-between gap-2">
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    className="flex items-center gap-2"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete Profile
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent className="bg-gray-800 border-gray-700">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle className="text-white">Delete Profile</AlertDialogTitle>
+                    <AlertDialogDescription className="text-gray-400">
+                      Are you sure you want to permanently delete your profile? This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel className="bg-gray-700 text-white border-gray-600 hover:bg-gray-600">
+                      Cancel
+                    </AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleDeleteProfile}
+                      disabled={deleteLoading}
+                      className="bg-red-600 hover:bg-red-700 text-white"
+                    >
+                      {deleteLoading ? 'Deleting...' : 'Delete Profile'}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  onClick={() => setDialogOpen(false)}
+                  className="bg-black text-white border-0 hover:bg-black"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="bg-white hover:bg-gray-100 text-black"
+                >
+                  {loading ? 'Saving...' : 'Save Changes'}
+                </Button>
+              </div>
             </div>
           </form>
         )}

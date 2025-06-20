@@ -1,21 +1,24 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { toast } from "@/hooks/use-toast";
+import { Sparkles, Clock, Mail, Calendar, ExternalLink } from "lucide-react";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 
 interface AstrologyProduct {
   id: string;
   title: string;
   description: string | null;
+  product_type: string;
+  delivery_type: string;
   base_price: number;
-  thumbnail_url: string | null;
-  delivery_type: string | null;
+  hours_selected: number | null;
   total_price: number;
-  created_at: string;
+  thumbnail_url: string | null;
+  admin_id: string;
 }
 
 const AstrologyStoreSection = () => {
@@ -46,97 +49,148 @@ const AstrologyStoreSection = () => {
     }
   };
 
-  const handlePurchase = async (productId: string, price: number) => {
+  const handlePurchase = async (product: AstrologyProduct) => {
     if (!user) {
-      toast({
-        title: "Authentication Required",
-        description: "Please sign in to make a purchase",
-        variant: "destructive"
-      });
+      alert('Please log in to make a purchase');
       return;
     }
 
     try {
-      const { data, error } = await supabase.functions.invoke('create-astrology-payment', {
-        body: {
-          productId: productId,
-          amount: price,
-          currency: 'USD'
-        }
+      const response = await fetch('/api/create-astrology-payment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          productId: product.id,
+          userId: user.id,
+          amount: product.total_price,
+          productType: product.product_type,
+          deliveryType: product.delivery_type,
+          hoursSelected: product.hours_selected
+        }),
       });
 
-      if (error) throw error;
-
-      if (data?.approvalUrl) {
-        window.location.href = data.approvalUrl;
+      const data = await response.json();
+      
+      if (data.approval_url) {
+        window.location.href = data.approval_url;
       }
     } catch (error) {
       console.error('Error creating payment:', error);
-      toast({
-        title: "Error",
-        description: "Failed to create payment. Please try again.",
-        variant: "destructive"
-      });
+      alert('Failed to create payment. Please try again.');
+    }
+  };
+
+  const getDeliveryIcon = (deliveryType: string) => {
+    switch (deliveryType) {
+      case 'email':
+        return <Mail className="w-4 h-4" />;
+      case 'video_call':
+        return <ExternalLink className="w-4 h-4" />;
+      default:
+        return <Calendar className="w-4 h-4" />;
     }
   };
 
   if (loading) {
     return (
-      <div className="text-center text-white">Loading astrology services...</div>
+      <div className="text-center text-white">
+        <Sparkles className="w-8 h-8 animate-spin mx-auto mb-2" />
+        Loading astrology services...
+      </div>
     );
   }
 
   if (products.length === 0) {
     return (
       <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
-        <CardContent className="p-8 text-center">
-          <p className="text-gray-400">No astrology services available yet. Check back soon!</p>
+        <CardContent className="text-center py-8">
+          <Sparkles className="w-12 h-12 text-purple-400 mx-auto mb-4" />
+          <p className="text-gray-400">No astrology services available at the moment.</p>
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {products.map((product) => (
-        <Card key={product.id} className="bg-gray-800/50 border-gray-700 backdrop-blur-sm hover:bg-gray-700/50 transition-colors">
-          {product.thumbnail_url && (
-            <CardHeader className="p-0">
-              <img
-                src={product.thumbnail_url}
-                alt={product.title}
-                className="w-full h-48 object-fill rounded-t-lg"
-              />
-            </CardHeader>
-          )}
-          <CardContent className="p-6">
-            <div className="flex items-start justify-between mb-3">
-              <CardTitle className="text-white text-lg">{product.title}</CardTitle>
-            </div>
-            
-            {product.description && (
-              <p className="text-gray-300 text-sm mb-4 line-clamp-3">{product.description}</p>
-            )}
-            
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-2xl font-bold text-white">${product.total_price}</span>
-              {product.delivery_type && (
-                <div className="flex items-center gap-1 text-gray-400">
-                  <Clock className="w-4 h-4" />
-                  <span className="text-sm capitalize">{product.delivery_type}</span>
-                </div>
-              )}
-            </div>
-            
-            <Button
-              onClick={() => handlePurchase(product.id, product.total_price)}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              Book Reading
-            </Button>
-          </CardContent>
-        </Card>
-      ))}
+    <div className="space-y-6">
+      <div className="text-center">
+        <h2 className="text-3xl font-bold text-white mb-2 flex items-center justify-center gap-2">
+          <Sparkles className="w-8 h-8 text-purple-400" />
+          Astrology Services
+        </h2>
+        <p className="text-gray-300">Discover your cosmic journey with personalized readings</p>
+      </div>
+
+      <Carousel
+        opts={{
+          align: "start",
+          loop: products.length > 3,
+        }}
+        className="w-full"
+      >
+        <CarouselContent className="-ml-4">
+          {products.map((product) => (
+            <CarouselItem key={product.id} className="pl-4 md:basis-1/3 lg:basis-1/4">
+              <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm h-full flex flex-col">
+                {product.thumbnail_url && (
+                  <div className="relative h-56 overflow-hidden rounded-t-lg">
+                    <img
+                      src={product.thumbnail_url}
+                      alt={product.title}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute top-4 right-4">
+                      <Badge className="bg-purple-600 text-white">
+                        ${product.total_price}
+                      </Badge>
+                    </div>
+                  </div>
+                )}
+                
+                <CardHeader className="flex-grow">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Sparkles className="w-5 h-5 text-purple-400" />
+                    <Badge variant="outline" className="text-purple-300 border-purple-300">
+                      {product.product_type.replace('_', ' ').toUpperCase()}
+                    </Badge>
+                  </div>
+                  <CardTitle className="text-white text-lg">{product.title}</CardTitle>
+                  {product.description && (
+                    <p className="text-gray-400 text-sm line-clamp-3">{product.description}</p>
+                  )}
+                </CardHeader>
+
+                <CardContent className="pt-0">
+                  <div className="flex items-center justify-between text-sm text-gray-400 mb-4">
+                    <div className="flex items-center gap-1">
+                      {getDeliveryIcon(product.delivery_type)}
+                      <span>{product.delivery_type.replace('_', ' ')}</span>
+                    </div>
+                    {product.hours_selected && (
+                      <div className="flex items-center gap-1">
+                        <Clock className="w-4 h-4" />
+                        <span>{product.hours_selected}h</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <Button
+                    onClick={() => handlePurchase(product)}
+                    className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+                    disabled={!user}
+                  >
+                    {!user ? 'Login to Purchase' : `Purchase - $${product.total_price}`}
+                  </Button>
+                </CardContent>
+              </Card>
+            </CarouselItem>
+          ))}
+        </CarouselContent>
+        <CarouselPrevious className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
+        <CarouselNext className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
+      </Carousel>
     </div>
   );
 };
