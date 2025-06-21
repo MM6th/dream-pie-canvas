@@ -46,6 +46,7 @@ export type Database = {
           description: string | null
           hours_selected: number | null
           id: string
+          is_adult_content: boolean | null
           product_type: Database["public"]["Enums"]["astrology_product_type"]
           thumbnail_url: string | null
           title: string
@@ -61,6 +62,7 @@ export type Database = {
           description?: string | null
           hours_selected?: number | null
           id?: string
+          is_adult_content?: boolean | null
           product_type: Database["public"]["Enums"]["astrology_product_type"]
           thumbnail_url?: string | null
           title: string
@@ -76,6 +78,7 @@ export type Database = {
           description?: string | null
           hours_selected?: number | null
           id?: string
+          is_adult_content?: boolean | null
           product_type?: Database["public"]["Enums"]["astrology_product_type"]
           thumbnail_url?: string | null
           title?: string
@@ -143,6 +146,7 @@ export type Database = {
           audio_type: string
           created_at: string
           id: string
+          is_adult_content: boolean | null
           is_free: boolean
           merchant_id: string
           price: number | null
@@ -158,6 +162,7 @@ export type Database = {
           audio_type: string
           created_at?: string
           id?: string
+          is_adult_content?: boolean | null
           is_free?: boolean
           merchant_id: string
           price?: number | null
@@ -173,6 +178,7 @@ export type Database = {
           audio_type?: string
           created_at?: string
           id?: string
+          is_adult_content?: boolean | null
           is_free?: boolean
           merchant_id?: string
           price?: number | null
@@ -196,6 +202,7 @@ export type Database = {
           created_at: string
           id: string
           image_url: string | null
+          is_adult_content: boolean | null
           link_url: string | null
           merchant_id: string
           post_type: string | null
@@ -207,6 +214,7 @@ export type Database = {
           created_at?: string
           id?: string
           image_url?: string | null
+          is_adult_content?: boolean | null
           link_url?: string | null
           merchant_id: string
           post_type?: string | null
@@ -218,6 +226,7 @@ export type Database = {
           created_at?: string
           id?: string
           image_url?: string | null
+          is_adult_content?: boolean | null
           link_url?: string | null
           merchant_id?: string
           post_type?: string | null
@@ -310,6 +319,7 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          is_adult_content: boolean | null
           materials: string | null
           price: number
           shipping_cost: number
@@ -322,6 +332,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          is_adult_content?: boolean | null
           materials?: string | null
           price: number
           shipping_cost?: number
@@ -334,6 +345,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          is_adult_content?: boolean | null
           materials?: string | null
           price?: number
           shipping_cost?: number
@@ -537,6 +549,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          adult_content_restricted: boolean | null
           approval_status: string | null
           avatar_url: string | null
           background_image_url: string | null
@@ -560,6 +573,7 @@ export type Database = {
           youtube_url: string | null
         }
         Insert: {
+          adult_content_restricted?: boolean | null
           approval_status?: string | null
           avatar_url?: string | null
           background_image_url?: string | null
@@ -583,6 +597,7 @@ export type Database = {
           youtube_url?: string | null
         }
         Update: {
+          adult_content_restricted?: boolean | null
           approval_status?: string | null
           avatar_url?: string | null
           background_image_url?: string | null
@@ -729,6 +744,7 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          is_adult_content: boolean | null
           is_free: boolean
           merchant_id: string
           price: number | null
@@ -743,6 +759,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          is_adult_content?: boolean | null
           is_free?: boolean
           merchant_id: string
           price?: number | null
@@ -757,6 +774,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          is_adult_content?: boolean | null
           is_free?: boolean
           merchant_id?: string
           price?: number | null

@@ -30,10 +30,12 @@ import {
 } from "@/components/ui/alert-dialog";
 
 interface SupporterProfileModalProps {
-  onSuccess?: () => void;
+  children?: React.ReactNode;
+  profile?: any;
+  onProfileUpdate?: () => void;
 }
 
-const SupporterProfileModal = ({ onSuccess }: SupporterProfileModalProps) => {
+const SupporterProfileModal = ({ children, profile: initialProfile, onProfileUpdate }: SupporterProfileModalProps) => {
   const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -48,13 +50,28 @@ const SupporterProfileModal = ({ onSuccess }: SupporterProfileModalProps) => {
     pinterest_url: "",
     website: "",
     adult_content_restricted: false,
+    avatar_url: "",
   });
 
   useEffect(() => {
-    if (user && isOpen) {
+    if (initialProfile) {
+      setProfile({
+        display_name: initialProfile.display_name || "",
+        contact_email: initialProfile.contact_email || "",
+        instagram_url: initialProfile.instagram_url || "",
+        facebook_url: initialProfile.facebook_url || "",
+        youtube_url: initialProfile.youtube_url || "",
+        snapchat_url: initialProfile.snapchat_url || "",
+        onlyfans_url: initialProfile.onlyfans_url || "",
+        pinterest_url: initialProfile.pinterest_url || "",
+        website: initialProfile.website || "",
+        adult_content_restricted: initialProfile.adult_content_restricted || false,
+        avatar_url: initialProfile.avatar_url || "",
+      });
+    } else if (user && isOpen) {
       fetchProfile();
     }
-  }, [user, isOpen]);
+  }, [user, isOpen, initialProfile]);
 
   const fetchProfile = async () => {
     if (!user) return;
@@ -83,6 +100,7 @@ const SupporterProfileModal = ({ onSuccess }: SupporterProfileModalProps) => {
           pinterest_url: data.pinterest_url || "",
           website: data.website || "",
           adult_content_restricted: data.adult_content_restricted || false,
+          avatar_url: data.avatar_url || "",
         });
       }
     } catch (error) {
@@ -108,6 +126,7 @@ const SupporterProfileModal = ({ onSuccess }: SupporterProfileModalProps) => {
           pinterest_url: profile.pinterest_url,
           website: profile.website,
           adult_content_restricted: profile.adult_content_restricted,
+          avatar_url: profile.avatar_url,
           updated_at: new Date().toISOString(),
         })
         .eq('id', user.id);
@@ -128,7 +147,7 @@ const SupporterProfileModal = ({ onSuccess }: SupporterProfileModalProps) => {
       });
 
       setIsOpen(false);
-      onSuccess?.();
+      onProfileUpdate?.();
     } catch (error) {
       console.error('Error updating profile:', error);
       toast({
@@ -171,13 +190,19 @@ const SupporterProfileModal = ({ onSuccess }: SupporterProfileModalProps) => {
     }
   };
 
+  const handleAvatarChange = (url: string) => {
+    setProfile(prev => ({ ...prev, avatar_url: url }));
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="border-gray-600 text-white bg-transparent hover:bg-gray-700">
-          <Settings className="w-4 h-4 mr-2" />
-          Edit Profile
-        </Button>
+        {children || (
+          <Button variant="outline" className="border-gray-600 text-white bg-transparent hover:bg-gray-700">
+            <Settings className="w-4 h-4 mr-2" />
+            Edit Profile
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="max-w-2xl bg-gray-800 border-gray-700 text-white max-h-[90vh] overflow-y-auto">
         <DialogHeader>
@@ -185,7 +210,10 @@ const SupporterProfileModal = ({ onSuccess }: SupporterProfileModalProps) => {
         </DialogHeader>
 
         <div className="space-y-6">
-          <AvatarUpload />
+          <AvatarUpload 
+            avatarUrl={profile.avatar_url}
+            onAvatarChange={handleAvatarChange}
+          />
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
