@@ -1,12 +1,21 @@
 
 import React, { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Settings, Trash2, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "@/components/ui/use-toast";
 import AvatarUpload from "./AvatarUpload";
 import {
   AlertDialog,
@@ -21,52 +30,35 @@ import {
 } from "@/components/ui/alert-dialog";
 
 interface SupporterProfileModalProps {
-  isOpen?: boolean;
-  onClose?: () => void;
   onSuccess?: () => void;
-  profile?: any;
-  onProfileUpdate?: () => void;
-  children?: React.ReactNode;
 }
 
-const SupporterProfileModal = ({ 
-  isOpen, 
-  onClose, 
-  onSuccess, 
-  profile, 
-  onProfileUpdate,
-  children 
-}: SupporterProfileModalProps) => {
-  const { user, signOut } = useAuth();
-  const [loading, setLoading] = useState(false);
-  const [fetchingProfile, setFetchingProfile] = useState(false);
-  const [displayName, setDisplayName] = useState('');
-  const [avatarUrl, setAvatarUrl] = useState('');
-  const [internalOpen, setInternalOpen] = useState(false);
-  const [currentProfile, setCurrentProfile] = useState(profile);
+const SupporterProfileModal = ({ onSuccess }: SupporterProfileModalProps) => {
+  const { user } = useAuth();
+  const [isOpen, setIsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [profile, setProfile] = useState({
+    display_name: "",
+    contact_email: "",
+    instagram_url: "",
+    facebook_url: "",
+    youtube_url: "",
+    snapchat_url: "",
+    onlyfans_url: "",
+    pinterest_url: "",
+    website: "",
+    adult_content_restricted: false,
+  });
 
-  // Fetch profile data if not provided
   useEffect(() => {
-    if (!profile && user && (isOpen || internalOpen)) {
-      fetchProfileData();
+    if (user && isOpen) {
+      fetchProfile();
     }
-  }, [profile, user, isOpen, internalOpen]);
+  }, [user, isOpen]);
 
-  // Update form when profile data changes
-  useEffect(() => {
-    const profileToUse = profile || currentProfile;
-    if (profileToUse) {
-      console.log('Setting supporter profile form data:', profileToUse);
-      setDisplayName(profileToUse.display_name || '');
-      setAvatarUrl(profileToUse.avatar_url || '');
-    }
-  }, [profile, currentProfile]);
-
-  const fetchProfileData = async () => {
+  const fetchProfile = async () => {
     if (!user) return;
 
-    console.log('Fetching profile data for supporter modal:', user.id);
-    setFetchingProfile(true);
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -75,55 +67,77 @@ const SupporterProfileModal = ({
         .single();
 
       if (error) {
-        console.error('Error fetching profile in modal:', error);
-      } else {
-        console.log('Profile fetched in supporter modal:', data);
-        setCurrentProfile(data);
+        console.error('Error fetching profile:', error);
+        return;
+      }
+
+      if (data) {
+        setProfile({
+          display_name: data.display_name || "",
+          contact_email: data.contact_email || "",
+          instagram_url: data.instagram_url || "",
+          facebook_url: data.facebook_url || "",
+          youtube_url: data.youtube_url || "",
+          snapchat_url: data.snapchat_url || "",
+          onlyfans_url: data.onlyfans_url || "",
+          pinterest_url: data.pinterest_url || "",
+          website: data.website || "",
+          adult_content_restricted: data.adult_content_restricted || false,
+        });
       }
     } catch (error) {
-      console.error('Error fetching profile in modal:', error);
-    } finally {
-      setFetchingProfile(false);
+      console.error('Error fetching profile:', error);
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSave = async () => {
     if (!user) return;
 
-    console.log('Submitting supporter profile update:', { displayName, avatarUrl });
-    setLoading(true);
+    setIsLoading(true);
     try {
       const { error } = await supabase
         .from('profiles')
         .update({
-          display_name: displayName,
-          avatar_url: avatarUrl,
-          updated_at: new Date().toISOString()
+          display_name: profile.display_name,
+          contact_email: profile.contact_email,
+          instagram_url: profile.instagram_url,
+          facebook_url: profile.facebook_url,
+          youtube_url: profile.youtube_url,
+          snapchat_url: profile.snapchat_url,
+          onlyfans_url: profile.onlyfans_url,
+          pinterest_url: profile.pinterest_url,
+          website: profile.website,
+          adult_content_restricted: profile.adult_content_restricted,
+          updated_at: new Date().toISOString(),
         })
         .eq('id', user.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error updating profile:', error);
+        toast({
+          title: "Error",
+          description: "Failed to update profile. Please try again.",
+          variant: "destructive"
+        });
+        return;
+      }
 
-      console.log('Supporter profile updated successfully');
       toast({
         title: "Success",
         description: "Profile updated successfully!"
       });
 
-      if (onSuccess) onSuccess();
-      if (onProfileUpdate) onProfileUpdate();
-      if (onClose) onClose();
-      setInternalOpen(false);
+      setIsOpen(false);
+      onSuccess?.();
     } catch (error) {
-      console.error('Error updating supporter profile:', error);
+      console.error('Error updating profile:', error);
       toast({
         title: "Error",
         description: "Failed to update profile. Please try again.",
         variant: "destructive"
       });
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -131,7 +145,6 @@ const SupporterProfileModal = ({
     if (!user) return;
 
     try {
-      // Delete the user account which will cascade delete the profile
       const { error } = await supabase.auth.admin.deleteUser(user.id);
       
       if (error) {
@@ -146,11 +159,8 @@ const SupporterProfileModal = ({
 
       toast({
         title: "Success",
-        description: "Profile deleted successfully. You will be signed out."
+        description: "Profile deleted successfully!"
       });
-
-      // Sign out the user
-      await signOut();
     } catch (error) {
       console.error('Error deleting profile:', error);
       toast({
@@ -161,182 +171,182 @@ const SupporterProfileModal = ({
     }
   };
 
-  const dialogOpen = isOpen !== undefined ? isOpen : internalOpen;
-  const setDialogOpen = onClose !== undefined ? 
-    (open: boolean) => { if (!open) onClose(); } : 
-    setInternalOpen;
-
-  // If children are provided, use trigger pattern
-  if (children) {
-    return (
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogTrigger asChild>
-          {children}
-        </DialogTrigger>
-        <DialogContent className="sm:max-w-[400px] bg-gray-800 border-gray-700">
-          <DialogHeader>
-            <DialogTitle className="text-white">Update Profile</DialogTitle>
-          </DialogHeader>
-          
-          {fetchingProfile ? (
-            <div className="text-center py-4">
-              <p className="text-gray-400">Loading profile data...</p>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="flex justify-center mb-4">
-                <AvatarUpload onAvatarChange={setAvatarUrl} avatarUrl={avatarUrl} />
-              </div>
-
-              <div>
-                <Label htmlFor="displayName" className="text-white">Display Name</Label>
-                <Input
-                  id="displayName"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  placeholder="Enter your display name"
-                  required
-                  className="bg-gray-700 border-gray-600 text-white"
-                />
-              </div>
-              
-              <div className="flex justify-between gap-2">
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white"
-                    >
-                      Delete Profile
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent className="bg-gray-800 border-gray-700">
-                    <AlertDialogHeader>
-                      <AlertDialogTitle className="text-white">Delete Profile</AlertDialogTitle>
-                      <AlertDialogDescription className="text-gray-400">
-                        Are you sure you want to delete your profile? This action cannot be undone and you will lose all your data.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel className="border-gray-600 text-white bg-transparent">
-                        Cancel
-                      </AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={handleDeleteProfile}
-                        className="bg-red-600 hover:bg-red-700"
-                      >
-                        Delete Profile
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    onClick={() => setDialogOpen(false)}
-                    className="bg-black text-white border-0 hover:bg-black"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={loading}
-                    className="bg-white hover:bg-gray-100 text-black"
-                  >
-                    {loading ? 'Saving...' : 'Save Changes'}
-                  </Button>
-                </div>
-              </div>
-            </form>
-          )}
-        </DialogContent>
-      </Dialog>
-    );
-  }
-
-  // Original controlled pattern
   return (
-    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-      <DialogContent className="sm:max-w-[400px] bg-gray-800 border-gray-700">
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline" className="border-gray-600 text-white bg-transparent hover:bg-gray-700">
+          <Settings className="w-4 h-4 mr-2" />
+          Edit Profile
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-2xl bg-gray-800 border-gray-700 text-white max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-white">Update Profile</DialogTitle>
+          <DialogTitle className="text-white">Edit Supporter Profile</DialogTitle>
         </DialogHeader>
-        
-        {fetchingProfile ? (
-          <div className="text-center py-4">
-            <p className="text-gray-400">Loading profile data...</p>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="flex justify-center mb-4">
-              <AvatarUpload onAvatarChange={setAvatarUrl} avatarUrl={avatarUrl} />
-            </div>
 
+        <div className="space-y-6">
+          <AvatarUpload />
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="displayName" className="text-white">Display Name</Label>
+              <Label htmlFor="display_name" className="text-white">Display Name</Label>
               <Input
-                id="displayName"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                placeholder="Enter your display name"
-                required
+                id="display_name"
+                value={profile.display_name}
+                onChange={(e) => setProfile({...profile, display_name: e.target.value})}
                 className="bg-gray-700 border-gray-600 text-white"
               />
             </div>
             
-            <div className="flex justify-between gap-2">
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white"
-                  >
-                    Delete Profile
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent className="bg-gray-800 border-gray-700">
-                  <AlertDialogHeader>
-                    <AlertDialogTitle className="text-white">Delete Profile</AlertDialogTitle>
-                    <AlertDialogDescription className="text-gray-400">
-                      Are you sure you want to delete your profile? This action cannot be undone and you will lose all your data.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel className="border-gray-600 text-white bg-transparent">
-                      Cancel
-                    </AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={handleDeleteProfile}
-                      className="bg-red-600 hover:bg-red-700"
-                    >
-                      Delete Profile
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+            <div>
+              <Label htmlFor="contact_email" className="text-white">Contact Email</Label>
+              <Input
+                id="contact_email"
+                type="email"
+                value={profile.contact_email}
+                onChange={(e) => setProfile({...profile, contact_email: e.target.value})}
+                className="bg-gray-700 border-gray-600 text-white"
+              />
+            </div>
+          </div>
 
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  onClick={() => setDialogOpen(false)}
-                  className="bg-black text-white border-0 hover:bg-black"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={loading}
-                  className="bg-white hover:bg-gray-100 text-black"
-                >
-                  {loading ? 'Saving...' : 'Save Changes'}
-                </Button>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="instagram_url" className="text-white">Instagram URL</Label>
+              <Input
+                id="instagram_url"
+                value={profile.instagram_url}
+                onChange={(e) => setProfile({...profile, instagram_url: e.target.value})}
+                className="bg-gray-700 border-gray-600 text-white"
+                placeholder="https://instagram.com/username"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="facebook_url" className="text-white">Facebook URL</Label>
+              <Input
+                id="facebook_url"
+                value={profile.facebook_url}
+                onChange={(e) => setProfile({...profile, facebook_url: e.target.value})}
+                className="bg-gray-700 border-gray-600 text-white"
+                placeholder="https://facebook.com/username"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="youtube_url" className="text-white">YouTube URL</Label>
+              <Input
+                id="youtube_url"
+                value={profile.youtube_url}
+                onChange={(e) => setProfile({...profile, youtube_url: e.target.value})}
+                className="bg-gray-700 border-gray-600 text-white"
+                placeholder="https://youtube.com/channel/..."
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="snapchat_url" className="text-white">Snapchat URL</Label>
+              <Input
+                id="snapchat_url"
+                value={profile.snapchat_url}
+                onChange={(e) => setProfile({...profile, snapchat_url: e.target.value})}
+                className="bg-gray-700 border-gray-600 text-white"
+                placeholder="https://snapchat.com/add/username"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="onlyfans_url" className="text-white">OnlyFans URL</Label>
+              <Input
+                id="onlyfans_url"
+                value={profile.onlyfans_url}
+                onChange={(e) => setProfile({...profile, onlyfans_url: e.target.value})}
+                className="bg-gray-700 border-gray-600 text-white"
+                placeholder="https://onlyfans.com/username"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="pinterest_url" className="text-white">Pinterest URL</Label>
+              <Input
+                id="pinterest_url"
+                value={profile.pinterest_url}
+                onChange={(e) => setProfile({...profile, pinterest_url: e.target.value})}
+                className="bg-gray-700 border-gray-600 text-white"
+                placeholder="https://pinterest.com/username"
+              />
+            </div>
+          </div>
+
+          <div>
+            <Label htmlFor="website" className="text-white">Website</Label>
+            <Input
+              id="website"
+              value={profile.website}
+              onChange={(e) => setProfile({...profile, website: e.target.value})}
+              className="bg-gray-700 border-gray-600 text-white"
+              placeholder="https://yourwebsite.com"
+            />
+          </div>
+
+          {/* Adult Content Restriction Toggle */}
+          <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg border border-gray-600">
+            <div className="flex items-center gap-3">
+              <Shield className="w-5 h-5 text-orange-400" />
+              <div>
+                <Label htmlFor="adult_restriction" className="text-white font-medium">
+                  Restrict Adult Content
+                </Label>
+                <p className="text-sm text-gray-400">
+                  Hide all products and content marked as adult/18+
+                </p>
               </div>
             </div>
-          </form>
-        )}
+            <Switch
+              id="adult_restriction"
+              checked={profile.adult_content_restricted}
+              onCheckedChange={(checked) => setProfile({...profile, adult_content_restricted: checked})}
+            />
+          </div>
+
+          <div className="flex justify-between pt-4">
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white">
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete Profile
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent className="bg-gray-800 border-gray-700">
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="text-white">Delete Profile</AlertDialogTitle>
+                  <AlertDialogDescription className="text-gray-400">
+                    Are you sure you want to delete your profile? This action cannot be undone and will permanently remove all your data.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel className="border-gray-600 text-white bg-transparent">
+                    Cancel
+                  </AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleDeleteProfile}
+                    className="bg-red-600 hover:bg-red-700"
+                  >
+                    Delete Profile
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+
+            <Button onClick={handleSave} disabled={isLoading} className="bg-blue-600 hover:bg-blue-700 text-white">
+              {isLoading ? "Saving..." : "Save Changes"}
+            </Button>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );

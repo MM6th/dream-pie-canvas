@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Clock, Star } from "lucide-react";
+import { Clock, Star, AlertTriangle } from "lucide-react";
 
 interface AstrologyProduct {
   id: string;
@@ -19,6 +19,7 @@ interface AstrologyProduct {
   delivery_type: string | null;
   total_price: number;
   created_at: string;
+  is_adult_content?: boolean;
 }
 
 interface AstrologyProductDetailModalProps {
@@ -33,7 +34,15 @@ const AstrologyProductDetailModal = ({ product, isOpen, onClose, onPurchase }: A
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl bg-gray-800 border-gray-700 text-white max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold text-white">{product.title}</DialogTitle>
+          <DialogTitle className="text-xl font-bold text-white flex items-center gap-2">
+            {product.title}
+            {product.is_adult_content && (
+              <Badge variant="destructive" className="bg-red-600 text-white">
+                <AlertTriangle className="w-3 h-3 mr-1" />
+                18+
+              </Badge>
+            )}
+          </DialogTitle>
         </DialogHeader>
         
         <div className="space-y-4">

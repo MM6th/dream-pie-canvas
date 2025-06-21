@@ -100,12 +100,15 @@ const AuthPage = () => {
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800 flex items-center justify-center p-4">
       <div className="max-w-md w-full space-y-6">
         <div className="text-center">
-          {/* Logo Image */}
+          {/* Logo Image with Glow Effect */}
           <div className="flex justify-center mb-4">
             <img
               src="/lovable-uploads/e4407ccd-84aa-476e-9171-384946d3ed51.png"
               alt="Private Investigation Enterprises Logo"
               className="w-32 h-32 object-contain"
+              style={{
+                filter: 'drop-shadow(0 0 20px rgba(255, 255, 255, 0.3)) drop-shadow(0 0 40px rgba(255, 255, 255, 0.2))',
+              }}
             />
           </div>
           

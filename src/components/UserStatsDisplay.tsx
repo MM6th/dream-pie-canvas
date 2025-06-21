@@ -21,19 +21,24 @@ const UserStatsDisplay = () => {
           table: 'profiles' 
         }, 
         () => {
+          console.log('Profile change detected, refetching stats...');
           // Refetch stats when profiles table changes
           fetchUserStats();
         }
       )
       .subscribe();
 
+    console.log('Subscribed to profile changes');
+
     // Cleanup subscription on unmount
     return () => {
+      console.log('Cleaning up subscription');
       supabase.removeChannel(channel);
     };
   }, []);
 
   const fetchUserStats = async () => {
+    console.log('Fetching user stats...');
     try {
       // Get supporter count
       const { data: supporters, error: supporterError } = await supabase
@@ -44,6 +49,7 @@ const UserStatsDisplay = () => {
       if (supporterError) {
         console.error('Error fetching supporter count:', supporterError);
       } else {
+        console.log('Supporters found:', supporters?.length || 0);
         setSupporterCount(supporters?.length || 0);
       }
 
@@ -56,6 +62,7 @@ const UserStatsDisplay = () => {
       if (merchantError) {
         console.error('Error fetching merchant count:', merchantError);
       } else {
+        console.log('Merchants found:', merchants?.length || 0);
         setMerchantCount(merchants?.length || 0);
       }
     } catch (error) {

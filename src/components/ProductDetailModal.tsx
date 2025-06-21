@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, Package } from "lucide-react";
+import { ShoppingCart, Package, AlertTriangle } from "lucide-react";
 
 interface FashionProduct {
   id: string;
@@ -17,6 +17,7 @@ interface FashionProduct {
   materials: string | null;
   price: number;
   shipping_cost: number;
+  is_adult_content?: boolean;
   fashion_product_images: Array<{
     id: string;
     image_url: string;
@@ -55,7 +56,15 @@ const ProductDetailModal = ({ product, isOpen, onClose, onPurchase }: ProductDet
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl bg-gray-800 border-gray-700 text-white max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold text-white">{product.title}</DialogTitle>
+          <DialogTitle className="text-xl font-bold text-white flex items-center gap-2">
+            {product.title}
+            {product.is_adult_content && (
+              <Badge variant="destructive" className="bg-red-600 text-white">
+                <AlertTriangle className="w-3 h-3 mr-1" />
+                18+
+              </Badge>
+            )}
+          </DialogTitle>
         </DialogHeader>
         
         <div className="space-y-4">
