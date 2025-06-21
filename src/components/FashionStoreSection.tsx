@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import FashionProductSlideshow from "./FashionProductSlideshow";
+import ProductDetailModal from "./ProductDetailModal";
 
 interface FashionProduct {
   id: string;
@@ -33,6 +34,7 @@ const FashionStoreSection = () => {
   const [products, setProducts] = useState<FashionProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState<FashionProduct | null>(null);
+  const [detailModalProduct, setDetailModalProduct] = useState<FashionProduct | null>(null);
 
   const fetchProducts = async () => {
     try {
@@ -176,7 +178,15 @@ const FashionStoreSection = () => {
                 )}
                 <CardTitle className="text-white text-lg line-clamp-2">{product.title}</CardTitle>
                 {product.description && (
-                  <p className="text-gray-400 text-sm line-clamp-2">{product.description}</p>
+                  <div>
+                    <p className="text-gray-400 text-sm line-clamp-2">{product.description}</p>
+                    <button
+                      onClick={() => setDetailModalProduct(product)}
+                      className="text-blue-400 hover:text-blue-300 text-sm mt-1 underline"
+                    >
+                      See More
+                    </button>
+                  </div>
                 )}
               </CardHeader>
               <CardContent className="p-4 pt-0">
@@ -214,6 +224,15 @@ const FashionStoreSection = () => {
           productTitle={selectedProduct.title}
           isOpen={!!selectedProduct}
           onClose={() => setSelectedProduct(null)}
+        />
+      )}
+
+      {detailModalProduct && (
+        <ProductDetailModal
+          product={detailModalProduct}
+          isOpen={!!detailModalProduct}
+          onClose={() => setDetailModalProduct(null)}
+          onPurchase={handlePurchase}
         />
       )}
     </>

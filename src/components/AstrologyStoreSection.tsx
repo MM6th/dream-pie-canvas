@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,6 +7,7 @@ import { Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
+import AstrologyProductDetailModal from "./AstrologyProductDetailModal";
 
 interface AstrologyProduct {
   id: string;
@@ -22,6 +24,7 @@ const AstrologyStoreSection = () => {
   const { user } = useAuth();
   const [products, setProducts] = useState<AstrologyProduct[]>([]);
   const [loading, setLoading] = useState(true);
+  const [detailModalProduct, setDetailModalProduct] = useState<AstrologyProduct | null>(null);
 
   useEffect(() => {
     fetchProducts();
@@ -97,47 +100,66 @@ const AstrologyStoreSection = () => {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {products.map((product) => (
-        <Card key={product.id} className="bg-gray-800/50 border-gray-700 backdrop-blur-sm hover:bg-gray-700/50 transition-colors">
-          {product.thumbnail_url && (
-            <CardHeader className="p-0">
-              <img
-                src={product.thumbnail_url}
-                alt={product.title}
-                className="w-full h-48 object-fill rounded-t-lg"
-              />
-            </CardHeader>
-          )}
-          <CardContent className="p-6">
-            <div className="flex items-start justify-between mb-3">
-              <CardTitle className="text-white text-lg">{product.title}</CardTitle>
-            </div>
-            
-            {product.description && (
-              <p className="text-gray-300 text-sm mb-4 line-clamp-3">{product.description}</p>
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {products.map((product) => (
+          <Card key={product.id} className="bg-gray-800/50 border-gray-700 backdrop-blur-sm hover:bg-gray-700/50 transition-colors">
+            {product.thumbnail_url && (
+              <CardHeader className="p-0">
+                <img
+                  src={product.thumbnail_url}
+                  alt={product.title}
+                  className="w-full h-48 object-fill rounded-t-lg"
+                />
+              </CardHeader>
             )}
-            
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-2xl font-bold text-white">${product.total_price}</span>
-              {product.delivery_type && (
-                <div className="flex items-center gap-1 text-gray-400">
-                  <Clock className="w-4 h-4" />
-                  <span className="text-sm capitalize">{product.delivery_type}</span>
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between mb-3">
+                <CardTitle className="text-white text-lg">{product.title}</CardTitle>
+              </div>
+              
+              {product.description && (
+                <div className="mb-4">
+                  <p className="text-gray-300 text-sm line-clamp-3">{product.description}</p>
+                  <button
+                    onClick={() => setDetailModalProduct(product)}
+                    className="text-blue-400 hover:text-blue-300 text-sm mt-1 underline"
+                  >
+                    See More
+                  </button>
                 </div>
               )}
-            </div>
-            
-            <Button
-              onClick={() => handlePurchase(product.id, product.total_price)}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              Book Reading
-            </Button>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
+              
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-2xl font-bold text-white">${product.total_price}</span>
+                {product.delivery_type && (
+                  <div className="flex items-center gap-1 text-gray-400">
+                    <Clock className="w-4 h-4" />
+                    <span className="text-sm capitalize">{product.delivery_type}</span>
+                  </div>
+                )}
+              </div>
+              
+              <Button
+                onClick={() => handlePurchase(product.id, product.total_price)}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                Book Reading
+              </Button>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {detailModalProduct && (
+        <AstrologyProductDetailModal
+          product={detailModalProduct}
+          isOpen={!!detailModalProduct}
+          onClose={() => setDetailModalProduct(null)}
+          onPurchase={handlePurchase}
+        />
+      )}
+    </>
   );
 };
 

@@ -165,34 +165,34 @@ const FashionProductManager = () => {
               </Button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {products.map((product) => {
                 const totalStock = getTotalStock(product.fashion_product_variants);
                 const { sizes, colors } = getVariantSummary(product.fashion_product_variants);
                 
                 return (
                   <Card key={product.id} className="bg-gray-700 border-gray-600">
-                    <CardContent className="p-4">
-                      <div className="space-y-4">
+                    <CardContent className="p-3">
+                      <div className="space-y-3">
                         {/* Product Images */}
                         {product.fashion_product_images.length > 0 ? (
                           <img
                             src={product.fashion_product_images[0].image_url}
                             alt={product.title}
-                            className="w-full h-48 object-fill rounded-lg cursor-pointer"
+                            className="w-full h-40 object-fill rounded-lg cursor-pointer"
                             onClick={() => handleImageClick(product)}
                           />
                         ) : (
-                          <div className="w-full h-48 bg-gray-600 rounded-lg flex items-center justify-center">
-                            <Shirt className="w-12 h-12 text-gray-400" />
+                          <div className="w-full h-40 bg-gray-600 rounded-lg flex items-center justify-center">
+                            <Shirt className="w-8 h-8 text-gray-400" />
                           </div>
                         )}
 
                         {/* Product Info */}
                         <div>
-                          <h3 className="text-lg font-semibold text-white line-clamp-2">{product.title}</h3>
+                          <h3 className="text-sm font-semibold text-white line-clamp-2">{product.title}</h3>
                           {product.description && (
-                            <p className="text-gray-400 text-sm line-clamp-2 mt-1">{product.description}</p>
+                            <p className="text-gray-400 text-xs line-clamp-2 mt-1">{product.description}</p>
                           )}
                           {product.materials && (
                             <p className="text-gray-300 text-xs mt-1">Materials: {product.materials}</p>
@@ -202,49 +202,50 @@ const FashionProductManager = () => {
                         {/* Price and Stock */}
                         <div className="flex items-center justify-between">
                           <div>
-                            <div className="text-lg font-bold text-white">${product.price.toFixed(2)}</div>
+                            <div className="text-sm font-bold text-white">${product.price.toFixed(2)}</div>
                             <div className="text-xs text-gray-400">
                               + ${product.shipping_cost.toFixed(2)} shipping
                             </div>
                           </div>
-                          <div className="text-right">
-                            <Badge variant={totalStock > 0 ? "default" : "destructive"} className="mb-1">
-                              <Package className="w-3 h-3 mr-1" />
-                              {totalStock} in stock
-                            </Badge>
-                          </div>
+                          <Badge variant={totalStock > 0 ? "default" : "destructive"} className="text-xs">
+                            <Package className="w-3 h-3 mr-1" />
+                            {totalStock}
+                          </Badge>
                         </div>
 
                         {/* Variants Summary */}
-                        <div className="space-y-2">
+                        <div className="space-y-1">
                           <div className="flex flex-wrap gap-1">
                             <span className="text-xs text-gray-400">Sizes:</span>
-                            {sizes.map(size => (
-                              <Badge key={size} variant="outline" className="text-xs">
+                            {sizes.slice(0, 3).map(size => (
+                              <Badge key={size} variant="outline" className="text-xs px-1 py-0">
                                 {size}
                               </Badge>
                             ))}
+                            {sizes.length > 3 && <span className="text-xs text-gray-400">+{sizes.length - 3}</span>}
                           </div>
                           <div className="flex flex-wrap gap-1">
                             <span className="text-xs text-gray-400">Colors:</span>
-                            {colors.map(color => (
-                              <Badge key={color} variant="outline" className="text-xs capitalize">
+                            {colors.slice(0, 2).map(color => (
+                              <Badge key={color} variant="outline" className="text-xs px-1 py-0 capitalize">
                                 {color}
                               </Badge>
                             ))}
+                            {colors.length > 2 && <span className="text-xs text-gray-400">+{colors.length - 2}</span>}
                           </div>
                         </div>
 
                         {/* Actions */}
-                        <div className="flex gap-2">
+                        <div className="flex gap-1">
                           <EditButton
                             onClick={() => handleEdit(product)}
+                            className="flex-1 text-xs px-2 py-1"
                           />
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() => handleDelete(product.id)}
-                            className="border-red-500 text-red-400 bg-black hover:bg-gray-800"
+                            className="border-red-500 text-red-400 bg-black hover:bg-gray-800 flex-1 text-xs px-2 py-1"
                           >
                             <Trash2 className="w-3 h-3" />
                           </Button>

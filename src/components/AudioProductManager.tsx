@@ -147,28 +147,28 @@ const AudioProductManager = () => {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {products.map((product) => (
               <Card key={product.id} className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
-                <CardHeader className="p-4">
+                <CardHeader className="p-3">
                   {product.thumbnail_url ? (
                     <img
                       src={product.thumbnail_url}
                       alt={product.title}
-                      className="w-full h-32 object-fill rounded-lg mb-3"
+                      className="w-full h-32 object-fill rounded-lg mb-2"
                     />
                   ) : (
-                    <div className="w-full h-32 bg-gray-700 rounded-lg mb-3 flex items-center justify-center">
-                      <AudioLines className="w-8 h-8 text-gray-400" />
+                    <div className="w-full h-32 bg-gray-700 rounded-lg mb-2 flex items-center justify-center">
+                      <AudioLines className="w-6 h-6 text-gray-400" />
                     </div>
                   )}
-                  <CardTitle className="text-white text-base line-clamp-2">{product.title}</CardTitle>
+                  <CardTitle className="text-white text-sm line-clamp-2">{product.title}</CardTitle>
                   {product.artist_name && (
-                    <p className="text-gray-400 text-sm">by {product.artist_name}</p>
+                    <p className="text-gray-400 text-xs">by {product.artist_name}</p>
                   )}
                 </CardHeader>
-                <CardContent className="p-4 pt-0">
-                  <div className="space-y-3">
+                <CardContent className="p-3 pt-0">
+                  <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <Badge variant="secondary" className="capitalize text-xs">
                         {product.audio_type}
@@ -180,26 +180,24 @@ const AudioProductManager = () => {
                       )}
                     </div>
                     
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        {product.is_free ? (
-                          <Badge className="bg-green-600 hover:bg-green-700 text-xs">
-                            Free
-                          </Badge>
-                        ) : (
-                          <Badge className="bg-blue-600 hover:bg-blue-700 flex items-center gap-1 text-xs">
-                            <DollarSign className="w-3 h-3" />
-                            {product.price?.toFixed(2)}
-                          </Badge>
-                        )}
-                      </div>
+                    <div className="flex items-center justify-center">
+                      {product.is_free ? (
+                        <Badge className="bg-green-600 hover:bg-green-700 text-xs">
+                          Free
+                        </Badge>
+                      ) : (
+                        <Badge className="bg-blue-600 hover:bg-blue-700 flex items-center gap-1 text-xs">
+                          <DollarSign className="w-3 h-3" />
+                          {product.price?.toFixed(2)}
+                        </Badge>
+                      )}
                     </div>
                     
-                    <div className="flex gap-2">
+                    <div className="flex gap-1">
                       <Button
                         size="sm"
                         onClick={() => setEditingProduct(product)}
-                        className="flex-1 bg-black text-white hover:bg-gray-800"
+                        className="flex-1 bg-black text-white hover:bg-gray-800 text-xs px-2 py-1"
                       >
                         <Edit className="w-3 h-3 mr-1" />
                         Edit
@@ -208,7 +206,7 @@ const AudioProductManager = () => {
                         size="sm"
                         variant="outline"
                         onClick={() => handleDelete(product.id)}
-                        className="flex-1 border-red-600 text-red-400 hover:bg-red-600 hover:text-white"
+                        className="flex-1 border-red-600 text-red-400 hover:bg-red-600 hover:text-white text-xs px-2 py-1"
                       >
                         <Trash2 className="w-3 h-3 mr-1" />
                         Delete

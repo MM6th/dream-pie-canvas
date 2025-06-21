@@ -131,7 +131,7 @@ const AstrologyProductManager = () => {
           {products.length === 0 ? (
             <p className="text-gray-400 text-center py-8">No astrology products created yet.</p>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {products.map((product) => (
                 <Card key={product.id} className="bg-gray-700/50 border-gray-600">
                   <CardContent className="p-4">
@@ -139,30 +139,30 @@ const AstrologyProductManager = () => {
                       <img
                         src={product.thumbnail_url}
                         alt={product.title}
-                        className="w-full h-32 object-fill rounded-lg mb-3"
+                        className="w-full h-40 object-fill rounded-lg mb-3"
                       />
                     )}
                     
                     <div className="space-y-3">
                       <div>
-                        <h3 className="text-white font-medium line-clamp-1">{product.title}</h3>
+                        <h3 className="text-white font-medium line-clamp-2 text-sm">{product.title}</h3>
                         <Badge variant="outline" className="mt-1 text-xs">
                           {getProductTypeLabel(product.product_type)}
                         </Badge>
                       </div>
 
                       {product.description && (
-                        <p className="text-gray-400 text-sm line-clamp-2">{product.description}</p>
+                        <p className="text-gray-400 text-xs line-clamp-3">{product.description}</p>
                       )}
 
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1">
                           {getDeliveryTypeIcon(product.delivery_type)}
-                          <span className="text-gray-300 text-sm">
+                          <span className="text-gray-300 text-xs">
                             {getDeliveryTypeLabel(product.delivery_type)}
                           </span>
                         </div>
-                        <Badge className="bg-green-600">
+                        <Badge className="bg-green-600 text-xs">
                           ${product.total_price}
                           {product.delivery_type === 'telephone' && product.hours_selected > 1 && (
                             <span className="text-xs ml-1">({product.hours_selected}h)</span>
@@ -174,7 +174,7 @@ const AstrologyProductManager = () => {
                         <Button
                           size="sm"
                           onClick={() => setEditingProduct(product)}
-                          className="bg-black text-white border-0 hover:bg-black"
+                          className="bg-black text-white border-0 hover:bg-black text-xs px-2 py-1"
                         >
                           <Edit className="w-3 h-3 mr-1" />
                           Edit
@@ -182,7 +182,7 @@ const AstrologyProductManager = () => {
                         <Button
                           size="sm"
                           onClick={() => handleDelete(product.id)}
-                          className="bg-black text-white border-0 hover:bg-black"
+                          className="bg-black text-white border-0 hover:bg-black text-xs px-2 py-1"
                         >
                           <Trash2 className="w-3 h-3 mr-1" />
                           Delete

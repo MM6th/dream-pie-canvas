@@ -1,12 +1,12 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, RefreshCw, FileText, MessageSquare } from "lucide-react";
+import { Users, RefreshCw, FileText, MessageSquare, BookOpen } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 import PendingMerchantCard from "./PendingMerchantCard";
 import ApprovedMerchantCard from "./ApprovedMerchantCard";
 import CoverSubmissionManager from "@/components/CoverSubmissionManager";
@@ -16,6 +16,7 @@ import BulletinPostManager from "@/components/BulletinPostManager";
 
 const AdminDashboard = () => {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("merchants");
 
   const { data: pendingMerchants, isLoading: pendingLoading } = useQuery({
@@ -90,14 +91,24 @@ const AdminDashboard = () => {
             </h2>
             <p className="text-gray-400">Manage merchants and platform content</p>
           </div>
-          <Button
-            onClick={handleRefresh}
-            variant="outline"
-            className="border-gray-600 text-white bg-transparent hover:bg-gray-700"
-          >
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Refresh
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={() => navigate('/about-author')}
+              variant="outline"
+              className="border-gray-600 text-white bg-transparent hover:bg-gray-700"
+            >
+              <BookOpen className="w-4 h-4 mr-2" />
+              About Author
+            </Button>
+            <Button
+              onClick={handleRefresh}
+              variant="outline"
+              className="border-gray-600 text-white bg-transparent hover:bg-gray-700"
+            >
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Refresh
+            </Button>
+          </div>
         </div>
       </div>
 
