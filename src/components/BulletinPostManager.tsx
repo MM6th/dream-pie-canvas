@@ -148,19 +148,19 @@ const BulletinPostManager = () => {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {posts.map((post) => (
-            <Card key={post.id} className="bg-gray-700/50 border-gray-600 overflow-hidden">
+            <Card key={post.id} className="bg-gray-700/50 border-gray-600 overflow-hidden h-[400px] flex flex-col">
               {post.image_url && (
                 <BulletinPostImage
                   src={post.image_url}
                   alt={post.title}
-                  className="w-full h-32"
+                  className="w-full h-40 object-cover"
                 />
               )}
-              <CardHeader className="pb-2">
+              <CardHeader className="pb-2 flex-shrink-0">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-white text-lg flex items-center gap-2">
+                  <CardTitle className="text-white text-sm flex items-center gap-2 line-clamp-1">
                     {post.title}
                     {post.link_url && (
                       <Badge variant="outline" className="border-blue-400 text-blue-400 text-xs">
@@ -169,7 +169,7 @@ const BulletinPostManager = () => {
                       </Badge>
                     )}
                   </CardTitle>
-                  <div className="flex gap-1">
+                  <div className="flex gap-1 flex-shrink-0">
                     <BulletinPostModal
                       post={post}
                       mode="edit"
@@ -204,14 +204,14 @@ const BulletinPostManager = () => {
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="pt-0">
-                <p className="text-gray-300 mb-2 text-sm line-clamp-2">{post.content}</p>
+              <CardContent className="pt-0 flex-grow flex flex-col">
+                <p className="text-gray-300 mb-2 text-sm line-clamp-3 flex-grow">{post.content}</p>
                 {post.link_url && (
                   <div className="mb-2">
                     <p className="text-xs text-blue-400 truncate">Link: {post.link_url}</p>
                   </div>
                 )}
-                <div className="flex items-center gap-2 text-xs text-gray-400">
+                <div className="flex items-center gap-2 text-xs text-gray-400 mt-auto">
                   <div className="flex items-center gap-1">
                     <Calendar className="w-3 h-3" />
                     {new Date(post.created_at).toLocaleDateString()}

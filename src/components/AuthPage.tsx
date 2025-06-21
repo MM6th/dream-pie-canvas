@@ -100,7 +100,18 @@ const AuthPage = () => {
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800 flex items-center justify-center p-4">
       <div className="max-w-md w-full space-y-6">
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-white mb-4">Private Investigation Enterprises</h1>
+          {/* Logo Image */}
+          <div className="flex justify-center mb-4">
+            <img
+              src="/lovable-uploads/e4407ccd-84aa-476e-9171-384946d3ed51.png"
+              alt="Private Investigation Enterprises Logo"
+              className="w-32 h-32 object-contain"
+            />
+          </div>
+          
+          {/* Company Name */}
+          <h1 className="text-2xl font-bold text-white mb-4 tracking-widest">PRIVATE INVESTIGATION ENTERPRISES</h1>
+          
           <p className="text-gray-400 mb-6">Your boutique platform for entertainment and astrology</p>
           
           <UserStatsDisplay />

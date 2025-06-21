@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -34,8 +33,7 @@ const AboutAuthor = () => {
       <div className="absolute top-4 left-4 right-4 z-20 flex justify-between">
         <Button
           onClick={handleBackToDashboard}
-          variant="outline"
-          className="border-gray-600 text-white hover:bg-white hover:text-black"
+          className="bg-black text-white border-0"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Dashboard

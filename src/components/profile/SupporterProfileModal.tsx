@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -7,6 +8,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import AvatarUpload from "./AvatarUpload";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface SupporterProfileModalProps {
   isOpen?: boolean;
@@ -25,7 +37,7 @@ const SupporterProfileModal = ({
   onProfileUpdate,
   children 
 }: SupporterProfileModalProps) => {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const [loading, setLoading] = useState(false);
   const [fetchingProfile, setFetchingProfile] = useState(false);
   const [displayName, setDisplayName] = useState('');
@@ -115,6 +127,40 @@ const SupporterProfileModal = ({
     }
   };
 
+  const handleDeleteProfile = async () => {
+    if (!user) return;
+
+    try {
+      // Delete the user account which will cascade delete the profile
+      const { error } = await supabase.auth.admin.deleteUser(user.id);
+      
+      if (error) {
+        console.error('Error deleting profile:', error);
+        toast({
+          title: "Error",
+          description: "Failed to delete profile. Please try again.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      toast({
+        title: "Success",
+        description: "Profile deleted successfully. You will be signed out."
+      });
+
+      // Sign out the user
+      await signOut();
+    } catch (error) {
+      console.error('Error deleting profile:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete profile. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
   const dialogOpen = isOpen !== undefined ? isOpen : internalOpen;
   const setDialogOpen = onClose !== undefined ? 
     (open: boolean) => { if (!open) onClose(); } : 
@@ -154,21 +200,54 @@ const SupporterProfileModal = ({
                 />
               </div>
               
-              <div className="flex justify-end gap-2">
-                <Button
-                  type="button"
-                  onClick={() => setDialogOpen(false)}
-                  className="bg-black text-white border-0 hover:bg-black"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={loading}
-                  className="bg-white hover:bg-gray-100 text-black"
-                >
-                  {loading ? 'Saving...' : 'Save Changes'}
-                </Button>
+              <div className="flex justify-between gap-2">
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white"
+                    >
+                      Delete Profile
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent className="bg-gray-800 border-gray-700">
+                    <AlertDialogHeader>
+                      <AlertDialogTitle className="text-white">Delete Profile</AlertDialogTitle>
+                      <AlertDialogDescription className="text-gray-400">
+                        Are you sure you want to delete your profile? This action cannot be undone and you will lose all your data.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel className="border-gray-600 text-white bg-transparent">
+                        Cancel
+                      </AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={handleDeleteProfile}
+                        className="bg-red-600 hover:bg-red-700"
+                      >
+                        Delete Profile
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    onClick={() => setDialogOpen(false)}
+                    className="bg-black text-white border-0 hover:bg-black"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={loading}
+                    className="bg-white hover:bg-gray-100 text-black"
+                  >
+                    {loading ? 'Saving...' : 'Save Changes'}
+                  </Button>
+                </div>
               </div>
             </form>
           )}
@@ -207,21 +286,54 @@ const SupporterProfileModal = ({
               />
             </div>
             
-            <div className="flex justify-end gap-2">
-              <Button
-                type="button"
-                onClick={() => setDialogOpen(false)}
-                className="bg-black text-white border-0 hover:bg-black"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={loading}
-                className="bg-white hover:bg-gray-100 text-black"
-              >
-                {loading ? 'Saving...' : 'Save Changes'}
-              </Button>
+            <div className="flex justify-between gap-2">
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white"
+                  >
+                    Delete Profile
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent className="bg-gray-800 border-gray-700">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle className="text-white">Delete Profile</AlertDialogTitle>
+                    <AlertDialogDescription className="text-gray-400">
+                      Are you sure you want to delete your profile? This action cannot be undone and you will lose all your data.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel className="border-gray-600 text-white bg-transparent">
+                      Cancel
+                    </AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleDeleteProfile}
+                      className="bg-red-600 hover:bg-red-700"
+                    >
+                      Delete Profile
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  onClick={() => setDialogOpen(false)}
+                  className="bg-black text-white border-0 hover:bg-black"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="bg-white hover:bg-gray-100 text-black"
+                >
+                  {loading ? 'Saving...' : 'Save Changes'}
+                </Button>
+              </div>
             </div>
           </form>
         )}
