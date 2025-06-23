@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -50,9 +49,13 @@ const AstrologyStoreSection = () => {
     }
   };
 
-  const filterAdultContent = (products: AstrologyProduct[]): AstrologyProduct[] => {
-    if (!userProfile?.adult_content_restricted) return products;
-    return products.filter(product => !product.is_adult_content);
+  const filterAdultContent = (products: AstrologyProduct[], userProfile: { adult_content_restricted: boolean | null } | null): AstrologyProduct[] => {
+    // If user has adult content restricted, filter out adult content
+    if (userProfile?.adult_content_restricted) {
+      return products.filter(product => !product.is_adult_content);
+    }
+    // If user doesn't have restrictions or isn't logged in, show all products
+    return products;
   };
 
   const fetchProducts = async () => {
@@ -69,8 +72,8 @@ const AstrologyStoreSection = () => {
       if (error) {
         console.error('Error fetching astrology products:', error);
       } else {
-        // Filter adult content based on user preferences
-        const filteredData = filterAdultContent(data || []);
+        // Apply adult content filtering based on user preferences
+        const filteredData = filterAdultContent(data || [], profile);
         setProducts(filteredData);
       }
     } catch (error) {
