@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Upload, AudioLines } from "lucide-react";
+import { Upload, AudioLines, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
@@ -28,7 +28,8 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
     albumName: "",
     hasAlbum: false,
     accessLevel: "public" as "public" | "merchant_only" | "paid",
-    price: ""
+    price: "",
+    is_adult_content: false
   });
   const [albums, setAlbums] = useState<any[]>([]);
 
@@ -174,7 +175,8 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
           album_id: albumId,
           access_level: formData.accessLevel,
           is_free: formData.accessLevel !== 'paid',
-          price: formData.accessLevel === 'paid' ? parseFloat(formData.price) : null
+          price: formData.accessLevel === 'paid' ? parseFloat(formData.price) : null,
+          is_adult_content: formData.is_adult_content
         });
       
       if (productError) throw productError;
@@ -194,7 +196,8 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
         albumName: "",
         hasAlbum: false,
         accessLevel: "public",
-        price: ""
+        price: "",
+        is_adult_content: false
       });
       onSuccess();
       
@@ -371,6 +374,26 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
               />
             </div>
           )}
+
+          {/* Adult Content Toggle */}
+          <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg border border-gray-600">
+            <div className="flex items-center gap-3">
+              <Shield className="w-5 h-5 text-orange-400" />
+              <div>
+                <Label htmlFor="adult_content_audio" className="text-white font-medium">
+                  Adult/Mature Content
+                </Label>
+                <p className="text-sm text-gray-400">
+                  Mark this if your audio contains adult or mature themes (18+)
+                </p>
+              </div>
+            </div>
+            <Switch
+              id="adult_content_audio"
+              checked={formData.is_adult_content}
+              onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_adult_content: checked }))}
+            />
+          </div>
           
           <div className="flex gap-2">
             <Button 

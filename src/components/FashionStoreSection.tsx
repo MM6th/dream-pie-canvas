@@ -1,8 +1,9 @@
+
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingCart, Shirt } from "lucide-react";
+import { ShoppingCart, Shirt, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
@@ -16,6 +17,7 @@ interface FashionProduct {
   materials: string | null;
   price: number;
   shipping_cost: number;
+  is_adult_content: boolean | null;
   fashion_product_images: Array<{
     id: string;
     image_url: string;
@@ -32,12 +34,40 @@ interface FashionProduct {
 const FashionStoreSection = () => {
   const { user } = useAuth();
   const [products, setProducts] = useState<FashionProduct[]>([]);
+  const [userProfile, setUserProfile] = useState<{ adult_content_restricted: boolean | null } | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState<FashionProduct | null>(null);
   const [detailModalProduct, setDetailModalProduct] = useState<FashionProduct | null>(null);
 
+  const fetchUserProfile = async () => {
+    if (!user) return null;
+    
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('adult_content_restricted')
+        .eq('id', user.id)
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      return null;
+    }
+  };
+
+  const filterAdultContent = (products: FashionProduct[]): FashionProduct[] => {
+    if (!userProfile?.adult_content_restricted) return products;
+    return products.filter(product => !product.is_adult_content);
+  };
+
   const fetchProducts = async () => {
     try {
+      // Fetch user profile first
+      const profile = await fetchUserProfile();
+      setUserProfile(profile);
+
       const { data, error } = await supabase
         .from('fashion_products')
         .select(`
@@ -47,6 +77,7 @@ const FashionStoreSection = () => {
           materials,
           price,
           shipping_cost,
+          is_adult_content,
           fashion_product_images (
             id,
             image_url,
@@ -63,13 +94,15 @@ const FashionStoreSection = () => {
 
       if (error) throw error;
 
-      // Sort images by display_order
+      // Sort images by display_order and filter adult content
       const productsWithSortedImages = (data || []).map(product => ({
         ...product,
         fashion_product_images: product.fashion_product_images.sort((a, b) => a.display_order - b.display_order)
       }));
 
-      setProducts(productsWithSortedImages);
+      // Filter adult content based on user preferences
+      const filteredProducts = filterAdultContent(productsWithSortedImages);
+      setProducts(filteredProducts);
     } catch (error: any) {
       console.error('Error fetching fashion products:', error);
       toast({
@@ -156,7 +189,12 @@ const FashionStoreSection = () => {
           <CardContent className="p-8 text-center">
             <Shirt className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-white mb-2">No Fashion Products Available</h3>
-            <p className="text-gray-400">Check back soon for new fashion items!</p>
+            <p className="text-gray-400">
+              {userProfile?.adult_content_restricted 
+                ? "No fashion products available (adult content filtering enabled)." 
+                : "Check back soon for new fashion items!"
+              }
+            </p>
           </CardContent>
         </Card>
       ) : (
@@ -176,7 +214,15 @@ const FashionStoreSection = () => {
                     <Shirt className="w-12 h-12 text-gray-400" />
                   </div>
                 )}
-                <CardTitle className="text-white text-lg line-clamp-2">{product.title}</CardTitle>
+                <div className="flex items-start justify-between">
+                  <CardTitle className="text-white text-lg line-clamp-2">{product.title}</CardTitle>
+                  {product.is_adult_content && !userProfile?.adult_content_restricted && (
+                    <Badge className="bg-orange-600 hover:bg-orange-700 text-xs flex items-center gap-1 ml-2">
+                      <Shield className="w-3 h-3" />
+                      18+
+                    </Badge>
+                  )}
+                </div>
                 {product.description && (
                   <div>
                     <p className="text-gray-400 text-sm line-clamp-2">{product.description}</p>

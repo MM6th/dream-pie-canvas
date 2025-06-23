@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Plus, Minus, Save } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Plus, Minus, Save, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
@@ -31,6 +32,7 @@ const FashionProductUploadModal = ({ isOpen, onClose, onSuccess }: FashionProduc
   const [materials, setMaterials] = useState("");
   const [price, setPrice] = useState("");
   const [shippingCost, setShippingCost] = useState("0");
+  const [isAdultContent, setIsAdultContent] = useState(false);
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [variants, setVariants] = useState<Array<{
     size: SizeType;
@@ -45,6 +47,7 @@ const FashionProductUploadModal = ({ isOpen, onClose, onSuccess }: FashionProduc
     setMaterials("");
     setPrice("");
     setShippingCost("0");
+    setIsAdultContent(false);
     setSelectedImages([]);
     setVariants([]);
     setNewColor("");
@@ -148,7 +151,8 @@ const FashionProductUploadModal = ({ isOpen, onClose, onSuccess }: FashionProduc
           description: description.trim() || null,
           materials: materials.trim() || null,
           price: parseFloat(price),
-          shipping_cost: parseFloat(shippingCost)
+          shipping_cost: parseFloat(shippingCost),
+          is_adult_content: isAdultContent
         })
         .select()
         .single();
@@ -295,6 +299,26 @@ const FashionProductUploadModal = ({ isOpen, onClose, onSuccess }: FashionProduc
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
               className="bg-gray-700 border-gray-600 text-white"
+            />
+          </div>
+
+          {/* Adult Content Toggle */}
+          <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg border border-gray-600">
+            <div className="flex items-center gap-3">
+              <Shield className="w-5 h-5 text-orange-400" />
+              <div>
+                <Label htmlFor="adult_content_fashion" className="text-white font-medium">
+                  Adult/Mature Content
+                </Label>
+                <p className="text-sm text-gray-400">
+                  Mark this if your fashion item is intended for adult/mature audiences (18+)
+                </p>
+              </div>
+            </div>
+            <Switch
+              id="adult_content_fashion"
+              checked={isAdultContent}
+              onCheckedChange={setIsAdultContent}
             />
           </div>
 

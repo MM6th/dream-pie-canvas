@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Plus } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Plus, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/components/ui/use-toast";
@@ -18,6 +19,7 @@ interface BulletinPostModalProps {
     content: string;
     image_url?: string;
     link_url?: string;
+    is_adult_content?: boolean;
   };
   mode?: 'create' | 'edit';
 }
@@ -30,6 +32,7 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create' }: BulletinPostMod
   const [content, setContent] = useState(post?.content || '');
   const [imageUrl, setImageUrl] = useState(post?.image_url || '');
   const [linkUrl, setLinkUrl] = useState(post?.link_url || '');
+  const [isAdultContent, setIsAdultContent] = useState(post?.is_adult_content || false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,6 +46,7 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create' }: BulletinPostMod
         content,
         image_url: imageUrl || null,
         link_url: linkUrl || null,
+        is_adult_content: isAdultContent,
         merchant_id: user.id,
         post_type: 'bulletin',
         updated_at: new Date().toISOString()
@@ -82,6 +86,7 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create' }: BulletinPostMod
       setContent('');
       setImageUrl('');
       setLinkUrl('');
+      setIsAdultContent(false);
       setOpen(false);
       onSuccess();
     } catch (error) {
@@ -166,6 +171,26 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create' }: BulletinPostMod
             <p className="text-xs text-gray-400 mt-1">
               Add a link to another page (internal like /store or external like https://example.com)
             </p>
+          </div>
+
+          {/* Adult Content Toggle */}
+          <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg border border-gray-600">
+            <div className="flex items-center gap-3">
+              <Shield className="w-5 h-5 text-orange-400" />
+              <div>
+                <Label htmlFor="adult_content_bulletin" className="text-white font-medium">
+                  Adult/Mature Content
+                </Label>
+                <p className="text-sm text-gray-400">
+                  Mark this if your post contains adult or mature themes (18+)
+                </p>
+              </div>
+            </div>
+            <Switch
+              id="adult_content_bulletin"
+              checked={isAdultContent}
+              onCheckedChange={setIsAdultContent}
+            />
           </div>
           
           <div className="flex justify-end gap-2">

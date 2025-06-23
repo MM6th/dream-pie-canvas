@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Clock } from "lucide-react";
+import { Clock, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
@@ -17,30 +17,61 @@ interface AstrologyProduct {
   thumbnail_url: string | null;
   delivery_type: string | null;
   total_price: number;
+  is_adult_content: boolean | null;
   created_at: string;
 }
 
 const AstrologyStoreSection = () => {
   const { user } = useAuth();
   const [products, setProducts] = useState<AstrologyProduct[]>([]);
+  const [userProfile, setUserProfile] = useState<{ adult_content_restricted: boolean | null } | null>(null);
   const [loading, setLoading] = useState(true);
   const [detailModalProduct, setDetailModalProduct] = useState<AstrologyProduct | null>(null);
 
   useEffect(() => {
     fetchProducts();
-  }, []);
+  }, [user]);
+
+  const fetchUserProfile = async () => {
+    if (!user) return null;
+    
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('adult_content_restricted')
+        .eq('id', user.id)
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      return null;
+    }
+  };
+
+  const filterAdultContent = (products: AstrologyProduct[]): AstrologyProduct[] => {
+    if (!userProfile?.adult_content_restricted) return products;
+    return products.filter(product => !product.is_adult_content);
+  };
 
   const fetchProducts = async () => {
     try {
+      // Fetch user profile first
+      const profile = await fetchUserProfile();
+      setUserProfile(profile);
+
       const { data, error } = await supabase
         .from('astrology_products')
-        .select('*')
+        .select('*, is_adult_content')
         .order('created_at', { ascending: false });
 
       if (error) {
         console.error('Error fetching astrology products:', error);
       } else {
-        setProducts(data || []);
+        // Filter adult content based on user preferences
+        const filteredData = filterAdultContent(data || []);
+        setProducts(filteredData);
       }
     } catch (error) {
       console.error('Error fetching astrology products:', error);
@@ -93,7 +124,12 @@ const AstrologyStoreSection = () => {
     return (
       <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
         <CardContent className="p-8 text-center">
-          <p className="text-gray-400">No astrology services available yet. Check back soon!</p>
+          <p className="text-gray-400">
+            {userProfile?.adult_content_restricted 
+              ? "No astrology services available (adult content filtering enabled)." 
+              : "No astrology services available yet. Check back soon!"
+            }
+          </p>
         </CardContent>
       </Card>
     );
@@ -116,6 +152,12 @@ const AstrologyStoreSection = () => {
             <CardContent className="p-6">
               <div className="flex items-start justify-between mb-3">
                 <CardTitle className="text-white text-lg">{product.title}</CardTitle>
+                {product.is_adult_content && !userProfile?.adult_content_restricted && (
+                  <Badge className="bg-orange-600 hover:bg-orange-700 text-xs flex items-center gap-1">
+                    <Shield className="w-3 h-3" />
+                    18+
+                  </Badge>
+                )}
               </div>
               
               {product.description && (

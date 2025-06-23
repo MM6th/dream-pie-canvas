@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { AudioLines, Download, DollarSign, Video, Lock, Shirt, Star } from "lucide-react";
+import { AudioLines, Download, DollarSign, Video, Lock, Shirt, Star, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
@@ -20,6 +20,7 @@ interface AudioProduct {
   is_free: boolean;
   price: number | null;
   access_level: "public" | "merchant_only" | "paid" | null;
+  is_adult_content: boolean | null;
   created_at: string;
   albums?: {
     name: string;
@@ -36,12 +37,14 @@ interface VideoProduct {
   background_music_url: string | null;
   is_free: boolean;
   price: number | null;
+  is_adult_content: boolean | null;
   created_at: string;
 }
 
 interface UserProfile {
   user_type: string;
   approval_status: string | null;
+  adult_content_restricted: boolean | null;
 }
 
 const StorePage = () => {
@@ -58,7 +61,7 @@ const StorePage = () => {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('user_type, approval_status')
+        .select('user_type, approval_status, adult_content_restricted')
         .eq('id', user.id)
         .single();
 
@@ -70,13 +73,18 @@ const StorePage = () => {
     }
   };
 
+  const filterAdultContent = <T extends { is_adult_content?: boolean | null }>(products: T[]): T[] => {
+    if (!userProfile?.adult_content_restricted) return products;
+    return products.filter(product => !product.is_adult_content);
+  };
+
   const fetchProducts = async () => {
     try {
       // Fetch user profile first
       const profile = await fetchUserProfile();
       setUserProfile(profile);
 
-      // Fetch audio products with access_level
+      // Fetch audio products with access_level and adult content flag
       const { data: audioData, error: audioError } = await supabase
         .from('audio_products')
         .select(`
@@ -90,6 +98,7 @@ const StorePage = () => {
           is_free,
           price,
           access_level,
+          is_adult_content,
           created_at,
           albums (
             name
@@ -99,16 +108,20 @@ const StorePage = () => {
 
       if (audioError) throw audioError;
 
-      // Fetch video products
+      // Fetch video products with adult content flag
       const { data: videoData, error: videoError } = await supabase
         .from('video_products')
-        .select('*')
+        .select('*, is_adult_content')
         .order('created_at', { ascending: false });
 
       if (videoError) throw videoError;
 
-      setAudioProducts(audioData || []);
-      setVideoProducts(videoData || []);
+      // Filter adult content based on user preferences
+      const filteredAudioData = filterAdultContent(audioData || []);
+      const filteredVideoData = filterAdultContent(videoData || []);
+
+      setAudioProducts(filteredAudioData);
+      setVideoProducts(filteredVideoData);
     } catch (error: any) {
       console.error('Error fetching products:', error);
       toast({
@@ -145,34 +158,75 @@ const StorePage = () => {
   const getAccessLevelBadge = (product: AudioProduct) => {
     const accessLevel = product.access_level || (product.is_free ? "public" : "paid");
     
-    switch (accessLevel) {
-      case "public":
-        return (
+    return (
+      <div className="flex items-center gap-2">
+        {/* Adult content indicator */}
+        {product.is_adult_content && !userProfile?.adult_content_restricted && (
+          <Badge className="bg-orange-600 hover:bg-orange-700 text-xs flex items-center gap-1">
+            <Shield className="w-3 h-3" />
+            18+
+          </Badge>
+        )}
+        
+        {/* Access level badge */}
+        {(() => {
+          switch (accessLevel) {
+            case "public":
+              return (
+                <Badge className="bg-green-600 hover:bg-green-700">
+                  Free
+                </Badge>
+              );
+            case "merchant_only":
+              return (
+                <Badge className="bg-orange-600 hover:bg-orange-700 flex items-center gap-1">
+                  <Lock className="w-3 h-3" />
+                  Merchants Only
+                </Badge>
+              );
+            case "paid":
+              return (
+                <Badge className="bg-blue-600 hover:bg-blue-700 flex items-center gap-1">
+                  <DollarSign className="w-3 h-3" />
+                  {product.price?.toFixed(2)}
+                </Badge>
+              );
+            default:
+              return (
+                <Badge className="bg-green-600 hover:bg-green-700">
+                  Free
+                </Badge>
+              );
+          }
+        })()}
+      </div>
+    );
+  };
+
+  const getVideoBadges = (product: VideoProduct) => {
+    return (
+      <div className="flex items-center gap-2">
+        {/* Adult content indicator */}
+        {product.is_adult_content && !userProfile?.adult_content_restricted && (
+          <Badge className="bg-orange-600 hover:bg-orange-700 text-xs flex items-center gap-1">
+            <Shield className="w-3 h-3" />
+            18+
+          </Badge>
+        )}
+        
+        {/* Price badge */}
+        {product.is_free ? (
           <Badge className="bg-green-600 hover:bg-green-700">
             Free
           </Badge>
-        );
-      case "merchant_only":
-        return (
-          <Badge className="bg-orange-600 hover:bg-orange-700 flex items-center gap-1">
-            <Lock className="w-3 h-3" />
-            Merchants Only
-          </Badge>
-        );
-      case "paid":
-        return (
+        ) : (
           <Badge className="bg-blue-600 hover:bg-blue-700 flex items-center gap-1">
             <DollarSign className="w-3 h-3" />
             {product.price?.toFixed(2)}
           </Badge>
-        );
-      default:
-        return (
-          <Badge className="bg-green-600 hover:bg-green-700">
-            Free
-          </Badge>
-        );
-    }
+        )}
+      </div>
+    );
   };
 
   const getDownloadButtonText = (product: AudioProduct) => {
@@ -419,6 +473,14 @@ const StorePage = () => {
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-white mb-2">Content Store</h1>
           <p className="text-gray-300">Discover amazing astrology, fashion, audio, and video content from creators</p>
+          {userProfile?.adult_content_restricted && (
+            <div className="mt-2 p-2 bg-blue-900/20 border border-blue-500/30 rounded-lg">
+              <p className="text-blue-300 text-sm flex items-center gap-2">
+                <Shield className="w-4 h-4" />
+                Adult content filtering is enabled. Some content may be hidden.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Astrology Products Section */}
@@ -489,9 +551,7 @@ const StorePage = () => {
                       </div>
                       
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          {getAccessLevelBadge(product)}
-                        </div>
+                        {getAccessLevelBadge(product)}
                         
                         <Button
                           size="sm"
@@ -562,18 +622,7 @@ const StorePage = () => {
                       </div>
                       
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          {product.is_free ? (
-                            <Badge className="bg-green-600 hover:bg-green-700">
-                              Free
-                            </Badge>
-                          ) : (
-                            <Badge className="bg-blue-600 hover:bg-blue-700 flex items-center gap-1">
-                              <DollarSign className="w-3 h-3" />
-                              {product.price?.toFixed(2)}
-                            </Badge>
-                          )}
-                        </div>
+                        {getVideoBadges(product)}
                         
                         <Button
                           size="sm"
