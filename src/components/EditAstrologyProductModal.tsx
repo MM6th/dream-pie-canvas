@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Edit, Loader2 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Edit, Loader2, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import ImagePicker from "./ImagePicker";
@@ -21,6 +22,7 @@ interface AstrologyProduct {
   hours_selected: number;
   total_price: number;
   buyer_email: string | null;
+  is_adult_content?: boolean;
 }
 
 interface EditAstrologyProductModalProps {
@@ -63,6 +65,7 @@ const EditAstrologyProductModal = ({ product, isOpen, onClose, onSuccess }: Edit
     hours_selected: product.hours_selected
   });
   const [thumbnailUrl, setThumbnailUrl] = useState(product.thumbnail_url || '');
+  const [isAdultContent, setIsAdultContent] = useState(product.is_adult_content || false);
 
   const calculateTotalPrice = () => {
     if (!formData.product_type || !formData.delivery_type) return 0;
@@ -101,6 +104,7 @@ const EditAstrologyProductModal = ({ product, isOpen, onClose, onSuccess }: Edit
           total_price: totalPrice,
           buyer_email: null,
           thumbnail_url: thumbnailUrl || null,
+          is_adult_content: isAdultContent,
           updated_at: new Date().toISOString()
         })
         .eq('id', product.id);
@@ -184,6 +188,16 @@ const EditAstrologyProductModal = ({ product, isOpen, onClose, onSuccess }: Edit
               onImageSelect={setThumbnailUrl}
               currentImageUrl={thumbnailUrl}
             />
+            {thumbnailUrl && (
+              <div className="mt-2">
+                <p className="text-sm text-gray-400 mb-2">Current thumbnail:</p>
+                <img
+                  src={thumbnailUrl}
+                  alt="Current thumbnail"
+                  className="w-32 h-32 object-cover rounded-lg border border-gray-600"
+                />
+              </div>
+            )}
           </div>
 
           <div>
@@ -219,6 +233,26 @@ const EditAstrologyProductModal = ({ product, isOpen, onClose, onSuccess }: Edit
               />
             </div>
           )}
+
+          {/* Adult Content Toggle */}
+          <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg border border-gray-600">
+            <div className="flex items-center gap-3">
+              <Shield className="w-5 h-5 text-orange-400" />
+              <div>
+                <Label htmlFor="adult_content_astrology" className="text-white font-medium">
+                  Adult/Mature Content
+                </Label>
+                <p className="text-sm text-gray-400">
+                  Mark this if your product contains adult or mature themes (18+)
+                </p>
+              </div>
+            </div>
+            <Switch
+              id="adult_content_astrology"
+              checked={isAdultContent}
+              onCheckedChange={setIsAdultContent}
+            />
+          </div>
 
           {formData.delivery_type && !formData.delivery_type.includes('telephone') && (
             <div className="p-3 bg-blue-900/20 border border-blue-500/30 rounded-lg">

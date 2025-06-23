@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -6,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Switch } from "@/components/ui/switch";
+import { Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
@@ -21,6 +24,7 @@ interface AudioProduct {
   is_free: boolean;
   price: number | null;
   access_level: "public" | "merchant_only" | "paid" | null;
+  is_adult_content?: boolean;
   albums?: {
     name: string;
   };
@@ -45,6 +49,7 @@ const EditAudioModal = ({ product, onSuccess, onClose }: EditAudioModalProps) =>
     accessLevel: (product.access_level || (product.is_free ? "public" : "paid")) as "public" | "merchant_only" | "paid",
     price: product.price?.toString() || ""
   });
+  const [isAdultContent, setIsAdultContent] = useState(product.is_adult_content || false);
   const [albums, setAlbums] = useState<any[]>([]);
 
   const fetchAlbums = async () => {
@@ -136,7 +141,7 @@ const EditAudioModal = ({ product, onSuccess, onClose }: EditAudioModalProps) =>
         }
       }
       
-      // Update audio product with new access_level field
+      // Update audio product with new access_level field and adult content
       const { error: productError } = await supabase
         .from('audio_products')
         .update({
@@ -147,7 +152,8 @@ const EditAudioModal = ({ product, onSuccess, onClose }: EditAudioModalProps) =>
           album_id: albumId,
           access_level: formData.accessLevel,
           is_free: formData.accessLevel !== 'paid',
-          price: formData.accessLevel === 'paid' ? parseFloat(formData.price) : null
+          price: formData.accessLevel === 'paid' ? parseFloat(formData.price) : null,
+          is_adult_content: isAdultContent
         })
         .eq('id', product.id);
       
@@ -174,7 +180,7 @@ const EditAudioModal = ({ product, onSuccess, onClose }: EditAudioModalProps) =>
 
   return (
     <Dialog open={true} onOpenChange={() => onClose()}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md bg-gray-800 border-gray-700 text-white">
         <DialogHeader>
           <DialogTitle>Edit Audio Product</DialogTitle>
         </DialogHeader>
@@ -186,6 +192,7 @@ const EditAudioModal = ({ product, onSuccess, onClose }: EditAudioModalProps) =>
               value={formData.title}
               onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
               placeholder="Enter audio title"
+              className="bg-gray-700 border-gray-600 text-white"
               required
             />
           </div>
@@ -197,6 +204,7 @@ const EditAudioModal = ({ product, onSuccess, onClose }: EditAudioModalProps) =>
               value={formData.artistName}
               onChange={(e) => setFormData(prev => ({ ...prev, artistName: e.target.value }))}
               placeholder="Enter artist name"
+              className="bg-gray-700 border-gray-600 text-white"
             />
           </div>
           
@@ -206,20 +214,31 @@ const EditAudioModal = ({ product, onSuccess, onClose }: EditAudioModalProps) =>
               value={formData.audioType} 
               onValueChange={(value) => setFormData(prev => ({ ...prev, audioType: value }))}
             >
-              <SelectTrigger>
+              <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
                 <SelectValue placeholder="Select audio type" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="music">Music</SelectItem>
-                <SelectItem value="podcast">Podcast</SelectItem>
-                <SelectItem value="spoken">Spoken</SelectItem>
-                <SelectItem value="asmr">ASMR</SelectItem>
+              <SelectContent className="bg-gray-700 border-gray-600">
+                <SelectItem value="music" className="text-white">Music</SelectItem>
+                <SelectItem value="podcast" className="text-white">Podcast</SelectItem>
+                <SelectItem value="spoken" className="text-white">Spoken</SelectItem>
+                <SelectItem value="asmr" className="text-white">ASMR</SelectItem>
               </SelectContent>
             </Select>
           </div>
           
           <div>
-            <Label htmlFor="thumbnail">Update Thumbnail Image</Label>
+            <Label htmlFor="thumbnail">Thumbnail Image</Label>
+            {product.thumbnail_url && (
+              <div className="mb-2">
+                <p className="text-sm text-gray-400 mb-2">Current thumbnail:</p>
+                <img
+                  src={product.thumbnail_url}
+                  alt="Current thumbnail"
+                  className="w-20 h-20 object-cover rounded-lg border border-gray-600"
+                />
+                <p className="text-xs text-gray-500 mt-1">Upload a new image to replace</p>
+              </div>
+            )}
             <Input
               id="thumbnail"
               type="file"
@@ -228,6 +247,7 @@ const EditAudioModal = ({ product, onSuccess, onClose }: EditAudioModalProps) =>
                 ...prev, 
                 thumbnail: e.target.files?.[0] || null 
               }))}
+              className="bg-gray-700 border-gray-600 text-white"
             />
           </div>
           
@@ -240,7 +260,7 @@ const EditAudioModal = ({ product, onSuccess, onClose }: EditAudioModalProps) =>
                 hasAlbum: checked as boolean 
               }))}
             />
-            <Label htmlFor="hasAlbum">Part of an album/collection</Label>
+            <Label htmlFor="hasAlbum" className="text-white">Part of an album/collection</Label>
           </div>
           
           {formData.hasAlbum && (
@@ -251,12 +271,13 @@ const EditAudioModal = ({ product, onSuccess, onClose }: EditAudioModalProps) =>
                 value={formData.albumName}
                 onChange={(e) => setFormData(prev => ({ ...prev, albumName: e.target.value }))}
                 placeholder="Enter album name"
+                className="bg-gray-700 border-gray-600 text-white"
               />
             </div>
           )}
           
           <div>
-            <Label>Access Level *</Label>
+            <Label className="text-white">Access Level *</Label>
             <RadioGroup
               value={formData.accessLevel}
               onValueChange={(value) => setFormData(prev => ({ 
@@ -267,15 +288,15 @@ const EditAudioModal = ({ product, onSuccess, onClose }: EditAudioModalProps) =>
             >
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="public" id="public" />
-                <Label htmlFor="public">Free for Everyone</Label>
+                <Label htmlFor="public" className="text-white">Free for Everyone</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="merchant_only" id="merchant_only" />
-                <Label htmlFor="merchant_only">Merchant Download Only</Label>
+                <Label htmlFor="merchant_only" className="text-white">Merchant Download Only</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="paid" id="paid" />
-                <Label htmlFor="paid">Paid Content</Label>
+                <Label htmlFor="paid" className="text-white">Paid Content</Label>
               </div>
             </RadioGroup>
           </div>
@@ -291,15 +312,36 @@ const EditAudioModal = ({ product, onSuccess, onClose }: EditAudioModalProps) =>
                 value={formData.price}
                 onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
                 placeholder="0.00"
+                className="bg-gray-700 border-gray-600 text-white"
               />
             </div>
           )}
+
+          {/* Adult Content Toggle */}
+          <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg border border-gray-600">
+            <div className="flex items-center gap-3">
+              <Shield className="w-5 h-5 text-orange-400" />
+              <div>
+                <Label htmlFor="adult_content_audio" className="text-white font-medium">
+                  Adult/Mature Content
+                </Label>
+                <p className="text-sm text-gray-400">
+                  Mark this if your audio contains adult or mature themes (18+)
+                </p>
+              </div>
+            </div>
+            <Switch
+              id="adult_content_audio"
+              checked={isAdultContent}
+              onCheckedChange={setIsAdultContent}
+            />
+          </div>
           
           <div className="flex gap-2">
-            <Button type="button" variant="outline" onClick={onClose} className="flex-1">
+            <Button type="button" variant="outline" onClick={onClose} className="flex-1 border-gray-600 text-white bg-transparent">
               Cancel
             </Button>
-            <Button type="submit" disabled={loading} className="flex-1">
+            <Button type="submit" disabled={loading} className="flex-1 bg-blue-600 hover:bg-blue-700">
               {loading ? "Updating..." : "Update Product"}
             </Button>
           </div>
