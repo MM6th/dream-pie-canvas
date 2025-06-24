@@ -8,6 +8,7 @@ import VideoPlayer from "@/components/VideoPlayer";
 import BackgroundUpload from "@/components/BackgroundUpload";
 import { useAuth } from "@/hooks/useAuth";
 import SupporterProfileModal from "@/components/profile/SupporterProfileModal";
+import PieWelcomeModal from "@/components/PieWelcomeModal";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -80,7 +81,12 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedVide
     <div className="max-w-6xl mx-auto p-6 space-y-8">
       <div className="text-center">
         <h1 className="text-4xl font-bold text-white mb-2">Welcome Back!</h1>
-        <p className="text-gray-300">Enjoy your purchased content</p>
+        <p className="text-gray-300 mb-4">Enjoy your purchased content</p>
+        <PieWelcomeModal>
+          <button className="text-blue-400 hover:text-blue-300 underline">
+            What is PIE?
+          </button>
+        </PieWelcomeModal>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
