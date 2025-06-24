@@ -547,6 +547,44 @@ export type Database = {
           },
         ]
       }
+      product_reviews: {
+        Row: {
+          astrology_product_id: string
+          created_at: string
+          id: string
+          rating: number
+          review_text: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          astrology_product_id: string
+          created_at?: string
+          id?: string
+          rating: number
+          review_text?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          astrology_product_id?: string
+          created_at?: string
+          id?: string
+          rating?: number
+          review_text?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_product_reviews_astrology_product"
+            columns: ["astrology_product_id"]
+            isOneToOne: false
+            referencedRelation: "astrology_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           adult_content_restricted: boolean | null

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import AstrologyProductDetailModal from "./AstrologyProductDetailModal";
+import ProductReviewsSection from "./reviews/ProductReviewsSection";
 
 interface AstrologyProduct {
   id: string;
@@ -26,6 +28,7 @@ const AstrologyStoreSection = () => {
   const [userProfile, setUserProfile] = useState<{ adult_content_restricted: boolean | null } | null>(null);
   const [loading, setLoading] = useState(true);
   const [detailModalProduct, setDetailModalProduct] = useState<AstrologyProduct | null>(null);
+  const [showReviews, setShowReviews] = useState<string | null>(null);
 
   useEffect(() => {
     fetchProducts();
@@ -50,17 +53,14 @@ const AstrologyStoreSection = () => {
   };
 
   const filterAdultContent = (products: AstrologyProduct[], userProfile: { adult_content_restricted: boolean | null } | null): AstrologyProduct[] => {
-    // If user has adult content restricted, filter out adult content
     if (userProfile?.adult_content_restricted) {
       return products.filter(product => !product.is_adult_content);
     }
-    // If user doesn't have restrictions or isn't logged in, show all products
     return products;
   };
 
   const fetchProducts = async () => {
     try {
-      // Fetch user profile first
       const profile = await fetchUserProfile();
       setUserProfile(profile);
 
@@ -72,7 +72,6 @@ const AstrologyStoreSection = () => {
       if (error) {
         console.error('Error fetching astrology products:', error);
       } else {
-        // Apply adult content filtering based on user preferences
         const filteredData = filterAdultContent(data || [], profile);
         setProducts(filteredData);
       }
@@ -133,6 +132,18 @@ const AstrologyStoreSection = () => {
               : "No astrology services available yet. Check back soon!"
             }
           </p>
+          
+          {/* Adult Content Guidelines for Supporters */}
+          {user && (
+            <div className="mt-6 p-4 bg-orange-900/20 border border-orange-600/30 rounded-lg">
+              <p className="text-orange-300 text-sm">
+                <strong>Content Guidelines:</strong> Content that may be sexually suggestive, 
+                seductive, reveals excessive skin, or contains wardrobe malfunctions is marked 
+                for mature audiences. Use the adult content restriction toggle in your profile 
+                to filter such content.
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
     );
@@ -140,6 +151,18 @@ const AstrologyStoreSection = () => {
 
   return (
     <>
+      {/* Adult Content Guidelines */}
+      {user && (
+        <div className="mb-6 p-4 bg-orange-900/20 border border-orange-600/30 rounded-lg">
+          <p className="text-orange-300 text-sm">
+            <strong>Content Guidelines:</strong> Some content may be marked for mature audiences (18+). 
+            Content that is sexually suggestive, seductive, reveals excessive skin, or contains 
+            wardrobe malfunctions falls under this category. You can manage your content preferences 
+            in your profile settings.
+          </p>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {products.map((product) => (
           <Card key={product.id} className="bg-gray-800/50 border-gray-700 backdrop-blur-sm hover:bg-gray-700/50 transition-colors">
@@ -168,7 +191,7 @@ const AstrologyStoreSection = () => {
                   <p className="text-gray-300 text-sm line-clamp-3">{product.description}</p>
                   <button
                     onClick={() => setDetailModalProduct(product)}
-                    className="text-blue-400 hover:text-blue-300 text-sm mt-1 underline"
+                    className="text-blue-400 hover:text-blue-300 text-sm mt-1"
                   >
                     See More
                   </button>
@@ -185,12 +208,29 @@ const AstrologyStoreSection = () => {
                 )}
               </div>
               
-              <Button
-                onClick={() => handlePurchase(product.id, product.total_price)}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                Book Reading
-              </Button>
+              <div className="space-y-2">
+                <Button
+                  onClick={() => handlePurchase(product.id, product.total_price)}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  Book Reading
+                </Button>
+                
+                <Button
+                  onClick={() => setShowReviews(showReviews === product.id ? null : product.id)}
+                  variant="outline"
+                  className="w-full border-gray-600 text-white bg-transparent hover:bg-gray-700"
+                >
+                  {showReviews === product.id ? "Hide Reviews" : "View Reviews"}
+                </Button>
+              </div>
+
+              {/* Reviews Section */}
+              {showReviews === product.id && (
+                <div className="mt-4">
+                  <ProductReviewsSection productId={product.id} />
+                </div>
+              )}
             </CardContent>
           </Card>
         ))}

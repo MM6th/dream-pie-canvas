@@ -10,7 +10,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Settings, Trash2, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -41,14 +40,6 @@ const SupporterProfileModal = ({ children, profile: initialProfile, onProfileUpd
   const [isLoading, setIsLoading] = useState(false);
   const [profile, setProfile] = useState({
     display_name: "",
-    contact_email: "",
-    instagram_url: "",
-    facebook_url: "",
-    youtube_url: "",
-    snapchat_url: "",
-    onlyfans_url: "",
-    pinterest_url: "",
-    website: "",
     adult_content_restricted: false,
     avatar_url: "",
   });
@@ -57,14 +48,6 @@ const SupporterProfileModal = ({ children, profile: initialProfile, onProfileUpd
     if (initialProfile) {
       setProfile({
         display_name: initialProfile.display_name || "",
-        contact_email: initialProfile.contact_email || "",
-        instagram_url: initialProfile.instagram_url || "",
-        facebook_url: initialProfile.facebook_url || "",
-        youtube_url: initialProfile.youtube_url || "",
-        snapchat_url: initialProfile.snapchat_url || "",
-        onlyfans_url: initialProfile.onlyfans_url || "",
-        pinterest_url: initialProfile.pinterest_url || "",
-        website: initialProfile.website || "",
         adult_content_restricted: initialProfile.adult_content_restricted || false,
         avatar_url: initialProfile.avatar_url || "",
       });
@@ -91,14 +74,6 @@ const SupporterProfileModal = ({ children, profile: initialProfile, onProfileUpd
       if (data) {
         setProfile({
           display_name: data.display_name || "",
-          contact_email: data.contact_email || "",
-          instagram_url: data.instagram_url || "",
-          facebook_url: data.facebook_url || "",
-          youtube_url: data.youtube_url || "",
-          snapchat_url: data.snapchat_url || "",
-          onlyfans_url: data.onlyfans_url || "",
-          pinterest_url: data.pinterest_url || "",
-          website: data.website || "",
           adult_content_restricted: data.adult_content_restricted || false,
           avatar_url: data.avatar_url || "",
         });
@@ -117,14 +92,6 @@ const SupporterProfileModal = ({ children, profile: initialProfile, onProfileUpd
         .from('profiles')
         .update({
           display_name: profile.display_name,
-          contact_email: profile.contact_email,
-          instagram_url: profile.instagram_url,
-          facebook_url: profile.facebook_url,
-          youtube_url: profile.youtube_url,
-          snapchat_url: profile.snapchat_url,
-          onlyfans_url: profile.onlyfans_url,
-          pinterest_url: profile.pinterest_url,
-          website: profile.website,
           adult_content_restricted: profile.adult_content_restricted,
           avatar_url: profile.avatar_url,
           updated_at: new Date().toISOString(),
@@ -204,7 +171,7 @@ const SupporterProfileModal = ({ children, profile: initialProfile, onProfileUpd
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="max-w-2xl bg-gray-800 border-gray-700 text-white max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-lg bg-gray-800 border-gray-700 text-white max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-white">Edit Supporter Profile</DialogTitle>
         </DialogHeader>
@@ -215,109 +182,14 @@ const SupporterProfileModal = ({ children, profile: initialProfile, onProfileUpd
             onAvatarChange={handleAvatarChange}
           />
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="display_name" className="text-white">Display Name</Label>
-              <Input
-                id="display_name"
-                value={profile.display_name}
-                onChange={(e) => setProfile({...profile, display_name: e.target.value})}
-                className="bg-gray-700 border-gray-600 text-white"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="contact_email" className="text-white">Contact Email</Label>
-              <Input
-                id="contact_email"
-                type="email"
-                value={profile.contact_email}
-                onChange={(e) => setProfile({...profile, contact_email: e.target.value})}
-                className="bg-gray-700 border-gray-600 text-white"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="instagram_url" className="text-white">Instagram URL</Label>
-              <Input
-                id="instagram_url"
-                value={profile.instagram_url}
-                onChange={(e) => setProfile({...profile, instagram_url: e.target.value})}
-                className="bg-gray-700 border-gray-600 text-white"
-                placeholder="https://instagram.com/username"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="facebook_url" className="text-white">Facebook URL</Label>
-              <Input
-                id="facebook_url"
-                value={profile.facebook_url}
-                onChange={(e) => setProfile({...profile, facebook_url: e.target.value})}
-                className="bg-gray-700 border-gray-600 text-white"
-                placeholder="https://facebook.com/username"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="youtube_url" className="text-white">YouTube URL</Label>
-              <Input
-                id="youtube_url"
-                value={profile.youtube_url}
-                onChange={(e) => setProfile({...profile, youtube_url: e.target.value})}
-                className="bg-gray-700 border-gray-600 text-white"
-                placeholder="https://youtube.com/channel/..."
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="snapchat_url" className="text-white">Snapchat URL</Label>
-              <Input
-                id="snapchat_url"
-                value={profile.snapchat_url}
-                onChange={(e) => setProfile({...profile, snapchat_url: e.target.value})}
-                className="bg-gray-700 border-gray-600 text-white"
-                placeholder="https://snapchat.com/add/username"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="onlyfans_url" className="text-white">OnlyFans URL</Label>
-              <Input
-                id="onlyfans_url"
-                value={profile.onlyfans_url}
-                onChange={(e) => setProfile({...profile, onlyfans_url: e.target.value})}
-                className="bg-gray-700 border-gray-600 text-white"
-                placeholder="https://onlyfans.com/username"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="pinterest_url" className="text-white">Pinterest URL</Label>
-              <Input
-                id="pinterest_url"
-                value={profile.pinterest_url}
-                onChange={(e) => setProfile({...profile, pinterest_url: e.target.value})}
-                className="bg-gray-700 border-gray-600 text-white"
-                placeholder="https://pinterest.com/username"
-              />
-            </div>
-          </div>
-
           <div>
-            <Label htmlFor="website" className="text-white">Website</Label>
+            <Label htmlFor="display_name" className="text-white">Display Name</Label>
             <Input
-              id="website"
-              value={profile.website}
-              onChange={(e) => setProfile({...profile, website: e.target.value})}
+              id="display_name"
+              value={profile.display_name}
+              onChange={(e) => setProfile({...profile, display_name: e.target.value})}
               className="bg-gray-700 border-gray-600 text-white"
-              placeholder="https://yourwebsite.com"
+              placeholder="Enter your display name"
             />
           </div>
 
@@ -330,7 +202,7 @@ const SupporterProfileModal = ({ children, profile: initialProfile, onProfileUpd
                   Restrict Adult Content
                 </Label>
                 <p className="text-sm text-gray-400">
-                  Hide all products and content marked as adult/18+
+                  Hide all products and content marked as adult/18+. This includes content that may be sexually suggestive, seductive, reveals excessive skin, or contains wardrobe malfunctions.
                 </p>
               </div>
             </div>

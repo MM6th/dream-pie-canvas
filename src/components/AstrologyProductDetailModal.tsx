@@ -55,6 +55,17 @@ const AstrologyProductDetailModal = ({ product, isOpen, onClose, onPurchase }: A
             />
           )}
 
+          {/* Adult Content Warning */}
+          {product.is_adult_content && (
+            <div className="p-3 bg-red-900/20 border border-red-600/30 rounded-lg">
+              <p className="text-red-300 text-sm">
+                <strong>Mature Content:</strong> This content is marked for mature audiences (18+) 
+                as it may contain sexually suggestive material, seductive content, excessive skin exposure, 
+                or wardrobe malfunctions.
+              </p>
+            </div>
+          )}
+
           {/* Product Details */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">

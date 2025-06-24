@@ -83,7 +83,7 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedVide
         <h1 className="text-4xl font-bold text-white mb-2">Welcome Back!</h1>
         <p className="text-gray-300 mb-4">Enjoy your purchased content</p>
         <PieWelcomeModal>
-          <button className="text-blue-400 hover:text-blue-300 underline">
+          <button className="text-blue-400 hover:text-blue-300">
             What is PIE?
           </button>
         </PieWelcomeModal>
