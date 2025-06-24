@@ -36,33 +36,39 @@ const ProductReviewsSection = ({ productId }: ProductReviewsSectionProps) => {
       const from = pageNum * REVIEWS_PER_PAGE;
       const to = from + REVIEWS_PER_PAGE - 1;
 
-      const { data, error } = await supabase
+      // First get reviews
+      const { data: reviewsData, error: reviewsError } = await supabase
         .from('product_reviews')
-        .select(`
-          *,
-          profiles!inner(
-            display_name,
-            avatar_url
-          )
-        `)
+        .select('*')
         .eq('astrology_product_id', productId)
         .order('created_at', { ascending: false })
         .range(from, to);
 
-      if (error) throw error;
+      if (reviewsError) throw reviewsError;
 
-      const formattedReviews = data?.map(review => ({
-        ...review,
-        user_profile: review.profiles
-      })) || [];
+      // Then enrich with user profiles
+      const enrichedReviews = await Promise.all(
+        (reviewsData || []).map(async (review) => {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('display_name, avatar_url')
+            .eq('id', review.user_id)
+            .single();
+
+          return {
+            ...review,
+            user_profile: profileData
+          };
+        })
+      );
 
       if (reset) {
-        setReviews(formattedReviews);
+        setReviews(enrichedReviews);
       } else {
-        setReviews(prev => [...prev, ...formattedReviews]);
+        setReviews(prev => [...prev, ...enrichedReviews]);
       }
 
-      setHasMore(formattedReviews.length === REVIEWS_PER_PAGE);
+      setHasMore(enrichedReviews.length === REVIEWS_PER_PAGE);
     } catch (error) {
       console.error('Error fetching reviews:', error);
     } finally {

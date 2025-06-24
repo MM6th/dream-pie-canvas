@@ -38,6 +38,20 @@ const MerchantsManagement = () => {
     }
   };
 
+  const handleApprovalChange = async (merchantId: string, newStatus: string) => {
+    try {
+      const { error } = await supabase.rpc('update_merchant_approval', {
+        merchant_id: merchantId,
+        new_status: newStatus
+      });
+
+      if (error) throw error;
+      fetchMerchants();
+    } catch (error) {
+      console.error('Error updating merchant approval:', error);
+    }
+  };
+
   useEffect(() => {
     fetchMerchants();
   }, []);
@@ -87,7 +101,7 @@ const MerchantsManagement = () => {
                     <PendingMerchantCard
                       key={merchant.id}
                       merchant={merchant}
-                      onStatusUpdate={fetchMerchants}
+                      onApprovalChange={handleApprovalChange}
                     />
                   ))}
                 </div>
@@ -110,7 +124,6 @@ const MerchantsManagement = () => {
                     <ApprovedMerchantCard
                       key={merchant.id}
                       merchant={merchant}
-                      onStatusUpdate={fetchMerchants}
                     />
                   ))}
                 </div>

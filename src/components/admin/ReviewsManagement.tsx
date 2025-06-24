@@ -29,29 +29,40 @@ const ReviewsManagement = () => {
 
   const fetchReviews = async () => {
     try {
-      const { data, error } = await supabase
+      // First get reviews
+      const { data: reviewsData, error: reviewsError } = await supabase
         .from('product_reviews')
-        .select(`
-          *,
-          profiles!inner(
-            display_name,
-            email
-          ),
-          astrology_products!inner(
-            title
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (reviewsError) throw reviewsError;
 
-      const formattedReviews = data?.map(review => ({
-        ...review,
-        user_profile: review.profiles,
-        astrology_product: review.astrology_products
-      })) || [];
+      // Then enrich with user and product data
+      const enrichedReviews = await Promise.all(
+        (reviewsData || []).map(async (review) => {
+          // Get user profile
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('display_name, email')
+            .eq('id', review.user_id)
+            .single();
 
-      setReviews(formattedReviews);
+          // Get astrology product
+          const { data: productData } = await supabase
+            .from('astrology_products')
+            .select('title')
+            .eq('id', review.astrology_product_id)
+            .single();
+
+          return {
+            ...review,
+            user_profile: profileData,
+            astrology_product: productData
+          };
+        })
+      );
+
+      setReviews(enrichedReviews);
     } catch (error) {
       console.error('Error fetching reviews:', error);
       toast({
@@ -134,11 +145,11 @@ const ReviewsManagement = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <CardTitle className="text-white text-lg">
-                      {review.astrology_product?.title}
+                      {review.astrology_product?.title || "Unknown Product"}
                     </CardTitle>
                     <p className="text-gray-400 text-sm">
                       by {review.user_profile?.display_name || "Anonymous"} 
-                      ({review.user_profile?.email})
+                      ({review.user_profile?.email || "Unknown"})
                     </p>
                   </div>
                   <div className="flex items-center gap-2">

@@ -5,7 +5,6 @@ import { Users, Image, Star, Settings } from "lucide-react";
 import MerchantsManagement from "./MerchantsManagement";
 import CoverSubmissionsManagement from "./CoverSubmissionsManagement";
 import ReviewsManagement from "./ReviewsManagement";
-import AdminDashboardButtons from "./AdminDashboardButtons";
 
 const AdminDashboard = () => {
   return (
@@ -62,7 +61,7 @@ const AdminDashboard = () => {
         <TabsContent value="settings">
           <div className="space-y-6">
             <h2 className="text-2xl font-bold text-white">Admin Tools</h2>
-            <AdminDashboardButtons />
+            <p className="text-gray-400">Additional admin functionality will be available here.</p>
           </div>
         </TabsContent>
       </Tabs>

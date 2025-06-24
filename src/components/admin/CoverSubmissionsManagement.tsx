@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
-import CoverSubmissionManager from "./CoverSubmissionManager";
+import CoverSubmissionManager from "../CoverSubmissionManager";
 
 interface CoverSubmission {
   id: string;
@@ -89,10 +89,7 @@ const CoverSubmissionsManagement = () => {
               {pendingSubmissions.length === 0 ? (
                 <p className="text-gray-400 text-center py-4">No pending submissions.</p>
               ) : (
-                <CoverSubmissionManager 
-                  submissions={pendingSubmissions}
-                  onUpdate={fetchSubmissions}
-                />
+                <CoverSubmissionManager />
               )}
             </CardContent>
           </Card>
@@ -107,10 +104,7 @@ const CoverSubmissionsManagement = () => {
               {approvedSubmissions.length === 0 ? (
                 <p className="text-gray-400 text-center py-4">No approved submissions yet.</p>
               ) : (
-                <CoverSubmissionManager 
-                  submissions={approvedSubmissions}
-                  onUpdate={fetchSubmissions}
-                />
+                <CoverSubmissionManager />
               )}
             </CardContent>
           </Card>
@@ -125,10 +119,7 @@ const CoverSubmissionsManagement = () => {
               {rejectedSubmissions.length === 0 ? (
                 <p className="text-gray-400 text-center py-4">No rejected submissions yet.</p>
               ) : (
-                <CoverSubmissionManager 
-                  submissions={rejectedSubmissions}
-                  onUpdate={fetchSubmissions}
-                />
+                <CoverSubmissionManager />
               )}
             </CardContent>
           </Card>
