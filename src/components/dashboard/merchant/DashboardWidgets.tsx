@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import BackgroundUpload from "@/components/BackgroundUpload";
 import AudioUploadModal from "@/components/AudioUploadModal";
 import VideoUploadModal from "@/components/VideoUploadModal";
+import VideoProductManager from "@/components/VideoProductManager";
 import FashionProductUploadModal from "@/components/FashionProductUploadModal";
 import AstrologyProductUploadModal from "@/components/AstrologyProductUploadModal";
 import FashionProductManager from "@/components/FashionProductManager";
@@ -141,6 +142,43 @@ const DashboardWidgets = ({ onSuccess, onViewStore, onBackgroundUpload, isAdmin 
       {isAdmin && (
         <div className="mb-12">
           <AudioProductManager />
+        </div>
+      )}
+
+      {/* Video Products - Admin Only */}
+      {isAdmin && (
+        <div className="grid grid-cols-1 lg:grid-cols-1 gap-6 mb-8">
+          <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-bold text-white">Video Products</h3>
+                <VideoUploadModal onSuccess={onSuccess} isAdmin={isAdmin} />
+              </div>
+              <p className="text-gray-400 mb-4">Upload and manage your video content</p>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg">
+                  <div>
+                    <p className="text-white font-medium">Total Video Products</p>
+                    <p className="text-gray-400 text-sm">Manage your video library</p>
+                  </div>
+                  <Button
+                    onClick={onViewStore}
+                    variant="outline"
+                    className="border-gray-600 text-white bg-black hover:bg-gray-800"
+                  >
+                    View in Store
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Video Product Management - Admin Only */}
+      {isAdmin && (
+        <div className="mb-12">
+          <VideoProductManager />
         </div>
       )}
 
