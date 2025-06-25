@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,6 +7,7 @@ import { Video, Edit, Trash2, DollarSign } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
+import EditVideoModal from "./EditVideoModal";
 
 interface VideoProduct {
   id: string;
@@ -14,6 +16,7 @@ interface VideoProduct {
   video_type: string;
   thumbnail_url: string | null;
   video_file_url: string;
+  background_music_url: string | null;
   is_free: boolean;
   price: number | null;
   created_at: string;
@@ -23,6 +26,7 @@ const VideoProductManager = () => {
   const { user } = useAuth();
   const [products, setProducts] = useState<VideoProduct[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editingProduct, setEditingProduct] = useState<VideoProduct | null>(null);
 
   const fetchProducts = async () => {
     if (!user) return;
@@ -52,6 +56,10 @@ const VideoProductManager = () => {
     fetchProducts();
   }, [user]);
 
+  const handleEdit = (product: VideoProduct) => {
+    setEditingProduct(product);
+  };
+
   const handleDelete = async (productId: string) => {
     if (!confirm("Are you sure you want to delete this video product?")) {
       return;
@@ -79,6 +87,11 @@ const VideoProductManager = () => {
         variant: "destructive"
       });
     }
+  };
+
+  const handleEditSuccess = () => {
+    setEditingProduct(null);
+    fetchProducts();
   };
 
   if (loading) {
@@ -149,7 +162,7 @@ const VideoProductManager = () => {
                   <div className="flex gap-2">
                     <Button
                       size="sm"
-                      onClick={() => {/* TODO: Add edit functionality */}}
+                      onClick={() => handleEdit(product)}
                       className="flex-1 bg-black text-white hover:bg-gray-800"
                     >
                       <Edit className="w-3 h-3 mr-1" />
@@ -170,6 +183,15 @@ const VideoProductManager = () => {
             </Card>
           ))}
         </div>
+      )}
+
+      {editingProduct && (
+        <EditVideoModal
+          isOpen={!!editingProduct}
+          onClose={() => setEditingProduct(null)}
+          onSuccess={handleEditSuccess}
+          product={editingProduct}
+        />
       )}
     </div>
   );
