@@ -4,8 +4,20 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SongCoverManager from "@/components/SongCoverManager";
 import MerchantCoverSubmissionsManager from "@/components/MerchantCoverSubmissionsManager";
+import { useAuth } from "@/hooks/useAuth";
 
 const ContentManagement = () => {
+  const { user } = useAuth();
+  
+  // Check if user is admin - admins don't need cover submission functionality
+  // since they can upload covers directly when creating products
+  const isAdmin = user?.email === 'cmooregee@gmail.com'; // You might want to check this via profiles table
+
+  // If user is admin, don't show cover submission functionality
+  if (isAdmin) {
+    return null;
+  }
+
   return (
     <div className="mb-8">
       <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">

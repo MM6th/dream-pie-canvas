@@ -22,6 +22,10 @@ interface AstrologyProduct {
   created_at: string;
 }
 
+interface ProductReviewCount {
+  [productId: string]: number;
+}
+
 const AstrologyStoreSection = () => {
   const { user } = useAuth();
   const [products, setProducts] = useState<AstrologyProduct[]>([]);
@@ -29,6 +33,7 @@ const AstrologyStoreSection = () => {
   const [loading, setLoading] = useState(true);
   const [detailModalProduct, setDetailModalProduct] = useState<AstrologyProduct | null>(null);
   const [showReviews, setShowReviews] = useState<string | null>(null);
+  const [reviewCounts, setReviewCounts] = useState<ProductReviewCount>({});
 
   useEffect(() => {
     fetchProducts();
@@ -49,6 +54,28 @@ const AstrologyStoreSection = () => {
     } catch (error) {
       console.error('Error fetching user profile:', error);
       return null;
+    }
+  };
+
+  const fetchReviewCounts = async (productIds: string[]) => {
+    try {
+      const { data, error } = await supabase
+        .from('product_reviews')
+        .select('astrology_product_id')
+        .in('astrology_product_id', productIds);
+
+      if (error) throw error;
+
+      const counts: ProductReviewCount = {};
+      productIds.forEach(id => counts[id] = 0);
+      
+      data?.forEach(review => {
+        counts[review.astrology_product_id] = (counts[review.astrology_product_id] || 0) + 1;
+      });
+
+      setReviewCounts(counts);
+    } catch (error) {
+      console.error('Error fetching review counts:', error);
     }
   };
 
@@ -74,6 +101,12 @@ const AstrologyStoreSection = () => {
       } else {
         const filteredData = filterAdultContent(data || [], profile);
         setProducts(filteredData);
+        
+        // Fetch review counts for all products
+        const productIds = filteredData.map(product => product.id);
+        if (productIds.length > 0) {
+          await fetchReviewCounts(productIds);
+        }
       }
     } catch (error) {
       console.error('Error fetching astrology products:', error);
@@ -164,76 +197,80 @@ const AstrologyStoreSection = () => {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {products.map((product) => (
-          <Card key={product.id} className="bg-gray-800/50 border-gray-700 backdrop-blur-sm hover:bg-gray-700/50 transition-colors">
-            {product.thumbnail_url && (
-              <CardHeader className="p-0">
-                <img
-                  src={product.thumbnail_url}
-                  alt={product.title}
-                  className="w-full h-48 object-fill rounded-t-lg"
-                />
-              </CardHeader>
-            )}
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between mb-3">
-                <CardTitle className="text-white text-lg">{product.title}</CardTitle>
-                {product.is_adult_content && !userProfile?.adult_content_restricted && (
-                  <Badge className="bg-orange-600 hover:bg-orange-700 text-xs flex items-center gap-1">
-                    <Shield className="w-3 h-3" />
-                    18+
-                  </Badge>
-                )}
-              </div>
-              
-              {product.description && (
-                <div className="mb-4">
-                  <p className="text-gray-300 text-sm line-clamp-3">{product.description}</p>
-                  <button
-                    onClick={() => setDetailModalProduct(product)}
-                    className="text-blue-400 hover:text-blue-300 text-sm mt-1"
-                  >
-                    See More
-                  </button>
-                </div>
+        {products.map((product) => {
+          const reviewCount = reviewCounts[product.id] || 0;
+          
+          return (
+            <Card key={product.id} className="bg-gray-800/50 border-gray-700 backdrop-blur-sm hover:bg-gray-700/50 transition-colors">
+              {product.thumbnail_url && (
+                <CardHeader className="p-0">
+                  <img
+                    src={product.thumbnail_url}
+                    alt={product.title}
+                    className="w-full h-48 object-fill rounded-t-lg"
+                  />
+                </CardHeader>
               )}
-              
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-2xl font-bold text-white">${product.total_price}</span>
-                {product.delivery_type && (
-                  <div className="flex items-center gap-1 text-gray-400">
-                    <Clock className="w-4 h-4" />
-                    <span className="text-sm capitalize">{product.delivery_type}</span>
+              <CardContent className="p-6">
+                <div className="flex items-start justify-between mb-3">
+                  <CardTitle className="text-white text-lg">{product.title}</CardTitle>
+                  {product.is_adult_content && !userProfile?.adult_content_restricted && (
+                    <Badge className="bg-orange-600 hover:bg-orange-700 text-xs flex items-center gap-1">
+                      <Shield className="w-3 h-3" />
+                      18+
+                    </Badge>
+                  )}
+                </div>
+                
+                {product.description && (
+                  <div className="mb-4">
+                    <p className="text-gray-300 text-sm line-clamp-3">{product.description}</p>
+                    <button
+                      onClick={() => setDetailModalProduct(product)}
+                      className="text-blue-400 hover:text-blue-300 text-sm mt-1"
+                    >
+                      See More
+                    </button>
                   </div>
                 )}
-              </div>
-              
-              <div className="space-y-2">
-                <Button
-                  onClick={() => handlePurchase(product.id, product.total_price)}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                >
-                  Book Reading
-                </Button>
                 
-                <Button
-                  onClick={() => setShowReviews(showReviews === product.id ? null : product.id)}
-                  variant="outline"
-                  className="w-full border-gray-600 text-white bg-transparent hover:bg-gray-700"
-                >
-                  {showReviews === product.id ? "Hide Reviews" : "View Reviews"}
-                </Button>
-              </div>
-
-              {/* Reviews Section */}
-              {showReviews === product.id && (
-                <div className="mt-4">
-                  <ProductReviewsSection productId={product.id} />
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-2xl font-bold text-white">${product.total_price}</span>
+                  {product.delivery_type && (
+                    <div className="flex items-center gap-1 text-gray-400">
+                      <Clock className="w-4 h-4" />
+                      <span className="text-sm capitalize">{product.delivery_type}</span>
+                    </div>
+                  )}
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        ))}
+                
+                <div className="space-y-2">
+                  <Button
+                    onClick={() => handlePurchase(product.id, product.total_price)}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    Book Reading
+                  </Button>
+                  
+                  <Button
+                    onClick={() => setShowReviews(showReviews === product.id ? null : product.id)}
+                    variant="outline"
+                    className="w-full border-gray-600 text-white bg-transparent hover:bg-gray-700"
+                  >
+                    {showReviews === product.id ? "Hide Reviews" : `View Reviews (${reviewCount})`}
+                  </Button>
+                </div>
+
+                {/* Reviews Section */}
+                {showReviews === product.id && (
+                  <div className="mt-4">
+                    <ProductReviewsSection productId={product.id} />
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       {detailModalProduct && (
