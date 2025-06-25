@@ -16,6 +16,9 @@ interface CoverSubmission {
   created_at: string;
   reviewed_at: string | null;
   reviewed_by: string | null;
+  contract_id: string | null;
+  requires_contract: boolean | null;
+  contract_generated_at: string | null;
 }
 
 const CoverSubmissionsManagement = () => {

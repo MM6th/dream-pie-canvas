@@ -243,6 +243,137 @@ export type Database = {
           },
         ]
       }
+      contracts: {
+        Row: {
+          admin_signature: string | null
+          contract_terms: string
+          contract_type: string
+          cover_submission_id: string | null
+          created_at: string
+          id: string
+          merchant_id: string
+          merchant_signature: string | null
+          modeling_application_id: string | null
+          signed_at: string | null
+          status: string
+          tunecore_terms_accepted: boolean | null
+          updated_at: string
+        }
+        Insert: {
+          admin_signature?: string | null
+          contract_terms: string
+          contract_type: string
+          cover_submission_id?: string | null
+          created_at?: string
+          id?: string
+          merchant_id: string
+          merchant_signature?: string | null
+          modeling_application_id?: string | null
+          signed_at?: string | null
+          status?: string
+          tunecore_terms_accepted?: boolean | null
+          updated_at?: string
+        }
+        Update: {
+          admin_signature?: string | null
+          contract_terms?: string
+          contract_type?: string
+          cover_submission_id?: string | null
+          created_at?: string
+          id?: string
+          merchant_id?: string
+          merchant_signature?: string | null
+          modeling_application_id?: string | null
+          signed_at?: string | null
+          status?: string
+          tunecore_terms_accepted?: boolean | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contracts_cover_submission_id_fkey"
+            columns: ["cover_submission_id"]
+            isOneToOne: false
+            referencedRelation: "song_cover_submissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contracts_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contracts_modeling_application_id_fkey"
+            columns: ["modeling_application_id"]
+            isOneToOne: false
+            referencedRelation: "modeling_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      digital_receipts: {
+        Row: {
+          admin_id: string
+          contract_id: string
+          created_at: string
+          generated_at: string
+          id: string
+          merchant_id: string
+          receipt_data: Json
+          receipt_number: string
+          sent_to_admin: boolean | null
+          sent_to_merchant: boolean | null
+        }
+        Insert: {
+          admin_id: string
+          contract_id: string
+          created_at?: string
+          generated_at?: string
+          id?: string
+          merchant_id: string
+          receipt_data: Json
+          receipt_number: string
+          sent_to_admin?: boolean | null
+          sent_to_merchant?: boolean | null
+        }
+        Update: {
+          admin_id?: string
+          contract_id?: string
+          created_at?: string
+          generated_at?: string
+          id?: string
+          merchant_id?: string
+          receipt_data?: Json
+          receipt_number?: string
+          sent_to_admin?: boolean | null
+          sent_to_merchant?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "digital_receipts_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "digital_receipts_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "digital_receipts_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fashion_product_images: {
         Row: {
           created_at: string
@@ -419,10 +550,13 @@ export type Database = {
         Row: {
           admin_notes: string | null
           application_photos: string[]
+          contract_generated_at: string | null
+          contract_id: string | null
           created_at: string
           fashion_product_id: string
           id: string
           merchant_id: string
+          requires_contract: boolean | null
           reviewed_at: string | null
           reviewed_by: string | null
           status: string
@@ -431,10 +565,13 @@ export type Database = {
         Insert: {
           admin_notes?: string | null
           application_photos?: string[]
+          contract_generated_at?: string | null
+          contract_id?: string | null
           created_at?: string
           fashion_product_id: string
           id?: string
           merchant_id: string
+          requires_contract?: boolean | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: string
@@ -443,10 +580,13 @@ export type Database = {
         Update: {
           admin_notes?: string | null
           application_photos?: string[]
+          contract_generated_at?: string | null
+          contract_id?: string | null
           created_at?: string
           fashion_product_id?: string
           id?: string
           merchant_id?: string
+          requires_contract?: boolean | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: string
@@ -472,6 +612,13 @@ export type Database = {
             columns: ["reviewed_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "modeling_applications_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
             referencedColumns: ["id"]
           },
         ]
@@ -598,9 +745,11 @@ export type Database = {
           display_name: string | null
           email: string
           facebook_url: string | null
+          first_name: string | null
           id: string
           instagram_url: string | null
           is_admin: boolean | null
+          last_name: string | null
           onlyfans_url: string | null
           paypal_email: string | null
           pinterest_url: string | null
@@ -622,9 +771,11 @@ export type Database = {
           display_name?: string | null
           email: string
           facebook_url?: string | null
+          first_name?: string | null
           id: string
           instagram_url?: string | null
           is_admin?: boolean | null
+          last_name?: string | null
           onlyfans_url?: string | null
           paypal_email?: string | null
           pinterest_url?: string | null
@@ -646,9 +797,11 @@ export type Database = {
           display_name?: string | null
           email?: string
           facebook_url?: string | null
+          first_name?: string | null
           id?: string
           instagram_url?: string | null
           is_admin?: boolean | null
+          last_name?: string | null
           onlyfans_url?: string | null
           paypal_email?: string | null
           pinterest_url?: string | null
@@ -664,10 +817,13 @@ export type Database = {
         Row: {
           admin_notes: string | null
           audio_product_id: string
+          contract_generated_at: string | null
+          contract_id: string | null
           cover_image_url: string
           created_at: string
           id: string
           merchant_id: string
+          requires_contract: boolean | null
           reviewed_at: string | null
           reviewed_by: string | null
           status: string
@@ -677,10 +833,13 @@ export type Database = {
         Insert: {
           admin_notes?: string | null
           audio_product_id: string
+          contract_generated_at?: string | null
+          contract_id?: string | null
           cover_image_url: string
           created_at?: string
           id?: string
           merchant_id: string
+          requires_contract?: boolean | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: string
@@ -690,17 +849,28 @@ export type Database = {
         Update: {
           admin_notes?: string | null
           audio_product_id?: string
+          contract_generated_at?: string | null
+          contract_id?: string | null
           cover_image_url?: string
           created_at?: string
           id?: string
           merchant_id?: string
+          requires_contract?: boolean | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: string
           submission_notes?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "song_cover_submissions_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_purchases: {
         Row: {
@@ -832,6 +1002,10 @@ export type Database = {
       can_user_upload: {
         Args: { user_uuid: string; new_file_size: number }
         Returns: boolean
+      }
+      generate_receipt_number: {
+        Args: Record<PropertyKey, never>
+        Returns: string
       }
       get_user_storage_usage: {
         Args: { user_uuid: string }
