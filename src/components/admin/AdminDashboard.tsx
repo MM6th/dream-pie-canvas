@@ -1,17 +1,33 @@
 
-import React from "react";
+import React, { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, Image, Star, Settings } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { 
+  Users, 
+  FileText, 
+  Star, 
+  ShoppingBag, 
+  Zap, 
+  Image,
+  UserCheck,
+  MessageSquare
+} from "lucide-react";
 import MerchantsManagement from "./MerchantsManagement";
 import CoverSubmissionsManagement from "./CoverSubmissionsManagement";
 import ReviewsManagement from "./ReviewsManagement";
+import AdminPhotoGallery from "./AdminPhotoGallery";
+import { useSubmissionCounts } from "@/hooks/useSubmissionCounts";
 
 const AdminDashboard = () => {
+  const { counts } = useSubmissionCounts();
+  const totalSubmissions = counts.coverSubmissions + counts.modelingApplications;
+
   return (
-    <div className="max-w-7xl mx-auto p-6 space-y-8">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-white mb-2">Admin Dashboard</h1>
-        <p className="text-gray-300">Manage your platform</p>
+    <div className="space-y-6">
+      <div className="text-center mb-8">
+        <h1 className="text-4xl font-bold text-white mb-4">Admin Dashboard</h1>
+        <p className="text-gray-400 text-lg">Manage merchants, submissions, and platform content</p>
       </div>
 
       <Tabs defaultValue="merchants" className="w-full">
@@ -24,11 +40,16 @@ const AdminDashboard = () => {
             Merchants
           </TabsTrigger>
           <TabsTrigger 
-            value="covers" 
-            className="text-white data-[state=active]:bg-gray-700"
+            value="submissions" 
+            className="text-white data-[state=active]:bg-gray-700 relative"
           >
-            <Image className="w-4 h-4 mr-2" />
+            <FileText className="w-4 h-4 mr-2" />
             Cover Submissions
+            {totalSubmissions > 0 && (
+              <Badge className="ml-2 bg-red-600 text-white animate-pulse">
+                {totalSubmissions}
+              </Badge>
+            )}
           </TabsTrigger>
           <TabsTrigger 
             value="reviews" 
@@ -38,31 +59,28 @@ const AdminDashboard = () => {
             Reviews
           </TabsTrigger>
           <TabsTrigger 
-            value="settings" 
+            value="gallery" 
             className="text-white data-[state=active]:bg-gray-700"
           >
-            <Settings className="w-4 h-4 mr-2" />
-            Admin Tools
+            <Image className="w-4 h-4 mr-2" />
+            Photo Gallery
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="merchants">
+        <TabsContent value="merchants" className="mt-6">
           <MerchantsManagement />
         </TabsContent>
 
-        <TabsContent value="covers">
+        <TabsContent value="submissions" className="mt-6">
           <CoverSubmissionsManagement />
         </TabsContent>
 
-        <TabsContent value="reviews">
+        <TabsContent value="reviews" className="mt-6">
           <ReviewsManagement />
         </TabsContent>
 
-        <TabsContent value="settings">
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-white">Admin Tools</h2>
-            <p className="text-gray-400">Additional admin functionality will be available here.</p>
-          </div>
+        <TabsContent value="gallery" className="mt-6">
+          <AdminPhotoGallery />
         </TabsContent>
       </Tabs>
     </div>

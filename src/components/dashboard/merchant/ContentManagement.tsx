@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SongCoverManager from "@/components/SongCoverManager";
 import MerchantCoverSubmissionsManager from "@/components/MerchantCoverSubmissionsManager";
+import ContractDashboard from "./ContractDashboard";
 import { useAuth } from "@/hooks/useAuth";
 
 const ContentManagement = () => {
@@ -11,7 +12,7 @@ const ContentManagement = () => {
   
   // Check if user is admin - admins don't need cover submission functionality
   // since they can upload covers directly when creating products
-  const isAdmin = user?.email === 'cmooregee@gmail.com'; // You might want to check this via profiles table
+  const isAdmin = user?.email === 'cmooregee@gmail.com';
 
   // If user is admin, don't show cover submission functionality
   if (isAdmin) {
@@ -19,7 +20,11 @@ const ContentManagement = () => {
   }
 
   return (
-    <div className="mb-8">
+    <div className="space-y-8">
+      {/* TuneCore Contracts Section */}
+      <ContractDashboard />
+      
+      {/* Cover Submission Management */}
       <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
         <CardHeader>
           <CardTitle className="text-white">Content Management</CardTitle>

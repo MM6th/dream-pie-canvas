@@ -2,8 +2,10 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import CoverSubmissionManager from "../CoverSubmissionManager";
+import { useSubmissionCounts } from "@/hooks/useSubmissionCounts";
 
 interface CoverSubmission {
   id: string;
@@ -24,6 +26,7 @@ interface CoverSubmission {
 const CoverSubmissionsManagement = () => {
   const [submissions, setSubmissions] = useState<CoverSubmission[]>([]);
   const [loading, setLoading] = useState(true);
+  const { counts } = useSubmissionCounts();
 
   const fetchSubmissions = async () => {
     try {
@@ -59,15 +62,28 @@ const CoverSubmissionsManagement = () => {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-white">Cover Submissions Management</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-white">Cover Submissions Management</h2>
+        {counts.coverSubmissions > 0 && (
+          <Badge className="bg-red-600 text-white animate-pulse">
+            {counts.coverSubmissions} New Submission{counts.coverSubmissions !== 1 ? 's' : ''}
+          </Badge>
+        )}
+      </div>
       
       <Tabs defaultValue="pending" className="w-full">
         <TabsList className="grid w-full grid-cols-3 bg-gray-800 border-gray-700">
           <TabsTrigger 
             value="pending" 
-            className="text-white data-[state=active]:bg-gray-700"
+            className="text-white data-[state=active]:bg-gray-700 relative"
           >
-            Pending ({pendingSubmissions.length})
+            Pending 
+            <span className="ml-1">({pendingSubmissions.length})</span>
+            {counts.coverSubmissions > 0 && (
+              <Badge className="ml-2 bg-red-600 text-white animate-pulse text-xs">
+                {counts.coverSubmissions}
+              </Badge>
+            )}
           </TabsTrigger>
           <TabsTrigger 
             value="approved" 
