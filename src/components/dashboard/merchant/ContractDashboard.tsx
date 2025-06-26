@@ -21,6 +21,10 @@ interface ContractWithDetails {
   modeling_application_id: string | null;
   tunecore_publishing_date: string | null;
   email_notifications_sent: boolean | null;
+  merchant_first_name: string | null;
+  merchant_last_name: string | null;
+  merchant_terms_acknowledged: boolean | null;
+  tunecore_screenshot_url: string | null;
   submission_title?: string;
 }
 
@@ -49,30 +53,44 @@ const ContractDashboard = () => {
           let submission_title = 'Unknown Submission';
 
           if (contract.cover_submission_id) {
+            // First get the submission
             const { data: coverData } = await supabase
               .from('song_cover_submissions')
-              .select(`
-                audio_product_id,
-                audio_products (title)
-              `)
+              .select('audio_product_id')
               .eq('id', contract.cover_submission_id)
               .single();
 
-            if (coverData?.audio_products) {
-              submission_title = `Audio Cover: ${coverData.audio_products.title}`;
+            if (coverData?.audio_product_id) {
+              // Then get the audio product
+              const { data: audioData } = await supabase
+                .from('audio_products')
+                .select('title')
+                .eq('id', coverData.audio_product_id)
+                .single();
+
+              if (audioData?.title) {
+                submission_title = `Audio Cover: ${audioData.title}`;
+              }
             }
           } else if (contract.modeling_application_id) {
+            // First get the modeling application
             const { data: modelingData } = await supabase
               .from('modeling_applications')
-              .select(`
-                fashion_product_id,
-                fashion_products (title)
-              `)
+              .select('fashion_product_id')
               .eq('id', contract.modeling_application_id)
               .single();
 
-            if (modelingData?.fashion_products) {
-              submission_title = `Modeling: ${modelingData.fashion_products.title}`;
+            if (modelingData?.fashion_product_id) {
+              // Then get the fashion product
+              const { data: fashionData } = await supabase
+                .from('fashion_products')
+                .select('title')
+                .eq('id', modelingData.fashion_product_id)
+                .single();
+
+              if (fashionData?.title) {
+                submission_title = `Modeling: ${fashionData.title}`;
+              }
             }
           }
 
