@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -36,22 +35,38 @@ const CoverSubmissionsManagement = () => {
 
   const fetchSubmissions = async () => {
     try {
-      const { data, error } = await supabase
+      // First get the submissions
+      const { data: submissionsData, error: submissionsError } = await supabase
         .from('song_cover_submissions')
-        .select(`
-          *,
-          profiles!song_cover_submissions_merchant_id_fkey(display_name),
-          audio_products!song_cover_submissions_audio_product_id_fkey(title)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (submissionsError) throw submissionsError;
 
-      const enrichedSubmissions = (data || []).map(submission => ({
-        ...submission,
-        merchant_name: submission.profiles?.display_name || 'Unknown Merchant',
-        audio_product_title: submission.audio_products?.title || 'Unknown Track'
-      }));
+      // Then enrich with merchant and audio product data
+      const enrichedSubmissions = await Promise.all(
+        (submissionsData || []).map(async (submission) => {
+          // Get merchant name
+          const { data: merchantData } = await supabase
+            .from('profiles')
+            .select('display_name')
+            .eq('id', submission.merchant_id)
+            .single();
+
+          // Get audio product title
+          const { data: audioData } = await supabase
+            .from('audio_products')
+            .select('title')
+            .eq('id', submission.audio_product_id)
+            .single();
+
+          return {
+            ...submission,
+            merchant_name: merchantData?.display_name || 'Unknown Merchant',
+            audio_product_title: audioData?.title || 'Unknown Track'
+          };
+        })
+      );
 
       setSubmissions(enrichedSubmissions);
     } catch (error) {
