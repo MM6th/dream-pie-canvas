@@ -27,12 +27,14 @@ interface CoverSubmissionDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   submission: CoverSubmissionData | null;
+  isAdmin?: boolean;
 }
 
 const CoverSubmissionDetailModal = ({
   isOpen,
   onClose,
   submission,
+  isAdmin = false,
 }: CoverSubmissionDetailModalProps) => {
   if (!submission) return null;
 

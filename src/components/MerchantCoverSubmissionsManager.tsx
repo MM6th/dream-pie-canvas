@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -198,7 +197,6 @@ const MerchantCoverSubmissionsManager = () => {
           setSelectedSubmission(null);
         }}
         submission={selectedSubmission}
-        isAdmin={false}
       />
     </>
   );
