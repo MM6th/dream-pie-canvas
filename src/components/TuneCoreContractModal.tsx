@@ -95,6 +95,9 @@ const TuneCoreContractModal = ({
 
   if (!contract) return null;
 
+  // Check if all required fields are filled
+  const isFormValid = firstName.trim().length > 0 && lastName.trim().length > 0 && termsAccepted;
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-4xl bg-gray-800 border-gray-700 text-white max-h-[90vh] overflow-y-auto">
@@ -212,8 +215,8 @@ const TuneCoreContractModal = ({
             </Button>
             <Button
               onClick={handleSubmitContract}
-              disabled={loading || !firstName.trim() || !lastName.trim() || !termsAccepted}
-              className="flex-1 bg-blue-600 hover:bg-blue-700"
+              disabled={loading || !isFormValid}
+              className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? "Signing..." : "Sign Contract"}
             </Button>
