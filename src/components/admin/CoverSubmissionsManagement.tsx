@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -19,9 +20,11 @@ interface CoverSubmission {
   created_at: string;
   reviewed_at: string | null;
   reviewed_by: string | null;
+  contract_id?: string;
+  requires_contract?: boolean;
+  contract_generated_at?: string | null;
   merchant_name?: string;
   audio_product_title?: string;
-  contract_id?: string;
 }
 
 const CoverSubmissionsManagement = () => {
@@ -38,7 +41,7 @@ const CoverSubmissionsManagement = () => {
         .select(`
           *,
           profiles!song_cover_submissions_merchant_id_fkey(display_name),
-          audio_products(title)
+          audio_products!song_cover_submissions_audio_product_id_fkey(title)
         `)
         .order('created_at', { ascending: false });
 
