@@ -1,12 +1,12 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Download, Image } from "lucide-react";
+import { Download, Image, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { toast } from "@/hooks/use-toast";
 import PhotoGallery from "@/components/PhotoGallery";
 
 interface ApprovedCover {
@@ -23,6 +23,7 @@ const AdminPhotoGallery = () => {
   const [approvedAudioCovers, setApprovedAudioCovers] = useState<ApprovedCover[]>([]);
   const [approvedModelingPhotos, setApprovedModelingPhotos] = useState<ApprovedCover[]>([]);
   const [loading, setLoading] = useState(true);
+  const [downloadingIds, setDownloadingIds] = useState<Set<string>>(new Set());
 
   const fetchApprovedCovers = async () => {
     try {
@@ -108,18 +109,70 @@ const AdminPhotoGallery = () => {
   }, []);
 
   const handleDownloadCover = async (cover: ApprovedCover) => {
+    if (!user) return;
+
+    setDownloadingIds(prev => new Set(prev).add(cover.id));
+
     try {
+      // Download the image
+      const response = await fetch(cover.cover_image_url);
+      const blob = await response.blob();
+      
+      // Create download link
       const link = document.createElement('a');
-      link.href = cover.cover_image_url;
+      link.href = URL.createObjectURL(blob);
       link.download = `${cover.type}_cover_${cover.audio_product_title?.replace(/\s+/g, '-')}.jpg`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      URL.revokeObjectURL(link.href);
 
-      // TODO: After SQL migration, save to admin gallery using the new function
-      console.log('Cover downloaded:', cover.id);
+      // Save to admin's gallery by uploading to user-media bucket
+      const fileName = `admin_gallery_${cover.type}_${Date.now()}.jpg`;
+      const filePath = `${user.id}/${fileName}`;
+
+      // Upload to storage
+      const { error: uploadError } = await supabase.storage
+        .from('user-media')
+        .upload(filePath, blob, {
+          contentType: 'image/jpeg',
+          upsert: false
+        });
+
+      if (uploadError) throw uploadError;
+
+      // Add to user_uploads table
+      const { error: dbError } = await supabase
+        .from('user_uploads')
+        .insert({
+          user_id: user.id,
+          file_name: fileName,
+          file_path: filePath,
+          file_type: 'image/jpeg',
+          file_size: blob.size,
+          storage_bucket: 'user-media'
+        });
+
+      if (dbError) throw dbError;
+
+      toast({
+        title: "Success",
+        description: `Cover downloaded and saved to your photo gallery!`,
+      });
+
     } catch (error) {
-      console.error('Error downloading cover:', error);
+      console.error('Error downloading and saving cover:', error);
+      toast({
+        title: "Error",
+        description: "Failed to download and save cover. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setDownloadingIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(cover.id);
+        return newSet;
+      });
     }
   };
 
@@ -201,11 +254,21 @@ const AdminPhotoGallery = () => {
                     </p>
                     <Button
                       onClick={() => handleDownloadCover(cover)}
+                      disabled={downloadingIds.has(cover.id)}
                       size="sm"
                       className="w-full bg-blue-600 hover:bg-blue-700"
                     >
-                      <Download className="w-4 h-4 mr-2" />
-                      Download
+                      {downloadingIds.has(cover.id) ? (
+                        <>
+                          <Check className="w-4 h-4 mr-2 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <Download className="w-4 h-4 mr-2" />
+                          Download & Save
+                        </>
+                      )}
                     </Button>
                   </div>
                 ))}
@@ -236,11 +299,21 @@ const AdminPhotoGallery = () => {
                     </p>
                     <Button
                       onClick={() => handleDownloadCover(photo)}
+                      disabled={downloadingIds.has(photo.id)}
                       size="sm"
                       className="w-full bg-purple-600 hover:bg-purple-700"
                     >
-                      <Download className="w-4 h-4 mr-2" />
-                      Download
+                      {downloadingIds.has(photo.id) ? (
+                        <>
+                          <Check className="w-4 h-4 mr-2 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <Download className="w-4 h-4 mr-2" />
+                          Download & Save
+                        </>
+                      )}
                     </Button>
                   </div>
                 ))}

@@ -1,44 +1,63 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { FileText, Eye, CheckCircle, XCircle, Clock, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import CoverSubmissionManager from "../CoverSubmissionManager";
-import { useSubmissionCounts } from "@/hooks/useSubmissionCounts";
+import { toast } from "@/hooks/use-toast";
+import CoverSubmissionDetailModal from "@/components/CoverSubmissionDetailModal";
 
 interface CoverSubmission {
   id: string;
   merchant_id: string;
   audio_product_id: string;
   cover_image_url: string;
-  status: string;
   submission_notes: string | null;
+  status: string;
   admin_notes: string | null;
   created_at: string;
   reviewed_at: string | null;
   reviewed_by: string | null;
-  contract_id: string | null;
-  requires_contract: boolean | null;
-  contract_generated_at: string | null;
+  merchant_name?: string;
+  audio_product_title?: string;
+  contract_id?: string;
 }
 
 const CoverSubmissionsManagement = () => {
   const [submissions, setSubmissions] = useState<CoverSubmission[]>([]);
   const [loading, setLoading] = useState(true);
-  const { counts } = useSubmissionCounts();
+  const [selectedSubmission, setSelectedSubmission] = useState<CoverSubmission | null>(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [adminNotes, setAdminNotes] = useState<{ [key: string]: string }>({});
 
   const fetchSubmissions = async () => {
     try {
       const { data, error } = await supabase
         .from('song_cover_submissions')
-        .select('*')
+        .select(`
+          *,
+          profiles!song_cover_submissions_merchant_id_fkey(display_name),
+          audio_products(title)
+        `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setSubmissions(data || []);
+
+      const enrichedSubmissions = (data || []).map(submission => ({
+        ...submission,
+        merchant_name: submission.profiles?.display_name || 'Unknown Merchant',
+        audio_product_title: submission.audio_products?.title || 'Unknown Track'
+      }));
+
+      setSubmissions(enrichedSubmissions);
     } catch (error) {
-      console.error('Error fetching cover submissions:', error);
+      console.error('Error fetching submissions:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load cover submissions",
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
@@ -48,103 +67,260 @@ const CoverSubmissionsManagement = () => {
     fetchSubmissions();
   }, []);
 
-  const pendingSubmissions = submissions.filter(s => s.status === 'pending');
-  const approvedSubmissions = submissions.filter(s => s.status === 'approved');
-  const rejectedSubmissions = submissions.filter(s => s.status === 'rejected');
+  const handleStatusUpdate = async (submissionId: string, newStatus: 'approved' | 'rejected', notes?: string) => {
+    try {
+      // If approving, create a contract with updated revenue sharing terms
+      if (newStatus === 'approved') {
+        const contractTerms = `SONG COVER SUBMISSION AGREEMENT
+
+This agreement establishes the terms for the approved song cover submission and TuneCore publishing partnership.
+
+TUNECORE PARTNERSHIP REVENUE SHARING:
+Through our partnership with TuneCore, this cover will be distributed across major streaming platforms including Spotify, Apple Music, Amazon Music, and YouTube Music.
+
+REVENUE BREAKDOWN:
+- TuneCore Distribution Fee: 15% of all streaming revenue
+- PIE (Original Artist/Composer): 85% of streaming revenue (70.5% of total)
+- Cover Artist (Merchant): 20% of PIE's revenue share (17% of total streaming revenue)
+
+EXAMPLE CALCULATION:
+For a $1.29 song purchase/stream:
+- TuneCore receives: $0.19 (15%)
+- PIE receives: $0.91 (70.5% of total)
+- Cover Artist receives: $0.19 (14.5% of total, which equals 20% of PIE's 85% share)
+
+MERCHANT OBLIGATIONS:
+- Maintain quality standards for all submissions
+- Comply with original song licensing requirements  
+- Provide accurate metadata for distribution
+- Acknowledge revenue sharing agreement
+
+TUNECORE PROCESSING:
+- Contract will be submitted to TuneCore for processing after merchant signature
+- Merchant will receive email confirmation with publishing date
+- Screenshot of TuneCore involvement will be provided as proof
+
+By signing below, both parties agree to these terms and the revenue sharing structure outlined above.`;
+
+        // Create contract with updated terms
+        const { data: contractData, error: contractError } = await supabase
+          .from('contracts')
+          .insert({
+            merchant_id: submissions.find(s => s.id === submissionId)?.merchant_id,
+            cover_submission_id: submissionId,
+            contract_type: 'cover_submission',
+            contract_terms: contractTerms,
+            status: 'pending'
+          })
+          .select()
+          .single();
+
+        if (contractError) throw contractError;
+
+        // Update submission with contract reference
+        const { error: updateError } = await supabase
+          .from('song_cover_submissions')
+          .update({
+            status: newStatus,
+            admin_notes: notes,
+            reviewed_by: (await supabase.auth.getUser()).data.user?.id,
+            reviewed_at: new Date().toISOString(),
+            contract_id: contractData.id,
+            contract_generated_at: new Date().toISOString()
+          })
+          .eq('id', submissionId);
+
+        if (updateError) throw updateError;
+      } else {
+        // For rejection, just update the submission
+        const { error } = await supabase
+          .from('song_cover_submissions')
+          .update({
+            status: newStatus,
+            admin_notes: notes,
+            reviewed_by: (await supabase.auth.getUser()).data.user?.id,
+            reviewed_at: new Date().toISOString()
+          })
+          .eq('id', submissionId);
+
+        if (error) throw error;
+      }
+
+      toast({
+        title: "Success",
+        description: `Submission ${newStatus} successfully${newStatus === 'approved' ? ' and contract generated' : ''}`,
+      });
+
+      fetchSubmissions();
+    } catch (error) {
+      console.error('Error updating submission:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update submission status",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return <Clock className="w-4 h-4 text-yellow-500" />;
+      case 'approved':
+        return <CheckCircle className="w-4 h-4 text-green-500" />;
+      case 'rejected':
+        return <XCircle className="w-4 h-4 text-red-500" />;
+      default:
+        return <AlertCircle className="w-4 h-4 text-gray-400" />;
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return 'bg-yellow-600';
+      case 'approved':
+        return 'bg-green-600';
+      case 'rejected':
+        return 'bg-red-600';
+      default:
+        return 'bg-gray-600';
+    }
+  };
 
   if (loading) {
     return (
-      <div className="text-center text-white py-8">
-        Loading cover submissions...
-      </div>
+      <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+        <CardContent className="p-6">
+          <p className="text-gray-400">Loading cover submissions...</p>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-white">Cover Submissions Management</h2>
-        {counts.coverSubmissions > 0 && (
-          <Badge className="bg-red-600 text-white animate-pulse">
-            {counts.coverSubmissions} New Submission{counts.coverSubmissions !== 1 ? 's' : ''}
-          </Badge>
-        )}
-      </div>
-      
-      <Tabs defaultValue="pending" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 bg-gray-800 border-gray-700">
-          <TabsTrigger 
-            value="pending" 
-            className="text-white data-[state=active]:bg-gray-700 relative"
-          >
-            Pending 
-            <span className="ml-1">({pendingSubmissions.length})</span>
-            {counts.coverSubmissions > 0 && (
-              <Badge className="ml-2 bg-red-600 text-white animate-pulse text-xs">
-                {counts.coverSubmissions}
-              </Badge>
-            )}
-          </TabsTrigger>
-          <TabsTrigger 
-            value="approved" 
-            className="text-white data-[state=active]:bg-gray-700"
-          >
-            Approved ({approvedSubmissions.length})
-          </TabsTrigger>
-          <TabsTrigger 
-            value="rejected" 
-            className="text-white data-[state=active]:bg-gray-700"
-          >
-            Rejected ({rejectedSubmissions.length})
-          </TabsTrigger>
-        </TabsList>
+    <>
+      <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-white">
+            <FileText className="w-5 h-5" />
+            Cover Submissions Management
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {submissions.length === 0 ? (
+            <div className="text-center py-8">
+              <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <h4 className="text-lg font-semibold text-white mb-2">No Submissions</h4>
+              <p className="text-gray-400">Cover submissions will appear here for review.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {submissions.map((submission) => (
+                <div key={submission.id} className="bg-gray-700/50 p-4 rounded-lg">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <h4 className="text-white font-medium">
+                          {submission.audio_product_title}
+                        </h4>
+                        <Badge className={`${getStatusColor(submission.status)} text-white`}>
+                          <span className="flex items-center gap-1">
+                            {getStatusIcon(submission.status)}
+                            {submission.status}
+                          </span>
+                        </Badge>
+                        {submission.contract_id && (
+                          <Badge className="bg-blue-600 text-white">
+                            Contract Generated
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-gray-400 text-sm mb-2">
+                        Submitted by: {submission.merchant_name}
+                      </p>
+                      {submission.submission_notes && (
+                        <p className="text-gray-300 text-sm mb-2">
+                          Notes: {submission.submission_notes}
+                        </p>
+                      )}
+                      {submission.admin_notes && (
+                        <p className="text-yellow-300 text-sm mb-2">
+                          Admin Notes: {submission.admin_notes}
+                        </p>
+                      )}
+                      <p className="text-gray-400 text-xs">
+                        Submitted: {new Date(submission.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                    
+                    <div className="flex gap-2 ml-4">
+                      <Button
+                        onClick={() => {
+                          setSelectedSubmission(submission);
+                          setShowDetailModal(true);
+                        }}
+                        variant="outline"
+                        size="sm"
+                        className="border-gray-600 text-white bg-gray-700"
+                      >
+                        <Eye className="w-4 h-4 mr-1" />
+                        View
+                      </Button>
+                      
+                      {submission.status === 'pending' && (
+                        <>
+                          <Button
+                            onClick={() => handleStatusUpdate(submission.id, 'approved', adminNotes[submission.id])}
+                            size="sm"
+                            className="bg-green-600 hover:bg-green-700"
+                          >
+                            <CheckCircle className="w-4 h-4 mr-1" />
+                            Approve
+                          </Button>
+                          <Button
+                            onClick={() => handleStatusUpdate(submission.id, 'rejected', adminNotes[submission.id])}
+                            size="sm"
+                            variant="destructive"
+                          >
+                            <XCircle className="w-4 h-4 mr-1" />
+                            Reject
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {submission.status === 'pending' && (
+                    <div className="mt-3">
+                      <Textarea
+                        placeholder="Add admin notes (optional)"
+                        value={adminNotes[submission.id] || ''}
+                        onChange={(e) => setAdminNotes(prev => ({
+                          ...prev,
+                          [submission.id]: e.target.value
+                        }))}
+                        className="bg-gray-600 border-gray-500 text-white text-sm"
+                        rows={2}
+                      />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
-        <TabsContent value="pending">
-          <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="text-white">Pending Cover Submissions</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {pendingSubmissions.length === 0 ? (
-                <p className="text-gray-400 text-center py-4">No pending submissions.</p>
-              ) : (
-                <CoverSubmissionManager />
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="approved">
-          <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="text-white">Approved Cover Submissions</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {approvedSubmissions.length === 0 ? (
-                <p className="text-gray-400 text-center py-4">No approved submissions yet.</p>
-              ) : (
-                <CoverSubmissionManager />
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="rejected">
-          <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="text-white">Rejected Cover Submissions</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {rejectedSubmissions.length === 0 ? (
-                <p className="text-gray-400 text-center py-4">No rejected submissions yet.</p>
-              ) : (
-                <CoverSubmissionManager />
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-    </div>
+      <CoverSubmissionDetailModal
+        isOpen={showDetailModal}
+        onClose={() => {
+          setShowDetailModal(false);
+          setSelectedSubmission(null);
+        }}
+        submission={selectedSubmission}
+      />
+    </>
   );
 };
 

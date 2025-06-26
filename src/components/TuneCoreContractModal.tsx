@@ -60,11 +60,9 @@ const TuneCoreContractModal = ({
       const { error } = await supabase
         .from('contracts')
         .update({
-          merchant_first_name: firstName.trim(),
-          merchant_last_name: lastName.trim(),
-          merchant_terms_acknowledged: true,
-          merchant_signed_at: new Date().toISOString(),
           merchant_signature: `${firstName.trim()} ${lastName.trim()}`,
+          signed_at: new Date().toISOString(),
+          tunecore_terms_accepted: true,
           status: 'signed'
         })
         .eq('id', contract?.id);
@@ -112,7 +110,7 @@ const TuneCoreContractModal = ({
           <div className="bg-blue-600/20 border border-blue-600/30 rounded-lg p-4">
             <div className="flex items-center gap-2 mb-3">
               <DollarSign className="w-5 h-5 text-blue-400" />
-              <h3 className="text-lg font-semibold text-blue-400">TuneCore Partnership Benefits</h3>
+              <h3 className="text-lg font-semibold text-blue-400">TuneCore Partnership Revenue Breakdown</h3>
             </div>
             <div className="space-y-2 text-sm">
               <p className="text-gray-300">
@@ -137,10 +135,16 @@ const TuneCoreContractModal = ({
                 </div>
               </div>
               <div className="mt-3 p-3 bg-green-600/20 border border-green-600/30 rounded">
-                <p className="text-green-400 font-medium">Revenue Sharing:</p>
-                <p className="text-gray-300 text-sm">• You retain 85% of all streaming royalties</p>
-                <p className="text-gray-300 text-sm">• Platform receives 15% for distribution and promotion</p>
-                <p className="text-gray-300 text-sm">• No upfront costs - only pay from earned revenue</p>
+                <p className="text-green-400 font-medium">Revenue Sharing Breakdown:</p>
+                <div className="text-gray-300 text-sm space-y-1">
+                  <p>• TuneCore keeps 15% of streaming revenue for distribution services</p>
+                  <p>• PIE (original artist/composer) receives 85% of streaming revenue</p>
+                  <p>• Cover artist (you) receives 20% of PIE's portion = 17% of total revenue</p>
+                  <p className="text-blue-400 font-medium mt-2">Example: For a $1.29 song sale:</p>
+                  <p>• TuneCore receives: $0.19 (15%)</p>
+                  <p>• PIE receives: $0.91 (70.5% of total)</p>
+                  <p>• Cover artist receives: $0.19 (14.5% of total, which is 20% of PIE's share)</p>
+                </div>
               </div>
             </div>
           </div>
@@ -190,9 +194,9 @@ const TuneCoreContractModal = ({
                 onCheckedChange={(checked) => setTermsAccepted(checked as boolean)}
               />
               <Label htmlFor="terms" className="text-sm text-gray-300 leading-5">
-                I acknowledge that I understand what I have submitted, what I am signing up for, 
+                I acknowledge that I understand the revenue sharing agreement: I will receive 20% of PIE's TuneCore royalties (17% of total streaming revenue), 
                 and that I will await an email with publishing date and screenshot of my involvement from TuneCore. 
-                I understand the revenue sharing terms and agree to the TuneCore partnership conditions.
+                I understand and agree to these TuneCore partnership conditions.
               </Label>
             </div>
           </div>
