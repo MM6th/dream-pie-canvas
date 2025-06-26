@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import CoverSubmissionDetailModal from "@/components/CoverSubmissionDetailModal";
 
-interface CoverSubmission {
+interface CoverSubmissionData {
   id: string;
   merchant_id: string;
   audio_product_id: string;
@@ -19,17 +20,17 @@ interface CoverSubmission {
   created_at: string;
   reviewed_at: string | null;
   reviewed_by: string | null;
-  contract_id?: string;
-  requires_contract?: boolean;
+  contract_id?: string | null;
+  requires_contract?: boolean | null;
   contract_generated_at?: string | null;
   merchant_name?: string;
   audio_product_title?: string;
 }
 
 const CoverSubmissionsManagement = () => {
-  const [submissions, setSubmissions] = useState<CoverSubmission[]>([]);
+  const [submissions, setSubmissions] = useState<CoverSubmissionData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedSubmission, setSelectedSubmission] = useState<CoverSubmission | null>(null);
+  const [selectedSubmission, setSelectedSubmission] = useState<CoverSubmissionData | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [adminNotes, setAdminNotes] = useState<{ [key: string]: string }>({});
 
