@@ -2,8 +2,7 @@
 import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { X, Calendar, User, FileText, ExternalLink } from "lucide-react";
+import { Calendar, User, FileText, ExternalLink } from "lucide-react";
 
 interface CoverSubmissionData {
   id: string;
@@ -55,19 +54,9 @@ const CoverSubmissionDetailModal = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-2xl bg-gray-800 border-gray-700 text-white">
         <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            <span className="flex items-center gap-2">
-              <FileText className="w-5 h-5" />
-              Cover Submission Details
-            </span>
-            <Button
-              onClick={onClose}
-              variant="ghost"
-              size="sm"
-              className="text-gray-400 hover:text-white"
-            >
-              <X className="w-4 h-4" />
-            </Button>
+          <DialogTitle className="flex items-center gap-2">
+            <FileText className="w-5 h-5" />
+            Cover Submission Details
           </DialogTitle>
         </DialogHeader>
 
