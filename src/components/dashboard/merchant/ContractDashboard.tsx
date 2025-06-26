@@ -14,17 +14,15 @@ interface ContractWithDetails {
   contract_type: string;
   status: string;
   created_at: string;
-  merchant_signed_at: string | null;
-  admin_signed_at: string | null;
+  signed_at: string | null;
   contract_terms: string;
   cover_submission_id: string | null;
   modeling_application_id: string | null;
-  tunecore_publishing_date: string | null;
-  email_notifications_sent: boolean | null;
-  merchant_first_name: string | null;
-  merchant_last_name: string | null;
-  merchant_terms_acknowledged: boolean | null;
-  tunecore_screenshot_url: string | null;
+  merchant_signature: string | null;
+  admin_signature: string | null;
+  merchant_id: string;
+  tunecore_terms_accepted: boolean | null;
+  updated_at: string;
   submission_title?: string;
 }
 
@@ -215,18 +213,13 @@ const ContractDashboard = () => {
                           <Calendar className="w-3 h-3" />
                           Created: {new Date(contract.created_at).toLocaleDateString()}
                         </span>
-                        {contract.merchant_signed_at && (
+                        {contract.signed_at && (
                           <span className="flex items-center gap-1">
                             <CheckCircle className="w-3 h-3" />
-                            Signed: {new Date(contract.merchant_signed_at).toLocaleDateString()}
+                            Signed: {new Date(contract.signed_at).toLocaleDateString()}
                           </span>
                         )}
                       </div>
-                      {contract.tunecore_publishing_date && (
-                        <p className="text-green-400 text-sm mt-2">
-                          TuneCore Publishing Date: {new Date(contract.tunecore_publishing_date).toLocaleDateString()}
-                        </p>
-                      )}
                     </div>
                     
                     {contract.status === 'pending' && (
