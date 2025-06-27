@@ -15,6 +15,7 @@ const AuthPage = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
 
   const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -92,6 +93,42 @@ const AuthPage = () => {
     }
   };
 
+  const handleForgotPassword = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    const formData = new FormData(e.currentTarget);
+    const email = formData.get("resetEmail") as string;
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/`
+      });
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Reset Email Sent",
+          description: "Check your email for password reset instructions."
+        });
+        setShowForgotPassword(false);
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "An error occurred",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleAboutAuthor = () => {
     navigate('/about-author');
   };
@@ -131,18 +168,46 @@ const AuthPage = () => {
                 <Button
                   onClick={handleAboutAuthor}
                   variant="link"
-                  className="text-blue-400 hover:text-blue-300 underline"
+                  className="text-blue-400 hover:text-blue-300"
                 >
                   About the Author
                 </Button>
               </div>
+            ) : showForgotPassword ? (
+              <div className="space-y-4">
+                <h3 className="text-white text-center text-lg">Reset Password</h3>
+                <form onSubmit={handleForgotPassword} className="space-y-4">
+                  <div>
+                    <Label htmlFor="resetEmail" className="text-white">Email</Label>
+                    <Input
+                      id="resetEmail"
+                      name="resetEmail"
+                      type="email"
+                      required
+                      className="bg-gray-700 border-gray-600 text-white focus:border-blue-500"
+                      placeholder="Enter your email address"
+                    />
+                  </div>
+                  <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white" disabled={isLoading}>
+                    {isLoading ? "Sending..." : "Send Reset Email"}
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={() => setShowForgotPassword(false)}
+                    variant="link"
+                    className="w-full text-gray-400 hover:text-white"
+                  >
+                    Back to Sign In
+                  </Button>
+                </form>
+              </div>
             ) : (
               <Tabs defaultValue="signin" className="space-y-4">
                 <TabsList className="grid w-full grid-cols-2 bg-gray-700">
-                  <TabsTrigger value="signin" className="text-white data-[state=active]:bg-gray-600">
+                  <TabsTrigger value="signin" className="text-white data-[state=active]:bg-blue-600">
                     Sign In
                   </TabsTrigger>
-                  <TabsTrigger value="signup" className="text-white data-[state=active]:bg-gray-600">
+                  <TabsTrigger value="signup" className="text-white data-[state=active]:bg-blue-600">
                     Sign Up
                   </TabsTrigger>
                 </TabsList>
@@ -156,7 +221,7 @@ const AuthPage = () => {
                         name="email"
                         type="email"
                         required
-                        className="bg-gray-700 border-gray-600 text-white"
+                        className="bg-gray-700 border-gray-600 text-white focus:border-blue-500"
                       />
                     </div>
                     <div>
@@ -166,11 +231,19 @@ const AuthPage = () => {
                         name="password"
                         type="password"
                         required
-                        className="bg-gray-700 border-gray-600 text-white"
+                        className="bg-gray-700 border-gray-600 text-white focus:border-blue-500"
                       />
                     </div>
                     <Button type="submit" className="w-full bg-white text-black hover:bg-gray-100" disabled={isLoading}>
                       {isLoading ? "Signing In..." : "Sign In"}
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={() => setShowForgotPassword(true)}
+                      variant="link"
+                      className="w-full text-blue-400 hover:text-blue-300"
+                    >
+                      Forgot Password?
                     </Button>
                   </form>
                 </TabsContent>
@@ -184,7 +257,7 @@ const AuthPage = () => {
                         name="email"
                         type="email"
                         required
-                        className="bg-gray-700 border-gray-600 text-white"
+                        className="bg-gray-700 border-gray-600 text-white focus:border-blue-500"
                       />
                     </div>
                     <div>
@@ -194,18 +267,18 @@ const AuthPage = () => {
                         name="password"
                         type="password"
                         required
-                        className="bg-gray-700 border-gray-600 text-white"
+                        className="bg-gray-700 border-gray-600 text-white focus:border-blue-500"
                       />
                     </div>
                     <div>
                       <Label className="text-white">Account Type</Label>
                       <RadioGroup defaultValue="supporter" name="userType" className="mt-2">
                         <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="supporter" id="supporter" />
+                          <RadioGroupItem value="supporter" id="supporter" className="border-blue-500 text-blue-600" />
                           <Label htmlFor="supporter" className="text-white">Supporter</Label>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="merchant" id="merchant" />
+                          <RadioGroupItem value="merchant" id="merchant" className="border-blue-500 text-blue-600" />
                           <Label htmlFor="merchant" className="text-white">Merchant</Label>
                         </div>
                       </RadioGroup>

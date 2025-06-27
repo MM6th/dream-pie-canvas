@@ -95,9 +95,14 @@ const TuneCoreContractModal = ({
 
   if (!contract) return null;
 
-  // Form validation with debugging
+  // Form validation
   const isFormValid = firstName.trim().length > 0 && lastName.trim().length > 0 && termsAccepted;
-  console.log('Form validation:', { firstName: firstName.trim(), lastName: lastName.trim(), termsAccepted, isFormValid });
+  console.log('Form validation debug:', { 
+    firstName: firstName.trim(), 
+    lastName: lastName.trim(), 
+    termsAccepted, 
+    isFormValid 
+  });
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -248,13 +253,8 @@ const TuneCoreContractModal = ({
                 <Input
                   id="firstName"
                   value={firstName}
-                  onChange={(e) => {
-                    setFirstName(e.target.value);
-                    console.log('First name updated:', e.target.value);
-                  }}
-                  className={`bg-gray-700 border-gray-600 text-white ${
-                    firstName.trim().length > 0 ? 'border-green-500' : ''
-                  }`}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  className="bg-gray-700 border-gray-600 text-white focus:border-blue-500"
                   placeholder="Enter your first name"
                 />
               </div>
@@ -263,13 +263,8 @@ const TuneCoreContractModal = ({
                 <Input
                   id="lastName"
                   value={lastName}
-                  onChange={(e) => {
-                    setLastName(e.target.value);
-                    console.log('Last name updated:', e.target.value);
-                  }}
-                  className={`bg-gray-700 border-gray-600 text-white ${
-                    lastName.trim().length > 0 ? 'border-green-500' : ''
-                  }`}
+                  onChange={(e) => setLastName(e.target.value)}
+                  className="bg-gray-700 border-gray-600 text-white focus:border-blue-500"
                   placeholder="Enter your last name"
                 />
               </div>
@@ -279,10 +274,8 @@ const TuneCoreContractModal = ({
               <Checkbox
                 id="terms"
                 checked={termsAccepted}
-                onCheckedChange={(checked) => {
-                  setTermsAccepted(checked as boolean);
-                  console.log('Terms accepted updated:', checked);
-                }}
+                onCheckedChange={(checked) => setTermsAccepted(checked as boolean)}
+                className="border-blue-500 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
               />
               <Label htmlFor="terms" className="text-sm text-gray-300 leading-5">
                 I acknowledge that I understand both revenue sharing agreements: I will receive 20% of PIE's platform royalties 
@@ -302,17 +295,17 @@ const TuneCoreContractModal = ({
             >
               Cancel
             </Button>
-            <Button
+            <button
               onClick={handleSubmitContract}
-              disabled={loading || !isFormValid}
-              className={`flex-1 transition-all duration-200 ${
+              disabled={!isFormValid || loading}
+              className={`flex-1 h-10 px-4 py-2 rounded-md font-medium transition-all duration-200 ${
                 isFormValid && !loading
                   ? 'bg-green-600 hover:bg-green-700 text-white cursor-pointer'
-                  : 'bg-gray-600 text-gray-400 cursor-not-allowed opacity-50'
+                  : 'bg-gray-600 text-gray-400 cursor-not-allowed'
               }`}
             >
               {loading ? "Signing..." : "Sign Contract"}
-            </Button>
+            </button>
           </div>
         </div>
       </DialogContent>
