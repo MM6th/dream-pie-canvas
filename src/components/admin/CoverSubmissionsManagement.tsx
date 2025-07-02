@@ -99,29 +99,46 @@ This agreement establishes the terms for the approved song cover submission and 
 TUNECORE PARTNERSHIP REVENUE SHARING:
 Through our partnership with TuneCore, this cover will be distributed across major streaming platforms including Spotify, Apple Music, Amazon Music, and YouTube Music.
 
-REVENUE BREAKDOWN:
-- TuneCore Distribution Fee: 15% of all streaming revenue
-- PIE (Original Artist/Composer): 85% of streaming revenue (70.5% of total)
-- Cover Artist (Merchant): 20% of PIE's revenue share (17% of total streaming revenue)
+DETAILED REVENUE BREAKDOWN:
 
-EXAMPLE CALCULATION:
-For a $1.29 song purchase/stream:
-- TuneCore receives: $0.19 (15%)
-- PIE receives: $0.91 (70.5% of total)
-- Cover Artist receives: $0.19 (14.5% of total, which equals 20% of PIE's 85% share)
+1. TUNECORE DISTRIBUTION FEE: 15%
+   - TuneCore handles global distribution and platform processing
+   - Covers distribution to 150+ digital stores and streaming services
+   - Includes monthly reporting and royalty collection services
+
+2. PIE (ORIGINAL ARTIST/COMPOSER): 70.5% OF TOTAL REVENUE
+   - Receives 85% of revenue remaining after TuneCore fees
+   - Retains full ownership and publishing rights to original composition
+   - Responsible for original song licensing and metadata accuracy
+
+3. COVER ARTIST (MERCHANT): 14.5% OF TOTAL REVENUE
+   - Receives 20% of PIE's 85% revenue share
+   - Compensation for cover art modeling and promotional value
+   - Percentage calculated as: 20% × 85% = 17% of post-TuneCore revenue
+
+REVENUE CALCULATION EXAMPLE:
+For each $1.29 song purchase or equivalent streaming revenue:
+• TuneCore Distribution Fee: $0.19 (15% of $1.29)
+• Remaining Revenue: $1.10 (85% of $1.29)
+• PIE Share: $0.91 (85% of $1.10 = 70.5% of total)
+• Cover Artist Share: $0.19 (20% of $0.91 = 14.5% of total)
 
 MERCHANT OBLIGATIONS:
-- Maintain quality standards for all submissions
-- Comply with original song licensing requirements  
-- Provide accurate metadata for distribution
-- Acknowledge revenue sharing agreement
+- Maintain professional quality standards for all submissions
+- Comply with original song licensing requirements and copyright laws
+- Provide accurate metadata and contact information for distribution
+- Acknowledge and comply with this revenue sharing agreement
+- Allow use of submitted cover art for promotional purposes
 
-TUNECORE PROCESSING:
-- Contract will be submitted to TuneCore for processing after merchant signature
-- Merchant will receive email confirmation with publishing date
-- Screenshot of TuneCore involvement will be provided as proof
+TUNECORE PROCESSING & DISTRIBUTION:
+- Contract will be submitted to TuneCore for processing after admin approval
+- Merchant will receive email confirmation with official publishing date
+- Screenshot proof of TuneCore involvement will be provided for verification
+- Monthly royalty statements will be accessible through TuneCore's platform
+- Revenue sharing begins upon successful distribution to streaming platforms
 
-By signing below, both parties agree to these terms and the revenue sharing structure outlined above.`;
+LEGAL ACKNOWLEDGMENT:
+By signing below, both parties acknowledge they have read, understood, and agree to be legally bound by the revenue sharing structure, obligations, and terms outlined in this agreement. This contract remains in effect for the duration of the track's distribution through TuneCore.`;
 
         // Create contract with updated terms
         const { data: contractData, error: contractError } = await supabase

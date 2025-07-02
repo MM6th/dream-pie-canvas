@@ -9,6 +9,7 @@ import DashboardWidgets from "./merchant/DashboardWidgets";
 import ContentManagement from "./merchant/ContentManagement";
 import RestrictedAccess from "./merchant/RestrictedAccess";
 import ModelingApplicationSection from "./merchant/ModelingApplicationSection";
+import RoyaltyBreakdownModal from "@/components/profile/RoyaltyBreakdownModal";
 
 interface MerchantDashboardProps {
   onSuccess: () => void;
@@ -59,6 +60,19 @@ const MerchantDashboard = ({
             onBackgroundUpload={onBackgroundUpload} 
             isAdmin={isAdmin}
           />
+          
+          {/* Royalty Breakdown for Merchants */}
+          {isApproved && !isAdmin && (
+            <div className="mb-8">
+              <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-6">
+                <h3 className="text-xl font-semibold text-white mb-4">Revenue Information</h3>
+                <p className="text-gray-300 mb-4">
+                  View detailed information about TuneCore partnership revenue sharing for cover submissions.
+                </p>
+                <RoyaltyBreakdownModal />
+              </div>
+            </div>
+          )}
           
           {/* Only show modeling applications for approved merchants (not admins) */}
           {isApproved && !isAdmin && (
