@@ -14,6 +14,8 @@ interface SignedContract {
   contract_terms: string;
   merchant_signature: string;
   signed_at: string;
+  status: string;
+  admin_signature?: string;
   cover_submission_id?: string;
   modeling_application_id?: string;
   merchant_name?: string;
@@ -30,7 +32,7 @@ const SignedContractsSection = () => {
       const { data: contractsData, error: contractsError } = await supabase
         .from('contracts')
         .select('*')
-        .eq('status', 'signed')
+        .in('status', ['signed', 'approved'])
         .order('signed_at', { ascending: false });
 
       if (contractsError) throw contractsError;
@@ -45,40 +47,52 @@ const SignedContractsSection = () => {
             .eq('id', contract.merchant_id)
             .single();
 
-          let submissionData = null;
+          let productTitle = 'Unknown Product';
           let submissionType = '';
 
           // Get submission details based on contract type
           if (contract.cover_submission_id) {
             const { data } = await supabase
               .from('song_cover_submissions')
-              .select(`
-                *,
-                audio_products (title)
-              `)
+              .select('audio_product_id')
               .eq('id', contract.cover_submission_id)
               .single();
             
-            submissionData = data;
+            if (data?.audio_product_id) {
+              const { data: audioData } = await supabase
+                .from('audio_products')
+                .select('title')
+                .eq('id', data.audio_product_id)
+                .single();
+              
+              productTitle = audioData?.title || 'Unknown Product';
+            }
+            
             submissionType = 'Cover Submission';
           } else if (contract.modeling_application_id) {
             const { data } = await supabase
               .from('modeling_applications')
-              .select(`
-                *,
-                fashion_products (title)
-              `)
+              .select('fashion_product_id')
               .eq('id', contract.modeling_application_id)
               .single();
             
-            submissionData = data;
+            if (data?.fashion_product_id) {
+              const { data: fashionData } = await supabase
+                .from('fashion_products')
+                .select('title')
+                .eq('id', data.fashion_product_id)
+                .single();
+              
+              productTitle = fashionData?.title || 'Unknown Product';
+            }
+            
             submissionType = 'Modeling Application';
           }
 
           return {
             ...contract,
             merchant_name: merchantData?.display_name || 'Unknown Merchant',
-            audio_product_title: submissionData?.audio_products?.title || submissionData?.fashion_products?.title || 'Unknown Product',
+            audio_product_title: productTitle,
             submission_type: submissionType
           };
         })
@@ -94,6 +108,35 @@ const SignedContractsSection = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleApproveContract = async (contractId: string) => {
+    try {
+      const { error } = await supabase
+        .from('contracts')
+        .update({ 
+          status: 'approved',
+          admin_signature: (await supabase.auth.getUser()).data.user?.email || 'Admin',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', contractId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Contract approved successfully"
+      });
+
+      fetchSignedContracts();
+    } catch (error) {
+      console.error('Error approving contract:', error);
+      toast({
+        title: "Error",
+        description: "Failed to approve contract",
+        variant: "destructive"
+      });
     }
   };
 
@@ -180,17 +223,17 @@ const SignedContractsSection = () => {
               <div key={contract.id} className="bg-gray-700/50 p-4 rounded-lg">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <h4 className="text-white font-medium">
-                        {contract.audio_product_title}
-                      </h4>
-                      <Badge className="bg-green-600 text-white">
-                        Signed
-                      </Badge>
-                      <Badge className="bg-blue-600 text-white">
-                        {contract.submission_type}
-                      </Badge>
-                    </div>
+                     <div className="flex items-center gap-2 mb-2">
+                       <h4 className="text-white font-medium">
+                         {contract.audio_product_title}
+                       </h4>
+                       <Badge className={contract.status === 'approved' ? 'bg-green-600 text-white' : 'bg-yellow-600 text-white'}>
+                         {contract.status === 'approved' ? 'Approved' : 'Awaiting Approval'}
+                       </Badge>
+                       <Badge className="bg-blue-600 text-white">
+                         {contract.submission_type}
+                       </Badge>
+                     </div>
                     
                     <div className="space-y-1 text-sm text-gray-300">
                       <div className="flex items-center gap-2">
@@ -208,16 +251,26 @@ const SignedContractsSection = () => {
                     </div>
                   </div>
                   
-                  <div className="flex gap-2 ml-4">
-                    <Button
-                      onClick={() => generateContractPDF(contract)}
-                      size="sm"
-                      className="bg-blue-600 hover:bg-blue-700"
-                    >
-                      <Download className="w-4 h-4 mr-1" />
-                      Download PDF
-                    </Button>
-                  </div>
+                   <div className="flex gap-2 ml-4">
+                     {contract.status === 'signed' && (
+                       <Button
+                         onClick={() => handleApproveContract(contract.id)}
+                         size="sm"
+                         className="bg-green-600 hover:bg-green-700"
+                       >
+                         <Eye className="w-4 h-4 mr-1" />
+                         Approve
+                       </Button>
+                     )}
+                     <Button
+                       onClick={() => generateContractPDF(contract)}
+                       size="sm"
+                       className="bg-blue-600 hover:bg-blue-700"
+                     >
+                       <Download className="w-4 h-4 mr-1" />
+                       Download PDF
+                     </Button>
+                   </div>
                 </div>
                 
                 <div className="mt-3 p-3 bg-gray-600/30 rounded text-xs text-gray-400">
