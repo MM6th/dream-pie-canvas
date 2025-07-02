@@ -4,10 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { FileText, Eye, CheckCircle, XCircle, Clock, AlertCircle } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { FileText, Eye, CheckCircle, XCircle, Clock, AlertCircle, ScrollText } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import CoverSubmissionDetailModal from "@/components/CoverSubmissionDetailModal";
+import SignedContractsSection from "./SignedContractsSection";
 
 interface CoverSubmissionData {
   id: string;
@@ -223,10 +225,29 @@ By signing below, both parties agree to these terms and the revenue sharing stru
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-white">
             <FileText className="w-5 h-5" />
-            Cover Submissions Management
+            Cover Submissions & Contracts Management
           </CardTitle>
         </CardHeader>
         <CardContent>
+          <Tabs defaultValue="submissions" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 bg-gray-700 border-gray-600">
+              <TabsTrigger 
+                value="submissions" 
+                className="text-white data-[state=active]:bg-gray-600"
+              >
+                <FileText className="w-4 h-4 mr-2" />
+                Submissions
+              </TabsTrigger>
+              <TabsTrigger 
+                value="contracts" 
+                className="text-white data-[state=active]:bg-gray-600"
+              >
+                <ScrollText className="w-4 h-4 mr-2" />
+                Signed Contracts
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="submissions" className="mt-6">
           {submissions.length === 0 ? (
             <div className="text-center py-8">
               <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -328,6 +349,12 @@ By signing below, both parties agree to these terms and the revenue sharing stru
               ))}
             </div>
           )}
+            </TabsContent>
+
+            <TabsContent value="contracts" className="mt-6">
+              <SignedContractsSection />
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
 
