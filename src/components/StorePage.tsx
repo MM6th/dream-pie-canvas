@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import FashionStoreSection from "./FashionStoreSection";
 import AstrologyStoreSection from "./AstrologyStoreSection";
+import TunecoreRoyaltyModal from "./profile/TunecoreRoyaltyModal";
 
 interface AudioProduct {
   id: string;
@@ -507,6 +508,20 @@ const StorePage = () => {
             <AudioLines className="w-6 h-6" />
             Audio Content
           </h2>
+          
+          {/* PIE Royalty Information for audio purchases */}
+          <div className="mb-6 p-4 bg-gray-800/30 border border-gray-700 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-white mb-2">Music Revenue Sharing</h3>
+                <p className="text-gray-300 text-sm">
+                  When you purchase music on PIE, you're supporting both the original artist and our platform. 
+                  Learn more about our revenue sharing structure.
+                </p>
+              </div>
+              <TunecoreRoyaltyModal />
+            </div>
+          </div>
           
           {audioProducts.length === 0 ? (
             <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">

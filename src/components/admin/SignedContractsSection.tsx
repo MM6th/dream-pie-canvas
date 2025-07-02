@@ -163,17 +163,84 @@ const SignedContractsSection = () => {
       doc.text(`Signed Date: ${new Date(contract.signed_at).toLocaleDateString()}`, 20, 105);
       doc.text(`Merchant Signature: ${contract.merchant_signature}`, 20, 115);
       
-      // Contract terms
-      doc.text('CONTRACT TERMS:', 20, 135);
-      doc.setFontSize(10);
+      // Add detailed royalty breakdown section for cover submission contracts
+      if (contract.contract_type === 'cover_submission') {
+        doc.setFontSize(14);
+        doc.text('TUNECORE ROYALTY BREAKDOWN:', 20, 135);
+        doc.setFontSize(10);
+        
+        const royaltyBreakdown = [
+          'REVENUE DISTRIBUTION STRUCTURE:',
+          '',
+          '• TuneCore Distribution Fee: 15%',
+          '  - Platform processing & distribution to 150+ stores',
+          '  - Monthly reporting and royalty collection services',
+          '',
+          '• PIE (Original Artist): 70.5% of total revenue',
+          '  - Receives 85% of revenue remaining after TuneCore fees',
+          '  - Retains full ownership and publishing rights',
+          '',
+          '• Cover Artist (Merchant): 14.5% of total revenue',
+          '  - Receives 20% of PIE\'s 85% revenue share',
+          '  - Compensation for cover art modeling and promotional value',
+          '',
+          'EXAMPLE CALCULATION (per $1.29 purchase):',
+          '• TuneCore Fee: $0.19 (15% of $1.29)',
+          '• PIE Share: $0.91 (70.5% of total)',
+          '• Cover Artist Share: $0.19 (14.5% of total)',
+          '',
+        ];
+        
+        let yPosition = 145;
+        royaltyBreakdown.forEach(line => {
+          if (yPosition > 250) {
+            doc.addPage();
+            yPosition = 20;
+          }
+          doc.text(line, 20, yPosition);
+          yPosition += 12;
+        });
+        
+        // Contract terms on new page or continued
+        if (yPosition > 200) {
+          doc.addPage();
+          yPosition = 20;
+        } else {
+          yPosition += 10;
+        }
+        
+        doc.setFontSize(12);
+        doc.text('FULL CONTRACT TERMS:', 20, yPosition);
+        yPosition += 15;
+        doc.setFontSize(10);
+        
+        // Split contract terms into lines that fit the page
+        const splitTerms = doc.splitTextToSize(contract.contract_terms, 170);
+        splitTerms.forEach((line: string) => {
+          if (yPosition > 270) {
+            doc.addPage();
+            yPosition = 20;
+          }
+          doc.text(line, 20, yPosition);
+          yPosition += 12;
+        });
+      } else {
+        // For non-cover submission contracts, just show the terms
+        doc.text('CONTRACT TERMS:', 20, 135);
+        doc.setFontSize(10);
+        
+        // Split contract terms into lines that fit the page
+        const splitTerms = doc.splitTextToSize(contract.contract_terms, 170);
+        doc.text(splitTerms, 20, 145);
+      }
       
-      // Split contract terms into lines that fit the page
-      const splitTerms = doc.splitTextToSize(contract.contract_terms, 170);
-      doc.text(splitTerms, 20, 145);
-      
-      // Footer
-      doc.setFontSize(8);
-      doc.text(`Generated on ${new Date().toLocaleDateString()} by PIE Admin Dashboard`, 20, 280);
+      // Footer on last page
+      const pageCount = doc.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.text(`Generated on ${new Date().toLocaleDateString()} by PIE Admin Dashboard - Page ${i} of ${pageCount}`, 20, 285);
+      }
       
       // Download the PDF
       doc.save(`PIE_Contract_${contract.id}_${contract.merchant_name.replace(/\s+/g, '_')}.pdf`);
