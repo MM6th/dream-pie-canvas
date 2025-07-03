@@ -162,34 +162,61 @@ const SignedContractsSection = () => {
       doc.text(`Product: ${contract.audio_product_title}`, 20, 95);
       doc.text(`Signed Date: ${new Date(contract.signed_at).toLocaleDateString()}`, 20, 105);
       doc.text(`Merchant Signature: ${contract.merchant_signature}`, 20, 115);
+      if (contract.admin_signature) {
+        doc.text(`Admin Signature: ${contract.admin_signature}`, 20, 125);
+      }
       
-      // Add detailed royalty breakdown section for cover submission contracts
-      if (contract.contract_type === 'cover_submission') {
-        doc.setFontSize(14);
-        doc.text('TUNECORE ROYALTY BREAKDOWN:', 20, 135);
-        doc.setFontSize(10);
-        
-        const royaltyBreakdown = [
-          'REVENUE DISTRIBUTION STRUCTURE:',
-          '',
-          '• TuneCore Distribution Fee: 15%',
-          '  - Platform processing & distribution to 150+ stores',
-          '  - Monthly reporting and royalty collection services',
-          '',
-          '• PIE (Original Artist): 70.5% of total revenue',
-          '  - Receives 85% of revenue remaining after TuneCore fees',
-          '  - Retains full ownership and publishing rights',
-          '',
-          '• Cover Artist (Merchant): 14.5% of total revenue',
-          '  - Receives 20% of PIE\'s 85% revenue share',
-          '  - Compensation for cover art modeling and promotional value',
-          '',
-          'EXAMPLE CALCULATION (per $1.29 purchase):',
-          '• TuneCore Fee: $0.19 (15% of $1.29)',
-          '• PIE Share: $0.91 (70.5% of total)',
-          '• Cover Artist Share: $0.19 (14.5% of total)',
-          '',
-        ];
+        // Add detailed royalty breakdown section for cover submission contracts
+        if (contract.contract_type === 'cover_submission') {
+          doc.setFontSize(14);
+          doc.text('REVENUE DISTRIBUTION BREAKDOWN:', 20, 135);
+          doc.setFontSize(10);
+          
+          const royaltyBreakdown = [
+            'PIE PLATFORM EXCLUSIVE DISTRIBUTION:',
+            '',
+            '• PIE Platform: 30% (after PayPal processing fees)',
+            '  - Platform hosting, processing, and exclusive early access',
+            '  - Premium pricing with $2.00 minimum for exclusivity',
+            '',
+            '• Main Artist: 70% of remaining revenue',
+            '  - Retains full ownership and publishing rights',
+            '  - Direct relationship with PIE platform supporters',
+            '',
+            '• Cover Model (Merchant): 21% of total revenue',
+            '  - Receives 30% of Main Artist\'s 70% share',
+            '  - Compensation for cover art modeling and promotional value',
+            '',
+            'PIE PLATFORM EXAMPLE (per $2.00 purchase):',
+            '• PIE Platform: $0.60 (30% after processing)',
+            '• Main Artist: $1.40 (70% of total)',
+            '• Cover Model: $0.42 (21% of total)',
+            '',
+            'TUNECORE WIDESPREAD DISTRIBUTION:',
+            '',
+            '• TuneCore Distribution Fee: 15%',
+            '  - Global distribution to 150+ stores and streaming platforms',
+            '  - Monthly reporting and royalty collection services',
+            '',
+            '• Main Artist: 70.5% of total revenue',
+            '  - Receives 85% of revenue remaining after TuneCore fees',
+            '  - Maintains full ownership and publishing rights',
+            '',
+            '• Cover Model (Merchant): 14.5% of total revenue',
+            '  - Receives 20% of Main Artist\'s 85% revenue share',
+            '  - Lower percentage due to widespread distribution model',
+            '',
+            'TUNECORE EXAMPLE (per $1.29 purchase/stream):',
+            '• TuneCore Fee: $0.19 (15% of $1.29)',
+            '• Main Artist: $0.91 (70.5% of total)',
+            '• Cover Model: $0.19 (14.5% of total)',
+            '',
+            'DISTRIBUTION STRATEGY:',
+            '• Tracks are first released exclusively on PIE platform',
+            '• After exclusivity period, distributed via TuneCore globally',
+            '• Different revenue structures reflect platform differences',
+            '',
+          ];
         
         let yPosition = 145;
         royaltyBreakdown.forEach(line => {
@@ -318,26 +345,26 @@ const SignedContractsSection = () => {
                     </div>
                   </div>
                   
-                   <div className="flex gap-2 ml-4">
-                     {contract.status === 'signed' && (
-                       <Button
-                         onClick={() => handleApproveContract(contract.id)}
-                         size="sm"
-                         className="bg-green-600 hover:bg-green-700"
-                       >
-                         <Eye className="w-4 h-4 mr-1" />
-                         Approve
-                       </Button>
-                     )}
-                     <Button
-                       onClick={() => generateContractPDF(contract)}
-                       size="sm"
-                       className="bg-blue-600 hover:bg-blue-700"
-                     >
-                       <Download className="w-4 h-4 mr-1" />
-                       Download PDF
-                     </Button>
-                   </div>
+                    <div className="flex gap-2 ml-4">
+                      <Button
+                        onClick={() => generateContractPDF(contract)}
+                        size="sm"
+                        className="bg-blue-600 hover:bg-blue-700"
+                      >
+                        <Download className="w-4 h-4 mr-1" />
+                        View Signed Contract
+                      </Button>
+                      {contract.status === 'signed' && (
+                        <Button
+                          onClick={() => handleApproveContract(contract.id)}
+                          size="sm"
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          <Eye className="w-4 h-4 mr-1" />
+                          Approve
+                        </Button>
+                      )}
+                    </div>
                 </div>
                 
                 <div className="mt-3 p-3 bg-gray-600/30 rounded text-xs text-gray-400">

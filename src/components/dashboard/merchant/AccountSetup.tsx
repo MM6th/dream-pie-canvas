@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import FullMerchantProfileModal from "@/components/profile/FullMerchantProfileModal";
-import TunecoreRoyaltyModal from "@/components/profile/TunecoreRoyaltyModal";
+import PublishingRoyaltiesModal from "@/components/profile/PublishingRoyaltiesModal";
 import { toast } from "@/hooks/use-toast";
 import { AlertCircle, CheckCircle } from "lucide-react";
 
@@ -61,7 +61,7 @@ const AccountSetup = ({ userProfile, onProfileUpdate }: AccountSetupProps) => {
             >
               Independent Contractor Agreement (Coming Soon)
             </Button>
-            <TunecoreRoyaltyModal />
+            <PublishingRoyaltiesModal />
           </div>
         </div>
       </CardContent>
