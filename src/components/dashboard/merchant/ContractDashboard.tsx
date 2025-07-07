@@ -3,11 +3,13 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { FileText, Calendar, CheckCircle, Clock, AlertCircle } from "lucide-react";
+import { FileText, Calendar, CheckCircle, Clock, AlertCircle, Eye, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import TuneCoreContractModal from "@/components/TuneCoreContractModal";
+import ContractPreviewModal from "@/components/ContractPreviewModal";
+import jsPDF from 'jspdf';
 
 interface ContractWithDetails {
   id: string;
@@ -32,6 +34,7 @@ const ContractDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [selectedContract, setSelectedContract] = useState<ContractWithDetails | null>(null);
   const [showContractModal, setShowContractModal] = useState(false);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
 
   const fetchContracts = async () => {
     if (!user) return;
@@ -121,12 +124,19 @@ const ContractDashboard = () => {
     setShowContractModal(true);
   };
 
+  const handleViewContract = (contract: ContractWithDetails) => {
+    setSelectedContract(contract);
+    setShowPreviewModal(true);
+  };
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'pending':
         return <Clock className="w-4 h-4 text-yellow-500" />;
       case 'signed':
         return <AlertCircle className="w-4 h-4 text-blue-500" />;
+      case 'approved':
+        return <CheckCircle className="w-4 h-4 text-green-500" />;
       case 'completed':
         return <CheckCircle className="w-4 h-4 text-green-500" />;
       default:
@@ -140,6 +150,8 @@ const ContractDashboard = () => {
         return 'bg-yellow-600';
       case 'signed':
         return 'bg-blue-600';
+      case 'approved':
+        return 'bg-green-600';
       case 'completed':
         return 'bg-green-600';
       default:
@@ -153,6 +165,8 @@ const ContractDashboard = () => {
         return 'Awaiting your signature';
       case 'signed':
         return 'Awaiting admin approval and TuneCore processing';
+      case 'approved':
+        return 'Contract approved - Product now available for purchase';
       case 'completed':
         return 'Contract completed - TuneCore publishing active';
       default:
@@ -222,15 +236,44 @@ const ContractDashboard = () => {
                       </div>
                     </div>
                     
-                    {contract.status === 'pending' && (
-                      <Button
-                        onClick={() => handleSignContract(contract)}
-                        className="bg-blue-600 hover:bg-blue-700"
-                        size="sm"
-                      >
-                        Sign Contract
-                      </Button>
-                    )}
+                    <div className="flex gap-2">
+                      {contract.status === 'pending' && (
+                        <Button
+                          onClick={() => handleSignContract(contract)}
+                          className="bg-blue-600 hover:bg-blue-700"
+                          size="sm"
+                        >
+                          Sign Contract
+                        </Button>
+                      )}
+                      {(contract.status === 'signed' || contract.status === 'approved') && contract.signed_at && (
+                        <>
+                          <Button
+                            onClick={() => handleViewContract(contract)}
+                            size="sm"
+                            variant="outline"
+                            className="border-gray-600 text-gray-300 hover:bg-gray-700"
+                          >
+                            <Eye className="w-4 h-4 mr-1" />
+                            View Contract
+                          </Button>
+                          <Button
+                            onClick={() => {
+                              const doc = new jsPDF();
+                              doc.text(`Contract: ${contract.submission_title}`, 20, 20);
+                              doc.text(`Status: ${contract.status}`, 20, 40);
+                              doc.text(contract.contract_terms, 20, 60);
+                              doc.save(`Contract_${contract.id}.pdf`);
+                            }}
+                            size="sm"
+                            className="bg-blue-600 hover:bg-blue-700"
+                          >
+                            <Download className="w-4 h-4 mr-1" />
+                            Download
+                          </Button>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
@@ -247,6 +290,15 @@ const ContractDashboard = () => {
         }}
         contract={selectedContract}
         onContractSigned={fetchContracts}
+      />
+
+      <ContractPreviewModal
+        isOpen={showPreviewModal}
+        onClose={() => {
+          setShowPreviewModal(false);
+          setSelectedContract(null);
+        }}
+        contract={selectedContract}
       />
     </>
   );
