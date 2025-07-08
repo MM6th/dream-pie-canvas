@@ -188,24 +188,14 @@ const ContractPreviewModal = ({ isOpen, onClose, contract }: ContractPreviewModa
           <DialogTitle className="text-white text-xl">
             Contract Preview - {contract.audio_product_title}
           </DialogTitle>
-          <div className="flex gap-2">
-            <Button
-              onClick={generateContractPDF}
-              size="sm"
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              <Download className="w-4 h-4 mr-2" />
-              Download PDF
-            </Button>
-            <Button
-              onClick={onClose}
-              size="sm"
-              variant="outline"
-              className="border-gray-600 text-gray-300"
-            >
-              <X className="w-4 h-4" />
-            </Button>
-          </div>
+          <Button
+            onClick={generateContractPDF}
+            size="sm"
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Download PDF
+          </Button>
         </DialogHeader>
         
         <ScrollArea className="h-[60vh] pr-4">
