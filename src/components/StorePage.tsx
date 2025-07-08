@@ -160,7 +160,7 @@ const StorePage = () => {
     const accessLevel = product.access_level || (product.is_free ? "public" : "paid");
     
     return (
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1 flex-wrap">
         {/* Adult content indicator */}
         {product.is_adult_content && !userProfile?.adult_content_restricted && (
           <Badge className="bg-orange-600 hover:bg-orange-700 text-xs flex items-center gap-1">
@@ -180,7 +180,7 @@ const StorePage = () => {
               );
             case "merchant_only":
               return (
-                <Badge className="bg-orange-600 hover:bg-orange-700 flex items-center gap-1">
+                <Badge className="bg-orange-600 hover:bg-orange-700 flex items-center gap-1 text-xs">
                   <Lock className="w-3 h-3" />
                   Merchants Only
                 </Badge>

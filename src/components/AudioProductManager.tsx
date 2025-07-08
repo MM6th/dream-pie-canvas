@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { AudioLines, Edit, Trash2, DollarSign } from "lucide-react";
+import { AudioLines, Edit, Trash2, DollarSign, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
@@ -181,16 +181,37 @@ const AudioProductManager = () => {
                     </div>
                     
                     <div className="flex items-center justify-center">
-                      {product.is_free ? (
-                        <Badge className="bg-green-600 hover:bg-green-700 text-xs">
-                          Free
-                        </Badge>
-                      ) : (
-                        <Badge className="bg-blue-600 hover:bg-blue-700 flex items-center gap-1 text-xs">
-                          <DollarSign className="w-3 h-3" />
-                          {product.price?.toFixed(2)}
-                        </Badge>
-                      )}
+                      {(() => {
+                        const accessLevel = product.access_level || (product.is_free ? "public" : "paid");
+                        switch (accessLevel) {
+                          case "public":
+                            return (
+                              <Badge className="bg-green-600 hover:bg-green-700 text-xs">
+                                Free
+                              </Badge>
+                            );
+                          case "merchant_only":
+                            return (
+                              <Badge className="bg-orange-600 hover:bg-orange-700 flex items-center gap-1 text-xs">
+                                <Lock className="w-3 h-3" />
+                                Merchants Only
+                              </Badge>
+                            );
+                          case "paid":
+                            return (
+                              <Badge className="bg-blue-600 hover:bg-blue-700 flex items-center gap-1 text-xs">
+                                <DollarSign className="w-3 h-3" />
+                                {product.price?.toFixed(2)}
+                              </Badge>
+                            );
+                          default:
+                            return (
+                              <Badge className="bg-green-600 hover:bg-green-700 text-xs">
+                                Free
+                              </Badge>
+                            );
+                        }
+                      })()}
                     </div>
                     
                     <div className="flex gap-1">
