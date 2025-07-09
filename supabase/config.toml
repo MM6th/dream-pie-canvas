@@ -59,3 +59,18 @@ verify_jwt = true
 
 [functions.capture-paypal-payment]
 verify_jwt = true
+
+[functions.create-astrology-payment]
+verify_jwt = true
+
+[functions.capture-astrology-payment]
+verify_jwt = true
+
+[functions.create-fashion-payment]
+verify_jwt = true
+
+[functions.capture-fashion-payment]
+verify_jwt = true
+
+[functions.generate-astrology-reading]
+verify_jwt = true

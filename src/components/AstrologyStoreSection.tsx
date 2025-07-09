@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import AstrologyProductDetailModal from "./AstrologyProductDetailModal";
+import AstrologyReadingModal from "./AstrologyReadingModal";
 import ProductReviewsSection from "./reviews/ProductReviewsSection";
 
 interface AstrologyProduct {
@@ -20,6 +21,7 @@ interface AstrologyProduct {
   total_price: number;
   is_adult_content: boolean | null;
   created_at: string;
+  product_type: string;
 }
 
 interface ProductReviewCount {
@@ -32,6 +34,7 @@ const AstrologyStoreSection = () => {
   const [userProfile, setUserProfile] = useState<{ adult_content_restricted: boolean | null } | null>(null);
   const [loading, setLoading] = useState(true);
   const [detailModalProduct, setDetailModalProduct] = useState<AstrologyProduct | null>(null);
+  const [readingModalProduct, setReadingModalProduct] = useState<AstrologyProduct | null>(null);
   const [showReviews, setShowReviews] = useState<string | null>(null);
   const [reviewCounts, setReviewCounts] = useState<ProductReviewCount>({});
 
@@ -253,6 +256,14 @@ const AstrologyStoreSection = () => {
                   </Button>
                   
                   <Button
+                    onClick={() => setReadingModalProduct(product)}
+                    variant="outline"
+                    className="w-full border-gray-600 text-white bg-transparent hover:bg-gray-700"
+                  >
+                    Generate Reading
+                  </Button>
+                  
+                  <Button
                     onClick={() => setShowReviews(showReviews === product.id ? null : product.id)}
                     variant="outline"
                     className="w-full border-gray-600 text-white bg-transparent hover:bg-gray-700"
@@ -279,6 +290,14 @@ const AstrologyStoreSection = () => {
           isOpen={!!detailModalProduct}
           onClose={() => setDetailModalProduct(null)}
           onPurchase={handlePurchase}
+        />
+      )}
+
+      {readingModalProduct && (
+        <AstrologyReadingModal
+          product={readingModalProduct}
+          isOpen={!!readingModalProduct}
+          onClose={() => setReadingModalProduct(null)}
         />
       )}
     </>
