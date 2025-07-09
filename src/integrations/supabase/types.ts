@@ -41,6 +41,30 @@ export type Database = {
         }
         Relationships: []
       }
+      astrology_cache: {
+        Row: {
+          cache_key: string
+          created_at: string
+          expires_at: string
+          id: string
+          response_data: Json
+        }
+        Insert: {
+          cache_key: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          response_data: Json
+        }
+        Update: {
+          cache_key?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          response_data?: Json
+        }
+        Relationships: []
+      }
       astrology_products: {
         Row: {
           admin_id: string
@@ -135,6 +159,60 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "astrology_purchases_astrology_product_id_fkey"
+            columns: ["astrology_product_id"]
+            isOneToOne: false
+            referencedRelation: "astrology_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      astrology_readings: {
+        Row: {
+          astrology_product_id: string
+          birth_data_id: string
+          charts_data: Json | null
+          generated_at: string
+          id: string
+          is_purchased: boolean
+          purchase_id: string | null
+          reading_content: Json
+          reading_type: string
+          user_id: string
+        }
+        Insert: {
+          astrology_product_id: string
+          birth_data_id: string
+          charts_data?: Json | null
+          generated_at?: string
+          id?: string
+          is_purchased?: boolean
+          purchase_id?: string | null
+          reading_content: Json
+          reading_type: string
+          user_id: string
+        }
+        Update: {
+          astrology_product_id?: string
+          birth_data_id?: string
+          charts_data?: Json | null
+          generated_at?: string
+          id?: string
+          is_purchased?: boolean
+          purchase_id?: string | null
+          reading_content?: Json
+          reading_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_astrology_readings_birth_data_id"
+            columns: ["birth_data_id"]
+            isOneToOne: false
+            referencedRelation: "user_birth_data"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_astrology_readings_product_id"
             columns: ["astrology_product_id"]
             isOneToOne: false
             referencedRelation: "astrology_products"
@@ -877,6 +955,51 @@ export type Database = {
           },
         ]
       }
+      user_birth_data: {
+        Row: {
+          birth_city: string
+          birth_country: string
+          birth_date: string
+          birth_state: string | null
+          birth_time: string
+          created_at: string
+          id: string
+          latitude: number
+          longitude: number
+          timezone: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          birth_city: string
+          birth_country: string
+          birth_date: string
+          birth_state?: string | null
+          birth_time: string
+          created_at?: string
+          id?: string
+          latitude: number
+          longitude: number
+          timezone: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          birth_city?: string
+          birth_country?: string
+          birth_date?: string
+          birth_state?: string | null
+          birth_time?: string
+          created_at?: string
+          id?: string
+          latitude?: number
+          longitude?: number
+          timezone?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_purchases: {
         Row: {
           amount_paid: number | null
@@ -1007,6 +1130,10 @@ export type Database = {
       can_user_upload: {
         Args: { user_uuid: string; new_file_size: number }
         Returns: boolean
+      }
+      clean_expired_astrology_cache: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       generate_receipt_number: {
         Args: Record<PropertyKey, never>
