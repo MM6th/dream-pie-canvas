@@ -559,7 +559,7 @@ const StorePage = () => {
                           size="sm"
                           onClick={() => handleAudioPurchase(product)}
                           disabled={purchasingId === product.id || (!canDownloadAudio(product) && (product.access_level === "merchant_only"))}
-                          className="bg-primary hover:bg-primary/90"
+                          className="bg-primary hover:bg-primary/90 text-xs h-8 px-2"
                         >
                           {purchasingId === product.id ? (
                             "Processing..."
