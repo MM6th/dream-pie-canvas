@@ -21,7 +21,6 @@ const PaymentSuccess = () => {
 
   const orderId = searchParams.get('token');
   const paymentType = searchParams.get('type') || 'audio';
-  const productId = searchParams.get('productId');
 
   useEffect(() => {
     const capturePayment = async () => {
@@ -35,15 +34,10 @@ const PaymentSuccess = () => {
         console.log('Capturing payment for order:', orderId, 'Type:', paymentType);
         
         // Choose the appropriate capture function based on payment type
-        let functionName = 'capture-paypal-payment';
-        if (paymentType === 'fashion') {
-          functionName = 'capture-fashion-payment';
-        } else if (paymentType === 'astrology') {
-          functionName = 'capture-astrology-payment';
-        }
+        const functionName = paymentType === 'fashion' ? 'capture-fashion-payment' : 'capture-paypal-payment';
         
         const { data, error } = await supabase.functions.invoke(functionName, {
-          body: paymentType === 'astrology' ? { token: orderId, productId } : { paymentId: orderId },
+          body: { paymentId: orderId },
           headers: {
             Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
           },
@@ -125,8 +119,6 @@ const PaymentSuccess = () => {
   const getSuccessMessage = () => {
     if (paymentType === 'fashion') {
       return "Thank you for your purchase! Your fashion item order has been confirmed.";
-    } else if (paymentType === 'astrology') {
-      return "Thank you for your purchase! Your astrology reading is now available to generate.";
     }
     return "Thank you for your purchase! Your audio has been added to your music library.";
   };

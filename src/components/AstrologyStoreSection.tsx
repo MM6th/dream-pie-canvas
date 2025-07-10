@@ -8,7 +8,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import AstrologyProductDetailModal from "./AstrologyProductDetailModal";
-import AstrologyReadingModal from "./AstrologyReadingModal";
 import ProductReviewsSection from "./reviews/ProductReviewsSection";
 
 interface AstrologyProduct {
@@ -21,17 +20,10 @@ interface AstrologyProduct {
   total_price: number;
   is_adult_content: boolean | null;
   created_at: string;
-  product_type: string;
 }
 
 interface ProductReviewCount {
   [productId: string]: number;
-}
-
-interface ProductStatus {
-  purchased: boolean;
-  hasReading: boolean;
-  purchaseId?: string;
 }
 
 const AstrologyStoreSection = () => {
@@ -40,10 +32,8 @@ const AstrologyStoreSection = () => {
   const [userProfile, setUserProfile] = useState<{ adult_content_restricted: boolean | null } | null>(null);
   const [loading, setLoading] = useState(true);
   const [detailModalProduct, setDetailModalProduct] = useState<AstrologyProduct | null>(null);
-  const [readingModalProduct, setReadingModalProduct] = useState<AstrologyProduct | null>(null);
   const [showReviews, setShowReviews] = useState<string | null>(null);
   const [reviewCounts, setReviewCounts] = useState<ProductReviewCount>({});
-  const [productStatuses, setProductStatuses] = useState<{ [productId: string]: ProductStatus }>({});
 
   useEffect(() => {
     fetchProducts();
@@ -89,47 +79,6 @@ const AstrologyStoreSection = () => {
     }
   };
 
-  const fetchProductStatuses = async (productIds: string[]) => {
-    if (!user || productIds.length === 0) return;
-    
-    try {
-      // Check purchases
-      const { data: purchases, error: purchaseError } = await supabase
-        .from('astrology_purchases')
-        .select('astrology_product_id, id')
-        .eq('user_id', user.id)
-        .in('astrology_product_id', productIds);
-
-      if (purchaseError) throw purchaseError;
-
-      // Check existing readings
-      const { data: readings, error: readingError } = await supabase
-        .from('astrology_readings')
-        .select('astrology_product_id')
-        .eq('user_id', user.id)
-        .in('astrology_product_id', productIds);
-
-      if (readingError) throw readingError;
-
-      const statuses: { [productId: string]: ProductStatus } = {};
-      
-      productIds.forEach(id => {
-        const purchase = purchases?.find(p => p.astrology_product_id === id);
-        const hasReading = readings?.some(r => r.astrology_product_id === id);
-        
-        statuses[id] = {
-          purchased: !!purchase,
-          hasReading: !!hasReading,
-          purchaseId: purchase?.id
-        };
-      });
-
-      setProductStatuses(statuses);
-    } catch (error) {
-      console.error('Error fetching product statuses:', error);
-    }
-  };
-
   const filterAdultContent = (products: AstrologyProduct[], userProfile: { adult_content_restricted: boolean | null } | null): AstrologyProduct[] => {
     if (userProfile?.adult_content_restricted) {
       return products.filter(product => !product.is_adult_content);
@@ -153,11 +102,10 @@ const AstrologyStoreSection = () => {
         const filteredData = filterAdultContent(data || [], profile);
         setProducts(filteredData);
         
-        // Fetch review counts and product statuses for all products
+        // Fetch review counts for all products
         const productIds = filteredData.map(product => product.id);
         if (productIds.length > 0) {
           await fetchReviewCounts(productIds);
-          await fetchProductStatuses(productIds);
         }
       }
     } catch (error) {
@@ -180,9 +128,9 @@ const AstrologyStoreSection = () => {
     try {
       const { data, error } = await supabase.functions.invoke('create-astrology-payment', {
         body: {
-          astrologyProductId: productId,
-          deliveryType: 'audio_file', // Default delivery type
-          totalPrice: price
+          productId: productId,
+          amount: price,
+          currency: 'USD'
         }
       });
 
@@ -251,7 +199,6 @@ const AstrologyStoreSection = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {products.map((product) => {
           const reviewCount = reviewCounts[product.id] || 0;
-          const status = productStatuses[product.id] || { purchased: false, hasReading: false };
           
           return (
             <Card key={product.id} className="bg-gray-800/50 border-gray-700 backdrop-blur-sm hover:bg-gray-700/50 transition-colors">
@@ -298,38 +245,12 @@ const AstrologyStoreSection = () => {
                 </div>
                 
                 <div className="space-y-2">
-                  {!status.purchased ? (
-                    <>
-                      <Button
-                        onClick={() => handlePurchase(product.id, product.total_price)}
-                        className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                      >
-                        Book Reading
-                      </Button>
-                      {/* Temporary test button - remove in production */}
-                      <Button
-                        onClick={() => setReadingModalProduct(product)}
-                        variant="outline"
-                        className="w-full border-purple-600 text-purple-400 bg-transparent hover:bg-purple-700/20"
-                      >
-                        Test Generate Reading
-                      </Button>
-                    </>
-                  ) : status.hasReading ? (
-                    <Button
-                      onClick={() => setReadingModalProduct(product)}
-                      className="w-full bg-green-600 hover:bg-green-700 text-white"
-                    >
-                      View Reading
-                    </Button>
-                  ) : (
-                    <Button
-                      onClick={() => setReadingModalProduct(product)}
-                      className="w-full bg-purple-600 hover:bg-purple-700 text-white"
-                    >
-                      Generate Reading
-                    </Button>
-                  )}
+                  <Button
+                    onClick={() => handlePurchase(product.id, product.total_price)}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    Book Reading
+                  </Button>
                   
                   <Button
                     onClick={() => setShowReviews(showReviews === product.id ? null : product.id)}
@@ -358,14 +279,6 @@ const AstrologyStoreSection = () => {
           isOpen={!!detailModalProduct}
           onClose={() => setDetailModalProduct(null)}
           onPurchase={handlePurchase}
-        />
-      )}
-
-      {readingModalProduct && (
-        <AstrologyReadingModal
-          product={readingModalProduct}
-          isOpen={!!readingModalProduct}
-          onClose={() => setReadingModalProduct(null)}
         />
       )}
     </>
