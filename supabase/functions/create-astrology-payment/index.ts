@@ -17,9 +17,10 @@ serve(async (req) => {
     
     console.log('Creating astrology payment for:', { astrologyProductId, deliveryType, totalPrice });
 
-    // Get PayPal access token using live credentials
+    // Get PayPal access token - use sandbox for development
     const clientId = Deno.env.get('PAYPAL_CLIENT_ID');
     const clientSecret = Deno.env.get('PAYPAL_CLIENT_SECRET');
+    const isProduction = Deno.env.get('PAYPAL_ENVIRONMENT') === 'production';
     
     if (!clientId || !clientSecret) {
       throw new Error('PayPal credentials not configured');
@@ -27,7 +28,12 @@ serve(async (req) => {
 
     console.log('Getting PayPal access token...');
     
-    const authResponse = await fetch('https://api-m.paypal.com/v1/oauth2/token', {
+    // Use sandbox endpoints for development
+    const authUrl = isProduction 
+      ? 'https://api-m.paypal.com/v1/oauth2/token'
+      : 'https://api-m.sandbox.paypal.com/v1/oauth2/token';
+    
+    const authResponse = await fetch(authUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -57,8 +63,8 @@ serve(async (req) => {
         description: `Astrology ${deliveryType.replace('_', ' ')} service`
       }],
       application_context: {
-        return_url: `https://veaupehwfsbagzfuvach.supabase.co/functions/v1/capture-astrology-payment?productId=${astrologyProductId}`,
-        cancel_url: 'https://your-app-domain.com/payment-cancelled',
+        return_url: `${req.headers.get('origin') || 'https://2bd288ec-59c8-49d3-a376-72589a059d77.lovableproject.com'}/payment-success?type=astrology&productId=${astrologyProductId}`,
+        cancel_url: `${req.headers.get('origin') || 'https://2bd288ec-59c8-49d3-a376-72589a059d77.lovableproject.com'}/payment-cancelled`,
         shipping_preference: 'NO_SHIPPING',
         user_action: 'PAY_NOW'
       }
@@ -66,7 +72,12 @@ serve(async (req) => {
 
     console.log('Creating PayPal order with data:', orderData);
 
-    const orderResponse = await fetch('https://api-m.paypal.com/v2/checkout/orders', {
+    // Use sandbox or production endpoints
+    const orderUrl = isProduction 
+      ? 'https://api-m.paypal.com/v2/checkout/orders'
+      : 'https://api-m.sandbox.paypal.com/v2/checkout/orders';
+
+    const orderResponse = await fetch(orderUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -180,9 +180,9 @@ const AstrologyStoreSection = () => {
     try {
       const { data, error } = await supabase.functions.invoke('create-astrology-payment', {
         body: {
-          productId: productId,
-          amount: price,
-          currency: 'USD'
+          astrologyProductId: productId,
+          deliveryType: 'audio_file', // Default delivery type
+          totalPrice: price
         }
       });
 
@@ -299,12 +299,22 @@ const AstrologyStoreSection = () => {
                 
                 <div className="space-y-2">
                   {!status.purchased ? (
-                    <Button
-                      onClick={() => handlePurchase(product.id, product.total_price)}
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                    >
-                      Book Reading
-                    </Button>
+                    <>
+                      <Button
+                        onClick={() => handlePurchase(product.id, product.total_price)}
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                      >
+                        Book Reading
+                      </Button>
+                      {/* Temporary test button - remove in production */}
+                      <Button
+                        onClick={() => setReadingModalProduct(product)}
+                        variant="outline"
+                        className="w-full border-purple-600 text-purple-400 bg-transparent hover:bg-purple-700/20"
+                      >
+                        Test Generate Reading
+                      </Button>
+                    </>
                   ) : status.hasReading ? (
                     <Button
                       onClick={() => setReadingModalProduct(product)}
