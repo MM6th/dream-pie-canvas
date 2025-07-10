@@ -123,8 +123,8 @@ serve(async (req) => {
 
     console.log('Astrology purchase recorded successfully');
 
-    // Redirect to success page
-    return Response.redirect('https://your-app-domain.com/payment-success', 302);
+    // Redirect to success page with astrology payment type
+    return Response.redirect(`${req.headers.get('origin') || 'https://veaupehwfsbagzfuvach.supabase.co'}/payment-success?type=astrology&token=${token}&productId=${productId}`, 302);
 
   } catch (error) {
     console.error('Error in capture-astrology-payment:', error);

@@ -104,6 +104,23 @@ const AstrologyReadingModal = ({ product, isOpen, onClose, purchaseId }: Astrolo
   const generateReading = async () => {
     if (!user || !birthData) return;
 
+    // Check if user has purchased this product
+    const { data: purchase, error: purchaseError } = await supabase
+      .from('astrology_purchases')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('astrology_product_id', product.id)
+      .single();
+
+    if (purchaseError || !purchase) {
+      toast({
+        title: 'Purchase Required',
+        description: 'You must purchase this astrology product before generating a reading.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setIsGenerating(true);
     try {
       const { data, error } = await supabase.functions.invoke('generate-astrology-reading', {
@@ -111,7 +128,7 @@ const AstrologyReadingModal = ({ product, isOpen, onClose, purchaseId }: Astrolo
           birthData,
           productType: product.product_type,
           productId: product.id,
-          purchaseId
+          purchaseId: purchase.id
         }
       });
 
