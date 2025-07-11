@@ -8,6 +8,7 @@ export interface BulletinPost {
   post_type?: string;
   created_at: string;
   merchant_id: string;
+  uploaded_image_url?: string;
   profiles: {
     display_name: string;
     avatar_url: string;

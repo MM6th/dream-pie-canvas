@@ -30,9 +30,10 @@ interface BulletinPostModalProps {
     uploaded_image_url?: string;
   };
   mode?: 'create' | 'edit';
+  initialPostType?: string;
 }
 
-const BulletinPostModal = ({ onSuccess, post, mode = 'create' }: BulletinPostModalProps) => {
+const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }: BulletinPostModalProps) => {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -46,7 +47,7 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create' }: BulletinPostMod
   const [isAdultContent, setIsAdultContent] = useState(post?.is_adult_content || false);
   
   // New fields
-  const [postType, setPostType] = useState(post?.post_type || 'tv_guide');
+  const [postType, setPostType] = useState(post?.post_type || initialPostType || 'tv_guide');
   const [contractType, setContractType] = useState(post?.contract_type || '');
   const [youtubeContractorShare, setYoutubeContractorShare] = useState(post?.youtube_contractor_share?.toString() || '');
   const [pieContractorShare, setPieContractorShare] = useState(post?.pie_contractor_share?.toString() || '');
@@ -114,7 +115,7 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create' }: BulletinPostMod
     setImageUrl('');
     setLinkUrl('');
     setIsAdultContent(false);
-    setPostType('tv_guide');
+    setPostType(initialPostType || 'tv_guide');
     setContractType('');
     setYoutubeContractorShare('');
     setPieContractorShare('');

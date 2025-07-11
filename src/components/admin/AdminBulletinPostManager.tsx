@@ -158,6 +158,7 @@ const AdminBulletinPostManager = () => {
         <BulletinPostModal
           onSuccess={fetchPosts}
           mode="create"
+          initialPostType="regular"
         />
       </div>
 

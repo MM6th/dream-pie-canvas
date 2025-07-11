@@ -7,6 +7,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import CurrentThoughtsSection from "@/components/CurrentThoughtsSection";
 import TVGuideSection from "@/components/TVGuideSection";
+import RegularPostsSection from "@/components/RegularPostsSection";
+import AnnouncementPostsSection from "@/components/AnnouncementPostsSection";
 
 const BulletinBoard = () => {
   const navigate = useNavigate();
@@ -45,6 +47,8 @@ const BulletinBoard = () => {
 
   const currentThoughtsPosts = posts.filter((post) => post.post_type === 'current_thoughts');
   const tvGuidePosts = posts.filter((post) => post.post_type === 'tv_guide');
+  const regularPosts = posts.filter((post) => post.post_type === 'regular');
+  const announcementPosts = posts.filter((post) => post.post_type === 'announcement');
 
   const handleBackToDashboard = () => {
     navigate('/');
@@ -136,11 +140,17 @@ const BulletinBoard = () => {
         </div>
 
         <div className="space-y-12">
+          {/* Announcements Section */}
+          <AnnouncementPostsSection posts={announcementPosts} />
+          
           {/* Current Thoughts Section */}
           <CurrentThoughtsSection posts={currentThoughtsPosts} />
           
           {/* TV Guide Section */}
           <TVGuideSection posts={tvGuidePosts} />
+          
+          {/* Regular Posts Section */}
+          <RegularPostsSection posts={regularPosts} />
         </div>
       </div>
     </div>
