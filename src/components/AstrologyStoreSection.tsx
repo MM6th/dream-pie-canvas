@@ -125,12 +125,23 @@ const AstrologyStoreSection = () => {
       return;
     }
 
+    // Find the product to get delivery type
+    const product = products.find(p => p.id === productId);
+    if (!product) {
+      toast({
+        title: "Error",
+        description: "Product not found",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
       const { data, error } = await supabase.functions.invoke('create-astrology-payment', {
         body: {
-          productId: productId,
-          amount: price,
-          currency: 'USD'
+          astrologyProductId: productId,
+          totalPrice: price,
+          deliveryType: product.delivery_type || 'audio_file'
         }
       });
 

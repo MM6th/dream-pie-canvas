@@ -17,6 +17,7 @@ import MerchantsManagement from "./MerchantsManagement";
 import CoverSubmissionsManagement from "./CoverSubmissionsManagement";
 import ReviewsManagement from "./ReviewsManagement";
 import AdminPhotoGallery from "./AdminPhotoGallery";
+import AdminBulletinPostManager from "./AdminBulletinPostManager";
 import { useSubmissionCounts } from "@/hooks/useSubmissionCounts";
 
 const AdminDashboard = () => {
@@ -31,7 +32,7 @@ const AdminDashboard = () => {
       </div>
 
       <Tabs defaultValue="merchants" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 bg-gray-800 border-gray-700">
+        <TabsList className="grid w-full grid-cols-5 bg-gray-800 border-gray-700">
           <TabsTrigger 
             value="merchants" 
             className="text-white data-[state=active]:bg-gray-700"
@@ -65,6 +66,13 @@ const AdminDashboard = () => {
             <Image className="w-4 h-4 mr-2" />
             Photo Gallery
           </TabsTrigger>
+          <TabsTrigger 
+            value="bulletin" 
+            className="text-white data-[state=active]:bg-gray-700"
+          >
+            <MessageSquare className="w-4 h-4 mr-2" />
+            Bulletin Posts
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="merchants" className="mt-6">
@@ -81,6 +89,10 @@ const AdminDashboard = () => {
 
         <TabsContent value="gallery" className="mt-6">
           <AdminPhotoGallery />
+        </TabsContent>
+
+        <TabsContent value="bulletin" className="mt-6">
+          <AdminBulletinPostManager />
         </TabsContent>
       </Tabs>
     </div>
