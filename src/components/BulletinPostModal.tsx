@@ -108,6 +108,30 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create' }: BulletinPostMod
     }
   };
 
+  const resetForm = () => {
+    setTitle('');
+    setContent('');
+    setImageUrl('');
+    setLinkUrl('');
+    setIsAdultContent(false);
+    setPostType('tv_guide');
+    setContractType('');
+    setYoutubeContractorShare('');
+    setPieContractorShare('');
+    setPieEpisodeCost('');
+    setNumberOfOpportunities('');
+    setUploadedImageUrl('');
+    setSelectedFile(null);
+    setImagePreview(null);
+  };
+
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen);
+    if (!newOpen && mode === 'create') {
+      resetForm();
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
@@ -172,21 +196,10 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create' }: BulletinPostMod
         description: `Post ${mode === 'edit' ? 'updated' : 'created'} successfully!`
       });
 
-      // Reset form
-      setTitle('');
-      setContent('');
-      setImageUrl('');
-      setLinkUrl('');
-      setIsAdultContent(false);
-      setPostType('tv_guide');
-      setContractType('');
-      setYoutubeContractorShare('');
-      setPieContractorShare('');
-      setPieEpisodeCost('');
-      setNumberOfOpportunities('');
-      setUploadedImageUrl('');
-      setSelectedFile(null);
-      setImagePreview(null);
+      // Reset form only for create mode
+      if (mode === 'create') {
+        resetForm();
+      }
       setOpen(false);
       onSuccess();
     } catch (error) {
@@ -202,7 +215,7 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create' }: BulletinPostMod
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button className="bg-white hover:bg-gray-100 text-black">
           {mode === 'edit' ? (
@@ -226,7 +239,17 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create' }: BulletinPostMod
           {/* Post Type Selection */}
           <div>
             <Label htmlFor="postType" className="text-white">Post Type</Label>
-            <Select value={postType} onValueChange={setPostType}>
+            <Select value={postType} onValueChange={(value) => {
+              setPostType(value);
+              // Reset announcement fields when changing away from announcement
+              if (value !== 'announcement') {
+                setContractType('');
+                setYoutubeContractorShare('');
+                setPieContractorShare('');
+                setPieEpisodeCost('');
+                setNumberOfOpportunities('');
+              }
+            }}>
               <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
                 <SelectValue placeholder="Select post type" />
               </SelectTrigger>

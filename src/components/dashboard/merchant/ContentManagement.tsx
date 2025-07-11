@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SongCoverManager from "@/components/SongCoverManager";
 import MerchantCoverSubmissionsManager from "@/components/MerchantCoverSubmissionsManager";
 import ContractDashboard from "./ContractDashboard";
+import BulletinPostManager from "@/components/BulletinPostManager";
 import { useAuth } from "@/hooks/useAuth";
 
 const ContentManagement = () => {
@@ -21,6 +22,16 @@ const ContentManagement = () => {
 
   return (
     <div className="space-y-8">
+      {/* Bulletin Board Management */}
+      <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+        <CardHeader>
+          <CardTitle className="text-white">Bulletin Board Posts</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <BulletinPostManager />
+        </CardContent>
+      </Card>
+
       {/* TuneCore Contracts Section */}
       <ContractDashboard />
       

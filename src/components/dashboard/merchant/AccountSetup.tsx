@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import FullMerchantProfileModal from "@/components/profile/FullMerchantProfileModal";
 import PublishingRoyaltiesModal from "@/components/profile/PublishingRoyaltiesModal";
+import ContractOpportunitiesModal from "@/components/profile/ContractOpportunitiesModal";
 import { toast } from "@/hooks/use-toast";
 import { AlertCircle, CheckCircle } from "lucide-react";
 
@@ -61,7 +62,10 @@ const AccountSetup = ({ userProfile, onProfileUpdate }: AccountSetupProps) => {
             >
               Independent Contractor Agreement (Coming Soon)
             </Button>
-            <PublishingRoyaltiesModal />
+            <div className="flex flex-wrap gap-3">
+              <PublishingRoyaltiesModal />
+              <ContractOpportunitiesModal />
+            </div>
           </div>
         </div>
       </CardContent>
