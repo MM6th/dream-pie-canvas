@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -5,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   Plus, 
   Pencil, 
@@ -194,141 +196,155 @@ const AdminBulletinPostManager = () => {
         </CardContent>
       </Card>
 
-      {/* Posts Grid */}
-      <div className="grid gap-4">
-        {filteredPosts.length === 0 ? (
-          <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
-            <CardContent className="p-8 text-center">
-              <MessageSquare className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-white mb-2">No Posts Found</h3>
-              <p className="text-gray-400">
-                {searchTerm || filterType !== "all" 
-                  ? "No posts match your search criteria." 
-                  : "No bulletin posts have been created yet."
-                }
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          filteredPosts.map((post) => (
-            <Card key={post.id} className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
-              <CardContent className="p-6">
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <h3 className="text-lg font-semibold text-white">{post.title}</h3>
-                      {post.post_type && (
-                        <Badge className={`${getPostTypeColor(post.post_type)} text-white text-xs`}>
-                          {post.post_type.replace('_', ' ').toUpperCase()}
-                        </Badge>
-                      )}
-                      {post.contract_type && (
-                        <Badge className="bg-purple-600 text-white text-xs">
-                          {post.contract_type.toUpperCase()}
-                        </Badge>
-                      )}
-                      {post.is_adult_content && (
-                        <Badge className="bg-orange-600 text-white text-xs flex items-center gap-1">
-                          <Shield className="w-3 h-3" />
-                          18+
-                        </Badge>
-                      )}
-                    </div>
-                    
-                    <p className="text-gray-300 text-sm mb-3 line-clamp-2">{post.content}</p>
-                    
-                    {/* Show announcement details */}
-                    {post.post_type === 'announcement' && (
-                      <div className="bg-gray-700/30 p-3 rounded-lg mb-3 space-y-1">
-                        <h4 className="text-sm font-semibold text-purple-300">Contract Details:</h4>
-                        {post.youtube_contractor_share && (
-                          <p className="text-xs text-gray-400">YouTube Share: {post.youtube_contractor_share}%</p>
-                        )}
-                        {post.pie_contractor_share && (
-                          <p className="text-xs text-gray-400">PIE Share: {post.pie_contractor_share}%</p>
-                        )}
-                        {post.pie_episode_cost && (
-                          <p className="text-xs text-gray-400">Episode Cost: ${post.pie_episode_cost}</p>
-                        )}
-                        {post.number_of_opportunities && (
-                          <p className="text-xs text-gray-400">Opportunities: {post.number_of_opportunities}</p>
-                        )}
-                        {post.contract_generated && (
-                          <p className="text-xs text-green-400">✓ Contract Generated</p>
-                        )}
+      {/* Horizontal Scrolling Posts */}
+      {filteredPosts.length === 0 ? (
+        <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+          <CardContent className="p-8 text-center">
+            <MessageSquare className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-white mb-2">No Posts Found</h3>
+            <p className="text-gray-400">
+              {searchTerm || filterType !== "all" 
+                ? "No posts match your search criteria." 
+                : "No bulletin posts have been created yet."
+              }
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold text-white">
+            Posts ({filteredPosts.length})
+          </h3>
+          <ScrollArea className="w-full" thumbClassName="bg-gray-600">
+            <div className="flex gap-4 pb-4" style={{ width: `${filteredPosts.length * 320}px` }}>
+              {filteredPosts.map((post) => (
+                <Card key={post.id} className="bg-gray-800/50 border-gray-700 backdrop-blur-sm flex-shrink-0 w-80">
+                  <CardContent className="p-4">
+                    <div className="space-y-3">
+                      {/* Header with title and badges */}
+                      <div className="space-y-2">
+                        <h4 className="text-white font-semibold text-sm line-clamp-2 h-10">{post.title}</h4>
+                        <div className="flex flex-wrap gap-1">
+                          {post.post_type && (
+                            <Badge className={`${getPostTypeColor(post.post_type)} text-white text-xs h-5`}>
+                              {post.post_type.replace('_', ' ').toUpperCase()}
+                            </Badge>
+                          )}
+                          {post.contract_type && (
+                            <Badge className="bg-purple-600 text-white text-xs h-5">
+                              {post.contract_type.toUpperCase()}
+                            </Badge>
+                          )}
+                          {post.is_adult_content && (
+                            <Badge className="bg-orange-600 text-white text-xs flex items-center gap-1 h-5">
+                              <Shield className="w-3 h-3" />
+                              18+
+                            </Badge>
+                          )}
+                        </div>
                       </div>
-                    )}
-                    
-                    <div className="flex items-center gap-4 text-sm text-gray-400">
-                      <div className="flex items-center gap-1">
-                        <User className="w-4 h-4" />
-                        <span>{post.profiles?.display_name || post.profiles?.business_name || 'Unknown User'}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Calendar className="w-4 h-4" />
-                        <span>{formatDate(post.created_at)}</span>
-                      </div>
-                      {(post.image_url || post.uploaded_image_url) && (
-                        <div className="flex items-center gap-1">
-                          <ImageIcon className="w-4 h-4" />
-                          <span>Has Image</span>
+                      
+                      {/* Content preview */}
+                      <p className="text-gray-300 text-xs line-clamp-3 h-12">{post.content}</p>
+                      
+                      {/* Image preview */}
+                      {(post.uploaded_image_url || post.image_url) && (
+                        <div className="w-full h-20 bg-gray-700 rounded overflow-hidden">
+                          <img
+                            src={post.uploaded_image_url || post.image_url}
+                            alt={post.title}
+                            className="w-full h-full object-cover"
+                          />
                         </div>
                       )}
-                      {post.link_url && (
-                        <div className="flex items-center gap-1">
-                          <Link className="w-4 h-4" />
-                          <span>Has Link</span>
+                      
+                      {/* Contract details for announcements */}
+                      {post.post_type === 'announcement' && (
+                        <div className="bg-gray-700/30 p-2 rounded text-xs space-y-1">
+                          <div className="font-semibold text-purple-300">Contract Details:</div>
+                          {post.youtube_contractor_share && (
+                            <div className="text-gray-400">YouTube: {post.youtube_contractor_share}%</div>
+                          )}
+                          {post.pie_contractor_share && (
+                            <div className="text-gray-400">PIE: {post.pie_contractor_share}%</div>
+                          )}
+                          {post.pie_episode_cost && (
+                            <div className="text-gray-400">Cost: ${post.pie_episode_cost}</div>
+                          )}
+                          {post.number_of_opportunities && (
+                            <div className="text-gray-400">Spots: {post.number_of_opportunities}</div>
+                          )}
+                          {post.contract_generated && (
+                            <div className="text-green-400 text-xs">✓ Contract Generated</div>
+                          )}
                         </div>
                       )}
+                      
+                      {/* Meta info */}
+                      <div className="flex flex-col gap-1 text-xs text-gray-400">
+                        <div className="flex items-center gap-1">
+                          <User className="w-3 h-3" />
+                          <span>{post.profiles?.display_name || post.profiles?.business_name || 'Unknown'}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Calendar className="w-3 h-3" />
+                          <span>{formatDate(post.created_at)}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {(post.image_url || post.uploaded_image_url) && (
+                            <div className="flex items-center gap-1">
+                              <ImageIcon className="w-3 h-3" />
+                              <span>Image</span>
+                            </div>
+                          )}
+                          {post.link_url && (
+                            <div className="flex items-center gap-1">
+                              <Link className="w-3 h-3" />
+                              <span>Link</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* Action buttons */}
+                      <div className="flex gap-1 pt-2">
+                        <BulletinPostModal
+                          onSuccess={fetchPosts}
+                          mode="edit"
+                          post={{
+                            id: post.id,
+                            title: post.title,
+                            content: post.content,
+                            image_url: post.image_url || undefined,
+                            link_url: post.link_url || undefined,
+                            is_adult_content: post.is_adult_content || false,
+                            post_type: post.post_type || undefined,
+                            contract_type: post.contract_type || undefined,
+                            youtube_contractor_share: post.youtube_contractor_share || undefined,
+                            pie_contractor_share: post.pie_contractor_share || undefined,
+                            pie_episode_cost: post.pie_episode_cost || undefined,
+                            number_of_opportunities: post.number_of_opportunities || undefined,
+                            uploaded_image_url: post.uploaded_image_url || undefined
+                          }}
+                        />
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleDelete(post.id)}
+                          className="border-red-600 text-red-400 hover:bg-red-900/20 flex-1"
+                        >
+                          <Trash2 className="w-3 h-3 mr-1" />
+                          Delete
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                  
-                  <div className="flex gap-2 ml-4">
-                    <BulletinPostModal
-                      onSuccess={fetchPosts}
-                      mode="edit"
-                      post={{
-                        id: post.id,
-                        title: post.title,
-                        content: post.content,
-                        image_url: post.image_url || undefined,
-                        link_url: post.link_url || undefined,
-                        is_adult_content: post.is_adult_content || false,
-                        post_type: post.post_type || undefined,
-                        contract_type: post.contract_type || undefined,
-                        youtube_contractor_share: post.youtube_contractor_share || undefined,
-                        pie_contractor_share: post.pie_contractor_share || undefined,
-                        pie_episode_cost: post.pie_episode_cost || undefined,
-                        number_of_opportunities: post.number_of_opportunities || undefined,
-                        uploaded_image_url: post.uploaded_image_url || undefined
-                      }}
-                    />
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleDelete(post.id)}
-                      className="border-red-600 text-red-400 hover:bg-red-900/20"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-                
-                {(post.uploaded_image_url || post.image_url) && (
-                  <div className="mt-4">
-                    <img
-                      src={post.uploaded_image_url || post.image_url}
-                      alt={post.title}
-                      className="w-full h-32 object-cover rounded-lg"
-                    />
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))
-        )}
-      </div>
-
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </ScrollArea>
+        </div>
+      )}
     </div>
   );
 };
