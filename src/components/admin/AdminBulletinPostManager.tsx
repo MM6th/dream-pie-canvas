@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -18,7 +18,9 @@ import {
   MessageSquare,
   Image as ImageIcon,
   Link,
-  Shield
+  Shield,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -57,6 +59,7 @@ const AdminBulletinPostManager = () => {
   const [filterType, setFilterType] = useState("all");
   const [showCreateButton, setShowCreateButton] = useState(false);
   const [editingPost, setEditingPost] = useState<BulletinPost | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchPosts();
@@ -142,6 +145,18 @@ const AdminBulletinPostManager = () => {
     });
   };
 
+  const scrollLeft = () => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({ left: -320, behavior: 'smooth' });
+    }
+  };
+
+  const scrollRight = () => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({ left: 320, behavior: 'smooth' });
+    }
+  };
+
   if (loading) {
     return (
       <div className="text-center text-white py-8">
@@ -212,141 +227,167 @@ const AdminBulletinPostManager = () => {
         </Card>
       ) : (
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-white">
-            Posts ({filteredPosts.length})
-          </h3>
-          <ScrollArea className="w-full" thumbClassName="bg-gray-600">
-            <div className="flex gap-4 pb-4" style={{ width: `${filteredPosts.length * 320}px` }}>
-              {filteredPosts.map((post) => (
-                <Card key={post.id} className="bg-gray-800/50 border-gray-700 backdrop-blur-sm flex-shrink-0 w-80">
-                  <CardContent className="p-4">
-                    <div className="space-y-3">
-                      {/* Header with title and badges */}
-                      <div className="space-y-2">
-                        <h4 className="text-white font-semibold text-sm line-clamp-2 h-10">{post.title}</h4>
-                        <div className="flex flex-wrap gap-1">
-                          {post.post_type && (
-                            <Badge className={`${getPostTypeColor(post.post_type)} text-white text-xs h-5`}>
-                              {post.post_type.replace('_', ' ').toUpperCase()}
-                            </Badge>
-                          )}
-                          {post.contract_type && (
-                            <Badge className="bg-purple-600 text-white text-xs h-5">
-                              {post.contract_type.toUpperCase()}
-                            </Badge>
-                          )}
-                          {post.is_adult_content && (
-                            <Badge className="bg-orange-600 text-white text-xs flex items-center gap-1 h-5">
-                              <Shield className="w-3 h-3" />
-                              18+
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                      
-                      {/* Content preview */}
-                      <p className="text-gray-300 text-xs line-clamp-3 h-12">{post.content}</p>
-                      
-                      {/* Image preview */}
-                      {(post.uploaded_image_url || post.image_url) && (
-                        <div className="w-full h-20 bg-gray-700 rounded overflow-hidden">
-                          <img
-                            src={post.uploaded_image_url || post.image_url}
-                            alt={post.title}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      )}
-                      
-                      {/* Contract details for announcements */}
-                      {post.post_type === 'announcement' && (
-                        <div className="bg-gray-700/30 p-2 rounded text-xs space-y-1">
-                          <div className="font-semibold text-purple-300">Contract Details:</div>
-                          {post.youtube_contractor_share && (
-                            <div className="text-gray-400">YouTube: {post.youtube_contractor_share}%</div>
-                          )}
-                          {post.pie_contractor_share && (
-                            <div className="text-gray-400">PIE: {post.pie_contractor_share}%</div>
-                          )}
-                          {post.pie_episode_cost && (
-                            <div className="text-gray-400">Cost: ${post.pie_episode_cost}</div>
-                          )}
-                          {post.number_of_opportunities && (
-                            <div className="text-gray-400">Spots: {post.number_of_opportunities}</div>
-                          )}
-                          {post.contract_generated && (
-                            <div className="text-green-400 text-xs">✓ Contract Generated</div>
-                          )}
-                        </div>
-                      )}
-                      
-                      {/* Meta info */}
-                      <div className="flex flex-col gap-1 text-xs text-gray-400">
-                        <div className="flex items-center gap-1">
-                          <User className="w-3 h-3" />
-                          <span>{post.profiles?.display_name || post.profiles?.business_name || 'Unknown'}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Calendar className="w-3 h-3" />
-                          <span>{formatDate(post.created_at)}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {(post.image_url || post.uploaded_image_url) && (
-                            <div className="flex items-center gap-1">
-                              <ImageIcon className="w-3 h-3" />
-                              <span>Image</span>
-                            </div>
-                          )}
-                          {post.link_url && (
-                            <div className="flex items-center gap-1">
-                              <Link className="w-3 h-3" />
-                              <span>Link</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      
-                      {/* Action buttons */}
-                      <div className="flex gap-1 pt-2">
-                        <BulletinPostModal
-                          onSuccess={fetchPosts}
-                          mode="edit"
-                          post={{
-                            id: post.id,
-                            title: post.title,
-                            content: post.content,
-                            image_url: post.image_url || undefined,
-                            link_url: post.link_url || undefined,
-                            is_adult_content: post.is_adult_content || false,
-                            post_type: post.post_type || undefined,
-                            contract_type: post.contract_type || undefined,
-                            youtube_contractor_share: post.youtube_contractor_share || undefined,
-                            pie_contractor_share: post.pie_contractor_share || undefined,
-                            pie_episode_cost: post.pie_episode_cost || undefined,
-                            number_of_opportunities: post.number_of_opportunities || undefined,
-                            uploaded_image_url: post.uploaded_image_url || undefined
-                          }}
-                        />
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleDelete(post.id)}
-                          className="border-red-600 text-red-400 hover:bg-red-900/20 flex-1"
-                        >
-                          <Trash2 className="w-3 h-3 mr-1" />
-                          Delete
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-white">
+              Posts ({filteredPosts.length})
+            </h3>
+            <div className="flex gap-2">
+              <Button
+                onClick={scrollLeft}
+                variant="outline"
+                size="sm"
+                className="border-gray-600 text-gray-400 hover:bg-gray-700"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              <Button
+                onClick={scrollRight}
+                variant="outline"
+                size="sm"
+                className="border-gray-600 text-gray-400 hover:bg-gray-700"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </Button>
             </div>
-          </ScrollArea>
-        </div>
-      )}
-    </div>
-  );
+          </div>
+          <div className="relative">
+            <ScrollArea className="w-full" thumbClassName="bg-gray-600">
+              <div 
+                ref={scrollRef}
+                className="flex gap-4 pb-4 overflow-x-auto" 
+                style={{ width: `${filteredPosts.length * 340}px` }}
+              >
+                  {filteredPosts.map((post) => (
+                    <Card key={post.id} className="bg-gray-800/50 border-gray-700 backdrop-blur-sm flex-shrink-0 w-80">
+                      <CardContent className="p-4">
+                        <div className="space-y-3">
+                          {/* Header with title and badges */}
+                          <div className="space-y-2">
+                            <h4 className="text-white font-semibold text-sm line-clamp-2 h-10">{post.title}</h4>
+                            <div className="flex flex-wrap gap-1">
+                              {post.post_type && (
+                                <Badge className={`${getPostTypeColor(post.post_type)} text-white text-xs h-5`}>
+                                  {post.post_type.replace('_', ' ').toUpperCase()}
+                                </Badge>
+                              )}
+                              {post.contract_type && (
+                                <Badge className="bg-purple-600 text-white text-xs h-5">
+                                  {post.contract_type.toUpperCase()}
+                                </Badge>
+                              )}
+                              {post.is_adult_content && (
+                                <Badge className="bg-orange-600 text-white text-xs flex items-center gap-1 h-5">
+                                  <Shield className="w-3 h-3" />
+                                  18+
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                          
+                          {/* Content preview */}
+                          <p className="text-gray-300 text-xs line-clamp-3 h-12">{post.content}</p>
+                          
+                          {/* Image preview */}
+                          {(post.uploaded_image_url || post.image_url) && (
+                            <div className="w-full h-20 bg-gray-700 rounded overflow-hidden">
+                              <img
+                                src={post.uploaded_image_url || post.image_url}
+                                alt={post.title}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          )}
+                          
+                          {/* Contract details for announcements */}
+                          {post.post_type === 'announcement' && (
+                            <div className="bg-gray-700/30 p-2 rounded text-xs space-y-1">
+                              <div className="font-semibold text-purple-300">Contract Details:</div>
+                              {post.youtube_contractor_share && (
+                                <div className="text-gray-400">YouTube: {post.youtube_contractor_share}%</div>
+                              )}
+                              {post.pie_contractor_share && (
+                                <div className="text-gray-400">PIE: {post.pie_contractor_share}%</div>
+                              )}
+                              {post.pie_episode_cost && (
+                                <div className="text-gray-400">Cost: ${post.pie_episode_cost}</div>
+                              )}
+                              {post.number_of_opportunities && (
+                                <div className="text-gray-400">Spots: {post.number_of_opportunities}</div>
+                              )}
+                              {post.contract_generated && (
+                                <div className="text-green-400 text-xs">✓ Contract Generated</div>
+                              )}
+                            </div>
+                          )}
+                          
+                          {/* Meta info */}
+                          <div className="flex flex-col gap-1 text-xs text-gray-400">
+                            <div className="flex items-center gap-1">
+                              <User className="w-3 h-3" />
+                              <span>{post.profiles?.display_name || post.profiles?.business_name || 'Unknown'}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Calendar className="w-3 h-3" />
+                              <span>{formatDate(post.created_at)}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {(post.image_url || post.uploaded_image_url) && (
+                                <div className="flex items-center gap-1">
+                                  <ImageIcon className="w-3 h-3" />
+                                  <span>Image</span>
+                                </div>
+                              )}
+                              {post.link_url && (
+                                <div className="flex items-center gap-1">
+                                  <Link className="w-3 h-3" />
+                                  <span>Link</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          
+                          {/* Action buttons */}
+                          <div className="flex gap-1 pt-2">
+                            <BulletinPostModal
+                              onSuccess={fetchPosts}
+                              mode="edit"
+                              post={{
+                                id: post.id,
+                                title: post.title,
+                                content: post.content,
+                                image_url: post.image_url || undefined,
+                                link_url: post.link_url || undefined,
+                                is_adult_content: post.is_adult_content || false,
+                                post_type: post.post_type || undefined,
+                                contract_type: post.contract_type || undefined,
+                                youtube_contractor_share: post.youtube_contractor_share || undefined,
+                                pie_contractor_share: post.pie_contractor_share || undefined,
+                                pie_episode_cost: post.pie_episode_cost || undefined,
+                                number_of_opportunities: post.number_of_opportunities || undefined,
+                                uploaded_image_url: post.uploaded_image_url || undefined
+                              }}
+                            />
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleDelete(post.id)}
+                              className="border-red-600 text-red-400 hover:bg-red-900/20 flex-1"
+                            >
+                              <Trash2 className="w-3 h-3 mr-1" />
+                              Delete
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </ScrollArea>
+            </div>
+          </div>
+        )}
+      </div>
+    );
 };
 
 export default AdminBulletinPostManager;
