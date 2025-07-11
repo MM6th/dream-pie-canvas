@@ -32,10 +32,10 @@ const CurrentThoughtsSection = ({ posts }: CurrentThoughtsSectionProps) => {
           {posts.map((post) => (
             <CarouselItem key={post.id} className="pl-4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
               <Card className="bg-gray-800 border-gray-700 h-full flex flex-col">
-                {post.image_url && (
+                {(post.image_url || post.uploaded_image_url) && (
                   <CardHeader className="p-0">
                     <img
-                      src={post.image_url}
+                      src={post.uploaded_image_url || post.image_url}
                       alt={post.title}
                       className="w-full h-48 object-fill rounded-t-lg"
                     />

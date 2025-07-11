@@ -1,6 +1,7 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MessageSquare, User, Calendar, ExternalLink } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { MessageSquare, User, Calendar, ExternalLink, Shield } from "lucide-react";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import PostInteractions from "./PostInteractions";
 import { BulletinPost } from "@/types/bulletin";
@@ -52,7 +53,15 @@ const RegularPostsSection = ({ posts }: RegularPostsSectionProps) => {
                   </CardHeader>
                 )}
                 <CardContent className="p-6 flex-grow flex flex-col">
-                  <CardTitle className="text-white text-lg mb-2">{post.title}</CardTitle>
+                  <div className="flex items-center justify-between mb-2">
+                    <CardTitle className="text-white text-lg">{post.title}</CardTitle>
+                    {post.profiles?.is_admin && (
+                      <Badge variant="secondary" className="bg-orange-600 text-white border-orange-500 flex items-center gap-1">
+                        <Shield className="w-3 h-3" />
+                        Admin Post
+                      </Badge>
+                    )}
+                  </div>
                   <p className="text-gray-300 text-sm mb-4 leading-relaxed line-clamp-4 flex-grow">{post.content}</p>
                   
                   <div className="flex items-center gap-4 text-xs text-gray-400 mb-4">
