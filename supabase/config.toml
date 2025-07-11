@@ -59,3 +59,6 @@ verify_jwt = true
 
 [functions.capture-paypal-payment]
 verify_jwt = true
+
+[functions.notify-merchants-announcement]
+verify_jwt = false

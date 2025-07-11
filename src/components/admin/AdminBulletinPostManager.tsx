@@ -34,6 +34,13 @@ interface BulletinPost {
   created_at: string;
   updated_at: string;
   merchant_id: string;
+  contract_type?: string | null;
+  youtube_contractor_share?: number | null;
+  pie_contractor_share?: number | null;
+  pie_episode_cost?: number | null;
+  number_of_opportunities?: number | null;
+  uploaded_image_url?: string | null;
+  contract_generated?: boolean | null;
   profiles?: {
     display_name: string | null;
     business_name: string | null;
@@ -179,6 +186,7 @@ const AdminBulletinPostManager = () => {
                 <option value="tv_guide">TV Guide</option>
                 <option value="current_thoughts">Current Thoughts</option>
                 <option value="announcement">Announcements</option>
+                <option value="regular">Regular</option>
               </select>
             </div>
           </div>
@@ -213,6 +221,11 @@ const AdminBulletinPostManager = () => {
                           {post.post_type.replace('_', ' ').toUpperCase()}
                         </Badge>
                       )}
+                      {post.contract_type && (
+                        <Badge className="bg-purple-600 text-white text-xs">
+                          {post.contract_type.toUpperCase()}
+                        </Badge>
+                      )}
                       {post.is_adult_content && (
                         <Badge className="bg-orange-600 text-white text-xs flex items-center gap-1">
                           <Shield className="w-3 h-3" />
@@ -223,6 +236,28 @@ const AdminBulletinPostManager = () => {
                     
                     <p className="text-gray-300 text-sm mb-3 line-clamp-2">{post.content}</p>
                     
+                    {/* Show announcement details */}
+                    {post.post_type === 'announcement' && (
+                      <div className="bg-gray-700/30 p-3 rounded-lg mb-3 space-y-1">
+                        <h4 className="text-sm font-semibold text-purple-300">Contract Details:</h4>
+                        {post.youtube_contractor_share && (
+                          <p className="text-xs text-gray-400">YouTube Share: {post.youtube_contractor_share}%</p>
+                        )}
+                        {post.pie_contractor_share && (
+                          <p className="text-xs text-gray-400">PIE Share: {post.pie_contractor_share}%</p>
+                        )}
+                        {post.pie_episode_cost && (
+                          <p className="text-xs text-gray-400">Episode Cost: ${post.pie_episode_cost}</p>
+                        )}
+                        {post.number_of_opportunities && (
+                          <p className="text-xs text-gray-400">Opportunities: {post.number_of_opportunities}</p>
+                        )}
+                        {post.contract_generated && (
+                          <p className="text-xs text-green-400">✓ Contract Generated</p>
+                        )}
+                      </div>
+                    )}
+                    
                     <div className="flex items-center gap-4 text-sm text-gray-400">
                       <div className="flex items-center gap-1">
                         <User className="w-4 h-4" />
@@ -232,7 +267,7 @@ const AdminBulletinPostManager = () => {
                         <Calendar className="w-4 h-4" />
                         <span>{formatDate(post.created_at)}</span>
                       </div>
-                      {post.image_url && (
+                      {(post.image_url || post.uploaded_image_url) && (
                         <div className="flex items-center gap-1">
                           <ImageIcon className="w-4 h-4" />
                           <span>Has Image</span>
@@ -257,7 +292,14 @@ const AdminBulletinPostManager = () => {
                         content: post.content,
                         image_url: post.image_url || undefined,
                         link_url: post.link_url || undefined,
-                        is_adult_content: post.is_adult_content || false
+                        is_adult_content: post.is_adult_content || false,
+                        post_type: post.post_type || undefined,
+                        contract_type: post.contract_type || undefined,
+                        youtube_contractor_share: post.youtube_contractor_share || undefined,
+                        pie_contractor_share: post.pie_contractor_share || undefined,
+                        pie_episode_cost: post.pie_episode_cost || undefined,
+                        number_of_opportunities: post.number_of_opportunities || undefined,
+                        uploaded_image_url: post.uploaded_image_url || undefined
                       }}
                     />
                     <Button
@@ -271,10 +313,10 @@ const AdminBulletinPostManager = () => {
                   </div>
                 </div>
                 
-                {post.image_url && (
+                {(post.uploaded_image_url || post.image_url) && (
                   <div className="mt-4">
                     <img
-                      src={post.image_url}
+                      src={post.uploaded_image_url || post.image_url}
                       alt={post.title}
                       className="w-full h-32 object-cover rounded-lg"
                     />

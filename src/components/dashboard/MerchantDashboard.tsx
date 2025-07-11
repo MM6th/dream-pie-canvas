@@ -10,6 +10,8 @@ import ContentManagement from "./merchant/ContentManagement";
 import RestrictedAccess from "./merchant/RestrictedAccess";
 import ModelingApplicationSection from "./merchant/ModelingApplicationSection";
 import PublishingRoyaltiesModal from "@/components/profile/PublishingRoyaltiesModal";
+import ContractOpportunitiesModal from "@/components/profile/ContractOpportunitiesModal";
+import AnnouncementContractsSection from "./merchant/AnnouncementContractsSection";
 
 interface MerchantDashboardProps {
   onSuccess: () => void;
@@ -61,16 +63,26 @@ const MerchantDashboard = ({
             isAdmin={isAdmin}
           />
           
-          {/* Publishing Royalties for Merchants */}
+          {/* Revenue Information and Contract Opportunities for Merchants */}
           {isApproved && !isAdmin && (
             <div className="mb-8">
               <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-6">
-                <h3 className="text-xl font-semibold text-white mb-4">Revenue Information</h3>
+                <h3 className="text-xl font-semibold text-white mb-4">Merchant Resources</h3>
                 <p className="text-gray-300 mb-4">
-                  View detailed information about PIE platform exclusive distribution and TuneCore partnership revenue sharing.
+                  Access revenue information, contract opportunities, and exclusive merchant benefits.
                 </p>
-                <PublishingRoyaltiesModal />
+                <div className="flex flex-wrap gap-3">
+                  <PublishingRoyaltiesModal />
+                  <ContractOpportunitiesModal />
+                </div>
               </div>
+            </div>
+          )}
+          
+          {/* Contract Opportunities for approved merchants (not admins) */}
+          {isApproved && !isAdmin && (
+            <div className="mb-8">
+              <AnnouncementContractsSection />
             </div>
           )}
           

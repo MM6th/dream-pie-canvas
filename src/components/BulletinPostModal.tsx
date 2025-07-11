@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Shield } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Plus, Shield, Upload, Image as ImageIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/components/ui/use-toast";
@@ -20,6 +21,13 @@ interface BulletinPostModalProps {
     image_url?: string;
     link_url?: string;
     is_adult_content?: boolean;
+    post_type?: string;
+    contract_type?: string;
+    youtube_contractor_share?: number;
+    pie_contractor_share?: number;
+    pie_episode_cost?: number;
+    number_of_opportunities?: number;
+    uploaded_image_url?: string;
   };
   mode?: 'create' | 'edit';
 }
@@ -28,11 +36,77 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create' }: BulletinPostMod
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  
+  // Basic fields
   const [title, setTitle] = useState(post?.title || '');
   const [content, setContent] = useState(post?.content || '');
   const [imageUrl, setImageUrl] = useState(post?.image_url || '');
   const [linkUrl, setLinkUrl] = useState(post?.link_url || '');
   const [isAdultContent, setIsAdultContent] = useState(post?.is_adult_content || false);
+  
+  // New fields
+  const [postType, setPostType] = useState(post?.post_type || 'tv_guide');
+  const [contractType, setContractType] = useState(post?.contract_type || '');
+  const [youtubeContractorShare, setYoutubeContractorShare] = useState(post?.youtube_contractor_share?.toString() || '');
+  const [pieContractorShare, setPieContractorShare] = useState(post?.pie_contractor_share?.toString() || '');
+  const [pieEpisodeCost, setPieEpisodeCost] = useState(post?.pie_episode_cost?.toString() || '');
+  const [numberOfOpportunities, setNumberOfOpportunities] = useState(post?.number_of_opportunities?.toString() || '');
+  const [uploadedImageUrl, setUploadedImageUrl] = useState(post?.uploaded_image_url || '');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(post?.uploaded_image_url || null);
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        toast({
+          title: "File too large",
+          description: "Please select an image under 5MB",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      setSelectedFile(file);
+      const reader = new FileReader();
+      reader.onload = (e) => setImagePreview(e.target?.result as string);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const uploadImage = async (): Promise<string | null> => {
+    if (!selectedFile || !user) return null;
+    
+    setUploading(true);
+    try {
+      const fileExt = selectedFile.name.split('.').pop();
+      const fileName = `${user.id}_${Date.now()}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('bulletin-images')
+        .upload(filePath, selectedFile);
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage
+        .from('bulletin-images')
+        .getPublicUrl(filePath);
+
+      return data.publicUrl;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast({
+        title: "Upload failed",
+        description: "Failed to upload image. Please try again.",
+        variant: "destructive"
+      });
+      return null;
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,6 +115,16 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create' }: BulletinPostMod
     setLoading(true);
     
     try {
+      // Upload image if selected
+      let finalUploadedImageUrl = uploadedImageUrl;
+      if (selectedFile) {
+        finalUploadedImageUrl = await uploadImage();
+        if (!finalUploadedImageUrl) {
+          setLoading(false);
+          return;
+        }
+      }
+
       const postData = {
         title,
         content,
@@ -48,7 +132,13 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create' }: BulletinPostMod
         link_url: linkUrl || null,
         is_adult_content: isAdultContent,
         merchant_id: user.id,
-        post_type: 'bulletin',
+        post_type: postType,
+        contract_type: postType === 'announcement' && contractType ? contractType : null,
+        youtube_contractor_share: postType === 'announcement' && youtubeContractorShare ? parseFloat(youtubeContractorShare) : null,
+        pie_contractor_share: postType === 'announcement' && pieContractorShare ? parseFloat(pieContractorShare) : null,
+        pie_episode_cost: postType === 'announcement' && pieEpisodeCost ? parseFloat(pieEpisodeCost) : null,
+        number_of_opportunities: postType === 'announcement' && numberOfOpportunities ? parseInt(numberOfOpportunities) : null,
+        uploaded_image_url: finalUploadedImageUrl || null,
         updated_at: new Date().toISOString()
       };
 
@@ -82,11 +172,21 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create' }: BulletinPostMod
         description: `Post ${mode === 'edit' ? 'updated' : 'created'} successfully!`
       });
 
+      // Reset form
       setTitle('');
       setContent('');
       setImageUrl('');
       setLinkUrl('');
       setIsAdultContent(false);
+      setPostType('tv_guide');
+      setContractType('');
+      setYoutubeContractorShare('');
+      setPieContractorShare('');
+      setPieEpisodeCost('');
+      setNumberOfOpportunities('');
+      setUploadedImageUrl('');
+      setSelectedFile(null);
+      setImagePreview(null);
       setOpen(false);
       onSuccess();
     } catch (error) {
@@ -115,7 +215,7 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create' }: BulletinPostMod
           )}
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px] bg-gray-800 border-gray-700">
+      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto bg-gray-800 border-gray-700">
         <DialogHeader>
           <DialogTitle className="text-white">
             {mode === 'edit' ? 'Edit Bulletin Post' : 'Create New Bulletin Post'}
@@ -123,6 +223,22 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create' }: BulletinPostMod
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Post Type Selection */}
+          <div>
+            <Label htmlFor="postType" className="text-white">Post Type</Label>
+            <Select value={postType} onValueChange={setPostType}>
+              <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
+                <SelectValue placeholder="Select post type" />
+              </SelectTrigger>
+              <SelectContent className="bg-gray-700 border-gray-600">
+                <SelectItem value="tv_guide">TV Guide</SelectItem>
+                <SelectItem value="current_thoughts">Current Thoughts</SelectItem>
+                <SelectItem value="announcement">Announcement</SelectItem>
+                <SelectItem value="regular">Regular</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           <div>
             <Label htmlFor="title" className="text-white">Title</Label>
             <Input
@@ -148,15 +264,128 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create' }: BulletinPostMod
             />
           </div>
           
-          <div>
-            <Label htmlFor="imageUrl" className="text-white">Image URL (Optional)</Label>
-            <Input
-              id="imageUrl"
-              value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
-              placeholder="https://example.com/image.jpg"
-              className="bg-gray-700 border-gray-600 text-white"
-            />
+          {/* Announcement-specific fields */}
+          {postType === 'announcement' && (
+            <>
+              <div>
+                <Label htmlFor="contractType" className="text-white">Contract Type</Label>
+                <Select value={contractType} onValueChange={setContractType}>
+                  <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
+                    <SelectValue placeholder="Select contract type" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-gray-700 border-gray-600">
+                    <SelectItem value="audio">Audio</SelectItem>
+                    <SelectItem value="asmr">ASMR</SelectItem>
+                    <SelectItem value="modeling">Modeling</SelectItem>
+                    <SelectItem value="podcast">Podcast</SelectItem>
+                    <SelectItem value="film">Film</SelectItem>
+                    <SelectItem value="video">Video</SelectItem>
+                    <SelectItem value="regular">Regular</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="youtubeShare" className="text-white">YouTube Revenue Share (%) - Optional</Label>
+                  <Input
+                    id="youtubeShare"
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.1"
+                    value={youtubeContractorShare}
+                    onChange={(e) => setYoutubeContractorShare(e.target.value)}
+                    placeholder="70"
+                    className="bg-gray-700 border-gray-600 text-white"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="pieShare" className="text-white">PIE Revenue Share (%) - Optional</Label>
+                  <Input
+                    id="pieShare"
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.1"
+                    value={pieContractorShare}
+                    onChange={(e) => setPieContractorShare(e.target.value)}
+                    placeholder="70"
+                    className="bg-gray-700 border-gray-600 text-white"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="episodeCost" className="text-white">Episode Cost ($) - Optional</Label>
+                  <Input
+                    id="episodeCost"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={pieEpisodeCost}
+                    onChange={(e) => setPieEpisodeCost(e.target.value)}
+                    placeholder="100.00"
+                    className="bg-gray-700 border-gray-600 text-white"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="opportunities" className="text-white">Number of Opportunities - Optional</Label>
+                  <Input
+                    id="opportunities"
+                    type="number"
+                    min="1"
+                    value={numberOfOpportunities}
+                    onChange={(e) => setNumberOfOpportunities(e.target.value)}
+                    placeholder="1"
+                    className="bg-gray-700 border-gray-600 text-white"
+                  />
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Image Upload Section */}
+          <div className="space-y-4">
+            <Label className="text-white">Image</Label>
+            
+            {/* File Upload */}
+            <div>
+              <Label htmlFor="imageFile" className="text-white text-sm">Upload Image (Optional)</Label>
+              <div className="mt-1">
+                <Input
+                  id="imageFile"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileSelect}
+                  className="bg-gray-700 border-gray-600 text-white file:bg-gray-600 file:text-white file:border-0 file:rounded file:px-4 file:py-2"
+                />
+              </div>
+              {imagePreview && (
+                <div className="mt-2">
+                  <img 
+                    src={imagePreview} 
+                    alt="Preview" 
+                    className="w-32 h-32 object-cover rounded-lg border border-gray-600"
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Image URL */}
+            <div>
+              <Label htmlFor="imageUrl" className="text-white text-sm">Or use Image URL</Label>
+              <Input
+                id="imageUrl"
+                value={imageUrl}
+                onChange={(e) => setImageUrl(e.target.value)}
+                placeholder="https://example.com/image.jpg"
+                className="bg-gray-700 border-gray-600 text-white"
+              />
+            </div>
           </div>
 
           <div>
@@ -204,10 +433,10 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create' }: BulletinPostMod
             </Button>
             <Button
               type="submit"
-              disabled={loading}
+              disabled={loading || uploading}
               className="bg-white hover:bg-gray-100 text-black"
             >
-              {loading ? 'Saving...' : (mode === 'edit' ? 'Update Post' : 'Create Post')}
+              {loading || uploading ? 'Saving...' : (mode === 'edit' ? 'Update Post' : 'Create Post')}
             </Button>
           </div>
         </form>

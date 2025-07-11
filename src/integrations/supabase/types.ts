@@ -282,39 +282,60 @@ export type Database = {
       bulletin_posts: {
         Row: {
           content: string
+          contract_generated: boolean | null
+          contract_type: string | null
           created_at: string
           id: string
           image_url: string | null
           is_adult_content: boolean | null
           link_url: string | null
           merchant_id: string
+          number_of_opportunities: number | null
+          pie_contractor_share: number | null
+          pie_episode_cost: number | null
           post_type: string | null
           title: string
           updated_at: string
+          uploaded_image_url: string | null
+          youtube_contractor_share: number | null
         }
         Insert: {
           content: string
+          contract_generated?: boolean | null
+          contract_type?: string | null
           created_at?: string
           id?: string
           image_url?: string | null
           is_adult_content?: boolean | null
           link_url?: string | null
           merchant_id: string
+          number_of_opportunities?: number | null
+          pie_contractor_share?: number | null
+          pie_episode_cost?: number | null
           post_type?: string | null
           title: string
           updated_at?: string
+          uploaded_image_url?: string | null
+          youtube_contractor_share?: number | null
         }
         Update: {
           content?: string
+          contract_generated?: boolean | null
+          contract_type?: string | null
           created_at?: string
           id?: string
           image_url?: string | null
           is_adult_content?: boolean | null
           link_url?: string | null
           merchant_id?: string
+          number_of_opportunities?: number | null
+          pie_contractor_share?: number | null
+          pie_episode_cost?: number | null
           post_type?: string | null
           title?: string
           updated_at?: string
+          uploaded_image_url?: string | null
+          youtube_contractor_share?: number | null
         }
         Relationships: [
           {
