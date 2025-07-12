@@ -120,8 +120,8 @@ const PodcastDownloadManager = ({ audioProduct }: PodcastDownloadManagerProps) =
       console.log('Successfully processed podcast download');
 
       toast({
-        title: "Download Started",
-        description: "Podcast downloaded successfully! A contract has been generated for your review.",
+        title: "Podcast Opportunity Downloaded",
+        description: "Podcast opportunity downloaded successfully! Review the contract in your dashboard.",
         variant: "default"
       });
 

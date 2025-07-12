@@ -74,12 +74,36 @@ const PodcastAudioPlayer = ({ tracks }: PodcastAudioPlayerProps) => {
     const audio = audioRef.current;
     if (!audio || !currentTrack) return;
 
+    console.log('Loading audio:', currentTrack.audio_file_url);
     audio.src = currentTrack.audio_file_url;
     audio.load();
+    
+    const handleLoadedData = () => {
+      console.log('Audio loaded successfully:', audio.duration);
+      setDuration(audio.duration);
+    };
+    
+    const handleError = (e: Event) => {
+      console.error('Audio error:', e);
+      console.error('Audio error details:', {
+        error: audio.error,
+        networkState: audio.networkState,
+        readyState: audio.readyState,
+        src: audio.src
+      });
+    };
+
+    audio.addEventListener('loadeddata', handleLoadedData);
+    audio.addEventListener('error', handleError);
     
     if (isPlaying) {
       audio.play().catch(console.error);
     }
+
+    return () => {
+      audio.removeEventListener('loadeddata', handleLoadedData);
+      audio.removeEventListener('error', handleError);
+    };
   }, [currentTrackIndex, currentTrack]);
 
   const togglePlay = () => {
@@ -89,7 +113,18 @@ const PodcastAudioPlayer = ({ tracks }: PodcastAudioPlayerProps) => {
     if (isPlaying) {
       audio.pause();
     } else {
-      audio.play().catch(console.error);
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(error => {
+          console.error('Audio play failed:', error);
+          console.error('Audio state:', {
+            readyState: audio.readyState,
+            networkState: audio.networkState,
+            currentSrc: audio.currentSrc,
+            duration: audio.duration
+          });
+        });
+      }
     }
     setIsPlaying(!isPlaying);
   };
@@ -272,7 +307,13 @@ const PodcastAudioPlayer = ({ tracks }: PodcastAudioPlayerProps) => {
           </div>
         </div>
 
-        <audio ref={audioRef} preload="metadata" />
+        <audio 
+          ref={audioRef} 
+          preload="metadata" 
+          crossOrigin="anonymous"
+          onCanPlay={() => console.log('Audio can play')}
+          onError={(e) => console.error('Audio element error:', e)}
+        />
       </CardContent>
     </Card>
   );

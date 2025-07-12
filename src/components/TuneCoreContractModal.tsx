@@ -71,7 +71,9 @@ const TuneCoreContractModal = ({
 
       toast({
         title: "Contract Signed Successfully",
-        description: "Your contract has been signed and submitted for admin approval. You will receive an email with TuneCore publishing details soon.",
+        description: isPodcastOpportunity 
+          ? "Your podcast opportunity contract has been signed! You can now begin creating content according to the terms."
+          : "Your contract has been signed and submitted for admin approval. You will receive an email with TuneCore publishing details soon.",
       });
 
       onContractSigned();
@@ -95,6 +97,9 @@ const TuneCoreContractModal = ({
 
   if (!contract) return null;
 
+  // Check if this is a podcast opportunity contract
+  const isPodcastOpportunity = contract.contract_type === 'podcast_opportunity';
+
   // Form validation
   const isFormValid = firstName.trim().length > 0 && lastName.trim().length > 0 && termsAccepted;
   console.log('Form validation debug:', { 
@@ -110,7 +115,7 @@ const TuneCoreContractModal = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             <FileText className="w-6 h-6" />
-            Publishing Agreement - Revenue Breakdown
+            {isPodcastOpportunity ? 'Podcast Opportunity Agreement - Revenue Breakdown' : 'Publishing Agreement - Revenue Breakdown'}
           </DialogTitle>
         </DialogHeader>
 
@@ -119,16 +124,28 @@ const TuneCoreContractModal = ({
           <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 border border-gray-600 rounded-lg p-4">
             <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
               <Star className="w-5 h-5 text-yellow-400" />
-              Dual Platform Revenue Opportunity
+              {isPodcastOpportunity ? 'Dual Platform Revenue Opportunity' : 'Dual Platform Revenue Opportunity'}
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <div className="bg-blue-600/30 border border-blue-600/40 rounded p-3">
-                <h4 className="text-blue-300 font-medium mb-2">🌍 TuneCore - Global Reach</h4>
-                <p className="text-gray-300">Wide distribution across major streaming platforms for maximum visibility</p>
+                <h4 className="text-blue-300 font-medium mb-2">
+                  {isPodcastOpportunity ? '🎥 YouTube - Global Distribution' : '🌍 TuneCore - Global Reach'}
+                </h4>
+                <p className="text-gray-300">
+                  {isPodcastOpportunity 
+                    ? 'Global distribution across YouTube with widespread reach and algorithmic discovery'
+                    : 'Wide distribution across major streaming platforms for maximum visibility'
+                  }
+                </p>
               </div>
               <div className="bg-purple-600/30 border border-purple-600/40 rounded p-3">
                 <h4 className="text-purple-300 font-medium mb-2">💰 PIE Platform - Higher Revenue</h4>
-                <p className="text-gray-300">Exclusive platform with better revenue sharing for direct fan connection</p>
+                <p className="text-gray-300">
+                  {isPodcastOpportunity
+                    ? 'Exclusive platform where supporters OWN content after purchase, no monthly subscriptions required'
+                    : 'Exclusive platform with better revenue sharing for direct fan connection'
+                  }
+                </p>
               </div>
             </div>
           </div>
@@ -136,42 +153,62 @@ const TuneCoreContractModal = ({
           {/* Revenue Breakdown Section */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             
-            {/* TuneCore Partnership Information */}
+            {/* YouTube/TuneCore Partnership Information */}
             <div className="bg-blue-600/20 border border-blue-600/30 rounded-lg p-4">
               <div className="flex items-center gap-2 mb-3">
                 <DollarSign className="w-5 h-5 text-blue-400" />
-                <h3 className="text-lg font-semibold text-blue-400">TuneCore Revenue Stream</h3>
+                <h3 className="text-lg font-semibold text-blue-400">
+                  {isPodcastOpportunity ? 'YouTube Revenue Stream' : 'TuneCore Revenue Stream'}
+                </h3>
               </div>
               <div className="space-y-3 text-sm">
                 <p className="text-gray-300">
-                  Global distribution across major streaming platforms:
+                  {isPodcastOpportunity 
+                    ? 'Global distribution through YouTube platform:'
+                    : 'Global distribution across major streaming platforms:'
+                  }
                 </p>
                 <div className="grid grid-cols-2 gap-2">
                   <div className="flex items-center gap-2">
                     <ExternalLink className="w-4 h-4 text-blue-400" />
-                    <span>Spotify</span>
+                    <span>{isPodcastOpportunity ? 'YouTube' : 'Spotify'}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <ExternalLink className="w-4 h-4 text-blue-400" />
-                    <span>Apple Music</span>
+                    <span>{isPodcastOpportunity ? 'YouTube Shorts' : 'Apple Music'}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <ExternalLink className="w-4 h-4 text-blue-400" />
-                    <span>Amazon Music</span>
+                    <span>{isPodcastOpportunity ? 'Algorithmic Discovery' : 'Amazon Music'}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <ExternalLink className="w-4 h-4 text-blue-400" />
-                    <span>YouTube Music</span>
+                    <span>{isPodcastOpportunity ? 'Global Reach' : 'YouTube Music'}</span>
                   </div>
                 </div>
                 <div className="mt-3 p-3 bg-blue-700/30 border border-blue-600/40 rounded">
-                  <p className="text-blue-300 font-medium mb-2">TuneCore Revenue Share:</p>
+                  <p className="text-blue-300 font-medium mb-2">
+                    {isPodcastOpportunity ? 'YouTube Revenue Share:' : 'TuneCore Revenue Share:'}
+                  </p>
                   <div className="text-gray-300 space-y-1">
-                    <p>• TuneCore: 15% distribution fee</p>
-                    <p>• PIE (original): 85% of streaming revenue</p>
-                    <p>• <strong>Cover artist (you): 17% of total</strong></p>
-                    <p className="text-blue-400 font-medium mt-2">Example: $1.29 song sale</p>
-                    <p>• You receive: <strong>$0.22</strong></p>
+                    {isPodcastOpportunity ? (
+                      <>
+                        <p>• YouTube: 30% platform fee</p>
+                        <p>• PIE: 70% of membership revenue</p>
+                        <p>• <strong>Merchant (you): 50% of PIE's 70% share</strong></p>
+                        <p className="text-blue-400 font-medium mt-2">Example: $10 monthly membership</p>
+                        <p>• After YouTube cut: $7.00</p>
+                        <p>• You receive: <strong>$3.50</strong></p>
+                      </>
+                    ) : (
+                      <>
+                        <p>• TuneCore: 15% distribution fee</p>
+                        <p>• PIE (original): 85% of streaming revenue</p>
+                        <p>• <strong>Cover artist (you): 17% of total</strong></p>
+                        <p className="text-blue-400 font-medium mt-2">Example: $1.29 song sale</p>
+                        <p>• You receive: <strong>$0.22</strong></p>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -206,10 +243,12 @@ const TuneCoreContractModal = ({
                   <div className="text-gray-300 space-y-1">
                     <p>• PayPal processing: ~2.9% fee</p>
                     <p>• PIE: 100% of net revenue</p>
-                    <p>• <strong>Cover artist (you): 20% of PIE's share</strong></p>
-                    <p className="text-purple-400 font-medium mt-2">Example: $1.29 song sale</p>
-                    <p>• Net after PayPal: $1.25</p>
-                    <p>• You receive: <strong>$0.25</strong></p>
+                    <p>• <strong>{isPodcastOpportunity ? 'Merchant (you): 50% of PIE\'s share' : 'Cover artist (you): 20% of PIE\'s share'}</strong></p>
+                    <p className="text-purple-400 font-medium mt-2">
+                      {isPodcastOpportunity ? 'Example: $5.99 episode purchase' : 'Example: $1.29 song sale'}
+                    </p>
+                    <p>• Net after PayPal: {isPodcastOpportunity ? '$5.82' : '$1.25'}</p>
+                    <p>• You receive: <strong>{isPodcastOpportunity ? '$2.91' : '$0.25'}</strong></p>
                   </div>
                 </div>
               </div>
@@ -222,12 +261,24 @@ const TuneCoreContractModal = ({
             <h3 className="text-green-400 font-medium mb-3">💡 Why Both Platforms Work Together</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-300">
               <div>
-                <h4 className="text-blue-400 font-medium mb-1">TuneCore Benefits:</h4>
-                <p>Maximum exposure, algorithmic discovery, global streaming reach</p>
+                <h4 className="text-blue-400 font-medium mb-1">
+                  {isPodcastOpportunity ? 'YouTube Benefits:' : 'TuneCore Benefits:'}
+                </h4>
+                <p>
+                  {isPodcastOpportunity 
+                    ? 'Maximum exposure, algorithmic discovery, global reach, recurring membership revenue'
+                    : 'Maximum exposure, algorithmic discovery, global streaming reach'
+                  }
+                </p>
               </div>
               <div>
                 <h4 className="text-purple-400 font-medium mb-1">PIE Benefits:</h4>
-                <p>Higher revenue per sale, direct fan relationship, exclusive content</p>
+                <p>
+                  {isPodcastOpportunity
+                    ? 'Higher revenue per episode, supporters own content permanently, no monthly fees for users'
+                    : 'Higher revenue per sale, direct fan relationship, exclusive content'
+                  }
+                </p>
               </div>
             </div>
           </div>
@@ -278,10 +329,17 @@ const TuneCoreContractModal = ({
                 className="border-blue-500 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
               />
               <Label htmlFor="terms" className="text-sm text-gray-300 leading-5">
-                I acknowledge that I understand both revenue sharing agreements: I will receive 20% of PIE's platform royalties 
-                and 17% of TuneCore streaming revenue. I understand that both platforms offer different benefits - TuneCore for 
-                global visibility and PIE for higher revenue sharing. I agree to await emails with publishing details from both platforms 
-                and understand these partnership conditions.
+                {isPodcastOpportunity ? (
+                  <>I acknowledge that I understand both revenue sharing agreements: I will receive 50% of PIE's platform royalties 
+                  and 50% of PIE's 70% share from YouTube membership revenue (after YouTube's 30% cut). I understand that YouTube provides 
+                  global visibility while PIE offers ownership-based content where supporters own episodes permanently vs. YouTube's subscription model. 
+                  I agree to await contract details and understand these partnership conditions.</>
+                ) : (
+                  <>I acknowledge that I understand both revenue sharing agreements: I will receive 20% of PIE's platform royalties 
+                  and 17% of TuneCore streaming revenue. I understand that both platforms offer different benefits - TuneCore for 
+                  global visibility and PIE for higher revenue sharing. I agree to await emails with publishing details from both platforms 
+                  and understand these partnership conditions.</>
+                )}
               </Label>
             </div>
           </div>

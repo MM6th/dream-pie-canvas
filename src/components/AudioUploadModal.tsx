@@ -23,6 +23,7 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
     title: "",
     artistName: "",
     audioType: "",
+    description: "",
     thumbnail: null as File | null,
     audioFile: null as File | null,
     albumName: "",
@@ -166,25 +167,32 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
       }
       
       // Create audio product with new fields including podcast-specific ones
+      const insertData: any = {
+        merchant_id: user.id,
+        title: formData.title,
+        artist_name: formData.artistName || null,
+        audio_type: formData.audioType,
+        thumbnail_url: thumbnailUrl,
+        audio_file_url: audioUrl,
+        album_id: albumId,
+        access_level: formData.accessLevel,
+        is_free: formData.accessLevel !== 'paid',
+        price: formData.accessLevel === 'paid' ? parseFloat(formData.price) : null,
+        pie_video_price: formData.audioType === 'podcast' && formData.pieVideoPrice ? parseFloat(formData.pieVideoPrice) : null,
+        youtube_membership_fee: formData.audioType === 'podcast' && formData.youtubeMembershipFee ? parseFloat(formData.youtubeMembershipFee) : null,
+        podcast_contract_generated: false,
+        max_downloads: formData.accessLevel === 'merchant_only' && formData.maxDownloads ? parseInt(formData.maxDownloads) : null,
+        is_adult_content: formData.is_adult_content
+      };
+
+      // Add description for podcasts if provided
+      if (formData.audioType === 'podcast' && formData.description) {
+        insertData.description = formData.description;
+      }
+
       const { error: productError } = await supabase
         .from('audio_products')
-        .insert({
-          merchant_id: user.id,
-          title: formData.title,
-          artist_name: formData.artistName || null,
-          audio_type: formData.audioType,
-          thumbnail_url: thumbnailUrl,
-          audio_file_url: audioUrl,
-          album_id: albumId,
-          access_level: formData.accessLevel,
-          is_free: formData.accessLevel !== 'paid',
-          price: formData.accessLevel === 'paid' ? parseFloat(formData.price) : null,
-          pie_video_price: formData.audioType === 'podcast' && formData.pieVideoPrice ? parseFloat(formData.pieVideoPrice) : null,
-          youtube_membership_fee: formData.audioType === 'podcast' && formData.youtubeMembershipFee ? parseFloat(formData.youtubeMembershipFee) : null,
-          podcast_contract_generated: false,
-          max_downloads: formData.accessLevel === 'merchant_only' && formData.maxDownloads ? parseInt(formData.maxDownloads) : null,
-          is_adult_content: formData.is_adult_content
-        });
+        .insert(insertData);
       
       if (productError) throw productError;
       
@@ -198,6 +206,7 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
         title: "",
         artistName: "",
         audioType: "",
+        description: "",
         thumbnail: null,
         audioFile: null,
         albumName: "",
@@ -269,6 +278,24 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
               placeholder="Enter artist name"
             />
           </div>
+
+          {/* Description field for podcasts */}
+          {formData.audioType === 'podcast' && (
+            <div>
+              <Label htmlFor="description">Description</Label>
+              <textarea
+                id="description"
+                value={formData.description || ""}
+                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                className="w-full bg-gray-700 border-gray-600 text-white rounded-md px-3 py-2 min-h-[80px] resize-y"
+                placeholder="Describe the podcast opportunity, requirements, and what merchants should know"
+                rows={3}
+              />
+              <p className="text-xs text-gray-400 mt-1">
+                Explain the podcast opportunity for merchants to understand before downloading
+              </p>
+            </div>
+          )}
           
           <div>
             <Label htmlFor="audioType">Audio Type *</Label>
