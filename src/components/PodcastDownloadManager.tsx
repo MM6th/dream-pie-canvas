@@ -108,11 +108,11 @@ const PodcastDownloadManager = ({ audioProduct }: PodcastDownloadManagerProps) =
   return (
     <Button
       onClick={handlePodcastDownload}
-      className="bg-primary hover:bg-primary/90 text-white"
+      className="bg-primary hover:bg-primary/90 text-white w-full"
       size="sm"
     >
-      <Download className="w-4 h-4 mr-2" />
-      Download Podcast
+      <Download className="w-4 h-4 mr-1" />
+      Download
     </Button>
   );
 };
