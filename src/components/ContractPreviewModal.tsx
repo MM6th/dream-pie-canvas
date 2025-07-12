@@ -11,7 +11,7 @@ interface Contract {
   merchant_id: string;
   contract_type: string;
   contract_terms: string;
-  merchant_signature: string;
+  merchant_signature: string | null;
   signed_at: string;
   status: string;
   admin_signature?: string;
