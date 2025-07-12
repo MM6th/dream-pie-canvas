@@ -26,6 +26,8 @@ interface ContractWithDetails {
   tunecore_terms_accepted: boolean | null;
   updated_at: string;
   submission_title?: string;
+  merchant_name?: string;
+  audio_product_title?: string;
 }
 
 const ContractDashboard = () => {
@@ -70,7 +72,7 @@ const ContractDashboard = () => {
                 .single();
 
               if (audioData?.title) {
-                submission_title = `Audio Cover: ${audioData.title}`;
+                submission_title = `PIE Audio Cover: ${audioData.title}`;
               }
             }
           } else if (contract.modeling_application_id) {
@@ -90,7 +92,7 @@ const ContractDashboard = () => {
                 .single();
 
               if (fashionData?.title) {
-                submission_title = `Modeling: ${fashionData.title}`;
+                submission_title = `PIE Modeling: ${fashionData.title}`;
               }
             }
           } else if (contract.contract_type === 'podcast_opportunity') {
@@ -109,14 +111,28 @@ const ContractDashboard = () => {
                 .single();
 
               if (audioData?.title) {
-                submission_title = `Podcast Opportunity: ${audioData.title}`;
+                submission_title = `PIE Podcast Opportunity: ${audioData.title}`;
               }
             }
           }
 
+          // Get merchant name for all contracts
+          const { data: merchantData } = await supabase
+            .from('profiles')
+            .select('display_name, first_name, last_name, business_name')
+            .eq('id', contract.merchant_id)
+            .single();
+
+          const merchantName = merchantData?.display_name || 
+                               merchantData?.business_name || 
+                               `${merchantData?.first_name || ''} ${merchantData?.last_name || ''}`.trim() || 
+                               'Unknown Merchant';
+
           return {
             ...contract,
-            submission_title
+            submission_title,
+            merchant_name: merchantName,
+            audio_product_title: submission_title
           };
         })
       );
