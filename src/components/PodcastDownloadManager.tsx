@@ -76,13 +76,17 @@ const PodcastDownloadManager = ({ audioProduct }: PodcastDownloadManagerProps) =
 
       if (insertError) throw insertError;
 
-      // Trigger the actual download
-      const link = document.createElement('a');
-      link.href = audioProduct.audio_file_url;
-      link.download = `${audioProduct.title}.mp3`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      // Add to user purchases so it shows up in their audio player
+      const { error: purchaseError } = await supabase
+        .from('user_purchases')
+        .insert({
+          audio_product_id: audioProduct.id,
+          user_id: user.id,
+          is_free_download: true,
+          amount_paid: 0
+        });
+
+      if (purchaseError) throw purchaseError;
 
       toast({
         title: "Download Started",
