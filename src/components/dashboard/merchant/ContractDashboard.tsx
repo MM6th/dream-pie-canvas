@@ -116,17 +116,25 @@ const ContractDashboard = () => {
             }
           }
 
-          // Get merchant name for all contracts
-          const { data: merchantData } = await supabase
-            .from('profiles')
-            .select('display_name, first_name, last_name, business_name')
-            .eq('id', contract.merchant_id)
-            .single();
+          // For merchant name: use merchant_signature if contract is signed, otherwise get from profile
+          let merchantName = 'Unknown Merchant';
+          
+          if (contract.merchant_signature) {
+            // If contract is signed, use the signature name
+            merchantName = contract.merchant_signature;
+          } else {
+            // If not signed yet, get from profile
+            const { data: merchantData } = await supabase
+              .from('profiles')
+              .select('display_name, first_name, last_name, business_name')
+              .eq('id', contract.merchant_id)
+              .single();
 
-          const merchantName = merchantData?.display_name || 
-                               merchantData?.business_name || 
-                               `${merchantData?.first_name || ''} ${merchantData?.last_name || ''}`.trim() || 
-                               'Unknown Merchant';
+            merchantName = merchantData?.display_name || 
+                           merchantData?.business_name || 
+                           `${merchantData?.first_name || ''} ${merchantData?.last_name || ''}`.trim() || 
+                           'Unknown Merchant';
+          }
 
           return {
             ...contract,
