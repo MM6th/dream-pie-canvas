@@ -289,20 +289,22 @@ const ContractDashboard = () => {
                             <Eye className="w-4 h-4 mr-1" />
                             View Contract
                           </Button>
-                          <Button
-                            onClick={() => {
-                              const doc = new jsPDF();
-                              doc.text(`Contract: ${contract.submission_title}`, 20, 20);
-                              doc.text(`Status: ${contract.status}`, 20, 40);
-                              doc.text(contract.contract_terms, 20, 60);
-                              doc.save(`Contract_${contract.id}.pdf`);
-                            }}
-                            size="sm"
-                            className="bg-blue-600 hover:bg-blue-700"
-                          >
-                            <Download className="w-4 h-4 mr-1" />
-                            Download
-                          </Button>
+                          {contract.status === 'approved' && (
+                            <Button
+                              onClick={() => {
+                                const doc = new jsPDF();
+                                doc.text(`Contract: ${contract.submission_title}`, 20, 20);
+                                doc.text(`Status: ${contract.status}`, 20, 40);
+                                doc.text(contract.contract_terms, 20, 60);
+                                doc.save(`Contract_${contract.id}.pdf`);
+                              }}
+                              size="sm"
+                              className="bg-blue-600 hover:bg-blue-700"
+                            >
+                              <Download className="w-4 h-4 mr-1" />
+                              Download
+                            </Button>
+                          )}
                         </>
                       )}
                     </div>
