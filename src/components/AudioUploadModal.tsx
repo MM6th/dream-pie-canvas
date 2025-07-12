@@ -235,14 +235,15 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
           Upload Audio
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md bg-gray-800 border-gray-700 text-white">
+      <DialogContent className="sm:max-w-md max-h-[80vh] bg-gray-800 border-gray-700 text-white">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <AudioLines className="w-5 h-5" />
             Upload Audio Content
           </DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="overflow-y-auto max-h-[60vh] pr-2">
+          <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Label htmlFor="title">Title *</Label>
             <Input
@@ -384,8 +385,8 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
             </div>
           )}
 
-          {/* Podcast-specific fields */}
-          {formData.audioType === 'podcast' && (
+          {/* Podcast-specific fields - only show when merchant_only access level */}
+          {formData.audioType === 'podcast' && formData.accessLevel === 'merchant_only' && (
             <div className="space-y-4 p-4 bg-gray-700/30 rounded-lg border border-gray-600">
               <h4 className="text-white font-medium">Podcast Revenue Settings</h4>
               
@@ -457,7 +458,8 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
               {loading ? "Uploading..." : "Upload Audio"}
             </Button>
           </div>
-        </form>
+          </form>
+        </div>
       </DialogContent>
     </Dialog>
   );
