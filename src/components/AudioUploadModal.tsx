@@ -306,11 +306,9 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
               <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
                 <SelectValue placeholder="Select audio type" />
               </SelectTrigger>
-              <SelectContent className="bg-gray-700 border-gray-600">
+               <SelectContent className="bg-gray-700 border-gray-600">
                 <SelectItem value="music" className="text-white hover:bg-gray-600">Music</SelectItem>
                 <SelectItem value="podcast" className="text-white hover:bg-gray-600">Podcast</SelectItem>
-                <SelectItem value="film" className="text-white hover:bg-gray-600">Film</SelectItem>
-                <SelectItem value="video" className="text-white hover:bg-gray-600">Video</SelectItem>
                 <SelectItem value="spoken" className="text-white hover:bg-gray-600">Spoken</SelectItem>
                 <SelectItem value="asmr" className="text-white hover:bg-gray-600">ASMR</SelectItem>
               </SelectContent>

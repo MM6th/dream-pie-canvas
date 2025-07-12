@@ -90,6 +90,25 @@ const SignedContractsSection = () => {
             }
             
             submissionType = 'Modeling Application';
+          } else if (contract.contract_type === 'podcast_opportunity') {
+            // For podcast opportunities, get the audio product from podcast_downloads
+            const { data: podcastDownload } = await supabase
+              .from('podcast_downloads')
+              .select('audio_product_id')
+              .eq('contract_id', contract.id)
+              .single();
+
+            if (podcastDownload?.audio_product_id) {
+              const { data: audioData } = await supabase
+                .from('audio_products')
+                .select('title')
+                .eq('id', podcastDownload.audio_product_id)
+                .single();
+
+              productTitle = audioData?.title || 'Unknown Product';
+            }
+            
+            submissionType = 'Podcast Opportunity';
           }
 
           return {

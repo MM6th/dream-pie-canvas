@@ -45,7 +45,7 @@ const AdminDashboard = () => {
             className="text-white data-[state=active]:bg-gray-700 relative"
           >
             <FileText className="w-4 h-4 mr-2" />
-            Cover Submissions
+            Contract Submissions
             {totalSubmissions > 0 && (
               <Badge className="ml-2 bg-red-600 text-white animate-pulse">
                 {totalSubmissions}

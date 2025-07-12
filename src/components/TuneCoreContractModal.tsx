@@ -72,7 +72,7 @@ const TuneCoreContractModal = ({
       toast({
         title: "Contract Signed Successfully",
         description: isPodcastOpportunity 
-          ? "Your podcast opportunity contract has been signed! You can now begin creating content according to the terms."
+          ? "Now just wait for your contract response from administration."
           : "Your contract has been signed and submitted for admin approval. You will receive an email with TuneCore publishing details soon.",
       });
 
