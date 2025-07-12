@@ -34,6 +34,7 @@ interface DashboardViewProps {
   onSuccess: () => void;
   onBackgroundUpload: (url: string) => void;
   purchasedTracks: AudioTrack[];
+  purchasedPodcasts: AudioTrack[];
   purchasedVideos: VideoTrack[];
 }
 
@@ -50,6 +51,7 @@ const DashboardView = ({
   onSuccess,
   onBackgroundUpload,
   purchasedTracks,
+  purchasedPodcasts,
   purchasedVideos,
 }: DashboardViewProps) => {
   const backgroundStyle = userProfile?.background_image_url 
@@ -85,16 +87,18 @@ const DashboardView = ({
             <MerchantDashboard 
               onSuccess={onSuccess}
               onViewStore={onStoreView}
-              onBackgroundUpload={onBackgroundUpload}
-              purchasedTracks={purchasedTracks}
-              purchasedVideos={purchasedVideos}
+            onBackgroundUpload={onBackgroundUpload}
+            purchasedTracks={purchasedTracks}
+            purchasedPodcasts={purchasedPodcasts}
+            purchasedVideos={purchasedVideos}
               userProfile={userProfile}
             />
           ) : (
             <SupporterDashboard 
-              onBackgroundUpload={onBackgroundUpload}
-              purchasedTracks={purchasedTracks}
-              purchasedVideos={purchasedVideos}
+            onBackgroundUpload={onBackgroundUpload}
+            purchasedTracks={purchasedTracks}
+            purchasedPodcasts={purchasedPodcasts}
+            purchasedVideos={purchasedVideos}
             />
           )}
         </>

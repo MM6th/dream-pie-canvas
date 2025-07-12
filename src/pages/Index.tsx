@@ -16,6 +16,7 @@ interface AudioTrack {
   audio_file_url: string;
   thumbnail_url: string | null;
   access_level?: "public" | "merchant_only" | "paid" | null;
+  audio_type?: string;
 }
 
 interface VideoTrack {
@@ -35,6 +36,7 @@ const Index = () => {
   const [profileLoading, setProfileLoading] = useState(false);
   const [currentView, setCurrentView] = useState<"dashboard" | "store">("dashboard");
   const [purchasedTracks, setPurchasedTracks] = useState<AudioTrack[]>([]);
+  const [purchasedPodcasts, setPurchasedPodcasts] = useState<AudioTrack[]>([]);
   const [purchasedVideos, setPurchasedVideos] = useState<VideoTrack[]>([]);
 
   useEffect(() => {
@@ -42,11 +44,13 @@ const Index = () => {
     if (user && !loading) {
       fetchUserProfile();
       fetchPurchasedTracks();
+      fetchPurchasedPodcasts();
       fetchPurchasedVideos();
     } else if (!user && !loading) {
       setUserProfile(null);
       setProfileLoading(false);
       setPurchasedTracks([]);
+      setPurchasedPodcasts([]);
       setPurchasedVideos([]);
     }
   }, [user, loading]);
@@ -54,6 +58,7 @@ const Index = () => {
   useEffect(() => {
     if (currentView === "dashboard" && user) {
       fetchPurchasedTracks();
+      fetchPurchasedPodcasts();
       fetchPurchasedVideos();
     }
   }, [currentView, user]);
@@ -119,7 +124,8 @@ const Index = () => {
             artist_name,
             audio_file_url,
             thumbnail_url,
-            access_level
+            access_level,
+            audio_type
           )
         `)
         .eq('user_id', user.id);
@@ -131,16 +137,66 @@ const Index = () => {
 
       console.log('Raw purchased tracks data:', data);
 
-      const tracks = data
+      const allTracks = data
         ?.filter(purchase => purchase.audio_products)
         .map(purchase => purchase.audio_products as AudioTrack) || [];
 
-      console.log('Processed purchased tracks:', tracks);
-      console.log('Number of tracks to set in audio player:', tracks.length);
+      // Separate music tracks from podcast/ASMR tracks
+      const musicTracks = allTracks.filter(track => 
+        track.audio_type !== 'podcast' && track.audio_type !== 'asmr'
+      );
 
-      setPurchasedTracks(tracks);
+      console.log('Processed purchased music tracks:', musicTracks);
+      console.log('Number of music tracks to set in audio player:', musicTracks.length);
+
+      setPurchasedTracks(musicTracks);
     } catch (error) {
       console.error('Error fetching purchased tracks:', error);
+    }
+  };
+
+  const fetchPurchasedPodcasts = async () => {
+    if (!user) return;
+
+    console.log('Fetching purchased podcasts for user:', user.id);
+
+    try {
+      const { data, error } = await supabase
+        .from('user_purchases')
+        .select(`
+          audio_product_id,
+          audio_products (
+            id,
+            title,
+            artist_name,
+            audio_file_url,
+            thumbnail_url,
+            access_level,
+            audio_type
+          )
+        `)
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('Error fetching purchased podcasts:', error);
+        return;
+      }
+
+      console.log('Raw purchased podcasts data:', data);
+
+      const podcastTracks = data
+        ?.filter(purchase => 
+          purchase.audio_products && 
+          (purchase.audio_products.audio_type === 'podcast' || purchase.audio_products.audio_type === 'asmr')
+        )
+        .map(purchase => purchase.audio_products as AudioTrack) || [];
+
+      console.log('Processed purchased podcasts:', podcastTracks);
+      console.log('Number of podcast tracks to set:', podcastTracks.length);
+
+      setPurchasedPodcasts(podcastTracks);
+    } catch (error) {
+      console.error('Error fetching purchased podcasts:', error);
     }
   };
 
@@ -239,6 +295,7 @@ const Index = () => {
       onSuccess={fetchUserProfile}
       onBackgroundUpload={handleBackgroundUpload}
       purchasedTracks={purchasedTracks}
+      purchasedPodcasts={purchasedPodcasts}
       purchasedVideos={purchasedVideos}
     />
   );

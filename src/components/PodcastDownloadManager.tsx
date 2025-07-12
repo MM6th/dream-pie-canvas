@@ -86,7 +86,12 @@ const PodcastDownloadManager = ({ audioProduct }: PodcastDownloadManagerProps) =
           amount_paid: 0
         });
 
-      if (purchaseError) throw purchaseError;
+      if (purchaseError) {
+        console.error('Error adding to user purchases:', purchaseError);
+        throw purchaseError;
+      }
+      
+      console.log('Successfully added podcast to user purchases');
 
       toast({
         title: "Download Started",

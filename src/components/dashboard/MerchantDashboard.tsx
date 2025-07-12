@@ -18,6 +18,7 @@ interface MerchantDashboardProps {
   onViewStore: () => void;
   onBackgroundUpload: (url:string) => void;
   purchasedTracks: any[];
+  purchasedPodcasts: any[];
   purchasedVideos: any[];
   userProfile: any;
 }
@@ -27,6 +28,7 @@ const MerchantDashboard = ({
   onViewStore, 
   onBackgroundUpload, 
   purchasedTracks,
+  purchasedPodcasts,
   purchasedVideos,
   userProfile
 }: MerchantDashboardProps) => {
@@ -80,7 +82,7 @@ const MerchantDashboard = ({
           
           <ContentManagement />
 
-          <MediaPlayers purchasedTracks={purchasedTracks} purchasedVideos={purchasedVideos} />
+          <MediaPlayers purchasedTracks={purchasedTracks} purchasedPodcasts={purchasedPodcasts} purchasedVideos={purchasedVideos} />
         </>
       )}
 

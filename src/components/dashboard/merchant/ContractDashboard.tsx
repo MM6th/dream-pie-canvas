@@ -93,6 +93,25 @@ const ContractDashboard = () => {
                 submission_title = `Modeling: ${fashionData.title}`;
               }
             }
+          } else if (contract.contract_type === 'podcast_opportunity') {
+            // For podcast opportunities, get the audio product from podcast_downloads
+            const { data: podcastDownload } = await supabase
+              .from('podcast_downloads')
+              .select('audio_product_id')
+              .eq('contract_id', contract.id)
+              .single();
+
+            if (podcastDownload?.audio_product_id) {
+              const { data: audioData } = await supabase
+                .from('audio_products')
+                .select('title')
+                .eq('id', podcastDownload.audio_product_id)
+                .single();
+
+              if (audioData?.title) {
+                submission_title = `Podcast Opportunity: ${audioData.title}`;
+              }
+            }
           }
 
           return {
@@ -160,6 +179,19 @@ const ContractDashboard = () => {
   };
 
   const getStatusDescription = (contract: ContractWithDetails) => {
+    if (contract.contract_type === 'podcast_opportunity') {
+      switch (contract.status) {
+        case 'pending':
+          return 'Contract available for signing';
+        case 'signed':
+          return 'Contract signed - YouTube/PIE partnership active';
+        case 'available':
+          return 'Contract available for signing';
+        default:
+          return 'Unknown status';
+      }
+    }
+    
     switch (contract.status) {
       case 'pending':
         return 'Awaiting your signature';
@@ -190,7 +222,7 @@ const ContractDashboard = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-white">
             <FileText className="w-5 h-5" />
-            TuneCore Publishing Contracts
+            Contract Opportunities
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -199,7 +231,7 @@ const ContractDashboard = () => {
               <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
               <h4 className="text-lg font-semibold text-white mb-2">No Contracts Yet</h4>
               <p className="text-gray-400">
-                Contracts will appear here once your submissions are approved for TuneCore publishing.
+                Contracts will appear here for approved submissions and podcast opportunities.
               </p>
             </div>
           ) : (

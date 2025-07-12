@@ -1,10 +1,10 @@
-
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Music, Video, User } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import AudioPlayer from "@/components/AudioPlayer";
 import VideoPlayer from "@/components/VideoPlayer";
+import PodcastAudioPlayer from "@/components/PodcastAudioPlayer";
 import BackgroundUpload from "@/components/BackgroundUpload";
 import { useAuth } from "@/hooks/useAuth";
 import SupporterProfileModal from "@/components/profile/SupporterProfileModal";
@@ -18,6 +18,7 @@ interface AudioTrack {
   artist_name: string | null;
   audio_file_url: string;
   thumbnail_url: string | null;
+  audio_type?: string;
 }
 
 interface VideoTrack {
@@ -32,26 +33,18 @@ interface VideoTrack {
 interface SupporterDashboardProps {
   onBackgroundUpload: (url: string) => void;
   purchasedTracks: AudioTrack[];
+  purchasedPodcasts: AudioTrack[];
   purchasedVideos: VideoTrack[];
 }
 
-const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedVideos }: SupporterDashboardProps) => {
+const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodcasts, purchasedVideos }: SupporterDashboardProps) => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState("music");
   const [userProfile, setUserProfile] = useState<any>(null);
-  const [profileLoading, setProfileLoading] = useState(true);
-
-  useEffect(() => {
-    if (user) {
-      fetchUserProfile();
-    }
-  }, [user]);
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
 
   const fetchUserProfile = async () => {
     if (!user) return;
-    
-    console.log('Fetching supporter profile for:', user.id);
-    setProfileLoading(true);
+
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -62,156 +55,88 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedVide
       if (error) {
         console.error('Error fetching supporter profile:', error);
       } else {
-        console.log('Supporter profile fetched:', data);
         setUserProfile(data);
       }
     } catch (error) {
       console.error('Error fetching supporter profile:', error);
-    } finally {
-      setProfileLoading(false);
     }
   };
 
   const handleProfileUpdate = () => {
-    console.log('Profile updated, refetching...');
     fetchUserProfile();
   };
 
+  useEffect(() => {
+    if (user) {
+      fetchUserProfile();
+    }
+  }, [user]);
+
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-8">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-white mb-2">Welcome Back!</h1>
-        <p className="text-gray-300 mb-4">Enjoy your purchased content</p>
-        <PieWelcomeModal>
-          <button className="text-blue-400 hover:text-blue-300">
-            What is PIE?
-          </button>
-        </PieWelcomeModal>
-      </div>
+    <div className="max-w-6xl mx-auto p-6 pt-20">
+      <PieWelcomeModal>
+        <Button 
+          onClick={() => setShowWelcomeModal(true)}
+          variant="ghost" 
+          className="text-blue-400 hover:text-blue-300"
+        >
+          What is PIE?
+        </Button>
+      </PieWelcomeModal>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4 bg-gray-800 border-gray-700">
-          <TabsTrigger 
-            value="music" 
-            className="text-white data-[state=active]:bg-gray-700"
-          >
-            <Music className="w-4 h-4 mr-2" />
-            Music
-          </TabsTrigger>
-          <TabsTrigger 
-            value="videos" 
-            className="text-white data-[state=active]:bg-gray-700"
-          >
-            <Video className="w-4 h-4 mr-2" />
-            Videos
-          </TabsTrigger>
-          <TabsTrigger 
-            value="profile" 
-            className="text-white data-[state=active]:bg-gray-700"
-          >
-            <User className="w-4 h-4 mr-2" />
-            Profile
-          </TabsTrigger>
-          <TabsTrigger 
-            value="background" 
-            className="text-white data-[state=active]:bg-gray-700"
-          >
-            Background
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="music">
-          <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="text-white">Your Music Collection</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {purchasedTracks.length > 0 ? (
+      <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm mb-6">
+        <CardHeader>
+          <CardTitle className="text-white">Welcome to your PIE Dashboard</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Tabs defaultValue="music" className="w-full">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="music" className="flex items-center gap-2">
+                <Music className="w-4 h-4" />
+                Music & Podcasts
+              </TabsTrigger>
+              <TabsTrigger value="videos" className="flex items-center gap-2">
+                <Video className="w-4 h-4" />
+                Videos
+              </TabsTrigger>
+              <TabsTrigger value="profile" className="flex items-center gap-2">
+                <User className="w-4 h-4" />
+                Profile
+              </TabsTrigger>
+              <TabsTrigger value="background">Background</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="music">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <AudioPlayer tracks={purchasedTracks} />
-              ) : (
-                <p className="text-gray-400 text-center py-8">
-                  No music purchased yet. Visit the store to discover amazing tracks!
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="videos">
-          <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="text-white">Your Video Collection</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {purchasedVideos.length > 0 ? (
-                <VideoPlayer videos={purchasedVideos} />
-              ) : (
-                <p className="text-gray-400 text-center py-8">
-                  No videos purchased yet. Check out our films section!
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="profile">
-          <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="text-white">Profile Settings</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {profileLoading ? (
-                <div className="text-center py-4">
-                  <p className="text-gray-400">Loading profile...</p>
-                </div>
-              ) : (
-                <div className="text-center">
-                  <p className="text-gray-400 mb-4">Update your profile information</p>
-                  {userProfile && (
-                    <div className="mb-4 p-4 bg-gray-700/50 rounded-lg">
-                      <div className="flex items-center gap-4">
-                        {userProfile.avatar_url && (
-                          <img
-                            src={userProfile.avatar_url}
-                            alt="Profile"
-                            className="w-16 h-16 rounded-full object-cover"
-                          />
-                        )}
-                        <div className="text-left">
-                          <p className="text-white font-medium">
-                            {userProfile.display_name || 'No display name set'}
-                          </p>
-                          <p className="text-gray-400 text-sm">{userProfile.email}</p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  <SupporterProfileModal 
-                    profile={userProfile}
-                    onProfileUpdate={handleProfileUpdate}
-                  >
-                    <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-                      <User className="w-4 h-4 mr-2" />
-                      Edit Profile
-                    </Button>
-                  </SupporterProfileModal>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="background">
-          <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="text-white">Dashboard Background</CardTitle>
-            </CardHeader>
-            <CardContent>
+                <PodcastAudioPlayer tracks={purchasedPodcasts} />
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="videos" className="space-y-6">
+              <VideoPlayer videos={purchasedVideos} />
+            </TabsContent>
+            
+            <TabsContent value="profile" className="space-y-6">
+              <div className="flex justify-center">
+                <SupporterProfileModal
+                  profile={userProfile}
+                  onProfileUpdate={handleProfileUpdate}
+                >
+                  <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                    <User className="w-4 h-4 mr-2" />
+                    Edit Profile
+                  </Button>
+                </SupporterProfileModal>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="background" className="space-y-6">
               <BackgroundUpload onUploadSuccess={onBackgroundUpload} />
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
     </div>
   );
 };
