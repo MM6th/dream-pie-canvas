@@ -31,6 +31,7 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
     price: "",
     pieVideoPrice: "",
     youtubeMembershipFee: "",
+    maxDownloads: "",
     is_adult_content: false
   });
   const [albums, setAlbums] = useState<any[]>([]);
@@ -181,6 +182,7 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
           pie_video_price: formData.audioType === 'podcast' && formData.pieVideoPrice ? parseFloat(formData.pieVideoPrice) : null,
           youtube_membership_fee: formData.audioType === 'podcast' && formData.youtubeMembershipFee ? parseFloat(formData.youtubeMembershipFee) : null,
           podcast_contract_generated: false,
+          max_downloads: formData.accessLevel === 'merchant_only' && formData.maxDownloads ? parseInt(formData.maxDownloads) : null,
           is_adult_content: formData.is_adult_content
         });
       
@@ -204,6 +206,7 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
         price: "",
         pieVideoPrice: "",
         youtubeMembershipFee: "",
+        maxDownloads: "",
         is_adult_content: false
       });
       onSuccess();
@@ -385,46 +388,67 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
             </div>
           )}
 
-          {/* Podcast-specific fields - only show when merchant_only access level */}
-          {formData.audioType === 'podcast' && formData.accessLevel === 'merchant_only' && (
-            <div className="space-y-4 p-4 bg-gray-700/30 rounded-lg border border-gray-600">
-              <h4 className="text-white font-medium">Podcast Revenue Settings</h4>
-              
-              <div>
-                <Label htmlFor="pieVideoPrice">PIE Individual Video Price ($)</Label>
-                <Input
-                  id="pieVideoPrice"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.pieVideoPrice}
-                  onChange={(e) => setFormData(prev => ({ ...prev, pieVideoPrice: e.target.value }))}
-                  className="bg-gray-700 border-gray-600 text-white"
-                  placeholder="Price per individual video on PIE platform"
-                />
-                <p className="text-xs text-gray-400 mt-1">
-                  Merchants receive 50% of this price for PIE exclusive content
-                </p>
-              </div>
-              
-              <div>
-                <Label htmlFor="youtubeMembershipFee">Monthly YouTube Membership Fee ($)</Label>
-                <Input
-                  id="youtubeMembershipFee"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.youtubeMembershipFee}
-                  onChange={(e) => setFormData(prev => ({ ...prev, youtubeMembershipFee: e.target.value }))}
-                  className="bg-gray-700 border-gray-600 text-white"
-                  placeholder="Monthly membership tier fee for revenue calculation"
-                />
-                <p className="text-xs text-gray-400 mt-1">
-                  For reference: Merchants receive 50% of PIE's 70% share (after YouTube's 30% cut)
-                </p>
-              </div>
-            </div>
-          )}
+           {/* Merchant-only specific fields */}
+           {formData.accessLevel === 'merchant_only' && (
+             <div className="space-y-4 p-4 bg-gray-700/30 rounded-lg border border-gray-600">
+               <h4 className="text-white font-medium">Download Opportunities Settings</h4>
+               
+               <div>
+                 <Label htmlFor="maxDownloads">Number of Download Opportunities</Label>
+                 <Input
+                   id="maxDownloads"
+                   type="number"
+                   min="1"
+                   value={formData.maxDownloads}
+                   onChange={(e) => setFormData(prev => ({ ...prev, maxDownloads: e.target.value }))}
+                   className="bg-gray-700 border-gray-600 text-white"
+                   placeholder="e.g., 5 (Leave empty for unlimited)"
+                 />
+                 <p className="text-xs text-gray-400 mt-1">
+                   First come, first serve. Once exhausted, the download button will be hidden.
+                 </p>
+               </div>
+
+               {/* Podcast-specific fields when merchant_only and podcast type */}
+               {formData.audioType === 'podcast' && (
+                 <>
+                   <div>
+                     <Label htmlFor="pieVideoPrice">PIE Individual Video Price ($)</Label>
+                     <Input
+                       id="pieVideoPrice"
+                       type="number"
+                       step="0.01"
+                       min="0"
+                       value={formData.pieVideoPrice}
+                       onChange={(e) => setFormData(prev => ({ ...prev, pieVideoPrice: e.target.value }))}
+                       className="bg-gray-700 border-gray-600 text-white"
+                       placeholder="Price per individual video on PIE platform"
+                     />
+                     <p className="text-xs text-gray-400 mt-1">
+                       Merchants receive 50% of this price for PIE exclusive content
+                     </p>
+                   </div>
+                   
+                   <div>
+                     <Label htmlFor="youtubeMembershipFee">Monthly YouTube Membership Fee ($)</Label>
+                     <Input
+                       id="youtubeMembershipFee"
+                       type="number"
+                       step="0.01"
+                       min="0"
+                       value={formData.youtubeMembershipFee}
+                       onChange={(e) => setFormData(prev => ({ ...prev, youtubeMembershipFee: e.target.value }))}
+                       className="bg-gray-700 border-gray-600 text-white"
+                       placeholder="Monthly membership tier fee for revenue calculation"
+                     />
+                     <p className="text-xs text-gray-400 mt-1">
+                       For reference: Merchants receive 50% of PIE's 70% share (after YouTube's 30% cut)
+                     </p>
+                   </div>
+                 </>
+               )}
+             </div>
+           )}
 
           {/* Adult Content Toggle */}
           <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg border border-gray-600">

@@ -12,6 +12,7 @@ interface PodcastDownloadManagerProps {
     audio_file_url: string;
     access_level: string;
     audio_type: string;
+    max_downloads?: number | null;
   };
 }
 
@@ -45,6 +46,25 @@ const PodcastDownloadManager = ({ audioProduct }: PodcastDownloadManagerProps) =
           variant: "destructive"
         });
         return;
+      }
+
+      // Check download limits
+      if (audioProduct.max_downloads) {
+        const { count: currentDownloads, error: countError } = await supabase
+          .from('podcast_downloads')
+          .select('*', { count: 'exact', head: true })
+          .eq('audio_product_id', audioProduct.id);
+
+        if (countError) throw countError;
+
+        if (currentDownloads && currentDownloads >= audioProduct.max_downloads) {
+          toast({
+            title: "Download Limit Reached",
+            description: "This podcast has reached its maximum download limit",
+            variant: "destructive"
+          });
+          return;
+        }
       }
 
       // Check if already downloaded
@@ -88,16 +108,25 @@ const PodcastDownloadManager = ({ audioProduct }: PodcastDownloadManagerProps) =
 
       if (purchaseError) {
         console.error('Error adding to user purchases:', purchaseError);
+        // Try to rollback the podcast_downloads insert
+        await supabase
+          .from('podcast_downloads')
+          .delete()
+          .eq('audio_product_id', audioProduct.id)
+          .eq('merchant_id', user.id);
         throw purchaseError;
       }
       
-      console.log('Successfully added podcast to user purchases');
+      console.log('Successfully processed podcast download');
 
       toast({
         title: "Download Started",
         description: "Podcast downloaded successfully! A contract has been generated for your review.",
         variant: "default"
       });
+
+      // Refresh the page to update the UI
+      window.location.reload();
 
     } catch (error: any) {
       console.error('Error downloading podcast:', error);

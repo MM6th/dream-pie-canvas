@@ -231,6 +231,7 @@ export type Database = {
           id: string
           is_adult_content: boolean | null
           is_free: boolean
+          max_downloads: number | null
           merchant_id: string
           pie_video_price: number | null
           podcast_contract_generated: boolean | null
@@ -250,6 +251,7 @@ export type Database = {
           id?: string
           is_adult_content?: boolean | null
           is_free?: boolean
+          max_downloads?: number | null
           merchant_id: string
           pie_video_price?: number | null
           podcast_contract_generated?: boolean | null
@@ -269,6 +271,7 @@ export type Database = {
           id?: string
           is_adult_content?: boolean | null
           is_free?: boolean
+          max_downloads?: number | null
           merchant_id?: string
           pie_video_price?: number | null
           podcast_contract_generated?: boolean | null

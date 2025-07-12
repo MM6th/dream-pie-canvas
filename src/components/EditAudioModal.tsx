@@ -25,6 +25,7 @@ interface AudioProduct {
   price: number | null;
   access_level: "public" | "merchant_only" | "paid" | null;
   is_adult_content?: boolean;
+  max_downloads?: number | null;
   albums?: {
     name: string;
   };
@@ -47,7 +48,8 @@ const EditAudioModal = ({ product, onSuccess, onClose }: EditAudioModalProps) =>
     albumName: product.albums?.name || "",
     hasAlbum: !!product.album_id,
     accessLevel: (product.access_level || (product.is_free ? "public" : "paid")) as "public" | "merchant_only" | "paid",
-    price: product.price?.toString() || ""
+    price: product.price?.toString() || "",
+    maxDownloads: product.max_downloads?.toString() || ""
   });
   const [isAdultContent, setIsAdultContent] = useState(product.is_adult_content || false);
   const [albums, setAlbums] = useState<any[]>([]);
@@ -153,6 +155,7 @@ const EditAudioModal = ({ product, onSuccess, onClose }: EditAudioModalProps) =>
           access_level: formData.accessLevel,
           is_free: formData.accessLevel !== 'paid',
           price: formData.accessLevel === 'paid' ? parseFloat(formData.price) : null,
+          max_downloads: formData.accessLevel === 'merchant_only' && formData.maxDownloads ? parseInt(formData.maxDownloads) : null,
           is_adult_content: isAdultContent
         })
         .eq('id', product.id);
@@ -315,9 +318,28 @@ const EditAudioModal = ({ product, onSuccess, onClose }: EditAudioModalProps) =>
                 className="bg-gray-700 border-gray-600 text-white"
               />
             </div>
-          )}
+           )}
 
-          {/* Adult Content Toggle */}
+           {/* Merchant-only specific fields */}
+           {formData.accessLevel === 'merchant_only' && (
+             <div>
+               <Label htmlFor="maxDownloads">Number of Download Opportunities</Label>
+               <Input
+                 id="maxDownloads"
+                 type="number"
+                 min="1"
+                 value={formData.maxDownloads}
+                 onChange={(e) => setFormData(prev => ({ ...prev, maxDownloads: e.target.value }))}
+                 className="bg-gray-700 border-gray-600 text-white"
+                 placeholder="e.g., 5 (Leave empty for unlimited)"
+               />
+               <p className="text-xs text-gray-400 mt-1">
+                 First come, first serve. Once exhausted, the download button will be hidden.
+               </p>
+             </div>
+           )}
+
+           {/* Adult Content Toggle */}
           <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg border border-gray-600">
             <div className="flex items-center gap-3">
               <Shield className="w-5 h-5 text-orange-400" />
