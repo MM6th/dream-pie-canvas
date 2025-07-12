@@ -29,6 +29,8 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
     hasAlbum: false,
     accessLevel: "public" as "public" | "merchant_only" | "paid",
     price: "",
+    pieVideoPrice: "",
+    youtubeMembershipFee: "",
     is_adult_content: false
   });
   const [albums, setAlbums] = useState<any[]>([]);
@@ -162,7 +164,7 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
         }
       }
       
-      // Create audio product with new access_level field
+      // Create audio product with new fields including podcast-specific ones
       const { error: productError } = await supabase
         .from('audio_products')
         .insert({
@@ -176,6 +178,9 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
           access_level: formData.accessLevel,
           is_free: formData.accessLevel !== 'paid',
           price: formData.accessLevel === 'paid' ? parseFloat(formData.price) : null,
+          pie_video_price: formData.audioType === 'podcast' && formData.pieVideoPrice ? parseFloat(formData.pieVideoPrice) : null,
+          youtube_membership_fee: formData.audioType === 'podcast' && formData.youtubeMembershipFee ? parseFloat(formData.youtubeMembershipFee) : null,
+          podcast_contract_generated: false,
           is_adult_content: formData.is_adult_content
         });
       
@@ -197,6 +202,8 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
         hasAlbum: false,
         accessLevel: "public",
         price: "",
+        pieVideoPrice: "",
+        youtubeMembershipFee: "",
         is_adult_content: false
       });
       onSuccess();
@@ -271,6 +278,8 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
               <SelectContent className="bg-gray-700 border-gray-600">
                 <SelectItem value="music" className="text-white hover:bg-gray-600">Music</SelectItem>
                 <SelectItem value="podcast" className="text-white hover:bg-gray-600">Podcast</SelectItem>
+                <SelectItem value="film" className="text-white hover:bg-gray-600">Film</SelectItem>
+                <SelectItem value="video" className="text-white hover:bg-gray-600">Video</SelectItem>
                 <SelectItem value="spoken" className="text-white hover:bg-gray-600">Spoken</SelectItem>
                 <SelectItem value="asmr" className="text-white hover:bg-gray-600">ASMR</SelectItem>
               </SelectContent>
@@ -372,6 +381,47 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
                 className="bg-gray-700 border-gray-600 text-white"
                 placeholder="0.00"
               />
+            </div>
+          )}
+
+          {/* Podcast-specific fields */}
+          {formData.audioType === 'podcast' && (
+            <div className="space-y-4 p-4 bg-gray-700/30 rounded-lg border border-gray-600">
+              <h4 className="text-white font-medium">Podcast Revenue Settings</h4>
+              
+              <div>
+                <Label htmlFor="pieVideoPrice">PIE Individual Video Price ($)</Label>
+                <Input
+                  id="pieVideoPrice"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.pieVideoPrice}
+                  onChange={(e) => setFormData(prev => ({ ...prev, pieVideoPrice: e.target.value }))}
+                  className="bg-gray-700 border-gray-600 text-white"
+                  placeholder="Price per individual video on PIE platform"
+                />
+                <p className="text-xs text-gray-400 mt-1">
+                  Merchants receive 50% of this price for PIE exclusive content
+                </p>
+              </div>
+              
+              <div>
+                <Label htmlFor="youtubeMembershipFee">Monthly YouTube Membership Fee ($)</Label>
+                <Input
+                  id="youtubeMembershipFee"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.youtubeMembershipFee}
+                  onChange={(e) => setFormData(prev => ({ ...prev, youtubeMembershipFee: e.target.value }))}
+                  className="bg-gray-700 border-gray-600 text-white"
+                  placeholder="Monthly membership tier fee for revenue calculation"
+                />
+                <p className="text-xs text-gray-400 mt-1">
+                  For reference: Merchants receive 50% of PIE's 70% share (after YouTube's 30% cut)
+                </p>
+              </div>
             </div>
           )}
 

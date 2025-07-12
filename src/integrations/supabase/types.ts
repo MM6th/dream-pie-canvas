@@ -232,10 +232,13 @@ export type Database = {
           is_adult_content: boolean | null
           is_free: boolean
           merchant_id: string
+          pie_video_price: number | null
+          podcast_contract_generated: boolean | null
           price: number | null
           thumbnail_url: string | null
           title: string
           updated_at: string
+          youtube_membership_fee: number | null
         }
         Insert: {
           access_level?: Database["public"]["Enums"]["access_level"] | null
@@ -248,10 +251,13 @@ export type Database = {
           is_adult_content?: boolean | null
           is_free?: boolean
           merchant_id: string
+          pie_video_price?: number | null
+          podcast_contract_generated?: boolean | null
           price?: number | null
           thumbnail_url?: string | null
           title: string
           updated_at?: string
+          youtube_membership_fee?: number | null
         }
         Update: {
           access_level?: Database["public"]["Enums"]["access_level"] | null
@@ -264,10 +270,13 @@ export type Database = {
           is_adult_content?: boolean | null
           is_free?: boolean
           merchant_id?: string
+          pie_video_price?: number | null
+          podcast_contract_generated?: boolean | null
           price?: number | null
           thumbnail_url?: string | null
           title?: string
           updated_at?: string
+          youtube_membership_fee?: number | null
         }
         Relationships: [
           {
@@ -726,6 +735,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      podcast_downloads: {
+        Row: {
+          audio_product_id: string
+          contract_generated: boolean | null
+          contract_id: string | null
+          created_at: string
+          downloaded_at: string
+          id: string
+          merchant_id: string
+        }
+        Insert: {
+          audio_product_id: string
+          contract_generated?: boolean | null
+          contract_id?: string | null
+          created_at?: string
+          downloaded_at?: string
+          id?: string
+          merchant_id: string
+        }
+        Update: {
+          audio_product_id?: string
+          contract_generated?: boolean | null
+          contract_id?: string | null
+          created_at?: string
+          downloaded_at?: string
+          id?: string
+          merchant_id?: string
+        }
+        Relationships: []
       }
       post_comments: {
         Row: {

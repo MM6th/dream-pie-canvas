@@ -30,7 +30,7 @@ const RegularPostsSection = ({ posts }: RegularPostsSectionProps) => {
     <div className="mb-12">
       <h2 className="text-3xl font-bold text-white mb-6 flex items-center gap-2">
         <MessageSquare className="w-8 h-8 text-white" />
-        Regular Posts
+        Admin Posts
       </h2>
       <Carousel
         opts={{

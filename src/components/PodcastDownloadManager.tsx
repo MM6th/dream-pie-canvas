@@ -1,0 +1,120 @@
+import React from "react";
+import { Button } from "@/components/ui/button";
+import { Download } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "@/hooks/use-toast";
+
+interface PodcastDownloadManagerProps {
+  audioProduct: {
+    id: string;
+    title: string;
+    audio_file_url: string;
+    access_level: string;
+    audio_type: string;
+  };
+}
+
+const PodcastDownloadManager = ({ audioProduct }: PodcastDownloadManagerProps) => {
+  const { user } = useAuth();
+
+  const handlePodcastDownload = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to download this podcast",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      // Check if user is a merchant
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('user_type, approval_status')
+        .eq('id', user.id)
+        .single();
+
+      if (profileError) throw profileError;
+
+      if (profile.user_type !== 'merchant' || profile.approval_status !== 'approved') {
+        toast({
+          title: "Access Denied",
+          description: "Only approved merchants can download this content",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Check if already downloaded
+      const { data: existingDownload, error: downloadCheckError } = await supabase
+        .from('podcast_downloads')
+        .select('id')
+        .eq('audio_product_id', audioProduct.id)
+        .eq('merchant_id', user.id)
+        .maybeSingle();
+
+      if (downloadCheckError) throw downloadCheckError;
+
+      if (existingDownload) {
+        toast({
+          title: "Already Downloaded",
+          description: "You have already downloaded this podcast. Check your dashboard for contract details.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Record the download
+      const { error: insertError } = await supabase
+        .from('podcast_downloads')
+        .insert({
+          audio_product_id: audioProduct.id,
+          merchant_id: user.id
+        });
+
+      if (insertError) throw insertError;
+
+      // Trigger the actual download
+      const link = document.createElement('a');
+      link.href = audioProduct.audio_file_url;
+      link.download = `${audioProduct.title}.mp3`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast({
+        title: "Download Started",
+        description: "Podcast downloaded successfully! A contract has been generated for your review.",
+        variant: "default"
+      });
+
+    } catch (error: any) {
+      console.error('Error downloading podcast:', error);
+      toast({
+        title: "Download Failed",
+        description: error.message || "Failed to download podcast",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Only show for podcast type with merchant_only access
+  if (audioProduct.audio_type !== 'podcast' || audioProduct.access_level !== 'merchant_only') {
+    return null;
+  }
+
+  return (
+    <Button
+      onClick={handlePodcastDownload}
+      className="bg-primary hover:bg-primary/90 text-white"
+      size="sm"
+    >
+      <Download className="w-4 h-4 mr-2" />
+      Download Podcast
+    </Button>
+  );
+};
+
+export default PodcastDownloadManager;

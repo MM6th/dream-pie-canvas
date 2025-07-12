@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import FashionStoreSection from "./FashionStoreSection";
 import AstrologyStoreSection from "./AstrologyStoreSection";
+import PodcastDownloadManager from "./PodcastDownloadManager";
 
 
 interface AudioProduct {
@@ -552,25 +553,41 @@ const StorePage = () => {
                         )}
                       </div>
                       
-                      <div className="flex items-center justify-between">
-                        {getAccessLevelBadge(product)}
-                        
-                        <Button
-                          size="sm"
-                          onClick={() => handleAudioPurchase(product)}
-                          disabled={purchasingId === product.id || (!canDownloadAudio(product) && (product.access_level === "merchant_only"))}
-                          className="bg-primary hover:bg-primary/90 text-xs h-8 px-2"
-                        >
-                          {purchasingId === product.id ? (
-                            "Processing..."
-                          ) : (
-                            <>
-                              {(product.access_level === "paid") ? <DollarSign className="w-4 h-4 mr-1" /> : <Download className="w-4 h-4 mr-1" />}
-                              {getDownloadButtonText(product)}
-                            </>
-                          )}
-                        </Button>
-                      </div>
+                       <div className="flex items-center justify-between">
+                         {getAccessLevelBadge(product)}
+                         
+                         <div className="flex gap-2">
+                           {/* Podcast Download Manager for merchant-only podcasts */}
+                           <PodcastDownloadManager 
+                             audioProduct={{
+                               id: product.id,
+                               title: product.title,
+                               audio_file_url: product.audio_file_url,
+                               access_level: product.access_level || (product.is_free ? "public" : "paid"),
+                               audio_type: product.audio_type
+                             }}
+                           />
+                           
+                           {/* Regular download/purchase button for non-podcast content */}
+                           {!(product.audio_type === 'podcast' && product.access_level === 'merchant_only') && (
+                             <Button
+                               size="sm"
+                               onClick={() => handleAudioPurchase(product)}
+                               disabled={purchasingId === product.id || (!canDownloadAudio(product) && (product.access_level === "merchant_only"))}
+                               className="bg-primary hover:bg-primary/90 text-xs h-8 px-2"
+                             >
+                               {purchasingId === product.id ? (
+                                 "Processing..."
+                               ) : (
+                                 <>
+                                   {(product.access_level === "paid") ? <DollarSign className="w-4 h-4 mr-1" /> : <Download className="w-4 h-4 mr-1" />}
+                                   {getDownloadButtonText(product)}
+                                 </>
+                               )}
+                             </Button>
+                           )}
+                         </div>
+                       </div>
                     </div>
                   </CardContent>
                 </Card>
