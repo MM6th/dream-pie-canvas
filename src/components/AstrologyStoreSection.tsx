@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Shield } from "lucide-react";
+import { Clock, Shield, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
@@ -19,6 +19,7 @@ interface AstrologyProduct {
   delivery_type: string | null;
   total_price: number;
   is_adult_content: boolean | null;
+  access_level: "public" | "merchant_only" | "paid" | null;
   created_at: string;
 }
 
@@ -29,7 +30,7 @@ interface ProductReviewCount {
 const AstrologyStoreSection = () => {
   const { user } = useAuth();
   const [products, setProducts] = useState<AstrologyProduct[]>([]);
-  const [userProfile, setUserProfile] = useState<{ adult_content_restricted: boolean | null } | null>(null);
+  const [userProfile, setUserProfile] = useState<{ adult_content_restricted: boolean | null; user_type: string; approval_status: string | null } | null>(null);
   const [loading, setLoading] = useState(true);
   const [detailModalProduct, setDetailModalProduct] = useState<AstrologyProduct | null>(null);
   const [showReviews, setShowReviews] = useState<string | null>(null);
@@ -45,7 +46,7 @@ const AstrologyStoreSection = () => {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('adult_content_restricted')
+        .select('adult_content_restricted, user_type, approval_status')
         .eq('id', user.id)
         .single();
 
@@ -79,10 +80,25 @@ const AstrologyStoreSection = () => {
     }
   };
 
-  const filterAdultContent = (products: AstrologyProduct[], userProfile: { adult_content_restricted: boolean | null } | null): AstrologyProduct[] => {
+  const filterAdultContent = (products: AstrologyProduct[], userProfile: { adult_content_restricted: boolean | null; user_type: string; approval_status: string | null } | null): AstrologyProduct[] => {
     if (userProfile?.adult_content_restricted) {
       return products.filter(product => !product.is_adult_content);
     }
+    return products;
+  };
+
+  const filterAccessLevel = (products: AstrologyProduct[], userProfile: { adult_content_restricted: boolean | null; user_type: string; approval_status: string | null } | null): AstrologyProduct[] => {
+    if (!userProfile) return products;
+    
+    // Supporters can only see public products
+    if (userProfile.user_type === 'supporter') {
+      return products.filter(product => {
+        const accessLevel = product.access_level || 'public';
+        return accessLevel === 'public';
+      });
+    }
+    
+    // Merchants and admins can see all products
     return products;
   };
 
@@ -93,13 +109,13 @@ const AstrologyStoreSection = () => {
 
       const { data, error } = await supabase
         .from('astrology_products')
-        .select('*, is_adult_content')
+        .select('*, is_adult_content, access_level')
         .order('created_at', { ascending: false });
 
       if (error) {
         console.error('Error fetching astrology products:', error);
       } else {
-        const filteredData = filterAdultContent(data || [], profile);
+        const filteredData = filterAccessLevel(filterAdultContent(data || [], profile), profile);
         setProducts(filteredData);
         
         // Fetch review counts for all products
@@ -225,12 +241,20 @@ const AstrologyStoreSection = () => {
               <CardContent className="p-6">
                 <div className="flex items-start justify-between mb-3">
                   <CardTitle className="text-white text-lg">{product.title}</CardTitle>
-                  {product.is_adult_content && !userProfile?.adult_content_restricted && (
-                    <Badge className="bg-orange-600 hover:bg-orange-700 text-xs flex items-center gap-1">
-                      <Shield className="w-3 h-3" />
-                      18+
-                    </Badge>
-                  )}
+                  <div className="flex items-center gap-1 flex-wrap">
+                    {product.is_adult_content && !userProfile?.adult_content_restricted && (
+                      <Badge className="bg-orange-600 hover:bg-orange-700 text-xs flex items-center gap-1">
+                        <Shield className="w-3 h-3" />
+                        18+
+                      </Badge>
+                    )}
+                    {product.access_level === "merchant_only" && (
+                      <Badge className="bg-orange-600 hover:bg-orange-700 flex items-center gap-1 text-xs">
+                        <Lock className="w-3 h-3" />
+                        Merchants Only
+                      </Badge>
+                    )}
+                  </div>
                 </div>
                 
                 {product.description && (

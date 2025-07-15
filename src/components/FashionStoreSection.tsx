@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingCart, Shirt, Shield } from "lucide-react";
+import { ShoppingCart, Shirt, Shield, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
@@ -18,6 +18,7 @@ interface FashionProduct {
   price: number;
   shipping_cost: number;
   is_adult_content: boolean | null;
+  access_level: "public" | "merchant_only" | "paid" | null;
   fashion_product_images: Array<{
     id: string;
     image_url: string;
@@ -34,7 +35,7 @@ interface FashionProduct {
 const FashionStoreSection = () => {
   const { user } = useAuth();
   const [products, setProducts] = useState<FashionProduct[]>([]);
-  const [userProfile, setUserProfile] = useState<{ adult_content_restricted: boolean | null } | null>(null);
+  const [userProfile, setUserProfile] = useState<{ adult_content_restricted: boolean | null; user_type: string; approval_status: string | null } | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState<FashionProduct | null>(null);
   const [detailModalProduct, setDetailModalProduct] = useState<FashionProduct | null>(null);
@@ -45,7 +46,7 @@ const FashionStoreSection = () => {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('adult_content_restricted')
+        .select('adult_content_restricted, user_type, approval_status')
         .eq('id', user.id)
         .single();
 
@@ -60,6 +61,21 @@ const FashionStoreSection = () => {
   const filterAdultContent = (products: FashionProduct[]): FashionProduct[] => {
     if (!userProfile?.adult_content_restricted) return products;
     return products.filter(product => !product.is_adult_content);
+  };
+
+  const filterAccessLevel = (products: FashionProduct[]): FashionProduct[] => {
+    if (!userProfile) return products;
+    
+    // Supporters can only see public products
+    if (userProfile.user_type === 'supporter') {
+      return products.filter(product => {
+        const accessLevel = product.access_level || 'public';
+        return accessLevel === 'public';
+      });
+    }
+    
+    // Merchants and admins can see all products
+    return products;
   };
 
   const fetchProducts = async () => {
@@ -78,6 +94,7 @@ const FashionStoreSection = () => {
           price,
           shipping_cost,
           is_adult_content,
+          access_level,
           fashion_product_images (
             id,
             image_url,
@@ -100,8 +117,8 @@ const FashionStoreSection = () => {
         fashion_product_images: product.fashion_product_images.sort((a, b) => a.display_order - b.display_order)
       }));
 
-      // Filter adult content based on user preferences
-      const filteredProducts = filterAdultContent(productsWithSortedImages);
+      // Filter adult content and access level based on user preferences
+      const filteredProducts = filterAccessLevel(filterAdultContent(productsWithSortedImages));
       setProducts(filteredProducts);
     } catch (error: any) {
       console.error('Error fetching fashion products:', error);
@@ -216,12 +233,20 @@ const FashionStoreSection = () => {
                 )}
                 <div className="flex items-start justify-between">
                   <CardTitle className="text-white text-lg line-clamp-2">{product.title}</CardTitle>
-                  {product.is_adult_content && !userProfile?.adult_content_restricted && (
-                    <Badge className="bg-orange-600 hover:bg-orange-700 text-xs flex items-center gap-1 ml-2">
-                      <Shield className="w-3 h-3" />
-                      18+
-                    </Badge>
-                  )}
+                  <div className="flex items-center gap-1 flex-wrap ml-2">
+                    {product.is_adult_content && !userProfile?.adult_content_restricted && (
+                      <Badge className="bg-orange-600 hover:bg-orange-700 text-xs flex items-center gap-1">
+                        <Shield className="w-3 h-3" />
+                        18+
+                      </Badge>
+                    )}
+                    {product.access_level === "merchant_only" && (
+                      <Badge className="bg-orange-600 hover:bg-orange-700 flex items-center gap-1 text-xs">
+                        <Lock className="w-3 h-3" />
+                        Merchants Only
+                      </Badge>
+                    )}
+                  </div>
                 </div>
                 {product.description && (
                   <div>

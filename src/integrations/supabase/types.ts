@@ -67,6 +67,7 @@ export type Database = {
       }
       astrology_products: {
         Row: {
+          access_level: Database["public"]["Enums"]["access_level"] | null
           admin_id: string
           base_price: number
           buyer_email: string | null
@@ -83,6 +84,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          access_level?: Database["public"]["Enums"]["access_level"] | null
           admin_id: string
           base_price: number
           buyer_email?: string | null
@@ -99,6 +101,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          access_level?: Database["public"]["Enums"]["access_level"] | null
           admin_id?: string
           base_price?: number
           buyer_email?: string | null
@@ -568,6 +571,7 @@ export type Database = {
       }
       fashion_products: {
         Row: {
+          access_level: Database["public"]["Enums"]["access_level"] | null
           admin_id: string
           created_at: string
           description: string | null
@@ -581,6 +585,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          access_level?: Database["public"]["Enums"]["access_level"] | null
           admin_id: string
           created_at?: string
           description?: string | null
@@ -594,6 +599,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          access_level?: Database["public"]["Enums"]["access_level"] | null
           admin_id?: string
           created_at?: string
           description?: string | null
@@ -1145,6 +1151,7 @@ export type Database = {
       }
       video_products: {
         Row: {
+          access_level: Database["public"]["Enums"]["access_level"] | null
           background_music_url: string | null
           created_at: string
           description: string | null
@@ -1160,6 +1167,7 @@ export type Database = {
           video_type: string
         }
         Insert: {
+          access_level?: Database["public"]["Enums"]["access_level"] | null
           background_music_url?: string | null
           created_at?: string
           description?: string | null
@@ -1175,6 +1183,7 @@ export type Database = {
           video_type: string
         }
         Update: {
+          access_level?: Database["public"]["Enums"]["access_level"] | null
           background_music_url?: string | null
           created_at?: string
           description?: string | null

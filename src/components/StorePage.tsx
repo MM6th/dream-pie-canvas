@@ -42,6 +42,7 @@ interface VideoProduct {
   is_free: boolean;
   price: number | null;
   is_adult_content: boolean | null;
+  access_level: "public" | "merchant_only" | "paid" | null;
   created_at: string;
 }
 
@@ -82,6 +83,21 @@ const StorePage = () => {
     return products.filter(product => !product.is_adult_content);
   };
 
+  const filterAccessLevel = <T extends { access_level?: string | null }>(products: T[]): T[] => {
+    if (!userProfile) return products;
+    
+    // Supporters can only see public products
+    if (userProfile.user_type === 'supporter') {
+      return products.filter(product => {
+        const accessLevel = product.access_level || 'public';
+        return accessLevel === 'public';
+      });
+    }
+    
+    // Merchants and admins can see all products
+    return products;
+  };
+
   const fetchProducts = async () => {
     try {
       // Fetch user profile first
@@ -113,17 +129,17 @@ const StorePage = () => {
 
       if (audioError) throw audioError;
 
-      // Fetch video products with adult content flag
+      // Fetch video products with access_level and adult content flag
       const { data: videoData, error: videoError } = await supabase
         .from('video_products')
-        .select('*, is_adult_content')
+        .select('*, is_adult_content, access_level')
         .order('created_at', { ascending: false });
 
       if (videoError) throw videoError;
 
-      // Filter adult content based on user preferences
-      const filteredAudioData = filterAdultContent(audioData || []);
-      const filteredVideoData = filterAdultContent(videoData || []);
+      // Filter adult content and access level based on user preferences
+      const filteredAudioData = filterAccessLevel(filterAdultContent(audioData || []));
+      const filteredVideoData = filterAccessLevel(filterAdultContent(videoData || []));
 
       setAudioProducts(filteredAudioData);
       setVideoProducts(filteredVideoData);
@@ -209,8 +225,10 @@ const StorePage = () => {
   };
 
   const getVideoBadges = (product: VideoProduct) => {
+    const accessLevel = product.access_level || (product.is_free ? "public" : "paid");
+    
     return (
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1 flex-wrap">
         {/* Adult content indicator */}
         {product.is_adult_content && !userProfile?.adult_content_restricted && (
           <Badge className="bg-orange-600 hover:bg-orange-700 text-xs flex items-center gap-1">
@@ -219,17 +237,37 @@ const StorePage = () => {
           </Badge>
         )}
         
-        {/* Price badge */}
-        {product.is_free ? (
-          <Badge className="bg-green-600 hover:bg-green-700">
-            Free
-          </Badge>
-        ) : (
-          <Badge className="bg-blue-600 hover:bg-blue-700 flex items-center gap-1">
-            <DollarSign className="w-3 h-3" />
-            {product.price?.toFixed(2)}
-          </Badge>
-        )}
+        {/* Access level badge */}
+        {(() => {
+          switch (accessLevel) {
+            case "public":
+              return (
+                <Badge className="bg-green-600 hover:bg-green-700">
+                  Free
+                </Badge>
+              );
+            case "merchant_only":
+              return (
+                <Badge className="bg-orange-600 hover:bg-orange-700 flex items-center gap-1 text-xs">
+                  <Lock className="w-3 h-3" />
+                  Merchants Only
+                </Badge>
+              );
+            case "paid":
+              return (
+                <Badge className="bg-blue-600 hover:bg-blue-700 flex items-center gap-1">
+                  <DollarSign className="w-3 h-3" />
+                  {product.price?.toFixed(2)}
+                </Badge>
+              );
+            default:
+              return (
+                <Badge className="bg-green-600 hover:bg-green-700">
+                  Free
+                </Badge>
+              );
+          }
+        })()}
       </div>
     );
   };
@@ -426,6 +464,43 @@ const StorePage = () => {
     }
   };
 
+  const canDownloadVideo = (product: VideoProduct) => {
+    if (!user) return false;
+    
+    const accessLevel = product.access_level || (product.is_free ? "public" : "paid");
+    
+    switch (accessLevel) {
+      case "public":
+        return true;
+      case "merchant_only":
+        return userProfile?.user_type === 'merchant' && userProfile?.approval_status === 'approved';
+      case "paid":
+        return false; // Will be handled by purchase flow
+      default:
+        return false;
+    }
+  };
+
+  const getVideoDownloadButtonText = (product: VideoProduct) => {
+    if (!user) return "Sign In to Download";
+    
+    const accessLevel = product.access_level || (product.is_free ? "public" : "paid");
+    
+    switch (accessLevel) {
+      case "public":
+        return "Add to Library";
+      case "merchant_only":
+        if (userProfile?.user_type === 'merchant' && userProfile?.approval_status === 'approved') {
+          return "Add to Library";
+        }
+        return "Merchants Only";
+      case "paid":
+        return "Buy";
+      default:
+        return "Add to Library";
+    }
+  };
+
   const handleVideoPurchase = async (product: VideoProduct) => {
     if (!user) {
       toast({
@@ -436,7 +511,24 @@ const StorePage = () => {
       return;
     }
 
-    if (product.is_free) {
+    const accessLevel = product.access_level || (product.is_free ? "public" : "paid");
+
+    // Check if user can download this content
+    if (accessLevel === "merchant_only") {
+      if (!canDownloadVideo(product)) {
+        toast({
+          title: "Access Restricted",
+          description: "This content is only available to approved merchants",
+          variant: "destructive"
+        });
+        return;
+      }
+      // If merchant can download, treat as free download
+      await handleFreeVideoDownload(product);
+      return;
+    }
+
+    if (accessLevel === "public") {
       await handleFreeVideoDownload(product);
       return;
     }
@@ -663,15 +755,15 @@ const StorePage = () => {
                         <Button
                           size="sm"
                           onClick={() => handleVideoPurchase(product)}
-                          disabled={purchasingId === product.id}
+                          disabled={purchasingId === product.id || (!canDownloadVideo(product) && (product.access_level === "merchant_only"))}
                           className="bg-primary hover:bg-primary/90"
                         >
                           {purchasingId === product.id ? (
                             "Processing..."
                           ) : (
                             <>
-                              {product.is_free ? <Download className="w-4 h-4 mr-1" /> : <DollarSign className="w-4 h-4 mr-1" />}
-                              {product.is_free ? "Add to Library" : "Buy"}
+                              {(product.access_level === "paid") ? <DollarSign className="w-4 h-4 mr-1" /> : <Download className="w-4 h-4 mr-1" />}
+                              {getVideoDownloadButtonText(product)}
                             </>
                           )}
                         </Button>
