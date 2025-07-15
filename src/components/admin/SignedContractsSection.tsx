@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { FileText, Download, Calendar, User, Eye } from "lucide-react";
+import { FileText, Download, Calendar, User, Eye, CheckCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import ContractPreviewModal from "@/components/ContractPreviewModal";
@@ -340,76 +340,78 @@ const SignedContractsSection = () => {
               <p className="text-gray-400">Signed contracts will appear here.</p>
             </div>
           ) : (
-            <div className="space-y-4">
-              {contracts.map((contract) => (
-                <div key={contract.id} className="bg-gray-700/50 p-4 rounded-lg">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1">
-                       <div className="flex items-center gap-2 mb-2">
-                         <h4 className="text-white font-medium">
-                           {contract.audio_product_title}
-                         </h4>
-                         <Badge className={contract.status === 'approved' ? 'bg-green-600 text-white' : 'bg-yellow-600 text-white'}>
-                           {contract.status === 'approved' ? 'Approved' : 'Awaiting Approval'}
-                         </Badge>
-                         <Badge className="bg-blue-600 text-white">
-                           {contract.submission_type}
-                         </Badge>
-                       </div>
-                      
-                      <div className="space-y-1 text-sm text-gray-300">
-                        <div className="flex items-center gap-2">
-                          <User className="w-4 h-4 text-gray-400" />
-                          <span>Merchant: {contract.merchant_name}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Calendar className="w-4 h-4 text-gray-400" />
-                          <span>Signed: {new Date(contract.signed_at).toLocaleDateString()}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <FileText className="w-4 h-4 text-gray-400" />
-                          <span>Signature: {contract.merchant_signature}</span>
+            <div className="overflow-x-auto">
+              <div className="flex gap-4 pb-4 min-w-max">
+                {contracts.map((contract) => (
+                  <div key={contract.id} className="bg-gray-700/50 p-4 rounded-lg min-w-[400px] max-w-[400px] flex-shrink-0">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1">
+                         <div className="flex items-center gap-2 mb-2">
+                           <h4 className="text-white font-medium truncate">
+                             {contract.audio_product_title}
+                           </h4>
+                           <Badge className={contract.status === 'approved' ? 'bg-green-600 text-white' : 'bg-yellow-600 text-white'}>
+                             {contract.status === 'approved' ? 'Approved' : 'Awaiting Approval'}
+                           </Badge>
+                           <Badge className="bg-blue-600 text-white">
+                             {contract.submission_type}
+                           </Badge>
+                         </div>
+                        
+                        <div className="space-y-1 text-sm text-gray-300">
+                          <div className="flex items-center gap-2">
+                            <User className="w-4 h-4 text-gray-400" />
+                            <span className="truncate">Merchant: {contract.merchant_name}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Calendar className="w-4 h-4 text-gray-400" />
+                            <span>Signed: {new Date(contract.signed_at).toLocaleDateString()}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <FileText className="w-4 h-4 text-gray-400" />
+                            <span className="truncate">Signature: {contract.merchant_signature}</span>
+                          </div>
                         </div>
                       </div>
                     </div>
                     
-                      <div className="flex gap-2 ml-4">
+                    <div className="flex gap-2 mb-3">
+                      <Button
+                        onClick={() => handleViewContract(contract)}
+                        size="sm"
+                        variant="outline"
+                        className="border-gray-600 text-gray-300 hover:bg-gray-700 flex-1"
+                      >
+                        <Eye className="w-4 h-4 mr-1" />
+                        View
+                      </Button>
+                      <Button
+                        onClick={() => handleDownloadContract(contract)}
+                        size="sm"
+                        className="bg-blue-600 hover:bg-blue-700"
+                      >
+                        <Download className="w-4 h-4 mr-1" />
+                        PDF
+                      </Button>
+                      {contract.status === 'signed' && (
                         <Button
-                          onClick={() => handleViewContract(contract)}
+                          onClick={() => handleApproveContract(contract.id)}
                           size="sm"
-                          variant="outline"
-                          className="border-gray-600 text-gray-300 hover:bg-gray-700"
+                          className="bg-green-600 hover:bg-green-700"
                         >
-                          <Eye className="w-4 h-4 mr-1" />
-                          View Contract
+                          <CheckCircle className="w-4 h-4 mr-1" />
+                          Approve
                         </Button>
-                        <Button
-                          onClick={() => handleDownloadContract(contract)}
-                          size="sm"
-                          className="bg-blue-600 hover:bg-blue-700"
-                        >
-                          <Download className="w-4 h-4 mr-1" />
-                          Download PDF
-                        </Button>
-                        {contract.status === 'signed' && (
-                          <Button
-                            onClick={() => handleApproveContract(contract.id)}
-                            size="sm"
-                            className="bg-green-600 hover:bg-green-700"
-                          >
-                            <Eye className="w-4 h-4 mr-1" />
-                            Approve
-                          </Button>
-                        )}
-                      </div>
+                      )}
+                    </div>
+                    
+                    <div className="mt-3 p-3 bg-gray-600/30 rounded text-xs text-gray-400">
+                      <p><strong>Contract ID:</strong> {contract.id}</p>
+                      <p><strong>Type:</strong> {contract.contract_type.replace('_', ' ')}</p>
+                    </div>
                   </div>
-                  
-                  <div className="mt-3 p-3 bg-gray-600/30 rounded text-xs text-gray-400">
-                    <p><strong>Contract ID:</strong> {contract.id}</p>
-                    <p><strong>Type:</strong> {contract.contract_type.replace('_', ' ')}</p>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           )}
         </CardContent>

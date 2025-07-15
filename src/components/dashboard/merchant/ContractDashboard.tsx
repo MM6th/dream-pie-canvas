@@ -3,13 +3,24 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { FileText, Calendar, CheckCircle, Clock, AlertCircle, Eye, Download } from "lucide-react";
+import { FileText, Calendar, CheckCircle, Clock, AlertCircle, Eye, Download, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import TuneCoreContractModal from "@/components/TuneCoreContractModal";
 import ContractPreviewModal from "@/components/ContractPreviewModal";
 import jsPDF from 'jspdf';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface ContractWithDetails {
   id: string;
@@ -162,6 +173,35 @@ const ContractDashboard = () => {
   const handleViewContract = (contract: ContractWithDetails) => {
     setSelectedContract(contract);
     setShowPreviewModal(true);
+  };
+
+  const handleDeleteContract = async (contractId: string) => {
+    try {
+      const { error } = await supabase
+        .from('contracts')
+        .update({ 
+          deleted_by_merchant: true,
+          merchant_deletion_date: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', contractId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Contract removed from your dashboard",
+      });
+
+      fetchContracts();
+    } catch (error) {
+      console.error('Error deleting contract:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete contract",
+        variant: "destructive"
+      });
+    }
   };
 
   const getStatusIcon = (status: string) => {
@@ -323,6 +363,39 @@ const ContractDashboard = () => {
                           )}
                         </>
                       )}
+                      
+                      {/* Delete Contract Button */}
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white"
+                          >
+                            <Trash2 className="w-4 h-4 mr-1" />
+                            Delete
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent className="bg-gray-800 border-gray-700">
+                          <AlertDialogHeader>
+                            <AlertDialogTitle className="text-white">Delete Contract</AlertDialogTitle>
+                            <AlertDialogDescription className="text-gray-400">
+                              Are you sure you want to remove this contract from your dashboard? This will only hide it from your view - the admin will still maintain a record of this contract for legal purposes.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel className="border-gray-600 text-white bg-transparent hover:bg-gray-700">
+                              Cancel
+                            </AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleDeleteContract(contract.id)}
+                              className="bg-red-600 hover:bg-red-700"
+                            >
+                              Delete Contract
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   </div>
                 </div>

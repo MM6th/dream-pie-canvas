@@ -15,7 +15,7 @@ const PublishingRoyaltiesModal = () => {
       <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl text-center text-white font-bold tracking-tight">
-            PIE Platform & TuneCore Publishing Royalties
+            PIE Platform Publishing Royalties & Partnership Revenue
           </DialogTitle>
         </DialogHeader>
         <div className="py-6 space-y-6 text-gray-300">
@@ -144,16 +144,56 @@ const PublishingRoyaltiesModal = () => {
             </div>
           </div>
 
+          {/* YouTube/PIE Podcast Opportunities */}
+          <div className="bg-gradient-to-r from-red-900/30 to-yellow-900/30 p-6 rounded-lg border border-red-500/30">
+            <h3 className="text-xl font-semibold text-red-300 mb-4 flex items-center gap-2">
+              <DollarSign className="w-5 h-5" />
+              YouTube/PIE Podcast Opportunities
+            </h3>
+            <p className="mb-4 text-red-100">
+              Merchants can access exclusive podcast opportunities that offer revenue sharing through both YouTube and PIE platform channels.
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <div className="bg-red-900/20 p-4 rounded border border-red-600">
+                <h4 className="font-semibold text-red-400 mb-2">YouTube Revenue Share</h4>
+                <p className="text-2xl font-bold text-red-300">50%</p>
+                <p className="text-sm text-gray-300">Of PIE's 70% share (after YouTube's 30% platform fee)</p>
+              </div>
+              
+              <div className="bg-yellow-900/20 p-4 rounded border border-yellow-600">
+                <h4 className="font-semibold text-yellow-400 mb-2">PIE Exclusive Revenue</h4>
+                <p className="text-2xl font-bold text-yellow-300">50%</p>
+                <p className="text-sm text-gray-300">Of individual video price per episode</p>
+              </div>
+            </div>
+
+            <div className="bg-gray-800/50 p-4 rounded">
+              <h4 className="font-medium text-white mb-2">Podcast Opportunity Structure:</h4>
+              <ul className="space-y-1 text-sm">
+                <li>• Monthly YouTube Membership: <span className="text-yellow-300 font-medium">Reference fee for royalty calculations</span></li>
+                <li>• YouTube Royalty Distribution: <span className="text-red-300 font-medium">Activates at $100 threshold</span></li>
+                <li>• PIE Exclusive Revenue: <span className="text-purple-300 font-medium">Paid monthly regardless of threshold</span></li>
+                <li>• Revenue Share: <span className="text-blue-300 font-medium">50% of PIE's 70% YouTube share</span></li>
+              </ul>
+              <p className="text-xs text-gray-400 mt-2">
+                * Podcast opportunities are available to approved merchants who download podcast content for video creation
+              </p>
+            </div>
+          </div>
+
           {/* Important Notes */}
           <div className="bg-gray-900/50 p-4 rounded-lg">
             <h3 className="text-lg font-semibold text-white mb-4">Important Notes</h3>
             <ul className="list-disc list-inside space-y-2 text-sm">
-              <li>Revenue sharing applies only to approved cover submissions</li>
+              <li>Revenue sharing applies to approved cover submissions and podcast opportunities</li>
               <li>Original licensing requirements must be met for all distributions</li>
               <li>Accurate metadata required for both PIE platform and TuneCore distribution</li>
-              <li>Monthly royalty statements provided for both platforms</li>
-              <li>Minimum payout thresholds may apply</li>
+              <li>Monthly royalty statements provided for all platforms</li>
+              <li>Minimum payout thresholds may apply (YouTube: $100, PIE: no minimum)</li>
               <li>Cover models must provide first and last name for TuneCore registration</li>
+              <li>Podcast opportunities require professional quality video content delivery</li>
+              <li>All partnership revenue structures are subject to contract terms</li>
             </ul>
           </div>
         </div>

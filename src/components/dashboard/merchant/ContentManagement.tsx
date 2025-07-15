@@ -5,6 +5,7 @@ import SongCoverManager from "@/components/SongCoverManager";
 import MerchantCoverSubmissionsManager from "@/components/MerchantCoverSubmissionsManager";
 import ContractDashboard from "./ContractDashboard";
 import BulletinPostManager from "@/components/BulletinPostManager";
+import PhotoGallery from "@/components/PhotoGallery";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -56,6 +57,16 @@ const ContentManagement = () => {
       {/* TuneCore Contracts Section */}
       <ContractDashboard />
       
+      {/* Photo Gallery Section */}
+      <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+        <CardHeader>
+          <CardTitle className="text-white">Photo Gallery</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <PhotoGallery />
+        </CardContent>
+      </Card>
+
       {/* Cover Submission Management - Only show if user hasn't downloaded podcasts */}
       {!hasPodcastDownloads && (
         <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">

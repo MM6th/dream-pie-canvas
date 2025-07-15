@@ -11,7 +11,6 @@ import RestrictedAccess from "./merchant/RestrictedAccess";
 import ModelingApplicationSection from "./merchant/ModelingApplicationSection";
 import PublishingRoyaltiesModal from "@/components/profile/PublishingRoyaltiesModal";
 import ContractOpportunitiesModal from "@/components/profile/ContractOpportunitiesModal";
-import AnnouncementContractsSection from "./merchant/AnnouncementContractsSection";
 
 interface MerchantDashboardProps {
   onSuccess: () => void;
@@ -65,13 +64,6 @@ const MerchantDashboard = ({
             isAdmin={isAdmin}
           />
           
-          
-          {/* Contract Opportunities for approved merchants (not admins) */}
-          {isApproved && !isAdmin && (
-            <div className="mb-8">
-              <AnnouncementContractsSection />
-            </div>
-          )}
           
           {/* Only show modeling applications for approved merchants (not admins) */}
           {isApproved && !isAdmin && (

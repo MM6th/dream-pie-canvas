@@ -366,7 +366,9 @@ export type Database = {
           contract_type: string
           cover_submission_id: string | null
           created_at: string
+          deleted_by_merchant: boolean | null
           id: string
+          merchant_deletion_date: string | null
           merchant_id: string
           merchant_signature: string | null
           modeling_application_id: string | null
@@ -381,7 +383,9 @@ export type Database = {
           contract_type: string
           cover_submission_id?: string | null
           created_at?: string
+          deleted_by_merchant?: boolean | null
           id?: string
+          merchant_deletion_date?: string | null
           merchant_id: string
           merchant_signature?: string | null
           modeling_application_id?: string | null
@@ -396,7 +400,9 @@ export type Database = {
           contract_type?: string
           cover_submission_id?: string | null
           created_at?: string
+          deleted_by_merchant?: boolean | null
           id?: string
+          merchant_deletion_date?: string | null
           merchant_id?: string
           merchant_signature?: string | null
           modeling_application_id?: string | null

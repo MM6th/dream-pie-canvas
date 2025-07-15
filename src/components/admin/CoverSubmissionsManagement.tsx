@@ -294,46 +294,48 @@ Both parties acknowledge they have read, understood, and agree to be legally bou
               <p className="text-gray-400">Cover submissions will appear here for review.</p>
             </div>
           ) : (
-            <div className="space-y-4">
-              {submissions.map((submission) => (
-                <div key={submission.id} className="bg-gray-700/50 p-4 rounded-lg">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h4 className="text-white font-medium">
-                          {submission.audio_product_title}
-                        </h4>
-                        <Badge className={`${getStatusColor(submission.status)} text-white`}>
-                          <span className="flex items-center gap-1">
-                            {getStatusIcon(submission.status)}
-                            {submission.status}
-                          </span>
-                        </Badge>
-                        {submission.contract_id && (
-                          <Badge className="bg-blue-600 text-white">
-                            Contract Generated
+            <div className="overflow-x-auto">
+              <div className="flex gap-4 pb-4 min-w-max">
+                {submissions.map((submission) => (
+                  <div key={submission.id} className="bg-gray-700/50 p-4 rounded-lg min-w-[400px] max-w-[400px] flex-shrink-0">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <h4 className="text-white font-medium truncate">
+                            {submission.audio_product_title}
+                          </h4>
+                          <Badge className={`${getStatusColor(submission.status)} text-white`}>
+                            <span className="flex items-center gap-1">
+                              {getStatusIcon(submission.status)}
+                              {submission.status}
+                            </span>
                           </Badge>
+                          {submission.contract_id && (
+                            <Badge className="bg-blue-600 text-white">
+                              Contract Generated
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-gray-400 text-sm mb-2">
+                          Submitted by: {submission.merchant_name}
+                        </p>
+                        {submission.submission_notes && (
+                          <p className="text-gray-300 text-sm mb-2 line-clamp-2">
+                            Notes: {submission.submission_notes}
+                          </p>
                         )}
+                        {submission.admin_notes && (
+                          <p className="text-yellow-300 text-sm mb-2 line-clamp-2">
+                            Admin Notes: {submission.admin_notes}
+                          </p>
+                        )}
+                        <p className="text-gray-400 text-xs">
+                          Submitted: {new Date(submission.created_at).toLocaleDateString()}
+                        </p>
                       </div>
-                      <p className="text-gray-400 text-sm mb-2">
-                        Submitted by: {submission.merchant_name}
-                      </p>
-                      {submission.submission_notes && (
-                        <p className="text-gray-300 text-sm mb-2">
-                          Notes: {submission.submission_notes}
-                        </p>
-                      )}
-                      {submission.admin_notes && (
-                        <p className="text-yellow-300 text-sm mb-2">
-                          Admin Notes: {submission.admin_notes}
-                        </p>
-                      )}
-                      <p className="text-gray-400 text-xs">
-                        Submitted: {new Date(submission.created_at).toLocaleDateString()}
-                      </p>
                     </div>
                     
-                    <div className="flex gap-2 ml-4">
+                    <div className="flex gap-2 mb-3">
                       <Button
                         onClick={() => {
                           setSelectedSubmission(submission);
@@ -341,7 +343,7 @@ Both parties acknowledge they have read, understood, and agree to be legally bou
                         }}
                         variant="outline"
                         size="sm"
-                        className="border-gray-600 text-white bg-gray-700"
+                        className="border-gray-600 text-white bg-gray-700 flex-1"
                       >
                         <Eye className="w-4 h-4 mr-1" />
                         View
@@ -368,24 +370,24 @@ Both parties acknowledge they have read, understood, and agree to be legally bou
                         </>
                       )}
                     </div>
+                    
+                    {submission.status === 'pending' && (
+                      <div className="mt-3">
+                        <Textarea
+                          placeholder="Add admin notes (optional)"
+                          value={adminNotes[submission.id] || ''}
+                          onChange={(e) => setAdminNotes(prev => ({
+                            ...prev,
+                            [submission.id]: e.target.value
+                          }))}
+                          className="bg-gray-600 border-gray-500 text-white text-sm"
+                          rows={2}
+                        />
+                      </div>
+                    )}
                   </div>
-                  
-                  {submission.status === 'pending' && (
-                    <div className="mt-3">
-                      <Textarea
-                        placeholder="Add admin notes (optional)"
-                        value={adminNotes[submission.id] || ''}
-                        onChange={(e) => setAdminNotes(prev => ({
-                          ...prev,
-                          [submission.id]: e.target.value
-                        }))}
-                        className="bg-gray-600 border-gray-500 text-white text-sm"
-                        rows={2}
-                      />
-                    </div>
-                  )}
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           )}
             </TabsContent>
