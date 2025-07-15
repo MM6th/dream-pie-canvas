@@ -31,7 +31,10 @@ const DownloadOpportunityChecker = ({
           .eq('audio_product_id', audioProductId);
 
         if (error) throw error;
-        setCurrentDownloads(count || 0);
+        
+        const downloadCount = count || 0;
+        console.log(`Download count for ${audioProductId}:`, downloadCount, 'Max downloads:', maxDownloads);
+        setCurrentDownloads(downloadCount);
       } catch (error) {
         console.error('Error fetching download count:', error);
         setCurrentDownloads(0);
@@ -41,6 +44,23 @@ const DownloadOpportunityChecker = ({
     };
 
     fetchDownloadCount();
+    
+    // Set up real-time subscription to update when downloads change
+    const channel = supabase
+      .channel('podcast_downloads_changes')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'podcast_downloads',
+        filter: `audio_product_id=eq.${audioProductId}`
+      }, () => {
+        fetchDownloadCount();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [audioProductId, maxDownloads]);
 
   if (loading) {
