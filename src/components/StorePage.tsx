@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -86,11 +87,11 @@ const StorePage = () => {
   const filterAccessLevel = <T extends { access_level?: string | null }>(products: T[], profile: UserProfile | null): T[] => {
     if (!profile) return []; // Return empty array if profile not loaded yet
     
-    // Supporters can only see public products
+    // Supporters can see public and paid products, but not merchant_only
     if (profile.user_type === 'supporter') {
       return products.filter(product => {
         const accessLevel = product.access_level || 'public';
-        return accessLevel === 'public';
+        return accessLevel === 'public' || accessLevel === 'paid';
       });
     }
     
