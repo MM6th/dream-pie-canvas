@@ -83,11 +83,11 @@ const StorePage = () => {
     return products.filter(product => !product.is_adult_content);
   };
 
-  const filterAccessLevel = <T extends { access_level?: string | null }>(products: T[]): T[] => {
-    if (!userProfile) return products;
+  const filterAccessLevel = <T extends { access_level?: string | null }>(products: T[], profile: UserProfile | null): T[] => {
+    if (!profile) return []; // Return empty array if profile not loaded yet
     
     // Supporters can only see public products
-    if (userProfile.user_type === 'supporter') {
+    if (profile.user_type === 'supporter') {
       return products.filter(product => {
         const accessLevel = product.access_level || 'public';
         return accessLevel === 'public';
@@ -138,8 +138,8 @@ const StorePage = () => {
       if (videoError) throw videoError;
 
       // Filter adult content and access level based on user preferences
-      const filteredAudioData = filterAccessLevel(filterAdultContent(audioData || []));
-      const filteredVideoData = filterAccessLevel(filterAdultContent(videoData || []));
+      const filteredAudioData = filterAccessLevel(filterAdultContent(audioData || []), profile);
+      const filteredVideoData = filterAccessLevel(filterAdultContent(videoData || []), profile);
 
       setAudioProducts(filteredAudioData);
       setVideoProducts(filteredVideoData);
