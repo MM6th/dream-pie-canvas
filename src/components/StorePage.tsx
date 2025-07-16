@@ -79,9 +79,25 @@ const StorePage = () => {
     }
   };
 
-  const filterAdultContent = <T extends { is_adult_content?: boolean | null }>(products: T[]): T[] => {
-    if (!userProfile?.adult_content_restricted) return products;
-    return products.filter(product => !product.is_adult_content);
+  const filterAdultContent = <T extends { is_adult_content?: boolean | null }>(products: T[], profile: UserProfile | null): T[] => {
+    // If no profile is loaded yet, don't filter anything
+    if (!profile) return products;
+    
+    // If user has adult content restriction enabled, filter out adult content
+    if (profile.adult_content_restricted === true) {
+      console.log('Filtering adult content - user has restriction enabled');
+      const filtered = products.filter(product => {
+        // Consider null or false as non-adult content
+        const isAdult = product.is_adult_content === true;
+        console.log(`Product ${(product as any).title || (product as any).id}: is_adult_content=${product.is_adult_content}, filtered=${isAdult}`);
+        return !isAdult;
+      });
+      console.log(`Filtered ${products.length - filtered.length} adult products out of ${products.length} total`);
+      return filtered;
+    }
+    
+    // If no restriction, return all products
+    return products;
   };
 
   const filterAccessLevel = <T extends { access_level?: string | null }>(products: T[], profile: UserProfile | null): T[] => {
@@ -139,8 +155,18 @@ const StorePage = () => {
       if (videoError) throw videoError;
 
       // Filter adult content and access level based on user preferences
-      const filteredAudioData = filterAccessLevel(filterAdultContent(audioData || []), profile);
-      const filteredVideoData = filterAccessLevel(filterAdultContent(videoData || []), profile);
+      console.log('User profile:', profile);
+      console.log('Raw audio products:', audioData?.length || 0);
+      console.log('Raw video products:', videoData?.length || 0);
+      
+      const adultFilteredAudioData = filterAdultContent(audioData || [], profile);
+      const adultFilteredVideoData = filterAdultContent(videoData || [], profile);
+      
+      const filteredAudioData = filterAccessLevel(adultFilteredAudioData, profile);
+      const filteredVideoData = filterAccessLevel(adultFilteredVideoData, profile);
+      
+      console.log('Final filtered audio products:', filteredAudioData.length);
+      console.log('Final filtered video products:', filteredVideoData.length);
 
       setAudioProducts(filteredAudioData);
       setVideoProducts(filteredVideoData);
