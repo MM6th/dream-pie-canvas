@@ -184,12 +184,12 @@ const EditAudioModal = ({ product, onSuccess, onClose }: EditAudioModalProps) =>
 
   return (
     <Dialog open={true} onOpenChange={() => onClose()}>
-      <DialogContent className="max-w-md max-h-[80vh] bg-gray-800 border-gray-700 text-white">
-        <DialogHeader>
+      <DialogContent className="max-w-md max-h-[80vh] bg-gray-800 border-gray-700 text-white flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle>Edit Audio Product</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="flex flex-col h-full">
-          <ScrollArea className="flex-1 pr-4" thumbClassName="bg-gray-400 hover:bg-gray-300">
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
+          <ScrollArea className="flex-1 min-h-0 pr-4" thumbClassName="bg-gray-400 hover:bg-gray-300">
             <div className="space-y-4">
               <div>
                 <Label htmlFor="title">Title *</Label>
@@ -364,7 +364,7 @@ const EditAudioModal = ({ product, onSuccess, onClose }: EditAudioModalProps) =>
             </div>
           </ScrollArea>
           
-          <div className="flex gap-2 mt-4 pt-4 border-t border-gray-600">
+          <div className="flex gap-2 mt-4 pt-4 border-t border-gray-600 flex-shrink-0">
             <Button type="button" variant="outline" onClick={onClose} className="flex-1 border-gray-600 text-white bg-transparent">
               Cancel
             </Button>
