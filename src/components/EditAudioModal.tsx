@@ -189,7 +189,7 @@ const EditAudioModal = ({ product, onSuccess, onClose }: EditAudioModalProps) =>
           <DialogTitle>Edit Audio Product</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="flex flex-col h-full">
-          <ScrollArea className="flex-1 pr-4">
+          <ScrollArea className="flex-1 pr-4" thumbClassName="bg-gray-400 hover:bg-gray-300">
             <div className="space-y-4">
               <div>
                 <Label htmlFor="title">Title *</Label>
