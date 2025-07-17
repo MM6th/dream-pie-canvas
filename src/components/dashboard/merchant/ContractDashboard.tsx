@@ -45,6 +45,7 @@ const ContractDashboard = () => {
   const { user } = useAuth();
   const [contracts, setContracts] = useState<ContractWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deletingContractId, setDeletingContractId] = useState<string | null>(null);
   const [selectedContract, setSelectedContract] = useState<ContractWithDetails | null>(null);
   const [showContractModal, setShowContractModal] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
@@ -176,31 +177,66 @@ const ContractDashboard = () => {
   };
 
   const handleDeleteContract = async (contractId: string) => {
+    if (deletingContractId === contractId) return; // Prevent multiple clicks
+    
+    setDeletingContractId(contractId);
+    
     try {
-      const { error } = await supabase
+      console.log('Attempting to soft delete contract:', contractId);
+      console.log('Current user:', user?.id);
+      
+      const { data, error } = await supabase
         .from('contracts')
         .update({ 
           deleted_by_merchant: true,
           merchant_deletion_date: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
-        .eq('id', contractId);
+        .eq('id', contractId)
+        .eq('merchant_id', user?.id) // Explicit merchant check
+        .select();
 
-      if (error) throw error;
+      console.log('Update result:', { data, error });
+
+      if (error) {
+        console.error('Supabase error details:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
+        throw error;
+      }
+
+      if (!data || data.length === 0) {
+        throw new Error('No contract was updated. You may not have permission to delete this contract.');
+      }
 
       toast({
-        title: "Success",
-        description: "Contract removed from your dashboard",
+        title: "Contract Hidden",
+        description: "Contract has been removed from your dashboard. It remains on file with PIE for record-keeping.",
       });
 
       fetchContracts();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting contract:', error);
+      
+      let errorMessage = "Failed to remove contract";
+      if (error.message?.includes('row-level security')) {
+        errorMessage = "Permission denied: You can only delete your own contracts";
+      } else if (error.message?.includes('No contract was updated')) {
+        errorMessage = error.message;
+      } else if (error.message) {
+        errorMessage = `Error: ${error.message}`;
+      }
+      
       toast({
-        title: "Error",
-        description: "Failed to delete contract",
+        title: "Delete Failed",
+        description: errorMessage,
         variant: "destructive"
       });
+    } finally {
+      setDeletingContractId(null);
     }
   };
 
@@ -371,27 +407,39 @@ const ContractDashboard = () => {
                             size="sm"
                             variant="outline"
                             className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white"
+                            disabled={deletingContractId === contract.id}
                           >
                             <Trash2 className="w-4 h-4 mr-1" />
-                            Delete
+                            {deletingContractId === contract.id ? "Hiding..." : "Hide"}
                           </Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent className="bg-gray-800 border-gray-700">
                           <AlertDialogHeader>
-                            <AlertDialogTitle className="text-white">Delete Contract</AlertDialogTitle>
-                            <AlertDialogDescription className="text-gray-400">
-                              Are you sure you want to remove this contract from your dashboard? This will only hide it from your view - the admin will still maintain a record of this contract for legal purposes.
+                            <AlertDialogTitle className="text-white">Hide Contract From Dashboard</AlertDialogTitle>
+                            <AlertDialogDescription className="text-gray-400 space-y-2">
+                              <p>This will remove the contract from your dashboard view, but:</p>
+                              <ul className="list-disc list-inside space-y-1 mt-2">
+                                <li>PIE administrators will still have access to this contract</li>
+                                <li>The contract remains legally valid and enforceable</li>
+                                <li>All terms and conditions continue to apply</li>
+                                <li>This action cannot be undone by you</li>
+                              </ul>
+                              <p className="mt-2 font-medium">Are you sure you want to hide this contract?</p>
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
-                            <AlertDialogCancel className="border-gray-600 text-white bg-transparent hover:bg-gray-700">
+                            <AlertDialogCancel 
+                              className="border-gray-600 text-white bg-transparent hover:bg-gray-700"
+                              disabled={deletingContractId === contract.id}
+                            >
                               Cancel
                             </AlertDialogCancel>
                             <AlertDialogAction
                               onClick={() => handleDeleteContract(contract.id)}
                               className="bg-red-600 hover:bg-red-700"
+                              disabled={deletingContractId === contract.id}
                             >
-                              Delete Contract
+                              {deletingContractId === contract.id ? "Hiding..." : "Hide Contract"}
                             </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
