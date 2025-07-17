@@ -213,7 +213,7 @@ const ContractDashboard = () => {
       }
 
       toast({
-        title: "Contract Hidden",
+        title: "Contract Deleted",
         description: "Contract has been removed from your dashboard. It remains on file with PIE for record-keeping.",
       });
 
@@ -410,12 +410,12 @@ const ContractDashboard = () => {
                             disabled={deletingContractId === contract.id}
                           >
                             <Trash2 className="w-4 h-4 mr-1" />
-                            {deletingContractId === contract.id ? "Hiding..." : "Hide"}
+                            {deletingContractId === contract.id ? "Deleting..." : "Delete"}
                           </Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent className="bg-gray-800 border-gray-700">
                           <AlertDialogHeader>
-                            <AlertDialogTitle className="text-white">Hide Contract From Dashboard</AlertDialogTitle>
+                            <AlertDialogTitle className="text-white">Delete Contract From Dashboard</AlertDialogTitle>
                             <AlertDialogDescription className="text-gray-400 space-y-2">
                               <p>This will remove the contract from your dashboard view, but:</p>
                               <ul className="list-disc list-inside space-y-1 mt-2">
@@ -424,7 +424,7 @@ const ContractDashboard = () => {
                                 <li>All terms and conditions continue to apply</li>
                                 <li>This action cannot be undone by you</li>
                               </ul>
-                              <p className="mt-2 font-medium">Are you sure you want to hide this contract?</p>
+                              <p className="mt-2 font-medium">Are you sure you want to delete this contract?</p>
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
@@ -439,7 +439,7 @@ const ContractDashboard = () => {
                               className="bg-red-600 hover:bg-red-700"
                               disabled={deletingContractId === contract.id}
                             >
-                              {deletingContractId === contract.id ? "Hiding..." : "Hide Contract"}
+                              {deletingContractId === contract.id ? "Deleting..." : "Delete Contract"}
                             </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
