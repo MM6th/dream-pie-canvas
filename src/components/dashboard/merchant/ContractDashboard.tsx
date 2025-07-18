@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { FileText, Calendar, CheckCircle, Clock, AlertCircle, Eye, Download, Trash2 } from "lucide-react";
+import { FileText, Calendar, CheckCircle, Clock, AlertCircle, Eye, Download, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
@@ -39,6 +39,7 @@ interface ContractWithDetails {
   submission_title?: string;
   merchant_name?: string;
   audio_product_title?: string;
+  deleted_by_merchant?: boolean;
 }
 
 const ContractDashboard = () => {
@@ -49,6 +50,7 @@ const ContractDashboard = () => {
   const [selectedContract, setSelectedContract] = useState<ContractWithDetails | null>(null);
   const [showContractModal, setShowContractModal] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [scrollPosition, setScrollPosition] = useState(0);
 
   const fetchContracts = async () => {
     if (!user) return;
@@ -58,6 +60,7 @@ const ContractDashboard = () => {
         .from('contracts')
         .select('*')
         .eq('merchant_id', user.id)
+        .or('deleted_by_merchant.is.null,deleted_by_merchant.eq.false')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -177,14 +180,11 @@ const ContractDashboard = () => {
   };
 
   const handleDeleteContract = async (contractId: string) => {
-    if (deletingContractId === contractId) return; // Prevent multiple clicks
+    if (deletingContractId === contractId) return;
     
     setDeletingContractId(contractId);
     
     try {
-      console.log('Attempting to soft delete contract:', contractId);
-      console.log('Current user:', user?.id);
-      
       const { data, error } = await supabase
         .from('contracts')
         .update({ 
@@ -193,20 +193,10 @@ const ContractDashboard = () => {
           updated_at: new Date().toISOString()
         })
         .eq('id', contractId)
-        .eq('merchant_id', user?.id) // Explicit merchant check
+        .eq('merchant_id', user?.id)
         .select();
 
-      console.log('Update result:', { data, error });
-
-      if (error) {
-        console.error('Supabase error details:', {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code
-        });
-        throw error;
-      }
+      if (error) throw error;
 
       if (!data || data.length === 0) {
         throw new Error('No contract was updated. You may not have permission to delete this contract.');
@@ -220,23 +210,32 @@ const ContractDashboard = () => {
       fetchContracts();
     } catch (error: any) {
       console.error('Error deleting contract:', error);
-      
-      let errorMessage = "Failed to remove contract";
-      if (error.message?.includes('row-level security')) {
-        errorMessage = "Permission denied: You can only delete your own contracts";
-      } else if (error.message?.includes('No contract was updated')) {
-        errorMessage = error.message;
-      } else if (error.message) {
-        errorMessage = `Error: ${error.message}`;
-      }
-      
       toast({
         title: "Delete Failed",
-        description: errorMessage,
+        description: "Failed to remove contract",
         variant: "destructive"
       });
     } finally {
       setDeletingContractId(null);
+    }
+  };
+
+  const scrollLeft = () => {
+    const container = document.getElementById('contracts-scroll-container');
+    if (container) {
+      const newPosition = Math.max(0, scrollPosition - 400);
+      container.scrollTo({ left: newPosition, behavior: 'smooth' });
+      setScrollPosition(newPosition);
+    }
+  };
+
+  const scrollRight = () => {
+    const container = document.getElementById('contracts-scroll-container');
+    if (container) {
+      const maxScroll = container.scrollWidth - container.clientWidth;
+      const newPosition = Math.min(maxScroll, scrollPosition + 400);
+      container.scrollTo({ left: newPosition, behavior: 'smooth' });
+      setScrollPosition(newPosition);
     }
   };
 
@@ -312,10 +311,32 @@ const ContractDashboard = () => {
     <>
       <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-white">
-            <FileText className="w-5 h-5" />
-            Contract Opportunities
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-white">
+              <FileText className="w-5 h-5" />
+              Contract Opportunities
+            </CardTitle>
+            {contracts.length > 0 && (
+              <div className="flex gap-2">
+                <Button
+                  onClick={scrollLeft}
+                  variant="outline"
+                  size="sm"
+                  className="border-gray-600 text-gray-300 hover:bg-gray-700"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                <Button
+                  onClick={scrollRight}
+                  variant="outline"
+                  size="sm"
+                  className="border-gray-600 text-gray-300 hover:bg-gray-700"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           {contracts.length === 0 ? (
@@ -327,40 +348,46 @@ const ContractDashboard = () => {
               </p>
             </div>
           ) : (
-            <div className="space-y-4">
-              {contracts.map((contract) => (
-                <div key={contract.id} className="bg-gray-700/50 p-4 rounded-lg">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h4 className="text-white font-medium">
-                          {contract.submission_title}
-                        </h4>
-                        <Badge className={`${getStatusColor(contract.status)} text-white`}>
+            <div className="relative">
+              <div 
+                id="contracts-scroll-container"
+                className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide"
+                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              >
+                {contracts.map((contract) => (
+                  <div key={contract.id} className="bg-gray-700/50 p-4 rounded-lg min-w-[400px] max-w-[400px] flex-shrink-0">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <h4 className="text-white font-medium truncate">
+                            {contract.submission_title}
+                          </h4>
+                          <Badge className={`${getStatusColor(contract.status)} text-white`}>
+                            <span className="flex items-center gap-1">
+                              {getStatusIcon(contract.status)}
+                              {contract.status}
+                            </span>
+                          </Badge>
+                        </div>
+                        <p className="text-gray-400 text-sm mb-2">
+                          {getStatusDescription(contract)}
+                        </p>
+                        <div className="flex items-center gap-4 text-xs text-gray-400">
                           <span className="flex items-center gap-1">
-                            {getStatusIcon(contract.status)}
-                            {contract.status}
+                            <Calendar className="w-3 h-3" />
+                            Created: {new Date(contract.created_at).toLocaleDateString()}
                           </span>
-                        </Badge>
-                      </div>
-                      <p className="text-gray-400 text-sm mb-2">
-                        {getStatusDescription(contract)}
-                      </p>
-                      <div className="flex items-center gap-4 text-xs text-gray-400">
-                        <span className="flex items-center gap-1">
-                          <Calendar className="w-3 h-3" />
-                          Created: {new Date(contract.created_at).toLocaleDateString()}
-                        </span>
-                        {contract.signed_at && (
-                          <span className="flex items-center gap-1">
-                            <CheckCircle className="w-3 h-3" />
-                            Signed: {new Date(contract.signed_at).toLocaleDateString()}
-                          </span>
-                        )}
+                          {contract.signed_at && (
+                            <span className="flex items-center gap-1">
+                              <CheckCircle className="w-3 h-3" />
+                              Signed: {new Date(contract.signed_at).toLocaleDateString()}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                     
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       {contract.status === 'pending' && (
                         <Button
                           onClick={() => handleSignContract(contract)}
@@ -379,7 +406,7 @@ const ContractDashboard = () => {
                             className="border-gray-600 text-gray-300 hover:bg-gray-700"
                           >
                             <Eye className="w-4 h-4 mr-1" />
-                            View Contract
+                            View
                           </Button>
                           {contract.status === 'approved' && (
                             <Button
@@ -446,8 +473,8 @@ const ContractDashboard = () => {
                       </AlertDialog>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           )}
         </CardContent>

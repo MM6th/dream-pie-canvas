@@ -11,13 +11,15 @@ import {
   Zap, 
   Image,
   UserCheck,
-  MessageSquare
+  MessageSquare,
+  Calculator
 } from "lucide-react";
 import MerchantsManagement from "./MerchantsManagement";
 import CoverSubmissionsManagement from "./CoverSubmissionsManagement";
 import ReviewsManagement from "./ReviewsManagement";
 import AdminPhotoGallery from "./AdminPhotoGallery";
 import AdminBulletinPostManager from "./AdminBulletinPostManager";
+import SECalculatorModal from "@/components/SECalculatorModal";
 import { useSubmissionCounts } from "@/hooks/useSubmissionCounts";
 
 const AdminDashboard = () => {
@@ -30,6 +32,24 @@ const AdminDashboard = () => {
         <h1 className="text-4xl font-bold text-white mb-4">Admin Dashboard</h1>
         <p className="text-gray-400 text-lg">Manage merchants, submissions, and platform content</p>
       </div>
+
+      {/* SE Tax Calculator Section */}
+      <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+        <CardHeader>
+          <CardTitle className="text-white">Administrative Tools</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg">
+            <div>
+              <h4 className="text-white font-medium">Self-Employment Tax Calculator</h4>
+              <p className="text-gray-400 text-sm">
+                Tax planning tool for administrative reference and merchant support
+              </p>
+            </div>
+            <SECalculatorModal />
+          </div>
+        </CardContent>
+      </Card>
 
       <Tabs defaultValue="merchants" className="w-full">
         <TabsList className="grid w-full grid-cols-5 bg-gray-800 border-gray-700">

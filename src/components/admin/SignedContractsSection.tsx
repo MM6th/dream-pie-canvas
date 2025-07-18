@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { FileText, Download, Calendar, User, Eye, CheckCircle } from "lucide-react";
+import { FileText, Download, Calendar, User, Eye, CheckCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import ContractPreviewModal from "@/components/ContractPreviewModal";
@@ -29,6 +29,7 @@ const SignedContractsSection = () => {
   const [loading, setLoading] = useState(true);
   const [selectedContract, setSelectedContract] = useState<SignedContract | null>(null);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [scrollPosition, setScrollPosition] = useState(0);
 
   const fetchSignedContracts = async () => {
     try {
@@ -40,10 +41,8 @@ const SignedContractsSection = () => {
 
       if (contractsError) throw contractsError;
 
-      // Enrich contracts with merchant and submission data
       const enrichedContracts = await Promise.all(
         (contractsData || []).map(async (contract) => {
-          // Get merchant name
           const { data: merchantData } = await supabase
             .from('profiles')
             .select('display_name')
@@ -53,7 +52,6 @@ const SignedContractsSection = () => {
           let productTitle = 'Unknown Product';
           let submissionType = '';
 
-          // Get submission details based on contract type
           if (contract.cover_submission_id) {
             const { data } = await supabase
               .from('song_cover_submissions')
@@ -91,7 +89,6 @@ const SignedContractsSection = () => {
             
             submissionType = 'Modeling Application';
           } else if (contract.contract_type === 'podcast_opportunity') {
-            // For podcast opportunities, get the audio product from podcast_downloads
             const { data: podcastDownload } = await supabase
               .from('podcast_downloads')
               .select('audio_product_id')
@@ -171,17 +168,34 @@ const SignedContractsSection = () => {
     setShowPreviewModal(true);
   };
 
+  const scrollLeft = () => {
+    const container = document.getElementById('signed-contracts-scroll');
+    if (container) {
+      const newPosition = Math.max(0, scrollPosition - 400);
+      container.scrollTo({ left: newPosition, behavior: 'smooth' });
+      setScrollPosition(newPosition);
+    }
+  };
+
+  const scrollRight = () => {
+    const container = document.getElementById('signed-contracts-scroll');
+    if (container) {
+      const maxScroll = container.scrollWidth - container.clientWidth;
+      const newPosition = Math.min(maxScroll, scrollPosition + 400);
+      container.scrollTo({ left: newPosition, behavior: 'smooth' });
+      setScrollPosition(newPosition);
+    }
+  };
+
   const handleDownloadContract = (contract: SignedContract) => {
     try {
       const doc = new jsPDF();
       
-      // Header
       doc.setFontSize(20);
       doc.text('PRIVATE INVESTIGATION ENTERPRISES', 20, 30);
       doc.setFontSize(16);
       doc.text('SIGNED CONTRACT DOCUMENT', 20, 45);
       
-      // Contract details
       doc.setFontSize(12);
       doc.text(`Contract ID: ${contract.id}`, 20, 65);
       doc.text(`Contract Type: ${contract.contract_type.replace('_', ' ').toUpperCase()}`, 20, 75);
@@ -193,7 +207,6 @@ const SignedContractsSection = () => {
         doc.text(`Admin Signature: ${contract.admin_signature}`, 20, 125);
       }
       
-      // Add detailed royalty breakdown section for cover submission contracts
       if (contract.contract_type === 'cover_submission') {
         doc.setFontSize(14);
         doc.text('REVENUE DISTRIBUTION BREAKDOWN:', 20, 135);
@@ -255,7 +268,6 @@ const SignedContractsSection = () => {
           yPosition += 12;
         });
         
-        // Contract terms on new page or continued
         if (yPosition > 200) {
           doc.addPage();
           yPosition = 20;
@@ -268,7 +280,6 @@ const SignedContractsSection = () => {
         yPosition += 15;
         doc.setFontSize(10);
         
-        // Split contract terms into lines that fit the page
         const splitTerms = doc.splitTextToSize(contract.contract_terms, 170);
         splitTerms.forEach((line: string) => {
           if (yPosition > 270) {
@@ -279,16 +290,13 @@ const SignedContractsSection = () => {
           yPosition += 12;
         });
       } else {
-        // For non-cover submission contracts, just show the terms
         doc.text('CONTRACT TERMS:', 20, 135);
         doc.setFontSize(10);
         
-        // Split contract terms into lines that fit the page
         const splitTerms = doc.splitTextToSize(contract.contract_terms, 170);
         doc.text(splitTerms, 20, 145);
       }
       
-      // Footer on last page
       const pageCount = doc.getNumberOfPages();
       for (let i = 1; i <= pageCount; i++) {
         doc.setPage(i);
@@ -296,7 +304,6 @@ const SignedContractsSection = () => {
         doc.text(`Generated on ${new Date().toLocaleDateString()} by PIE Admin Dashboard - Page ${i} of ${pageCount}`, 20, 285);
       }
       
-      // Download the PDF
       doc.save(`PIE_Contract_${contract.id}_${contract.merchant_name?.replace(/\s+/g, '_')}.pdf`);
       
       toast({
@@ -327,10 +334,32 @@ const SignedContractsSection = () => {
     <>
       <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-white">
-            <FileText className="w-5 h-5" />
-            Signed Contracts ({contracts.length})
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-white">
+              <FileText className="w-5 h-5" />
+              Signed Contracts ({contracts.length})
+            </CardTitle>
+            {contracts.length > 0 && (
+              <div className="flex gap-2">
+                <Button
+                  onClick={scrollLeft}
+                  variant="outline"
+                  size="sm"
+                  className="border-gray-600 text-gray-300 hover:bg-gray-700"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                <Button
+                  onClick={scrollRight}
+                  variant="outline"
+                  size="sm"
+                  className="border-gray-600 text-gray-300 hover:bg-gray-700"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           {contracts.length === 0 ? (
@@ -340,8 +369,12 @@ const SignedContractsSection = () => {
               <p className="text-gray-400">Signed contracts will appear here.</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <div className="flex gap-4 pb-4 min-w-max">
+            <div className="relative">
+              <div 
+                id="signed-contracts-scroll"
+                className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide"
+                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              >
                 {contracts.map((contract) => (
                   <div key={contract.id} className="bg-gray-700/50 p-4 rounded-lg min-w-[400px] max-w-[400px] flex-shrink-0">
                     <div className="flex items-start justify-between mb-3">

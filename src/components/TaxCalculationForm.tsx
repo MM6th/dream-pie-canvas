@@ -135,14 +135,14 @@ const TaxCalculationForm = ({ initialData, onCalculate, onReset }: TaxCalculatio
               value={formData.filingStatus}
               onValueChange={(value) => handleInputChange('filingStatus', value)}
             >
-              <SelectTrigger className="bg-gray-600 border-gray-500 text-white">
-                <SelectValue placeholder="Select filing status" />
+              <SelectTrigger className="bg-gray-600 border-gray-500 text-white [&>span]:text-white">
+                <SelectValue placeholder="Select filing status" className="text-white" />
               </SelectTrigger>
               <SelectContent className="bg-gray-600 border-gray-500 text-white z-50">
-                <SelectItem value="single" className="text-white hover:bg-gray-500 focus:bg-gray-500">Single</SelectItem>
-                <SelectItem value="married-filing-jointly" className="text-white hover:bg-gray-500 focus:bg-gray-500">Married Filing Jointly</SelectItem>
-                <SelectItem value="married-filing-separately" className="text-white hover:bg-gray-500 focus:bg-gray-500">Married Filing Separately</SelectItem>
-                <SelectItem value="head-of-household" className="text-white hover:bg-gray-500 focus:bg-gray-500">Head of Household</SelectItem>
+                <SelectItem value="single" className="text-white hover:bg-gray-500 focus:bg-gray-500 focus:text-white">Single</SelectItem>
+                <SelectItem value="married-filing-jointly" className="text-white hover:bg-gray-500 focus:bg-gray-500 focus:text-white">Married Filing Jointly</SelectItem>
+                <SelectItem value="married-filing-separately" className="text-white hover:bg-gray-500 focus:bg-gray-500 focus:text-white">Married Filing Separately</SelectItem>
+                <SelectItem value="head-of-household" className="text-white hover:bg-gray-500 focus:bg-gray-500 focus:text-white">Head of Household</SelectItem>
               </SelectContent>
             </Select>
           </div>
