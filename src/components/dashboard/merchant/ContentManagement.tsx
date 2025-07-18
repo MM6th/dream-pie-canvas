@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -6,6 +7,7 @@ import MerchantCoverSubmissionsManager from "@/components/MerchantCoverSubmissio
 import ContractDashboard from "./ContractDashboard";
 import BulletinPostManager from "@/components/BulletinPostManager";
 import PhotoGallery from "@/components/PhotoGallery";
+import SECalculatorModal from "@/components/SECalculatorModal";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -44,6 +46,24 @@ const ContentManagement = () => {
 
   return (
     <div className="space-y-8">
+      {/* SE Tax Calculator Section */}
+      <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+        <CardHeader>
+          <CardTitle className="text-white">Tax Planning Tools</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg">
+            <div>
+              <h4 className="text-white font-medium">Self-Employment Tax Calculator</h4>
+              <p className="text-gray-400 text-sm">
+                Estimate your quarterly tax obligations as an independent contractor
+              </p>
+            </div>
+            <SECalculatorModal />
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Bulletin Board Management */}
       <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
         <CardHeader>
