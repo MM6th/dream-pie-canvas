@@ -426,51 +426,6 @@ const ContractDashboard = () => {
                           )}
                         </>
                       )}
-                      
-                      {/* Delete Contract Button */}
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white"
-                            disabled={deletingContractId === contract.id}
-                          >
-                            <Trash2 className="w-4 h-4 mr-1" />
-                            {deletingContractId === contract.id ? "Deleting..." : "Delete"}
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent className="bg-gray-800 border-gray-700">
-                          <AlertDialogHeader>
-                            <AlertDialogTitle className="text-white">Delete Contract From Dashboard</AlertDialogTitle>
-                            <AlertDialogDescription className="text-gray-400 space-y-2">
-                              <p>This will remove the contract from your dashboard view, but:</p>
-                              <ul className="list-disc list-inside space-y-1 mt-2">
-                                <li>PIE administrators will still have access to this contract</li>
-                                <li>The contract remains legally valid and enforceable</li>
-                                <li>All terms and conditions continue to apply</li>
-                                <li>This action cannot be undone by you</li>
-                              </ul>
-                              <p className="mt-2 font-medium">Are you sure you want to delete this contract?</p>
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel 
-                              className="border-gray-600 text-white bg-transparent hover:bg-gray-700"
-                              disabled={deletingContractId === contract.id}
-                            >
-                              Cancel
-                            </AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => handleDeleteContract(contract.id)}
-                              className="bg-red-600 hover:bg-red-700"
-                              disabled={deletingContractId === contract.id}
-                            >
-                              {deletingContractId === contract.id ? "Deleting..." : "Delete Contract"}
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
                     </div>
                   </div>
                 ))}
