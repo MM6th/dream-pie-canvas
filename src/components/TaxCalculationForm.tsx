@@ -138,11 +138,11 @@ const TaxCalculationForm = ({ initialData, onCalculate, onReset }: TaxCalculatio
               <SelectTrigger className="bg-gray-600 border-gray-500 text-white">
                 <SelectValue placeholder="Select filing status" />
               </SelectTrigger>
-              <SelectContent className="bg-gray-600 border-gray-500">
-                <SelectItem value="single" className="text-white">Single</SelectItem>
-                <SelectItem value="married-filing-jointly" className="text-white">Married Filing Jointly</SelectItem>
-                <SelectItem value="married-filing-separately" className="text-white">Married Filing Separately</SelectItem>
-                <SelectItem value="head-of-household" className="text-white">Head of Household</SelectItem>
+              <SelectContent className="bg-gray-600 border-gray-500 text-white z-50">
+                <SelectItem value="single" className="text-white hover:bg-gray-500 focus:bg-gray-500">Single</SelectItem>
+                <SelectItem value="married-filing-jointly" className="text-white hover:bg-gray-500 focus:bg-gray-500">Married Filing Jointly</SelectItem>
+                <SelectItem value="married-filing-separately" className="text-white hover:bg-gray-500 focus:bg-gray-500">Married Filing Separately</SelectItem>
+                <SelectItem value="head-of-household" className="text-white hover:bg-gray-500 focus:bg-gray-500">Head of Household</SelectItem>
               </SelectContent>
             </Select>
           </div>
