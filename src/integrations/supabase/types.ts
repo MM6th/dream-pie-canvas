@@ -304,6 +304,7 @@ export type Database = {
           image_url: string | null
           is_adult_content: boolean | null
           link_url: string | null
+          media_type: string | null
           merchant_id: string
           number_of_opportunities: number | null
           pie_contractor_share: number | null
@@ -312,6 +313,7 @@ export type Database = {
           title: string
           updated_at: string
           uploaded_image_url: string | null
+          video_url: string | null
           youtube_contractor_share: number | null
         }
         Insert: {
@@ -323,6 +325,7 @@ export type Database = {
           image_url?: string | null
           is_adult_content?: boolean | null
           link_url?: string | null
+          media_type?: string | null
           merchant_id: string
           number_of_opportunities?: number | null
           pie_contractor_share?: number | null
@@ -331,6 +334,7 @@ export type Database = {
           title: string
           updated_at?: string
           uploaded_image_url?: string | null
+          video_url?: string | null
           youtube_contractor_share?: number | null
         }
         Update: {
@@ -342,6 +346,7 @@ export type Database = {
           image_url?: string | null
           is_adult_content?: boolean | null
           link_url?: string | null
+          media_type?: string | null
           merchant_id?: string
           number_of_opportunities?: number | null
           pie_contractor_share?: number | null
@@ -350,6 +355,7 @@ export type Database = {
           title?: string
           updated_at?: string
           uploaded_image_url?: string | null
+          video_url?: string | null
           youtube_contractor_share?: number | null
         }
         Relationships: [

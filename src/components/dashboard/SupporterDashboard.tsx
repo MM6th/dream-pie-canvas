@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Music, Video, User } from "lucide-react";
+import { Music, Video, User, FolderOpen } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import AudioPlayer from "@/components/AudioPlayer";
 import VideoPlayer from "@/components/VideoPlayer";
 import PodcastAudioPlayer from "@/components/PodcastAudioPlayer";
 import BackgroundUpload from "@/components/BackgroundUpload";
+import ContentGallery from "@/components/ContentGallery";
 import { useAuth } from "@/hooks/useAuth";
 import SupporterProfileModal from "@/components/profile/SupporterProfileModal";
 import PieWelcomeModal from "@/components/PieWelcomeModal";
@@ -90,7 +91,7 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="music" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="music" className="flex items-center gap-2">
                 <Music className="w-4 h-4" />
                 Music & Podcasts
@@ -98,6 +99,10 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
               <TabsTrigger value="videos" className="flex items-center gap-2">
                 <Video className="w-4 h-4" />
                 Videos
+              </TabsTrigger>
+              <TabsTrigger value="content" className="flex items-center gap-2">
+                <FolderOpen className="w-4 h-4" />
+                Content Gallery
               </TabsTrigger>
               <TabsTrigger value="profile" className="flex items-center gap-2">
                 <User className="w-4 h-4" />
@@ -115,6 +120,10 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
             
             <TabsContent value="videos" className="space-y-6">
               <VideoPlayer videos={purchasedVideos} />
+            </TabsContent>
+            
+            <TabsContent value="content" className="space-y-6">
+              <ContentGallery />
             </TabsContent>
             
             <TabsContent value="profile" className="space-y-6">

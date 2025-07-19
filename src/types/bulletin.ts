@@ -9,6 +9,8 @@ export interface BulletinPost {
   created_at: string;
   merchant_id: string;
   uploaded_image_url?: string;
+  video_url?: string;
+  media_type?: string;
   profiles: {
     display_name: string;
     avatar_url: string;

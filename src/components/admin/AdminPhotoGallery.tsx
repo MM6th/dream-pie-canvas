@@ -7,7 +7,7 @@ import { Download, Image, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
-import PhotoGallery from "@/components/PhotoGallery";
+import ContentGallery from "@/components/ContentGallery";
 
 interface ApprovedCover {
   id: string;
@@ -228,7 +228,7 @@ const AdminPhotoGallery = () => {
           </TabsList>
 
           <TabsContent value="my-uploads" className="mt-6">
-            <PhotoGallery />
+            <ContentGallery />
           </TabsContent>
 
           <TabsContent value="approved-audio" className="mt-6">

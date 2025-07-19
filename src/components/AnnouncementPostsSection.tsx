@@ -43,12 +43,22 @@ const AnnouncementPostsSection = ({ posts }: AnnouncementPostsSectionProps) => {
           {posts.map((post) => (
             <CarouselItem key={post.id} className="pl-4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
               <Card className="bg-gradient-to-br from-green-900/20 to-blue-900/20 border-green-700 h-full flex flex-col">
-                {(post.image_url || post.uploaded_image_url) && (
+                {((post.image_url || post.uploaded_image_url) && post.media_type !== 'video') && (
                   <CardHeader className="p-0">
                     <img
                       src={post.uploaded_image_url || post.image_url}
                       alt={post.title}
                       className="w-full h-48 object-cover rounded-t-lg"
+                    />
+                  </CardHeader>
+                )}
+                {post.video_url && post.media_type === 'video' && (
+                  <CardHeader className="p-0">
+                    <video
+                      src={post.video_url}
+                      controls
+                      className="w-full h-48 object-cover rounded-t-lg"
+                      preload="metadata"
                     />
                   </CardHeader>
                 )}
