@@ -18,7 +18,7 @@ interface ApprovedCover {
   type: 'audio' | 'modeling';
 }
 
-const AdminPhotoGallery = () => {
+const AdminContentGallery = () => {
   const { user } = useAuth();
   const [approvedAudioCovers, setApprovedAudioCovers] = useState<ApprovedCover[]>([]);
   const [approvedModelingPhotos, setApprovedModelingPhotos] = useState<ApprovedCover[]>([]);
@@ -191,7 +191,7 @@ const AdminPhotoGallery = () => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-white">
           <Image className="w-5 h-5" />
-          Admin Photo Gallery
+          Admin Content Gallery
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -326,4 +326,4 @@ const AdminPhotoGallery = () => {
   );
 };
 
-export default AdminPhotoGallery;
+export default AdminContentGallery;

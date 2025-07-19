@@ -17,7 +17,7 @@ import {
 import MerchantsManagement from "./MerchantsManagement";
 import CoverSubmissionsManagement from "./CoverSubmissionsManagement";
 import ReviewsManagement from "./ReviewsManagement";
-import AdminPhotoGallery from "./AdminPhotoGallery";
+import AdminContentGallery from "./AdminContentGallery";
 import AdminBulletinPostManager from "./AdminBulletinPostManager";
 import SECalculatorModal from "@/components/SECalculatorModal";
 import { useSubmissionCounts } from "@/hooks/useSubmissionCounts";
@@ -84,7 +84,7 @@ const AdminDashboard = () => {
             className="text-white data-[state=active]:bg-gray-700"
           >
             <Image className="w-4 h-4 mr-2" />
-            Photo Gallery
+            Admin Content Gallery
           </TabsTrigger>
           <TabsTrigger 
             value="bulletin" 
@@ -108,7 +108,7 @@ const AdminDashboard = () => {
         </TabsContent>
 
         <TabsContent value="gallery" className="mt-6">
-          <AdminPhotoGallery />
+          <AdminContentGallery />
         </TabsContent>
 
         <TabsContent value="bulletin" className="mt-6">
