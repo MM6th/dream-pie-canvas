@@ -197,7 +197,27 @@ const StorePage = () => {
     }
   };
 
-  const getAccessLevelBadge = (product: AudioProduct) => {
+  const getDownloadButtonText = (product: AudioProduct) => {
+    if (!user) return "Sign In to Download";
+    
+    const accessLevel = product.access_level || (product.is_free ? "public" : "paid");
+    
+    switch (accessLevel) {
+      case "public":
+        return "Add to Library";
+      case "merchant_only":
+        if (userProfile?.user_type === 'merchant' && userProfile?.approval_status === 'approved') {
+          return "Add to Library";
+        }
+        return "Merchants Only";
+      case "paid":
+        return "Buy";
+      default:
+        return "Add to Library";
+    }
+  };
+
+  const getAccessLevelBadgeForAudio = (product: AudioProduct) => {
     const accessLevel = product.access_level || (product.is_free ? "public" : "paid");
     
     return (
@@ -241,26 +261,6 @@ const StorePage = () => {
         })()}
       </div>
     );
-  };
-
-  const getDownloadButtonText = (product: AudioProduct) => {
-    if (!user) return "Sign In to Download";
-    
-    const accessLevel = product.access_level || (product.is_free ? "public" : "paid");
-    
-    switch (accessLevel) {
-      case "public":
-        return "Add to Library";
-      case "merchant_only":
-        if (userProfile?.user_type === 'merchant' && userProfile?.approval_status === 'approved') {
-          return "Add to Library";
-        }
-        return "Merchants Only";
-      case "paid":
-        return "Buy";
-      default:
-        return "Add to Library";
-    }
   };
 
   const handleFreeAudioDownload = async (product: AudioProduct) => {
@@ -413,6 +413,19 @@ const StorePage = () => {
         return false;
       default:
         return false;
+    }
+  };
+
+  const getAccessLevelBadge = (accessLevel: string) => {
+    switch (accessLevel) {
+      case 'public':
+        return <Badge className="bg-green-600 hover:bg-green-700 text-xs">Public</Badge>;
+      case 'merchant_only':
+        return <Badge className="bg-blue-600 hover:bg-blue-700 text-xs">Merchants Only</Badge>;
+      case 'paid':
+        return <Badge className="bg-purple-600 hover:bg-purple-700 text-xs">Paid</Badge>;
+      default:
+        return <Badge variant="outline" className="text-xs">{accessLevel}</Badge>;
     }
   };
 
@@ -580,7 +593,7 @@ const StorePage = () => {
                       </div>
                       
                        <div className="flex items-center justify-between">
-                         {getAccessLevelBadge(product)}
+                         {getAccessLevelBadgeForAudio(product)}
                          
                           <div className="flex gap-2">
                             {product.audio_type === 'podcast' && product.access_level === 'merchant_only' ? (
@@ -683,10 +696,13 @@ const StorePage = () => {
                         </Badge>
                       </div>
                       
-                      <div className="flex items-center justify-between gap-2">
-                        <Badge className="bg-blue-600 hover:bg-blue-700 capitalize text-xs">
-                          {opportunity.target_platform}
-                        </Badge>
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <div className="flex gap-1 flex-wrap">
+                          <Badge className="bg-blue-600 hover:bg-blue-700 capitalize text-xs">
+                            {opportunity.target_platform}
+                          </Badge>
+                          {getAccessLevelBadge(opportunity.access_level || 'public')}
+                        </div>
                         
                         <div className="flex gap-1">
                           <Button
