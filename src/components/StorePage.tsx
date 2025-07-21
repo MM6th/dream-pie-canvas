@@ -421,7 +421,7 @@ const StorePage = () => {
       case 'public':
         return <Badge className="bg-green-600 hover:bg-green-700 text-xs">Public</Badge>;
       case 'merchant_only':
-        return <Badge className="bg-blue-600 hover:bg-blue-700 text-xs">Merchants Only</Badge>;
+        return <Badge className="bg-orange-600 hover:bg-orange-700 text-xs">Merchants Only</Badge>;
       case 'paid':
         return <Badge className="bg-purple-600 hover:bg-purple-700 text-xs">Paid</Badge>;
       default:

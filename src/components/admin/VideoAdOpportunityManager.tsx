@@ -104,7 +104,7 @@ const VideoAdOpportunityManager = () => {
       case 'public':
         return <Badge className="bg-green-600">Public</Badge>;
       case 'merchant_only':
-        return <Badge className="bg-blue-600">Merchants Only</Badge>;
+        return <Badge className="bg-orange-600">Merchants Only</Badge>;
       case 'paid':
         return <Badge className="bg-purple-600">Paid</Badge>;
       default:
