@@ -22,6 +22,7 @@ import ReviewsManagement from "./ReviewsManagement";
 import AdminContentGallery from "./AdminContentGallery";
 import AdminBulletinPostManager from "./AdminBulletinPostManager";
 import VideoAdSubmissionsManager from "./VideoAdSubmissionsManager";
+import VideoAdOpportunityManager from "./VideoAdOpportunityManager";
 import SECalculatorModal from "@/components/SECalculatorModal";
 import VideoAdOpportunityUploadModal from "@/components/VideoAdOpportunityUploadModal";
 import { useSubmissionCounts } from "@/hooks/useSubmissionCounts";
@@ -75,7 +76,7 @@ const AdminDashboard = () => {
       </Card>
 
       <Tabs defaultValue="merchants" className="w-full">
-        <TabsList className="grid w-full grid-cols-6 bg-gray-800 border-gray-700">
+        <TabsList className="grid w-full grid-cols-7 bg-gray-800 border-gray-700">
           <TabsTrigger 
             value="merchants" 
             className="text-white data-[state=active]:bg-gray-700"
@@ -117,6 +118,13 @@ const AdminDashboard = () => {
             Bulletin Posts
           </TabsTrigger>
           <TabsTrigger 
+            value="video-opportunities" 
+            className="text-white data-[state=active]:bg-gray-700"
+          >
+            <Video className="w-4 h-4 mr-2" />
+            Video Opportunities
+          </TabsTrigger>
+          <TabsTrigger 
             value="video-ads" 
             className="text-white data-[state=active]:bg-gray-700"
           >
@@ -143,6 +151,10 @@ const AdminDashboard = () => {
 
         <TabsContent value="bulletin" className="mt-6">
           <AdminBulletinPostManager />
+        </TabsContent>
+
+        <TabsContent value="video-opportunities" className="mt-6">
+          <VideoAdOpportunityManager />
         </TabsContent>
 
         <TabsContent value="video-ads" className="mt-6">

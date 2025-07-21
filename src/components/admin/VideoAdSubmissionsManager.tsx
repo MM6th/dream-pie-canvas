@@ -52,14 +52,18 @@ const VideoAdSubmissionsManager = () => {
           admin_notes,
           created_at,
           merchant_id,
-          video_ad_opportunity_id,
-          profiles!merchant_id (
-            display_name,
-            email,
-            business_name
-          )
+          video_ad_opportunity_id
         `)
         .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Fetch merchant profiles separately
+      const merchantIds = data?.map(s => s.merchant_id) || [];
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, display_name, email, business_name')
+        .in('id', merchantIds);
 
       if (error) throw error;
 
@@ -71,6 +75,7 @@ const VideoAdSubmissionsManager = () => {
         .in('id', opportunityIds);
 
       if (oppError) throw oppError;
+      if (profilesError) throw profilesError;
 
       // Transform the data to match our interface
       const transformedData = data?.map(submission => ({
@@ -80,7 +85,7 @@ const VideoAdSubmissionsManager = () => {
           payment_amount: 0,
           target_platform: 'unknown'
         },
-        profiles: submission.profiles || {
+        profiles: profiles?.find(profile => profile.id === submission.merchant_id) || {
           display_name: null,
           email: 'Unknown',
           business_name: null
