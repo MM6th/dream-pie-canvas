@@ -1204,6 +1204,7 @@ export type Database = {
           is_adult_content: boolean | null
           payment_amount: number
           target_platform: Database["public"]["Enums"]["social_media_platform"]
+          thumbnail_url: string | null
           title: string
           updated_at: string
         }
@@ -1219,6 +1220,7 @@ export type Database = {
           is_adult_content?: boolean | null
           payment_amount: number
           target_platform: Database["public"]["Enums"]["social_media_platform"]
+          thumbnail_url?: string | null
           title: string
           updated_at?: string
         }
@@ -1234,6 +1236,7 @@ export type Database = {
           is_adult_content?: boolean | null
           payment_amount?: number
           target_platform?: Database["public"]["Enums"]["social_media_platform"]
+          thumbnail_url?: string | null
           title?: string
           updated_at?: string
         }
