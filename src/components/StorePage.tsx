@@ -697,12 +697,18 @@ const StorePage = () => {
                       </div>
                       
                       <div className="flex items-center justify-between gap-2 flex-wrap">
-                        <div className="flex gap-1 flex-wrap">
-                          <Badge className="bg-blue-600 hover:bg-blue-700 capitalize text-xs">
-                            {opportunity.target_platform}
-                          </Badge>
-                          {getAccessLevelBadge(opportunity.access_level || 'public')}
-                        </div>
+                         <div className="flex gap-1 flex-wrap">
+                           <Badge className="bg-blue-600 hover:bg-blue-700 capitalize text-xs">
+                             {opportunity.target_platform}
+                           </Badge>
+                           {getAccessLevelBadge(opportunity.access_level || 'public')}
+                           {opportunity.is_adult_content && !userProfile?.adult_content_restricted && (
+                             <Badge className="bg-orange-600 hover:bg-orange-700 text-xs flex items-center gap-1">
+                               <Shield className="w-3 h-3" />
+                               18+
+                             </Badge>
+                           )}
+                         </div>
                         
                         <div className="flex gap-1">
                           <Button
