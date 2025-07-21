@@ -385,6 +385,8 @@ export type Database = {
           status: string
           tunecore_terms_accepted: boolean | null
           updated_at: string
+          video_ad_opportunity_id: string | null
+          video_ad_submission_id: string | null
         }
         Insert: {
           admin_signature?: string | null
@@ -402,6 +404,8 @@ export type Database = {
           status?: string
           tunecore_terms_accepted?: boolean | null
           updated_at?: string
+          video_ad_opportunity_id?: string | null
+          video_ad_submission_id?: string | null
         }
         Update: {
           admin_signature?: string | null
@@ -419,6 +423,8 @@ export type Database = {
           status?: string
           tunecore_terms_accepted?: boolean | null
           updated_at?: string
+          video_ad_opportunity_id?: string | null
+          video_ad_submission_id?: string | null
         }
         Relationships: [
           {
@@ -1155,6 +1161,135 @@ export type Database = {
         }
         Relationships: []
       }
+      video_ad_downloads: {
+        Row: {
+          contract_generated: boolean | null
+          contract_id: string | null
+          created_at: string
+          downloaded_at: string
+          id: string
+          merchant_id: string
+          video_ad_opportunity_id: string
+        }
+        Insert: {
+          contract_generated?: boolean | null
+          contract_id?: string | null
+          created_at?: string
+          downloaded_at?: string
+          id?: string
+          merchant_id: string
+          video_ad_opportunity_id: string
+        }
+        Update: {
+          contract_generated?: boolean | null
+          contract_id?: string | null
+          created_at?: string
+          downloaded_at?: string
+          id?: string
+          merchant_id?: string
+          video_ad_opportunity_id?: string
+        }
+        Relationships: []
+      }
+      video_ad_opportunities: {
+        Row: {
+          access_level: Database["public"]["Enums"]["access_level"] | null
+          admin_id: string
+          audio_file_url: string
+          audio_type: Database["public"]["Enums"]["audio_type_enum"]
+          available_spots: number
+          created_at: string
+          description: string | null
+          id: string
+          is_adult_content: boolean | null
+          payment_amount: number
+          target_platform: Database["public"]["Enums"]["social_media_platform"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          access_level?: Database["public"]["Enums"]["access_level"] | null
+          admin_id: string
+          audio_file_url: string
+          audio_type: Database["public"]["Enums"]["audio_type_enum"]
+          available_spots?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_adult_content?: boolean | null
+          payment_amount: number
+          target_platform: Database["public"]["Enums"]["social_media_platform"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          access_level?: Database["public"]["Enums"]["access_level"] | null
+          admin_id?: string
+          audio_file_url?: string
+          audio_type?: Database["public"]["Enums"]["audio_type_enum"]
+          available_spots?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_adult_content?: boolean | null
+          payment_amount?: number
+          target_platform?: Database["public"]["Enums"]["social_media_platform"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      video_ad_submissions: {
+        Row: {
+          admin_notes: string | null
+          contract_generated_at: string | null
+          contract_id: string | null
+          created_at: string
+          id: string
+          merchant_id: string
+          negotiation_text: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+          video_ad_opportunity_id: string
+          video_file_url: string
+          why_me_text: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          contract_generated_at?: string | null
+          contract_id?: string | null
+          created_at?: string
+          id?: string
+          merchant_id: string
+          negotiation_text?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          video_ad_opportunity_id: string
+          video_file_url: string
+          why_me_text?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          contract_generated_at?: string | null
+          contract_id?: string | null
+          created_at?: string
+          id?: string
+          merchant_id?: string
+          negotiation_text?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          video_ad_opportunity_id?: string
+          video_file_url?: string
+          why_me_text?: string | null
+        }
+        Relationships: []
+      }
       video_products: {
         Row: {
           access_level: Database["public"]["Enums"]["access_level"] | null
@@ -1255,6 +1390,7 @@ export type Database = {
         | "solar_return_reading"
         | "north_node_reading"
         | "career_path_reading"
+      audio_type_enum: "music" | "podcast" | "asmr" | "spoken"
       delivery_type: "telephone" | "audio_file" | "video_file"
       fashion_color:
         | "black"
@@ -1265,6 +1401,13 @@ export type Database = {
         | "pink"
         | "green"
       fashion_size: "XS" | "S" | "M" | "L" | "XL" | "2XL"
+      social_media_platform:
+        | "facebook"
+        | "instagram"
+        | "youtube"
+        | "x"
+        | "tiktok"
+        | "onlyfans"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1399,9 +1542,18 @@ export const Constants = {
         "north_node_reading",
         "career_path_reading",
       ],
+      audio_type_enum: ["music", "podcast", "asmr", "spoken"],
       delivery_type: ["telephone", "audio_file", "video_file"],
       fashion_color: ["black", "white", "nude", "red", "blue", "pink", "green"],
       fashion_size: ["XS", "S", "M", "L", "XL", "2XL"],
+      social_media_platform: [
+        "facebook",
+        "instagram",
+        "youtube",
+        "x",
+        "tiktok",
+        "onlyfans",
+      ],
     },
   },
 } as const

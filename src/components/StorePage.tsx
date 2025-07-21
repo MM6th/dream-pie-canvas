@@ -11,6 +11,7 @@ import FashionStoreSection from "./FashionStoreSection";
 import AstrologyStoreSection from "./AstrologyStoreSection";
 import PodcastDownloadManager from "./PodcastDownloadManager";
 import DownloadOpportunityChecker from "./DownloadOpportunityChecker";
+import VideoAdSubmissionModal from "./VideoAdSubmissionModal";
 
 
 interface AudioProduct {
@@ -47,6 +48,20 @@ interface VideoProduct {
   created_at: string;
 }
 
+interface VideoAdOpportunity {
+  id: string;
+  title: string;
+  description: string | null;
+  audio_file_url: string;
+  audio_type: string;
+  target_platform: string;
+  payment_amount: number;
+  available_spots: number;
+  access_level: "public" | "merchant_only" | "paid" | null;
+  is_adult_content: boolean | null;
+  created_at: string;
+}
+
 interface UserProfile {
   user_type: string;
   approval_status: string | null;
@@ -57,9 +72,12 @@ const StorePage = () => {
   const { user } = useAuth();
   const [audioProducts, setAudioProducts] = useState<AudioProduct[]>([]);
   const [videoProducts, setVideoProducts] = useState<VideoProduct[]>([]);
+  const [videoAdOpportunities, setVideoAdOpportunities] = useState<VideoAdOpportunity[]>([]);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [purchasingId, setPurchasingId] = useState<string | null>(null);
+  const [selectedOpportunity, setSelectedOpportunity] = useState<VideoAdOpportunity | null>(null);
+  const [submissionModalOpen, setSubmissionModalOpen] = useState(false);
 
   const fetchUserProfile = async () => {
     if (!user) return null;
@@ -154,22 +172,35 @@ const StorePage = () => {
 
       if (videoError) throw videoError;
 
+      // Fetch video ad opportunities
+      const { data: videoAdData, error: videoAdError } = await supabase
+        .from('video_ad_opportunities')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (videoAdError) throw videoAdError;
+
       // Filter adult content and access level based on user preferences
       console.log('User profile:', profile);
       console.log('Raw audio products:', audioData?.length || 0);
       console.log('Raw video products:', videoData?.length || 0);
+      console.log('Raw video ad opportunities:', videoAdData?.length || 0);
       
       const adultFilteredAudioData = filterAdultContent(audioData || [], profile);
       const adultFilteredVideoData = filterAdultContent(videoData || [], profile);
+      const adultFilteredVideoAdData = filterAdultContent(videoAdData || [], profile);
       
       const filteredAudioData = filterAccessLevel(adultFilteredAudioData, profile);
       const filteredVideoData = filterAccessLevel(adultFilteredVideoData, profile);
+      const filteredVideoAdData = filterAccessLevel(adultFilteredVideoAdData, profile);
       
       console.log('Final filtered audio products:', filteredAudioData.length);
       console.log('Final filtered video products:', filteredVideoData.length);
+      console.log('Final filtered video ad opportunities:', filteredVideoAdData.length);
 
       setAudioProducts(filteredAudioData);
       setVideoProducts(filteredVideoData);
+      setVideoAdOpportunities(filteredVideoAdData);
     } catch (error: any) {
       console.error('Error fetching products:', error);
       toast({
@@ -416,6 +447,100 @@ const StorePage = () => {
       toast({
         title: "Error",
         description: error.message || "Failed to add video to your library. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const canDownloadVideoAdOpportunity = (opportunity: VideoAdOpportunity) => {
+    if (!user) return false;
+    
+    const accessLevel = opportunity.access_level || 'public';
+    
+    switch (accessLevel) {
+      case "public":
+        return true;
+      case "merchant_only":
+        return userProfile?.user_type === 'merchant' && userProfile?.approval_status === 'approved';
+      case "paid":
+        return false; // Will be handled by purchase flow
+      default:
+        return false;
+    }
+  };
+
+  const handleVideoAdOpportunityDownload = async (opportunity: VideoAdOpportunity) => {
+    if (!user) {
+      toast({
+        title: "Please sign in",
+        description: "You need to be logged in to download opportunities",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const accessLevel = opportunity.access_level || 'public';
+
+    // Check if user can download this opportunity
+    if (accessLevel === "merchant_only") {
+      if (!canDownloadVideoAdOpportunity(opportunity)) {
+        toast({
+          title: "Access Restricted",
+          description: "This opportunity is only available to approved merchants",
+          variant: "destructive"
+        });
+        return;
+      }
+    }
+
+    try {
+      // Check if user already downloaded this opportunity
+      const { data: existingDownload, error: checkError } = await supabase
+        .from('video_ad_downloads')
+        .select('id')
+        .eq('merchant_id', user.id)
+        .eq('video_ad_opportunity_id', opportunity.id)
+        .maybeSingle();
+
+      if (checkError) {
+        console.error('Error checking existing downloads:', checkError);
+        throw new Error('Failed to check existing downloads');
+      }
+
+      if (existingDownload) {
+        // If already downloaded, show submission modal
+        setSelectedOpportunity(opportunity);
+        setSubmissionModalOpen(true);
+        return;
+      }
+
+      // Record the download
+      const { error: insertError } = await supabase
+        .from('video_ad_downloads')
+        .insert({
+          merchant_id: user.id,
+          video_ad_opportunity_id: opportunity.id
+        });
+
+      if (insertError) {
+        console.error('Error recording download:', insertError);
+        throw new Error(`Database error: ${insertError.message}`);
+      }
+
+      toast({
+        title: "Opportunity downloaded!",
+        description: "You can now create your video submission. Check your merchant dashboard for details.",
+      });
+
+      // Open submission modal
+      setSelectedOpportunity(opportunity);
+      setSubmissionModalOpen(true);
+
+    } catch (error: any) {
+      console.error('Error downloading opportunity:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to download opportunity. Please try again.",
         variant: "destructive"
       });
     }
