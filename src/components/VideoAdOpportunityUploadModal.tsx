@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,6 @@ import { Upload, Loader2, Shield, Video, Music, DollarSign } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
-import ImagePicker from "./ImagePicker";
 
 interface VideoAdOpportunityUploadModalProps {
   isOpen: boolean;
@@ -44,7 +44,7 @@ const VideoAdOpportunityUploadModal = ({ isOpen, onClose, onSuccess }: VideoAdOp
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [audioFile, setAudioFile] = useState<File | null>(null);
-  const [thumbnailUrl, setThumbnailUrl] = useState('');
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   
   const [formData, setFormData] = useState({
     title: '',
@@ -58,12 +58,13 @@ const VideoAdOpportunityUploadModal = ({ isOpen, onClose, onSuccess }: VideoAdOp
   });
 
   const MAX_AUDIO_SIZE = 50 * 1024 * 1024; // 50MB
+  const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
 
-  const validateFileSize = (file: File) => {
-    if (file.size > MAX_AUDIO_SIZE) {
+  const validateFileSize = (file: File, maxSize: number, fileType: string) => {
+    if (file.size > maxSize) {
       toast({
         title: "File too large",
-        description: "Audio file must be smaller than 50MB",
+        description: `${fileType} file must be smaller than ${maxSize / (1024 * 1024)}MB`,
         variant: "destructive"
       });
       return false;
@@ -73,11 +74,21 @@ const VideoAdOpportunityUploadModal = ({ isOpen, onClose, onSuccess }: VideoAdOp
 
   const handleAudioFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file && validateFileSize(file)) {
+    if (file && validateFileSize(file, MAX_AUDIO_SIZE, "Audio")) {
       setAudioFile(file);
     } else {
       e.target.value = '';
       setAudioFile(null);
+    }
+  };
+
+  const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && validateFileSize(file, MAX_IMAGE_SIZE, "Image")) {
+      setThumbnailFile(file);
+    } else {
+      e.target.value = '';
+      setThumbnailFile(null);
     }
   };
 
@@ -108,6 +119,25 @@ const VideoAdOpportunityUploadModal = ({ isOpen, onClose, onSuccess }: VideoAdOp
         .from('audio-files')
         .getPublicUrl(audioData.path);
 
+      // Upload thumbnail if provided
+      let thumbnailUrl = '';
+      if (thumbnailFile) {
+        const thumbnailExt = thumbnailFile.name.split('.').pop();
+        const thumbnailFileName = `video-ad-opportunities/${user.id}/${Date.now()}.${thumbnailExt}`;
+        
+        const { data: thumbnailData, error: thumbnailError } = await supabase.storage
+          .from('thumbnails')
+          .upload(thumbnailFileName, thumbnailFile);
+
+        if (thumbnailError) throw thumbnailError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('thumbnails')
+          .getPublicUrl(thumbnailData.path);
+        
+        thumbnailUrl = publicUrl;
+      }
+
       // Create video ad opportunity
       const { error: insertError } = await supabase
         .from('video_ad_opportunities')
@@ -121,7 +151,8 @@ const VideoAdOpportunityUploadModal = ({ isOpen, onClose, onSuccess }: VideoAdOp
           payment_amount: parseFloat(formData.payment_amount),
           available_spots: parseInt(formData.available_spots),
           access_level: formData.access_level as any,
-          is_adult_content: formData.is_adult_content
+          is_adult_content: formData.is_adult_content,
+          thumbnail_url: thumbnailUrl || null
         });
 
       if (insertError) throw insertError;
@@ -158,7 +189,7 @@ const VideoAdOpportunityUploadModal = ({ isOpen, onClose, onSuccess }: VideoAdOp
       is_adult_content: false
     });
     setAudioFile(null);
-    setThumbnailUrl('');
+    setThumbnailFile(null);
   };
 
   return (
@@ -215,11 +246,17 @@ const VideoAdOpportunityUploadModal = ({ isOpen, onClose, onSuccess }: VideoAdOp
           </div>
 
           <div>
-            <Label>Thumbnail (Optional)</Label>
-            <ImagePicker
-              onImageSelect={setThumbnailUrl}
-              currentImageUrl={thumbnailUrl}
+            <Label htmlFor="thumbnailFile">Thumbnail Image (Optional, Max 10MB)</Label>
+            <Input
+              id="thumbnailFile"
+              type="file"
+              accept="image/*"
+              onChange={handleThumbnailChange}
+              className="bg-gray-700 border-gray-600 text-white"
             />
+            <p className="text-xs text-gray-400 mt-1">
+              Upload a thumbnail image for the opportunity
+            </p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

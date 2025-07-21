@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,7 +11,7 @@ import AstrologyStoreSection from "./AstrologyStoreSection";
 import PodcastDownloadManager from "./PodcastDownloadManager";
 import DownloadOpportunityChecker from "./DownloadOpportunityChecker";
 import VideoAdSubmissionModal from "./VideoAdSubmissionModal";
-
+import ExpandableDescription from "@/components/ui/ExpandableDescription";
 
 interface AudioProduct {
   id: string;
@@ -33,21 +32,6 @@ interface AudioProduct {
   };
 }
 
-interface VideoProduct {
-  id: string;
-  title: string;
-  description: string | null;
-  video_type: string;
-  thumbnail_url: string | null;
-  video_file_url: string;
-  background_music_url: string | null;
-  is_free: boolean;
-  price: number | null;
-  is_adult_content: boolean | null;
-  access_level: "public" | "merchant_only" | "paid" | null;
-  created_at: string;
-}
-
 interface VideoAdOpportunity {
   id: string;
   title: string;
@@ -60,6 +44,7 @@ interface VideoAdOpportunity {
   access_level: "public" | "merchant_only" | "paid" | null;
   is_adult_content: boolean | null;
   created_at: string;
+  thumbnail_url?: string | null;
 }
 
 interface UserProfile {
@@ -71,7 +56,6 @@ interface UserProfile {
 const StorePage = () => {
   const { user } = useAuth();
   const [audioProducts, setAudioProducts] = useState<AudioProduct[]>([]);
-  const [videoProducts, setVideoProducts] = useState<VideoProduct[]>([]);
   const [videoAdOpportunities, setVideoAdOpportunities] = useState<VideoAdOpportunity[]>([]);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -98,14 +82,11 @@ const StorePage = () => {
   };
 
   const filterAdultContent = <T extends { is_adult_content?: boolean | null }>(products: T[], profile: UserProfile | null): T[] => {
-    // If no profile is loaded yet, don't filter anything
     if (!profile) return products;
     
-    // If user has adult content restriction enabled, filter out adult content
     if (profile.adult_content_restricted === true) {
       console.log('Filtering adult content - user has restriction enabled');
       const filtered = products.filter(product => {
-        // Consider null or false as non-adult content
         const isAdult = product.is_adult_content === true;
         console.log(`Product ${(product as any).title || (product as any).id}: is_adult_content=${product.is_adult_content}, filtered=${isAdult}`);
         return !isAdult;
@@ -114,14 +95,12 @@ const StorePage = () => {
       return filtered;
     }
     
-    // If no restriction, return all products
     return products;
   };
 
   const filterAccessLevel = <T extends { access_level?: string | null }>(products: T[], profile: UserProfile | null): T[] => {
-    if (!profile) return []; // Return empty array if profile not loaded yet
+    if (!profile) return [];
     
-    // Supporters can see public and paid products, but not merchant_only
     if (profile.user_type === 'supporter') {
       return products.filter(product => {
         const accessLevel = product.access_level || 'public';
@@ -129,17 +108,15 @@ const StorePage = () => {
       });
     }
     
-    // Merchants and admins can see all products
     return products;
   };
 
   const fetchProducts = async () => {
     try {
-      // Fetch user profile first
       const profile = await fetchUserProfile();
       setUserProfile(profile);
 
-      // Fetch audio products with access_level and adult content flag
+      // Fetch audio products
       const { data: audioData, error: audioError } = await supabase
         .from('audio_products')
         .select(`
@@ -164,14 +141,6 @@ const StorePage = () => {
 
       if (audioError) throw audioError;
 
-      // Fetch video products with access_level and adult content flag
-      const { data: videoData, error: videoError } = await supabase
-        .from('video_products')
-        .select('*, is_adult_content, access_level')
-        .order('created_at', { ascending: false });
-
-      if (videoError) throw videoError;
-
       // Fetch video ad opportunities
       const { data: videoAdData, error: videoAdError } = await supabase
         .from('video_ad_opportunities')
@@ -180,26 +149,20 @@ const StorePage = () => {
 
       if (videoAdError) throw videoAdError;
 
-      // Filter adult content and access level based on user preferences
       console.log('User profile:', profile);
       console.log('Raw audio products:', audioData?.length || 0);
-      console.log('Raw video products:', videoData?.length || 0);
       console.log('Raw video ad opportunities:', videoAdData?.length || 0);
       
       const adultFilteredAudioData = filterAdultContent(audioData || [], profile);
-      const adultFilteredVideoData = filterAdultContent(videoData || [], profile);
       const adultFilteredVideoAdData = filterAdultContent(videoAdData || [], profile);
       
       const filteredAudioData = filterAccessLevel(adultFilteredAudioData, profile);
-      const filteredVideoData = filterAccessLevel(adultFilteredVideoData, profile);
       const filteredVideoAdData = filterAccessLevel(adultFilteredVideoAdData, profile);
       
       console.log('Final filtered audio products:', filteredAudioData.length);
-      console.log('Final filtered video products:', filteredVideoData.length);
       console.log('Final filtered video ad opportunities:', filteredVideoAdData.length);
 
       setAudioProducts(filteredAudioData);
-      setVideoProducts(filteredVideoData);
       setVideoAdOpportunities(filteredVideoAdData);
     } catch (error: any) {
       console.error('Error fetching products:', error);
@@ -228,7 +191,7 @@ const StorePage = () => {
       case "merchant_only":
         return userProfile?.user_type === 'merchant' && userProfile?.approval_status === 'approved';
       case "paid":
-        return false; // Will be handled by purchase flow
+        return false;
       default:
         return false;
     }
@@ -239,7 +202,6 @@ const StorePage = () => {
     
     return (
       <div className="flex items-center gap-1 flex-wrap">
-        {/* Adult content indicator */}
         {product.is_adult_content && !userProfile?.adult_content_restricted && (
           <Badge className="bg-orange-600 hover:bg-orange-700 text-xs flex items-center gap-1">
             <Shield className="w-3 h-3" />
@@ -247,55 +209,6 @@ const StorePage = () => {
           </Badge>
         )}
         
-        {/* Access level badge */}
-        {(() => {
-          switch (accessLevel) {
-            case "public":
-              return (
-                <Badge className="bg-green-600 hover:bg-green-700">
-                  Free
-                </Badge>
-              );
-            case "merchant_only":
-              return (
-                <Badge className="bg-orange-600 hover:bg-orange-700 flex items-center gap-1 text-xs">
-                  <Lock className="w-3 h-3" />
-                  Merchants Only
-                </Badge>
-              );
-            case "paid":
-              return (
-                <Badge className="bg-blue-600 hover:bg-blue-700 flex items-center gap-1">
-                  <DollarSign className="w-3 h-3" />
-                  {product.price?.toFixed(2)}
-                </Badge>
-              );
-            default:
-              return (
-                <Badge className="bg-green-600 hover:bg-green-700">
-                  Free
-                </Badge>
-              );
-          }
-        })()}
-      </div>
-    );
-  };
-
-  const getVideoBadges = (product: VideoProduct) => {
-    const accessLevel = product.access_level || (product.is_free ? "public" : "paid");
-    
-    return (
-      <div className="flex items-center gap-1 flex-wrap">
-        {/* Adult content indicator */}
-        {product.is_adult_content && !userProfile?.adult_content_restricted && (
-          <Badge className="bg-orange-600 hover:bg-orange-700 text-xs flex items-center gap-1">
-            <Shield className="w-3 h-3" />
-            18+
-          </Badge>
-        )}
-        
-        {/* Access level badge */}
         {(() => {
           switch (accessLevel) {
             case "public":
@@ -363,7 +276,6 @@ const StorePage = () => {
     try {
       console.log('Processing free download for product:', product.id);
       
-      // Check if user already has this free audio
       const { data: existingPurchase, error: checkError } = await supabase
         .from('user_purchases')
         .select('id')
@@ -386,7 +298,6 @@ const StorePage = () => {
 
       console.log('Recording free download in database...');
       
-      // Record the free download with the new column
       const { data: insertedPurchase, error: insertError } = await supabase
         .from('user_purchases')
         .insert({
@@ -421,131 +332,6 @@ const StorePage = () => {
     }
   };
 
-  const handleFreeVideoDownload = async (product: VideoProduct) => {
-    if (!user) {
-      toast({
-        title: "Please sign in",
-        description: "You need to be logged in to download video",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    try {
-      console.log('Processing free video download for product:', product.id);
-      
-      // For now, we'll simulate adding to library since user_video_purchases doesn't exist in types yet
-      // This will be updated once the database types are regenerated
-      
-      toast({
-        title: "Video added to library!",
-        description: "The video has been added to your video player in the dashboard (feature coming soon)",
-      });
-
-    } catch (error: any) {
-      console.error('Error recording free video download:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to add video to your library. Please try again.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const canDownloadVideoAdOpportunity = (opportunity: VideoAdOpportunity) => {
-    if (!user) return false;
-    
-    const accessLevel = opportunity.access_level || 'public';
-    
-    switch (accessLevel) {
-      case "public":
-        return true;
-      case "merchant_only":
-        return userProfile?.user_type === 'merchant' && userProfile?.approval_status === 'approved';
-      case "paid":
-        return false; // Will be handled by purchase flow
-      default:
-        return false;
-    }
-  };
-
-  const handleVideoAdOpportunityDownload = async (opportunity: VideoAdOpportunity) => {
-    if (!user) {
-      toast({
-        title: "Please sign in",
-        description: "You need to be logged in to download opportunities",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const accessLevel = opportunity.access_level || 'public';
-
-    // Check if user can download this opportunity
-    if (accessLevel === "merchant_only") {
-      if (!canDownloadVideoAdOpportunity(opportunity)) {
-        toast({
-          title: "Access Restricted",
-          description: "This opportunity is only available to approved merchants",
-          variant: "destructive"
-        });
-        return;
-      }
-    }
-
-    try {
-      // Check if user already downloaded this opportunity
-      const { data: existingDownload, error: checkError } = await supabase
-        .from('video_ad_downloads')
-        .select('id')
-        .eq('merchant_id', user.id)
-        .eq('video_ad_opportunity_id', opportunity.id)
-        .maybeSingle();
-
-      if (checkError) {
-        console.error('Error checking existing downloads:', checkError);
-        throw new Error('Failed to check existing downloads');
-      }
-
-      if (existingDownload) {
-        // If already downloaded, show submission modal
-        setSelectedOpportunity(opportunity);
-        setSubmissionModalOpen(true);
-        return;
-      }
-
-      // Record the download
-      const { error: insertError } = await supabase
-        .from('video_ad_downloads')
-        .insert({
-          merchant_id: user.id,
-          video_ad_opportunity_id: opportunity.id
-        });
-
-      if (insertError) {
-        console.error('Error recording download:', insertError);
-        throw new Error(`Database error: ${insertError.message}`);
-      }
-
-      toast({
-        title: "Opportunity downloaded!",
-        description: "You can now create your video submission. Check your merchant dashboard for details.",
-      });
-
-      // Open submission modal
-      setSelectedOpportunity(opportunity);
-      setSubmissionModalOpen(true);
-
-    } catch (error: any) {
-      console.error('Error downloading opportunity:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to download opportunity. Please try again.",
-        variant: "destructive"
-      });
-    }
-  };
-
   const handleAudioPurchase = async (product: AudioProduct) => {
     if (!user) {
       toast({
@@ -558,7 +344,6 @@ const StorePage = () => {
 
     const accessLevel = product.access_level || (product.is_free ? "public" : "paid");
 
-    // Check if user can download this content
     if (accessLevel === "merchant_only") {
       if (!canDownloadAudio(product)) {
         toast({
@@ -568,7 +353,6 @@ const StorePage = () => {
         });
         return;
       }
-      // If merchant can download, treat as free download
       await handleFreeAudioDownload(product);
       return;
     }
@@ -578,7 +362,6 @@ const StorePage = () => {
       return;
     }
 
-    // Handle paid content
     setPurchasingId(product.id);
 
     try {
@@ -616,10 +399,10 @@ const StorePage = () => {
     }
   };
 
-  const canDownloadVideo = (product: VideoProduct) => {
+  const canDownloadVideoAdOpportunity = (opportunity: VideoAdOpportunity) => {
     if (!user) return false;
     
-    const accessLevel = product.access_level || (product.is_free ? "public" : "paid");
+    const accessLevel = opportunity.access_level || 'public';
     
     switch (accessLevel) {
       case "public":
@@ -627,84 +410,81 @@ const StorePage = () => {
       case "merchant_only":
         return userProfile?.user_type === 'merchant' && userProfile?.approval_status === 'approved';
       case "paid":
-        return false; // Will be handled by purchase flow
+        return false;
       default:
         return false;
     }
   };
 
-  const getVideoDownloadButtonText = (product: VideoProduct) => {
-    if (!user) return "Sign In to Download";
-    
-    const accessLevel = product.access_level || (product.is_free ? "public" : "paid");
-    
-    switch (accessLevel) {
-      case "public":
-        return "Add to Library";
-      case "merchant_only":
-        if (userProfile?.user_type === 'merchant' && userProfile?.approval_status === 'approved') {
-          return "Add to Library";
-        }
-        return "Merchants Only";
-      case "paid":
-        return "Buy";
-      default:
-        return "Add to Library";
-    }
-  };
-
-  const handleVideoPurchase = async (product: VideoProduct) => {
+  const handleVideoAdOpportunityDownload = async (opportunity: VideoAdOpportunity) => {
     if (!user) {
       toast({
         title: "Please sign in",
-        description: "You need to be logged in to make a purchase",
+        description: "You need to be logged in to download opportunities",
         variant: "destructive"
       });
       return;
     }
 
-    const accessLevel = product.access_level || (product.is_free ? "public" : "paid");
+    const accessLevel = opportunity.access_level || 'public';
 
-    // Check if user can download this content
     if (accessLevel === "merchant_only") {
-      if (!canDownloadVideo(product)) {
+      if (!canDownloadVideoAdOpportunity(opportunity)) {
         toast({
           title: "Access Restricted",
-          description: "This content is only available to approved merchants",
+          description: "This opportunity is only available to approved merchants",
           variant: "destructive"
         });
         return;
       }
-      // If merchant can download, treat as free download
-      await handleFreeVideoDownload(product);
-      return;
     }
-
-    if (accessLevel === "public") {
-      await handleFreeVideoDownload(product);
-      return;
-    }
-
-    setPurchasingId(product.id);
 
     try {
-      console.log('Starting video payment process for product:', product.id);
-      
+      const { data: existingDownload, error: checkError } = await supabase
+        .from('video_ad_downloads')
+        .select('id')
+        .eq('merchant_id', user.id)
+        .eq('video_ad_opportunity_id', opportunity.id)
+        .maybeSingle();
+
+      if (checkError) {
+        console.error('Error checking existing downloads:', checkError);
+        throw new Error('Failed to check existing downloads');
+      }
+
+      if (existingDownload) {
+        setSelectedOpportunity(opportunity);
+        setSubmissionModalOpen(true);
+        return;
+      }
+
+      const { error: insertError } = await supabase
+        .from('video_ad_downloads')
+        .insert({
+          merchant_id: user.id,
+          video_ad_opportunity_id: opportunity.id
+        });
+
+      if (insertError) {
+        console.error('Error recording download:', insertError);
+        throw new Error(`Database error: ${insertError.message}`);
+      }
+
       toast({
-        title: "Video Purchases",
-        description: "Paid video purchases will be implemented soon. Free videos work now!",
-        variant: "default"
+        title: "Opportunity downloaded!",
+        description: "You can now create your video submission. Check your merchant dashboard for details.",
       });
 
+      setSelectedOpportunity(opportunity);
+      setSubmissionModalOpen(true);
+
     } catch (error: any) {
-      console.error('Error creating video payment:', error);
+      console.error('Error downloading opportunity:', error);
       toast({
-        title: "Payment Error",
-        description: error.message || "Failed to initiate payment. Please try again.",
+        title: "Error",
+        description: error.message || "Failed to download opportunity. Please try again.",
         variant: "destructive"
       });
-    } finally {
-      setPurchasingId(null);
     }
   };
 
@@ -757,7 +537,6 @@ const StorePage = () => {
             Audio Content
           </h2>
           
-          
           {audioProducts.length === 0 ? (
             <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
               <CardContent className="p-8 text-center">
@@ -804,7 +583,6 @@ const StorePage = () => {
                          {getAccessLevelBadge(product)}
                          
                           <div className="flex gap-2">
-                            {/* Podcast Download Manager for merchant-only podcasts */}
                             {product.audio_type === 'podcast' && product.access_level === 'merchant_only' ? (
                               <DownloadOpportunityChecker
                                 audioProductId={product.id}
@@ -830,7 +608,6 @@ const StorePage = () => {
                                 )}
                               </DownloadOpportunityChecker>
                             ) : (
-                              /* Regular download/purchase button for non-podcast content */
                               <Button
                                 size="sm"
                                 onClick={() => handleAudioPurchase(product)}
@@ -849,77 +626,6 @@ const StorePage = () => {
                            )}
                          </div>
                        </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Video Products Section */}
-        <div className="mb-12">
-          <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
-            <Video className="w-6 h-6" />
-            Video Content
-          </h2>
-          
-          {videoProducts.length === 0 ? (
-            <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
-              <CardContent className="p-8 text-center">
-                <Video className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-white mb-2">No Video Products Available</h3>
-                <p className="text-gray-400">Be the first to upload some video content!</p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {videoProducts.map((product) => (
-                <Card key={product.id} className="bg-gray-800/50 border-gray-700 backdrop-blur-sm hover:bg-gray-800/70 transition-colors">
-                  <CardHeader className="p-4">
-                    {product.thumbnail_url ? (
-                      <img
-                        src={product.thumbnail_url}
-                        alt={product.title}
-                        className="w-full h-40 object-cover rounded-lg mb-3"
-                      />
-                    ) : (
-                      <div className="w-full h-40 bg-gray-700 rounded-lg mb-3 flex items-center justify-center">
-                        <Video className="w-12 h-12 text-gray-400" />
-                      </div>
-                    )}
-                    <CardTitle className="text-white text-lg line-clamp-2">{product.title}</CardTitle>
-                    {product.description && (
-                      <p className="text-gray-400 text-sm line-clamp-2">{product.description}</p>
-                    )}
-                  </CardHeader>
-                  <CardContent className="p-4 pt-0">
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <Badge variant="secondary" className="capitalize">
-                          {product.video_type}
-                        </Badge>
-                      </div>
-                      
-                      <div className="flex items-center justify-between">
-                        {getVideoBadges(product)}
-                        
-                        <Button
-                          size="sm"
-                          onClick={() => handleVideoPurchase(product)}
-                          disabled={purchasingId === product.id || (!canDownloadVideo(product) && (product.access_level === "merchant_only"))}
-                          className="bg-primary hover:bg-primary/90"
-                        >
-                          {purchasingId === product.id ? (
-                            "Processing..."
-                          ) : (
-                            <>
-                              {(product.access_level === "paid") ? <DollarSign className="w-4 h-4 mr-1" /> : <Download className="w-4 h-4 mr-1" />}
-                              {getVideoDownloadButtonText(product)}
-                            </>
-                          )}
-                        </Button>
-                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -948,39 +654,50 @@ const StorePage = () => {
               {videoAdOpportunities.map((opportunity) => (
                 <Card key={opportunity.id} className="bg-gray-800/50 border-gray-700 backdrop-blur-sm hover:bg-gray-800/70 transition-colors">
                   <CardHeader className="p-4">
-                    <div className="w-full h-40 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg mb-3 flex items-center justify-center">
-                      <Video className="w-12 h-12 text-white" />
-                    </div>
-                    <CardTitle className="text-white text-lg line-clamp-2">{opportunity.title}</CardTitle>
-                    {opportunity.description && (
-                      <p className="text-gray-400 text-sm line-clamp-2">{opportunity.description}</p>
+                    {opportunity.thumbnail_url ? (
+                      <img
+                        src={opportunity.thumbnail_url}
+                        alt={opportunity.title}
+                        className="w-full h-40 object-cover rounded-lg mb-3"
+                      />
+                    ) : (
+                      <div className="w-full h-40 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg mb-3 flex items-center justify-center">
+                        <Video className="w-12 h-12 text-white" />
+                      </div>
                     )}
+                    <CardTitle className="text-white text-lg line-clamp-2">{opportunity.title}</CardTitle>
+                    <ExpandableDescription 
+                      description={opportunity.description || ""}
+                      maxLength={80}
+                      className="mt-2"
+                    />
                   </CardHeader>
                   <CardContent className="p-4 pt-0">
                     <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <Badge variant="secondary" className="capitalize">
+                      <div className="flex items-center justify-between flex-wrap gap-1">
+                        <Badge variant="secondary" className="capitalize text-xs">
                           {opportunity.audio_type}
                         </Badge>
-                        <Badge className="bg-green-600 hover:bg-green-700">
+                        <Badge className="bg-green-600 hover:bg-green-700 text-xs">
                           ${opportunity.payment_amount}
                         </Badge>
                       </div>
                       
-                      <div className="flex items-center justify-between">
-                        <Badge className="bg-blue-600 hover:bg-blue-700 capitalize">
+                      <div className="flex items-center justify-between gap-2">
+                        <Badge className="bg-blue-600 hover:bg-blue-700 capitalize text-xs">
                           {opportunity.target_platform}
                         </Badge>
                         
-                        <div className="flex gap-2">
+                        <div className="flex gap-1">
                           <Button
                             size="sm"
                             variant="outline"
                             asChild
+                            className="text-xs h-7 px-2"
                           >
                             <a href={opportunity.audio_file_url} target="_blank" rel="noopener noreferrer">
-                              <Download className="w-4 h-4 mr-1" />
-                              Download
+                              <Download className="w-3 h-3 mr-1" />
+                              Audio
                             </a>
                           </Button>
                           {userProfile?.user_type === 'merchant' && userProfile?.approval_status === 'approved' && (
@@ -990,7 +707,7 @@ const StorePage = () => {
                                 setSelectedOpportunity(opportunity);
                                 setSubmissionModalOpen(true);
                               }}
-                              className="bg-blue-600 hover:bg-blue-700"
+                              className="bg-blue-600 hover:bg-blue-700 text-xs h-7 px-2"
                             >
                               Apply
                             </Button>

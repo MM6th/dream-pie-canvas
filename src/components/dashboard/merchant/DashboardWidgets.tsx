@@ -4,9 +4,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import BackgroundUpload from "@/components/BackgroundUpload";
 import AudioUploadModal from "@/components/AudioUploadModal";
-import VideoProductManager from "@/components/VideoProductManager";
 import FashionProductUploadModal from "@/components/FashionProductUploadModal";
 import AstrologyProductUploadModal from "@/components/AstrologyProductUploadModal";
+import VideoAdOpportunityUploadModal from "@/components/VideoAdOpportunityUploadModal";
 import FashionProductManager from "@/components/FashionProductManager";
 import AudioProductManager from "@/components/AudioProductManager";
 import AstrologyProductManager from "@/components/AstrologyProductManager";
@@ -21,6 +21,7 @@ interface DashboardWidgetsProps {
 const DashboardWidgets = ({ onSuccess, onViewStore, onBackgroundUpload, isAdmin }: DashboardWidgetsProps) => {
   const [isFashionModalOpen, setIsFashionModalOpen] = useState(false);
   const [isAstrologyModalOpen, setIsAstrologyModalOpen] = useState(false);
+  const [isVideoAdModalOpen, setIsVideoAdModalOpen] = useState(false);
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -144,20 +145,26 @@ const DashboardWidgets = ({ onSuccess, onViewStore, onBackgroundUpload, isAdmin 
         </div>
       )}
 
-      {/* Video Products - Admin Only */}
+      {/* Video Ad Opportunities - Admin Only */}
       {isAdmin && (
         <div className="grid grid-cols-1 lg:grid-cols-1 gap-6 mb-8">
           <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-bold text-white">Video Products</h3>
+                <h3 className="text-xl font-bold text-white">Video Ad Opportunities</h3>
+                <Button
+                  onClick={() => setIsVideoAdModalOpen(true)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  Create Video Ad Opportunity
+                </Button>
               </div>
-              <p className="text-gray-400 mb-4">Upload and manage your video content</p>
+              <p className="text-gray-400 mb-4">Create video advertising opportunities for merchants</p>
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg">
                   <div>
-                    <p className="text-white font-medium">Total Video Products</p>
-                    <p className="text-gray-400 text-sm">Manage your video library</p>
+                    <p className="text-white font-medium">Active Opportunities</p>
+                    <p className="text-gray-400 text-sm">Manage video ad campaigns</p>
                   </div>
                   <Button
                     onClick={onViewStore}
@@ -170,13 +177,6 @@ const DashboardWidgets = ({ onSuccess, onViewStore, onBackgroundUpload, isAdmin 
               </div>
             </CardContent>
           </Card>
-        </div>
-      )}
-
-      {/* Video Product Management - Admin Only */}
-      {isAdmin && (
-        <div className="mb-12">
-          <VideoProductManager />
         </div>
       )}
 
@@ -217,6 +217,13 @@ const DashboardWidgets = ({ onSuccess, onViewStore, onBackgroundUpload, isAdmin 
       <AstrologyProductUploadModal 
         isOpen={isAstrologyModalOpen}
         onClose={() => setIsAstrologyModalOpen(false)}
+        onSuccess={onSuccess} 
+      />
+
+      {/* Video Ad Opportunity Upload Modal */}
+      <VideoAdOpportunityUploadModal 
+        isOpen={isVideoAdModalOpen}
+        onClose={() => setIsVideoAdModalOpen(false)}
         onSuccess={onSuccess} 
       />
     </div>
