@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -8,7 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, Save } from "lucide-react";
+import { Loader2, Save, Upload, Music, Image } from "lucide-react";
+import ImagePicker from "@/components/ImagePicker";
 
 interface VideoAdOpportunity {
   id: string;
@@ -21,6 +23,7 @@ interface VideoAdOpportunity {
   available_spots: number;
   access_level: string;
   is_adult_content: boolean;
+  thumbnail_url?: string | null;
 }
 
 interface EditVideoAdOpportunityModalProps {
@@ -32,6 +35,8 @@ interface EditVideoAdOpportunityModalProps {
 
 const EditVideoAdOpportunityModal = ({ isOpen, onClose, opportunity, onSuccess }: EditVideoAdOpportunityModalProps) => {
   const [loading, setLoading] = useState(false);
+  const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [thumbnailUrl, setThumbnailUrl] = useState('');
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -42,6 +47,8 @@ const EditVideoAdOpportunityModal = ({ isOpen, onClose, opportunity, onSuccess }
     access_level: 'public' as const,
     is_adult_content: false,
   });
+
+  const MAX_AUDIO_SIZE = 50 * 1024 * 1024; // 50MB
 
   useEffect(() => {
     if (opportunity) {
@@ -55,8 +62,31 @@ const EditVideoAdOpportunityModal = ({ isOpen, onClose, opportunity, onSuccess }
         access_level: opportunity.access_level as any,
         is_adult_content: opportunity.is_adult_content,
       });
+      setThumbnailUrl(opportunity.thumbnail_url || '');
     }
   }, [opportunity]);
+
+  const validateFileSize = (file: File, maxSize: number, fileType: string) => {
+    if (file.size > maxSize) {
+      toast({
+        title: "File too large",
+        description: `${fileType} file must be smaller than ${maxSize / (1024 * 1024)}MB`,
+        variant: "destructive"
+      });
+      return false;
+    }
+    return true;
+  };
+
+  const handleAudioFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && validateFileSize(file, MAX_AUDIO_SIZE, "Audio")) {
+      setAudioFile(file);
+    } else {
+      e.target.value = '';
+      setAudioFile(null);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,6 +94,27 @@ const EditVideoAdOpportunityModal = ({ isOpen, onClose, opportunity, onSuccess }
 
     setLoading(true);
     try {
+      let audioFileUrl = opportunity.audio_file_url;
+      let finalThumbnailUrl = thumbnailUrl;
+
+      // Upload new audio file if selected
+      if (audioFile) {
+        const audioFileExt = audioFile.name.split('.').pop();
+        const audioFileName = `video-ad-opportunities/${opportunity.id}/${Date.now()}.${audioFileExt}`;
+        
+        const { data: audioData, error: audioError } = await supabase.storage
+          .from('audio-files')
+          .upload(audioFileName, audioFile);
+
+        if (audioError) throw audioError;
+
+        const { data: { publicUrl: audioPublicUrl } } = supabase.storage
+          .from('audio-files')
+          .getPublicUrl(audioData.path);
+
+        audioFileUrl = audioPublicUrl;
+      }
+
       const { error } = await supabase
         .from('video_ad_opportunities')
         .update({
@@ -75,6 +126,8 @@ const EditVideoAdOpportunityModal = ({ isOpen, onClose, opportunity, onSuccess }
           available_spots: formData.available_spots,
           access_level: formData.access_level,
           is_adult_content: formData.is_adult_content,
+          audio_file_url: audioFileUrl,
+          thumbnail_url: finalThumbnailUrl || null,
           updated_at: new Date().toISOString()
         })
         .eq('id', opportunity.id);
@@ -130,6 +183,66 @@ const EditVideoAdOpportunityModal = ({ isOpen, onClose, opportunity, onSuccess }
               className="bg-gray-700 border-gray-600 text-white"
               rows={3}
             />
+          </div>
+
+          <div>
+            <Label htmlFor="audioFile" className="flex items-center gap-2 text-white">
+              <Music className="w-4 h-4" />
+              Update Audio File (Optional, Max 50MB)
+            </Label>
+            <Input
+              id="audioFile"
+              type="file"
+              accept="audio/*"
+              onChange={handleAudioFileChange}
+              className="bg-gray-700 border-gray-600 text-white"
+            />
+            <p className="text-xs text-gray-400 mt-1">
+              Leave empty to keep current audio file. Upload a new file to replace it.
+            </p>
+            {opportunity?.audio_file_url && (
+              <div className="mt-2">
+                <a
+                  href={opportunity.audio_file_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-400 hover:text-blue-300 text-sm flex items-center gap-1"
+                >
+                  <Music className="w-4 h-4" />
+                  Current Audio File
+                </a>
+              </div>
+            )}
+          </div>
+
+          <div>
+            <Label className="flex items-center gap-2 text-white mb-2">
+              <Image className="w-4 h-4" />
+              Thumbnail Image (Optional)
+            </Label>
+            <ImagePicker
+              onImageSelect={setThumbnailUrl}
+              currentImageUrl={thumbnailUrl}
+              trigger={
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="border-gray-600 text-white bg-gray-700 hover:bg-gray-600"
+                >
+                  <Image className="w-4 h-4 mr-2" />
+                  {thumbnailUrl ? 'Change Thumbnail' : 'Select Thumbnail'}
+                </Button>
+              }
+            />
+            {thumbnailUrl && (
+              <div className="mt-2">
+                <img
+                  src={thumbnailUrl}
+                  alt="Thumbnail preview"
+                  className="w-20 h-20 object-cover rounded border border-gray-600"
+                />
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
