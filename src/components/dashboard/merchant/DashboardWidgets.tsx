@@ -4,7 +4,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import BackgroundUpload from "@/components/BackgroundUpload";
 import AudioUploadModal from "@/components/AudioUploadModal";
-import VideoUploadModal from "@/components/VideoUploadModal";
 import VideoProductManager from "@/components/VideoProductManager";
 import FashionProductUploadModal from "@/components/FashionProductUploadModal";
 import AstrologyProductUploadModal from "@/components/AstrologyProductUploadModal";
@@ -152,7 +151,6 @@ const DashboardWidgets = ({ onSuccess, onViewStore, onBackgroundUpload, isAdmin 
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-xl font-bold text-white">Video Products</h3>
-                <VideoUploadModal onSuccess={onSuccess} isAdmin={isAdmin} />
               </div>
               <p className="text-gray-400 mb-4">Upload and manage your video content</p>
               <div className="space-y-4">
@@ -194,7 +192,6 @@ const DashboardWidgets = ({ onSuccess, onViewStore, onBackgroundUpload, isAdmin 
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-bold text-white">Films</h3>
-              <VideoUploadModal onSuccess={onSuccess} isAdmin={isAdmin} />
             </div>
             <p className="text-gray-400 mb-4">Upload and manage your video content for the films page</p>
             <div className="space-y-4">

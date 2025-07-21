@@ -858,7 +858,7 @@ const StorePage = () => {
         </div>
 
         {/* Video Products Section */}
-        <div>
+        <div className="mb-12">
           <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
             <Video className="w-6 h-6" />
             Video Content
@@ -927,7 +927,96 @@ const StorePage = () => {
             </div>
           )}
         </div>
+
+        {/* Video Ad Opportunities Section */}
+        <div className="mb-12">
+          <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+            <Video className="w-6 h-6" />
+            Video Ad Opportunities
+          </h2>
+          
+          {videoAdOpportunities.length === 0 ? (
+            <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+              <CardContent className="p-8 text-center">
+                <Video className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-white mb-2">No Video Ad Opportunities Available</h3>
+                <p className="text-gray-400">Check back later for new opportunities!</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {videoAdOpportunities.map((opportunity) => (
+                <Card key={opportunity.id} className="bg-gray-800/50 border-gray-700 backdrop-blur-sm hover:bg-gray-800/70 transition-colors">
+                  <CardHeader className="p-4">
+                    <div className="w-full h-40 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg mb-3 flex items-center justify-center">
+                      <Video className="w-12 h-12 text-white" />
+                    </div>
+                    <CardTitle className="text-white text-lg line-clamp-2">{opportunity.title}</CardTitle>
+                    {opportunity.description && (
+                      <p className="text-gray-400 text-sm line-clamp-2">{opportunity.description}</p>
+                    )}
+                  </CardHeader>
+                  <CardContent className="p-4 pt-0">
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <Badge variant="secondary" className="capitalize">
+                          {opportunity.audio_type}
+                        </Badge>
+                        <Badge className="bg-green-600 hover:bg-green-700">
+                          ${opportunity.payment_amount}
+                        </Badge>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <Badge className="bg-blue-600 hover:bg-blue-700 capitalize">
+                          {opportunity.target_platform}
+                        </Badge>
+                        
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            asChild
+                          >
+                            <a href={opportunity.audio_file_url} target="_blank" rel="noopener noreferrer">
+                              <Download className="w-4 h-4 mr-1" />
+                              Download
+                            </a>
+                          </Button>
+                          {userProfile?.user_type === 'merchant' && userProfile?.approval_status === 'approved' && (
+                            <Button
+                              size="sm"
+                              onClick={() => {
+                                setSelectedOpportunity(opportunity);
+                                setSubmissionModalOpen(true);
+                              }}
+                              className="bg-blue-600 hover:bg-blue-700"
+                            >
+                              Apply
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
+
+      {selectedOpportunity && (
+        <VideoAdSubmissionModal
+          isOpen={submissionModalOpen}
+          onClose={() => setSubmissionModalOpen(false)}
+          onSuccess={() => {
+            setSubmissionModalOpen(false);
+            fetchProducts();
+          }}
+          opportunity={selectedOpportunity}
+        />
+      )}
     </div>
   );
 };

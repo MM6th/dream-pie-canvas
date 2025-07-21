@@ -45,53 +45,54 @@ const VideoAdOpportunitySection = () => {
 
   const fetchData = async () => {
     try {
-      // Fetch downloads
+      // Fetch downloads with opportunity data
       const { data: downloadsData, error: downloadsError } = await supabase
         .from('video_ad_downloads')
-        .select(`
-          id,
-          video_ad_opportunities!inner (
-            id,
-            title,
-            description,
-            audio_file_url,
-            payment_amount,
-            target_platform
-          )
-        `)
+        .select('id, video_ad_opportunity_id')
         .eq('merchant_id', user?.id);
 
       if (downloadsError) throw downloadsError;
 
-      // Fetch submissions
+      // Fetch submissions with opportunity data
       const { data: submissionsData, error: submissionsError } = await supabase
         .from('video_ad_submissions')
-        .select(`
-          id,
-          status,
-          created_at,
-          video_ad_opportunities!inner (
-            id,
-            title,
-            description,
-            audio_file_url,
-            payment_amount,
-            target_platform
-          )
-        `)
+        .select('id, status, created_at, video_ad_opportunity_id')
         .eq('merchant_id', user?.id);
 
       if (submissionsError) throw submissionsError;
 
-      setDownloads(downloadsData?.map(d => ({
-        ...d,
-        video_ad_opportunity: d.video_ad_opportunities
-      })) || []);
+      // Get unique opportunity IDs
+      const opportunityIds = [
+        ...(downloadsData?.map(d => d.video_ad_opportunity_id) || []),
+        ...(submissionsData?.map(s => s.video_ad_opportunity_id) || [])
+      ];
 
+      // Fetch opportunity details
+      const { data: opportunitiesData, error: opportunitiesError } = await supabase
+        .from('video_ad_opportunities')
+        .select('id, title, description, audio_file_url, payment_amount, target_platform')
+        .in('id', [...new Set(opportunityIds)]);
+
+      if (opportunitiesError) throw opportunitiesError;
+
+      // Create opportunity lookup
+      const opportunityMap = new Map(
+        opportunitiesData?.map(opp => [opp.id, opp]) || []
+      );
+
+      // Map downloads with opportunity data
+      setDownloads(downloadsData?.map(d => ({
+        id: d.id,
+        video_ad_opportunity: opportunityMap.get(d.video_ad_opportunity_id)!
+      })).filter(d => d.video_ad_opportunity) || []);
+
+      // Map submissions with opportunity data
       setSubmissions(submissionsData?.map(s => ({
-        ...s,
-        video_ad_opportunity: s.video_ad_opportunities
-      })) || []);
+        id: s.id,
+        status: s.status,
+        created_at: s.created_at,
+        video_ad_opportunity: opportunityMap.get(s.video_ad_opportunity_id)!
+      })).filter(s => s.video_ad_opportunity) || []);
 
     } catch (error: any) {
       console.error('Error fetching video ad data:', error);
