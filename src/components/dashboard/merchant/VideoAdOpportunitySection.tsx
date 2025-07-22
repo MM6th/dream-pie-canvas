@@ -217,7 +217,7 @@ const VideoAdOpportunitySection = () => {
                               disabled={isDownloading}
                             >
                               <Download className="w-4 h-4 mr-2" />
-                              {isDownloading ? "Downloading..." : "Download Audio"}
+                              {isDownloading ? "Downloading..." : "Add to Library"}
                             </Button>
                             {!hasSubmission && (
                               <Button

@@ -263,6 +263,81 @@ const StorePage = () => {
     );
   };
 
+  const handleVideoAdDownload = async (opportunity: VideoAdOpportunity) => {
+    if (!user) {
+      toast({
+        title: "Please sign in",
+        description: "You need to be logged in to download video ad opportunities",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      // Check if user is an approved merchant
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('user_type, approval_status')
+        .eq('id', user.id)
+        .single();
+
+      if (profileError) throw profileError;
+
+      if (profile.user_type !== 'merchant' || profile.approval_status !== 'approved') {
+        toast({
+          title: "Access Denied",
+          description: "Only approved merchants can download video ad opportunities",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Check if already downloaded
+      const { data: existingDownload, error: checkError } = await supabase
+        .from('video_ad_downloads')
+        .select('id')
+        .eq('merchant_id', user.id)
+        .eq('video_ad_opportunity_id', opportunity.id)
+        .maybeSingle();
+
+      if (checkError) throw checkError;
+
+      if (existingDownload) {
+        toast({
+          title: "Already in your library",
+          description: "This video ad opportunity is already available in your dashboard",
+        });
+        return;
+      }
+
+      // Record the download
+      const { error: insertError } = await supabase
+        .from('video_ad_downloads')
+        .insert({
+          merchant_id: user.id,
+          video_ad_opportunity_id: opportunity.id
+        });
+
+      if (insertError) throw insertError;
+
+      toast({
+        title: "Video Ad Opportunity Downloaded",
+        description: "The audio has been added to your library! Check your dashboard to submit your video.",
+      });
+
+      // Refresh to update UI
+      window.location.reload();
+
+    } catch (error: any) {
+      console.error('Error downloading video ad opportunity:', error);
+      toast({
+        title: "Download Failed",
+        description: error.message || "Failed to download video ad opportunity",
+        variant: "destructive"
+      });
+    }
+  };
+
   const handleFreeAudioDownload = async (product: AudioProduct) => {
     if (!user) {
       toast({
@@ -714,13 +789,11 @@ const StorePage = () => {
                           <Button
                             size="sm"
                             variant="outline"
-                            asChild
+                            onClick={() => handleVideoAdDownload(opportunity)}
                             className="text-xs h-7 px-2"
                           >
-                            <a href={opportunity.audio_file_url} target="_blank" rel="noopener noreferrer">
-                              <Download className="w-3 h-3 mr-1" />
-                              Audio
-                            </a>
+                            <Download className="w-3 h-3 mr-1" />
+                            Add to Library
                           </Button>
                           {userProfile?.user_type === 'merchant' && userProfile?.approval_status === 'approved' && (
                             <Button
