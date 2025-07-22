@@ -122,6 +122,33 @@ const VideoAdOpportunitySection = () => {
     setSubmissionModalOpen(true);
   };
 
+  const handleAudioDownload = async (audioUrl: string, title: string) => {
+    try {
+      const response = await fetch(audioUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_audio.mp3`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      toast({
+        title: "Audio downloaded successfully!",
+        description: "The audio has been downloaded to your device.",
+      });
+    } catch (error) {
+      console.error('Error downloading audio:', error);
+      toast({
+        title: "Download failed",
+        description: "There was an error downloading the audio file.",
+        variant: "destructive"
+      });
+    }
+  };
+
   if (loading) {
     return (
       <Card className="bg-gray-800/50 border-gray-700">
@@ -171,12 +198,10 @@ const VideoAdOpportunitySection = () => {
                             <Button
                               size="sm"
                               variant="outline"
-                              asChild
+                              onClick={() => handleAudioDownload(download.video_ad_opportunity.audio_file_url, download.video_ad_opportunity.title)}
                             >
-                              <a href={download.video_ad_opportunity.audio_file_url} target="_blank" rel="noopener noreferrer">
-                                <Download className="w-4 h-4 mr-2" />
-                                Download Audio
-                              </a>
+                              <Download className="w-4 h-4 mr-2" />
+                              Download Audio
                             </Button>
                             {!hasSubmission && (
                               <Button
