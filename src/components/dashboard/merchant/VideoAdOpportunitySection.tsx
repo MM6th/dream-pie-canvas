@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -36,6 +37,7 @@ const VideoAdOpportunitySection = () => {
   const [loading, setLoading] = useState(true);
   const [selectedOpportunity, setSelectedOpportunity] = useState<VideoAdOpportunity | null>(null);
   const [submissionModalOpen, setSubmissionModalOpen] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -123,24 +125,37 @@ const VideoAdOpportunitySection = () => {
   };
 
   const handleAudioDownload = async (audioUrl: string, title: string) => {
+    if (isDownloading) return;
+    
+    setIsDownloading(true);
+    
     try {
-      const response = await fetch(audioUrl);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_audio.mp3`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      console.log('Starting download from URL:', audioUrl);
       
-      toast({
-        title: "Audio downloaded successfully!",
-        description: "The audio has been downloaded to your device.",
-      });
+      // Create a hidden anchor element
+      const link = document.createElement('a');
+      link.style.display = 'none';
+      link.href = audioUrl;
+      link.download = `${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_audio.mp3`;
+      
+      // Append to body, click it, and then remove it
+      document.body.appendChild(link);
+      link.click();
+      
+      // Short delay before removing the element
+      setTimeout(() => {
+        document.body.removeChild(link);
+        setIsDownloading(false);
+        
+        toast({
+          title: "Audio downloaded successfully!",
+          description: "The audio has been downloaded to your device.",
+        });
+      }, 100);
     } catch (error) {
       console.error('Error downloading audio:', error);
+      setIsDownloading(false);
+      
       toast({
         title: "Download failed",
         description: "There was an error downloading the audio file.",
@@ -199,9 +214,10 @@ const VideoAdOpportunitySection = () => {
                               size="sm"
                               variant="outline"
                               onClick={() => handleAudioDownload(download.video_ad_opportunity.audio_file_url, download.video_ad_opportunity.title)}
+                              disabled={isDownloading}
                             >
                               <Download className="w-4 h-4 mr-2" />
-                              Download Audio
+                              {isDownloading ? "Downloading..." : "Download Audio"}
                             </Button>
                             {!hasSubmission && (
                               <Button
