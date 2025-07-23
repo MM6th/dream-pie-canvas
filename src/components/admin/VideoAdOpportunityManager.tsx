@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Video, Edit, Trash2, Plus, DollarSign, Users, Eye } from "lucide-react";
+import { Video, Edit, Trash2, Plus, DollarSign, Users, Eye, ChevronLeft, ChevronRight } from "lucide-react";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import VideoAdOpportunityUploadModal from "@/components/VideoAdOpportunityUploadModal";
@@ -157,93 +158,97 @@ const VideoAdOpportunityManager = () => {
               </Button>
             </div>
           ) : (
-            <div className="grid gap-4">
-              {opportunities.map((opportunity) => (
-                <div
-                  key={opportunity.id}
-                  className="p-4 bg-gray-700/50 rounded-lg border border-gray-600"
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1">
-                      <h3 className="text-white font-medium text-lg mb-1">
-                        {opportunity.title}
-                      </h3>
-                      {opportunity.description && (
-                        <p className="text-gray-400 text-sm mb-2 line-clamp-2">
-                          {opportunity.description}
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 ml-4">
-                      <Button
-                        onClick={() => handleEdit(opportunity)}
-                        variant="outline"
-                        size="sm"
-                        className="border-gray-600 text-white bg-transparent hover:bg-gray-700"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        onClick={() => handleDelete(opportunity)}
-                        variant="outline"
-                        size="sm"
-                        className="border-red-600 text-red-400 bg-transparent hover:bg-red-900/20"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
+            <Carousel className="w-full">
+              <CarouselContent className="-ml-2 md:-ml-4">
+                {opportunities.map((opportunity) => (
+                  <CarouselItem key={opportunity.id} className="pl-2 md:pl-4 md:basis-1/2 lg:basis-1/3">
+                    <div className="p-4 bg-gray-700/50 rounded-lg border border-gray-600 h-full">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1">
+                          <h3 className="text-white font-medium text-lg mb-1">
+                            {opportunity.title}
+                          </h3>
+                          {opportunity.description && (
+                            <p className="text-gray-400 text-sm mb-2 line-clamp-2">
+                              {opportunity.description}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 ml-4">
+                          <Button
+                            onClick={() => handleEdit(opportunity)}
+                            variant="outline"
+                            size="sm"
+                            className="border-gray-600 text-white bg-transparent hover:bg-gray-700"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            onClick={() => handleDelete(opportunity)}
+                            variant="outline"
+                            size="sm"
+                            className="border-red-600 text-red-400 bg-transparent hover:bg-red-900/20"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
 
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3">
-                    <div>
-                      <p className="text-xs text-gray-400 mb-1">Payment</p>
-                      <div className="flex items-center gap-1">
-                        <DollarSign className="w-3 h-3 text-green-400" />
-                        <span className="text-white font-medium">{opportunity.payment_amount}</span>
+                      <div className="grid grid-cols-2 gap-3 mb-3">
+                        <div>
+                          <p className="text-xs text-gray-400 mb-1">Payment</p>
+                          <div className="flex items-center gap-1">
+                            <DollarSign className="w-3 h-3 text-green-400" />
+                            <span className="text-white font-medium">{opportunity.payment_amount}</span>
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-400 mb-1">Platform</p>
+                          <span className="text-white capitalize">{opportunity.target_platform}</span>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-400 mb-1">Available Spots</p>
+                          <div className="flex items-center gap-1">
+                            <Users className="w-3 h-3 text-blue-400" />
+                            <span className="text-white">{opportunity.available_spots}</span>
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-400 mb-1">Audio Type</p>
+                          <span className="text-white capitalize">{opportunity.audio_type}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          {getAccessLevelBadge(opportunity.access_level)}
+                          {opportunity.is_adult_content && (
+                            <Badge className="bg-red-600">Adult Content</Badge>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <a
+                          href={opportunity.audio_file_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-400 hover:text-blue-300 text-sm flex items-center gap-1"
+                        >
+                          <Eye className="w-4 h-4" />
+                          View Audio
+                        </a>
+                        <span className="text-xs text-gray-500">
+                          {new Date(opportunity.created_at).toLocaleDateString()}
+                        </span>
                       </div>
                     </div>
-                    <div>
-                      <p className="text-xs text-gray-400 mb-1">Platform</p>
-                      <span className="text-white capitalize">{opportunity.target_platform}</span>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-400 mb-1">Available Spots</p>
-                      <div className="flex items-center gap-1">
-                        <Users className="w-3 h-3 text-blue-400" />
-                        <span className="text-white">{opportunity.available_spots}</span>
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-400 mb-1">Audio Type</p>
-                      <span className="text-white capitalize">{opportunity.audio_type}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      {getAccessLevelBadge(opportunity.access_level)}
-                      {opportunity.is_adult_content && (
-                        <Badge className="bg-red-600">Adult Content</Badge>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <a
-                        href={opportunity.audio_file_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-400 hover:text-blue-300 text-sm flex items-center gap-1"
-                      >
-                        <Eye className="w-4 h-4" />
-                        View Audio
-                      </a>
-                      <span className="text-xs text-gray-500">
-                        Created {new Date(opportunity.created_at).toLocaleDateString()}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="text-white border-gray-600 bg-gray-800 hover:bg-gray-700" />
+              <CarouselNext className="text-white border-gray-600 bg-gray-800 hover:bg-gray-700" />
+            </Carousel>
           )}
         </CardContent>
       </Card>

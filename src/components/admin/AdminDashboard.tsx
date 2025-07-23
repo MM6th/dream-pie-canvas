@@ -74,16 +74,6 @@ const AdminDashboard = () => {
         </CardContent>
       </Card>
 
-      {/* Video Ad Opportunities Management */}
-      <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
-        <CardHeader>
-          <CardTitle className="text-white">Video Ad Opportunities Management</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <VideoAdOpportunityManager />
-        </CardContent>
-      </Card>
-
       <Tabs defaultValue="merchants" className="w-full">
         <TabsList className="grid w-full grid-cols-5 bg-gray-800 border-gray-700">
           <TabsTrigger 
@@ -149,7 +139,17 @@ const AdminDashboard = () => {
         </TabsContent>
       </Tabs>
 
-      <VideoAdOpportunityUploadModal 
+      {/* Video Ad Opportunities Management */}
+      <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+        <CardHeader>
+          <CardTitle className="text-white">Video Ad Opportunities Management</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <VideoAdOpportunityManager />
+        </CardContent>
+      </Card>
+
+      <VideoAdOpportunityUploadModal
         isOpen={videoAdModalOpen} 
         onClose={() => setVideoAdModalOpen(false)}
         onSuccess={() => {
