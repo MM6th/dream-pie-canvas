@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -75,8 +74,18 @@ const AdminDashboard = () => {
         </CardContent>
       </Card>
 
+      {/* Video Ad Opportunities Management */}
+      <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+        <CardHeader>
+          <CardTitle className="text-white">Video Ad Opportunities Management</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <VideoAdOpportunityManager />
+        </CardContent>
+      </Card>
+
       <Tabs defaultValue="merchants" className="w-full">
-        <TabsList className="grid w-full grid-cols-6 bg-gray-800 border-gray-700">
+        <TabsList className="grid w-full grid-cols-5 bg-gray-800 border-gray-700">
           <TabsTrigger 
             value="merchants" 
             className="text-white data-[state=active]:bg-gray-700"
@@ -117,13 +126,6 @@ const AdminDashboard = () => {
             <MessageSquare className="w-4 h-4 mr-2" />
             Bulletin Posts
           </TabsTrigger>
-          <TabsTrigger 
-            value="video-opportunities" 
-            className="text-white data-[state=active]:bg-gray-700"
-          >
-            <Video className="w-4 h-4 mr-2" />
-            Video Opportunities
-          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="merchants" className="mt-6">
@@ -144,10 +146,6 @@ const AdminDashboard = () => {
 
         <TabsContent value="bulletin" className="mt-6">
           <AdminBulletinPostManager />
-        </TabsContent>
-
-        <TabsContent value="video-opportunities" className="mt-6">
-          <VideoAdOpportunityManager />
         </TabsContent>
       </Tabs>
 
