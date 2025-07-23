@@ -76,7 +76,7 @@ const AdminDashboard = () => {
       </Card>
 
       <Tabs defaultValue="merchants" className="w-full">
-        <TabsList className="grid w-full grid-cols-7 bg-gray-800 border-gray-700">
+        <TabsList className="grid w-full grid-cols-6 bg-gray-800 border-gray-700">
           <TabsTrigger 
             value="merchants" 
             className="text-white data-[state=active]:bg-gray-700"
@@ -124,13 +124,6 @@ const AdminDashboard = () => {
             <Video className="w-4 h-4 mr-2" />
             Video Opportunities
           </TabsTrigger>
-          <TabsTrigger 
-            value="video-ads" 
-            className="text-white data-[state=active]:bg-gray-700"
-          >
-            <Video className="w-4 h-4 mr-2" />
-            Video Ad Submissions
-          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="merchants" className="mt-6">
@@ -155,10 +148,6 @@ const AdminDashboard = () => {
 
         <TabsContent value="video-opportunities" className="mt-6">
           <VideoAdOpportunityManager />
-        </TabsContent>
-
-        <TabsContent value="video-ads" className="mt-6">
-          <VideoAdSubmissionsManager />
         </TabsContent>
       </Tabs>
 

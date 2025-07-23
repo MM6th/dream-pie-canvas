@@ -5,11 +5,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, Eye, CheckCircle, XCircle, Clock, AlertCircle, ScrollText } from "lucide-react";
+import { FileText, Eye, CheckCircle, XCircle, Clock, AlertCircle, ScrollText, Video } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import CoverSubmissionDetailModal from "@/components/CoverSubmissionDetailModal";
 import SignedContractsSection from "./SignedContractsSection";
+import VideoAdSubmissionsManager from "./VideoAdSubmissionsManager";
 
 interface CoverSubmissionData {
   id: string;
@@ -269,13 +270,20 @@ Both parties acknowledge they have read, understood, and agree to be legally bou
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="submissions" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 bg-gray-700 border-gray-600">
+            <TabsList className="grid w-full grid-cols-3 bg-gray-700 border-gray-600">
               <TabsTrigger 
                 value="submissions" 
                 className="text-white data-[state=active]:bg-gray-600"
               >
                 <FileText className="w-4 h-4 mr-2" />
-                Submissions
+                Cover Submissions
+              </TabsTrigger>
+              <TabsTrigger 
+                value="video-submissions" 
+                className="text-white data-[state=active]:bg-gray-600"
+              >
+                <Video className="w-4 h-4 mr-2" />
+                Video Ad Submissions
               </TabsTrigger>
               <TabsTrigger 
                 value="contracts" 
@@ -390,6 +398,10 @@ Both parties acknowledge they have read, understood, and agree to be legally bou
               </div>
             </div>
           )}
+            </TabsContent>
+
+            <TabsContent value="video-submissions" className="mt-6">
+              <VideoAdSubmissionsManager />
             </TabsContent>
 
             <TabsContent value="contracts" className="mt-6">
