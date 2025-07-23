@@ -1,35 +1,26 @@
-import React, { useState } from "react";
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { 
   Users, 
   FileText, 
   Star, 
-  ShoppingBag, 
-  Zap, 
   Image,
-  UserCheck,
-  MessageSquare,
-  Calculator,
-  Video
+  MessageSquare
 } from "lucide-react";
 import MerchantsManagement from "./MerchantsManagement";
 import CoverSubmissionsManagement from "./CoverSubmissionsManagement";
 import ReviewsManagement from "./ReviewsManagement";
 import AdminContentGallery from "./AdminContentGallery";
 import AdminBulletinPostManager from "./AdminBulletinPostManager";
-import VideoAdSubmissionsManager from "./VideoAdSubmissionsManager";
 import VideoAdOpportunityManager from "./VideoAdOpportunityManager";
 import SECalculatorModal from "@/components/SECalculatorModal";
-import VideoAdOpportunityUploadModal from "@/components/VideoAdOpportunityUploadModal";
 import { useSubmissionCounts } from "@/hooks/useSubmissionCounts";
 
 const AdminDashboard = () => {
   const { counts } = useSubmissionCounts();
   const totalSubmissions = counts.coverSubmissions + counts.modelingApplications;
-  const [videoAdModalOpen, setVideoAdModalOpen] = useState(false);
 
   return (
     <div className="space-y-6">
@@ -44,32 +35,14 @@ const AdminDashboard = () => {
           <CardTitle className="text-white">Administrative Tools</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4">
-            <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg">
-              <div>
-                <h4 className="text-white font-medium">Self-Employment Tax Calculator</h4>
-                <p className="text-gray-400 text-sm">
-                  Tax planning tool for administrative reference and merchant support
-                </p>
-              </div>
-              <SECalculatorModal />
+          <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg">
+            <div>
+              <h4 className="text-white font-medium">Self-Employment Tax Calculator</h4>
+              <p className="text-gray-400 text-sm">
+                Tax planning tool for administrative reference and merchant support
+              </p>
             </div>
-            
-            <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg">
-              <div>
-                <h4 className="text-white font-medium">Create Video Ad Opportunity</h4>
-                <p className="text-gray-400 text-sm">
-                  Create new video advertising opportunities for merchants
-                </p>
-              </div>
-              <Button 
-                onClick={() => setVideoAdModalOpen(true)}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                <Video className="w-4 h-4 mr-2" />
-                Create Opportunity
-              </Button>
-            </div>
+            <SECalculatorModal />
           </div>
         </CardContent>
       </Card>
@@ -148,15 +121,6 @@ const AdminDashboard = () => {
           <VideoAdOpportunityManager />
         </CardContent>
       </Card>
-
-      <VideoAdOpportunityUploadModal
-        isOpen={videoAdModalOpen} 
-        onClose={() => setVideoAdModalOpen(false)}
-        onSuccess={() => {
-          setVideoAdModalOpen(false);
-          // Optionally refresh data
-        }}
-      />
     </div>
   );
 };
