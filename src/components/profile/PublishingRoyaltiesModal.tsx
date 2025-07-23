@@ -34,32 +34,34 @@ const PublishingRoyaltiesModal = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               <div className="bg-purple-900/20 p-4 rounded border border-purple-600">
                 <h4 className="font-semibold text-purple-400 mb-2">PIE Platform</h4>
-                <p className="text-2xl font-bold text-purple-300">30%</p>
+                <p className="text-2xl font-bold text-purple-300">10%</p>
                 <p className="text-sm text-gray-300">After PayPal processing fees</p>
               </div>
               
               <div className="bg-blue-900/20 p-4 rounded border border-blue-600">
                 <h4 className="font-semibold text-blue-400 mb-2">Main Artist</h4>
-                <p className="text-2xl font-bold text-blue-300">70%</p>
-                <p className="text-sm text-gray-300">Of remaining revenue</p>
+                <p className="text-2xl font-bold text-blue-300">60%</p>
+                <p className="text-sm text-gray-300">After PIE and PayPal fees</p>
               </div>
               
               <div className="bg-green-900/20 p-4 rounded border border-green-600">
                 <h4 className="font-semibold text-green-400 mb-2">Cover Model</h4>
-                <p className="text-2xl font-bold text-green-300">21%</p>
-                <p className="text-sm text-gray-300">30% of artist's 70%</p>
+                <p className="text-2xl font-bold text-green-300">30%</p>
+                <p className="text-sm text-gray-300">After PIE and PayPal fees</p>
               </div>
             </div>
 
             <div className="bg-gray-800/50 p-4 rounded">
               <h4 className="font-medium text-white mb-2">PIE Platform Example ($2.00 purchase):</h4>
               <ul className="space-y-1 text-sm">
-                <li>• PIE Platform: <span className="text-purple-300 font-medium">$0.60 (30%)</span></li>
-                <li>• Main Artist: <span className="text-blue-300 font-medium">$1.40 (70%)</span></li>
-                <li>• Cover Model: <span className="text-green-300 font-medium">$0.42 (21% of total)</span></li>
+                <li>• PayPal Processing Fee: <span className="text-gray-400 font-medium">~$0.09 (2.9% + $0.30)</span></li>
+                <li>• After PayPal: <span className="text-white font-medium">$1.91</span></li>
+                <li>• PIE Platform: <span className="text-purple-300 font-medium">$0.19 (10%)</span></li>
+                <li>• Main Artist: <span className="text-blue-300 font-medium">$1.15 (60%)</span></li>
+                <li>• Cover Model: <span className="text-green-300 font-medium">$0.57 (30%)</span></li>
               </ul>
               <p className="text-xs text-gray-400 mt-2">
-                * After PayPal processing fees. Cover Model receives 30% of the Main Artist's 70% share.
+                * Revenue splits calculated after PayPal processing fees are deducted from the total purchase amount.
               </p>
             </div>
           </div>
@@ -128,7 +130,7 @@ const PublishingRoyaltiesModal = () => {
                 <ul className="list-disc list-inside space-y-1 text-sm">
                   <li>Exclusive early access for supporters</li>
                   <li>Premium pricing ($2.00 minimum)</li>
-                  <li>Higher revenue share for cover models (21%)</li>
+                  <li>Higher revenue share for cover models (30%)</li>
                   <li>Direct relationship with supporters</li>
                 </ul>
               </div>
