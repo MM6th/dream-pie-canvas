@@ -139,16 +139,6 @@ const AdminDashboard = () => {
         </TabsContent>
       </Tabs>
 
-      {/* Video Ad Opportunities Management */}
-      <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
-        <CardHeader>
-          <CardTitle className="text-white">Video Ad Opportunities Management</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <VideoAdOpportunityManager />
-        </CardContent>
-      </Card>
-
       <VideoAdOpportunityUploadModal
         isOpen={videoAdModalOpen} 
         onClose={() => setVideoAdModalOpen(false)}
