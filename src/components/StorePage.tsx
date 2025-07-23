@@ -783,6 +783,9 @@ const StorePage = () => {
                                18+
                              </Badge>
                            )}
+                           <Badge className="bg-purple-600 hover:bg-purple-700 text-xs">
+                             {opportunity.available_spots} spot{opportunity.available_spots !== 1 ? 's' : ''} left
+                           </Badge>
                          </div>
                         
                         <div className="flex gap-1">
