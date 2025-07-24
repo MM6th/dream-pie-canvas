@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import MultiImagePicker from "@/components/MultiImagePicker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -33,7 +35,13 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
     pieVideoPrice: "",
     youtubeMembershipFee: "",
     maxDownloads: "",
-    is_adult_content: false
+    is_adult_content: false,
+    // ASMR-specific fields
+    backEndRoyalties: false,
+    piePhotoEditing: false,
+    coverPhotos: [] as File[],
+    advanceFeeRate: "",
+    numberOfOpportunities: ""
   });
   const [albums, setAlbums] = useState<any[]>([]);
 
@@ -165,8 +173,17 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
           albumId = newAlbum.id;
         }
       }
+
+      // Upload cover photos for ASMR if provided
+      let coverPhotoUrls: string[] = [];
+      if (formData.audioType === 'asmr' && formData.coverPhotos.length > 0) {
+        for (const photo of formData.coverPhotos) {
+          const photoUrl = await uploadFile(photo, 'user-media', `${user.id}/asmr-covers/`);
+          coverPhotoUrls.push(photoUrl);
+        }
+      }
       
-      // Create audio product with new fields including podcast-specific ones
+      // Create audio product with new fields including ASMR-specific ones
       const insertData: any = {
         merchant_id: user.id,
         title: formData.title,
@@ -185,9 +202,19 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
         is_adult_content: formData.is_adult_content
       };
 
-      // Add description for podcasts if provided
-      if (formData.audioType === 'podcast' && formData.description) {
+      // Add description for podcasts and ASMR if provided
+      if ((formData.audioType === 'podcast' || formData.audioType === 'asmr') && formData.description) {
         insertData.description = formData.description;
+      }
+
+      // Add ASMR-specific fields
+      if (formData.audioType === 'asmr') {
+        insertData.back_end_royalties = formData.backEndRoyalties;
+        insertData.pie_photo_editing = formData.piePhotoEditing;
+        insertData.cover_photos = coverPhotoUrls;
+        insertData.advance_fee_rate = formData.advanceFeeRate ? parseFloat(formData.advanceFeeRate) : null;
+        insertData.number_of_opportunities = formData.numberOfOpportunities ? parseInt(formData.numberOfOpportunities) : null;
+        insertData.opportunities_exhausted = false;
       }
 
       const { error: productError } = await supabase
@@ -216,7 +243,12 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
         pieVideoPrice: "",
         youtubeMembershipFee: "",
         maxDownloads: "",
-        is_adult_content: false
+        is_adult_content: false,
+        backEndRoyalties: false,
+        piePhotoEditing: false,
+        coverPhotos: [],
+        advanceFeeRate: "",
+        numberOfOpportunities: ""
       });
       onSuccess();
       
@@ -293,6 +325,25 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
               />
               <p className="text-xs text-gray-400 mt-1">
                 Explain the podcast opportunity for merchants to understand before downloading
+              </p>
+            </div>
+          )}
+
+          {/* Description field for ASMR */}
+          {formData.audioType === 'asmr' && (
+            <div>
+              <Label htmlFor="asmr-description">ASMR Opportunity Description *</Label>
+              <textarea
+                id="asmr-description"
+                value={formData.description || ""}
+                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                className="w-full bg-gray-700 border-gray-600 text-white rounded-md px-3 py-2 min-h-[80px] resize-y"
+                placeholder="Describe the ASMR opportunity, requirements, and what merchants should know"
+                rows={3}
+                required
+              />
+              <p className="text-xs text-gray-400 mt-1">
+                Explain the ASMR opportunity for merchants to understand before downloading
               </p>
             </div>
           )}
@@ -470,10 +521,93 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
                        For reference: Merchants receive 50% of PIE's 70% share (after YouTube's 30% cut)
                      </p>
                    </div>
-                 </>
-               )}
-             </div>
-           )}
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* ASMR-specific fields when merchant_only and ASMR type */}
+            {formData.audioType === 'asmr' && formData.accessLevel === 'merchant_only' && (
+              <div className="space-y-4 p-4 bg-blue-700/20 rounded-lg border border-blue-600">
+                <h4 className="text-white font-medium">ASMR Opportunity Settings</h4>
+                
+                <div>
+                  <Label htmlFor="advanceFeeRate">Advance Fee Rate ($) *</Label>
+                  <Input
+                    id="advanceFeeRate"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={formData.advanceFeeRate}
+                    onChange={(e) => setFormData(prev => ({ ...prev, advanceFeeRate: e.target.value }))}
+                    className="bg-gray-700 border-gray-600 text-white"
+                    placeholder="e.g., 50.00"
+                    required
+                  />
+                  <p className="text-xs text-gray-400 mt-1">
+                    Payment amount per approved ASMR submission
+                  </p>
+                </div>
+
+                <div>
+                  <Label htmlFor="numberOfOpportunities">Number of Opportunities</Label>
+                  <Input
+                    id="numberOfOpportunities"
+                    type="number"
+                    min="1"
+                    value={formData.numberOfOpportunities}
+                    onChange={(e) => setFormData(prev => ({ ...prev, numberOfOpportunities: e.target.value }))}
+                    className="bg-gray-700 border-gray-600 text-white"
+                    placeholder="e.g., 3 (Leave empty for unlimited)"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">
+                    First come, first serve. Once exhausted, the opportunity will be hidden.
+                  </p>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="backEndRoyalties"
+                    checked={formData.backEndRoyalties}
+                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, backEndRoyalties: checked as boolean }))}
+                  />
+                  <Label htmlFor="backEndRoyalties" className="text-white">Back-End Royalties</Label>
+                </div>
+                <p className="text-xs text-gray-400 ml-6">
+                  Allow merchants to submit covers for additional revenue sharing
+                </p>
+
+                {formData.backEndRoyalties && (
+                  <div className="ml-6 space-y-4">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="piePhotoEditing"
+                        checked={formData.piePhotoEditing}
+                        onCheckedChange={(checked) => setFormData(prev => ({ ...prev, piePhotoEditing: checked as boolean }))}
+                      />
+                      <Label htmlFor="piePhotoEditing" className="text-white">PIE Photo Editing Service</Label>
+                    </div>
+                    <p className="text-xs text-gray-400 ml-6">
+                      Have PIE edit merchant photos in Photoshop for covers
+                    </p>
+
+                    {formData.piePhotoEditing && (
+                      <div className="ml-6">
+                        <Label htmlFor="coverPhotos">Cover Photos (Max 3)</Label>
+                        <MultiImagePicker
+                          selectedImages={formData.coverPhotos}
+                          onImagesChange={(files) => setFormData(prev => ({ ...prev, coverPhotos: files }))}
+                          maxImages={3}
+                        />
+                        <p className="text-xs text-gray-400 mt-1">
+                          Upload reference photos for cover design (max 3 images)
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
 
           {/* Adult Content Toggle */}
           <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg border border-gray-600">

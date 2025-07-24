@@ -41,6 +41,7 @@ const SupporterProfileModal = ({ children, profile: initialProfile, onProfileUpd
   const [profile, setProfile] = useState({
     display_name: "",
     adult_content_restricted: false,
+    is_adult_creator: false,
     avatar_url: "",
   });
 
@@ -49,6 +50,7 @@ const SupporterProfileModal = ({ children, profile: initialProfile, onProfileUpd
       setProfile({
         display_name: initialProfile.display_name || "",
         adult_content_restricted: initialProfile.adult_content_restricted || false,
+        is_adult_creator: initialProfile.is_adult_creator || false,
         avatar_url: initialProfile.avatar_url || "",
       });
     } else if (user && isOpen) {
@@ -75,6 +77,7 @@ const SupporterProfileModal = ({ children, profile: initialProfile, onProfileUpd
         setProfile({
           display_name: data.display_name || "",
           adult_content_restricted: data.adult_content_restricted || false,
+          is_adult_creator: data.is_adult_creator || false,
           avatar_url: data.avatar_url || "",
         });
       }
@@ -93,6 +96,7 @@ const SupporterProfileModal = ({ children, profile: initialProfile, onProfileUpd
         .update({
           display_name: profile.display_name,
           adult_content_restricted: profile.adult_content_restricted,
+          is_adult_creator: profile.is_adult_creator,
           avatar_url: profile.avatar_url,
           updated_at: new Date().toISOString(),
         })
@@ -210,6 +214,26 @@ const SupporterProfileModal = ({ children, profile: initialProfile, onProfileUpd
               id="adult_restriction"
               checked={profile.adult_content_restricted}
               onCheckedChange={(checked) => setProfile({...profile, adult_content_restricted: checked})}
+            />
+          </div>
+
+          {/* Adult Creator Toggle */}
+          <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg border border-gray-600">
+            <div className="flex items-center gap-3">
+              <Shield className="w-5 h-5 text-blue-400" />
+              <div>
+                <Label htmlFor="adult_creator" className="text-white font-medium">
+                  I am an Adult Content Creator
+                </Label>
+                <p className="text-sm text-gray-400">
+                  Check this if you create adult content. This will allow you to see and participate in adult/18+ opportunities.
+                </p>
+              </div>
+            </div>
+            <Switch
+              id="adult_creator"
+              checked={profile.is_adult_creator}
+              onCheckedChange={(checked) => setProfile({...profile, is_adult_creator: checked})}
             />
           </div>
 

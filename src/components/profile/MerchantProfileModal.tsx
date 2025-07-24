@@ -1,6 +1,8 @@
 
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
+import { Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -32,6 +34,7 @@ const MerchantProfileModal = ({
   const [businessName, setBusinessName] = useState(profile?.business_name || '');
   const [businessDescription, setBusinessDescription] = useState(profile?.business_description || '');
   const [website, setWebsite] = useState(profile?.website || '');
+  const [isAdultCreator, setIsAdultCreator] = useState(profile?.is_adult_creator || false);
   const [internalOpen, setInternalOpen] = useState(false);
 
   useEffect(() => {
@@ -40,6 +43,7 @@ const MerchantProfileModal = ({
       setBusinessName(profile.business_name || '');
       setBusinessDescription(profile.business_description || '');
       setWebsite(profile.website || '');
+      setIsAdultCreator(profile.is_adult_creator || false);
     }
   }, [profile]);
 
@@ -56,6 +60,7 @@ const MerchantProfileModal = ({
           business_name: businessName,
           business_description: businessDescription,
           website: website,
+          is_adult_creator: isAdultCreator,
           updated_at: new Date().toISOString()
         })
         .eq('id', user.id);
@@ -144,6 +149,26 @@ const MerchantProfileModal = ({
                 onChange={(e) => setWebsite(e.target.value)}
                 placeholder="https://your-website.com"
                 className="bg-gray-700 border-gray-600 text-white"
+            />
+            </div>
+            
+            {/* Adult Creator Toggle */}
+            <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg border border-gray-600">
+              <div className="flex items-center gap-3">
+                <Shield className="w-5 h-5 text-blue-400" />
+                <div>
+                  <Label htmlFor="isAdultCreator" className="text-white font-medium">
+                    I am an Adult Content Creator
+                  </Label>
+                  <p className="text-sm text-gray-400">
+                    Check this if you create adult content. This will allow you to see and participate in adult/18+ opportunities.
+                  </p>
+                </div>
+              </div>
+              <Switch
+                id="isAdultCreator"
+                checked={isAdultCreator}
+                onCheckedChange={setIsAdultCreator}
               />
             </div>
             
@@ -221,6 +246,26 @@ const MerchantProfileModal = ({
               onChange={(e) => setWebsite(e.target.value)}
               placeholder="https://your-website.com"
               className="bg-gray-700 border-gray-600 text-white"
+            />
+          </div>
+          
+          {/* Adult Creator Toggle */}
+          <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg border border-gray-600">
+            <div className="flex items-center gap-3">
+              <Shield className="w-5 h-5 text-blue-400" />
+              <div>
+                <Label htmlFor="isAdultCreator2" className="text-white font-medium">
+                  I am an Adult Content Creator
+                </Label>
+                <p className="text-sm text-gray-400">
+                  Check this if you create adult content. This will allow you to see and participate in adult/18+ opportunities.
+                </p>
+              </div>
+            </div>
+            <Switch
+              id="isAdultCreator2"
+              checked={isAdultCreator}
+              onCheckedChange={setIsAdultCreator}
             />
           </div>
           
