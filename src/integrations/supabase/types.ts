@@ -41,6 +41,96 @@ export type Database = {
         }
         Relationships: []
       }
+      asmr_downloads: {
+        Row: {
+          audio_product_id: string
+          contract_generated: boolean | null
+          contract_id: string | null
+          created_at: string
+          downloaded_at: string
+          id: string
+          merchant_id: string
+          negotiation_message: string | null
+          why_me_text: string | null
+        }
+        Insert: {
+          audio_product_id: string
+          contract_generated?: boolean | null
+          contract_id?: string | null
+          created_at?: string
+          downloaded_at?: string
+          id?: string
+          merchant_id: string
+          negotiation_message?: string | null
+          why_me_text?: string | null
+        }
+        Update: {
+          audio_product_id?: string
+          contract_generated?: boolean | null
+          contract_id?: string | null
+          created_at?: string
+          downloaded_at?: string
+          id?: string
+          merchant_id?: string
+          negotiation_message?: string | null
+          why_me_text?: string | null
+        }
+        Relationships: []
+      }
+      asmr_submissions: {
+        Row: {
+          admin_notes: string | null
+          audio_product_id: string
+          contract_generated_at: string | null
+          contract_id: string | null
+          cover_photos: string[] | null
+          created_at: string
+          id: string
+          merchant_id: string
+          negotiation_text: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          submission_audio_url: string
+          updated_at: string
+          why_me_text: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          audio_product_id: string
+          contract_generated_at?: string | null
+          contract_id?: string | null
+          cover_photos?: string[] | null
+          created_at?: string
+          id?: string
+          merchant_id: string
+          negotiation_text?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submission_audio_url: string
+          updated_at?: string
+          why_me_text?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          audio_product_id?: string
+          contract_generated_at?: string | null
+          contract_id?: string | null
+          cover_photos?: string[] | null
+          created_at?: string
+          id?: string
+          merchant_id?: string
+          negotiation_text?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submission_audio_url?: string
+          updated_at?: string
+          why_me_text?: string | null
+        }
+        Relationships: []
+      }
       astrology_cache: {
         Row: {
           cache_key: string
@@ -226,16 +316,23 @@ export type Database = {
       audio_products: {
         Row: {
           access_level: Database["public"]["Enums"]["access_level"] | null
+          advance_fee_rate: number | null
           album_id: string | null
           artist_name: string | null
           audio_file_url: string
           audio_type: string
+          back_end_royalties: boolean | null
+          cover_photos: string[] | null
           created_at: string
+          description: string | null
           id: string
           is_adult_content: boolean | null
           is_free: boolean
           max_downloads: number | null
           merchant_id: string
+          number_of_opportunities: number | null
+          opportunities_exhausted: boolean | null
+          pie_photo_editing: boolean | null
           pie_video_price: number | null
           podcast_contract_generated: boolean | null
           price: number | null
@@ -246,16 +343,23 @@ export type Database = {
         }
         Insert: {
           access_level?: Database["public"]["Enums"]["access_level"] | null
+          advance_fee_rate?: number | null
           album_id?: string | null
           artist_name?: string | null
           audio_file_url: string
           audio_type: string
+          back_end_royalties?: boolean | null
+          cover_photos?: string[] | null
           created_at?: string
+          description?: string | null
           id?: string
           is_adult_content?: boolean | null
           is_free?: boolean
           max_downloads?: number | null
           merchant_id: string
+          number_of_opportunities?: number | null
+          opportunities_exhausted?: boolean | null
+          pie_photo_editing?: boolean | null
           pie_video_price?: number | null
           podcast_contract_generated?: boolean | null
           price?: number | null
@@ -266,16 +370,23 @@ export type Database = {
         }
         Update: {
           access_level?: Database["public"]["Enums"]["access_level"] | null
+          advance_fee_rate?: number | null
           album_id?: string | null
           artist_name?: string | null
           audio_file_url?: string
           audio_type?: string
+          back_end_royalties?: boolean | null
+          cover_photos?: string[] | null
           created_at?: string
+          description?: string | null
           id?: string
           is_adult_content?: boolean | null
           is_free?: boolean
           max_downloads?: number | null
           merchant_id?: string
+          number_of_opportunities?: number | null
+          opportunities_exhausted?: boolean | null
+          pie_photo_editing?: boolean | null
           pie_video_price?: number | null
           podcast_contract_generated?: boolean | null
           price?: number | null
@@ -919,6 +1030,7 @@ export type Database = {
           id: string
           instagram_url: string | null
           is_admin: boolean | null
+          is_adult_creator: boolean | null
           last_name: string | null
           onlyfans_url: string | null
           paypal_email: string | null
@@ -945,6 +1057,7 @@ export type Database = {
           id: string
           instagram_url?: string | null
           is_admin?: boolean | null
+          is_adult_creator?: boolean | null
           last_name?: string | null
           onlyfans_url?: string | null
           paypal_email?: string | null
@@ -971,6 +1084,7 @@ export type Database = {
           id?: string
           instagram_url?: string | null
           is_admin?: boolean | null
+          is_adult_creator?: boolean | null
           last_name?: string | null
           onlyfans_url?: string | null
           paypal_email?: string | null

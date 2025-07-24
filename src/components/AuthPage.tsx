@@ -25,6 +25,7 @@ const AuthPage = () => {
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
     const userType = formData.get("userType") as string;
+    const isAdultCreator = formData.get("isAdultCreator") === "on";
 
     try {
       const { error } = await supabase.auth.signUp({
@@ -32,7 +33,8 @@ const AuthPage = () => {
         password,
         options: {
           data: {
-            user_type: userType || "supporter"
+            user_type: userType || "supporter",
+            is_adult_creator: isAdultCreator
           }
         }
       });
@@ -283,6 +285,18 @@ const AuthPage = () => {
                         </div>
                       </RadioGroup>
                     </div>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="isAdultCreator"
+                        name="isAdultCreator"
+                        className="rounded border-gray-600 text-blue-600 focus:ring-blue-500 focus:ring-2"
+                      />
+                      <Label htmlFor="isAdultCreator" className="text-white">I am an adult content creator</Label>
+                    </div>
+                    <p className="text-xs text-gray-400">
+                      Adult creators can see and participate in adult/18+ opportunities. Only check this if you create adult content.
+                    </p>
                     <Button type="submit" className="w-full bg-white text-black hover:bg-gray-100" disabled={isLoading}>
                       {isLoading ? "Creating Account..." : "Create Account"}
                     </Button>
