@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -125,6 +125,25 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
     setSelectedFile(null);
     setImagePreview(null);
   };
+
+  // Update form fields when post prop changes or when opening in edit mode
+  useEffect(() => {
+    if (post && mode === 'edit') {
+      setTitle(post.title || '');
+      setContent(post.content || '');
+      setImageUrl(post.image_url || '');
+      setLinkUrl(post.link_url || '');
+      setIsAdultContent(post.is_adult_content || false);
+      setPostType(post.post_type || 'tv_guide');
+      setContractType(post.contract_type || '');
+      setYoutubeContractorShare(post.youtube_contractor_share?.toString() || '');
+      setPieContractorShare(post.pie_contractor_share?.toString() || '');
+      setPieEpisodeCost(post.pie_episode_cost?.toString() || '');
+      setNumberOfOpportunities(post.number_of_opportunities?.toString() || '');
+      setUploadedImageUrl(post.uploaded_image_url || '');
+      setImagePreview(post.uploaded_image_url || null);
+    }
+  }, [post, mode]);
 
   const handleOpenChange = (newOpen: boolean) => {
     setOpen(newOpen);
