@@ -6,7 +6,6 @@ import SongCoverManager from "@/components/SongCoverManager";
 import MerchantCoverSubmissionsManager from "@/components/MerchantCoverSubmissionsManager";
 import ContractDashboard from "./ContractDashboard";
 import BulletinPostManager from "@/components/BulletinPostManager";
-import CurrentThoughtsModal from "@/components/CurrentThoughtsModal";
 import ContentGallery from "@/components/ContentGallery";
 import SECalculatorModal from "@/components/SECalculatorModal";
 import { useAuth } from "@/hooks/useAuth";
@@ -71,12 +70,7 @@ const ContentManagement = () => {
           <CardTitle className="text-white">Bulletin Board Posts</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <div className="flex gap-2">
-              <CurrentThoughtsModal onSuccess={() => window.location.reload()} />
-            </div>
-            <BulletinPostManager />
-          </div>
+          <BulletinPostManager />
         </CardContent>
       </Card>
 

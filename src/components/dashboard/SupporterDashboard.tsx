@@ -9,7 +9,6 @@ import BackgroundUpload from "@/components/BackgroundUpload";
 import ContentGallery from "@/components/ContentGallery";
 import { useAuth } from "@/hooks/useAuth";
 import SupporterProfileModal from "@/components/profile/SupporterProfileModal";
-import CurrentThoughtsModal from "@/components/CurrentThoughtsModal";
 import PieWelcomeModal from "@/components/PieWelcomeModal";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -92,7 +91,7 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="music" className="w-full">
-            <TabsList className="grid w-full grid-cols-6">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="music" className="flex items-center gap-2">
                 <Music className="w-4 h-4" />
                 Music & Podcasts
@@ -104,10 +103,6 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
               <TabsTrigger value="content" className="flex items-center gap-2">
                 <FolderOpen className="w-4 h-4" />
                 Content Gallery
-              </TabsTrigger>
-              <TabsTrigger value="thoughts" className="flex items-center gap-2">
-                <Music className="w-4 h-4" />
-                Share Thoughts
               </TabsTrigger>
               <TabsTrigger value="profile" className="flex items-center gap-2">
                 <User className="w-4 h-4" />
@@ -129,12 +124,6 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
             
             <TabsContent value="content" className="space-y-6">
               <ContentGallery />
-            </TabsContent>
-            
-            <TabsContent value="thoughts" className="space-y-6">
-              <div className="flex justify-center">
-                <CurrentThoughtsModal onSuccess={() => window.location.reload()} />
-              </div>
             </TabsContent>
             
             <TabsContent value="profile" className="space-y-6">
