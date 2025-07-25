@@ -174,14 +174,7 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
         }
       }
 
-      // Upload cover photos for ASMR if provided
-      let coverPhotoUrls: string[] = [];
-      if (formData.audioType === 'asmr' && formData.coverPhotos.length > 0) {
-        for (const photo of formData.coverPhotos) {
-          const photoUrl = await uploadFile(photo, 'user-media', `${user.id}/asmr-covers/`);
-          coverPhotoUrls.push(photoUrl);
-        }
-      }
+      // No photo uploads needed for admin ASMR creation - merchants upload photos when applying
       
       // Create audio product with new fields including ASMR-specific ones
       const insertData: any = {
@@ -211,7 +204,7 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
       if (formData.audioType === 'asmr') {
         insertData.back_end_royalties = formData.backEndRoyalties;
         insertData.pie_photo_editing = formData.piePhotoEditing;
-        insertData.cover_photos = coverPhotoUrls;
+        insertData.cover_photos = []; // No photos uploaded by admin - merchants upload when applying
         insertData.advance_fee_rate = formData.advanceFeeRate ? parseFloat(formData.advanceFeeRate) : null;
         insertData.number_of_opportunities = formData.numberOfOpportunities ? parseInt(formData.numberOfOpportunities) : null;
         insertData.opportunities_exhausted = false;
@@ -593,14 +586,8 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
 
                     {formData.piePhotoEditing && (
                       <div className="ml-6">
-                        <Label htmlFor="coverPhotos">Cover Photos (Max 3)</Label>
-                        <MultiImagePicker
-                          selectedImages={formData.coverPhotos}
-                          onImagesChange={(files) => setFormData(prev => ({ ...prev, coverPhotos: files }))}
-                          maxImages={3}
-                        />
-                        <p className="text-xs text-gray-400 mt-1">
-                          Upload reference photos for cover design (max 3 images)
+                        <p className="text-xs text-green-400">
+                          ✓ PIE photo editing service enabled - merchants will upload their photos when applying
                         </p>
                       </div>
                     )}
