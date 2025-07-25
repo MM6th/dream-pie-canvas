@@ -52,7 +52,6 @@ const EditASMRProductModal = ({ product, open, onOpenChange, onSuccess }: EditAS
     numberOfOpportunities: "",
     backEndRoyalties: false,
     piePhotoEditing: false,
-    coverPhotos: [] as File[],
     isAdultContent: false,
     thumbnail: null as File | null
   });
@@ -69,7 +68,6 @@ const EditASMRProductModal = ({ product, open, onOpenChange, onSuccess }: EditAS
         numberOfOpportunities: product.number_of_opportunities?.toString() || "",
         backEndRoyalties: product.back_end_royalties || false,
         piePhotoEditing: product.pie_photo_editing || false,
-        coverPhotos: [],
         isAdultContent: product.is_adult_content || false,
         thumbnail: null
       });
@@ -105,16 +103,6 @@ const EditASMRProductModal = ({ product, open, onOpenChange, onSuccess }: EditAS
         thumbnailUrl = await uploadFile(formData.thumbnail, 'thumbnails', `${user.id}/`);
       }
 
-      // Upload cover photos if provided
-      let coverPhotoUrls = product.cover_photos || [];
-      if (formData.coverPhotos.length > 0) {
-        const newCoverPhotos = [];
-        for (const photo of formData.coverPhotos) {
-          const photoUrl = await uploadFile(photo, 'user-media', `${user.id}/asmr-covers/`);
-          newCoverPhotos.push(photoUrl);
-        }
-        coverPhotoUrls = [...coverPhotoUrls, ...newCoverPhotos];
-      }
 
       const updateData: any = {
         title: formData.title,
@@ -127,7 +115,6 @@ const EditASMRProductModal = ({ product, open, onOpenChange, onSuccess }: EditAS
         number_of_opportunities: formData.numberOfOpportunities ? parseInt(formData.numberOfOpportunities) : null,
         back_end_royalties: formData.backEndRoyalties,
         pie_photo_editing: formData.piePhotoEditing,
-        cover_photos: coverPhotoUrls,
         is_adult_content: formData.isAdultContent,
         thumbnail_url: thumbnailUrl,
         updated_at: new Date().toISOString()
@@ -302,25 +289,15 @@ const EditASMRProductModal = ({ product, open, onOpenChange, onSuccess }: EditAS
 
               {formData.backEndRoyalties && (
                 <div className="ml-6 space-y-4">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="piePhotoEditing-edit"
-                      checked={formData.piePhotoEditing}
-                      onCheckedChange={(checked) => setFormData(prev => ({ ...prev, piePhotoEditing: checked as boolean }))}
-                    />
-                    <Label htmlFor="piePhotoEditing-edit" className="text-white">PIE Photo Editing Service</Label>
-                  </div>
-
-                  {formData.piePhotoEditing && (
-                    <div className="ml-6">
-                      <Label htmlFor="coverPhotos-edit">Add Cover Photos (Max 3)</Label>
-                      <MultiImagePicker
-                        selectedImages={formData.coverPhotos}
-                        onImagesChange={(files) => setFormData(prev => ({ ...prev, coverPhotos: files }))}
-                        maxImages={3}
-                      />
-                    </div>
-                  )}
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="piePhotoEditing-edit"
+                  checked={formData.piePhotoEditing}
+                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, piePhotoEditing: checked as boolean }))}
+                />
+                <Label htmlFor="piePhotoEditing-edit" className="text-white">PIE Photo Editing Service Available</Label>
+                <p className="text-xs text-gray-400 ml-2">(Merchants can upload photos when applying)</p>
+              </div>
                 </div>
               )}
             </div>

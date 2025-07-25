@@ -2,11 +2,12 @@ import React, { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Download, Eye } from "lucide-react";
+import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Download, Upload } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useApprovalStatus } from "@/hooks/useApprovalStatus";
+import ASMRSubmissionModal from "@/components/ASMRSubmissionModal";
 
 interface ASMRTrack {
   id: string;
@@ -22,6 +23,8 @@ interface ASMRTrack {
   opportunities_exhausted: boolean | null;
   is_free: boolean;
   max_downloads: number | null;
+  back_end_royalties: boolean | null;
+  pie_photo_editing: boolean | null;
 }
 
 interface ASMRAudioPlayerProps {
@@ -39,6 +42,8 @@ const ASMRAudioPlayer = ({ tracks }: ASMRAudioPlayerProps) => {
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [showSubmissionModal, setShowSubmissionModal] = useState(false);
+  const [selectedTrackForSubmission, setSelectedTrackForSubmission] = useState<ASMRTrack | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
@@ -187,6 +192,11 @@ const ASMRAudioPlayer = ({ tracks }: ASMRAudioPlayerProps) => {
     return "I am interested in this ASMR opportunity and would like to discuss the details.";
   };
 
+  const handleSubmission = (track: ASMRTrack) => {
+    setSelectedTrackForSubmission(track);
+    setShowSubmissionModal(true);
+  };
+
   if (!tracks || tracks.length === 0) {
     return (
       <Card className="bg-gray-800 border-gray-700">
@@ -253,6 +263,14 @@ const ASMRAudioPlayer = ({ tracks }: ASMRAudioPlayerProps) => {
               >
                 <Download className="w-4 h-4 mr-1" />
                 {isDownloading ? 'Downloading...' : 'Download'}
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => handleSubmission(track)}
+                className="bg-purple-600 hover:bg-purple-700 text-white"
+              >
+                <Upload className="w-4 h-4 mr-1" />
+                Submit
               </Button>
             </div>
           )}
@@ -358,6 +376,25 @@ const ASMRAudioPlayer = ({ tracks }: ASMRAudioPlayerProps) => {
               ))}
             </div>
           </div>
+        )}
+
+        {/* Submission Modal */}
+        {selectedTrackForSubmission && (
+          <ASMRSubmissionModal
+            open={showSubmissionModal}
+            onOpenChange={setShowSubmissionModal}
+            audioProduct={{
+              id: selectedTrackForSubmission.id,
+              title: selectedTrackForSubmission.title,
+              pie_photo_editing: selectedTrackForSubmission.pie_photo_editing || false,
+              back_end_royalties: selectedTrackForSubmission.back_end_royalties || false,
+              advance_fee_rate: selectedTrackForSubmission.advance_fee_rate
+            }}
+            onSuccess={() => {
+              setShowSubmissionModal(false);
+              setSelectedTrackForSubmission(null);
+            }}
+          />
         )}
       </CardContent>
     </Card>
