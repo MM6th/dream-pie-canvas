@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Trash2, Download, Eye, Calendar, Play, Image, Video } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -209,27 +210,63 @@ const ContentGallery = () => {
           </TabsList>
           
           <TabsContent value="all" className="mt-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {uploads.map((upload) => (
-                <ContentCard key={upload.id} upload={upload} onDelete={handleDelete} getContentUrl={getContentUrl} formatBytes={formatBytes} />
-              ))}
-            </div>
+            <Carousel
+              className="w-full"
+              opts={{
+                align: "start",
+                loop: true,
+              }}
+            >
+              <CarouselContent className="-ml-2 md:-ml-4">
+                {uploads.map((upload) => (
+                  <CarouselItem key={upload.id} className="pl-2 md:pl-4 basis-full sm:basis-1/2 lg:basis-1/3 xl:basis-1/4">
+                    <ContentCard upload={upload} onDelete={handleDelete} getContentUrl={getContentUrl} formatBytes={formatBytes} />
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
+              <CarouselNext className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
+            </Carousel>
           </TabsContent>
           
           <TabsContent value="images" className="mt-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {imageUploads.map((upload) => (
-                <ContentCard key={upload.id} upload={upload} onDelete={handleDelete} getContentUrl={getContentUrl} formatBytes={formatBytes} />
-              ))}
-            </div>
+            <Carousel
+              className="w-full"
+              opts={{
+                align: "start",
+                loop: true,
+              }}
+            >
+              <CarouselContent className="-ml-2 md:-ml-4">
+                {imageUploads.map((upload) => (
+                  <CarouselItem key={upload.id} className="pl-2 md:pl-4 basis-full sm:basis-1/2 lg:basis-1/3 xl:basis-1/4">
+                    <ContentCard upload={upload} onDelete={handleDelete} getContentUrl={getContentUrl} formatBytes={formatBytes} />
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
+              <CarouselNext className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
+            </Carousel>
           </TabsContent>
           
           <TabsContent value="videos" className="mt-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {videoUploads.map((upload) => (
-                <ContentCard key={upload.id} upload={upload} onDelete={handleDelete} getContentUrl={getContentUrl} formatBytes={formatBytes} />
-              ))}
-            </div>
+            <Carousel
+              className="w-full"
+              opts={{
+                align: "start",
+                loop: true,
+              }}
+            >
+              <CarouselContent className="-ml-2 md:-ml-4">
+                {videoUploads.map((upload) => (
+                  <CarouselItem key={upload.id} className="pl-2 md:pl-4 basis-full sm:basis-1/2 lg:basis-1/3 xl:basis-1/4">
+                    <ContentCard upload={upload} onDelete={handleDelete} getContentUrl={getContentUrl} formatBytes={formatBytes} />
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
+              <CarouselNext className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
+            </Carousel>
           </TabsContent>
         </Tabs>
       )}
@@ -250,7 +287,7 @@ const ContentCard = ({ upload, onDelete, getContentUrl, formatBytes }: ContentCa
   const isVideo = upload.file_type.startsWith('video/');
 
   return (
-    <Card className="bg-gray-700/50 border-gray-600 overflow-hidden">
+    <Card className="bg-gray-700/50 border-gray-600 overflow-hidden h-full">
       <div className="aspect-video relative">
         {isImage ? (
           <img

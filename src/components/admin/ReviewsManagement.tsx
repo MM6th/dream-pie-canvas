@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Star, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -138,46 +139,58 @@ const ReviewsManagement = () => {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4">
-          {reviews.map((review) => (
-            <Card key={review.id} className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-white text-lg">
-                      {review.astrology_product?.title || "Unknown Product"}
-                    </CardTitle>
-                    <p className="text-gray-400 text-sm">
-                      by {review.user_profile?.display_name || "Anonymous"} 
-                      ({review.user_profile?.email || "Unknown"})
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-1">
-                      {renderStars(review.rating)}
+        <Carousel
+          className="w-full"
+          opts={{
+            align: "start",
+            loop: true,
+          }}
+        >
+          <CarouselContent className="-ml-2 md:-ml-4">
+            {reviews.map((review) => (
+              <CarouselItem key={review.id} className="pl-2 md:pl-4 basis-full md:basis-1/2 lg:basis-1/3">
+                <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm h-full">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle className="text-white text-lg">
+                          {review.astrology_product?.title || "Unknown Product"}
+                        </CardTitle>
+                        <p className="text-gray-400 text-sm">
+                          by {review.user_profile?.display_name || "Anonymous"} 
+                          ({review.user_profile?.email || "Unknown"})
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1">
+                          {renderStars(review.rating)}
+                        </div>
+                        <Button
+                          onClick={() => handleDeleteReview(review.id)}
+                          variant="destructive"
+                          size="sm"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
-                    <Button
-                      onClick={() => handleDeleteReview(review.id)}
-                      variant="destructive"
-                      size="sm"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-              
-              <CardContent>
-                {review.review_text && (
-                  <p className="text-gray-300 mb-3">{review.review_text}</p>
-                )}
-                <p className="text-gray-500 text-sm">
-                  Submitted on {new Date(review.created_at).toLocaleDateString()}
-                </p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                  </CardHeader>
+                  
+                  <CardContent>
+                    {review.review_text && (
+                      <p className="text-gray-300 mb-3">{review.review_text}</p>
+                    )}
+                    <p className="text-gray-500 text-sm">
+                      Submitted on {new Date(review.created_at).toLocaleDateString()}
+                    </p>
+                  </CardContent>
+                </Card>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
+          <CarouselNext className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
+        </Carousel>
       )}
     </div>
   );

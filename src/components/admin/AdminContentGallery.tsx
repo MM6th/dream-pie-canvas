@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Download, Image, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -235,44 +236,56 @@ const AdminContentGallery = () => {
             {approvedAudioCovers.length === 0 ? (
               <p className="text-gray-400 text-center py-8">No approved audio covers yet.</p>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {approvedAudioCovers.map((cover) => (
-                  <div key={cover.id} className="bg-gray-700/50 rounded-lg p-4">
-                    <img 
-                      src={cover.cover_image_url} 
-                      alt={cover.audio_product_title}
-                      className="w-full h-32 object-cover rounded mb-3"
-                    />
-                    <h4 className="text-white font-medium text-sm mb-1">
-                      {cover.audio_product_title}
-                    </h4>
-                    <p className="text-gray-400 text-xs mb-2">
-                      by {cover.merchant_name}
-                    </p>
-                    <p className="text-gray-400 text-xs mb-3">
-                      Approved: {new Date(cover.approved_date).toLocaleDateString()}
-                    </p>
-                    <Button
-                      onClick={() => handleDownloadCover(cover)}
-                      disabled={downloadingIds.has(cover.id)}
-                      size="sm"
-                      className="w-full bg-blue-600 hover:bg-blue-700"
-                    >
-                      {downloadingIds.has(cover.id) ? (
-                        <>
-                          <Check className="w-4 h-4 mr-2 animate-spin" />
-                          Saving...
-                        </>
-                      ) : (
-                        <>
-                          <Download className="w-4 h-4 mr-2" />
-                          Download & Save
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                ))}
-              </div>
+              <Carousel
+                className="w-full"
+                opts={{
+                  align: "start",
+                  loop: true,
+                }}
+              >
+                <CarouselContent className="-ml-2 md:-ml-4">
+                  {approvedAudioCovers.map((cover) => (
+                    <CarouselItem key={cover.id} className="pl-2 md:pl-4 basis-full sm:basis-1/2 lg:basis-1/3 xl:basis-1/4">
+                      <div className="bg-gray-700/50 rounded-lg p-4 h-full">
+                        <img 
+                          src={cover.cover_image_url} 
+                          alt={cover.audio_product_title}
+                          className="w-full h-32 object-cover rounded mb-3"
+                        />
+                        <h4 className="text-white font-medium text-sm mb-1">
+                          {cover.audio_product_title}
+                        </h4>
+                        <p className="text-gray-400 text-xs mb-2">
+                          by {cover.merchant_name}
+                        </p>
+                        <p className="text-gray-400 text-xs mb-3">
+                          Approved: {new Date(cover.approved_date).toLocaleDateString()}
+                        </p>
+                        <Button
+                          onClick={() => handleDownloadCover(cover)}
+                          disabled={downloadingIds.has(cover.id)}
+                          size="sm"
+                          className="w-full bg-blue-600 hover:bg-blue-700"
+                        >
+                          {downloadingIds.has(cover.id) ? (
+                            <>
+                              <Check className="w-4 h-4 mr-2 animate-spin" />
+                              Saving...
+                            </>
+                          ) : (
+                            <>
+                              <Download className="w-4 h-4 mr-2" />
+                              Download & Save
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
+                <CarouselNext className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
+              </Carousel>
             )}
           </TabsContent>
 
@@ -280,44 +293,56 @@ const AdminContentGallery = () => {
             {approvedModelingPhotos.length === 0 ? (
               <p className="text-gray-400 text-center py-8">No approved modeling photos yet.</p>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {approvedModelingPhotos.map((photo) => (
-                  <div key={photo.id} className="bg-gray-700/50 rounded-lg p-4">
-                    <img 
-                      src={photo.cover_image_url} 
-                      alt={photo.audio_product_title}
-                      className="w-full h-32 object-cover rounded mb-3"
-                    />
-                    <h4 className="text-white font-medium text-sm mb-1">
-                      {photo.audio_product_title}
-                    </h4>
-                    <p className="text-gray-400 text-xs mb-2">
-                      by {photo.merchant_name}
-                    </p>
-                    <p className="text-gray-400 text-xs mb-3">
-                      Approved: {new Date(photo.approved_date).toLocaleDateString()}
-                    </p>
-                    <Button
-                      onClick={() => handleDownloadCover(photo)}
-                      disabled={downloadingIds.has(photo.id)}
-                      size="sm"
-                      className="w-full bg-purple-600 hover:bg-purple-700"
-                    >
-                      {downloadingIds.has(photo.id) ? (
-                        <>
-                          <Check className="w-4 h-4 mr-2 animate-spin" />
-                          Saving...
-                        </>
-                      ) : (
-                        <>
-                          <Download className="w-4 h-4 mr-2" />
-                          Download & Save
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                ))}
-              </div>
+              <Carousel
+                className="w-full"
+                opts={{
+                  align: "start",
+                  loop: true,
+                }}
+              >
+                <CarouselContent className="-ml-2 md:-ml-4">
+                  {approvedModelingPhotos.map((photo) => (
+                    <CarouselItem key={photo.id} className="pl-2 md:pl-4 basis-full sm:basis-1/2 lg:basis-1/3 xl:basis-1/4">
+                      <div className="bg-gray-700/50 rounded-lg p-4 h-full">
+                        <img 
+                          src={photo.cover_image_url} 
+                          alt={photo.audio_product_title}
+                          className="w-full h-32 object-cover rounded mb-3"
+                        />
+                        <h4 className="text-white font-medium text-sm mb-1">
+                          {photo.audio_product_title}
+                        </h4>
+                        <p className="text-gray-400 text-xs mb-2">
+                          by {photo.merchant_name}
+                        </p>
+                        <p className="text-gray-400 text-xs mb-3">
+                          Approved: {new Date(photo.approved_date).toLocaleDateString()}
+                        </p>
+                        <Button
+                          onClick={() => handleDownloadCover(photo)}
+                          disabled={downloadingIds.has(photo.id)}
+                          size="sm"
+                          className="w-full bg-purple-600 hover:bg-purple-700"
+                        >
+                          {downloadingIds.has(photo.id) ? (
+                            <>
+                              <Check className="w-4 h-4 mr-2 animate-spin" />
+                              Saving...
+                            </>
+                          ) : (
+                            <>
+                              <Download className="w-4 h-4 mr-2" />
+                              Download & Save
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
+                <CarouselNext className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
+              </Carousel>
             )}
           </TabsContent>
         </Tabs>

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { CheckCircle, XCircle, Clock, User, Package, Calendar } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -162,108 +163,120 @@ const ModelingApplicationManager = () => {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 gap-6">
-          {applications.map((application) => (
-            <Card key={application.id} className="bg-gray-800/50 border-gray-700">
-              <CardContent className="p-6">
-                <div className="flex justify-between items-start mb-4">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-3">
-                      <Badge className={`${getStatusColor(application.status)} text-white`}>
-                        {getStatusIcon(application.status)}
-                        <span className="ml-1 capitalize">{application.status}</span>
-                      </Badge>
-                      <span className="text-sm text-gray-400">
-                        {new Date(application.created_at).toLocaleDateString()}
-                      </span>
+        <Carousel
+          className="w-full"
+          opts={{
+            align: "start",
+            loop: true,
+          }}
+        >
+          <CarouselContent className="-ml-2 md:-ml-4">
+            {applications.map((application) => (
+              <CarouselItem key={application.id} className="pl-2 md:pl-4 basis-full lg:basis-1/2">
+                <Card className="bg-gray-800/50 border-gray-700 h-full">
+                  <CardContent className="p-6">
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-3">
+                          <Badge className={`${getStatusColor(application.status)} text-white`}>
+                            {getStatusIcon(application.status)}
+                            <span className="ml-1 capitalize">{application.status}</span>
+                          </Badge>
+                          <span className="text-sm text-gray-400">
+                            {new Date(application.created_at).toLocaleDateString()}
+                          </span>
+                        </div>
+                        
+                        <div className="flex items-center gap-2 text-white">
+                          <User className="w-4 h-4" />
+                          <span>{application.profiles?.display_name || application.profiles?.email || 'Unknown User'}</span>
+                        </div>
+                        
+                        <div className="flex items-center gap-2 text-white">
+                          <Package className="w-4 h-4" />
+                          <span>{application.fashion_products?.title || 'Unknown Product'}</span>
+                        </div>
+                      </div>
                     </div>
-                    
-                    <div className="flex items-center gap-2 text-white">
-                      <User className="w-4 h-4" />
-                      <span>{application.profiles?.display_name || application.profiles?.email || 'Unknown User'}</span>
-                    </div>
-                    
-                    <div className="flex items-center gap-2 text-white">
-                      <Package className="w-4 h-4" />
-                      <span>{application.fashion_products?.title || 'Unknown Product'}</span>
-                    </div>
-                  </div>
-                </div>
 
-                {/* Application Photos */}
-                <div className="mb-4">
-                  <Label className="text-white mb-2 block">Application Photos ({application.application_photos.length})</Label>
-                  <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2">
-                    {application.application_photos.map((photoUrl, index) => (
-                      <button
-                        key={index}
-                        onClick={() => setSelectedImageUrl(photoUrl)}
-                        className="aspect-square bg-gray-700 rounded-lg overflow-hidden hover:ring-2 hover:ring-blue-500 transition-all"
-                      >
-                        <img
-                          src={photoUrl}
-                          alt={`Application photo ${index + 1}`}
-                          className="w-full h-full object-cover"
+                    {/* Application Photos */}
+                    <div className="mb-4">
+                      <Label className="text-white mb-2 block">Application Photos ({application.application_photos.length})</Label>
+                      <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2">
+                        {application.application_photos.map((photoUrl, index) => (
+                          <button
+                            key={index}
+                            onClick={() => setSelectedImageUrl(photoUrl)}
+                            className="aspect-square bg-gray-700 rounded-lg overflow-hidden hover:ring-2 hover:ring-blue-500 transition-all"
+                          >
+                            <img
+                              src={photoUrl}
+                              alt={`Application photo ${index + 1}`}
+                              className="w-full h-full object-cover"
+                            />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Admin Notes */}
+                    {application.status === 'pending' && (
+                      <div className="mb-4">
+                        <Label htmlFor={`notes-${application.id}`} className="text-white">Admin Notes</Label>
+                        <Textarea
+                          id={`notes-${application.id}`}
+                          value={adminNotes[application.id] || ''}
+                          onChange={(e) => setAdminNotes(prev => ({ ...prev, [application.id]: e.target.value }))}
+                          placeholder="Add notes about this application..."
+                          className="bg-gray-700 border-gray-600 text-white mt-2"
+                          rows={3}
                         />
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                      </div>
+                    )}
 
-                {/* Admin Notes */}
-                {application.status === 'pending' && (
-                  <div className="mb-4">
-                    <Label htmlFor={`notes-${application.id}`} className="text-white">Admin Notes</Label>
-                    <Textarea
-                      id={`notes-${application.id}`}
-                      value={adminNotes[application.id] || ''}
-                      onChange={(e) => setAdminNotes(prev => ({ ...prev, [application.id]: e.target.value }))}
-                      placeholder="Add notes about this application..."
-                      className="bg-gray-700 border-gray-600 text-white mt-2"
-                      rows={3}
-                    />
-                  </div>
-                )}
+                    {/* Existing Admin Notes */}
+                    {application.admin_notes && (
+                      <div className="mb-4">
+                        <Label className="text-white">Previous Admin Notes</Label>
+                        <div className="bg-gray-700 border border-gray-600 rounded-md p-3 mt-2">
+                          <p className="text-gray-300">{application.admin_notes}</p>
+                          {application.reviewed_at && (
+                            <p className="text-xs text-gray-500 mt-2">
+                              <Calendar className="w-3 h-3 inline mr-1" />
+                              Reviewed on {new Date(application.reviewed_at).toLocaleString()}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )}
 
-                {/* Existing Admin Notes */}
-                {application.admin_notes && (
-                  <div className="mb-4">
-                    <Label className="text-white">Previous Admin Notes</Label>
-                    <div className="bg-gray-700 border border-gray-600 rounded-md p-3 mt-2">
-                      <p className="text-gray-300">{application.admin_notes}</p>
-                      {application.reviewed_at && (
-                        <p className="text-xs text-gray-500 mt-2">
-                          <Calendar className="w-3 h-3 inline mr-1" />
-                          Reviewed on {new Date(application.reviewed_at).toLocaleString()}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Action Buttons */}
-                {application.status === 'pending' && (
-                  <div className="flex gap-3">
-                    <Button
-                      onClick={() => updateApplicationStatus(application.id, 'approved')}
-                      className="bg-green-600 hover:bg-green-700 text-white"
-                    >
-                      <CheckCircle className="w-4 h-4 mr-2" />
-                      Approve
-                    </Button>
-                    <Button
-                      onClick={() => updateApplicationStatus(application.id, 'rejected')}
-                      variant="destructive"
-                    >
-                      <XCircle className="w-4 h-4 mr-2" />
-                      Reject
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                    {/* Action Buttons */}
+                    {application.status === 'pending' && (
+                      <div className="flex gap-3">
+                        <Button
+                          onClick={() => updateApplicationStatus(application.id, 'approved')}
+                          className="bg-green-600 hover:bg-green-700 text-white"
+                        >
+                          <CheckCircle className="w-4 h-4 mr-2" />
+                          Approve
+                        </Button>
+                        <Button
+                          onClick={() => updateApplicationStatus(application.id, 'rejected')}
+                          variant="destructive"
+                        >
+                          <XCircle className="w-4 h-4 mr-2" />
+                          Reject
+                        </Button>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
+          <CarouselNext className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
+        </Carousel>
       )}
 
       {/* Image Zoom Modal - using proper props for the existing ImageZoomModal */}
