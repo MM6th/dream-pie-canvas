@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Clock, Shield, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -223,90 +224,102 @@ const AstrologyStoreSection = () => {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {products.map((product) => {
-          const reviewCount = reviewCounts[product.id] || 0;
-          
-          return (
-            <Card key={product.id} className="bg-gray-800/50 border-gray-700 backdrop-blur-sm hover:bg-gray-700/50 transition-colors">
-              {product.thumbnail_url && (
-                <CardHeader className="p-0">
-                  <img
-                    src={product.thumbnail_url}
-                    alt={product.title}
-                    className="w-full h-48 object-fill rounded-t-lg"
-                  />
-                </CardHeader>
-              )}
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between mb-3">
-                  <CardTitle className="text-white text-lg">{product.title}</CardTitle>
-                  <div className="flex items-center gap-1 flex-wrap">
-                    {product.is_adult_content && !userProfile?.adult_content_restricted && (
-                      <Badge className="bg-orange-600 hover:bg-orange-700 text-xs flex items-center gap-1">
-                        <Shield className="w-3 h-3" />
-                        18+
-                      </Badge>
-                    )}
-                    {product.access_level === "merchant_only" && (
-                      <Badge className="bg-orange-600 hover:bg-orange-700 flex items-center gap-1 text-xs">
-                        <Lock className="w-3 h-3" />
-                        Merchants Only
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-                
-                {product.description && (
-                  <div className="mb-4">
-                    <p className="text-gray-300 text-sm line-clamp-3">{product.description}</p>
-                    <button
-                      onClick={() => setDetailModalProduct(product)}
-                      className="text-blue-400 hover:text-blue-300 text-sm mt-1"
-                    >
-                      See More
-                    </button>
-                  </div>
-                )}
-                
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-2xl font-bold text-white">${product.total_price}</span>
-                  {product.delivery_type && (
-                    <div className="flex items-center gap-1 text-gray-400">
-                      <Clock className="w-4 h-4" />
-                      <span className="text-sm capitalize">{product.delivery_type}</span>
-                    </div>
+      <Carousel
+        className="w-full"
+        opts={{
+          align: "start",
+          loop: true,
+        }}
+      >
+        <CarouselContent className="-ml-2 md:-ml-4">
+          {products.map((product) => {
+            const reviewCount = reviewCounts[product.id] || 0;
+            
+            return (
+              <CarouselItem key={product.id} className="pl-2 md:pl-4 basis-full sm:basis-1/2 lg:basis-1/3">
+                <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm hover:bg-gray-700/50 transition-colors h-full">
+                  {product.thumbnail_url && (
+                    <CardHeader className="p-0">
+                      <img
+                        src={product.thumbnail_url}
+                        alt={product.title}
+                        className="w-full h-48 object-fill rounded-t-lg"
+                      />
+                    </CardHeader>
                   )}
-                </div>
-                
-                <div className="space-y-2">
-                  <Button
-                    onClick={() => handlePurchase(product.id, product.total_price)}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                  >
-                    Book Reading
-                  </Button>
-                  
-                  <Button
-                    onClick={() => setShowReviews(showReviews === product.id ? null : product.id)}
-                    variant="outline"
-                    className="w-full border-gray-600 text-white bg-transparent hover:bg-gray-700"
-                  >
-                    {showReviews === product.id ? "Hide Reviews" : `View Reviews (${reviewCount})`}
-                  </Button>
-                </div>
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between mb-3">
+                      <CardTitle className="text-white text-lg">{product.title}</CardTitle>
+                      <div className="flex items-center gap-1 flex-wrap">
+                        {product.is_adult_content && !userProfile?.adult_content_restricted && (
+                          <Badge className="bg-orange-600 hover:bg-orange-700 text-xs flex items-center gap-1">
+                            <Shield className="w-3 h-3" />
+                            18+
+                          </Badge>
+                        )}
+                        {product.access_level === "merchant_only" && (
+                          <Badge className="bg-orange-600 hover:bg-orange-700 flex items-center gap-1 text-xs">
+                            <Lock className="w-3 h-3" />
+                            Merchants Only
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {product.description && (
+                      <div className="mb-4">
+                        <p className="text-gray-300 text-sm line-clamp-3">{product.description}</p>
+                        <button
+                          onClick={() => setDetailModalProduct(product)}
+                          className="text-blue-400 hover:text-blue-300 text-sm mt-1"
+                        >
+                          See More
+                        </button>
+                      </div>
+                    )}
+                    
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="text-2xl font-bold text-white">${product.total_price}</span>
+                      {product.delivery_type && (
+                        <div className="flex items-center gap-1 text-gray-400">
+                          <Clock className="w-4 h-4" />
+                          <span className="text-sm capitalize">{product.delivery_type}</span>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Button
+                        onClick={() => handlePurchase(product.id, product.total_price)}
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                      >
+                        Book Reading
+                      </Button>
+                      
+                      <Button
+                        onClick={() => setShowReviews(showReviews === product.id ? null : product.id)}
+                        variant="outline"
+                        className="w-full border-gray-600 text-white bg-transparent hover:bg-gray-700"
+                      >
+                        {showReviews === product.id ? "Hide Reviews" : `View Reviews (${reviewCount})`}
+                      </Button>
+                    </div>
 
-                {/* Reviews Section */}
-                {showReviews === product.id && (
-                  <div className="mt-4">
-                    <ProductReviewsSection productId={product.id} />
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+                    {/* Reviews Section */}
+                    {showReviews === product.id && (
+                      <div className="mt-4">
+                        <ProductReviewsSection productId={product.id} />
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </CarouselItem>
+            );
+          })}
+        </CarouselContent>
+        <CarouselPrevious className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
+        <CarouselNext className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
+      </Carousel>
 
       {detailModalProduct && (
         <AstrologyProductDetailModal

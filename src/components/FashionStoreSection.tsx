@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { ShoppingCart, Shirt, Shield, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -215,78 +216,90 @@ const FashionStoreSection = () => {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {products.map((product) => (
-            <Card key={product.id} className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
-              <CardHeader className="p-4">
-                {product.fashion_product_images.length > 0 ? (
-                  <img
-                    src={product.fashion_product_images[0].image_url}
-                    alt={product.title}
-                    className="w-full h-48 object-fill rounded-lg mb-3 cursor-pointer"
-                    onClick={() => setSelectedProduct(product)}
-                  />
-                ) : (
-                  <div className="w-full h-48 bg-gray-700 rounded-lg mb-3 flex items-center justify-center">
-                    <Shirt className="w-12 h-12 text-gray-400" />
-                  </div>
-                )}
-                <div className="flex items-start justify-between">
-                  <CardTitle className="text-white text-lg line-clamp-2">{product.title}</CardTitle>
-                  <div className="flex items-center gap-1 flex-wrap ml-2">
-                    {product.is_adult_content && !userProfile?.adult_content_restricted && (
-                      <Badge className="bg-orange-600 hover:bg-orange-700 text-xs flex items-center gap-1">
-                        <Shield className="w-3 h-3" />
-                        18+
-                      </Badge>
+        <Carousel
+          className="w-full"
+          opts={{
+            align: "start",
+            loop: true,
+          }}
+        >
+          <CarouselContent className="-ml-2 md:-ml-4">
+            {products.map((product) => (
+              <CarouselItem key={product.id} className="pl-2 md:pl-4 basis-full sm:basis-1/2 lg:basis-1/3 xl:basis-1/4">
+                <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm h-full">
+                  <CardHeader className="p-4">
+                    {product.fashion_product_images.length > 0 ? (
+                      <img
+                        src={product.fashion_product_images[0].image_url}
+                        alt={product.title}
+                        className="w-full h-48 object-fill rounded-lg mb-3 cursor-pointer"
+                        onClick={() => setSelectedProduct(product)}
+                      />
+                    ) : (
+                      <div className="w-full h-48 bg-gray-700 rounded-lg mb-3 flex items-center justify-center">
+                        <Shirt className="w-12 h-12 text-gray-400" />
+                      </div>
                     )}
-                    {product.access_level === "merchant_only" && (
-                      <Badge className="bg-orange-600 hover:bg-orange-700 flex items-center gap-1 text-xs">
-                        <Lock className="w-3 h-3" />
-                        Merchants Only
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-                {product.description && (
-                  <div>
-                    <p className="text-gray-400 text-sm line-clamp-2">{product.description}</p>
-                    <button
-                      onClick={() => setDetailModalProduct(product)}
-                      className="text-blue-400 hover:text-blue-300 text-sm mt-1 underline"
-                    >
-                      See More
-                    </button>
-                  </div>
-                )}
-              </CardHeader>
-              <CardContent className="p-4 pt-0">
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="text-white font-semibold">
-                      ${product.price.toFixed(2)}
+                    <div className="flex items-start justify-between">
+                      <CardTitle className="text-white text-lg line-clamp-2">{product.title}</CardTitle>
+                      <div className="flex items-center gap-1 flex-wrap ml-2">
+                        {product.is_adult_content && !userProfile?.adult_content_restricted && (
+                          <Badge className="bg-orange-600 hover:bg-orange-700 text-xs flex items-center gap-1">
+                            <Shield className="w-3 h-3" />
+                            18+
+                          </Badge>
+                        )}
+                        {product.access_level === "merchant_only" && (
+                          <Badge className="bg-orange-600 hover:bg-orange-700 flex items-center gap-1 text-xs">
+                            <Lock className="w-3 h-3" />
+                            Merchants Only
+                          </Badge>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                  
-                  {product.materials && (
-                    <p className="text-gray-400 text-xs">
-                      Materials: {product.materials}
-                    </p>
-                  )}
-                  
-                  <Button
-                    size="sm"
-                    onClick={() => handlePurchase(product)}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                  >
-                    <ShoppingCart className="w-4 h-4 mr-1" />
-                    Buy Now
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                    {product.description && (
+                      <div>
+                        <p className="text-gray-400 text-sm line-clamp-2">{product.description}</p>
+                        <button
+                          onClick={() => setDetailModalProduct(product)}
+                          className="text-blue-400 hover:text-blue-300 text-sm mt-1 underline"
+                        >
+                          See More
+                        </button>
+                      </div>
+                    )}
+                  </CardHeader>
+                  <CardContent className="p-4 pt-0">
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="text-white font-semibold">
+                          ${product.price.toFixed(2)}
+                        </div>
+                      </div>
+                      
+                      {product.materials && (
+                        <p className="text-gray-400 text-xs">
+                          Materials: {product.materials}
+                        </p>
+                      )}
+                      
+                      <Button
+                        size="sm"
+                        onClick={() => handlePurchase(product)}
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                      >
+                        <ShoppingCart className="w-4 h-4 mr-1" />
+                        Buy Now
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
+          <CarouselNext className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
+        </Carousel>
       )}
 
       {selectedProduct && (
