@@ -3,6 +3,13 @@ import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { 
+  Carousel, 
+  CarouselContent, 
+  CarouselItem, 
+  CarouselNext, 
+  CarouselPrevious 
+} from "@/components/ui/carousel";
 import { Video, Edit, Trash2, DollarSign } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -116,8 +123,11 @@ const VideoProductManager = () => {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {products.map((product) => (
+        <Carousel className="w-full">
+          <CarouselContent>
+            {products.map((product) => (
+              <CarouselItem key={product.id} className="md:basis-1/2 lg:basis-1/3">
+                <div className="p-1">
             <Card key={product.id} className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
               <CardHeader className="p-4">
                 {product.thumbnail_url ? (
@@ -180,9 +190,14 @@ const VideoProductManager = () => {
                   </div>
                 </div>
               </CardContent>
-            </Card>
-          ))}
-        </div>
+                </Card>
+                </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious />
+          <CarouselNext />
+        </Carousel>
       )}
 
       {editingProduct && (

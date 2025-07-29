@@ -2,6 +2,13 @@ import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { 
+  Carousel, 
+  CarouselContent, 
+  CarouselItem, 
+  CarouselNext, 
+  CarouselPrevious 
+} from "@/components/ui/carousel";
 import { AudioLines, Edit, Trash2, DollarSign, Lock } from "lucide-react";
 import PodcastDownloadManager from "./PodcastDownloadManager";
 import { supabase } from "@/integrations/supabase/client";
@@ -148,8 +155,11 @@ const AudioProductManager = () => {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {products.map((product) => (
+          <Carousel className="w-full">
+            <CarouselContent>
+              {products.map((product) => (
+                <CarouselItem key={product.id} className="md:basis-1/2 lg:basis-1/4">
+                  <div className="p-1">
               <Card key={product.id} className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
                 <CardHeader className="p-3">
                   {product.thumbnail_url ? (
@@ -236,9 +246,14 @@ const AudioProductManager = () => {
                     </div>
                   </div>
                 </CardContent>
-              </Card>
-            ))}
-          </div>
+                  </Card>
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious />
+            <CarouselNext />
+          </Carousel>
         )}
       </div>
 
