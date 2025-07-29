@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Image, Clock, CheckCircle, XCircle, Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -169,44 +170,56 @@ const SongCoverManager = () => {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {audioProducts.map((product) => (
-                <Card key={product.id} className="bg-gray-800/50 border-gray-700">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-3 mb-3">
-                      {product.thumbnail_url ? (
-                        <img
-                          src={product.thumbnail_url}
-                          alt={product.title}
-                          className="w-12 h-12 object-cover rounded"
-                        />
-                      ) : (
-                        <div className="w-12 h-12 bg-gray-700 rounded flex items-center justify-center">
-                          <Image className="w-6 h-6 text-gray-400" />
+            <Carousel
+              className="w-full"
+              opts={{
+                align: "start",
+                loop: true,
+              }}
+            >
+              <CarouselContent className="-ml-2 md:-ml-4">
+                {audioProducts.map((product) => (
+                  <CarouselItem key={product.id} className="pl-2 md:pl-4 basis-full md:basis-1/2 lg:basis-1/3">
+                    <Card className="bg-gray-800/50 border-gray-700">
+                      <CardContent className="p-4">
+                        <div className="flex items-center gap-3 mb-3">
+                          {product.thumbnail_url ? (
+                            <img
+                              src={product.thumbnail_url}
+                              alt={product.title}
+                              className="w-12 h-12 object-cover rounded"
+                            />
+                          ) : (
+                            <div className="w-12 h-12 bg-gray-700 rounded flex items-center justify-center">
+                              <Image className="w-6 h-6 text-gray-400" />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <h5 className="text-white font-medium truncate">{product.title}</h5>
+                            <p className="text-gray-400 text-sm truncate">
+                              {product.artist_name || 'Unknown Artist'}
+                            </p>
+                          </div>
                         </div>
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <h5 className="text-white font-medium truncate">{product.title}</h5>
-                        <p className="text-gray-400 text-sm truncate">
-                          {product.artist_name || 'Unknown Artist'}
-                        </p>
-                      </div>
-                    </div>
-                    <Button
-                      size="sm"
-                      onClick={() => {
-                        setSelectedProduct(product);
-                        setShowSubmissionModal(true);
-                      }}
-                      className="w-full bg-blue-600 hover:bg-blue-700"
-                    >
-                      <Upload className="w-4 h-4 mr-2" />
-                      Submit Cover
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            setSelectedProduct(product);
+                            setShowSubmissionModal(true);
+                          }}
+                          className="w-full bg-blue-600 hover:bg-blue-700"
+                        >
+                          <Upload className="w-4 h-4 mr-2" />
+                          Submit Cover
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
+              <CarouselNext className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
+            </Carousel>
           )}
         </div>
 

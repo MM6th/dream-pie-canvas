@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Trash2, Calendar, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -146,79 +147,91 @@ const BulletinPostManager = () => {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {posts.map((post) => (
-            <Card key={post.id} className="bg-gray-700/50 border-gray-600 overflow-hidden h-[400px] flex flex-col">
-              {post.image_url && (
-                <BulletinPostImage
-                  src={post.image_url}
-                  alt={post.title}
-                  className="w-full h-40 object-cover"
-                />
-              )}
-              <CardHeader className="pb-2 flex-shrink-0">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-white text-sm flex items-center gap-2 line-clamp-1">
-                    {post.title}
-                    {post.link_url && (
-                      <Badge variant="outline" className="border-blue-400 text-blue-400 text-xs">
-                        <ExternalLink className="w-3 h-3 mr-1" />
-                        Link
-                      </Badge>
-                    )}
-                  </CardTitle>
-                  <div className="flex gap-1 flex-shrink-0">
-                    <BulletinPostModal
-                      post={post}
-                      mode="edit"
-                      onSuccess={fetchPosts}
+        <Carousel
+          className="w-full"
+          opts={{
+            align: "start",
+            loop: true,
+          }}
+        >
+          <CarouselContent className="-ml-2 md:-ml-4">
+            {posts.map((post) => (
+              <CarouselItem key={post.id} className="pl-2 md:pl-4 basis-full md:basis-1/2 lg:basis-1/3">
+                <Card className="bg-gray-700/50 border-gray-600 overflow-hidden h-[400px] flex flex-col">
+                  {post.image_url && (
+                    <BulletinPostImage
+                      src={post.image_url}
+                      alt={post.title}
+                      className="w-full h-40 object-cover"
                     />
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="outline" size="sm" className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white p-1">
-                          <Trash2 className="w-3 h-3" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent className="bg-gray-800 border-gray-700">
-                        <AlertDialogHeader>
-                          <AlertDialogTitle className="text-white">Delete Post</AlertDialogTitle>
-                          <AlertDialogDescription className="text-gray-400">
-                            Are you sure you want to delete this post? This action cannot be undone.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel className="border-gray-600 text-white bg-transparent">
-                            Cancel
-                          </AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => handleDelete(post.id)}
-                            className="bg-red-600 hover:bg-red-700"
-                          >
-                            Delete
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-0 flex-grow flex flex-col">
-                <p className="text-gray-300 mb-2 text-sm line-clamp-3 flex-grow">{post.content}</p>
-                {post.link_url && (
-                  <div className="mb-2">
-                    <p className="text-xs text-blue-400 truncate">Link: {post.link_url}</p>
-                  </div>
-                )}
-                <div className="flex items-center gap-2 text-xs text-gray-400 mt-auto">
-                  <div className="flex items-center gap-1">
-                    <Calendar className="w-3 h-3" />
-                    {new Date(post.created_at).toLocaleDateString()}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                  )}
+                  <CardHeader className="pb-2 flex-shrink-0">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-white text-sm flex items-center gap-2 line-clamp-1">
+                        {post.title}
+                        {post.link_url && (
+                          <Badge variant="outline" className="border-blue-400 text-blue-400 text-xs">
+                            <ExternalLink className="w-3 h-3 mr-1" />
+                            Link
+                          </Badge>
+                        )}
+                      </CardTitle>
+                      <div className="flex gap-1 flex-shrink-0">
+                        <BulletinPostModal
+                          post={post}
+                          mode="edit"
+                          onSuccess={fetchPosts}
+                        />
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="outline" size="sm" className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white p-1">
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent className="bg-gray-800 border-gray-700">
+                            <AlertDialogHeader>
+                              <AlertDialogTitle className="text-white">Delete Post</AlertDialogTitle>
+                              <AlertDialogDescription className="text-gray-400">
+                                Are you sure you want to delete this post? This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel className="border-gray-600 text-white bg-transparent">
+                                Cancel
+                              </AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleDelete(post.id)}
+                                className="bg-red-600 hover:bg-red-700"
+                              >
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-0 flex-grow flex flex-col">
+                    <p className="text-gray-300 mb-2 text-sm line-clamp-3 flex-grow">{post.content}</p>
+                    {post.link_url && (
+                      <div className="mb-2">
+                        <p className="text-xs text-blue-400 truncate">Link: {post.link_url}</p>
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2 text-xs text-gray-400 mt-auto">
+                      <div className="flex items-center gap-1">
+                        <Calendar className="w-3 h-3" />
+                        {new Date(post.created_at).toLocaleDateString()}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
+          <CarouselNext className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
+        </Carousel>
       )}
     </div>
   );

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Image, Clock, CheckCircle, XCircle, FileText } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -133,60 +134,71 @@ const MerchantCoverSubmissionsManager = () => {
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-4">
-            {submissions.map((submission) => (
-              <Card 
-                key={submission.id} 
-                className="bg-gray-800/50 border-gray-700 backdrop-blur-sm cursor-pointer hover:bg-gray-700/50 transition-colors"
-                onClick={() => handleSubmissionClick(submission)}
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-start gap-4">
-                    <img
-                      src={submission.cover_image_url}
-                      alt="Submitted cover"
-                      className="w-16 h-16 object-cover rounded-lg"
-                    />
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h5 className="text-white font-medium">
-                          {submission.audio_product_title}
-                        </h5>
-                        <Badge className={`${getStatusColor(submission.status)} text-white`}>
-                          <span className="flex items-center gap-1">
-                            {getStatusIcon(submission.status)}
-                            {submission.status}
-                          </span>
-                        </Badge>
-                      </div>
-                      <p className="text-gray-400 text-sm mb-2">
-                        by {submission.audio_product_artist}
-                      </p>
-                      <p className="text-gray-400 text-sm mb-2">
-                        Submitted {new Date(submission.created_at).toLocaleDateString()}
-                      </p>
-                      {submission.submission_notes && (
-                        <p className="text-gray-300 text-sm mb-2">
-                          <strong>Your notes:</strong> {submission.submission_notes}
-                        </p>
-                      )}
-                      {submission.admin_notes && (
-                        <p className="text-gray-300 text-sm">
-                          <strong>Admin feedback:</strong> {submission.admin_notes}
-                        </p>
-                      )}
-                      {submission.status === 'approved' && submission.contract_id && (
-                        <div className="mt-2 flex items-center gap-2 text-blue-400 text-sm">
-                          <FileText className="w-4 h-4" />
-                          <span>Contract available for signature</span>
+          <Carousel
+            className="w-full"
+            opts={{
+              align: "start",
+              loop: true,
+            }}
+          >
+            <CarouselContent className="-ml-2 md:-ml-4">
+              {submissions.map((submission) => (
+                <CarouselItem key={submission.id} className="pl-2 md:pl-4 basis-full md:basis-1/2 lg:basis-1/3">
+                  <Card 
+                    className="bg-gray-800/50 border-gray-700 backdrop-blur-sm cursor-pointer hover:bg-gray-700/50 transition-colors h-full"
+                    onClick={() => handleSubmissionClick(submission)}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-start gap-4">
+                        <img
+                          src={submission.cover_image_url}
+                          alt="Submitted cover"
+                          className="w-16 h-16 object-cover rounded-lg"
+                        />
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h5 className="text-white font-medium">
+                              {submission.audio_product_title}
+                            </h5>
+                            <Badge className={`${getStatusColor(submission.status)} text-white`}>
+                              <span className="flex items-center gap-1">
+                                {getStatusIcon(submission.status)}
+                                {submission.status}
+                              </span>
+                            </Badge>
+                          </div>
+                          <p className="text-gray-400 text-sm mb-2">
+                            by {submission.audio_product_artist}
+                          </p>
+                          <p className="text-gray-400 text-sm mb-2">
+                            Submitted {new Date(submission.created_at).toLocaleDateString()}
+                          </p>
+                          {submission.submission_notes && (
+                            <p className="text-gray-300 text-sm mb-2">
+                              <strong>Your notes:</strong> {submission.submission_notes}
+                            </p>
+                          )}
+                          {submission.admin_notes && (
+                            <p className="text-gray-300 text-sm">
+                              <strong>Admin feedback:</strong> {submission.admin_notes}
+                            </p>
+                          )}
+                          {submission.status === 'approved' && submission.contract_id && (
+                            <div className="mt-2 flex items-center gap-2 text-blue-400 text-sm">
+                              <FileText className="w-4 h-4" />
+                              <span>Contract available for signature</span>
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
+            <CarouselNext className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
+          </Carousel>
         )}
       </div>
 
