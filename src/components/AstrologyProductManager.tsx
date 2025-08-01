@@ -2,6 +2,13 @@ import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { 
+  Carousel, 
+  CarouselContent, 
+  CarouselItem, 
+  CarouselNext, 
+  CarouselPrevious 
+} from "@/components/ui/carousel";
 import { Edit, Trash2, Star, Clock, FileAudio, Video } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -131,67 +138,75 @@ const AstrologyProductManager = () => {
           {products.length === 0 ? (
             <p className="text-gray-400 text-center py-8">No astrology products created yet.</p>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {products.map((product) => (
-                <Card key={product.id} className="bg-gray-700/50 border-gray-600">
-                  <CardContent className="p-4">
-                    {product.thumbnail_url && (
-                      <img
-                        src={product.thumbnail_url}
-                        alt={product.title}
-                        className="w-full h-40 object-fill rounded-lg mb-3"
-                      />
-                    )}
-                    
-                    <div className="space-y-3">
-                      <div>
-                        <h3 className="text-white font-medium line-clamp-2 text-sm">{product.title}</h3>
-                        <Badge variant="outline" className="mt-1 text-xs">
-                          {getProductTypeLabel(product.product_type)}
-                        </Badge>
-                      </div>
-
-                      {product.description && (
-                        <p className="text-gray-400 text-xs line-clamp-3">{product.description}</p>
-                      )}
-
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1">
-                          {getDeliveryTypeIcon(product.delivery_type)}
-                          <span className="text-gray-300 text-xs">
-                            {getDeliveryTypeLabel(product.delivery_type)}
-                          </span>
-                        </div>
-                        <Badge className="bg-green-600 text-xs">
-                          ${product.total_price}
-                          {product.delivery_type === 'telephone' && product.hours_selected > 1 && (
-                            <span className="text-xs ml-1">({product.hours_selected}h)</span>
+            <div className="relative">
+              <Carousel className="w-full">
+                <CarouselContent className="-ml-2 md:-ml-4">
+                  {products.map((product) => (
+                    <CarouselItem key={product.id} className="pl-2 md:pl-4 basis-full md:basis-1/2 lg:basis-1/4">
+                      <Card className="bg-gray-700/50 border-gray-600 h-full">
+                        <CardContent className="p-4">
+                          {product.thumbnail_url && (
+                            <img
+                              src={product.thumbnail_url}
+                              alt={product.title}
+                              className="w-full h-40 object-fill rounded-lg mb-3"
+                            />
                           )}
-                        </Badge>
-                      </div>
+                          
+                          <div className="space-y-3">
+                            <div>
+                              <h3 className="text-white font-medium line-clamp-2 text-sm">{product.title}</h3>
+                              <Badge variant="outline" className="mt-1 text-xs">
+                                {getProductTypeLabel(product.product_type)}
+                              </Badge>
+                            </div>
 
-                      <div className="flex justify-between gap-2 pt-2">
-                        <Button
-                          size="sm"
-                          onClick={() => setEditingProduct(product)}
-                          className="bg-black text-white border-0 hover:bg-black text-xs px-2 py-1"
-                        >
-                          <Edit className="w-3 h-3 mr-1" />
-                          Edit
-                        </Button>
-                        <Button
-                          size="sm"
-                          onClick={() => handleDelete(product.id)}
-                          className="bg-black text-white border-0 hover:bg-black text-xs px-2 py-1"
-                        >
-                          <Trash2 className="w-3 h-3 mr-1" />
-                          Delete
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                            {product.description && (
+                              <p className="text-gray-400 text-xs line-clamp-3">{product.description}</p>
+                            )}
+
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-1">
+                                {getDeliveryTypeIcon(product.delivery_type)}
+                                <span className="text-gray-300 text-xs">
+                                  {getDeliveryTypeLabel(product.delivery_type)}
+                                </span>
+                              </div>
+                              <Badge className="bg-green-600 text-xs">
+                                ${product.total_price}
+                                {product.delivery_type === 'telephone' && product.hours_selected > 1 && (
+                                  <span className="text-xs ml-1">({product.hours_selected}h)</span>
+                                )}
+                              </Badge>
+                            </div>
+
+                            <div className="flex justify-between gap-2 pt-2">
+                              <Button
+                                size="sm"
+                                onClick={() => setEditingProduct(product)}
+                                className="bg-black text-white border-0 hover:bg-black text-xs px-2 py-1"
+                              >
+                                <Edit className="w-3 h-3 mr-1" />
+                                Edit
+                              </Button>
+                              <Button
+                                size="sm"
+                                onClick={() => handleDelete(product.id)}
+                                className="bg-black text-white border-0 hover:bg-black text-xs px-2 py-1"
+                              >
+                                <Trash2 className="w-3 h-3 mr-1" />
+                                Delete
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600 -left-4" />
+                <CarouselNext className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600 -right-4" />
+              </Carousel>
             </div>
           )}
         </CardContent>

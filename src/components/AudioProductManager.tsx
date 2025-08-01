@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -155,105 +156,105 @@ const AudioProductManager = () => {
             </CardContent>
           </Card>
         ) : (
-          <Carousel className="w-full">
-            <CarouselContent>
-              {products.map((product) => (
-                <CarouselItem key={product.id} className="md:basis-1/2 lg:basis-1/4">
-                  <div className="p-1">
-              <Card key={product.id} className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
-                <CardHeader className="p-3">
-                  {product.thumbnail_url ? (
-                    <img
-                      src={product.thumbnail_url}
-                      alt={product.title}
-                      className="w-full h-32 object-fill rounded-lg mb-2"
-                    />
-                  ) : (
-                    <div className="w-full h-32 bg-gray-700 rounded-lg mb-2 flex items-center justify-center">
-                      <AudioLines className="w-6 h-6 text-gray-400" />
-                    </div>
-                  )}
-                  <CardTitle className="text-white text-sm line-clamp-2">{product.title}</CardTitle>
-                  {product.artist_name && (
-                    <p className="text-gray-400 text-xs">by {product.artist_name}</p>
-                  )}
-                </CardHeader>
-                <CardContent className="p-3 pt-0">
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Badge variant="secondary" className="capitalize text-xs">
-                        {product.audio_type}
-                      </Badge>
-                      {product.albums && (
-                        <Badge variant="outline" className="text-xs bg-white text-black border-white">
-                          {product.albums.name}
-                        </Badge>
-                      )}
-                    </div>
-                    
-                    <div className="flex items-center justify-center">
-                      {(() => {
-                        const accessLevel = product.access_level || (product.is_free ? "public" : "paid");
-                        switch (accessLevel) {
-                          case "public":
-                            return (
-                              <Badge className="bg-green-600 hover:bg-green-700 text-xs">
-                                Free
+          <div className="relative">
+            <Carousel className="w-full">
+              <CarouselContent className="-ml-2 md:-ml-4">
+                {products.map((product) => (
+                  <CarouselItem key={product.id} className="pl-2 md:pl-4 basis-full md:basis-1/2 lg:basis-1/4">
+                    <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm h-full">
+                      <CardHeader className="p-3">
+                        {product.thumbnail_url ? (
+                          <img
+                            src={product.thumbnail_url}
+                            alt={product.title}
+                            className="w-full h-32 object-fill rounded-lg mb-2"
+                          />
+                        ) : (
+                          <div className="w-full h-32 bg-gray-700 rounded-lg mb-2 flex items-center justify-center">
+                            <AudioLines className="w-6 h-6 text-gray-400" />
+                          </div>
+                        )}
+                        <CardTitle className="text-white text-sm line-clamp-2">{product.title}</CardTitle>
+                        {product.artist_name && (
+                          <p className="text-gray-400 text-xs">by {product.artist_name}</p>
+                        )}
+                      </CardHeader>
+                      <CardContent className="p-3 pt-0">
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <Badge variant="secondary" className="capitalize text-xs">
+                              {product.audio_type}
+                            </Badge>
+                            {product.albums && (
+                              <Badge variant="outline" className="text-xs bg-white text-black border-white">
+                                {product.albums.name}
                               </Badge>
-                            );
-                          case "merchant_only":
-                            return (
-                              <Badge className="bg-orange-600 hover:bg-orange-700 flex items-center gap-1 text-xs">
-                                <Lock className="w-3 h-3" />
-                                Merchants Only
-                              </Badge>
-                            );
-                          case "paid":
-                            return (
-                              <Badge className="bg-blue-600 hover:bg-blue-700 flex items-center gap-1 text-xs">
-                                <DollarSign className="w-3 h-3" />
-                                {product.price?.toFixed(2)}
-                              </Badge>
-                            );
-                          default:
-                            return (
-                              <Badge className="bg-green-600 hover:bg-green-700 text-xs">
-                                Free
-                              </Badge>
-                            );
-                        }
-                      })()}
-                    </div>
-                    
-                    <div className="flex gap-1">
-                      <Button
-                        size="sm"
-                        onClick={() => setEditingProduct(product)}
-                        className="flex-1 bg-black text-white hover:bg-gray-800 text-xs px-2 py-1"
-                      >
-                        <Edit className="w-3 h-3 mr-1" />
-                        Edit
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleDelete(product.id)}
-                        className="flex-1 border-red-600 text-red-400 hover:bg-red-600 hover:text-white text-xs px-2 py-1"
-                      >
-                        <Trash2 className="w-3 h-3 mr-1" />
-                        Delete
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-                  </Card>
-                  </div>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious />
-            <CarouselNext />
-          </Carousel>
+                            )}
+                          </div>
+                          
+                          <div className="flex items-center justify-center">
+                            {(() => {
+                              const accessLevel = product.access_level || (product.is_free ? "public" : "paid");
+                              switch (accessLevel) {
+                                case "public":
+                                  return (
+                                    <Badge className="bg-green-600 hover:bg-green-700 text-xs">
+                                      Free
+                                    </Badge>
+                                  );
+                                case "merchant_only":
+                                  return (
+                                    <Badge className="bg-orange-600 hover:bg-orange-700 flex items-center gap-1 text-xs">
+                                      <Lock className="w-3 h-3" />
+                                      Merchants Only
+                                    </Badge>
+                                  );
+                                case "paid":
+                                  return (
+                                    <Badge className="bg-blue-600 hover:bg-blue-700 flex items-center gap-1 text-xs">
+                                      <DollarSign className="w-3 h-3" />
+                                      {product.price?.toFixed(2)}
+                                    </Badge>
+                                  );
+                                default:
+                                  return (
+                                    <Badge className="bg-green-600 hover:bg-green-700 text-xs">
+                                      Free
+                                    </Badge>
+                                  );
+                              }
+                            })()}
+                          </div>
+                          
+                          <div className="flex gap-1">
+                            <Button
+                              size="sm"
+                              onClick={() => setEditingProduct(product)}
+                              className="flex-1 bg-black text-white hover:bg-gray-800 text-xs px-2 py-1"
+                            >
+                              <Edit className="w-3 h-3 mr-1" />
+                              Edit
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleDelete(product.id)}
+                              className="flex-1 border-red-600 text-red-400 hover:bg-red-600 hover:text-white text-xs px-2 py-1"
+                            >
+                              <Trash2 className="w-3 h-3 mr-1" />
+                              Delete
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600 -left-4" />
+              <CarouselNext className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600 -right-4" />
+            </Carousel>
+          </div>
         )}
       </div>
 
