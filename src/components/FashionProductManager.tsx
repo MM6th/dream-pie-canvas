@@ -15,23 +15,28 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import EditFashionProductModal from "./EditFashionProductModal";
 
-interface FashionProduct {
+type FashionProductWithRelations = {
   id: string;
-  product_name: string;
+  title: string;
   description: string | null;
   price: number;
-  images: string[] | null;
-  size_options: string[] | null;
-  color_options: string[] | null;
-  category: string;
+  shipping_cost: number;
+  tax_rate: number;
+  materials: string | null;
+  admin_id: string;
+  access_level: string;
+  is_adult_content: boolean | null;
   created_at: string;
-}
+  updated_at: string;
+  fashion_product_images?: { id: string; image_url: string; display_order: number }[];
+  fashion_product_variants?: { id: string; size: string; color: string; stock_quantity: number }[];
+};
 
 const FashionProductManager = () => {
   const { user } = useAuth();
-  const [products, setProducts] = useState<FashionProduct[]>([]);
+  const [products, setProducts] = useState<FashionProductWithRelations[]>([]);
   const [loading, setLoading] = useState(true);
-  const [editingProduct, setEditingProduct] = useState<FashionProduct | null>(null);
+  const [editingProduct, setEditingProduct] = useState<FashionProductWithRelations | null>(null);
 
   const fetchProducts = async () => {
     if (!user) return;
@@ -39,8 +44,21 @@ const FashionProductManager = () => {
     try {
       const { data, error } = await supabase
         .from('fashion_products')
-        .select('*')
-        .eq('merchant_id', user.id)
+        .select(`
+          *,
+          fashion_product_images (
+            id,
+            image_url,
+            display_order
+          ),
+          fashion_product_variants (
+            id,
+            size,
+            color,
+            stock_quantity
+          )
+        `)
+        .eq('admin_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -90,6 +108,14 @@ const FashionProductManager = () => {
     }
   };
 
+  const convertToEditFormat = (product: FashionProductWithRelations) => {
+    return {
+      ...product,
+      fashion_product_images: product.fashion_product_images || [],
+      fashion_product_variants: product.fashion_product_variants || []
+    };
+  };
+
   const handleEditSuccess = () => {
     setEditingProduct(null);
     fetchProducts();
@@ -123,49 +149,49 @@ const FashionProductManager = () => {
               {products.map((product) => (
                 <CarouselItem key={product.id} className="pl-2 md:pl-4 basis-full md:basis-1/2 lg:basis-1/3">
                   <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm h-full">
-                    <CardHeader className="p-4">
-                      {product.images && product.images.length > 0 ? (
-                        <img
-                          src={product.images[0]}
-                          alt={product.product_name}
-                          className="w-full h-48 object-cover rounded-lg mb-3"
-                        />
-                      ) : (
-                        <div className="w-full h-48 bg-gray-700 rounded-lg mb-3 flex items-center justify-center">
-                          <Shirt className="w-8 h-8 text-gray-400" />
-                        </div>
-                      )}
-                      <CardTitle className="text-white text-base line-clamp-2">{product.product_name}</CardTitle>
-                      {product.description && (
-                        <p className="text-gray-400 text-sm line-clamp-2">{product.description}</p>
-                      )}
-                    </CardHeader>
-                    <CardContent className="p-4 pt-0">
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <Badge variant="secondary" className="capitalize text-xs">
-                            {product.category}
-                          </Badge>
-                          <Badge className="bg-green-600 hover:bg-green-700 flex items-center gap-1 text-xs">
-                            <DollarSign className="w-3 h-3" />
-                            {product.price.toFixed(2)}
-                          </Badge>
-                        </div>
-                        
-                        {(product.size_options || product.color_options) && (
-                          <div className="space-y-1">
-                            {product.size_options && (
-                              <div className="text-xs text-gray-300">
-                                <strong>Sizes:</strong> {product.size_options.join(', ')}
-                              </div>
-                            )}
-                            {product.color_options && (
-                              <div className="text-xs text-gray-300">
-                                <strong>Colors:</strong> {product.color_options.join(', ')}
-                              </div>
-                            )}
-                          </div>
-                        )}
+                     <CardHeader className="p-4">
+                       {product.fashion_product_images && product.fashion_product_images.length > 0 ? (
+                         <img
+                           src={product.fashion_product_images.sort((a, b) => a.display_order - b.display_order)[0].image_url}
+                           alt={product.title}
+                           className="w-full h-48 object-cover rounded-lg mb-3"
+                         />
+                       ) : (
+                         <div className="w-full h-48 bg-gray-700 rounded-lg mb-3 flex items-center justify-center">
+                           <Shirt className="w-8 h-8 text-gray-400" />
+                         </div>
+                       )}
+                       <CardTitle className="text-white text-base line-clamp-2">{product.title}</CardTitle>
+                       {product.description && (
+                         <p className="text-gray-400 text-sm line-clamp-2">{product.description}</p>
+                       )}
+                     </CardHeader>
+                     <CardContent className="p-4 pt-0">
+                       <div className="space-y-3">
+                         <div className="flex items-center justify-between">
+                           <Badge variant="secondary" className="capitalize text-xs">
+                             {product.materials || 'Fashion'}
+                           </Badge>
+                           <Badge className="bg-green-600 hover:bg-green-700 flex items-center gap-1 text-xs">
+                             <DollarSign className="w-3 h-3" />
+                             {product.price.toFixed(2)}
+                           </Badge>
+                         </div>
+                         
+                         {product.fashion_product_variants && product.fashion_product_variants.length > 0 && (
+                           <div className="space-y-1">
+                             {product.fashion_product_variants.some(v => v.size) && (
+                               <div className="text-xs text-gray-300">
+                                 <strong>Sizes:</strong> {[...new Set(product.fashion_product_variants.map(v => v.size))].join(', ')}
+                               </div>
+                             )}
+                             {product.fashion_product_variants.some(v => v.color) && (
+                               <div className="text-xs text-gray-300">
+                                 <strong>Colors:</strong> {[...new Set(product.fashion_product_variants.map(v => v.color))].join(', ')}
+                               </div>
+                             )}
+                           </div>
+                         )}
                         
                         <div className="flex gap-2">
                           <Button
@@ -200,7 +226,7 @@ const FashionProductManager = () => {
 
       {editingProduct && (
         <EditFashionProductModal
-          product={editingProduct}
+          product={convertToEditFormat(editingProduct)}
           isOpen={!!editingProduct}
           onClose={() => setEditingProduct(null)}
           onSuccess={handleEditSuccess}
