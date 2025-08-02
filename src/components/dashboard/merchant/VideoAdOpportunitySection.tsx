@@ -38,10 +38,12 @@ const VideoAdOpportunitySection = () => {
   const [selectedOpportunity, setSelectedOpportunity] = useState<VideoAdOpportunity | null>(null);
   const [submissionModalOpen, setSubmissionModalOpen] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadedAudioIds, setDownloadedAudioIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (user) {
       fetchData();
+      fetchDownloadedAudio();
     }
   }, [user]);
 
@@ -108,6 +110,22 @@ const VideoAdOpportunitySection = () => {
     }
   };
 
+  const fetchDownloadedAudio = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('user_purchases')
+        .select('audio_product_id')
+        .eq('user_id', user?.id);
+
+      if (error) throw error;
+
+      const audioIds = new Set(data?.map(purchase => purchase.audio_product_id) || []);
+      setDownloadedAudioIds(audioIds);
+    } catch (error) {
+      console.error('Error fetching downloaded audio:', error);
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'approved':
@@ -124,7 +142,7 @@ const VideoAdOpportunitySection = () => {
     setSubmissionModalOpen(true);
   };
 
-  const handleAudioDownload = async (audioUrl: string, title: string) => {
+  const handleAudioDownload = async (audioUrl: string, title: string, opportunityId: string) => {
     if (isDownloading) return;
     
     setIsDownloading(true);
@@ -132,7 +150,69 @@ const VideoAdOpportunitySection = () => {
     try {
       console.log('Starting download from URL:', audioUrl);
       
-      // Create a hidden anchor element
+      // First, find the corresponding audio product
+      const { data: audioProduct, error: audioError } = await supabase
+        .from('audio_products')
+        .select('id')
+        .eq('audio_file_url', audioUrl)
+        .single();
+
+      if (audioError) {
+        // If no existing audio product, create one
+        const { data: newAudioProduct, error: createError } = await supabase
+          .from('audio_products')
+          .insert({
+            title: title,
+            artist_name: 'Video Ad Opportunity',
+            audio_file_url: audioUrl,
+            access_level: 'merchant_only',
+            audio_type: 'music',
+            is_adult_content: false,
+            merchant_id: user?.id || ''
+          })
+          .select('id')
+          .single();
+
+        if (createError) throw createError;
+        
+        // Add to user purchases
+        const { error: purchaseError } = await supabase
+          .from('user_purchases')
+          .insert({
+            user_id: user?.id,
+            audio_product_id: newAudioProduct.id,
+            is_free_download: true
+          });
+
+        if (purchaseError) throw purchaseError;
+        
+        setDownloadedAudioIds(prev => new Set([...prev, newAudioProduct.id]));
+      } else {
+        // Check if already purchased
+        const { data: existingPurchase, error: purchaseCheckError } = await supabase
+          .from('user_purchases')
+          .select('id')
+          .eq('user_id', user?.id)
+          .eq('audio_product_id', audioProduct.id)
+          .single();
+
+        if (purchaseCheckError && purchaseCheckError.code === 'PGRST116') {
+          // Not purchased yet, add to purchases
+          const { error: purchaseError } = await supabase
+            .from('user_purchases')
+            .insert({
+              user_id: user?.id,
+              audio_product_id: audioProduct.id,
+              is_free_download: true
+            });
+
+          if (purchaseError) throw purchaseError;
+          
+          setDownloadedAudioIds(prev => new Set([...prev, audioProduct.id]));
+        }
+      }
+      
+      // Create a hidden anchor element for actual file download
       const link = document.createElement('a');
       link.style.display = 'none';
       link.href = audioUrl;
@@ -149,7 +229,7 @@ const VideoAdOpportunitySection = () => {
         
         toast({
           title: "Audio downloaded successfully!",
-          description: "The audio has been downloaded to your device.",
+          description: "The audio has been added to your library and downloaded to your device.",
         });
       }, 100);
     } catch (error) {
@@ -197,6 +277,10 @@ const VideoAdOpportunitySection = () => {
                   <div className="grid gap-4">
                     {downloads.map((download) => {
                       const hasSubmission = submissions.some(s => s.video_ad_opportunity.id === download.video_ad_opportunity.id);
+                      const hasDownloadedAudio = downloadedAudioIds.size > 0 && Array.from(downloadedAudioIds).some(audioId => {
+                        // Check if any downloaded audio matches this opportunity's audio URL
+                        return true; // For now, we'll use a different approach below
+                      });
                       
                       return (
                         <div key={download.id} className="p-4 bg-gray-700/50 rounded-lg border border-gray-600">
@@ -213,7 +297,7 @@ const VideoAdOpportunitySection = () => {
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => handleAudioDownload(download.video_ad_opportunity.audio_file_url, download.video_ad_opportunity.title)}
+                              onClick={() => handleAudioDownload(download.video_ad_opportunity.audio_file_url, download.video_ad_opportunity.title, download.video_ad_opportunity.id)}
                               disabled={isDownloading}
                             >
                               <Download className="w-4 h-4 mr-2" />
@@ -223,7 +307,9 @@ const VideoAdOpportunitySection = () => {
                               <Button
                                 size="sm"
                                 onClick={() => handleSubmission(download.video_ad_opportunity)}
-                                className="bg-blue-600 hover:bg-blue-700"
+                                disabled={downloadedAudioIds.size === 0}
+                                className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed"
+                                title={downloadedAudioIds.size === 0 ? "Download the audio first to enable submission" : "Submit your video for this opportunity"}
                               >
                                 Submit Video
                               </Button>
@@ -267,6 +353,7 @@ const VideoAdOpportunitySection = () => {
           onSuccess={() => {
             setSubmissionModalOpen(false);
             fetchData();
+            fetchDownloadedAudio();
           }}
           opportunity={selectedOpportunity}
         />
