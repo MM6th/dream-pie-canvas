@@ -120,6 +120,8 @@ const VideoAdOpportunitySection = () => {
 
       if (error) throw error;
 
+      console.log('Fetched user purchases:', data);
+
       const audioIds = new Set(data?.map(purchase => purchase.audio_product_id) || []);
       setDownloadedAudioIds(audioIds);
 
@@ -128,6 +130,7 @@ const VideoAdOpportunitySection = () => {
         data?.filter(purchase => purchase.audio_products?.audio_file_url)
           .map(purchase => purchase.audio_products!.audio_file_url) || []
       );
+      console.log('Downloaded opportunity audio URLs:', opportunityAudioUrls);
       setDownloadedOpportunityAudios(opportunityAudioUrls);
     } catch (error) {
       console.error('Error fetching downloaded audio:', error);
@@ -293,11 +296,13 @@ const VideoAdOpportunitySection = () => {
                 <div>
                   <h3 className="text-lg font-semibold text-white mb-4">Available Opportunities</h3>
                   <div className="grid gap-4">
-                    {downloads.map((download) => {
-                      const hasSubmission = submissions.some(s => s.video_ad_opportunity.id === download.video_ad_opportunity.id);
-                      const hasDownloadedAudio = downloadedOpportunityAudios.has(download.video_ad_opportunity.audio_file_url);
-                      
-                      return (
+                     {downloads.map((download) => {
+                       const hasSubmission = submissions.some(s => s.video_ad_opportunity.id === download.video_ad_opportunity.id);
+                       const hasDownloadedAudio = downloadedOpportunityAudios.has(download.video_ad_opportunity.audio_file_url);
+                       
+                       console.log('Checking opportunity:', download.video_ad_opportunity.title, 'Audio URL:', download.video_ad_opportunity.audio_file_url, 'Has downloaded:', hasDownloadedAudio);
+                       
+                       return (
                         <div key={download.id} className="p-4 bg-gray-700/50 rounded-lg border border-gray-600">
                           <div className="flex items-center justify-between mb-3">
                             <h4 className="text-white font-medium">{download.video_ad_opportunity.title}</h4>
