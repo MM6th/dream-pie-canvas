@@ -39,6 +39,7 @@ const VideoAdOpportunitySection = () => {
   const [submissionModalOpen, setSubmissionModalOpen] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadedAudioIds, setDownloadedAudioIds] = useState<Set<string>>(new Set());
+  const [downloadedOpportunityAudios, setDownloadedOpportunityAudios] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (user) {
@@ -114,13 +115,20 @@ const VideoAdOpportunitySection = () => {
     try {
       const { data, error } = await supabase
         .from('user_purchases')
-        .select('audio_product_id')
+        .select('audio_product_id, audio_products(audio_file_url)')
         .eq('user_id', user?.id);
 
       if (error) throw error;
 
       const audioIds = new Set(data?.map(purchase => purchase.audio_product_id) || []);
       setDownloadedAudioIds(audioIds);
+
+      // Track which video ad opportunity audios have been downloaded
+      const opportunityAudioUrls = new Set(
+        data?.filter(purchase => purchase.audio_products?.audio_file_url)
+          .map(purchase => purchase.audio_products!.audio_file_url) || []
+      );
+      setDownloadedOpportunityAudios(opportunityAudioUrls);
     } catch (error) {
       console.error('Error fetching downloaded audio:', error);
     }
@@ -138,6 +146,14 @@ const VideoAdOpportunitySection = () => {
   };
 
   const handleSubmission = (opportunity: VideoAdOpportunity) => {
+    if (!downloadedOpportunityAudios.has(opportunity.audio_file_url)) {
+      toast({
+        title: "Audio Download Required",
+        description: "Please download the audio file first by clicking 'Add to Library' before submitting your video.",
+        variant: "destructive"
+      });
+      return;
+    }
     setSelectedOpportunity(opportunity);
     setSubmissionModalOpen(true);
   };
@@ -187,6 +203,7 @@ const VideoAdOpportunitySection = () => {
         if (purchaseError) throw purchaseError;
         
         setDownloadedAudioIds(prev => new Set([...prev, newAudioProduct.id]));
+        setDownloadedOpportunityAudios(prev => new Set([...prev, audioUrl]));
       } else {
         // Check if already purchased
         const { data: existingPurchase, error: purchaseCheckError } = await supabase
@@ -209,6 +226,7 @@ const VideoAdOpportunitySection = () => {
           if (purchaseError) throw purchaseError;
           
           setDownloadedAudioIds(prev => new Set([...prev, audioProduct.id]));
+          setDownloadedOpportunityAudios(prev => new Set([...prev, audioUrl]));
         }
       }
       
@@ -277,10 +295,7 @@ const VideoAdOpportunitySection = () => {
                   <div className="grid gap-4">
                     {downloads.map((download) => {
                       const hasSubmission = submissions.some(s => s.video_ad_opportunity.id === download.video_ad_opportunity.id);
-                      const hasDownloadedAudio = downloadedAudioIds.size > 0 && Array.from(downloadedAudioIds).some(audioId => {
-                        // Check if any downloaded audio matches this opportunity's audio URL
-                        return true; // For now, we'll use a different approach below
-                      });
+                      const hasDownloadedAudio = downloadedOpportunityAudios.has(download.video_ad_opportunity.audio_file_url);
                       
                       return (
                         <div key={download.id} className="p-4 bg-gray-700/50 rounded-lg border border-gray-600">
@@ -307,9 +322,9 @@ const VideoAdOpportunitySection = () => {
                               <Button
                                 size="sm"
                                 onClick={() => handleSubmission(download.video_ad_opportunity)}
-                                disabled={downloadedAudioIds.size === 0}
+                                disabled={!hasDownloadedAudio}
                                 className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed"
-                                title={downloadedAudioIds.size === 0 ? "Download the audio first to enable submission" : "Submit your video for this opportunity"}
+                                title={!hasDownloadedAudio ? "Download the audio first to enable submission" : "Submit your video for this opportunity"}
                               >
                                 Submit Video
                               </Button>
