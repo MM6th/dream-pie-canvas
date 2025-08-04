@@ -167,16 +167,47 @@ const VideoAdOpportunitySection = () => {
     setIsDownloading(true);
     
     try {
-      console.log('Starting download from URL:', audioUrl);
+      console.log('Starting video ad download for opportunity:', opportunityId);
       
-      // First, find the corresponding audio product
+      // First, check if this opportunity has already been downloaded
+      const { data: existingDownload, error: downloadCheckError } = await supabase
+        .from('video_ad_downloads')
+        .select('id')
+        .eq('video_ad_opportunity_id', opportunityId)
+        .eq('merchant_id', user?.id)
+        .maybeSingle();
+
+      if (downloadCheckError) throw downloadCheckError;
+
+      if (!existingDownload) {
+        // Create a video_ad_download record which will trigger contract creation
+        const { data: downloadRecord, error: downloadError } = await supabase
+          .from('video_ad_downloads')
+          .insert({
+            video_ad_opportunity_id: opportunityId,
+            merchant_id: user?.id
+          })
+          .select('*')
+          .single();
+
+        if (downloadError) {
+          console.error('Error creating video ad download record:', downloadError);
+          throw downloadError;
+        }
+
+        console.log('Video ad download record created:', downloadRecord.id);
+      }
+
+      // Now handle the audio product logic
       const { data: audioProduct, error: audioError } = await supabase
         .from('audio_products')
         .select('id')
         .eq('audio_file_url', audioUrl)
-        .single();
+        .maybeSingle();
 
-      if (audioError) {
+      let productId = audioProduct?.id;
+
+      if (!audioProduct) {
         // If no existing audio product, create one
         const { data: newAudioProduct, error: createError } = await supabase
           .from('audio_products')
@@ -185,7 +216,7 @@ const VideoAdOpportunitySection = () => {
             artist_name: 'Video Ad Opportunity',
             audio_file_url: audioUrl,
             access_level: 'merchant_only',
-            audio_type: 'music',
+            audio_type: 'video_ad',
             is_adult_content: false,
             merchant_id: user?.id || ''
           })
@@ -193,45 +224,37 @@ const VideoAdOpportunitySection = () => {
           .single();
 
         if (createError) throw createError;
-        
+        productId = newAudioProduct.id;
+        console.log('Audio product created:', productId);
+      }
+
+      // Check if already purchased
+      const { data: existingPurchase, error: purchaseCheckError } = await supabase
+        .from('user_purchases')
+        .select('id')
+        .eq('user_id', user?.id)
+        .eq('audio_product_id', productId)
+        .maybeSingle();
+
+      if (purchaseCheckError) throw purchaseCheckError;
+
+      if (!existingPurchase) {
         // Add to user purchases
         const { error: purchaseError } = await supabase
           .from('user_purchases')
           .insert({
             user_id: user?.id,
-            audio_product_id: newAudioProduct.id,
+            audio_product_id: productId,
             is_free_download: true
           });
 
         if (purchaseError) throw purchaseError;
-        
-        setDownloadedAudioIds(prev => new Set([...prev, newAudioProduct.id]));
-        setDownloadedOpportunityAudios(prev => new Set([...prev, audioUrl]));
-      } else {
-        // Check if already purchased
-        const { data: existingPurchase, error: purchaseCheckError } = await supabase
-          .from('user_purchases')
-          .select('id')
-          .eq('user_id', user?.id)
-          .eq('audio_product_id', audioProduct.id)
-          .single();
-
-        if (purchaseCheckError && purchaseCheckError.code === 'PGRST116') {
-          // Not purchased yet, add to purchases
-          const { error: purchaseError } = await supabase
-            .from('user_purchases')
-            .insert({
-              user_id: user?.id,
-              audio_product_id: audioProduct.id,
-              is_free_download: true
-            });
-
-          if (purchaseError) throw purchaseError;
-          
-          setDownloadedAudioIds(prev => new Set([...prev, audioProduct.id]));
-          setDownloadedOpportunityAudios(prev => new Set([...prev, audioUrl]));
-        }
+        console.log('Added to user purchases');
       }
+      
+      // Update local state
+      setDownloadedAudioIds(prev => new Set([...prev, productId!]));
+      setDownloadedOpportunityAudios(prev => new Set([...prev, audioUrl]));
       
       // Create a hidden anchor element for actual file download
       const link = document.createElement('a');
@@ -252,14 +275,18 @@ const VideoAdOpportunitySection = () => {
           title: "Audio downloaded successfully!",
           description: "The audio has been added to your library and downloaded to your device.",
         });
+
+        // Refresh data to reflect changes
+        fetchData();
+        fetchDownloadedAudio();
       }, 100);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error downloading audio:', error);
       setIsDownloading(false);
       
       toast({
         title: "Download failed",
-        description: "There was an error downloading the audio file.",
+        description: error.message || "There was an error downloading the audio file.",
         variant: "destructive"
       });
     }
