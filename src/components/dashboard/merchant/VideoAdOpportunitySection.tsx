@@ -327,8 +327,10 @@ const VideoAdOpportunitySection = () => {
                               <Button
                                 size="sm"
                                 onClick={() => handleSubmission(download.video_ad_opportunity)}
-                                disabled={!hasDownloadedAudio}
-                                className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed"
+                                className={hasDownloadedAudio 
+                                  ? "bg-blue-600 hover:bg-blue-700" 
+                                  : "bg-gray-600 text-gray-300 opacity-60 cursor-not-allowed hover:bg-gray-600"
+                                }
                                 title={!hasDownloadedAudio ? "Download the audio first to enable submission" : "Submit your video for this opportunity"}
                               >
                                 Submit Video
