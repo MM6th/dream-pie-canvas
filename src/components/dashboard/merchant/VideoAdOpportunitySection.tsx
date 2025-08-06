@@ -205,6 +205,8 @@ const VideoAdOpportunitySection = () => {
         }
 
         console.log('Video ad download record created:', downloadRecord.id);
+      } else {
+        console.log('Video ad download record already exists:', existingDownload.id);
       }
 
       // Now handle the audio product logic
@@ -247,7 +249,7 @@ const VideoAdOpportunitySection = () => {
 
       if (purchaseCheckError) throw purchaseCheckError;
 
-      if (!existingPurchase) {
+      if (!existingPurchase && productId) {
         // Add to user purchases
         const { error: purchaseError } = await supabase
           .from('user_purchases')
@@ -259,6 +261,8 @@ const VideoAdOpportunitySection = () => {
 
         if (purchaseError) throw purchaseError;
         console.log('Added to user purchases');
+      } else if (existingPurchase) {
+        console.log('Audio already in user purchases');
       }
       
       // Update local state
