@@ -129,6 +129,17 @@ const ContractDashboard = () => {
                 submission_title = `PIE Podcast Opportunity: ${audioData.title}`;
               }
             }
+          } else if (contract.contract_type === 'video_ad_download' && contract.video_ad_opportunity_id) {
+            // For video ad download contracts, get the opportunity title directly
+            const { data: opportunityData } = await supabase
+              .from('video_ad_opportunities')
+              .select('title')
+              .eq('id', contract.video_ad_opportunity_id)
+              .single();
+
+            if (opportunityData?.title) {
+              submission_title = `Video Ad Opportunity: ${opportunityData.title}`;
+            }
           }
 
           // Get merchant name from profile - use same reliable logic as admin version
@@ -278,6 +289,19 @@ const ContractDashboard = () => {
           return 'Contract signed - YouTube/PIE partnership active';
         case 'available':
           return 'Contract available for signing';
+        default:
+          return 'Unknown status';
+      }
+    }
+
+    if (contract.contract_type === 'video_ad_download') {
+      switch (contract.status) {
+        case 'available':
+          return 'Contract available for review - Download completed';
+        case 'pending':
+          return 'Contract available for signing';
+        case 'signed':
+          return 'Contract signed - Ready to submit video';
         default:
           return 'Unknown status';
       }
