@@ -169,6 +169,15 @@ const VideoAdOpportunitySection = () => {
     try {
       console.log('Starting video ad download for opportunity:', opportunityId);
       
+      // Get the opportunity data to preserve audio_type
+      const { data: opportunityData, error: opportunityError } = await supabase
+        .from('video_ad_opportunities')
+        .select('audio_type')
+        .eq('id', opportunityId)
+        .single();
+
+      if (opportunityError) throw opportunityError;
+      
       // First, check if this opportunity has already been downloaded
       const { data: existingDownload, error: downloadCheckError } = await supabase
         .from('video_ad_downloads')
@@ -208,7 +217,7 @@ const VideoAdOpportunitySection = () => {
       let productId = audioProduct?.id;
 
       if (!audioProduct) {
-        // If no existing audio product, create one
+        // If no existing audio product, create one - preserve original audio_type
         const { data: newAudioProduct, error: createError } = await supabase
           .from('audio_products')
           .insert({
@@ -216,7 +225,7 @@ const VideoAdOpportunitySection = () => {
             artist_name: 'Video Ad Opportunity',
             audio_file_url: audioUrl,
             access_level: 'merchant_only',
-            audio_type: 'video_ad',
+            audio_type: opportunityData.audio_type, // Preserve original audio_type (e.g., 'music')
             is_adult_content: false,
             merchant_id: user?.id || ''
           })

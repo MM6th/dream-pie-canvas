@@ -11,6 +11,7 @@ interface AudioTrack {
   audio_file_url: string;
   thumbnail_url: string | null;
   access_level?: "public" | "merchant_only" | "paid" | null;
+  audio_type?: string;
 }
 
 interface AudioPlayerProps {
@@ -195,6 +196,11 @@ const AudioPlayer = ({ tracks }: AudioPlayerProps) => {
                 {currentTrack?.access_level && (
                   <span className="text-xs bg-gray-600 px-2 py-1 rounded capitalize">
                     {currentTrack.access_level.replace('_', ' ')}
+                  </span>
+                )}
+                {currentTrack?.audio_type === 'video_ad' && (
+                  <span className="text-xs bg-orange-600 px-2 py-1 rounded">
+                    Video Ad
                   </span>
                 )}
               </div>

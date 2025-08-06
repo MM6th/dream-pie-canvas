@@ -141,9 +141,9 @@ const Index = () => {
         ?.filter(purchase => purchase.audio_products)
         .map(purchase => purchase.audio_products as AudioTrack) || [];
 
-      // Separate music tracks from podcast/ASMR tracks
+      // Include music and video_ad tracks in audio player
       const musicTracks = allTracks.filter(track => 
-        track.audio_type !== 'podcast' && track.audio_type !== 'asmr'
+        track.audio_type === 'music' || track.audio_type === 'video_ad'
       );
 
       console.log('Processed purchased music tracks:', musicTracks);
