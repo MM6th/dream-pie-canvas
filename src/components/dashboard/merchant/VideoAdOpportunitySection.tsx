@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -275,11 +274,9 @@ const VideoAdOpportunitySection = () => {
       link.href = audioUrl;
       link.download = `${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_audio.mp3`;
       
-      // Append to body, click it, and then remove it
       document.body.appendChild(link);
       link.click();
       
-      // Short delay before removing the element
       setTimeout(() => {
         document.body.removeChild(link);
         setIsDownloading(false);
@@ -289,7 +286,14 @@ const VideoAdOpportunitySection = () => {
           description: "The audio has been added to your library and downloaded to your device.",
         });
 
-        // Refresh data to reflect changes
+        // Notify the app that the library was updated (so players can refresh if listening)
+        try {
+          window.dispatchEvent(new CustomEvent('libraryUpdated', { detail: { section: 'audio', source: 'video_ad_download' } }));
+        } catch (e) {
+          console.log('libraryUpdated event dispatch failed:', e);
+        }
+
+        // Refresh local data to reflect changes
         fetchData();
         fetchDownloadedAudio();
       }, 100);

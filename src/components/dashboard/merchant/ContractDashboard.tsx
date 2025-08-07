@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -260,6 +259,8 @@ const ContractDashboard = () => {
         return <CheckCircle className="w-4 h-4 text-green-500" />;
       case 'completed':
         return <CheckCircle className="w-4 h-4 text-green-500" />;
+      case 'available':
+        return <Eye className="w-4 h-4 text-blue-500" />;
       default:
         return <FileText className="w-4 h-4 text-gray-400" />;
     }
@@ -275,6 +276,8 @@ const ContractDashboard = () => {
         return 'bg-green-600';
       case 'completed':
         return 'bg-green-600';
+      case 'available':
+        return 'bg-blue-600';
       default:
         return 'bg-gray-600';
     }
@@ -412,6 +415,27 @@ const ContractDashboard = () => {
                     </div>
                     
                     <div className="flex flex-wrap gap-2">
+                      {contract.status === 'available' && (
+                        <>
+                          <Button
+                            onClick={() => handleViewContract(contract)}
+                            size="sm"
+                            variant="outline"
+                            className="border-gray-600 text-gray-300 hover:bg-gray-700"
+                          >
+                            <Eye className="w-4 h-4 mr-1" />
+                            View
+                          </Button>
+                          <Button
+                            onClick={() => handleSignContract(contract)}
+                            className="bg-blue-600 hover:bg-blue-700"
+                            size="sm"
+                          >
+                            Sign Contract
+                          </Button>
+                        </>
+                      )}
+
                       {contract.status === 'pending' && (
                         <Button
                           onClick={() => handleSignContract(contract)}
@@ -421,6 +445,7 @@ const ContractDashboard = () => {
                           Sign Contract
                         </Button>
                       )}
+
                       {(contract.status === 'signed' || contract.status === 'approved') && contract.signed_at && (
                         <>
                           <Button
