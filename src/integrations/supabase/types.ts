@@ -1309,6 +1309,7 @@ export type Database = {
         Row: {
           access_level: Database["public"]["Enums"]["access_level"] | null
           admin_id: string
+          artist_name: string | null
           audio_file_url: string
           audio_type: Database["public"]["Enums"]["audio_type_enum"]
           available_spots: number
@@ -1325,6 +1326,7 @@ export type Database = {
         Insert: {
           access_level?: Database["public"]["Enums"]["access_level"] | null
           admin_id: string
+          artist_name?: string | null
           audio_file_url: string
           audio_type: Database["public"]["Enums"]["audio_type_enum"]
           available_spots?: number
@@ -1341,6 +1343,7 @@ export type Database = {
         Update: {
           access_level?: Database["public"]["Enums"]["access_level"] | null
           admin_id?: string
+          artist_name?: string | null
           audio_file_url?: string
           audio_type?: Database["public"]["Enums"]["audio_type_enum"]
           available_spots?: number
