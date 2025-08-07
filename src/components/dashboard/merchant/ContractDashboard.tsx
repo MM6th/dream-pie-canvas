@@ -381,70 +381,72 @@ const ContractDashboard = () => {
                 className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide"
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
               >
-                {contracts.map((contract) => (
-                  <div key={contract.id} className="bg-gray-700/50 p-4 rounded-lg min-w-[400px] max-w-[400px] flex-shrink-0">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h4 className="text-white font-medium truncate">
-                            {contract.submission_title}
-                          </h4>
-                          <Badge className={`${getStatusColor(contract.status)} text-white`}>
-                            <span className="flex items-center gap-1">
-                              {getStatusIcon(contract.status)}
-                              {contract.status}
-                            </span>
-                          </Badge>
-                        </div>
-                        <p className="text-gray-400 text-sm mb-2">
-                          {getStatusDescription(contract)}
-                        </p>
-                        <div className="flex items-center gap-4 text-xs text-gray-400">
-                          <span className="flex items-center gap-1">
-                            <Calendar className="w-3 h-3" />
-                            Created: {new Date(contract.created_at).toLocaleDateString()}
-                          </span>
-                          {contract.signed_at && (
-                            <span className="flex items-center gap-1">
-                              <CheckCircle className="w-3 h-3" />
-                              Signed: {new Date(contract.signed_at).toLocaleDateString()}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
+{contracts.map((contract) => (
+  <div key={contract.id} className="bg-gray-700/50 p-4 rounded-lg min-w-[320px] max-w-[320px] flex-shrink-0">
+    <div className="flex items-start justify-between mb-3">
+      <div className="flex-1">
+        <div className="flex items-center gap-2 mb-2">
+          <h4 className="text-white font-medium truncate">
+            {contract.submission_title}
+          </h4>
+          <Badge className={`${getStatusColor(contract.status)} text-white`}>
+            <span className="flex items-center gap-1">
+              {getStatusIcon(contract.status)}
+              {contract.status}
+            </span>
+          </Badge>
+        </div>
+        <p className="text-gray-400 text-sm mb-2">
+          {getStatusDescription(contract)}
+        </p>
+        <div className="flex items-center gap-4 text-xs text-gray-400">
+          <span className="flex items-center gap-1">
+            <Calendar className="w-3 h-3" />
+            Created: {new Date(contract.created_at).toLocaleDateString()}
+          </span>
+          {contract.signed_at && (
+            <span className="flex items-center gap-1">
+              <CheckCircle className="w-3 h-3" />
+              Signed: {new Date(contract.signed_at).toLocaleDateString()}
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
                     
                     <div className="flex flex-wrap gap-2">
-                      {contract.status === 'available' && (
-                        <>
-                          <Button
-                            onClick={() => handleViewContract(contract)}
-                            size="sm"
-                            variant="outline"
-                            className="border-gray-600 text-gray-300 hover:bg-gray-700"
-                          >
-                            <Eye className="w-4 h-4 mr-1" />
-                            View
-                          </Button>
-                          <Button
-                            onClick={() => handleSignContract(contract)}
-                            className="bg-blue-600 hover:bg-blue-700"
-                            size="sm"
-                          >
-                            Sign Contract
-                          </Button>
-                        </>
-                      )}
+{contract.status === 'available' && (
+  <>
+    <Button
+      onClick={() => handleViewContract(contract)}
+      size="sm"
+      variant="outline"
+      className="border-gray-600 text-gray-300 hover:bg-gray-700"
+    >
+      <Eye className="w-4 h-4 mr-1" />
+      View
+    </Button>
+    {contract.contract_type !== 'video_ad_download' && (
+      <Button
+        onClick={() => handleSignContract(contract)}
+        className="bg-blue-600 hover:bg-blue-700"
+        size="sm"
+      >
+        Sign Contract
+      </Button>
+    )}
+  </>
+)}
 
-                      {contract.status === 'pending' && (
-                        <Button
-                          onClick={() => handleSignContract(contract)}
-                          className="bg-blue-600 hover:bg-blue-700"
-                          size="sm"
-                        >
-                          Sign Contract
-                        </Button>
-                      )}
+{contract.status === 'pending' && contract.contract_type !== 'video_ad_download' && (
+  <Button
+    onClick={() => handleSignContract(contract)}
+    className="bg-blue-600 hover:bg-blue-700"
+    size="sm"
+  >
+    Sign Contract
+  </Button>
+)}
 
                       {(contract.status === 'signed' || contract.status === 'approved') && contract.signed_at && (
                         <>

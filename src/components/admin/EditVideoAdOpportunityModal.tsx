@@ -24,6 +24,7 @@ interface VideoAdOpportunity {
   access_level: string;
   is_adult_content: boolean;
   thumbnail_url?: string | null;
+  artist_name?: string | null;
 }
 
 interface EditVideoAdOpportunityModalProps {
@@ -37,32 +38,34 @@ const EditVideoAdOpportunityModal = ({ isOpen, onClose, opportunity, onSuccess }
   const [loading, setLoading] = useState(false);
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [thumbnailUrl, setThumbnailUrl] = useState('');
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    payment_amount: 0,
-    target_platform: 'instagram' as const,
-    audio_type: 'music' as const,
-    available_spots: 1,
-    access_level: 'public' as const,
-    is_adult_content: false,
-  });
+const [formData, setFormData] = useState({
+  title: '',
+  description: '',
+  artist_name: '',
+  payment_amount: 0,
+  target_platform: 'instagram' as const,
+  audio_type: 'music' as const,
+  available_spots: 1,
+  access_level: 'public' as const,
+  is_adult_content: false,
+});
 
   const MAX_AUDIO_SIZE = 50 * 1024 * 1024; // 50MB
 
   useEffect(() => {
     if (opportunity) {
-      setFormData({
-        title: opportunity.title,
-        description: opportunity.description || '',
-        payment_amount: opportunity.payment_amount,
-        target_platform: opportunity.target_platform as any,
-        audio_type: opportunity.audio_type as any,
-        available_spots: opportunity.available_spots,
-        access_level: opportunity.access_level as any,
-        is_adult_content: opportunity.is_adult_content,
-      });
-      setThumbnailUrl(opportunity.thumbnail_url || '');
+setFormData({
+  title: opportunity.title,
+  description: opportunity.description || '',
+  artist_name: (opportunity as any).artist_name || '',
+  payment_amount: opportunity.payment_amount,
+  target_platform: opportunity.target_platform as any,
+  audio_type: opportunity.audio_type as any,
+  available_spots: opportunity.available_spots,
+  access_level: opportunity.access_level as any,
+  is_adult_content: opportunity.is_adult_content,
+});
+setThumbnailUrl(opportunity.thumbnail_url || '');
     }
   }, [opportunity]);
 
@@ -115,22 +118,23 @@ const EditVideoAdOpportunityModal = ({ isOpen, onClose, opportunity, onSuccess }
         audioFileUrl = audioPublicUrl;
       }
 
-      const { error } = await supabase
-        .from('video_ad_opportunities')
-        .update({
-          title: formData.title,
-          description: formData.description || null,
-          payment_amount: formData.payment_amount,
-          target_platform: formData.target_platform,
-          audio_type: formData.audio_type,
-          available_spots: formData.available_spots,
-          access_level: formData.access_level,
-          is_adult_content: formData.is_adult_content,
-          audio_file_url: audioFileUrl,
-          thumbnail_url: finalThumbnailUrl || null,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', opportunity.id);
+const { error } = await supabase
+  .from('video_ad_opportunities')
+  .update({
+    title: formData.title,
+    description: formData.description || null,
+    artist_name: formData.artist_name || null,
+    payment_amount: formData.payment_amount,
+    target_platform: formData.target_platform,
+    audio_type: formData.audio_type,
+    available_spots: formData.available_spots,
+    access_level: formData.access_level,
+    is_adult_content: formData.is_adult_content,
+    audio_file_url: audioFileUrl,
+    thumbnail_url: finalThumbnailUrl || null,
+    updated_at: new Date().toISOString()
+  })
+  .eq('id', opportunity.id);
 
       if (error) throw error;
 
@@ -174,16 +178,27 @@ const EditVideoAdOpportunityModal = ({ isOpen, onClose, opportunity, onSuccess }
             />
           </div>
 
-          <div>
-            <Label htmlFor="description" className="text-white">Description</Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="bg-gray-700 border-gray-600 text-white"
-              rows={3}
-            />
-          </div>
+<div>
+  <Label htmlFor="description" className="text-white">Description</Label>
+  <Textarea
+    id="description"
+    value={formData.description}
+    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+    className="bg-gray-700 border-gray-600 text-white"
+    rows={3}
+  />
+</div>
+
+<div>
+  <Label htmlFor="artist_name" className="text-white">Artist name (optional)</Label>
+  <Input
+    id="artist_name"
+    value={formData.artist_name}
+    onChange={(e) => setFormData({ ...formData, artist_name: e.target.value })}
+    className="bg-gray-700 border-gray-600 text-white"
+    placeholder="Enter the artist's name"
+  />
+</div>
 
           <div>
             <Label htmlFor="audioFile" className="flex items-center gap-2 text-white">

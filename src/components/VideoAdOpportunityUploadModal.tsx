@@ -46,16 +46,17 @@ const VideoAdOpportunityUploadModal = ({ isOpen, onClose, onSuccess }: VideoAdOp
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    audio_type: '',
-    target_platform: '',
-    payment_amount: '',
-    available_spots: '1',
-    access_level: 'public',
-    is_adult_content: false
-  });
+const [formData, setFormData] = useState({
+  title: '',
+  description: '',
+  artist_name: '',
+  audio_type: '',
+  target_platform: '',
+  payment_amount: '',
+  available_spots: '1',
+  access_level: 'public',
+  is_adult_content: false
+});
 
   const MAX_AUDIO_SIZE = 50 * 1024 * 1024; // 50MB
   const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -138,22 +139,23 @@ const VideoAdOpportunityUploadModal = ({ isOpen, onClose, onSuccess }: VideoAdOp
         thumbnailUrl = publicUrl;
       }
 
-      // Create video ad opportunity
-      const { error: insertError } = await supabase
-        .from('video_ad_opportunities')
-        .insert({
-          admin_id: user.id,
-          title: formData.title,
-          description: formData.description,
-          audio_file_url: audioPublicUrl,
-          audio_type: formData.audio_type as any,
-          target_platform: formData.target_platform as any,
-          payment_amount: parseFloat(formData.payment_amount),
-          available_spots: parseInt(formData.available_spots),
-          access_level: formData.access_level as any,
-          is_adult_content: formData.is_adult_content,
-          thumbnail_url: thumbnailUrl || null
-        });
+// Create video ad opportunity
+const { error: insertError } = await supabase
+  .from('video_ad_opportunities')
+  .insert({
+    admin_id: user.id,
+    title: formData.title,
+    description: formData.description,
+    artist_name: formData.artist_name || null,
+    audio_file_url: audioPublicUrl,
+    audio_type: formData.audio_type as any,
+    target_platform: formData.target_platform as any,
+    payment_amount: parseFloat(formData.payment_amount),
+    available_spots: parseInt(formData.available_spots),
+    access_level: formData.access_level as any,
+    is_adult_content: formData.is_adult_content,
+    thumbnail_url: thumbnailUrl || null
+  });
 
       if (insertError) throw insertError;
 
@@ -178,16 +180,17 @@ const VideoAdOpportunityUploadModal = ({ isOpen, onClose, onSuccess }: VideoAdOp
   };
 
   const resetForm = () => {
-    setFormData({
-      title: '',
-      description: '',
-      audio_type: '',
-      target_platform: '',
-      payment_amount: '',
-      available_spots: '1',
-      access_level: 'public',
-      is_adult_content: false
-    });
+setFormData({
+  title: '',
+  description: '',
+  artist_name: '',
+  audio_type: '',
+  target_platform: '',
+  payment_amount: '',
+  available_spots: '1',
+  access_level: 'public',
+  is_adult_content: false
+});
     setAudioFile(null);
     setThumbnailFile(null);
   };
@@ -213,19 +216,30 @@ const VideoAdOpportunityUploadModal = ({ isOpen, onClose, onSuccess }: VideoAdOp
               placeholder="Enter opportunity title"
               required
             />
-          </div>
+</div>
 
-          <div>
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="bg-gray-700 border-gray-600 text-white"
-              placeholder="Describe the video ad opportunity"
-              rows={3}
-            />
-          </div>
+<div>
+  <Label htmlFor="description">Description</Label>
+  <Textarea
+    id="description"
+    value={formData.description}
+    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+    className="bg-gray-700 border-gray-600 text-white"
+    placeholder="Describe the video ad opportunity"
+    rows={3}
+  />
+</div>
+
+<div>
+  <Label htmlFor="artist_name">Artist name (optional)</Label>
+  <Input
+    id="artist_name"
+    value={formData.artist_name}
+    onChange={(e) => setFormData({ ...formData, artist_name: e.target.value })}
+    className="bg-gray-700 border-gray-600 text-white"
+    placeholder="Enter the artist's name"
+  />
+</div>
 
           <div>
             <Label htmlFor="audioFile" className="flex items-center gap-2">

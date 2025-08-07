@@ -38,8 +38,12 @@ const ContractPreviewModal = ({ isOpen, onClose, contract }: ContractPreviewModa
       // Header
       doc.setFontSize(20);
       doc.text('PRIVATE INVESTIGATION ENTERPRISES', 20, 30);
-      doc.setFontSize(16);
-      doc.text('SIGNED CONTRACT DOCUMENT', 20, 45);
+doc.setFontSize(16);
+if (contract.signed_at) {
+  doc.text('SIGNED CONTRACT DOCUMENT', 20, 45);
+} else {
+  doc.text('CONTRACT PREVIEW', 20, 45);
+}
       
       // Contract details
       doc.setFontSize(12);
@@ -212,7 +216,7 @@ const ContractPreviewModal = ({ isOpen, onClose, contract }: ContractPreviewModa
                 <div>
                   <p><strong>Merchant:</strong> {contract.merchant_name}</p>
                   <p><strong>Product:</strong> {contract.audio_product_title}</p>
-                  <p><strong>Signed:</strong> {new Date(contract.signed_at).toLocaleDateString()}</p>
+<p><strong>Signed:</strong> {contract.signed_at ? new Date(contract.signed_at).toLocaleDateString() : 'Not signed'}</p>
                 </div>
               </div>
             </div>
