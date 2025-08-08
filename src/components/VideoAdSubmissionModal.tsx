@@ -20,6 +20,7 @@ interface VideoAdSubmissionModalProps {
     audio_file_url: string;
     payment_amount: number;
     target_platform: string;
+    artist_name?: string | null;
   };
 }
 
@@ -187,10 +188,15 @@ const VideoAdSubmissionModal = ({ isOpen, onClose, onSuccess, opportunity }: Vid
               {isPlaying ? 'Pause' : 'Play'} Audio
             </Button>
           </div>
-          <p className="text-sm text-gray-400">
-            Platform: <span className="text-white capitalize">{opportunity.target_platform}</span> | 
-            Payment: <span className="text-green-400">${opportunity.payment_amount}</span>
-          </p>
+          <div className="space-y-1 text-sm text-gray-400">
+            {opportunity.artist_name && (
+              <p>Artist: <span className="text-white">{opportunity.artist_name}</span></p>
+            )}
+            <p>
+              Platform: <span className="text-white capitalize">{opportunity.target_platform}</span> | 
+              Payment: <span className="text-green-400">${opportunity.payment_amount}</span>
+            </p>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">

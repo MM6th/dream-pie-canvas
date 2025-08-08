@@ -15,6 +15,7 @@ interface VideoAdOpportunity {
   audio_file_url: string;
   payment_amount: number;
   target_platform: string;
+  artist_name?: string | null;
 }
 
 interface VideoAdDownload {
@@ -74,7 +75,7 @@ const VideoAdOpportunitySection = () => {
       // Fetch opportunity details
       const { data: opportunitiesData, error: opportunitiesError } = await supabase
         .from('video_ad_opportunities')
-        .select('id, title, description, audio_file_url, payment_amount, target_platform')
+        .select('id, title, description, audio_file_url, payment_amount, target_platform, artist_name')
         .in('id', [...new Set(opportunityIds)]);
 
       if (opportunitiesError) throw opportunitiesError;
@@ -160,22 +161,13 @@ const VideoAdOpportunitySection = () => {
     setSubmissionModalOpen(true);
   };
 
-  const handleAudioDownload = async (audioUrl: string, title: string, opportunityId: string) => {
+  const handleAudioDownload = async (audioUrl: string, title: string, opportunityId: string, opportunityData: VideoAdOpportunity) => {
     if (isDownloading) return;
     
     setIsDownloading(true);
     
     try {
       console.log('Starting video ad download for opportunity:', opportunityId);
-      
-      // Get the opportunity data to preserve audio_type
-      const { data: opportunityData, error: opportunityError } = await supabase
-        .from('video_ad_opportunities')
-        .select('audio_type')
-        .eq('id', opportunityId)
-        .single();
-
-      if (opportunityError) throw opportunityError;
       
       // First, check if this opportunity has already been downloaded
       const { data: existingDownload, error: downloadCheckError } = await supabase
@@ -188,7 +180,7 @@ const VideoAdOpportunitySection = () => {
       if (downloadCheckError) throw downloadCheckError;
 
       if (!existingDownload) {
-        // Create a video_ad_download record which will trigger contract creation
+        // Create a video_ad_download record which will trigger contract creation and spot decrement
         const { data: downloadRecord, error: downloadError } = await supabase
           .from('video_ad_downloads')
           .insert({
@@ -207,65 +199,8 @@ const VideoAdOpportunitySection = () => {
       } else {
         console.log('Video ad download record already exists:', existingDownload.id);
       }
-
-      // Now handle the audio product logic
-      const { data: audioProduct, error: audioError } = await supabase
-        .from('audio_products')
-        .select('id')
-        .eq('audio_file_url', audioUrl)
-        .maybeSingle();
-
-      let productId = audioProduct?.id;
-
-      if (!audioProduct) {
-        // If no existing audio product, create one - preserve original audio_type
-        const { data: newAudioProduct, error: createError } = await supabase
-          .from('audio_products')
-          .insert({
-            title: title,
-            artist_name: 'Video Ad Opportunity',
-            audio_file_url: audioUrl,
-            access_level: 'merchant_only',
-            audio_type: opportunityData.audio_type, // Preserve original audio_type (e.g., 'music')
-            is_adult_content: false,
-            merchant_id: user?.id || ''
-          })
-          .select('id')
-          .single();
-
-        if (createError) throw createError;
-        productId = newAudioProduct.id;
-        console.log('Audio product created:', productId);
-      }
-
-      // Check if already purchased
-      const { data: existingPurchase, error: purchaseCheckError } = await supabase
-        .from('user_purchases')
-        .select('id')
-        .eq('user_id', user?.id)
-        .eq('audio_product_id', productId)
-        .maybeSingle();
-
-      if (purchaseCheckError) throw purchaseCheckError;
-
-      if (!existingPurchase && productId) {
-        // Add to user purchases
-        const { error: purchaseError } = await supabase
-          .from('user_purchases')
-          .insert({
-            user_id: user?.id,
-            audio_product_id: productId,
-            is_free_download: true
-          });
-
-        if (purchaseError) throw purchaseError;
-        console.log('Added to user purchases');
-      } else if (existingPurchase) {
-        console.log('Audio already in user purchases');
-      }
       
-      // Update local state
-      setDownloadedAudioIds(prev => new Set([...prev, productId!]));
+      // Update local state to mark as downloaded
       setDownloadedOpportunityAudios(prev => new Set([...prev, audioUrl]));
       
       // Create a hidden anchor element for actual file download
@@ -283,19 +218,15 @@ const VideoAdOpportunitySection = () => {
         
         toast({
           title: "Audio downloaded successfully!",
-          description: "The audio has been added to your library and downloaded to your device.",
+          description: "Audio downloaded to your device. Now you can submit a video!",
         });
 
-        // Notify the app that the library was updated (so players can refresh if listening)
-        try {
-          window.dispatchEvent(new CustomEvent('libraryUpdated', { detail: { section: 'audio', source: 'video_ad_download' } }));
-        } catch (e) {
-          console.log('libraryUpdated event dispatch failed:', e);
-        }
+        // Auto-open the video submission modal
+        setSelectedOpportunity(opportunityData);
+        setSubmissionModalOpen(true);
 
         // Refresh local data to reflect changes
         fetchData();
-        fetchDownloadedAudio();
       }, 100);
     } catch (error: any) {
       console.error('Error downloading audio:', error);
@@ -361,11 +292,11 @@ const VideoAdOpportunitySection = () => {
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => handleAudioDownload(download.video_ad_opportunity.audio_file_url, download.video_ad_opportunity.title, download.video_ad_opportunity.id)}
+                              onClick={() => handleAudioDownload(download.video_ad_opportunity.audio_file_url, download.video_ad_opportunity.title, download.video_ad_opportunity.id, download.video_ad_opportunity)}
                               disabled={isDownloading}
                             >
                               <Download className="w-4 h-4 mr-2" />
-                              {isDownloading ? "Downloading..." : "Add to Library"}
+                              {isDownloading ? "Downloading..." : "Download Audio"}
                             </Button>
                             {!hasSubmission && (
                               <Button
