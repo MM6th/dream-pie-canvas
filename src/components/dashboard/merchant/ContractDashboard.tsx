@@ -382,21 +382,21 @@ const ContractDashboard = () => {
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
               >
 {contracts.map((contract) => (
-  <div key={contract.id} className="bg-gray-700/50 p-4 rounded-lg min-w-[320px] max-w-[320px] flex-shrink-0">
+  <div key={contract.id} className="bg-gray-700/50 p-4 rounded-lg min-w-[320px] max-w-[320px] min-h-[240px] flex-shrink-0">
     <div className="flex items-start justify-between mb-3">
       <div className="flex-1">
-        <div className="flex items-center gap-2 mb-2">
-          <h4 className="text-white font-medium truncate">
+        <div className="flex items-center flex-wrap gap-2 mb-2">
+          <h4 className="text-white font-medium whitespace-normal break-words">
             {contract.submission_title}
           </h4>
-          <Badge className={`${getStatusColor(contract.status)} text-white`}>
+          <Badge className={`${getStatusColor(contract.status)} text-white shrink-0`}>
             <span className="flex items-center gap-1">
               {getStatusIcon(contract.status)}
               {contract.status}
             </span>
           </Badge>
         </div>
-        <p className="text-gray-400 text-sm mb-2">
+        <p className="text-gray-400 text-sm mb-2 whitespace-normal break-words">
           {getStatusDescription(contract)}
         </p>
         <div className="flex items-center gap-4 text-xs text-gray-400">
