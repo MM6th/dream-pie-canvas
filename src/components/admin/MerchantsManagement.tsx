@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import PendingMerchantCard from "./PendingMerchantCard";
 import ApprovedMerchantCard from "./ApprovedMerchantCard";
 import { supabase } from "@/integrations/supabase/client";
@@ -119,14 +120,17 @@ const MerchantsManagement = () => {
               {approvedMerchants.length === 0 ? (
                 <p className="text-gray-400 text-center py-4">No approved merchants yet.</p>
               ) : (
-                <div className="grid gap-4">
-                  {approvedMerchants.map((merchant) => (
-                    <ApprovedMerchantCard
-                      key={merchant.id}
-                      merchant={merchant}
-                    />
-                  ))}
-                </div>
+                <Carousel className="w-full max-w-full">
+                  <CarouselContent className="-ml-2 md:-ml-4">
+                    {approvedMerchants.map((merchant) => (
+                      <CarouselItem key={merchant.id} className="pl-2 md:pl-4 md:basis-1/2 lg:basis-1/3">
+                        <ApprovedMerchantCard merchant={merchant} />
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                  <CarouselPrevious />
+                  <CarouselNext />
+                </Carousel>
               )}
             </CardContent>
           </Card>
