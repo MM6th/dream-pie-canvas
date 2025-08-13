@@ -1362,49 +1362,61 @@ export type Database = {
       video_ad_submissions: {
         Row: {
           admin_notes: string | null
+          audio_sync_offset: number | null
+          background_audio_volume: number | null
           contract_generated_at: string | null
           contract_id: string | null
           created_at: string
           id: string
           merchant_id: string
+          mixing_preferences: Json | null
           negotiation_text: string | null
           reviewed_at: string | null
           reviewed_by: string | null
           status: string
           updated_at: string
           video_ad_opportunity_id: string
+          video_audio_volume: number | null
           video_file_url: string
           why_me_text: string | null
         }
         Insert: {
           admin_notes?: string | null
+          audio_sync_offset?: number | null
+          background_audio_volume?: number | null
           contract_generated_at?: string | null
           contract_id?: string | null
           created_at?: string
           id?: string
           merchant_id: string
+          mixing_preferences?: Json | null
           negotiation_text?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: string
           updated_at?: string
           video_ad_opportunity_id: string
+          video_audio_volume?: number | null
           video_file_url: string
           why_me_text?: string | null
         }
         Update: {
           admin_notes?: string | null
+          audio_sync_offset?: number | null
+          background_audio_volume?: number | null
           contract_generated_at?: string | null
           contract_id?: string | null
           created_at?: string
           id?: string
           merchant_id?: string
+          mixing_preferences?: Json | null
           negotiation_text?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: string
           updated_at?: string
           video_ad_opportunity_id?: string
+          video_audio_volume?: number | null
           video_file_url?: string
           why_me_text?: string | null
         }

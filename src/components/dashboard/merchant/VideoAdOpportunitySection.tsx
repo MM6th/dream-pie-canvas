@@ -6,7 +6,7 @@ import { Video, Download, Eye, Clock, CheckCircle, XCircle } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
-import VideoAdSubmissionModal from "@/components/VideoAdSubmissionModal";
+import { EnhancedVideoAdSubmissionModal } from "@/components/EnhancedVideoAdSubmissionModal";
 
 interface VideoAdOpportunity {
   id: string;
@@ -299,17 +299,17 @@ const VideoAdOpportunitySection = () => {
                               {isDownloading ? "Downloading..." : "Download Audio"}
                             </Button>
                             {!hasSubmission && (
-                              <Button
-                                size="sm"
-                                onClick={() => handleSubmission(download.video_ad_opportunity)}
-                                className={hasDownloadedAudio 
-                                  ? "bg-blue-600 hover:bg-blue-700" 
-                                  : "bg-gray-600 text-gray-300 opacity-60 cursor-not-allowed hover:bg-gray-600"
-                                }
-                                title={!hasDownloadedAudio ? "Download the audio first to enable submission" : "Submit your video for this opportunity"}
-                              >
-                                Submit Video
-                              </Button>
+                               <Button
+                                 size="sm"
+                                 onClick={() => handleSubmission(download.video_ad_opportunity)}
+                                 className={hasDownloadedAudio 
+                                   ? "bg-blue-600 hover:bg-blue-700" 
+                                   : "bg-gray-600 text-gray-300 opacity-60 cursor-not-allowed hover:bg-gray-600"
+                                 }
+                                 title={!hasDownloadedAudio ? "Download the audio first to enable submission" : "Create your video ad for this opportunity"}
+                               >
+                                 Create Video Ad
+                               </Button>
                             )}
                           </div>
                         </div>
@@ -344,7 +344,7 @@ const VideoAdOpportunitySection = () => {
       </Card>
 
       {selectedOpportunity && (
-        <VideoAdSubmissionModal
+        <EnhancedVideoAdSubmissionModal
           isOpen={submissionModalOpen}
           onClose={() => setSubmissionModalOpen(false)}
           onSuccess={() => {
