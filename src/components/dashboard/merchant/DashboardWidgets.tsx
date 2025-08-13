@@ -9,8 +9,6 @@ import AstrologyProductUploadModal from "@/components/AstrologyProductUploadModa
 import FashionProductManager from "@/components/FashionProductManager";
 import AudioProductManager from "@/components/AudioProductManager";
 import AstrologyProductManager from "@/components/AstrologyProductManager";
-import VideoAdOpportunitySection from "./VideoAdOpportunitySection";
-
 interface DashboardWidgetsProps {
   onSuccess: () => void;
   onViewStore: () => void;
@@ -143,11 +141,6 @@ const DashboardWidgets = ({ onSuccess, onViewStore, onBackgroundUpload, isAdmin 
           <AudioProductManager />
         </div>
       )}
-
-      {/* Video Ad Opportunities */}
-      <div className="mb-8">
-        <VideoAdOpportunitySection />
-      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">

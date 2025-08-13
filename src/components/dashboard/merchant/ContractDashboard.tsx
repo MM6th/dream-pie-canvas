@@ -2,12 +2,13 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { FileText, Calendar, CheckCircle, Clock, AlertCircle, Eye, Download, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import { FileText, Calendar, CheckCircle, Clock, AlertCircle, Eye, Download, Trash2, ChevronLeft, ChevronRight, Video } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import TuneCoreContractModal from "@/components/TuneCoreContractModal";
 import ContractPreviewModal from "@/components/ContractPreviewModal";
+import { EnhancedVideoAdSubmissionModal } from "@/components/EnhancedVideoAdSubmissionModal";
 import jsPDF from 'jspdf';
 import {
   AlertDialog,
@@ -30,6 +31,7 @@ interface ContractWithDetails {
   contract_terms: string;
   cover_submission_id: string | null;
   modeling_application_id: string | null;
+  video_ad_opportunity_id: string | null;
   merchant_signature: string | null;
   admin_signature: string | null;
   merchant_id: string;
@@ -49,6 +51,8 @@ const ContractDashboard = () => {
   const [selectedContract, setSelectedContract] = useState<ContractWithDetails | null>(null);
   const [showContractModal, setShowContractModal] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [showVideoAdModal, setShowVideoAdModal] = useState(false);
+  const [selectedOpportunity, setSelectedOpportunity] = useState<any>(null);
   const [scrollPosition, setScrollPosition] = useState(0);
 
   const fetchContracts = async () => {
@@ -187,6 +191,30 @@ const ContractDashboard = () => {
   const handleViewContract = (contract: ContractWithDetails) => {
     setSelectedContract(contract);
     setShowPreviewModal(true);
+  };
+
+  const handleCreateVideoAd = async (contract: ContractWithDetails) => {
+    if (!contract.video_ad_opportunity_id) return;
+    
+    try {
+      const { data: opportunityData, error } = await supabase
+        .from('video_ad_opportunities')
+        .select('*')
+        .eq('id', contract.video_ad_opportunity_id)
+        .single();
+
+      if (error) throw error;
+
+      setSelectedOpportunity(opportunityData);
+      setShowVideoAdModal(true);
+    } catch (error) {
+      console.error('Error fetching opportunity data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load video ad opportunity data",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleDeleteContract = async (contractId: string) => {
@@ -426,6 +454,16 @@ const ContractDashboard = () => {
       <Eye className="w-4 h-4 mr-1" />
       View
     </Button>
+    {contract.contract_type === 'video_ad_download' && contract.video_ad_opportunity_id && (
+      <Button
+        onClick={() => handleCreateVideoAd(contract)}
+        className="bg-blue-600 hover:bg-blue-700"
+        size="sm"
+      >
+        <Video className="w-4 h-4 mr-1" />
+        Create Video Ad
+      </Button>
+    )}
     {contract.contract_type !== 'video_ad_download' && (
       <Button
         onClick={() => handleSignContract(contract)}
@@ -503,6 +541,23 @@ const ContractDashboard = () => {
           setSelectedContract(null);
         }}
         contract={selectedContract}
+      />
+
+      <EnhancedVideoAdSubmissionModal
+        isOpen={showVideoAdModal}
+        onClose={() => {
+          setShowVideoAdModal(false);
+          setSelectedOpportunity(null);
+        }}
+        onSuccess={() => {
+          setShowVideoAdModal(false);
+          setSelectedOpportunity(null);
+          toast({
+            title: "Success",
+            description: "Video ad submitted successfully!"
+          });
+        }}
+        opportunity={selectedOpportunity}
       />
     </>
   );
