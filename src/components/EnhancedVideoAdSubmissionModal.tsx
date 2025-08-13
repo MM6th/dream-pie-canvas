@@ -63,7 +63,7 @@ interface EnhancedVideoAdSubmissionModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  opportunity: VideoAdOpportunity;
+  opportunity: VideoAdOpportunity | null;
 }
 
 interface MixingPreferences {
@@ -78,6 +78,10 @@ export const EnhancedVideoAdSubmissionModal: React.FC<EnhancedVideoAdSubmissionM
   onSuccess,
   opportunity
 }) => {
+  // Don't render if opportunity is null
+  if (!opportunity) {
+    return null;
+  }
   const [step, setStep] = useState<'upload' | 'edit' | 'submit'>('upload');
   const [loading, setLoading] = useState(false);
   const [selectedVideoFile, setSelectedVideoFile] = useState<File | null>(null);
