@@ -9,6 +9,7 @@ import {
   Image,
   MessageSquare
 } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import MerchantsManagement from "./MerchantsManagement";
 import CoverSubmissionsManagement from "./CoverSubmissionsManagement";
 import ReviewsManagement from "./ReviewsManagement";
@@ -20,6 +21,7 @@ import { useSubmissionCounts } from "@/hooks/useSubmissionCounts";
 
 const AdminDashboard = () => {
   const { counts } = useSubmissionCounts();
+  const isMobile = useIsMobile();
   const totalSubmissions = counts.coverSubmissions + counts.modelingApplications;
 
   return (
@@ -48,47 +50,62 @@ const AdminDashboard = () => {
       </Card>
 
       <Tabs defaultValue="merchants" className="w-full">
-        <TabsList className="grid w-full grid-cols-5 bg-gray-800 border-gray-700">
+        <TabsList className={`grid w-full ${isMobile ? 'grid-cols-2 gap-2 h-auto' : 'grid-cols-5'} bg-gray-800 border-gray-700`}>
           <TabsTrigger 
             value="merchants" 
-            className="text-white data-[state=active]:bg-gray-700"
+            className={`text-white data-[state=active]:bg-gray-700 ${isMobile ? 'text-xs px-2 py-2 h-auto flex-col gap-1' : ''}`}
           >
-            <Users className="w-4 h-4 mr-2" />
+            <Users className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4 mr-2'}`} />
             Merchants
           </TabsTrigger>
           <TabsTrigger 
             value="submissions" 
-            className="text-white data-[state=active]:bg-gray-700 relative"
+            className={`text-white data-[state=active]:bg-gray-700 relative ${isMobile ? 'text-xs px-2 py-2 h-auto flex-col gap-1' : ''}`}
           >
-            <FileText className="w-4 h-4 mr-2" />
-            Contract Submissions
-            {totalSubmissions > 0 && (
-              <Badge className="ml-2 bg-red-600 text-white animate-pulse">
-                {totalSubmissions}
-              </Badge>
-            )}
+            <div className={`flex ${isMobile ? 'flex-col' : ''} items-center gap-1`}>
+              <FileText className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4 mr-2'}`} />
+              {isMobile ? 'Contracts' : 'Contract Submissions'}
+              {totalSubmissions > 0 && (
+                <Badge className="bg-red-600 text-white animate-pulse text-xs">
+                  {totalSubmissions}
+                </Badge>
+              )}
+            </div>
           </TabsTrigger>
-          <TabsTrigger 
-            value="reviews" 
-            className="text-white data-[state=active]:bg-gray-700"
-          >
-            <Star className="w-4 h-4 mr-2" />
-            Reviews
-          </TabsTrigger>
-          <TabsTrigger 
-            value="gallery" 
-            className="text-white data-[state=active]:bg-gray-700"
-          >
-            <Image className="w-4 h-4 mr-2" />
-            Admin Content Gallery
-          </TabsTrigger>
-          <TabsTrigger 
-            value="bulletin" 
-            className="text-white data-[state=active]:bg-gray-700"
-          >
-            <MessageSquare className="w-4 h-4 mr-2" />
-            Bulletin Posts
-          </TabsTrigger>
+          {!isMobile && (
+            <>
+              <TabsTrigger 
+                value="reviews" 
+                className="text-white data-[state=active]:bg-gray-700"
+              >
+                <Star className="w-4 h-4 mr-2" />
+                Reviews
+              </TabsTrigger>
+              <TabsTrigger 
+                value="gallery" 
+                className="text-white data-[state=active]:bg-gray-700"
+              >
+                <Image className="w-4 h-4 mr-2" />
+                Admin Content Gallery
+              </TabsTrigger>
+              <TabsTrigger 
+                value="bulletin" 
+                className="text-white data-[state=active]:bg-gray-700"
+              >
+                <MessageSquare className="w-4 h-4 mr-2" />
+                Bulletin Posts
+              </TabsTrigger>
+            </>
+          )}
+          {isMobile && (
+            <TabsTrigger 
+              value="more" 
+              className="text-white data-[state=active]:bg-gray-700 text-xs px-2 py-2 h-auto flex-col gap-1"
+            >
+              <MessageSquare className="w-3 h-3" />
+              More
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="merchants" className="mt-6">
@@ -99,17 +116,54 @@ const AdminDashboard = () => {
           <CoverSubmissionsManagement />
         </TabsContent>
 
-        <TabsContent value="reviews" className="mt-6">
-          <ReviewsManagement />
-        </TabsContent>
+        {!isMobile && (
+          <>
+            <TabsContent value="reviews" className="mt-6">
+              <ReviewsManagement />
+            </TabsContent>
 
-        <TabsContent value="gallery" className="mt-6">
-          <AdminContentGallery />
-        </TabsContent>
+            <TabsContent value="gallery" className="mt-6">
+              <AdminContentGallery />
+            </TabsContent>
 
-        <TabsContent value="bulletin" className="mt-6">
-          <AdminBulletinPostManager />
-        </TabsContent>
+            <TabsContent value="bulletin" className="mt-6">
+              <AdminBulletinPostManager />
+            </TabsContent>
+          </>
+        )}
+
+        {isMobile && (
+          <TabsContent value="more" className="mt-6">
+            <div className="space-y-6">
+              <Card className="bg-gray-700/50 border-gray-600">
+                <CardHeader>
+                  <CardTitle className="text-white text-sm">Reviews Management</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ReviewsManagement />
+                </CardContent>
+              </Card>
+              
+              <Card className="bg-gray-700/50 border-gray-600">
+                <CardHeader>
+                  <CardTitle className="text-white text-sm">Admin Content Gallery</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <AdminContentGallery />
+                </CardContent>
+              </Card>
+              
+              <Card className="bg-gray-700/50 border-gray-600">
+                <CardHeader>
+                  <CardTitle className="text-white text-sm">Bulletin Posts Management</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <AdminBulletinPostManager />
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+        )}
       </Tabs>
 
       {/* Video Ad Opportunities Management */}
