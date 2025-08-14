@@ -17,6 +17,7 @@ import AdminContentGallery from "./AdminContentGallery";
 import AdminBulletinPostManager from "./AdminBulletinPostManager";
 import VideoAdOpportunityManager from "./VideoAdOpportunityManager";
 import SECalculatorModal from "@/components/SECalculatorModal";
+import AdminDataExport from "./AdminDataExport";
 import { useSubmissionCounts } from "@/hooks/useSubmissionCounts";
 
 const AdminDashboard = () => {
@@ -48,6 +49,9 @@ const AdminDashboard = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Data Export Tools */}
+      <AdminDataExport />
 
       <Tabs defaultValue="merchants" className="w-full">
         <TabsList className={`grid w-full ${isMobile ? 'grid-cols-2 gap-2 h-auto' : 'grid-cols-5'} bg-gray-800 border-gray-700`}>
