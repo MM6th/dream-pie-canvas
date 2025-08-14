@@ -201,11 +201,11 @@ const VideoAdSubmissionsManager = () => {
           {submissions.length === 0 ? (
             <p className="text-gray-400 text-center py-8">No video ad submissions yet.</p>
           ) : (
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {submissions.map((submission) => (
                 <div
                   key={submission.id}
-                  className="p-4 bg-gray-700/50 rounded-lg border border-gray-600"
+                  className="p-4 bg-gray-700/50 rounded-lg border border-gray-600 max-w-sm"
                 >
                   <div className="flex items-center justify-between mb-3">
                     <div>
