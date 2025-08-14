@@ -224,10 +224,10 @@ export const VideoEditor: React.FC<VideoEditorProps> = ({
               <Button 
                 onClick={togglePlayback} 
                 size="lg" 
-                className="w-16 h-16 rounded-full !bg-blue-600 hover:!bg-blue-700"
+                className="w-16 h-16 rounded-full !bg-blue-600 hover:!bg-blue-700 text-black text-2xl font-bold"
                 disabled={!mediaReady || !!playbackError}
               >
-                {isPlaying ? <Pause className="h-6 w-6 !fill-black !stroke-black" style={{color: 'black'}} /> : <Play className="h-6 w-6 !fill-black !stroke-black" style={{color: 'black'}} />}
+                {isPlaying ? "⏸" : "▶"}
               </Button>
             </div>
 
