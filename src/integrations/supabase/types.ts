@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -1479,7 +1479,7 @@ export type Database = {
     }
     Functions: {
       can_user_upload: {
-        Args: { user_uuid: string; new_file_size: number }
+        Args: { new_file_size: number; user_uuid: string }
         Returns: boolean
       }
       clean_expired_astrology_cache: {
@@ -1504,9 +1504,9 @@ export type Database = {
       }
       update_cover_submission_status: {
         Args: {
-          submission_id: string
-          new_status: string
           admin_notes_text?: string
+          new_status: string
+          submission_id: string
         }
         Returns: boolean
       }
