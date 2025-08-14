@@ -156,21 +156,21 @@ export const VideoReviewPlayer: React.FC<VideoReviewPlayerProps> = ({
   };
 
   return (
-    <Card className="bg-gray-700/50 border-gray-600">
+    <Card className="bg-card border-border">
       <CardHeader>
-        <CardTitle className="text-white flex items-center gap-2">
+        <CardTitle className="text-foreground flex items-center gap-2">
           <Eye className="w-4 h-4" />
           Review Video with Audio Mix: {title}
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
+        <div className="space-y-3">
           {/* Video Player */}
           <div className="relative bg-black rounded-lg overflow-hidden">
             <video
               ref={videoRef}
               src={videoUrl}
-              className="w-full h-64 object-contain"
+              className="w-full h-48 object-contain"
               controls={false}
             />
             
@@ -183,13 +183,13 @@ export const VideoReviewPlayer: React.FC<VideoReviewPlayerProps> = ({
 
           {/* Status and Error Display */}
           {playbackError && (
-            <div className="text-center text-red-400 text-sm">
+            <div className="text-center text-destructive text-sm">
               {playbackError}
             </div>
           )}
           
           {!mediaReady && !playbackError && (
-            <div className="text-center text-gray-400 text-sm">
+            <div className="text-center text-muted-foreground text-sm">
               Loading media...
             </div>
           )}
@@ -199,59 +199,44 @@ export const VideoReviewPlayer: React.FC<VideoReviewPlayerProps> = ({
             <Button 
               onClick={togglePlayback} 
               size="lg" 
-              className="w-16 h-16 rounded-full bg-blue-600 hover:bg-blue-700 text-white"
+              className="w-12 h-12 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground"
               disabled={!mediaReady || !!playbackError}
             >
-              {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" />}
+              {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
             </Button>
           </div>
 
           {/* Timeline */}
           {mediaReady && (
-            <div className="space-y-2">
-              <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-400">{formatTime(currentTime)}</span>
-                <Slider
-                  value={[currentTime]}
-                  max={duration}
-                  step={0.1}
-                  onValueChange={([value]) => handleSeek(value)}
-                  className="flex-1"
-                />
-                <span className="text-sm text-gray-400">{formatTime(duration)}</span>
-              </div>
+            <div className="flex items-center space-x-2">
+              <span className="text-xs text-muted-foreground">{formatTime(currentTime)}</span>
+              <Slider
+                value={[currentTime]}
+                max={duration}
+                step={0.1}
+                onValueChange={([value]) => handleSeek(value)}
+                className="flex-1"
+              />
+              <span className="text-xs text-muted-foreground">{formatTime(duration)}</span>
             </div>
           )}
 
           {/* Mixing Info Display */}
-          <div className="mt-4 p-3 bg-gray-600/50 rounded-lg">
-            <h4 className="text-sm font-medium text-white mb-2">Applied Audio Mix Settings:</h4>
-            <div className="grid grid-cols-3 gap-4 text-xs text-gray-300">
+          <div className="p-2 bg-muted/50 rounded text-xs">
+            <div className="grid grid-cols-3 gap-2 text-muted-foreground">
               <div>
-                <span className="text-gray-400">Background Music:</span>
-                <div className="font-medium">{Math.round((mixingPreferences.background_audio_volume || 0.5) * 100)}%</div>
+                <div className="font-medium text-foreground">{Math.round((mixingPreferences.background_audio_volume || 0.5) * 100)}%</div>
+                <div>Background</div>
               </div>
               <div>
-                <span className="text-gray-400">Video Audio:</span>
-                <div className="font-medium">{Math.round((mixingPreferences.video_audio_volume || 0.5) * 100)}%</div>
+                <div className="font-medium text-foreground">{Math.round((mixingPreferences.video_audio_volume || 0.5) * 100)}%</div>
+                <div>Video Audio</div>
               </div>
               <div>
-                <span className="text-gray-400">Sync Offset:</span>
-                <div className="font-medium">{mixingPreferences.audio_sync_offset || 0}ms</div>
+                <div className="font-medium text-foreground">{mixingPreferences.audio_sync_offset || 0}ms</div>
+                <div>Sync Offset</div>
               </div>
             </div>
-          </div>
-
-          {/* Raw Video Link as Fallback */}
-          <div className="text-center">
-            <a
-              href={videoUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-400 hover:text-blue-300 text-sm"
-            >
-              Open raw video in new tab
-            </a>
           </div>
         </div>
       </CardContent>
