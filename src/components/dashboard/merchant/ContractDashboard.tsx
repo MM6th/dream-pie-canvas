@@ -30,6 +30,8 @@ interface ContractWithDetails {
   merchant_name?: string;
   audio_product_title?: string;
   deleted_by_merchant?: boolean;
+  hasValidSubmission?: boolean;
+  submissionStatus?: string | null;
 }
 
 const ContractDashboard = () => {
@@ -62,6 +64,7 @@ const ContractDashboard = () => {
       const enrichedContracts = await Promise.all(
         (data || []).map(async (contract) => {
           let submission_title = 'Unknown Submission';
+          let hasValidSubmission = false;
 
           if (contract.cover_submission_id) {
             // First get the submission
@@ -81,6 +84,7 @@ const ContractDashboard = () => {
 
               if (audioData?.title) {
                 submission_title = `PIE Audio Cover: ${audioData.title}`;
+                hasValidSubmission = true;
               }
             }
           } else if (contract.modeling_application_id) {
@@ -101,6 +105,7 @@ const ContractDashboard = () => {
 
               if (fashionData?.title) {
                 submission_title = `PIE Modeling: ${fashionData.title}`;
+                hasValidSubmission = true;
               }
             }
           } else if (contract.contract_type === 'podcast_opportunity') {
@@ -120,6 +125,7 @@ const ContractDashboard = () => {
 
               if (audioData?.title) {
                 submission_title = `PIE Podcast Opportunity: ${audioData.title}`;
+                hasValidSubmission = true;
               }
             }
           } else if (contract.contract_type === 'video_ad_download' && contract.video_ad_opportunity_id) {
@@ -132,6 +138,7 @@ const ContractDashboard = () => {
 
             if (opportunityData?.title) {
               submission_title = `Video Ad Opportunity: ${opportunityData.title}`;
+              hasValidSubmission = true;
             }
           }
 
@@ -170,13 +177,25 @@ const ContractDashboard = () => {
             }
           }
 
+          // Debug logging for unknown submissions
+          if (!hasValidSubmission) {
+            console.log('Unknown submission contract:', {
+              id: contract.id,
+              contract_type: contract.contract_type,
+              cover_submission_id: contract.cover_submission_id,
+              modeling_application_id: contract.modeling_application_id,
+              video_ad_opportunity_id: contract.video_ad_opportunity_id
+            });
+          }
+
           return {
             ...contract,
             status: actualStatus,
             submissionStatus,
             submission_title,
             merchant_name: merchantName,
-            audio_product_title: submission_title
+            audio_product_title: submission_title,
+            hasValidSubmission
           };
         })
       );
@@ -486,7 +505,8 @@ const ContractDashboard = () => {
                       </div>
                                       
                       <div className="flex flex-wrap gap-2">
-                        {contract.status === 'available' && (
+                        {/* Only show action buttons for contracts with valid submissions */}
+                        {contract.hasValidSubmission && contract.status === 'available' && (
                           <>
                             <Button
                               onClick={() => handleViewContract(contract)}
@@ -519,7 +539,8 @@ const ContractDashboard = () => {
                           </>
                         )}
 
-                        {(contract.status === 'pending' || contract.status === 'submission_pending') && contract.contract_type !== 'video_ad_download' && (
+                        {/* Video ad download contracts with approved submissions should allow signing */}
+                        {contract.hasValidSubmission && contract.status === 'pending' && contract.contract_type === 'video_ad_download' && (
                           <Button
                             onClick={() => handleSignContract(contract)}
                             className="bg-blue-600 hover:bg-blue-700"
@@ -527,6 +548,24 @@ const ContractDashboard = () => {
                           >
                             Sign Contract
                           </Button>
+                        )}
+
+                        {/* Other contract types with pending status */}
+                        {contract.hasValidSubmission && (contract.status === 'pending' || contract.status === 'submission_pending') && contract.contract_type !== 'video_ad_download' && (
+                          <Button
+                            onClick={() => handleSignContract(contract)}
+                            className="bg-blue-600 hover:bg-blue-700"
+                            size="sm"
+                          >
+                            Sign Contract
+                          </Button>
+                        )}
+                        
+                        {/* Show message for unknown submissions */}
+                        {!contract.hasValidSubmission && (
+                          <div className="text-xs text-red-400 bg-red-900/20 px-2 py-1 rounded">
+                            Invalid contract - no associated submission found
+                          </div>
                         )}
 
                         {(contract.status === 'signed' || contract.status === 'approved') && contract.signed_at && (
