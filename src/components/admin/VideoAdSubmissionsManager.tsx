@@ -293,7 +293,7 @@ const VideoAdSubmissionsManager = () => {
       </Card>
 
       <Dialog open={reviewModalOpen} onOpenChange={setReviewModalOpen}>
-        <DialogContent className="max-w-2xl bg-gray-800 border-gray-700 text-white">
+        <DialogContent className="sm:max-w-lg bg-gray-800 border-gray-700 text-white max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Video className="w-5 h-5" />
