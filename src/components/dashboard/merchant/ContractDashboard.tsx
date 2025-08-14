@@ -254,8 +254,7 @@ const ContractDashboard = () => {
         .from('contracts')
         .update({ 
           deleted_by_merchant: true,
-          merchant_deletion_date: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          merchant_deletion_date: new Date().toISOString()
         })
         .eq('id', contractId)
         .eq('merchant_id', user?.id)
