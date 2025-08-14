@@ -99,17 +99,17 @@ const CurrentThoughtsSection = ({ posts, useCarousel = true }: CurrentThoughtsSe
             loop: posts.length > 1,
           }}
           className="w-full"
-          orientation="horizontal"
+          orientation="vertical"
         >
-          <CarouselContent className="-ml-4">
+          <CarouselContent className="-mt-4 h-[600px]">
             {posts.map((post) => (
-              <CarouselItem key={post.id} className="pl-4 basis-full">
+              <CarouselItem key={post.id} className="pt-4 basis-full">
                 {renderCard(post)}
               </CarouselItem>
             ))}
           </CarouselContent>
-          <CarouselPrevious className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
-          <CarouselNext className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
+          <CarouselPrevious className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600 top-2 left-1/2 -translate-x-1/2 rotate-90" />
+          <CarouselNext className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600 bottom-2 left-1/2 -translate-x-1/2 rotate-90" />
         </Carousel>
       )}
     </div>
