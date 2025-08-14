@@ -215,22 +215,31 @@ const ContractDashboard = () => {
 
   useEffect(() => {
     fetchContracts();
-    
-    // Initialize hidden contracts from localStorage with user ID
-    if (user?.id && typeof window !== 'undefined') {
-      const storageKey = `hiddenContracts_${user.id}`;
-      const stored = localStorage.getItem(storageKey);
-      if (stored) {
-        try {
-          const hiddenArray = JSON.parse(stored);
-          setHiddenContracts(new Set(hiddenArray));
-          console.log('Loaded hidden contracts for user:', user.id, hiddenArray);
-        } catch (e) {
-          console.error('Failed to parse hidden contracts from localStorage:', e);
-        }
-      }
-    }
   }, [user]);
+
+  // Separate effect for loading hidden contracts to ensure user is available
+  useEffect(() => {
+    if (!user?.id || typeof window === 'undefined') return;
+    
+    const storageKey = `hiddenContracts_${user.id}`;
+    const stored = localStorage.getItem(storageKey);
+    console.log('Loading hidden contracts for user:', user.id, 'stored data:', stored);
+    
+    if (stored) {
+      try {
+        const hiddenArray = JSON.parse(stored);
+        setHiddenContracts(new Set(hiddenArray));
+        console.log('Successfully loaded hidden contracts:', hiddenArray);
+      } catch (e) {
+        console.error('Failed to parse hidden contracts from localStorage:', e);
+        // Clear invalid data
+        localStorage.removeItem(storageKey);
+      }
+    } else {
+      // Ensure we start with an empty set if no data
+      setHiddenContracts(new Set());
+    }
+  }, [user?.id]);
 
   const handleSignContract = (contract: ContractWithDetails) => {
     setSelectedContract(contract);
