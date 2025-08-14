@@ -350,7 +350,9 @@ const ContractDashboard = () => {
         case 'pending':
           return 'Contract available for signing';
         case 'signed':
-          return 'Contract signed - YouTube/PIE partnership active';
+          return 'Contract signed - awaiting admin approval';
+        case 'approved':
+          return 'Contract approved - YouTube/PIE partnership active';
         case 'available':
           return 'Contract available for signing';
         default:
