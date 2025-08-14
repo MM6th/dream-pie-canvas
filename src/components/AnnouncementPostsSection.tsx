@@ -1,11 +1,11 @@
 import React from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Megaphone, User, Calendar, ExternalLink, DollarSign, Users } from "lucide-react";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import PostInteractions from "./PostInteractions";
 import { BulletinPost } from "@/types/bulletin";
-import { useNavigate } from "react-router-dom";
 
 interface AnnouncementPostsSectionProps {
   posts: BulletinPost[];
@@ -98,7 +98,12 @@ const AnnouncementPostsSection = ({ posts }: AnnouncementPostsSectionProps) => {
                         ) : (
                           <User className="w-4 h-4" />
                         )}
-                        {post.profiles?.display_name || 'Community'}
+                         <Link 
+                           to={`/profile/${post.merchant_id}`}
+                           className="text-gray-300 hover:text-white transition-colors"
+                         >
+                           {post.profiles?.display_name || 'Community'}
+                         </Link>
                       </div>
                       <div className="flex items-center gap-1">
                         <Calendar className="w-3 h-3" />

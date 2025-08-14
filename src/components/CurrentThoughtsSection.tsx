@@ -1,5 +1,6 @@
 
 import React from "react";
+import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MessageSquare, User, Calendar } from "lucide-react";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
@@ -52,7 +53,12 @@ const CurrentThoughtsSection = ({ posts, useCarousel = true }: CurrentThoughtsSe
               ) : (
                 <User className="w-4 h-4" />
               )}
-              {post.profiles?.display_name || 'Community'}
+               <Link 
+                 to={`/profile/${post.merchant_id}`}
+                 className="text-gray-300 hover:text-white transition-colors"
+               >
+                 {post.profiles?.display_name || 'Community'}
+               </Link>
             </div>
             <div className="flex items-center gap-1">
               <Calendar className="w-3 h-3" />

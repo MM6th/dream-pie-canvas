@@ -1,11 +1,11 @@
 
 import React from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar, ExternalLink, Tv, User } from "lucide-react";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import PostInteractions from "./PostInteractions";
-import { useNavigate } from "react-router-dom";
 import { BulletinPost } from "@/types/bulletin";
 
 interface TVGuideSectionProps {
@@ -64,7 +64,12 @@ const TVGuideSection = ({ posts, useCarousel = true }: TVGuideSectionProps) => {
               ) : (
                 <User className="w-6 h-6" />
               )}
-              {post.profiles?.display_name || 'Community'}
+               <Link 
+                 to={`/profile/${post.merchant_id}`}
+                 className="text-gray-300 hover:text-white transition-colors"
+               >
+                 {post.profiles?.display_name || 'Community'}
+               </Link>
             </div>
             <div className="flex items-center gap-1">
               <Calendar className="w-4 h-4" />
