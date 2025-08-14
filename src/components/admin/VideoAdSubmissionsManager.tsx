@@ -8,6 +8,7 @@ import { Video, CheckCircle, XCircle, Eye, Clock, DollarSign } from "lucide-reac
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
+import { VideoReviewPlayer } from "./VideoReviewPlayer";
 
 interface VideoAdSubmission {
   id: string;
@@ -18,10 +19,14 @@ interface VideoAdSubmission {
   admin_notes: string | null;
   created_at: string;
   merchant_id: string;
+  background_audio_volume: number;
+  video_audio_volume: number;
+  audio_sync_offset: number;
   video_ad_opportunity: {
     title: string;
     payment_amount: number;
     target_platform: string;
+    audio_file_url: string;
   };
   profiles: {
     display_name: string | null;
@@ -52,7 +57,10 @@ const VideoAdSubmissionsManager = () => {
           admin_notes,
           created_at,
           merchant_id,
-          video_ad_opportunity_id
+          video_ad_opportunity_id,
+          background_audio_volume,
+          video_audio_volume,
+          audio_sync_offset
         `)
         .order('created_at', { ascending: false });
 
@@ -67,11 +75,11 @@ const VideoAdSubmissionsManager = () => {
 
       if (error) throw error;
 
-      // Fetch video ad opportunities separately to get the details
+      // Fetch video ad opportunities separately to get the details including audio file URL
       const opportunityIds = data?.map(s => s.video_ad_opportunity_id) || [];
       const { data: opportunities, error: oppError } = await supabase
         .from('video_ad_opportunities')
-        .select('id, title, payment_amount, target_platform')
+        .select('id, title, payment_amount, target_platform, audio_file_url')
         .in('id', opportunityIds);
 
       if (oppError) throw oppError;
@@ -83,7 +91,8 @@ const VideoAdSubmissionsManager = () => {
         video_ad_opportunity: opportunities?.find(opp => opp.id === submission.video_ad_opportunity_id) || {
           title: 'Unknown',
           payment_amount: 0,
-          target_platform: 'unknown'
+          target_platform: 'unknown',
+          audio_file_url: ''
         },
         profiles: profiles?.find(profile => profile.id === submission.merchant_id) || {
           display_name: null,
@@ -303,17 +312,30 @@ const VideoAdSubmissionsManager = () => {
                 </p>
               </div>
 
-              <div className="p-4 bg-gray-700/50 rounded-lg">
-                <a
-                  href={selectedSubmission.video_file_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-400 hover:text-blue-300 flex items-center gap-2"
-                >
-                  <Eye className="w-4 h-4" />
-                  View Submitted Video
-                </a>
-              </div>
+              {selectedSubmission.video_ad_opportunity.audio_file_url ? (
+                <VideoReviewPlayer
+                  videoUrl={selectedSubmission.video_file_url}
+                  backgroundAudioUrl={selectedSubmission.video_ad_opportunity.audio_file_url}
+                  mixingPreferences={{
+                    background_audio_volume: selectedSubmission.background_audio_volume || 0.5,
+                    video_audio_volume: selectedSubmission.video_audio_volume || 0.5,
+                    audio_sync_offset: selectedSubmission.audio_sync_offset || 0
+                  }}
+                  title={selectedSubmission.video_ad_opportunity.title}
+                />
+              ) : (
+                <div className="p-4 bg-gray-700/50 rounded-lg">
+                  <a
+                    href={selectedSubmission.video_file_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-400 hover:text-blue-300 flex items-center gap-2"
+                  >
+                    <Eye className="w-4 h-4" />
+                    View Submitted Video (No Background Audio Available)
+                  </a>
+                </div>
+              )}
 
               <div>
                 <label className="block text-sm text-gray-400 mb-2">Admin Notes</label>
