@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { FileText, Calendar, CheckCircle, Clock, AlertCircle, Eye, Download, Trash2, ChevronLeft, ChevronRight, Video } from "lucide-react";
+import { FileText, Calendar, CheckCircle, Clock, AlertCircle, Eye, Download, EyeOff, ChevronLeft, ChevronRight, Video } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
@@ -47,7 +47,7 @@ const ContractDashboard = () => {
   const { user } = useAuth();
   const [contracts, setContracts] = useState<ContractWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
-  const [deletingContractId, setDeletingContractId] = useState<string | null>(null);
+  const [hiddenContracts, setHiddenContracts] = useState<Set<string>>(new Set());
   const [selectedContract, setSelectedContract] = useState<ContractWithDetails | null>(null);
   const [showContractModal, setShowContractModal] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
@@ -242,54 +242,12 @@ const ContractDashboard = () => {
     }
   };
 
-  const handleDeleteContract = async (contractId: string) => {
-    if (deletingContractId === contractId) return;
-    
-    setDeletingContractId(contractId);
-    
-    try {
-      console.log('Attempting to delete contract:', contractId, 'for user:', user?.id);
-      
-      const { data, error } = await supabase
-        .from('contracts')
-        .update({ 
-          deleted_by_merchant: true,
-          merchant_deletion_date: new Date().toISOString()
-        })
-        .eq('id', contractId)
-        .eq('merchant_id', user?.id)
-        .select();
-
-      console.log('Delete response:', { data, error });
-
-      if (error) {
-        console.error('Supabase error details:', error);
-        throw error;
-      }
-
-      if (!data || data.length === 0) {
-        console.error('No contract was updated - contract not found or no permission');
-        throw new Error('No contract was updated. You may not have permission to delete this contract.');
-      }
-
-      console.log('Contract successfully marked as deleted:', data);
-
-      toast({
-        title: "Contract Deleted",
-        description: "Contract has been removed from your dashboard. It remains on file with PIE for record-keeping.",
-      });
-
-      fetchContracts();
-    } catch (error: any) {
-      console.error('Error deleting contract:', error);
-      toast({
-        title: "Delete Failed",
-        description: error.message || "Failed to remove contract",
-        variant: "destructive"
-      });
-    } finally {
-      setDeletingContractId(null);
-    }
+  const handleHideContract = (contractId: string) => {
+    setHiddenContracts(prev => new Set(prev).add(contractId));
+    toast({
+      title: "Contract Hidden",
+      description: "Contract has been hidden from your dashboard.",
+    });
   };
 
   const scrollLeft = () => {
@@ -457,7 +415,7 @@ const ContractDashboard = () => {
                 className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide"
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
               >
-{contracts.map((contract) => (
+{contracts.filter(contract => !hiddenContracts.has(contract.id)).map((contract) => (
   <div key={contract.id} className="bg-gray-700/50 p-4 rounded-lg min-w-[320px] max-w-[320px] min-h-[240px] flex-shrink-0">
     <div className="flex items-start justify-between mb-3">
       <div className="flex-1">
@@ -488,38 +446,14 @@ const ContractDashboard = () => {
           )}
         </div>
       </div>
-      <AlertDialog>
-        <AlertDialogTrigger asChild>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-red-400 hover:text-red-300 hover:bg-red-900/20 ml-2"
-            disabled={deletingContractId === contract.id}
-          >
-            <Trash2 className="w-4 h-4" />
-          </Button>
-        </AlertDialogTrigger>
-        <AlertDialogContent className="bg-gray-800 border-gray-700">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-white">Delete Contract</AlertDialogTitle>
-            <AlertDialogDescription className="text-gray-400">
-              Are you sure you want to delete this contract? This action will remove it from your dashboard but it will remain on file with PIE for record-keeping purposes.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="bg-gray-700 text-white border-gray-600 hover:bg-gray-600">
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => handleDeleteContract(contract.id)}
-              className="bg-red-600 hover:bg-red-700 text-white"
-              disabled={deletingContractId === contract.id}
-            >
-              {deletingContractId === contract.id ? 'Deleting...' : 'Delete'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => handleHideContract(contract.id)}
+        className="text-gray-400 hover:text-gray-300 hover:bg-gray-700/50 ml-2"
+      >
+        <EyeOff className="w-4 h-4" />
+      </Button>
     </div>
                     
                     <div className="flex flex-wrap gap-2">
