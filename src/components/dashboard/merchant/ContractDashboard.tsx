@@ -157,8 +157,24 @@ const ContractDashboard = () => {
                                `${merchantData?.first_name || ''} ${merchantData?.last_name || ''}`.trim() || 
                                'Unknown Merchant';
 
+          // Check if there's a video ad submission for this contract
+          let actualStatus = contract.status;
+          if (contract.contract_type === 'video_ad_download' && contract.video_ad_opportunity_id) {
+            const { data: submissionData } = await supabase
+              .from('video_ad_submissions')
+              .select('id, status')
+              .eq('video_ad_opportunity_id', contract.video_ad_opportunity_id)
+              .eq('merchant_id', contract.merchant_id)
+              .maybeSingle();
+
+            if (submissionData) {
+              actualStatus = 'pending'; // Change status to pending when submission exists
+            }
+          }
+
           return {
             ...contract,
+            status: actualStatus,
             submission_title,
             merchant_name: merchantName,
             audio_product_title: submission_title
@@ -552,6 +568,7 @@ const ContractDashboard = () => {
         onSuccess={() => {
           setShowVideoAdModal(false);
           setSelectedOpportunity(null);
+          fetchContracts(); // Refresh contracts to show updated status
           toast({
             title: "Success",
             description: "Video ad submitted successfully!"
