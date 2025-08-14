@@ -93,9 +93,24 @@ const CurrentThoughtsSection = ({ posts, useCarousel = true }: CurrentThoughtsSe
           <CarouselNext className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
         </Carousel>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {posts.map((post) => renderCard(post))}
-        </div>
+        <Carousel
+          opts={{
+            align: "start",
+            loop: posts.length > 1,
+          }}
+          className="w-full"
+          orientation="horizontal"
+        >
+          <CarouselContent className="-ml-4">
+            {posts.map((post) => (
+              <CarouselItem key={post.id} className="pl-4 basis-full">
+                {renderCard(post)}
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
+          <CarouselNext className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
+        </Carousel>
       )}
     </div>
   );
