@@ -117,7 +117,7 @@ const StorePage = () => {
       const profile = await fetchUserProfile();
       setUserProfile(profile);
 
-      // Fetch audio products
+      // Fetch audio products (excluding video ad opportunities that shouldn't be in audio section)
       const { data: audioData, error: audioError } = await supabase
         .from('audio_products')
         .select(`
@@ -138,6 +138,8 @@ const StorePage = () => {
             name
           )
         `)
+        .not('title', 'ilike', '%video ad%')
+        .not('title', 'ilike', '%dance to dairy queen%')
         .order('created_at', { ascending: false });
 
       if (audioError) throw audioError;
