@@ -9,10 +9,12 @@ import BulletinPostManager from "@/components/BulletinPostManager";
 import ContentGallery from "@/components/ContentGallery";
 import SECalculatorModal from "@/components/SECalculatorModal";
 import { useAuth } from "@/hooks/useAuth";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 
 const ContentManagement = () => {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const [hasPodcastDownloads, setHasPodcastDownloads] = useState(false);
   
   // Check if user is admin - admins don't need cover submission functionality
@@ -95,18 +97,18 @@ const ContentManagement = () => {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="cover-submissions" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 bg-gray-700 border-gray-600">
+              <TabsList className={`grid w-full ${isMobile ? 'grid-cols-1 gap-2 h-auto' : 'grid-cols-2'} bg-gray-700 border-gray-600`}>
                 <TabsTrigger 
                   value="cover-submissions" 
-                  className="text-white data-[state=active]:bg-gray-600"
+                  className={`text-white data-[state=active]:bg-gray-600 ${isMobile ? 'text-sm px-3 py-2 h-auto whitespace-normal' : ''}`}
                 >
-                  Submit New Covers
+                  {isMobile ? 'Submit Covers' : 'Submit New Covers'}
                 </TabsTrigger>
                 <TabsTrigger 
                   value="my-submissions" 
-                  className="text-white data-[state=active]:bg-gray-600"
+                  className={`text-white data-[state=active]:bg-gray-600 ${isMobile ? 'text-sm px-3 py-2 h-auto whitespace-normal' : ''}`}
                 >
-                  My Submissions
+                  {isMobile ? 'My Submissions' : 'My Submissions'}
                 </TabsTrigger>
               </TabsList>
 

@@ -7,6 +7,7 @@ import { Video, Edit, Trash2, Plus, DollarSign, Users, Eye, ChevronLeft, Chevron
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 import VideoAdOpportunityUploadModal from "@/components/VideoAdOpportunityUploadModal";
 import EditVideoAdOpportunityModal from "./EditVideoAdOpportunityModal";
 
@@ -25,6 +26,7 @@ interface VideoAdOpportunity {
 }
 
 const VideoAdOpportunityManager = () => {
+  const isMobile = useIsMobile();
   const [opportunities, setOpportunities] = useState<VideoAdOpportunity[]>([]);
   const [loading, setLoading] = useState(true);
   const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -127,22 +129,22 @@ const VideoAdOpportunityManager = () => {
     <>
       <Card className="bg-gray-800/50 border-gray-700">
         <CardHeader>
-          <CardTitle className="flex items-center justify-between text-white">
-            <div className="flex items-center gap-2">
+          <div className={`flex ${isMobile ? 'flex-col gap-4' : 'items-center justify-between'}`}>
+            <CardTitle className="flex items-center gap-2 text-white">
               <Video className="w-5 h-5" />
               Video Ad Opportunities
               <Badge className="bg-blue-600 text-white">
                 {opportunities.length} Total
               </Badge>
-            </div>
+            </CardTitle>
             <Button 
               onClick={() => setCreateModalOpen(true)}
-              className="bg-green-600 hover:bg-green-700"
+              className={`bg-green-600 hover:bg-green-700 ${isMobile ? 'w-full' : ''}`}
             >
               <Plus className="w-4 h-4 mr-2" />
-              Create New
+              {isMobile ? 'Create New Opportunity' : 'Create New'}
             </Button>
-          </CardTitle>
+          </div>
         </CardHeader>
         <CardContent>
           {opportunities.length === 0 ? (
@@ -151,10 +153,10 @@ const VideoAdOpportunityManager = () => {
               <p className="text-gray-400 mb-4">No video ad opportunities created yet.</p>
               <Button 
                 onClick={() => setCreateModalOpen(true)}
-                className="bg-blue-600 hover:bg-blue-700"
+                className={`bg-blue-600 hover:bg-blue-700 ${isMobile ? 'w-full' : ''}`}
               >
                 <Plus className="w-4 h-4 mr-2" />
-                Create First Opportunity
+                {isMobile ? 'Create Your First Opportunity' : 'Create First Opportunity'}
               </Button>
             </div>
           ) : (
