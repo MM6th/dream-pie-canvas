@@ -224,7 +224,7 @@ export const VideoEditor: React.FC<VideoEditorProps> = ({
               <Button 
                 onClick={togglePlayback} 
                 size="lg" 
-                className="w-16 h-16 rounded-full"
+                className="w-16 h-16 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground"
                 disabled={!mediaReady || !!playbackError}
               >
                 {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
@@ -267,7 +267,7 @@ export const VideoEditor: React.FC<VideoEditorProps> = ({
               max={1}
               step={0.1}
               onValueChange={([value]) => setBackgroundAudioVolume(value)}
-              className="w-full"
+              className="w-full [&_[role=slider]]:bg-primary [&_[role=slider]]:border-primary"
             />
             <span className="text-xs text-muted-foreground">{Math.round(backgroundAudioVolume * 100)}%</span>
           </div>
@@ -284,7 +284,7 @@ export const VideoEditor: React.FC<VideoEditorProps> = ({
               max={1}
               step={0.1}
               onValueChange={([value]) => setVideoAudioVolume(value)}
-              className="w-full"
+              className="w-full [&_[role=slider]]:bg-primary [&_[role=slider]]:border-primary"
             />
             <span className="text-xs text-muted-foreground">{Math.round(videoAudioVolume * 100)}%</span>
           </div>
@@ -298,7 +298,7 @@ export const VideoEditor: React.FC<VideoEditorProps> = ({
               max={5000}
               step={100}
               onValueChange={([value]) => setAudioSyncOffset(value)}
-              className="w-full"
+              className="w-full [&_[role=slider]]:bg-primary [&_[role=slider]]:border-primary"
             />
             <span className="text-xs text-muted-foreground">
               {audioSyncOffset}ms {audioSyncOffset > 0 ? '(audio starts later)' : audioSyncOffset < 0 ? '(audio starts earlier)' : '(synchronized)'}
