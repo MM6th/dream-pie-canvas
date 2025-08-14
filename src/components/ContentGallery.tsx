@@ -6,6 +6,7 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import { Trash2, Download, Eye, Calendar, Play, Image, Video } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "@/components/ui/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PhotoUpload from "./PhotoUpload";
@@ -33,6 +34,7 @@ interface UserUpload {
 
 const ContentGallery = () => {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const [uploads, setUploads] = useState<UserUpload[]>([]);
   const [loading, setLoading] = useState(true);
   const [storageUsage, setStorageUsage] = useState<number>(0);
@@ -197,16 +199,35 @@ const ContentGallery = () => {
         </Card>
       ) : (
         <Tabs defaultValue="all" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 bg-gray-700">
-            <TabsTrigger value="all">All Content ({uploads.length})</TabsTrigger>
-            <TabsTrigger value="images" className="flex items-center gap-2">
-              <Image className="w-4 h-4" />
-              Images ({imageUploads.length})
+          <TabsList className={`grid w-full ${isMobile ? 'grid-cols-2 gap-2 h-auto' : 'grid-cols-3'} bg-gray-700`}>
+            <TabsTrigger 
+              value="all" 
+              className={`${isMobile ? 'text-xs px-2 py-2 h-auto' : ''}`}
+            >
+              {isMobile ? `All (${uploads.length})` : `All Content (${uploads.length})`}
             </TabsTrigger>
-            <TabsTrigger value="videos" className="flex items-center gap-2">
-              <Video className="w-4 h-4" />
-              Videos ({videoUploads.length})
+            <TabsTrigger 
+              value="images" 
+              className={`flex items-center gap-2 ${isMobile ? 'text-xs px-2 py-2 h-auto flex-col gap-1' : ''}`}
+            >
+              <Image className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'}`} />
+              {isMobile ? `Images (${imageUploads.length})` : `Images (${imageUploads.length})`}
             </TabsTrigger>
+            {!isMobile && (
+              <TabsTrigger value="videos" className="flex items-center gap-2">
+                <Video className="w-4 h-4" />
+                Videos ({videoUploads.length})
+              </TabsTrigger>
+            )}
+            {isMobile && (
+              <TabsTrigger 
+                value="videos" 
+                className="flex items-center gap-2 text-xs px-2 py-2 h-auto flex-col gap-1"
+              >
+                <Video className="w-3 h-3" />
+                Videos ({videoUploads.length})
+              </TabsTrigger>
+            )}
           </TabsList>
           
           <TabsContent value="all" className="mt-4">
