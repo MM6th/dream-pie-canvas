@@ -199,7 +199,7 @@ export const VideoReviewPlayer: React.FC<VideoReviewPlayerProps> = ({
             <Button 
               onClick={togglePlayback} 
               size="lg" 
-              className="w-12 h-12 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground"
+              className="w-12 h-12 rounded-full bg-primary hover:bg-primary/90"
               disabled={!mediaReady || !!playbackError}
             >
               {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
