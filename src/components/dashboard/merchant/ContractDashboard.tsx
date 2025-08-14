@@ -38,14 +38,7 @@ const ContractDashboard = () => {
   const { user } = useAuth();
   const [contracts, setContracts] = useState<ContractWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
-  const [hiddenContracts, setHiddenContracts] = useState<Set<string>>(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('hiddenContracts');
-      console.log('Loading hidden contracts from localStorage:', stored);
-      return stored ? new Set(JSON.parse(stored)) : new Set();
-    }
-    return new Set();
-  });
+  const [hiddenContracts, setHiddenContracts] = useState<Set<string>>(new Set());
   const [showHidden, setShowHidden] = useState(false);
   const [selectedContract, setSelectedContract] = useState<ContractWithDetails | null>(null);
   const [showContractModal, setShowContractModal] = useState(false);
@@ -222,6 +215,21 @@ const ContractDashboard = () => {
 
   useEffect(() => {
     fetchContracts();
+    
+    // Initialize hidden contracts from localStorage with user ID
+    if (user?.id && typeof window !== 'undefined') {
+      const storageKey = `hiddenContracts_${user.id}`;
+      const stored = localStorage.getItem(storageKey);
+      if (stored) {
+        try {
+          const hiddenArray = JSON.parse(stored);
+          setHiddenContracts(new Set(hiddenArray));
+          console.log('Loaded hidden contracts for user:', user.id, hiddenArray);
+        } catch (e) {
+          console.error('Failed to parse hidden contracts from localStorage:', e);
+        }
+      }
+    }
   }, [user]);
 
   const handleSignContract = (contract: ContractWithDetails) => {
@@ -263,8 +271,14 @@ const ContractDashboard = () => {
     setHiddenContracts(prev => {
       const newSet = new Set(prev).add(contractId);
       const hiddenArray = Array.from(newSet);
-      localStorage.setItem('hiddenContracts', JSON.stringify(hiddenArray));
-      console.log('Updated hidden contracts in localStorage:', hiddenArray);
+      
+      // Store with user ID for proper isolation
+      if (user?.id && typeof window !== 'undefined') {
+        const storageKey = `hiddenContracts_${user.id}`;
+        localStorage.setItem(storageKey, JSON.stringify(hiddenArray));
+        console.log('Updated hidden contracts in localStorage for user:', user.id, hiddenArray);
+      }
+      
       return newSet;
     });
     toast({
@@ -279,8 +293,14 @@ const ContractDashboard = () => {
       const newSet = new Set(prev);
       newSet.delete(contractId);
       const hiddenArray = Array.from(newSet);
-      localStorage.setItem('hiddenContracts', JSON.stringify(hiddenArray));
-      console.log('Updated hidden contracts in localStorage:', hiddenArray);
+      
+      // Store with user ID for proper isolation
+      if (user?.id && typeof window !== 'undefined') {
+        const storageKey = `hiddenContracts_${user.id}`;
+        localStorage.setItem(storageKey, JSON.stringify(hiddenArray));
+        console.log('Updated hidden contracts in localStorage for user:', user.id, hiddenArray);
+      }
+      
       return newSet;
     });
     toast({
