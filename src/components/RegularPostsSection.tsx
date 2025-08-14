@@ -9,9 +9,10 @@ import { useNavigate } from "react-router-dom";
 
 interface RegularPostsSectionProps {
   posts: BulletinPost[];
+  useCarousel?: boolean;
 }
 
-const RegularPostsSection = ({ posts }: RegularPostsSectionProps) => {
+const RegularPostsSection = ({ posts, useCarousel = true }: RegularPostsSectionProps) => {
   const navigate = useNavigate();
   
   if (posts.length === 0) {
@@ -26,94 +27,105 @@ const RegularPostsSection = ({ posts }: RegularPostsSectionProps) => {
     }
   };
 
+  const renderCard = (post: BulletinPost) => (
+    <Card key={post.id} className="bg-gray-800 border-gray-700 h-full flex flex-col">
+      {((post.image_url || post.uploaded_image_url) && post.media_type !== 'video') && (
+        <CardHeader className="p-0">
+          <img
+            src={post.uploaded_image_url || post.image_url}
+            alt={post.title}
+            className="w-full h-48 object-cover rounded-t-lg"
+          />
+        </CardHeader>
+      )}
+      {post.video_url && post.media_type === 'video' && (
+        <CardHeader className="p-0">
+          <video
+            src={post.video_url}
+            controls
+            className="w-full h-48 object-cover rounded-t-lg"
+            preload="metadata"
+          />
+        </CardHeader>
+      )}
+      <CardContent className="p-6 flex-grow flex flex-col">
+        <div className="flex items-center justify-between mb-2">
+          <CardTitle className="text-white text-lg">{post.title}</CardTitle>
+          {post.profiles?.is_admin && (
+            <Badge variant="secondary" className="bg-orange-600 text-white border-orange-500 flex items-center gap-1">
+              <Shield className="w-3 h-3" />
+              Admin Post
+            </Badge>
+          )}
+        </div>
+        <p className="text-gray-300 text-sm mb-4 leading-relaxed line-clamp-4 flex-grow">{post.content}</p>
+        
+        <div className="flex items-center gap-4 text-xs text-gray-400 mb-4">
+           <div className="flex items-center gap-2">
+              {post.profiles?.avatar_url ? (
+                <img
+                  src={post.profiles.avatar_url}
+                  alt="Avatar"
+                  className="w-6 h-6 rounded-full object-cover"
+                />
+              ) : (
+                <User className="w-4 h-4" />
+              )}
+              {post.profiles?.display_name || 'Community'}
+            </div>
+            <div className="flex items-center gap-1">
+              <Calendar className="w-3 h-3" />
+              {new Date(post.created_at).toLocaleDateString()}
+            </div>
+        </div>
+        
+        {post.link_url && (
+          <button
+            onClick={() => handleLinkClick(post.link_url)}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg mb-4 transition-colors flex items-center justify-center gap-2"
+          >
+            <ExternalLink className="w-4 h-4" />
+            View Link
+          </button>
+        )}
+        
+        <div className="mt-auto">
+          <PostInteractions postId={post.id} />
+        </div>
+      </CardContent>
+    </Card>
+  );
+
   return (
     <div className="mb-12">
-      <h2 className="text-3xl font-bold text-white mb-6 flex items-center gap-2">
-        <MessageSquare className="w-8 h-8 text-white" />
+      <h2 className="text-2xl lg:text-3xl font-bold text-white mb-6 flex items-center gap-2">
+        <MessageSquare className="w-6 h-6 lg:w-8 lg:h-8 text-white" />
         Admin Posts
       </h2>
-      <Carousel
-        opts={{
-          align: "start",
-          loop: posts.length > 2,
-        }}
-        className="w-full"
-      >
-        <CarouselContent className="-ml-4">
-          {posts.map((post) => (
-            <CarouselItem key={post.id} className="pl-4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
-              <Card className="bg-gray-800 border-gray-700 h-full flex flex-col">
-                {((post.image_url || post.uploaded_image_url) && post.media_type !== 'video') && (
-                  <CardHeader className="p-0">
-                    <img
-                      src={post.uploaded_image_url || post.image_url}
-                      alt={post.title}
-                      className="w-full h-48 object-cover rounded-t-lg"
-                    />
-                  </CardHeader>
-                )}
-                {post.video_url && post.media_type === 'video' && (
-                  <CardHeader className="p-0">
-                    <video
-                      src={post.video_url}
-                      controls
-                      className="w-full h-48 object-cover rounded-t-lg"
-                      preload="metadata"
-                    />
-                  </CardHeader>
-                )}
-                <CardContent className="p-6 flex-grow flex flex-col">
-                  <div className="flex items-center justify-between mb-2">
-                    <CardTitle className="text-white text-lg">{post.title}</CardTitle>
-                    {post.profiles?.is_admin && (
-                      <Badge variant="secondary" className="bg-orange-600 text-white border-orange-500 flex items-center gap-1">
-                        <Shield className="w-3 h-3" />
-                        Admin Post
-                      </Badge>
-                    )}
-                  </div>
-                  <p className="text-gray-300 text-sm mb-4 leading-relaxed line-clamp-4 flex-grow">{post.content}</p>
-                  
-                  <div className="flex items-center gap-4 text-xs text-gray-400 mb-4">
-                     <div className="flex items-center gap-2">
-                        {post.profiles?.avatar_url ? (
-                          <img
-                            src={post.profiles.avatar_url}
-                            alt="Avatar"
-                            className="w-6 h-6 rounded-full object-cover"
-                          />
-                        ) : (
-                          <User className="w-4 h-4" />
-                        )}
-                        {post.profiles?.display_name || 'Community'}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Calendar className="w-3 h-3" />
-                        {new Date(post.created_at).toLocaleDateString()}
-                      </div>
-                  </div>
-                  
-                  {post.link_url && (
-                    <button
-                      onClick={() => handleLinkClick(post.link_url)}
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg mb-4 transition-colors flex items-center justify-center gap-2"
-                    >
-                      <ExternalLink className="w-4 h-4" />
-                      View Link
-                    </button>
-                  )}
-                  
-                  <div className="mt-auto">
-                    <PostInteractions postId={post.id} />
-                  </div>
-                </CardContent>
-              </Card>
-            </CarouselItem>
-          ))}
-        </CarouselContent>
-        <CarouselPrevious className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
-        <CarouselNext className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
-      </Carousel>
+      
+      {useCarousel ? (
+        <Carousel
+          opts={{
+            align: "start",
+            loop: posts.length > 2,
+          }}
+          className="w-full"
+        >
+          <CarouselContent className="-ml-4">
+            {posts.map((post) => (
+              <CarouselItem key={post.id} className="pl-4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
+                {renderCard(post)}
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
+          <CarouselNext className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
+        </Carousel>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {posts.map((post) => renderCard(post))}
+        </div>
+      )}
     </div>
   );
 };

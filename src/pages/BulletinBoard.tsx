@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, LogOut, ShoppingBag, Film } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import CurrentThoughtsSection from "@/components/CurrentThoughtsSection";
 import TVGuideSection from "@/components/TVGuideSection";
@@ -13,6 +14,7 @@ import AnnouncementPostsSection from "@/components/AnnouncementPostsSection";
 const BulletinBoard = () => {
   const navigate = useNavigate();
   const { signOut, user } = useAuth();
+  const isMobile = useIsMobile();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -139,19 +141,33 @@ const BulletinBoard = () => {
           <p className="text-gray-300">Stay updated with the latest from our community</p>
         </div>
 
-        <div className="space-y-12">
-          {/* Announcements Section */}
+        {/* Announcements Section - Always full width */}
+        <div className="mb-12">
           <AnnouncementPostsSection posts={announcementPosts} />
-          
-          {/* Current Thoughts Section */}
-          <CurrentThoughtsSection posts={currentThoughtsPosts} />
-          
-          {/* TV Guide Section */}
-          <TVGuideSection posts={tvGuidePosts} />
-          
-          {/* Regular Posts Section */}
-          <RegularPostsSection posts={regularPosts} />
         </div>
+
+        {/* Responsive Layout for Other Sections */}
+        {isMobile ? (
+          // Mobile: Vertical stack
+          <div className="space-y-8">
+            <CurrentThoughtsSection posts={currentThoughtsPosts} useCarousel={false} />
+            <TVGuideSection posts={tvGuidePosts} useCarousel={false} />
+            <RegularPostsSection posts={regularPosts} useCarousel={false} />
+          </div>
+        ) : (
+          // Desktop: Three columns
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-1">
+              <CurrentThoughtsSection posts={currentThoughtsPosts} useCarousel={false} />
+            </div>
+            <div className="lg:col-span-1">
+              <TVGuideSection posts={tvGuidePosts} useCarousel={false} />
+            </div>
+            <div className="lg:col-span-1">
+              <RegularPostsSection posts={regularPosts} useCarousel={false} />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
