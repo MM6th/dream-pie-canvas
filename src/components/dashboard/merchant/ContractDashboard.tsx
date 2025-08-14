@@ -159,6 +159,7 @@ const ContractDashboard = () => {
 
           // Check if there's a video ad submission for this contract
           let actualStatus = contract.status;
+          let submissionStatus = null;
           if (contract.contract_type === 'video_ad_download' && contract.video_ad_opportunity_id) {
             const { data: submissionData } = await supabase
               .from('video_ad_submissions')
@@ -168,13 +169,21 @@ const ContractDashboard = () => {
               .maybeSingle();
 
             if (submissionData) {
-              actualStatus = 'pending'; // Change status to pending when submission exists
+              submissionStatus = submissionData.status;
+              if (submissionData.status === 'pending') {
+                actualStatus = 'submission_pending';
+              } else if (submissionData.status === 'approved') {
+                actualStatus = 'pending'; // Contract now available for signing
+              } else if (submissionData.status === 'rejected') {
+                actualStatus = 'submission_rejected';
+              }
             }
           }
 
           return {
             ...contract,
             status: actualStatus,
+            submissionStatus,
             submission_title,
             merchant_name: merchantName,
             audio_product_title: submission_title
@@ -297,6 +306,10 @@ const ContractDashboard = () => {
     switch (status) {
       case 'pending':
         return <Clock className="w-4 h-4 text-yellow-500" />;
+      case 'submission_pending':
+        return <Clock className="w-4 h-4 text-orange-500" />;
+      case 'submission_rejected':
+        return <AlertCircle className="w-4 h-4 text-red-500" />;
       case 'signed':
         return <AlertCircle className="w-4 h-4 text-blue-500" />;
       case 'approved':
@@ -314,6 +327,10 @@ const ContractDashboard = () => {
     switch (status) {
       case 'pending':
         return 'bg-yellow-600';
+      case 'submission_pending':
+        return 'bg-orange-600';
+      case 'submission_rejected':
+        return 'bg-red-600';
       case 'signed':
         return 'bg-blue-600';
       case 'approved':
@@ -345,8 +362,12 @@ const ContractDashboard = () => {
       switch (contract.status) {
         case 'available':
           return 'Contract available for review - Download completed';
+        case 'submission_pending':
+          return 'Video submitted - awaiting admin review';
+        case 'submission_rejected':
+          return 'Video submission rejected - review feedback';
         case 'pending':
-          return 'Contract available for signing';
+          return 'Video approved - contract available for signing';
         case 'signed':
           return 'Contract signed - Ready to submit video';
         default:
@@ -492,7 +513,7 @@ const ContractDashboard = () => {
   </>
 )}
 
-{contract.status === 'pending' && contract.contract_type !== 'video_ad_download' && (
+{(contract.status === 'pending' || contract.status === 'submission_pending') && contract.contract_type !== 'video_ad_download' && (
   <Button
     onClick={() => handleSignContract(contract)}
     className="bg-blue-600 hover:bg-blue-700"
