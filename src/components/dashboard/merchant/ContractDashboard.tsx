@@ -248,6 +248,8 @@ const ContractDashboard = () => {
     setDeletingContractId(contractId);
     
     try {
+      console.log('Attempting to delete contract:', contractId, 'for user:', user?.id);
+      
       const { data, error } = await supabase
         .from('contracts')
         .update({ 
@@ -259,11 +261,19 @@ const ContractDashboard = () => {
         .eq('merchant_id', user?.id)
         .select();
 
-      if (error) throw error;
+      console.log('Delete response:', { data, error });
+
+      if (error) {
+        console.error('Supabase error details:', error);
+        throw error;
+      }
 
       if (!data || data.length === 0) {
+        console.error('No contract was updated - contract not found or no permission');
         throw new Error('No contract was updated. You may not have permission to delete this contract.');
       }
+
+      console.log('Contract successfully marked as deleted:', data);
 
       toast({
         title: "Contract Deleted",
@@ -275,7 +285,7 @@ const ContractDashboard = () => {
       console.error('Error deleting contract:', error);
       toast({
         title: "Delete Failed",
-        description: "Failed to remove contract",
+        description: error.message || "Failed to remove contract",
         variant: "destructive"
       });
     } finally {
