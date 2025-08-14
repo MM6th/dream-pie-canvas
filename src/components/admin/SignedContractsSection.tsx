@@ -19,6 +19,7 @@ interface SignedContract {
   admin_signature?: string;
   cover_submission_id?: string;
   modeling_application_id?: string;
+  video_ad_submission_id?: string;
   merchant_name?: string;
   audio_product_title?: string;
   submission_type?: string;
@@ -88,6 +89,24 @@ const SignedContractsSection = () => {
             }
             
             submissionType = 'Modeling Application';
+          } else if (contract.video_ad_submission_id) {
+            const { data } = await supabase
+              .from('video_ad_submissions')
+              .select('video_ad_opportunity_id')
+              .eq('id', contract.video_ad_submission_id)
+              .single();
+            
+            if (data?.video_ad_opportunity_id) {
+              const { data: opportunityData } = await supabase
+                .from('video_ad_opportunities')
+                .select('title')
+                .eq('id', data.video_ad_opportunity_id)
+                .single();
+              
+              productTitle = opportunityData?.title || 'Unknown Product';
+            }
+            
+            submissionType = 'Video Ad Submission';
           } else if (contract.contract_type === 'podcast_opportunity') {
             const { data: podcastDownload } = await supabase
               .from('podcast_downloads')
@@ -320,6 +339,71 @@ const SignedContractsSection = () => {
     }
   };
 
+  const handleDownloadSubmissionContent = async (contract: SignedContract) => {
+    try {
+      if (contract.cover_submission_id) {
+        // Download cover submission content
+        const { data: submission } = await supabase
+          .from('song_cover_submissions')
+          .select('cover_image_url, audio_product_id')
+          .eq('id', contract.cover_submission_id)
+          .single();
+
+        if (submission?.cover_image_url) {
+          // Create download link for cover image
+          const link = document.createElement('a');
+          link.href = submission.cover_image_url;
+          link.download = `cover_submission_${contract.cover_submission_id}_image.jpg`;
+          link.target = '_blank';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+
+          toast({
+            title: "Download Started",
+            description: "Cover submission image download initiated"
+          });
+        }
+      } else if (contract.video_ad_submission_id) {
+        // Download video submission content
+        const { data: submission } = await supabase
+          .from('video_ad_submissions')
+          .select('video_file_url')
+          .eq('id', contract.video_ad_submission_id)
+          .single();
+
+        if (submission?.video_file_url) {
+          // Create download link for video file
+          const link = document.createElement('a');
+          link.href = submission.video_file_url;
+          link.download = `video_submission_${contract.video_ad_submission_id}.mp4`;
+          link.target = '_blank';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+
+          toast({
+            title: "Download Started",
+            description: "Video submission download initiated"
+          });
+        }
+      } else {
+        toast({
+          title: "No Content Available",
+          description: "This contract type doesn't have downloadable submission content",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Error downloading submission content:', error);
+      toast({
+        title: "Download Failed",
+        description: "Failed to download submission content",
+        variant: "destructive"
+      });
+    }
+  };
+
   if (loading) {
     return (
       <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
@@ -418,6 +502,16 @@ const SignedContractsSection = () => {
                         <Eye className="w-4 h-4 mr-1" />
                         View
                       </Button>
+                      {(contract.cover_submission_id || contract.video_ad_submission_id) && (
+                        <Button
+                          onClick={() => handleDownloadSubmissionContent(contract)}
+                          size="sm"
+                          className="bg-purple-600 hover:bg-purple-700"
+                        >
+                          <Download className="w-4 h-4 mr-1" />
+                          Content
+                        </Button>
+                      )}
                       <Button
                         onClick={() => handleDownloadContract(contract)}
                         size="sm"
