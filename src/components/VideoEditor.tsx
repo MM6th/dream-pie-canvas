@@ -112,10 +112,16 @@ export const VideoEditor: React.FC<VideoEditorProps> = ({
         }
       };
 
+      const handleVideoEnded = () => {
+        audio.pause();
+        setIsPlaying(false);
+      };
+
       video.addEventListener('timeupdate', handleTimeUpdate);
       video.addEventListener('loadedmetadata', handleVideoLoadedMetadata);
       video.addEventListener('canplaythrough', checkMediaReady);
       video.addEventListener('error', handleVideoError);
+      video.addEventListener('ended', handleVideoEnded);
       
       audio.addEventListener('loadedmetadata', handleAudioLoadedMetadata);
       audio.addEventListener('canplaythrough', checkMediaReady);
@@ -126,6 +132,7 @@ export const VideoEditor: React.FC<VideoEditorProps> = ({
         video.removeEventListener('loadedmetadata', handleVideoLoadedMetadata);
         video.removeEventListener('canplaythrough', checkMediaReady);
         video.removeEventListener('error', handleVideoError);
+        video.removeEventListener('ended', handleVideoEnded);
         
         audio.removeEventListener('loadedmetadata', handleAudioLoadedMetadata);
         audio.removeEventListener('canplaythrough', checkMediaReady);
