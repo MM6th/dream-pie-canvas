@@ -7,6 +7,7 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import { Download, Image, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "@/hooks/use-toast";
 import ContentGallery from "@/components/ContentGallery";
 
@@ -21,6 +22,7 @@ interface ApprovedCover {
 
 const AdminContentGallery = () => {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const [approvedAudioCovers, setApprovedAudioCovers] = useState<ApprovedCover[]>([]);
   const [approvedModelingPhotos, setApprovedModelingPhotos] = useState<ApprovedCover[]>([]);
   const [loading, setLoading] = useState(true);
@@ -197,35 +199,54 @@ const AdminContentGallery = () => {
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="my-uploads" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 bg-gray-700 border-gray-600">
+          <TabsList className={`grid w-full ${isMobile ? 'grid-cols-2 gap-2 h-auto' : 'grid-cols-3'} bg-gray-700 border-gray-600`}>
             <TabsTrigger 
               value="my-uploads" 
-              className="text-white data-[state=active]:bg-gray-600"
+              className={`text-white data-[state=active]:bg-gray-600 ${isMobile ? 'text-xs px-2 py-2 h-auto' : ''}`}
             >
-              My Uploads
+              {isMobile ? 'My Uploads' : 'My Uploads'}
             </TabsTrigger>
             <TabsTrigger 
               value="approved-audio" 
-              className="text-white data-[state=active]:bg-gray-600"
+              className={`text-white data-[state=active]:bg-gray-600 ${isMobile ? 'text-xs px-2 py-2 h-auto flex-col gap-1' : ''}`}
             >
-              Approved Audio Covers
-              {approvedAudioCovers.length > 0 && (
-                <Badge className="ml-2 bg-blue-600 text-white">
-                  {approvedAudioCovers.length}
-                </Badge>
-              )}
+              <div className={`flex ${isMobile ? 'flex-col' : ''} items-center gap-1`}>
+                {isMobile ? 'Audio' : 'Approved Audio Covers'}
+                {approvedAudioCovers.length > 0 && (
+                  <Badge className="bg-blue-600 text-white text-xs">
+                    {approvedAudioCovers.length}
+                  </Badge>
+                )}
+              </div>
             </TabsTrigger>
-            <TabsTrigger 
-              value="approved-modeling" 
-              className="text-white data-[state=active]:bg-gray-600"
-            >
-              Approved Modeling
-              {approvedModelingPhotos.length > 0 && (
-                <Badge className="ml-2 bg-purple-600 text-white">
-                  {approvedModelingPhotos.length}
-                </Badge>
-              )}
-            </TabsTrigger>
+            {!isMobile && (
+              <TabsTrigger 
+                value="approved-modeling" 
+                className="text-white data-[state=active]:bg-gray-600"
+              >
+                Approved Modeling
+                {approvedModelingPhotos.length > 0 && (
+                  <Badge className="ml-2 bg-purple-600 text-white">
+                    {approvedModelingPhotos.length}
+                  </Badge>
+                )}
+              </TabsTrigger>
+            )}
+            {isMobile && (
+              <TabsTrigger 
+                value="more" 
+                className="text-white data-[state=active]:bg-gray-600 text-xs px-2 py-2 h-auto flex-col gap-1"
+              >
+                <div className="flex flex-col items-center gap-1">
+                  Modeling
+                  {approvedModelingPhotos.length > 0 && (
+                    <Badge className="bg-purple-600 text-white text-xs">
+                      {approvedModelingPhotos.length}
+                    </Badge>
+                  )}
+                </div>
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="my-uploads" className="mt-6">
@@ -289,62 +310,137 @@ const AdminContentGallery = () => {
             )}
           </TabsContent>
 
-          <TabsContent value="approved-modeling" className="mt-6">
-            {approvedModelingPhotos.length === 0 ? (
-              <p className="text-gray-400 text-center py-8">No approved modeling photos yet.</p>
-            ) : (
-              <Carousel
-                className="w-full"
-                opts={{
-                  align: "start",
-                  loop: true,
-                }}
-              >
-                <CarouselContent className="-ml-2 md:-ml-4">
-                  {approvedModelingPhotos.map((photo) => (
-                    <CarouselItem key={photo.id} className="pl-2 md:pl-4 basis-full sm:basis-1/2 lg:basis-1/3 xl:basis-1/4">
-                      <div className="bg-gray-700/50 rounded-lg p-4 h-full">
-                        <img 
-                          src={photo.cover_image_url} 
-                          alt={photo.audio_product_title}
-                          className="w-full h-32 object-cover rounded mb-3"
-                        />
-                        <h4 className="text-white font-medium text-sm mb-1">
-                          {photo.audio_product_title}
-                        </h4>
-                        <p className="text-gray-400 text-xs mb-2">
-                          by {photo.merchant_name}
-                        </p>
-                        <p className="text-gray-400 text-xs mb-3">
-                          Approved: {new Date(photo.approved_date).toLocaleDateString()}
-                        </p>
-                        <Button
-                          onClick={() => handleDownloadCover(photo)}
-                          disabled={downloadingIds.has(photo.id)}
-                          size="sm"
-                          className="w-full bg-purple-600 hover:bg-purple-700"
-                        >
-                          {downloadingIds.has(photo.id) ? (
-                            <>
-                              <Check className="w-4 h-4 mr-2 animate-spin" />
-                              Saving...
-                            </>
-                          ) : (
-                            <>
-                              <Download className="w-4 h-4 mr-2" />
-                              Download & Save
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                    </CarouselItem>
-                  ))}
-                </CarouselContent>
-                <CarouselPrevious className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
-                <CarouselNext className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
-              </Carousel>
-            )}
-          </TabsContent>
+          {!isMobile && (
+            <TabsContent value="approved-modeling" className="mt-6">
+              {approvedModelingPhotos.length === 0 ? (
+                <p className="text-gray-400 text-center py-8">No approved modeling photos yet.</p>
+              ) : (
+                <Carousel
+                  className="w-full"
+                  opts={{
+                    align: "start",
+                    loop: true,
+                  }}
+                >
+                  <CarouselContent className="-ml-2 md:-ml-4">
+                    {approvedModelingPhotos.map((photo) => (
+                      <CarouselItem key={photo.id} className="pl-2 md:pl-4 basis-full sm:basis-1/2 lg:basis-1/3 xl:basis-1/4">
+                        <div className="bg-gray-700/50 rounded-lg p-4 h-full">
+                          <img 
+                            src={photo.cover_image_url} 
+                            alt={photo.audio_product_title}
+                            className="w-full h-32 object-cover rounded mb-3"
+                          />
+                          <h4 className="text-white font-medium text-sm mb-1">
+                            {photo.audio_product_title}
+                          </h4>
+                          <p className="text-gray-400 text-xs mb-2">
+                            by {photo.merchant_name}
+                          </p>
+                          <p className="text-gray-400 text-xs mb-3">
+                            Approved: {new Date(photo.approved_date).toLocaleDateString()}
+                          </p>
+                          <Button
+                            onClick={() => handleDownloadCover(photo)}
+                            disabled={downloadingIds.has(photo.id)}
+                            size="sm"
+                            className="w-full bg-purple-600 hover:bg-purple-700"
+                          >
+                            {downloadingIds.has(photo.id) ? (
+                              <>
+                                <Check className="w-4 h-4 mr-2 animate-spin" />
+                                Saving...
+                              </>
+                            ) : (
+                              <>
+                                <Download className="w-4 h-4 mr-2" />
+                                Download & Save
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                  <CarouselPrevious className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
+                  <CarouselNext className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
+                </Carousel>
+              )}
+            </TabsContent>
+          )}
+
+          {isMobile && (
+            <TabsContent value="more" className="mt-6">
+              <Card className="bg-gray-700/50 border-gray-600">
+                <CardHeader>
+                  <CardTitle className="text-white text-sm flex items-center gap-2">
+                    Approved Modeling Photos
+                    {approvedModelingPhotos.length > 0 && (
+                      <Badge className="bg-purple-600 text-white text-xs">
+                        {approvedModelingPhotos.length}
+                      </Badge>
+                    )}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {approvedModelingPhotos.length === 0 ? (
+                    <p className="text-gray-400 text-center py-4">No approved modeling photos yet.</p>
+                  ) : (
+                    <Carousel
+                      className="w-full"
+                      opts={{
+                        align: "start",
+                        loop: true,
+                      }}
+                    >
+                      <CarouselContent className="-ml-2">
+                        {approvedModelingPhotos.map((photo) => (
+                          <CarouselItem key={photo.id} className="pl-2 basis-full">
+                            <div className="bg-gray-600/50 rounded-lg p-4 h-full">
+                              <img 
+                                src={photo.cover_image_url} 
+                                alt={photo.audio_product_title}
+                                className="w-full h-32 object-cover rounded mb-3"
+                              />
+                              <h4 className="text-white font-medium text-sm mb-1">
+                                {photo.audio_product_title}
+                              </h4>
+                              <p className="text-gray-400 text-xs mb-2">
+                                by {photo.merchant_name}
+                              </p>
+                              <p className="text-gray-400 text-xs mb-3">
+                                Approved: {new Date(photo.approved_date).toLocaleDateString()}
+                              </p>
+                              <Button
+                                onClick={() => handleDownloadCover(photo)}
+                                disabled={downloadingIds.has(photo.id)}
+                                size="sm"
+                                className="w-full bg-purple-600 hover:bg-purple-700 text-xs"
+                              >
+                                {downloadingIds.has(photo.id) ? (
+                                  <>
+                                    <Check className="w-3 h-3 mr-2 animate-spin" />
+                                    Saving...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Download className="w-3 h-3 mr-2" />
+                                    Download & Save
+                                  </>
+                                )}
+                              </Button>
+                            </div>
+                          </CarouselItem>
+                        ))}
+                      </CarouselContent>
+                      <CarouselPrevious className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
+                      <CarouselNext className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
+                    </Carousel>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
         </Tabs>
       </CardContent>
     </Card>
