@@ -149,16 +149,8 @@ const ProfilesDirectory = ({
       <div className="sticky top-0 z-50 bg-gray-900/95 backdrop-blur-sm border-b border-gray-700">
         <div className="container mx-auto px-4 py-4">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            {/* Main Navigation */}
+            {/* Main Navigation - excluding back button */}
             <div className={`flex gap-2 ${isMobile ? 'flex-wrap w-full' : ''}`}>
-              <Button
-                onClick={handleGoBack}
-                variant="outline"
-                className={`border-gray-600 text-white bg-transparent hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
-              >
-                <ArrowLeft className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
-                {isMobile ? 'Back' : 'Go Back'}
-              </Button>
               {(onBackToDashboard || onStoreView) && (
                 <Button
                   onClick={onBackToDashboard || (() => navigate('/'))}
@@ -216,6 +208,17 @@ const ProfilesDirectory = ({
       </div>
 
       <div className="max-w-6xl mx-auto px-6 py-8">
+        {/* Back Button within content area */}
+        <div className="mb-6">
+          <Button
+            onClick={handleGoBack}
+            variant="outline"
+            className={`border-gray-600 text-white bg-transparent hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
+          >
+            <ArrowLeft className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
+            {isMobile ? 'Back' : 'Go Back'}
+          </Button>
+        </div>
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-white mb-4 flex items-center justify-center gap-3">
