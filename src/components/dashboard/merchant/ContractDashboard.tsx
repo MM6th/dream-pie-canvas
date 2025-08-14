@@ -38,7 +38,10 @@ const ContractDashboard = () => {
   const { user } = useAuth();
   const [contracts, setContracts] = useState<ContractWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
-  const [hiddenContracts, setHiddenContracts] = useState<Set<string>>(new Set());
+  const [hiddenContracts, setHiddenContracts] = useState<Set<string>>(() => {
+    const stored = localStorage.getItem('hiddenContracts');
+    return stored ? new Set(JSON.parse(stored)) : new Set();
+  });
   const [showHidden, setShowHidden] = useState(false);
   const [selectedContract, setSelectedContract] = useState<ContractWithDetails | null>(null);
   const [showContractModal, setShowContractModal] = useState(false);
@@ -252,7 +255,11 @@ const ContractDashboard = () => {
   };
 
   const handleHideContract = (contractId: string) => {
-    setHiddenContracts(prev => new Set(prev).add(contractId));
+    setHiddenContracts(prev => {
+      const newSet = new Set(prev).add(contractId);
+      localStorage.setItem('hiddenContracts', JSON.stringify(Array.from(newSet)));
+      return newSet;
+    });
     toast({
       title: "Contract Hidden",
       description: "Contract has been hidden from your dashboard.",
@@ -263,6 +270,7 @@ const ContractDashboard = () => {
     setHiddenContracts(prev => {
       const newSet = new Set(prev);
       newSet.delete(contractId);
+      localStorage.setItem('hiddenContracts', JSON.stringify(Array.from(newSet)));
       return newSet;
     });
     toast({
