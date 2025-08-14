@@ -2,6 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { LogOut, ShoppingBag, Film, MessageSquare, User } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import FullMerchantProfileModal from "@/components/profile/FullMerchantProfileModal";
 
 interface DashboardHeaderProps {
@@ -25,35 +26,38 @@ const DashboardHeader = ({
   isApproved,
   isAdmin 
 }: DashboardHeaderProps) => {
+  const isMobile = useIsMobile();
+
   return (
-    <div className="max-w-6xl mx-auto px-6 pt-4 pb-4">
-      <div className="flex justify-between items-center">
-        <div className="flex gap-2">
+    <div className="max-w-6xl mx-auto px-4 pt-4 pb-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        {/* Main Navigation */}
+        <div className={`flex gap-2 ${isMobile ? 'flex-wrap w-full' : ''}`}>
           {(isApproved || isAdmin) && (
             <>
               <Button
                 onClick={onStoreView}
                 variant="outline"
-                className="border-gray-600 text-white bg-transparent hover:bg-gray-700"
+                className={`border-gray-600 text-white bg-transparent hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
               >
-                <ShoppingBag className="w-4 h-4 mr-2" />
-                Browse Store
+                <ShoppingBag className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
+                {isMobile ? 'Store' : 'Browse Store'}
               </Button>
               <Button
                 onClick={onFilmsView}
                 variant="outline"
-                className="border-gray-600 text-white bg-transparent hover:bg-gray-700"
+                className={`border-gray-600 text-white bg-transparent hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
               >
-                <Film className="w-4 h-4 mr-2" />
-                Browse Films
+                <Film className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
+                {isMobile ? 'Films' : 'Browse Films'}
               </Button>
               <Button
                 onClick={onBulletinView}
                 variant="outline"
-                className="border-gray-600 text-white bg-transparent hover:bg-gray-700"
+                className={`border-gray-600 text-white bg-transparent hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
               >
-                <MessageSquare className="w-4 h-4 mr-2" />
-                Browse Bulletin
+                <MessageSquare className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
+                {isMobile ? 'Bulletin' : 'Browse Bulletin'}
               </Button>
             </>
           )}
@@ -61,19 +65,21 @@ const DashboardHeader = ({
             <FullMerchantProfileModal onProfileUpdate={onProfileUpdate}>
               <Button
                 variant="outline"
-                className="border-gray-600 text-white bg-transparent hover:bg-gray-700"
+                className={`border-gray-600 text-white bg-transparent hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
               >
-                <User className="w-4 h-4 mr-2" />
-                Edit Profile
+                <User className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
+                {isMobile ? 'Profile' : 'Edit Profile'}
               </Button>
             </FullMerchantProfileModal>
           )}
         </div>
+        
+        {/* Sign Out Button */}
         <Button
           onClick={onSignOut}
-          className="bg-white text-black hover:bg-gray-100"
+          className={`bg-white text-black hover:bg-gray-100 ${isMobile ? 'text-xs px-3 py-2 h-8 w-full sm:w-auto' : ''}`}
         >
-          <LogOut className="w-4 h-4 mr-2" />
+          <LogOut className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
           Sign Out
         </Button>
       </div>

@@ -8,6 +8,7 @@ import PodcastAudioPlayer from "@/components/PodcastAudioPlayer";
 import BackgroundUpload from "@/components/BackgroundUpload";
 import ContentGallery from "@/components/ContentGallery";
 import { useAuth } from "@/hooks/useAuth";
+import { useIsMobile } from "@/hooks/use-mobile";
 import SupporterProfileModal from "@/components/profile/SupporterProfileModal";
 import PieWelcomeModal from "@/components/PieWelcomeModal";
 import { Button } from "@/components/ui/button";
@@ -40,6 +41,7 @@ interface SupporterDashboardProps {
 
 const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodcasts, purchasedVideos }: SupporterDashboardProps) => {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const [userProfile, setUserProfile] = useState<any>(null);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
 
@@ -74,12 +76,12 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
   }, [user]);
 
   return (
-    <div className="max-w-6xl mx-auto p-6 pt-20">
+    <div className={`max-w-6xl mx-auto ${isMobile ? 'p-4' : 'p-6'} pt-20`}>
       <PieWelcomeModal>
         <Button 
           onClick={() => setShowWelcomeModal(true)}
           variant="ghost" 
-          className="text-blue-400 hover:text-blue-300"
+          className={`text-blue-400 hover:text-blue-300 ${isMobile ? 'text-sm' : ''}`}
         >
           What is PIE?
         </Button>
@@ -87,32 +89,42 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
 
       <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm mb-6">
         <CardHeader>
-          <CardTitle className="text-white">Welcome to your PIE Dashboard</CardTitle>
+          <CardTitle className={`text-white ${isMobile ? 'text-lg' : ''}`}>Welcome to your PIE Dashboard</CardTitle>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="music" className="w-full">
-            <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="music" className="flex items-center gap-2">
-                <Music className="w-4 h-4" />
-                Music & Podcasts
+            <TabsList className={`grid w-full ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-5'}`}>
+              <TabsTrigger value="music" className={`flex items-center gap-2 ${isMobile ? 'text-xs px-2 py-1 h-8' : ''}`}>
+                <Music className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'}`} />
+                {isMobile ? 'Media' : 'Music & Podcasts'}
               </TabsTrigger>
-              <TabsTrigger value="videos" className="flex items-center gap-2">
-                <Video className="w-4 h-4" />
+              <TabsTrigger value="videos" className={`flex items-center gap-2 ${isMobile ? 'text-xs px-2 py-1 h-8' : ''}`}>
+                <Video className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'}`} />
                 Videos
               </TabsTrigger>
-              <TabsTrigger value="content" className="flex items-center gap-2">
-                <FolderOpen className="w-4 h-4" />
-                Content Gallery
-              </TabsTrigger>
-              <TabsTrigger value="profile" className="flex items-center gap-2">
-                <User className="w-4 h-4" />
-                Profile
-              </TabsTrigger>
-              <TabsTrigger value="background">Background</TabsTrigger>
+              {!isMobile && (
+                <>
+                  <TabsTrigger value="content" className="flex items-center gap-2">
+                    <FolderOpen className="w-4 h-4" />
+                    Content Gallery
+                  </TabsTrigger>
+                  <TabsTrigger value="profile" className="flex items-center gap-2">
+                    <User className="w-4 h-4" />
+                    Profile
+                  </TabsTrigger>
+                  <TabsTrigger value="background">Background</TabsTrigger>
+                </>
+              )}
+              {isMobile && (
+                <TabsTrigger value="more" className="flex items-center gap-2 text-xs px-2 py-1 h-8">
+                  <User className="w-3 h-3" />
+                  More
+                </TabsTrigger>
+              )}
             </TabsList>
             
             <TabsContent value="music">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-2'} gap-6`}>
                 <AudioPlayer tracks={purchasedTracks} />
                 <PodcastAudioPlayer tracks={purchasedPodcasts} />
               </div>
@@ -122,27 +134,72 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
               <VideoPlayer videos={purchasedVideos} />
             </TabsContent>
             
-            <TabsContent value="content" className="space-y-6">
-              <ContentGallery />
-            </TabsContent>
+            {!isMobile && (
+              <>
+                <TabsContent value="content" className="space-y-6">
+                  <ContentGallery />
+                </TabsContent>
+                
+                <TabsContent value="profile" className="space-y-6">
+                  <div className="flex justify-center">
+                    <SupporterProfileModal
+                      profile={userProfile}
+                      onProfileUpdate={handleProfileUpdate}
+                    >
+                      <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                        <User className="w-4 h-4 mr-2" />
+                        Edit Profile
+                      </Button>
+                    </SupporterProfileModal>
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="background" className="space-y-6">
+                  <BackgroundUpload onUploadSuccess={onBackgroundUpload} />
+                </TabsContent>
+              </>
+            )}
             
-            <TabsContent value="profile" className="space-y-6">
-              <div className="flex justify-center">
-                <SupporterProfileModal
-                  profile={userProfile}
-                  onProfileUpdate={handleProfileUpdate}
-                >
-                  <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-                    <User className="w-4 h-4 mr-2" />
-                    Edit Profile
-                  </Button>
-                </SupporterProfileModal>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="background" className="space-y-6">
-              <BackgroundUpload onUploadSuccess={onBackgroundUpload} />
-            </TabsContent>
+            {isMobile && (
+              <TabsContent value="more" className="space-y-6">
+                <div className="grid grid-cols-1 gap-4">
+                  <Card className="bg-gray-700/50 border-gray-600">
+                    <CardHeader>
+                      <CardTitle className="text-white text-sm">Content Gallery</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ContentGallery />
+                    </CardContent>
+                  </Card>
+                  
+                  <Card className="bg-gray-700/50 border-gray-600">
+                    <CardHeader>
+                      <CardTitle className="text-white text-sm">Profile Settings</CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex justify-center">
+                      <SupporterProfileModal
+                        profile={userProfile}
+                        onProfileUpdate={handleProfileUpdate}
+                      >
+                        <Button className="bg-blue-600 hover:bg-blue-700 text-white text-sm">
+                          <User className="w-3 h-3 mr-2" />
+                          Edit Profile
+                        </Button>
+                      </SupporterProfileModal>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card className="bg-gray-700/50 border-gray-600">
+                    <CardHeader>
+                      <CardTitle className="text-white text-sm">Background</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <BackgroundUpload onUploadSuccess={onBackgroundUpload} />
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+            )}
           </Tabs>
         </CardContent>
       </Card>

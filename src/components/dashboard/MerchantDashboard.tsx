@@ -4,6 +4,7 @@ import MediaPlayers from "./MediaPlayers";
 import AdminDashboard from "@/components/admin/AdminDashboard";
 import ApprovalStatusBanner from "@/components/ApprovalStatusBanner";
 import { useApprovalStatus } from "@/hooks/useApprovalStatus";
+import { useIsMobile } from "@/hooks/use-mobile";
 import AccountSetup from "./merchant/AccountSetup";
 import DashboardWidgets from "./merchant/DashboardWidgets";
 import ContentManagement from "./merchant/ContentManagement";
@@ -32,17 +33,18 @@ const MerchantDashboard = ({
   userProfile
 }: MerchantDashboardProps) => {
   const { isAdmin, isApproved, approvalStatus, loading } = useApprovalStatus();
+  const isMobile = useIsMobile();
 
   if (loading) {
     return (
-      <div className="max-w-6xl mx-auto p-6 pt-20">
+      <div className={`max-w-6xl mx-auto ${isMobile ? 'p-4' : 'p-6'} pt-20`}>
         <div className="text-white text-xl">Loading dashboard...</div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6 pt-20">
+    <div className={`max-w-6xl mx-auto ${isMobile ? 'p-4' : 'p-6'} pt-20`}>
       <ApprovalStatusBanner approvalStatus={approvalStatus} isAdmin={isAdmin} />
 
       {isAdmin && (
