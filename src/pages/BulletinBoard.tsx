@@ -97,38 +97,41 @@ const BulletinBoard = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800">
       {/* Header */}
-      <div className="relative z-10 max-w-6xl mx-auto px-6 pt-4 pb-4">
-        <div className="flex justify-between items-center">
-          <div className="flex gap-2">
+      <div className="relative z-10 max-w-6xl mx-auto px-4 pt-4 pb-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          {/* Main Navigation */}
+          <div className={`flex gap-2 ${isMobile ? 'flex-wrap w-full' : ''}`}>
             <Button
               onClick={handleBackToDashboard}
-              className="bg-black text-white border-0 hover:bg-black"
+              className={`bg-black text-white border-0 hover:bg-black ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
             >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Dashboard
+              <ArrowLeft className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
+              {isMobile ? 'Dashboard' : 'Back to Dashboard'}
             </Button>
             <Button
               onClick={handleStoreView}
               variant="outline"
-              className="border-gray-600 text-white bg-transparent hover:bg-gray-700"
+              className={`border-gray-600 text-white bg-transparent hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
             >
-              <ShoppingBag className="w-4 h-4 mr-2" />
-              Browse Store
+              <ShoppingBag className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
+              {isMobile ? 'Store' : 'Browse Store'}
             </Button>
             <Button
               onClick={handleFilmsView}
               variant="outline"
-              className="border-gray-600 text-white bg-transparent hover:bg-gray-700"
+              className={`border-gray-600 text-white bg-transparent hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
             >
-              <Film className="w-4 h-4 mr-2" />
-              Browse Films
+              <Film className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
+              {isMobile ? 'Films' : 'Browse Films'}
             </Button>
           </div>
+          
+          {/* Sign Out Button */}
           <Button
             onClick={handleSignOut}
-            className="bg-white text-black hover:bg-gray-100"
+            className={`bg-white text-black hover:bg-gray-100 ${isMobile ? 'text-xs px-3 py-2 h-8 w-full sm:w-auto' : ''}`}
           >
-            <LogOut className="w-4 h-4 mr-2" />
+            <LogOut className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
             Sign Out
           </Button>
         </div>
