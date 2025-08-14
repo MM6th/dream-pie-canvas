@@ -811,29 +811,17 @@ const StorePage = () => {
                                </Badge>
                              </div>
                             
-                            <div className="flex gap-1">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleVideoAdDownload(opportunity)}
-                                className="text-xs h-7 px-2"
-                              >
-                                <Download className="w-3 h-3 mr-1" />
-                                Add to Library
-                              </Button>
-                              {userProfile?.user_type === 'merchant' && userProfile?.approval_status === 'approved' && (
-                                <Button
-                                  size="sm"
-                                  onClick={() => {
-                                    setSelectedOpportunity(opportunity);
-                                    setSubmissionModalOpen(true);
-                                  }}
-                                  className="bg-blue-600 hover:bg-blue-700 text-xs h-7 px-2"
-                                >
-                                  Apply
-                                </Button>
-                              )}
-                            </div>
+                             <div className="flex gap-1">
+                               <Button
+                                 size="sm"
+                                 variant="outline"
+                                 onClick={() => handleVideoAdDownload(opportunity)}
+                                 className="text-xs h-7 px-2"
+                               >
+                                 <Download className="w-3 h-3 mr-1" />
+                                 Add to Library
+                               </Button>
+                             </div>
                           </div>
                         </div>
                       </CardContent>
