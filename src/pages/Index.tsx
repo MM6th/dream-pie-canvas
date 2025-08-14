@@ -245,6 +245,18 @@ const Index = () => {
     navigate('/bulletin');
   };
 
+  const handleProfilesView = () => {
+    if (!user) {
+        toast({
+            title: "Access Denied",
+            description: "You must be logged in to access this page.",
+            variant: "destructive"
+        });
+        return;
+    }
+    navigate('/profiles');
+  };
+
   const handleProfileUpdate = () => {
     fetchUserProfile();
   };
@@ -288,6 +300,7 @@ const Index = () => {
       onStoreView={() => setCurrentView("store")}
       onFilmsView={handleFilmsView}
       onBulletinView={handleBulletinView}
+      onProfilesView={handleProfilesView}
       onSignOut={handleSignOut}
       onProfileUpdate={handleProfileUpdate}
       isApproved={isApproved}

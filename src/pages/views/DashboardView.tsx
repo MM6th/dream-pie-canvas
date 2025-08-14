@@ -27,6 +27,7 @@ interface DashboardViewProps {
   onStoreView: () => void;
   onFilmsView: () => void;
   onBulletinView: () => void;
+  onProfilesView: () => void;
   onSignOut: () => void;
   onProfileUpdate: () => void;
   isApproved: boolean;
@@ -44,6 +45,7 @@ const DashboardView = ({
   onStoreView,
   onFilmsView,
   onBulletinView,
+  onProfilesView,
   onSignOut,
   onProfileUpdate,
   isApproved,
@@ -70,6 +72,7 @@ const DashboardView = ({
         onStoreView={onStoreView} 
         onFilmsView={onFilmsView}
         onBulletinView={onBulletinView}
+        onProfilesView={onProfilesView}
         onSignOut={onSignOut}
         userType={userProfile?.user_type}
         onProfileUpdate={onProfileUpdate}
