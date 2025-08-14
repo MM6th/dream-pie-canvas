@@ -380,23 +380,36 @@ const ContractDashboard = () => {
               Contract Opportunities
             </CardTitle>
             {contracts.length > 0 && (
-              <div className="flex gap-2">
-                <Button
-                  onClick={scrollLeft}
-                  variant="outline"
-                  size="sm"
-                  className="border-gray-600 text-gray-300 hover:bg-gray-700"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </Button>
-                <Button
-                  onClick={scrollRight}
-                  variant="outline"
-                  size="sm"
-                  className="border-gray-600 text-gray-300 hover:bg-gray-700"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </Button>
+              <div className="flex items-center gap-2">
+                {hiddenContracts.size > 0 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowHidden(!showHidden)}
+                    className="bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600"
+                  >
+                    {showHidden ? <EyeOff className="w-4 h-4 mr-1" /> : <Eye className="w-4 h-4 mr-1" />}
+                    {showHidden ? 'Hide' : 'Show'} Hidden ({hiddenContracts.size})
+                  </Button>
+                )}
+                <div className="flex gap-2">
+                  <Button
+                    onClick={scrollLeft}
+                    variant="outline"
+                    size="sm"
+                    className="border-gray-600 text-gray-300 hover:bg-gray-700"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    onClick={scrollRight}
+                    variant="outline"
+                    size="sm"
+                    className="border-gray-600 text-gray-300 hover:bg-gray-700"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
             )}
           </div>
