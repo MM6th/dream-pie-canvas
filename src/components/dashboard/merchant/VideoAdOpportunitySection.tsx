@@ -271,13 +271,15 @@ const VideoAdOpportunitySection = () => {
                 <div>
                   <h3 className="text-lg font-semibold text-white mb-4">Available Opportunities</h3>
                   <div className="grid gap-4">
-                     {downloads.map((download) => {
-                       const hasSubmission = submissions.some(s => s.video_ad_opportunity.id === download.video_ad_opportunity.id);
-                       const hasDownloadedAudio = downloadedOpportunityAudios.has(download.video_ad_opportunity.audio_file_url);
-                       
-                       console.log('Checking opportunity:', download.video_ad_opportunity.title, 'Audio URL:', download.video_ad_opportunity.audio_file_url, 'Has downloaded:', hasDownloadedAudio);
-                       
-                       return (
+                     {downloads.filter((download) => {
+                        // Filter out opportunities that already have submissions
+                        return !submissions.some(s => s.video_ad_opportunity.id === download.video_ad_opportunity.id);
+                      }).map((download) => {
+                        const hasDownloadedAudio = downloadedOpportunityAudios.has(download.video_ad_opportunity.audio_file_url);
+                        
+                        console.log('Checking opportunity:', download.video_ad_opportunity.title, 'Audio URL:', download.video_ad_opportunity.audio_file_url, 'Has downloaded:', hasDownloadedAudio);
+                        
+                        return (
                         <div key={download.id} className="p-4 bg-gray-700/50 rounded-lg border border-gray-600">
                           <div className="flex items-center justify-between mb-3">
                             <h4 className="text-white font-medium">{download.video_ad_opportunity.title}</h4>
@@ -298,19 +300,17 @@ const VideoAdOpportunitySection = () => {
                               <Download className="w-4 h-4 mr-2" />
                               {isDownloading ? "Downloading..." : "Download Audio"}
                             </Button>
-                            {!hasSubmission && (
-                               <Button
-                                 size="sm"
-                                 onClick={() => handleSubmission(download.video_ad_opportunity)}
-                                 className={hasDownloadedAudio 
-                                   ? "bg-blue-600 hover:bg-blue-700" 
-                                   : "bg-gray-600 text-gray-300 opacity-60 cursor-not-allowed hover:bg-gray-600"
-                                 }
-                                 title={!hasDownloadedAudio ? "Download the audio first to enable submission" : "Create your video ad for this opportunity"}
-                               >
-                                 Create Video Ad
-                               </Button>
-                            )}
+                            <Button
+                              size="sm"
+                              onClick={() => handleSubmission(download.video_ad_opportunity)}
+                              className={hasDownloadedAudio 
+                                ? "bg-blue-600 hover:bg-blue-700" 
+                                : "bg-gray-600 text-gray-300 opacity-60 cursor-not-allowed hover:bg-gray-600"
+                              }
+                              title={!hasDownloadedAudio ? "Download the audio first to enable submission" : "Create your video ad for this opportunity"}
+                            >
+                              Create Video Ad
+                            </Button>
                           </div>
                         </div>
                       );
