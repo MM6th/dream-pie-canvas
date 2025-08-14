@@ -417,138 +417,138 @@ const ContractDashboard = () => {
                 className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide"
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
               >
-{(showHidden ? contracts : contracts.filter(contract => !hiddenContracts.has(contract.id))).map((contract) => {
-  const isHidden = hiddenContracts.has(contract.id);
-  return (
-    <div key={contract.id} className={`bg-gray-700/50 p-4 rounded-lg min-w-[320px] max-w-[320px] min-h-[240px] flex-shrink-0 ${isHidden ? 'opacity-60 border border-gray-600' : ''}`}>
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex-1">
-          <div className="flex items-center flex-wrap gap-2 mb-2">
-            <h4 className={`font-medium whitespace-normal break-words ${isHidden ? 'text-gray-400' : 'text-white'}`}>
-              {contract.submission_title}
-              {isHidden && <span className="text-orange-400 ml-2">(Hidden)</span>}
-            </h4>
-            <Badge className={`${getStatusColor(contract.status)} text-white shrink-0`}>
-              <span className="flex items-center gap-1">
-                {getStatusIcon(contract.status)}
-                {contract.status}
-              </span>
-            </Badge>
-          </div>
-          <p className={`text-sm mb-2 whitespace-normal break-words ${isHidden ? 'text-gray-500' : 'text-gray-400'}`}>
-            {getStatusDescription(contract)}
-          </p>
-          <div className="flex items-center gap-4 text-xs text-gray-400">
-            <span className="flex items-center gap-1">
-              <Calendar className="w-3 h-3" />
-              Created: {new Date(contract.created_at).toLocaleDateString()}
-            </span>
-            {contract.signed_at && (
-              <span className="flex items-center gap-1">
-                <CheckCircle className="w-3 h-3" />
-                Signed: {new Date(contract.signed_at).toLocaleDateString()}
-              </span>
-            )}
-          </div>
-        </div>
-        {isHidden ? (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => handleRestoreContract(contract.id)}
-            className="text-green-400 hover:text-green-300 hover:bg-green-900/20 ml-2"
-          >
-            <RotateCcw className="w-4 h-4" />
-          </Button>
-        ) : (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => handleHideContract(contract.id)}
-            className="text-gray-400 hover:text-gray-300 hover:bg-gray-700/50 ml-2"
-          >
-            <EyeOff className="w-4 h-4" />
-          </Button>
-        )}
-      </div>
-                    
-      <div className="flex flex-wrap gap-2">
-        {contract.status === 'available' && (
-          <>
-            <Button
-              onClick={() => handleViewContract(contract)}
-              size="sm"
-              variant="outline"
-              className="border-gray-600 text-gray-300 hover:bg-gray-700"
-            >
-              <Eye className="w-4 h-4 mr-1" />
-              View
-            </Button>
-            {contract.contract_type === 'video_ad_download' && contract.video_ad_opportunity_id && (
-              <Button
-                onClick={() => handleCreateVideoAd(contract)}
-                className="bg-blue-600 hover:bg-blue-700"
-                size="sm"
-              >
-                <Video className="w-4 h-4 mr-1" />
-                Create Video Ad
-              </Button>
-            )}
-            {contract.contract_type !== 'video_ad_download' && (
-              <Button
-                onClick={() => handleSignContract(contract)}
-                className="bg-blue-600 hover:bg-blue-700"
-                size="sm"
-              >
-                Sign Contract
-              </Button>
-            )}
-          </>
-        )}
+                {(showHidden ? contracts : contracts.filter(contract => !hiddenContracts.has(contract.id))).map((contract) => {
+                  const isHidden = hiddenContracts.has(contract.id);
+                  return (
+                    <div key={contract.id} className={`bg-gray-700/50 p-4 rounded-lg min-w-[320px] max-w-[320px] min-h-[240px] flex-shrink-0 ${isHidden ? 'opacity-60 border border-gray-600' : ''}`}>
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1">
+                          <div className="flex items-center flex-wrap gap-2 mb-2">
+                            <h4 className={`font-medium whitespace-normal break-words ${isHidden ? 'text-gray-400' : 'text-white'}`}>
+                              {contract.submission_title}
+                              {isHidden && <span className="text-orange-400 ml-2">(Hidden)</span>}
+                            </h4>
+                            <Badge className={`${getStatusColor(contract.status)} text-white shrink-0`}>
+                              <span className="flex items-center gap-1">
+                                {getStatusIcon(contract.status)}
+                                {contract.status}
+                              </span>
+                            </Badge>
+                          </div>
+                          <p className={`text-sm mb-2 whitespace-normal break-words ${isHidden ? 'text-gray-500' : 'text-gray-400'}`}>
+                            {getStatusDescription(contract)}
+                          </p>
+                          <div className="flex items-center gap-4 text-xs text-gray-400">
+                            <span className="flex items-center gap-1">
+                              <Calendar className="w-3 h-3" />
+                              Created: {new Date(contract.created_at).toLocaleDateString()}
+                            </span>
+                            {contract.signed_at && (
+                              <span className="flex items-center gap-1">
+                                <CheckCircle className="w-3 h-3" />
+                                Signed: {new Date(contract.signed_at).toLocaleDateString()}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        {isHidden ? (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleRestoreContract(contract.id)}
+                            className="text-green-400 hover:text-green-300 hover:bg-green-900/20 ml-2"
+                          >
+                            <RotateCcw className="w-4 h-4" />
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleHideContract(contract.id)}
+                            className="text-gray-400 hover:text-gray-300 hover:bg-gray-700/50 ml-2"
+                          >
+                            <EyeOff className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
+                                      
+                      <div className="flex flex-wrap gap-2">
+                        {contract.status === 'available' && (
+                          <>
+                            <Button
+                              onClick={() => handleViewContract(contract)}
+                              size="sm"
+                              variant="outline"
+                              className="border-gray-600 text-gray-300 hover:bg-gray-700"
+                            >
+                              <Eye className="w-4 h-4 mr-1" />
+                              View
+                            </Button>
+                            {contract.contract_type === 'video_ad_download' && contract.video_ad_opportunity_id && (
+                              <Button
+                                onClick={() => handleCreateVideoAd(contract)}
+                                className="bg-blue-600 hover:bg-blue-700"
+                                size="sm"
+                              >
+                                <Video className="w-4 h-4 mr-1" />
+                                Create Video Ad
+                              </Button>
+                            )}
+                            {contract.contract_type !== 'video_ad_download' && (
+                              <Button
+                                onClick={() => handleSignContract(contract)}
+                                className="bg-blue-600 hover:bg-blue-700"
+                                size="sm"
+                              >
+                                Sign Contract
+                              </Button>
+                            )}
+                          </>
+                        )}
 
-        {(contract.status === 'pending' || contract.status === 'submission_pending') && contract.contract_type !== 'video_ad_download' && (
-          <Button
-            onClick={() => handleSignContract(contract)}
-            className="bg-blue-600 hover:bg-blue-700"
-            size="sm"
-          >
-            Sign Contract
-          </Button>
-        )}
+                        {(contract.status === 'pending' || contract.status === 'submission_pending') && contract.contract_type !== 'video_ad_download' && (
+                          <Button
+                            onClick={() => handleSignContract(contract)}
+                            className="bg-blue-600 hover:bg-blue-700"
+                            size="sm"
+                          >
+                            Sign Contract
+                          </Button>
+                        )}
 
-        {(contract.status === 'signed' || contract.status === 'approved') && contract.signed_at && (
-          <>
-            <Button
-              onClick={() => handleViewContract(contract)}
-              size="sm"
-              variant="outline"
-              className="border-gray-600 text-gray-300 hover:bg-gray-700"
-            >
-              <Eye className="w-4 h-4 mr-1" />
-              View
-            </Button>
-            {contract.status === 'approved' && (
-              <Button
-                onClick={() => {
-                  const doc = new jsPDF();
-                  doc.text(`Contract: ${contract.submission_title}`, 20, 20);
-                  doc.text(`Status: ${contract.status}`, 20, 40);
-                  doc.text(contract.contract_terms, 20, 60);
-                  doc.save(`Contract_${contract.id}.pdf`);
-                }}
-                size="sm"
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                <Download className="w-4 h-4 mr-1" />
-                Download
-              </Button>
-            )}
-          </>
-        )}
-      </div>
-    </div>
-  );
-})}
+                        {(contract.status === 'signed' || contract.status === 'approved') && contract.signed_at && (
+                          <>
+                            <Button
+                              onClick={() => handleViewContract(contract)}
+                              size="sm"
+                              variant="outline"
+                              className="border-gray-600 text-gray-300 hover:bg-gray-700"
+                            >
+                              <Eye className="w-4 h-4 mr-1" />
+                              View
+                            </Button>
+                            {contract.status === 'approved' && (
+                              <Button
+                                onClick={() => {
+                                  const doc = new jsPDF();
+                                  doc.text(`Contract: ${contract.submission_title}`, 20, 20);
+                                  doc.text(`Status: ${contract.status}`, 20, 40);
+                                  doc.text(contract.contract_terms, 20, 60);
+                                  doc.save(`Contract_${contract.id}.pdf`);
+                                }}
+                                size="sm"
+                                className="bg-blue-600 hover:bg-blue-700"
+                              >
+                                <Download className="w-4 h-4 mr-1" />
+                                Download
+                              </Button>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
