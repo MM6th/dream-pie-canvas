@@ -119,6 +119,10 @@ const ProfilesDirectory = ({
     navigate(`/profile/${profileId}`);
   };
 
+  const handleGoBack = () => {
+    navigate(-1);
+  };
+
   const handleNavigation = (action: () => void) => {
     if (!user) {
       toast({
@@ -148,7 +152,7 @@ const ProfilesDirectory = ({
             {/* Main Navigation */}
             <div className={`flex gap-2 ${isMobile ? 'flex-wrap w-full' : ''}`}>
               <Button
-                onClick={() => navigate(-1)}
+                onClick={handleGoBack}
                 variant="outline"
                 className={`border-gray-600 text-white bg-transparent hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
               >
@@ -211,7 +215,7 @@ const ProfilesDirectory = ({
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="max-w-6xl mx-auto px-6 py-8">
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-white mb-4 flex items-center justify-center gap-3">
