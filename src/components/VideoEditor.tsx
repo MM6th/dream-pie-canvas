@@ -227,7 +227,7 @@ export const VideoEditor: React.FC<VideoEditorProps> = ({
                 className="w-16 h-16 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground"
                 disabled={!mediaReady || !!playbackError}
               >
-                {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
+                {isPlaying ? <Pause className="h-6 w-6 text-black" /> : <Play className="h-6 w-6 text-black" />}
               </Button>
             </div>
 
