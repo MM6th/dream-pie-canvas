@@ -10,17 +10,6 @@ import TuneCoreContractModal from "@/components/TuneCoreContractModal";
 import ContractPreviewModal from "@/components/ContractPreviewModal";
 import { EnhancedVideoAdSubmissionModal } from "@/components/EnhancedVideoAdSubmissionModal";
 import jsPDF from 'jspdf';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 
 interface ContractWithDetails {
   id: string;
