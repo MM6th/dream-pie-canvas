@@ -4,10 +4,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft, LogOut, Youtube } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const AboutAuthor = () => {
   const navigate = useNavigate();
   const { signOut } = useAuth();
+  const isMobile = useIsMobile();
 
   const handleBackToDashboard = () => {
     navigate('/');
@@ -30,21 +32,23 @@ const AboutAuthor = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black">
       {/* Navigation Header */}
-      <div className="absolute top-4 left-4 right-4 z-20 flex justify-between">
-        <Button
-          onClick={handleBackToDashboard}
-          className="bg-black text-white border-0"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Dashboard
-        </Button>
-        <Button
-          onClick={handleSignOut}
-          className="bg-white text-black hover:bg-gray-100 hover:text-black"
-        >
-          <LogOut className="w-4 h-4 mr-2" />
-          Sign Out
-        </Button>
+      <div className="absolute top-4 left-4 right-4 z-20">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <Button
+            onClick={handleBackToDashboard}
+            className={`bg-black text-white border-0 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
+          >
+            <ArrowLeft className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
+            {isMobile ? 'Dashboard' : 'Back to Dashboard'}
+          </Button>
+          <Button
+            onClick={handleSignOut}
+            className={`bg-white text-black hover:bg-gray-100 hover:text-black ${isMobile ? 'text-xs px-3 py-2 h-8 w-full sm:w-auto' : ''}`}
+          >
+            <LogOut className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
+            Sign Out
+          </Button>
+        </div>
       </div>
 
       <div className="pt-20 max-w-4xl mx-auto p-6">
