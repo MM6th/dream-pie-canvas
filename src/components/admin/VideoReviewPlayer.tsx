@@ -199,13 +199,12 @@ export const VideoReviewPlayer: React.FC<VideoReviewPlayerProps> = ({
             <Button 
               onClick={togglePlayback} 
               size="lg" 
-              className="w-12 h-12 rounded-full bg-primary hover:bg-primary/90"
+              className="w-12 h-12 rounded-full bg-primary hover:bg-primary/90 text-white"
               disabled={!mediaReady || !!playbackError}
             >
-              {isPlaying ? 
-                <Pause className="w-5 h-5" style={{color: 'white', fill: 'white'}} /> : 
-                <Play className="w-5 h-5" style={{color: 'white', fill: 'white'}} />
-              }
+              <span style={{fontSize: '16px', color: 'white'}}>
+                {isPlaying ? '⏸️' : '▶️'}
+              </span>
             </Button>
           </div>
 
