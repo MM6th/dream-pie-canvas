@@ -39,8 +39,12 @@ const ContractDashboard = () => {
   const [contracts, setContracts] = useState<ContractWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const [hiddenContracts, setHiddenContracts] = useState<Set<string>>(() => {
-    const stored = localStorage.getItem('hiddenContracts');
-    return stored ? new Set(JSON.parse(stored)) : new Set();
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('hiddenContracts');
+      console.log('Loading hidden contracts from localStorage:', stored);
+      return stored ? new Set(JSON.parse(stored)) : new Set();
+    }
+    return new Set();
   });
   const [showHidden, setShowHidden] = useState(false);
   const [selectedContract, setSelectedContract] = useState<ContractWithDetails | null>(null);
@@ -255,9 +259,12 @@ const ContractDashboard = () => {
   };
 
   const handleHideContract = (contractId: string) => {
+    console.log('Hiding contract:', contractId);
     setHiddenContracts(prev => {
       const newSet = new Set(prev).add(contractId);
-      localStorage.setItem('hiddenContracts', JSON.stringify(Array.from(newSet)));
+      const hiddenArray = Array.from(newSet);
+      localStorage.setItem('hiddenContracts', JSON.stringify(hiddenArray));
+      console.log('Updated hidden contracts in localStorage:', hiddenArray);
       return newSet;
     });
     toast({
@@ -267,10 +274,13 @@ const ContractDashboard = () => {
   };
 
   const handleRestoreContract = (contractId: string) => {
+    console.log('Restoring contract:', contractId);
     setHiddenContracts(prev => {
       const newSet = new Set(prev);
       newSet.delete(contractId);
-      localStorage.setItem('hiddenContracts', JSON.stringify(Array.from(newSet)));
+      const hiddenArray = Array.from(newSet);
+      localStorage.setItem('hiddenContracts', JSON.stringify(hiddenArray));
+      console.log('Updated hidden contracts in localStorage:', hiddenArray);
       return newSet;
     });
     toast({
