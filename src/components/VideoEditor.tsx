@@ -29,6 +29,8 @@ export const VideoEditor: React.FC<VideoEditorProps> = ({
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [videoUrl, setVideoUrl] = useState<string>('');
+  const [mediaReady, setMediaReady] = useState(false);
+  const [playbackError, setPlaybackError] = useState<string | null>(null);
 
   useEffect(() => {
     // Create object URL for video file
@@ -49,6 +51,22 @@ export const VideoEditor: React.FC<VideoEditorProps> = ({
     });
   }, [backgroundAudioVolume, videoAudioVolume, audioSyncOffset, onMixingChange]);
 
+  // Apply volumes immediately when they change
+  useEffect(() => {
+    const video = videoRef.current;
+    if (video) {
+      video.volume = videoAudioVolume;
+    }
+  }, [videoAudioVolume]);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (audio) {
+      audio.volume = backgroundAudioVolume;
+    }
+  }, [backgroundAudioVolume]);
+
+  // Media event handlers
   useEffect(() => {
     const video = videoRef.current;
     const audio = audioRef.current;
@@ -56,26 +74,65 @@ export const VideoEditor: React.FC<VideoEditorProps> = ({
     if (video && audio) {
       const handleTimeUpdate = () => {
         setCurrentTime(video.currentTime);
-        // Sync background audio with video
+        // Improved audio sync with less jitter
         const targetAudioTime = video.currentTime + audioSyncOffset / 1000;
-        if (Math.abs(audio.currentTime - targetAudioTime) > 0.1) {
-          audio.currentTime = Math.max(0, targetAudioTime);
+        const timeDiff = Math.abs(audio.currentTime - targetAudioTime);
+        
+        // Only sync if difference is significant to avoid stuttering
+        if (timeDiff > 0.2) {
+          audio.currentTime = Math.max(0, Math.min(targetAudioTime, audio.duration || 0));
         }
       };
 
-      const handleLoadedMetadata = () => {
+      const handleVideoLoadedMetadata = () => {
         setDuration(video.duration);
+        video.volume = videoAudioVolume;
+        checkMediaReady();
+      };
+
+      const handleAudioLoadedMetadata = () => {
+        audio.volume = backgroundAudioVolume;
+        checkMediaReady();
+      };
+
+      const handleVideoError = () => {
+        setPlaybackError('Failed to load video');
+        setMediaReady(false);
+      };
+
+      const handleAudioError = () => {
+        setPlaybackError('Failed to load background audio');
+        setMediaReady(false);
+      };
+
+      const checkMediaReady = () => {
+        if (video.readyState >= 3 && audio.readyState >= 3) {
+          setMediaReady(true);
+          setPlaybackError(null);
+        }
       };
 
       video.addEventListener('timeupdate', handleTimeUpdate);
-      video.addEventListener('loadedmetadata', handleLoadedMetadata);
+      video.addEventListener('loadedmetadata', handleVideoLoadedMetadata);
+      video.addEventListener('canplaythrough', checkMediaReady);
+      video.addEventListener('error', handleVideoError);
+      
+      audio.addEventListener('loadedmetadata', handleAudioLoadedMetadata);
+      audio.addEventListener('canplaythrough', checkMediaReady);
+      audio.addEventListener('error', handleAudioError);
 
       return () => {
         video.removeEventListener('timeupdate', handleTimeUpdate);
-        video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+        video.removeEventListener('loadedmetadata', handleVideoLoadedMetadata);
+        video.removeEventListener('canplaythrough', checkMediaReady);
+        video.removeEventListener('error', handleVideoError);
+        
+        audio.removeEventListener('loadedmetadata', handleAudioLoadedMetadata);
+        audio.removeEventListener('canplaythrough', checkMediaReady);
+        audio.removeEventListener('error', handleAudioError);
       };
     }
-  }, [audioSyncOffset]);
+  }, [audioSyncOffset, videoAudioVolume, backgroundAudioVolume]);
 
   const togglePlayback = async () => {
     const video = videoRef.current;
@@ -149,9 +206,27 @@ export const VideoEditor: React.FC<VideoEditorProps> = ({
 
           {/* Controls */}
           <div className="mt-4 space-y-4">
+            {/* Status and Error Display */}
+            {playbackError && (
+              <div className="text-center text-destructive text-sm">
+                {playbackError}
+              </div>
+            )}
+            
+            {!mediaReady && !playbackError && (
+              <div className="text-center text-muted-foreground text-sm">
+                Loading media...
+              </div>
+            )}
+
             {/* Play/Pause Button */}
             <div className="flex items-center justify-center">
-              <Button onClick={togglePlayback} size="lg" className="w-16 h-16 rounded-full">
+              <Button 
+                onClick={togglePlayback} 
+                size="lg" 
+                className="w-16 h-16 rounded-full"
+                disabled={!mediaReady || !!playbackError}
+              >
                 {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
               </Button>
             </div>
