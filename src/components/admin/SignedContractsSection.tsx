@@ -350,14 +350,20 @@ const SignedContractsSection = () => {
           .single();
 
         if (submission?.cover_image_url) {
-          // Create download link for cover image
+          // Fetch the image as blob and download
+          const response = await fetch(submission.cover_image_url);
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          
           const link = document.createElement('a');
-          link.href = submission.cover_image_url;
+          link.href = url;
           link.download = `cover_submission_${contract.cover_submission_id}_image.jpg`;
-          link.target = '_blank';
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);
+          
+          // Clean up the object URL
+          window.URL.revokeObjectURL(url);
 
           toast({
             title: "Download Started",
@@ -373,14 +379,20 @@ const SignedContractsSection = () => {
           .single();
 
         if (submission?.video_file_url) {
-          // Create download link for video file
+          // Fetch the video as blob and download
+          const response = await fetch(submission.video_file_url);
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          
           const link = document.createElement('a');
-          link.href = submission.video_file_url;
+          link.href = url;
           link.download = `video_submission_${contract.video_ad_submission_id}.mp4`;
-          link.target = '_blank';
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);
+          
+          // Clean up the object URL
+          window.URL.revokeObjectURL(url);
 
           toast({
             title: "Download Started",
