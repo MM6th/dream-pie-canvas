@@ -167,12 +167,15 @@ const ContractDashboard = () => {
 
             if (submissionData) {
               submissionStatus = submissionData.status;
-              if (submissionData.status === 'pending') {
-                actualStatus = 'submission_pending';
-              } else if (submissionData.status === 'approved') {
-                actualStatus = 'pending'; // Contract now available for signing
-              } else if (submissionData.status === 'rejected') {
-                actualStatus = 'submission_rejected';
+              // Only override status if the contract is NOT already signed
+              if (contract.status !== 'signed' && contract.signed_at === null) {
+                if (submissionData.status === 'pending') {
+                  actualStatus = 'submission_pending';
+                } else if (submissionData.status === 'approved') {
+                  actualStatus = 'pending'; // Contract now available for signing
+                } else if (submissionData.status === 'rejected') {
+                  actualStatus = 'submission_rejected';
+                }
               }
             }
           }
@@ -595,7 +598,72 @@ const ContractDashboard = () => {
                       </div>
                                       
                       <div className="flex flex-wrap gap-2">
-                        {/* Only show action buttons for contracts with valid submissions */}
+                        {/* Show message for unknown submissions */}
+                        {!contract.hasValidSubmission && (
+                          <div className="text-xs text-red-400 bg-red-900/20 px-2 py-1 rounded">
+                            Invalid contract - no associated submission found
+                          </div>
+                        )}
+
+                        {/* Prioritize signed status - show View and Download buttons */}
+                        {contract.hasValidSubmission && contract.status === 'signed' && contract.signed_at && (
+                          <>
+                            <Button
+                              onClick={() => handleViewContract(contract)}
+                              size="sm"
+                              variant="outline"
+                              className="border-blue-600 text-blue-400 hover:bg-blue-600 hover:text-white"
+                            >
+                              <Eye className="w-4 h-4 mr-1" />
+                              View
+                            </Button>
+                            <Button
+                              onClick={() => handleDownloadSignedContract(contract)}
+                              size="sm"
+                              className="bg-blue-600 hover:bg-blue-700"
+                            >
+                              <Download className="w-4 h-4 mr-1" />
+                              Download PDF
+                            </Button>
+                          </>
+                        )}
+
+                        {/* Approved contracts - show View and Download buttons */}
+                        {contract.hasValidSubmission && contract.status === 'approved' && contract.signed_at && (
+                          <>
+                            <Button
+                              onClick={() => handleViewContract(contract)}
+                              size="sm"
+                              variant="outline"
+                              className="border-green-600 text-green-400 hover:bg-green-600 hover:text-white"
+                            >
+                              <Eye className="w-4 h-4 mr-1" />
+                              View
+                            </Button>
+                            <Button
+                              onClick={() => handleDownloadSignedContract(contract)}
+                              size="sm"
+                              className="bg-green-600 hover:bg-green-700"
+                            >
+                              <Download className="w-4 h-4 mr-1" />
+                              Download PDF
+                            </Button>
+                          </>
+                        )}
+
+                        {/* Pending contracts - show Sign Contract button */}
+                        {contract.hasValidSubmission && contract.status === 'pending' && !contract.signed_at && (
+                          <Button
+                            onClick={() => handleSignContract(contract)}
+                            size="sm"
+                            className="bg-green-600 hover:bg-green-700"
+                          >
+                            <FileText className="w-4 h-4 mr-1" />
+                            Sign Contract
+                          </Button>
+                        )}
+
+                        {/* Available contracts for download and submission */}
                         {contract.hasValidSubmission && contract.status === 'available' && (
                           <>
                             <Button
@@ -617,68 +685,20 @@ const ContractDashboard = () => {
                                 Create Video Ad
                               </Button>
                             )}
-                            {contract.contract_type !== 'video_ad_download' && (
-                              <Button
-                                onClick={() => handleSignContract(contract)}
-                                className="bg-blue-600 hover:bg-blue-700"
-                                size="sm"
-                              >
-                                Sign Contract
-                              </Button>
-                            )}
                           </>
                         )}
 
-                        {/* Video ad download contracts with approved submissions should allow signing */}
-                        {contract.hasValidSubmission && contract.status === 'pending' && contract.contract_type === 'video_ad_download' && (
-                          <Button
-                            onClick={() => handleSignContract(contract)}
-                            className="bg-blue-600 hover:bg-blue-700"
-                            size="sm"
-                          >
-                            Sign Contract
-                          </Button>
-                        )}
-
-                        {/* Other contract types with pending status */}
-                        {contract.hasValidSubmission && (contract.status === 'pending' || contract.status === 'submission_pending') && contract.contract_type !== 'video_ad_download' && (
-                          <Button
-                            onClick={() => handleSignContract(contract)}
-                            className="bg-blue-600 hover:bg-blue-700"
-                            size="sm"
-                          >
-                            Sign Contract
-                          </Button>
-                        )}
-                        
-                        {/* Show message for unknown submissions */}
-                        {!contract.hasValidSubmission && (
-                          <div className="text-xs text-red-400 bg-red-900/20 px-2 py-1 rounded">
-                            Invalid contract - no associated submission found
+                        {/* Other contract statuses */}
+                        {contract.hasValidSubmission && contract.status === 'submission_pending' && (
+                          <div className="text-sm text-orange-400">
+                            Video submission under review
                           </div>
                         )}
 
-                        {/* Signed contracts get view and download buttons */}
-                        {(contract.status === 'signed' || contract.status === 'approved') && contract.signed_at && (
-                          <>
-                            <Button
-                              onClick={() => handleViewContract(contract)}
-                              size="sm"
-                              variant="outline"
-                              className="border-gray-600 text-gray-300 hover:bg-gray-700"
-                            >
-                              <Eye className="w-4 h-4 mr-1" />
-                              View
-                            </Button>
-                            <Button
-                              onClick={() => handleDownloadSignedContract(contract)}
-                              size="sm"
-                              className="bg-blue-600 hover:bg-blue-700"
-                            >
-                              <Download className="w-4 h-4 mr-1" />
-                              Download
-                            </Button>
-                          </>
+                        {contract.hasValidSubmission && contract.status === 'submission_rejected' && (
+                          <div className="text-sm text-red-400">
+                            Submission rejected - resubmit required
+                          </div>
                         )}
                       </div>
                     </div>
