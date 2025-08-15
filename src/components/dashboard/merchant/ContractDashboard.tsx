@@ -275,6 +275,49 @@ const ContractDashboard = () => {
     }
   };
 
+  const handleDownloadSignedContract = (contract: ContractWithDetails) => {
+    const doc = new jsPDF();
+    
+    // Add title
+    doc.setFontSize(16);
+    doc.text(`Signed Contract`, 20, 20);
+    
+    // Add contract details
+    doc.setFontSize(12);
+    doc.text(`Contract ID: ${contract.id}`, 20, 40);
+    doc.text(`Title: ${contract.submission_title}`, 20, 50);
+    doc.text(`Status: ${contract.status}`, 20, 60);
+    doc.text(`Created: ${new Date(contract.created_at).toLocaleDateString()}`, 20, 70);
+    doc.text(`Signed: ${contract.signed_at ? new Date(contract.signed_at).toLocaleDateString() : 'N/A'}`, 20, 80);
+    
+    // Add contract terms (with line wrapping)
+    doc.setFontSize(10);
+    const splitText = doc.splitTextToSize(contract.contract_terms, 170);
+    doc.text(splitText, 20, 100);
+    
+    // Add signatures if available
+    if (contract.merchant_signature || contract.admin_signature) {
+      const yPosition = 100 + (splitText.length * 5) + 20;
+      doc.setFontSize(12);
+      doc.text('Signatures:', 20, yPosition);
+      
+      if (contract.merchant_signature) {
+        doc.text(`Merchant: ${contract.merchant_signature}`, 20, yPosition + 10);
+      }
+      if (contract.admin_signature) {
+        doc.text(`Admin: ${contract.admin_signature}`, 20, yPosition + 20);
+      }
+    }
+    
+    // Download the PDF
+    doc.save(`Signed_Contract_${contract.id}.pdf`);
+    
+    toast({
+      title: "Download Started",
+      description: "Your signed contract has been downloaded successfully."
+    });
+  };
+
   const handleHideContract = (contractId: string) => {
     console.log('Hiding contract:', contractId);
     setHiddenContracts(prev => {
@@ -615,6 +658,7 @@ const ContractDashboard = () => {
                           </div>
                         )}
 
+                        {/* Signed contracts get view and download buttons */}
                         {(contract.status === 'signed' || contract.status === 'approved') && contract.signed_at && (
                           <>
                             <Button
@@ -626,22 +670,14 @@ const ContractDashboard = () => {
                               <Eye className="w-4 h-4 mr-1" />
                               View
                             </Button>
-                            {contract.status === 'approved' && (
-                              <Button
-                                onClick={() => {
-                                  const doc = new jsPDF();
-                                  doc.text(`Contract: ${contract.submission_title}`, 20, 20);
-                                  doc.text(`Status: ${contract.status}`, 20, 40);
-                                  doc.text(contract.contract_terms, 20, 60);
-                                  doc.save(`Contract_${contract.id}.pdf`);
-                                }}
-                                size="sm"
-                                className="bg-blue-600 hover:bg-blue-700"
-                              >
-                                <Download className="w-4 h-4 mr-1" />
-                                Download
-                              </Button>
-                            )}
+                            <Button
+                              onClick={() => handleDownloadSignedContract(contract)}
+                              size="sm"
+                              className="bg-blue-600 hover:bg-blue-700"
+                            >
+                              <Download className="w-4 h-4 mr-1" />
+                              Download
+                            </Button>
                           </>
                         )}
                       </div>
