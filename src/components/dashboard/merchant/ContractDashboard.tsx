@@ -167,13 +167,17 @@ const ContractDashboard = () => {
 
             if (submissionData) {
               submissionStatus = submissionData.status;
-              if (submissionData.status === 'pending') {
-                actualStatus = 'submission_pending';
-              } else if (submissionData.status === 'approved') {
-                actualStatus = 'pending'; // Contract now available for signing
-              } else if (submissionData.status === 'rejected') {
-                actualStatus = 'submission_rejected';
+              // Only override status if contract is not already signed
+              if (!contract.signed_at) {
+                if (submissionData.status === 'pending') {
+                  actualStatus = 'submission_pending';
+                } else if (submissionData.status === 'approved') {
+                  actualStatus = 'pending'; // Contract now available for signing
+                } else if (submissionData.status === 'rejected') {
+                  actualStatus = 'submission_rejected';
+                }
               }
+              // If contract is already signed, preserve the signed status
             }
           }
 
@@ -626,22 +630,20 @@ const ContractDashboard = () => {
                               <Eye className="w-4 h-4 mr-1" />
                               View
                             </Button>
-                            {contract.status === 'approved' && (
-                              <Button
-                                onClick={() => {
-                                  const doc = new jsPDF();
-                                  doc.text(`Contract: ${contract.submission_title}`, 20, 20);
-                                  doc.text(`Status: ${contract.status}`, 20, 40);
-                                  doc.text(contract.contract_terms, 20, 60);
-                                  doc.save(`Contract_${contract.id}.pdf`);
-                                }}
-                                size="sm"
-                                className="bg-blue-600 hover:bg-blue-700"
-                              >
-                                <Download className="w-4 h-4 mr-1" />
-                                Download
-                              </Button>
-                            )}
+                            <Button
+                              onClick={() => {
+                                const doc = new jsPDF();
+                                doc.text(`Contract: ${contract.submission_title}`, 20, 20);
+                                doc.text(`Status: ${contract.status}`, 20, 40);
+                                doc.text(contract.contract_terms, 20, 60);
+                                doc.save(`Contract_${contract.id}.pdf`);
+                              }}
+                              size="sm"
+                              className="bg-blue-600 hover:bg-blue-700"
+                            >
+                              <Download className="w-4 h-4 mr-1" />
+                              Download PDF
+                            </Button>
                           </>
                         )}
                       </div>
