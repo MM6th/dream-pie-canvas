@@ -128,17 +128,26 @@ const ContractDashboard = () => {
                 hasValidSubmission = true;
               }
             }
-          } else if (contract.contract_type === 'video_ad_download' && contract.video_ad_opportunity_id) {
-            // For video ad download contracts, get the opportunity title directly
-            const { data: opportunityData } = await supabase
-              .from('video_ad_opportunities')
-              .select('title')
-              .eq('id', contract.video_ad_opportunity_id)
+          } else if (contract.video_ad_submission_id) {
+            // For video ad opportunity contracts, get submission details
+            const { data: submissionData } = await supabase
+              .from('video_ad_submissions')
+              .select('*, video_ad_opportunity_id')
+              .eq('id', contract.video_ad_submission_id)
               .single();
 
-            if (opportunityData?.title) {
-              submission_title = `Video Ad Opportunity: ${opportunityData.title}`;
-              hasValidSubmission = true;
+            if (submissionData?.video_ad_opportunity_id) {
+              // Get the opportunity details separately
+              const { data: opportunityData } = await supabase
+                .from('video_ad_opportunities')
+                .select('title, description, payment_amount')
+                .eq('id', submissionData.video_ad_opportunity_id)
+                .single();
+
+              if (opportunityData?.title) {
+                submission_title = `Video Ad Opportunity: ${opportunityData.title}`;
+                hasValidSubmission = true;
+              }
             }
           }
 
@@ -154,30 +163,24 @@ const ContractDashboard = () => {
                                `${merchantData?.first_name || ''} ${merchantData?.last_name || ''}`.trim() || 
                                'Unknown Merchant';
 
-          // Check if there's a video ad submission for this contract
+          // For video ad opportunity contracts, handle status based on submission
           let actualStatus = contract.status;
           let submissionStatus = null;
-          if (contract.contract_type === 'video_ad_download' && contract.video_ad_opportunity_id) {
+          if (contract.video_ad_submission_id && contract.contract_type === 'video_ad_opportunity') {
             const { data: submissionData } = await supabase
               .from('video_ad_submissions')
-              .select('id, status')
-              .eq('video_ad_opportunity_id', contract.video_ad_opportunity_id)
-              .eq('merchant_id', contract.merchant_id)
-              .maybeSingle();
+              .select('status')
+              .eq('id', contract.video_ad_submission_id)
+              .single();
 
             if (submissionData) {
               submissionStatus = submissionData.status;
-              // Only override status if contract is not already signed
-              if (!contract.signed_at) {
-                if (submissionData.status === 'pending') {
-                  actualStatus = 'submission_pending';
-                } else if (submissionData.status === 'approved') {
-                  actualStatus = 'pending'; // Contract now available for signing
-                } else if (submissionData.status === 'rejected') {
-                  actualStatus = 'submission_rejected';
-                }
+              // Set status based on contract signing and submission approval
+              if (contract.signed_at) {
+                actualStatus = 'signed';
+              } else if (submissionData.status === 'approved') {
+                actualStatus = 'pending'; // Contract available for signing
               }
-              // If contract is already signed, preserve the signed status
             }
           }
 
@@ -399,18 +402,14 @@ const ContractDashboard = () => {
       }
     }
 
-    if (contract.contract_type === 'video_ad_download') {
+    if (contract.contract_type === 'video_ad_opportunity') {
       switch (contract.status) {
-        case 'available':
-          return 'Contract available for review - Download completed';
-        case 'submission_pending':
-          return 'Video submitted - awaiting admin review';
-        case 'submission_rejected':
-          return 'Video submission rejected - review feedback';
         case 'pending':
           return 'Video approved - contract available for signing';
         case 'signed':
-          return 'Contract signed - Ready to submit video';
+          return 'Contract signed - ready for work';
+        case 'approved':
+          return 'Contract approved - payment authorized';
         default:
           return 'Unknown status';
       }
