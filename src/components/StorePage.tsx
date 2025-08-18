@@ -27,6 +27,7 @@ interface AudioProduct {
   access_level: "public" | "merchant_only" | "paid" | null;
   is_adult_content: boolean | null;
   max_downloads?: number | null;
+  description: string | null;
   created_at: string;
   albums?: {
     name: string;
@@ -133,6 +134,7 @@ const StorePage = () => {
           access_level,
           is_adult_content,
           max_downloads,
+          description,
           created_at,
           albums (
             name
@@ -663,6 +665,13 @@ const StorePage = () => {
                         <CardTitle className="text-white text-lg line-clamp-2">{product.title}</CardTitle>
                         {product.artist_name && (
                           <p className="text-gray-400 text-sm">by {product.artist_name}</p>
+                        )}
+                        {product.description && (
+                          <ExpandableDescription 
+                            description={product.description} 
+                            maxLength={80}
+                            className="mt-2"
+                          />
                         )}
                       </CardHeader>
                       <CardContent className="p-4 pt-0">
