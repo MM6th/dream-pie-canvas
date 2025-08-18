@@ -13,6 +13,7 @@ import PodcastDownloadManager from "./PodcastDownloadManager";
 import DownloadOpportunityChecker from "./DownloadOpportunityChecker";
 import VideoAdSubmissionModal from "./VideoAdSubmissionModal";
 import ExpandableDescription from "@/components/ui/ExpandableDescription";
+import ASMRSubmissionModal from "./ASMRSubmissionModal";
 
 interface AudioProduct {
   id: string;
@@ -64,6 +65,9 @@ const StorePage = () => {
   const [purchasingId, setPurchasingId] = useState<string | null>(null);
   const [selectedOpportunity, setSelectedOpportunity] = useState<VideoAdOpportunity | null>(null);
   const [submissionModalOpen, setSubmissionModalOpen] = useState(false);
+  const [asmrDownloads, setAsmrDownloads] = useState<string[]>([]);
+  const [selectedAsmrProduct, setSelectedAsmrProduct] = useState<AudioProduct | null>(null);
+  const [asmrSubmissionModalOpen, setAsmrSubmissionModalOpen] = useState(false);
 
   const fetchUserProfile = async () => {
     if (!user) return null;
@@ -111,6 +115,23 @@ const StorePage = () => {
     }
     
     return products;
+  };
+
+  const fetchAsmrDownloads = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('asmr_downloads')
+        .select('audio_product_id')
+        .eq('merchant_id', user.id);
+
+      if (error) throw error;
+      
+      setAsmrDownloads(data?.map(d => d.audio_product_id) || []);
+    } catch (error) {
+      console.error('Error fetching ASMR downloads:', error);
+    }
   };
 
   const fetchProducts = async () => {
@@ -183,6 +204,7 @@ const StorePage = () => {
 
   useEffect(() => {
     fetchProducts();
+    fetchAsmrDownloads();
   }, [user]);
 
   const canDownloadAudio = (product: AudioProduct) => {
@@ -397,6 +419,23 @@ const StorePage = () => {
 
       console.log('Free download recorded successfully:', insertedPurchase);
 
+      // Track ASMR downloads for Apply button functionality
+      if (product.audio_type === 'asmr' && product.access_level === 'merchant_only') {
+        const { error: asmrDownloadError } = await supabase
+          .from('asmr_downloads')
+          .insert({
+            merchant_id: user.id,
+            audio_product_id: product.id
+          });
+
+        if (asmrDownloadError) {
+          console.error('Error recording ASMR download:', asmrDownloadError);
+        } else {
+          // Update local state to show Apply button immediately
+          setAsmrDownloads(prev => [...prev, product.id]);
+        }
+      }
+
       toast({
         title: "Audio added to library!",
         description: "The audio has been added to your audio player in the dashboard",
@@ -410,6 +449,11 @@ const StorePage = () => {
         variant: "destructive"
       });
     }
+  };
+
+  const handleAsmrApply = (product: AudioProduct) => {
+    setSelectedAsmrProduct(product);
+    setAsmrSubmissionModalOpen(true);
   };
 
   const handleAudioPurchase = async (product: AudioProduct) => {
@@ -690,49 +734,62 @@ const StorePage = () => {
                            <div className="flex items-center justify-between">
                              {getAccessLevelBadgeForAudio(product)}
                              
-                              <div className="flex gap-2">
-                                {product.audio_type === 'podcast' && product.access_level === 'merchant_only' ? (
-                                  <DownloadOpportunityChecker
-                                    audioProductId={product.id}
-                                    maxDownloads={product.max_downloads}
+                               <div className="flex gap-2 flex-wrap">
+                                 {product.audio_type === 'podcast' && product.access_level === 'merchant_only' ? (
+                                   <DownloadOpportunityChecker
+                                     audioProductId={product.id}
+                                     maxDownloads={product.max_downloads}
+                                   >
+                                     {(remainingDownloads, isExhausted) => (
+                                       !isExhausted ? (
+                                         <PodcastDownloadManager 
+                                           audioProduct={{
+                                             id: product.id,
+                                             title: product.title,
+                                             audio_file_url: product.audio_file_url,
+                                             access_level: product.access_level || (product.is_free ? "public" : "paid"),
+                                             audio_type: product.audio_type,
+                                             max_downloads: product.max_downloads
+                                           }}
+                                         />
+                                       ) : (
+                                         <div className="text-xs text-gray-500 italic">
+                                           Download opportunities exhausted
+                                         </div>
+                                       )
+                                     )}
+                                   </DownloadOpportunityChecker>
+                                 ) : (
+                                   <Button
+                                     size="sm"
+                                     onClick={() => handleAudioPurchase(product)}
+                                     disabled={purchasingId === product.id || (!canDownloadAudio(product) && (product.access_level === "merchant_only"))}
+                                     className="bg-primary hover:bg-primary/90 text-xs h-8 px-2"
                                   >
-                                    {(remainingDownloads, isExhausted) => (
-                                      !isExhausted ? (
-                                        <PodcastDownloadManager 
-                                          audioProduct={{
-                                            id: product.id,
-                                            title: product.title,
-                                            audio_file_url: product.audio_file_url,
-                                            access_level: product.access_level || (product.is_free ? "public" : "paid"),
-                                            audio_type: product.audio_type,
-                                            max_downloads: product.max_downloads
-                                          }}
-                                        />
-                                      ) : (
-                                        <div className="text-xs text-gray-500 italic">
-                                          Download opportunities exhausted
-                                        </div>
-                                      )
+                                    {purchasingId === product.id ? (
+                                      "Processing..."
+                                    ) : (
+                                      <>
+                                        {(product.access_level === "paid") ? <DollarSign className="w-4 h-4 mr-1" /> : <Download className="w-4 h-4 mr-1" />}
+                                        {getDownloadButtonText(product)}
+                                      </>
                                     )}
-                                  </DownloadOpportunityChecker>
-                                ) : (
+                                  </Button>
+                                )}
+                                
+                                {/* Apply button for ASMR opportunities after download */}
+                                {product.audio_type === 'asmr' && 
+                                 product.access_level === 'merchant_only' && 
+                                 asmrDownloads.includes(product.id) && (
                                   <Button
                                     size="sm"
-                                    onClick={() => handleAudioPurchase(product)}
-                                    disabled={purchasingId === product.id || (!canDownloadAudio(product) && (product.access_level === "merchant_only"))}
-                                    className="bg-primary hover:bg-primary/90 text-xs h-8 px-2"
-                                 >
-                                   {purchasingId === product.id ? (
-                                     "Processing..."
-                                   ) : (
-                                     <>
-                                       {(product.access_level === "paid") ? <DollarSign className="w-4 h-4 mr-1" /> : <Download className="w-4 h-4 mr-1" />}
-                                       {getDownloadButtonText(product)}
-                                     </>
-                                   )}
-                                 </Button>
-                               )}
-                             </div>
+                                    onClick={() => handleAsmrApply(product)}
+                                    className="bg-green-600 hover:bg-green-700 text-xs h-8 px-2"
+                                  >
+                                    Apply
+                                  </Button>
+                                )}
+                              </div>
                            </div>
                         </div>
                       </CardContent>
@@ -854,6 +911,21 @@ const StorePage = () => {
             fetchProducts();
           }}
           opportunity={selectedOpportunity}
+        />
+      )}
+
+      {selectedAsmrProduct && (
+        <ASMRSubmissionModal
+          open={asmrSubmissionModalOpen}
+          onOpenChange={setAsmrSubmissionModalOpen}
+          audioProduct={selectedAsmrProduct}
+          onSuccess={() => {
+            setAsmrSubmissionModalOpen(false);
+            toast({
+              title: "Application Submitted",
+              description: "Your ASMR application has been submitted for review.",
+            });
+          }}
         />
       )}
     </div>
