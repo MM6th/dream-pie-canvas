@@ -790,9 +790,11 @@ const StorePage = () => {
                                   <Button
                                     size="sm"
                                     onClick={() => handleAsmrApply(product)}
-                                    className="bg-green-600 hover:bg-green-700 text-xs h-8 px-2"
+                                    className="bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 font-semibold text-xs h-8 px-3 border-0"
                                   >
-                                    Apply
+                                    <span className="flex items-center gap-1">
+                                      🎯 Apply Now
+                                    </span>
                                   </Button>
                                 )}
                               </div>
