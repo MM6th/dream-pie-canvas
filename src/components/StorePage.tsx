@@ -29,6 +29,9 @@ interface AudioProduct {
   is_adult_content: boolean | null;
   max_downloads?: number | null;
   description: string | null;
+  pie_photo_editing: boolean | null;
+  back_end_royalties: boolean | null;
+  advance_fee_rate: number | null;
   created_at: string;
   albums?: {
     name: string;
@@ -156,6 +159,9 @@ const StorePage = () => {
           is_adult_content,
           max_downloads,
           description,
+          pie_photo_editing,
+          back_end_royalties,
+          advance_fee_rate,
           created_at,
           albums (
             name
