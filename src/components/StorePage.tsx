@@ -725,80 +725,82 @@ const StorePage = () => {
                         )}
                       </CardHeader>
                       <CardContent className="p-4 pt-0">
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between">
-                            <Badge variant="secondary" className="capitalize">
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between flex-wrap gap-2">
+                            <Badge variant="secondary" className="capitalize text-xs px-2 py-1">
                               {product.audio_type}
                             </Badge>
                             {product.albums && (
-                              <Badge variant="outline" className="text-xs bg-white text-black border-white">
+                              <Badge variant="outline" className="text-xs bg-white text-black border-white px-2 py-1">
                                 {product.albums.name}
                               </Badge>
                             )}
                           </div>
                           
-                           <div className="flex items-center justify-between">
-                             {getAccessLevelBadgeForAudio(product)}
-                             
-                               <div className="flex gap-2 flex-wrap">
-                                 {product.audio_type === 'podcast' && product.access_level === 'merchant_only' ? (
-                                   <DownloadOpportunityChecker
-                                     audioProductId={product.id}
-                                     maxDownloads={product.max_downloads}
-                                   >
-                                     {(remainingDownloads, isExhausted) => (
-                                       !isExhausted ? (
-                                         <PodcastDownloadManager 
-                                           audioProduct={{
-                                             id: product.id,
-                                             title: product.title,
-                                             audio_file_url: product.audio_file_url,
-                                             access_level: product.access_level || (product.is_free ? "public" : "paid"),
-                                             audio_type: product.audio_type,
-                                             max_downloads: product.max_downloads
-                                           }}
-                                         />
-                                       ) : (
-                                         <div className="text-xs text-gray-500 italic">
-                                           Download opportunities exhausted
-                                         </div>
-                                       )
-                                     )}
-                                   </DownloadOpportunityChecker>
-                                 ) : (
-                                   <Button
-                                     size="sm"
-                                     onClick={() => handleAudioPurchase(product)}
-                                     disabled={purchasingId === product.id || (!canDownloadAudio(product) && (product.access_level === "merchant_only"))}
-                                     className="bg-primary hover:bg-primary/90 text-xs h-8 px-2"
-                                  >
-                                    {purchasingId === product.id ? (
-                                      "Processing..."
-                                    ) : (
-                                      <>
-                                        {(product.access_level === "paid") ? <DollarSign className="w-4 h-4 mr-1" /> : <Download className="w-4 h-4 mr-1" />}
-                                        {getDownloadButtonText(product)}
-                                      </>
-                                    )}
-                                  </Button>
+                          {/* Badges section with better spacing */}
+                          <div className="flex items-center justify-between flex-wrap gap-2">
+                            {getAccessLevelBadgeForAudio(product)}
+                          </div>
+                          
+                          {/* Action buttons section with improved spacing */}
+                          <div className="flex items-center justify-end gap-2 flex-wrap">
+                            {product.audio_type === 'podcast' && product.access_level === 'merchant_only' ? (
+                              <DownloadOpportunityChecker
+                                audioProductId={product.id}
+                                maxDownloads={product.max_downloads}
+                              >
+                                {(remainingDownloads, isExhausted) => (
+                                  !isExhausted ? (
+                                    <PodcastDownloadManager 
+                                      audioProduct={{
+                                        id: product.id,
+                                        title: product.title,
+                                        audio_file_url: product.audio_file_url,
+                                        access_level: product.access_level || (product.is_free ? "public" : "paid"),
+                                        audio_type: product.audio_type,
+                                        max_downloads: product.max_downloads
+                                      }}
+                                    />
+                                  ) : (
+                                    <div className="text-xs text-gray-500 italic">
+                                      Download opportunities exhausted
+                                    </div>
+                                  )
                                 )}
-                                
-                                {/* Apply button for ASMR opportunities after download */}
-                                {product.audio_type === 'asmr' && 
-                                 product.access_level === 'merchant_only' && 
-                                 asmrDownloads.includes(product.id) && (
-                                  <Button
-                                    size="sm"
-                                    onClick={() => handleAsmrApply(product)}
-                                    className="bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 font-semibold text-xs h-8 px-3 border-0"
-                                  >
-                                    <span className="flex items-center gap-1">
-                                      🎯 Apply Now
-                                    </span>
-                                  </Button>
-                                )}
-                              </div>
-                           </div>
+                              </DownloadOpportunityChecker>
+                            ) : (
+                              <Button
+                                size="sm"
+                                onClick={() => handleAudioPurchase(product)}
+                                disabled={purchasingId === product.id || (!canDownloadAudio(product) && (product.access_level === "merchant_only"))}
+                                className="bg-primary hover:bg-primary/90 text-xs h-7 px-3"
+                             >
+                               {purchasingId === product.id ? (
+                                 "Processing..."
+                               ) : (
+                                 <>
+                                   {(product.access_level === "paid") ? <DollarSign className="w-3 h-3 mr-1" /> : <Download className="w-3 h-3 mr-1" />}
+                                   {getDownloadButtonText(product)}
+                                 </>
+                               )}
+                             </Button>
+                           )}
+                           
+                           {/* Apply button for ASMR opportunities after download */}
+                           {product.audio_type === 'asmr' && 
+                            product.access_level === 'merchant_only' && 
+                            asmrDownloads.includes(product.id) && (
+                             <Button
+                               size="sm"
+                               onClick={() => handleAsmrApply(product)}
+                               className="bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 font-semibold text-xs h-7 px-3 border-0"
+                             >
+                               <span className="flex items-center gap-1">
+                                 🎯 Apply Now
+                               </span>
+                             </Button>
+                           )}
+                         </div>
                         </div>
                       </CardContent>
                     </Card>
