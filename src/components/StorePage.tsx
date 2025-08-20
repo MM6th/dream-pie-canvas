@@ -785,21 +785,29 @@ const StorePage = () => {
                                )}
                              </Button>
                            )}
-                           
-                           {/* Apply button for ASMR opportunities after download */}
-                           {product.audio_type === 'asmr' && 
-                            product.access_level === 'merchant_only' && 
-                            asmrDownloads.includes(product.id) && (
-                             <Button
-                               size="sm"
-                               onClick={() => handleAsmrApply(product)}
-                               className="bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 font-semibold text-xs h-7 px-3 border-0"
-                             >
-                               <span className="flex items-center gap-1">
-                                 🎯 Apply Now
-                               </span>
-                             </Button>
-                           )}
+                            
+                            {/* Apply button for ASMR opportunities after download */}
+                            {product.audio_type === 'asmr' && 
+                             product.access_level === 'merchant_only' && 
+                             asmrDownloads.includes(product.id) && (
+                              <Button
+                                size="sm"
+                                onClick={() => handleAsmrApply(product)}
+                                className="bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 font-semibold text-xs h-8 px-4 border-0 rounded-lg"
+                              >
+                                <span className="flex items-center gap-2">
+                                  <span className="text-lg">🎯</span>
+                                  <span>Apply Now</span>
+                                </span>
+                              </Button>
+                            )}
+                            
+                            {/* Debug info - remove this after testing */}
+                            {product.audio_type === 'asmr' && process.env.NODE_ENV === 'development' && (
+                              <div className="text-xs text-gray-400 mt-1">
+                                Debug: Type={product.audio_type}, Access={product.access_level}, Downloaded={asmrDownloads.includes(product.id)}
+                              </div>
+                            )}
                          </div>
                         </div>
                       </CardContent>
