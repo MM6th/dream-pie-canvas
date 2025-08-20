@@ -124,14 +124,47 @@ const StorePage = () => {
     if (!user) return;
     
     try {
-      const { data, error } = await supabase
+      // Get existing ASMR downloads
+      const { data: existingDownloads, error: downloadsError } = await supabase
         .from('asmr_downloads')
         .select('audio_product_id')
         .eq('merchant_id', user.id);
 
-      if (error) throw error;
+      if (downloadsError) throw downloadsError;
       
-      setAsmrDownloads(data?.map(d => d.audio_product_id) || []);
+      const existingDownloadIds = existingDownloads?.map(d => d.audio_product_id) || [];
+      
+      // Also check user_purchases for ASMR products that were downloaded but not recorded in asmr_downloads
+      const { data: purchasedAsmr, error: purchaseError } = await supabase
+        .from('user_purchases')
+        .select(`
+          audio_product_id,
+          audio_products!inner(audio_type, access_level)
+        `)
+        .eq('user_id', user.id)
+        .eq('audio_products.audio_type', 'asmr')
+        .eq('audio_products.access_level', 'merchant_only');
+
+      if (purchaseError) throw purchaseError;
+
+      // Sync missing ASMR downloads
+      const purchasedAsmrIds = purchasedAsmr?.map(p => p.audio_product_id) || [];
+      const missingDownloads = purchasedAsmrIds.filter(id => !existingDownloadIds.includes(id));
+
+      if (missingDownloads.length > 0) {
+        const { error: syncError } = await supabase
+          .from('asmr_downloads')
+          .insert(missingDownloads.map(audioProductId => ({
+            merchant_id: user.id,
+            audio_product_id: audioProductId
+          })));
+
+        if (syncError) console.error('Error syncing ASMR downloads:', syncError);
+      }
+
+      // Set all ASMR downloads (existing + synced)
+      setAsmrDownloads([...existingDownloadIds, ...missingDownloads]);
+      
     } catch (error) {
       console.error('Error fetching ASMR downloads:', error);
     }
