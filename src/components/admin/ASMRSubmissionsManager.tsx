@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { FileText, Eye, CheckCircle, XCircle, Clock, AlertCircle, Music, PlayCircle } from "lucide-react";
+import { FileText, Eye, CheckCircle, XCircle, Clock, AlertCircle, AudioLines, PlayCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
@@ -151,7 +151,7 @@ const ASMRSubmissionsManager = () => {
     <div>
       {submissions.length === 0 ? (
         <div className="text-center py-8">
-          <Music className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+          <AudioLines className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <h4 className="text-lg font-semibold text-white mb-2">No ASMR Submissions</h4>
           <p className="text-gray-400">ASMR submissions will appear here for review.</p>
         </div>

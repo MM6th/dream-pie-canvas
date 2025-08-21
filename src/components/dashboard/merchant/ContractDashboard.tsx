@@ -65,6 +65,7 @@ const ContractDashboard = () => {
         (data || []).map(async (contract) => {
           let submission_title = 'Unknown Submission';
           let hasValidSubmission = false;
+          let submissionStatus: string | null = null;
 
           if (contract.cover_submission_id) {
             // First get the submission
@@ -128,6 +129,27 @@ const ContractDashboard = () => {
                 hasValidSubmission = true;
               }
             }
+          } else if (contract.contract_type === 'asmr_submission') {
+            // For ASMR submission contracts, get the audio product from asmr_submissions
+            const { data: asmrSubmission } = await supabase
+              .from('asmr_submissions')
+              .select('audio_product_id, status')
+              .eq('contract_id', contract.id)
+              .single();
+
+            if (asmrSubmission?.audio_product_id) {
+              const { data: audioData } = await supabase
+                .from('audio_products')
+                .select('title')
+                .eq('id', asmrSubmission.audio_product_id)
+                .single();
+
+              if (audioData?.title) {
+                submission_title = `ASMR Submission: ${audioData.title}`;
+                hasValidSubmission = true;
+                submissionStatus = asmrSubmission.status;
+              }
+            }
           } else if (contract.video_ad_submission_id) {
             // For video ad opportunity contracts, get submission details
             const { data: submissionData } = await supabase
@@ -165,7 +187,6 @@ const ContractDashboard = () => {
 
           // For video ad opportunity contracts, handle status based on submission
           let actualStatus = contract.status;
-          let submissionStatus = null;
           if (contract.video_ad_submission_id && contract.contract_type === 'video_ad_opportunity') {
             const { data: submissionData } = await supabase
               .from('video_ad_submissions')
@@ -181,6 +202,17 @@ const ContractDashboard = () => {
               } else if (submissionData.status === 'approved') {
                 actualStatus = 'pending'; // Contract available for signing
               }
+            }
+          }
+
+          // For ASMR submission contracts, handle status based on submission
+          if (contract.contract_type === 'asmr_submission') {
+            if (contract.signed_at) {
+              actualStatus = 'signed';
+            } else if (submissionStatus === 'approved') {
+              actualStatus = 'pending'; // Contract available for signing
+            } else if (submissionStatus === 'rejected') {
+              actualStatus = 'rejected';
             }
           }
 
@@ -410,6 +442,21 @@ const ContractDashboard = () => {
           return 'Contract signed - ready for work';
         case 'approved':
           return 'Contract approved - payment authorized';
+        default:
+          return 'Unknown status';
+      }
+    }
+
+    if (contract.contract_type === 'asmr_submission') {
+      switch (contract.status) {
+        case 'pending':
+          return 'ASMR submission approved - contract available for signing';
+        case 'signed':
+          return 'Contract signed - awaiting admin approval';
+        case 'approved':
+          return 'Contract approved - ASMR content authorized for use';
+        case 'rejected':
+          return 'ASMR submission was rejected';
         default:
           return 'Unknown status';
       }
