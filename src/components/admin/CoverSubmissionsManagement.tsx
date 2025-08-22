@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, Eye, CheckCircle, XCircle, Clock, AlertCircle, ScrollText, Video, Music } from "lucide-react";
+import { FileText, Eye, CheckCircle, XCircle, Clock, AlertCircle, ScrollText, Video, AudioLines } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import CoverSubmissionDetailModal from "@/components/CoverSubmissionDetailModal";
@@ -282,7 +282,7 @@ Both parties acknowledge they have read, understood, and agree to be legally bou
                 value="asmr-submissions" 
                 className="text-white data-[state=active]:bg-gray-600"
               >
-                <Music className="w-4 h-4 mr-2" />
+                <AudioLines className="w-4 h-4 mr-2" />
                 ASMR Submissions
               </TabsTrigger>
               <TabsTrigger 
