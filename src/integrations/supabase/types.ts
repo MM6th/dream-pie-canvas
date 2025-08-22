@@ -328,6 +328,7 @@ export type Database = {
           id: string
           is_adult_content: boolean | null
           is_free: boolean
+          is_pie_exclusive: boolean | null
           max_downloads: number | null
           merchant_id: string
           number_of_opportunities: number | null
@@ -355,6 +356,7 @@ export type Database = {
           id?: string
           is_adult_content?: boolean | null
           is_free?: boolean
+          is_pie_exclusive?: boolean | null
           max_downloads?: number | null
           merchant_id: string
           number_of_opportunities?: number | null
@@ -382,6 +384,7 @@ export type Database = {
           id?: string
           is_adult_content?: boolean | null
           is_free?: boolean
+          is_pie_exclusive?: boolean | null
           max_downloads?: number | null
           merchant_id?: string
           number_of_opportunities?: number | null

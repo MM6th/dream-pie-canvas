@@ -41,7 +41,8 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
     piePhotoEditing: false,
     coverPhotos: [] as File[],
     advanceFeeRate: "",
-    numberOfOpportunities: ""
+    numberOfOpportunities: "",
+    isPieExclusive: false
   });
   const [albums, setAlbums] = useState<any[]>([]);
 
@@ -208,6 +209,7 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
         insertData.advance_fee_rate = formData.advanceFeeRate ? parseFloat(formData.advanceFeeRate) : null;
         insertData.number_of_opportunities = formData.numberOfOpportunities ? parseInt(formData.numberOfOpportunities) : null;
         insertData.opportunities_exhausted = false;
+        insertData.is_pie_exclusive = formData.isPieExclusive;
       }
 
       const { error: productError } = await supabase
@@ -241,7 +243,8 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
         piePhotoEditing: false,
         coverPhotos: [],
         advanceFeeRate: "",
-        numberOfOpportunities: ""
+        numberOfOpportunities: "",
+        isPieExclusive: false
       });
       onSuccess();
       
@@ -560,6 +563,36 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
 
                 <div className="flex items-center space-x-2">
                   <Checkbox
+                    id="isPieExclusive"
+                    checked={formData.isPieExclusive}
+                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isPieExclusive: checked as boolean }))}
+                  />
+                  <Label htmlFor="isPieExclusive" className="text-white">PIE Exclusive Deal</Label>
+                </div>
+                <p className="text-xs text-gray-400 ml-6">
+                  Exclusive deals include advance fees + back-end royalties
+                </p>
+
+                {formData.isPieExclusive && (
+                  <div className="ml-6 space-y-4">
+                    <div>
+                      <Label htmlFor="advanceFeeRate">Advance Fee Rate ($)</Label>
+                      <Input
+                        id="advanceFeeRate"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={formData.advanceFeeRate}
+                        onChange={(e) => setFormData(prev => ({ ...prev, advanceFeeRate: e.target.value }))}
+                        className="bg-gray-700 border-gray-600 text-white"
+                        placeholder="Amount paid upfront to contractors"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex items-center space-x-2">
+                  <Checkbox
                     id="backEndRoyalties"
                     checked={formData.backEndRoyalties}
                     onCheckedChange={(checked) => setFormData(prev => ({ ...prev, backEndRoyalties: checked as boolean }))}
@@ -567,7 +600,7 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
                   <Label htmlFor="backEndRoyalties" className="text-white">Back-End Royalties</Label>
                 </div>
                 <p className="text-xs text-gray-400 ml-6">
-                  Allow merchants to submit covers for additional revenue sharing
+                  Allow merchants to submit covers for additional revenue sharing (50%)
                 </p>
 
                 {formData.backEndRoyalties && (
