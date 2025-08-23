@@ -4,9 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { FileText, Eye, CheckCircle, XCircle, Clock, AlertCircle, AudioLines, PlayCircle } from "lucide-react";
+import { FileText, Eye, CheckCircle, XCircle, Clock, AlertCircle, AudioLines, PlayCircle, Edit, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import EditASMRProductModal from "@/components/EditASMRProductModal";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface ASMRSubmissionData {
   id: string;
@@ -25,12 +27,16 @@ interface ASMRSubmissionData {
   contract_generated_at?: string | null;
   merchant_name?: string;
   audio_product_title?: string;
+  audio_product?: any;
 }
 
 const ASMRSubmissionsManager = () => {
   const [submissions, setSubmissions] = useState<ASMRSubmissionData[]>([]);
   const [loading, setLoading] = useState(true);
   const [adminNotes, setAdminNotes] = useState<{ [key: string]: string }>({});
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
 
   const fetchSubmissions = async () => {
     try {
@@ -51,17 +57,18 @@ const ASMRSubmissionsManager = () => {
             .eq('id', submission.merchant_id)
             .single();
 
-          // Get audio product title
+          // Get full audio product data
           const { data: audioData } = await supabase
             .from('audio_products')
-            .select('title')
+            .select('*')
             .eq('id', submission.audio_product_id)
             .single();
 
           return {
             ...submission,
             merchant_name: merchantData?.display_name || 'Unknown Merchant',
-            audio_product_title: audioData?.title || 'Unknown ASMR Track'
+            audio_product_title: audioData?.title || 'Unknown ASMR Track',
+            audio_product: audioData
           };
         })
       );
@@ -108,6 +115,45 @@ const ASMRSubmissionsManager = () => {
       toast({
         title: "Error",
         description: "Failed to update ASMR submission status",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleEditProduct = (audioProduct: any) => {
+    setSelectedProduct(audioProduct);
+    setEditModalOpen(true);
+  };
+
+  const handleDeleteProduct = (audioProduct: any) => {
+    setSelectedProduct(audioProduct);
+    setDeleteModalOpen(true);
+  };
+
+  const confirmDeleteProduct = async () => {
+    if (!selectedProduct) return;
+
+    try {
+      const { error } = await supabase
+        .from('audio_products')
+        .delete()
+        .eq('id', selectedProduct.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "ASMR product deleted successfully"
+      });
+
+      fetchSubmissions();
+      setDeleteModalOpen(false);
+      setSelectedProduct(null);
+    } catch (error) {
+      console.error('Error deleting ASMR product:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete ASMR product",
         variant: "destructive"
       });
     }
@@ -239,6 +285,29 @@ const ASMRSubmissionsManager = () => {
                   </div>
                 )}
                 
+                {/* Product Management Buttons */}
+                {submission.audio_product && (
+                  <div className="flex gap-2 mb-3">
+                    <Button
+                      onClick={() => handleEditProduct(submission.audio_product)}
+                      size="sm"
+                      className="bg-blue-600 hover:bg-blue-700 text-white"
+                    >
+                      <Edit className="w-4 h-4 mr-1" />
+                      Edit Product
+                    </Button>
+                    <Button
+                      onClick={() => handleDeleteProduct(submission.audio_product)}
+                      size="sm"
+                      variant="destructive"
+                    >
+                      <Trash2 className="w-4 h-4 mr-1" />
+                      Delete Product
+                    </Button>
+                  </div>
+                )}
+
+                {/* Submission Management Buttons */}
                 <div className="flex gap-2 mb-3">
                   {submission.status === 'pending' && (
                     <>
@@ -281,6 +350,49 @@ const ASMRSubmissionsManager = () => {
           </div>
         </div>
       )}
+
+      {/* Edit Product Modal */}
+      {selectedProduct && (
+        <EditASMRProductModal
+          product={selectedProduct}
+          open={editModalOpen}
+          onOpenChange={setEditModalOpen}
+          onSuccess={() => {
+            fetchSubmissions();
+            setEditModalOpen(false);
+            setSelectedProduct(null);
+          }}
+        />
+      )}
+
+      {/* Delete Product Confirmation Modal */}
+      <Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
+        <DialogContent className="bg-gray-800 border-gray-700">
+          <DialogHeader>
+            <DialogTitle className="text-white">Delete ASMR Product</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-gray-300">
+              Are you sure you want to delete "{selectedProduct?.title}"? This action cannot be undone and will also remove all related submissions.
+            </p>
+            <div className="flex justify-end gap-2">
+              <Button
+                onClick={() => setDeleteModalOpen(false)}
+                variant="outline"
+                className="border-gray-600 text-white bg-transparent hover:bg-gray-700"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={confirmDeleteProduct}
+                variant="destructive"
+              >
+                Delete Product
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
