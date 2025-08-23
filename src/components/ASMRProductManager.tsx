@@ -9,6 +9,7 @@ import { toast } from "@/hooks/use-toast";
 import { Edit, Trash2, Play, DollarSign, Users, Shield } from "lucide-react";
 import AudioUploadModal from "@/components/AudioUploadModal";
 import EditASMRProductModal from "@/components/EditASMRProductModal";
+import DownloadOpportunityChecker from "@/components/DownloadOpportunityChecker";
 
 interface ASMRProduct {
   id: string;
@@ -195,12 +196,25 @@ const ASMRProductManager = () => {
                               <span>Advance: ${product.advance_fee_rate}</span>
                             </div>
                           )}
-                          {product.number_of_opportunities && (
-                            <div className="flex items-center gap-2 text-blue-400">
-                              <Users className="w-4 h-4" />
-                              <span>Opportunities: {product.number_of_opportunities}</span>
-                            </div>
-                          )}
+                          
+                          {/* Opportunity Counter with Downloads Tracking */}
+                          <DownloadOpportunityChecker
+                            audioProductId={product.id}
+                            maxDownloads={product.number_of_opportunities}
+                            downloadTable="asmr_downloads"
+                          >
+                            {(remainingDownloads, isExhausted) => (
+                              product.number_of_opportunities && (
+                                <div className="flex items-center gap-2 text-blue-400">
+                                  <Users className="w-4 h-4" />
+                                  <span>
+                                    Opportunities: {remainingDownloads !== null ? remainingDownloads : product.number_of_opportunities} / {product.number_of_opportunities}
+                                  </span>
+                                </div>
+                              )
+                            )}
+                          </DownloadOpportunityChecker>
+                          
                           {product.back_end_royalties && (
                             <div className="text-purple-400">
                               <span>✓ Back-end Royalties</span>

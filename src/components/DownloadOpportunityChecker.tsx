@@ -6,12 +6,14 @@ import { AlertTriangle } from 'lucide-react';
 interface DownloadOpportunityCheckerProps {
   audioProductId: string;
   maxDownloads: number | null;
+  downloadTable?: 'podcast_downloads' | 'asmr_downloads';
   children: (remainingDownloads: number | null, isExhausted: boolean) => React.ReactNode;
 }
 
 const DownloadOpportunityChecker = ({ 
   audioProductId, 
   maxDownloads, 
+  downloadTable = 'podcast_downloads',
   children 
 }: DownloadOpportunityCheckerProps) => {
   const [currentDownloads, setCurrentDownloads] = useState<number | null>(null);
@@ -26,14 +28,14 @@ const DownloadOpportunityChecker = ({
 
       try {
         const { count, error } = await supabase
-          .from('podcast_downloads')
+          .from(downloadTable)
           .select('*', { count: 'exact', head: true })
           .eq('audio_product_id', audioProductId);
 
         if (error) throw error;
         
         const downloadCount = count || 0;
-        console.log(`Download count for ${audioProductId}:`, downloadCount, 'Max downloads:', maxDownloads);
+        console.log(`Download count for ${audioProductId}:`, downloadCount, 'Max downloads:', maxDownloads, 'Table:', downloadTable);
         setCurrentDownloads(downloadCount);
       } catch (error) {
         console.error('Error fetching download count:', error);
@@ -47,11 +49,11 @@ const DownloadOpportunityChecker = ({
     
     // Set up real-time subscription to update when downloads change
     const channel = supabase
-      .channel('podcast_downloads_changes')
+      .channel(`${downloadTable}_changes`)
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
-        table: 'podcast_downloads',
+        table: downloadTable,
         filter: `audio_product_id=eq.${audioProductId}`
       }, () => {
         fetchDownloadCount();
@@ -61,7 +63,7 @@ const DownloadOpportunityChecker = ({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [audioProductId, maxDownloads]);
+  }, [audioProductId, maxDownloads, downloadTable]);
 
   if (loading) {
     return <div className="text-xs text-gray-400">Checking availability...</div>;
