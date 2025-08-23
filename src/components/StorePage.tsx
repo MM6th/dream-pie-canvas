@@ -28,6 +28,7 @@ interface AudioProduct {
   access_level: "public" | "merchant_only" | "paid" | null;
   is_adult_content: boolean | null;
   max_downloads?: number | null;
+  number_of_opportunities?: number | null;
   description: string | null;
   pie_photo_editing: boolean | null;
   back_end_royalties: boolean | null;
@@ -781,6 +782,7 @@ const StorePage = () => {
                               <DownloadOpportunityChecker
                                 audioProductId={product.id}
                                 maxDownloads={product.max_downloads}
+                                downloadTable="podcast_downloads"
                               >
                                 {(remainingDownloads, isExhausted) => (
                                   !isExhausted ? (
@@ -801,6 +803,39 @@ const StorePage = () => {
                                   )
                                 )}
                               </DownloadOpportunityChecker>
+                            ) : product.audio_type === 'asmr' && product.access_level === 'merchant_only' ? (
+                              <div className="flex flex-col items-end gap-2">
+                                <DownloadOpportunityChecker
+                                  audioProductId={product.id}
+                                  maxDownloads={product.number_of_opportunities}
+                                  downloadTable="asmr_downloads"
+                                >
+                                  {(remainingDownloads, isExhausted) => (
+                                    <div className="text-xs text-right">
+                                      {product.number_of_opportunities && (
+                                        <div className="text-blue-400">
+                                          {remainingDownloads !== null ? remainingDownloads : product.number_of_opportunities} / {product.number_of_opportunities} opportunities
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+                                </DownloadOpportunityChecker>
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleAudioPurchase(product)}
+                                  disabled={purchasingId === product.id || (!canDownloadAudio(product) && (product.access_level === "merchant_only"))}
+                                  className="bg-primary hover:bg-primary/90 text-xs h-7 px-3"
+                               >
+                                 {purchasingId === product.id ? (
+                                   "Processing..."
+                                 ) : (
+                                   <>
+                                     <Download className="w-3 h-3 mr-1" />
+                                     {getDownloadButtonText(product)}
+                                   </>
+                                 )}
+                               </Button>
+                              </div>
                             ) : (
                               <Button
                                 size="sm"
@@ -817,30 +852,23 @@ const StorePage = () => {
                                  </>
                                )}
                              </Button>
-                           )}
-                            
-                            {/* Apply button for ASMR opportunities after download */}
-                            {product.audio_type === 'asmr' && 
-                             product.access_level === 'merchant_only' && 
-                             asmrDownloads.includes(product.id) && (
-                              <Button
-                                size="sm"
-                                onClick={() => handleAsmrApply(product)}
-                                className="bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 font-semibold text-xs h-8 px-4 border-0 rounded-lg"
-                              >
-                                <span className="flex items-center gap-2">
-                                  <span className="text-lg">🎯</span>
-                                  <span>Apply Now</span>
-                                </span>
-                              </Button>
                             )}
-                            
-                            {/* Debug info - remove this after testing */}
-                            {product.audio_type === 'asmr' && process.env.NODE_ENV === 'development' && (
-                              <div className="text-xs text-gray-400 mt-1">
-                                Debug: Type={product.audio_type}, Access={product.access_level}, Downloaded={asmrDownloads.includes(product.id)}
-                              </div>
-                            )}
+                             
+                             {/* Apply button for ASMR opportunities after download */}
+                             {product.audio_type === 'asmr' && 
+                              product.access_level === 'merchant_only' && 
+                              asmrDownloads.includes(product.id) && (
+                               <Button
+                                 size="sm"
+                                 onClick={() => handleAsmrApply(product)}
+                                 className="bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 font-semibold text-xs h-8 px-4 border-0 rounded-lg"
+                               >
+                                 <span className="flex items-center gap-2">
+                                   <span className="text-lg">🎯</span>
+                                   <span>Apply Now</span>
+                                 </span>
+                               </Button>
+                             )}
                          </div>
                         </div>
                       </CardContent>
