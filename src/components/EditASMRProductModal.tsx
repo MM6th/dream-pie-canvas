@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Shield } from "lucide-react";
+import { Shield, AudioLines } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
@@ -195,15 +195,43 @@ const EditASMRProductModal = ({ product, open, onOpenChange, onSuccess }: EditAS
             />
           </div>
 
-          <div>
-            <Label htmlFor="thumbnail">Update Thumbnail (Optional)</Label>
-            <Input
-              id="thumbnail"
-              type="file"
-              accept="image/*"
-              onChange={handleThumbnailChange}
-              className="bg-gray-700 border-gray-600 text-white"
-            />
+          <div className="space-y-3">
+            <Label>Current Thumbnail</Label>
+            {product.thumbnail_url ? (
+              <div className="flex items-center gap-4">
+                <img
+                  src={product.thumbnail_url}
+                  alt="Current thumbnail"
+                  className="w-20 h-20 object-cover rounded-lg border border-gray-600"
+                />
+                <div className="text-sm text-gray-400">
+                  Current thumbnail image
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center gap-4">
+                <div className="w-20 h-20 bg-gray-700 rounded-lg border border-gray-600 flex items-center justify-center">
+                  <AudioLines className="w-8 h-8 text-gray-400" />
+                </div>
+                <div className="text-sm text-gray-400">
+                  No thumbnail currently set
+                </div>
+              </div>
+            )}
+            
+            <div>
+              <Label htmlFor="thumbnail">Upload New Thumbnail (Optional)</Label>
+              <Input
+                id="thumbnail"
+                type="file"
+                accept="image/*"
+                onChange={handleThumbnailChange}
+                className="bg-gray-700 border-gray-600 text-white"
+              />
+              <p className="text-xs text-gray-400 mt-1">
+                Leave empty to keep current thumbnail
+              </p>
+            </div>
           </div>
 
           <div>
