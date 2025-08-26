@@ -806,15 +806,15 @@ const StorePage = () => {
                             ) : product.audio_type === 'asmr' && product.access_level === 'merchant_only' ? (
                               <DownloadOpportunityChecker
                                 audioProductId={product.id}
-                                maxDownloads={product.number_of_opportunities}
+                                maxDownloads={product.max_downloads}
                                 downloadTable="asmr_downloads"
                               >
                                 {(remainingDownloads, isExhausted) => (
                                   <div className="flex flex-col items-end gap-2">
                                     <div className="text-xs text-right">
-                                      {product.number_of_opportunities && (
+                                      {product.max_downloads && (
                                         <div className="text-blue-400">
-                                          {remainingDownloads !== null ? remainingDownloads : product.number_of_opportunities} / {product.number_of_opportunities} opportunities
+                                          {remainingDownloads !== null ? remainingDownloads : product.max_downloads} / {product.max_downloads} opportunities
                                         </div>
                                       )}
                                       {isExhausted && (
