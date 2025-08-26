@@ -785,22 +785,32 @@ const StorePage = () => {
                                 downloadTable="podcast_downloads"
                               >
                                 {(remainingDownloads, isExhausted) => (
-                                  !isExhausted ? (
-                                    <PodcastDownloadManager 
-                                      audioProduct={{
-                                        id: product.id,
-                                        title: product.title,
-                                        audio_file_url: product.audio_file_url,
-                                        access_level: product.access_level || (product.is_free ? "public" : "paid"),
-                                        audio_type: product.audio_type,
-                                        max_downloads: product.max_downloads
-                                      }}
-                                    />
-                                  ) : (
-                                    <div className="text-xs text-gray-500 italic">
-                                      Download opportunities exhausted
+                                  <div className="flex flex-col items-end gap-2">
+                                    <div className="text-xs text-right">
+                                      {product.max_downloads && !isExhausted && (
+                                        <Badge className="bg-purple-600 hover:bg-purple-700 text-xs">
+                                          {remainingDownloads !== null ? remainingDownloads : product.max_downloads} opportunity{(remainingDownloads !== null ? remainingDownloads : product.max_downloads) !== 1 ? 's' : ''} left
+                                        </Badge>
+                                      )}
+                                      {isExhausted && (
+                                        <div className="text-xs text-gray-500 italic">
+                                          Download opportunities exhausted
+                                        </div>
+                                      )}
                                     </div>
-                                  )
+                                    {!isExhausted && (
+                                      <PodcastDownloadManager 
+                                        audioProduct={{
+                                          id: product.id,
+                                          title: product.title,
+                                          audio_file_url: product.audio_file_url,
+                                          access_level: product.access_level || (product.is_free ? "public" : "paid"),
+                                          audio_type: product.audio_type,
+                                          max_downloads: product.max_downloads
+                                        }}
+                                      />
+                                    )}
+                                  </div>
                                 )}
                               </DownloadOpportunityChecker>
                             ) : product.audio_type === 'asmr' && product.access_level === 'merchant_only' ? (
@@ -811,18 +821,18 @@ const StorePage = () => {
                               >
                                 {(remainingDownloads, isExhausted) => (
                                   <div className="flex flex-col items-end gap-2">
-                                    <div className="text-xs text-right">
-                                      {product.max_downloads && (
-                                        <div className="text-blue-400">
-                                          {remainingDownloads !== null ? remainingDownloads : product.max_downloads} / {product.max_downloads} opportunities
-                                        </div>
-                                      )}
-                                      {isExhausted && (
-                                        <div className="text-xs text-gray-500 italic">
-                                          Download opportunities exhausted
-                                        </div>
-                                      )}
-                                    </div>
+                                     <div className="text-xs text-right">
+                                       {product.max_downloads && !isExhausted && (
+                                         <Badge className="bg-purple-600 hover:bg-purple-700 text-xs">
+                                           {remainingDownloads !== null ? remainingDownloads : product.max_downloads} opportunity{(remainingDownloads !== null ? remainingDownloads : product.max_downloads) !== 1 ? 's' : ''} left
+                                         </Badge>
+                                       )}
+                                       {isExhausted && (
+                                         <div className="text-xs text-gray-500 italic">
+                                           Download opportunities exhausted
+                                         </div>
+                                       )}
+                                     </div>
                                     <Button
                                       size="sm"
                                       onClick={() => handleAudioPurchase(product)}
