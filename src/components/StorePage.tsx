@@ -804,38 +804,43 @@ const StorePage = () => {
                                 )}
                               </DownloadOpportunityChecker>
                             ) : product.audio_type === 'asmr' && product.access_level === 'merchant_only' ? (
-                              <div className="flex flex-col items-end gap-2">
-                                <DownloadOpportunityChecker
-                                  audioProductId={product.id}
-                                  maxDownloads={product.number_of_opportunities}
-                                  downloadTable="asmr_downloads"
-                                >
-                                  {(remainingDownloads, isExhausted) => (
+                              <DownloadOpportunityChecker
+                                audioProductId={product.id}
+                                maxDownloads={product.number_of_opportunities}
+                                downloadTable="asmr_downloads"
+                              >
+                                {(remainingDownloads, isExhausted) => (
+                                  <div className="flex flex-col items-end gap-2">
                                     <div className="text-xs text-right">
                                       {product.number_of_opportunities && (
                                         <div className="text-blue-400">
                                           {remainingDownloads !== null ? remainingDownloads : product.number_of_opportunities} / {product.number_of_opportunities} opportunities
                                         </div>
                                       )}
+                                      {isExhausted && (
+                                        <div className="text-xs text-gray-500 italic">
+                                          Download opportunities exhausted
+                                        </div>
+                                      )}
                                     </div>
-                                  )}
-                                </DownloadOpportunityChecker>
-                                <Button
-                                  size="sm"
-                                  onClick={() => handleAudioPurchase(product)}
-                                  disabled={purchasingId === product.id || (!canDownloadAudio(product) && (product.access_level === "merchant_only"))}
-                                  className="bg-primary hover:bg-primary/90 text-xs h-7 px-3"
-                               >
-                                 {purchasingId === product.id ? (
-                                   "Processing..."
-                                 ) : (
-                                   <>
-                                     <Download className="w-3 h-3 mr-1" />
-                                     {getDownloadButtonText(product)}
-                                   </>
-                                 )}
-                               </Button>
-                              </div>
+                                    <Button
+                                      size="sm"
+                                      onClick={() => handleAudioPurchase(product)}
+                                      disabled={purchasingId === product.id || isExhausted || (!canDownloadAudio(product) && (product.access_level === "merchant_only"))}
+                                      className="bg-primary hover:bg-primary/90 text-xs h-7 px-3"
+                                    >
+                                     {purchasingId === product.id ? (
+                                       "Processing..."
+                                     ) : (
+                                       <>
+                                         <Download className="w-3 h-3 mr-1" />
+                                         {getDownloadButtonText(product)}
+                                       </>
+                                     )}
+                                    </Button>
+                                  </div>
+                                )}
+                              </DownloadOpportunityChecker>
                             ) : (
                               <Button
                                 size="sm"
