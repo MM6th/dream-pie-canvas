@@ -125,6 +125,24 @@ const SignedContractsSection = () => {
             }
             
             submissionType = 'Podcast Opportunity';
+          } else if (contract.contract_type === 'asmr_submission') {
+            const { data: asmrSubmission } = await supabase
+              .from('asmr_submissions')
+              .select('audio_product_id')
+              .eq('contract_id', contract.id)
+              .single();
+
+            if (asmrSubmission?.audio_product_id) {
+              const { data: audioData } = await supabase
+                .from('audio_products')
+                .select('title')
+                .eq('id', asmrSubmission.audio_product_id)
+                .single();
+
+              productTitle = audioData?.title || 'Unknown Product';
+            }
+            
+            submissionType = 'ASMR Submission';
           }
 
           return {
