@@ -13,6 +13,7 @@ import PodcastDownloadManager from "./PodcastDownloadManager";
 import DownloadOpportunityChecker from "./DownloadOpportunityChecker";
 import VideoAdSubmissionModal from "./VideoAdSubmissionModal";
 import ExpandableDescription from "@/components/ui/ExpandableDescription";
+import ProductInstructionalText from "@/components/ui/ProductInstructionalText";
 import ASMRSubmissionModal from "./ASMRSubmissionModal";
 
 interface AudioProduct {
@@ -750,6 +751,9 @@ const StorePage = () => {
                         {product.artist_name && (
                           <p className="text-gray-400 text-sm">by {product.artist_name}</p>
                         )}
+                        <ProductInstructionalText 
+                          productType={product.audio_type === 'asmr' || product.audio_type === 'podcast' ? product.audio_type : 'asmr'} 
+                        />
                         {product.description && (
                           <ExpandableDescription 
                             description={product.description} 
@@ -937,6 +941,7 @@ const StorePage = () => {
                           </div>
                         )}
                         <CardTitle className="text-white text-lg line-clamp-2">{opportunity.title}</CardTitle>
+                        <ProductInstructionalText productType="video_ad" />
                         <ExpandableDescription 
                           description={opportunity.description || ""}
                           maxLength={80}

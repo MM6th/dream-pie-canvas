@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import AstrologyProductDetailModal from "./AstrologyProductDetailModal";
 import ProductReviewsSection from "./reviews/ProductReviewsSection";
+import ProductInstructionalText from "./ui/ProductInstructionalText";
 
 interface AstrologyProduct {
   id: string;
@@ -266,6 +267,7 @@ const AstrologyStoreSection = () => {
                       </div>
                     </div>
                     
+                    <ProductInstructionalText productType="astrology" />
                     {product.description && (
                       <div className="mb-4">
                         <p className="text-gray-300 text-sm line-clamp-3">{product.description}</p>

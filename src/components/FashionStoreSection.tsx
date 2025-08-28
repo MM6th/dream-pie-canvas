@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import FashionProductSlideshow from "./FashionProductSlideshow";
 import ProductDetailModal from "./ProductDetailModal";
+import ProductInstructionalText from "./ui/ProductInstructionalText";
 
 interface FashionProduct {
   id: string;
@@ -257,6 +258,7 @@ const FashionStoreSection = () => {
                         )}
                       </div>
                     </div>
+                    <ProductInstructionalText productType="fashion" />
                     {product.description && (
                       <div>
                         <p className="text-gray-400 text-sm line-clamp-2">{product.description}</p>
