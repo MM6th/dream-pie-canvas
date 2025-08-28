@@ -753,6 +753,7 @@ const StorePage = () => {
                         )}
                         <ProductInstructionalText 
                           productType={product.audio_type === 'asmr' || product.audio_type === 'podcast' ? product.audio_type : 'asmr'} 
+                          isForSale={product.access_level === 'paid'}
                         />
                         {product.description && (
                           <ExpandableDescription 

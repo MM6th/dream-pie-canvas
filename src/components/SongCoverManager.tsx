@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import SongCoverSubmissionModal from "./SongCoverSubmissionModal";
+import ProductInstructionalText from "./ui/ProductInstructionalText";
 
 interface AudioProduct {
   id: string;
@@ -201,6 +202,7 @@ const SongCoverManager = () => {
                             </p>
                           </div>
                         </div>
+                        <ProductInstructionalText productType="cover_submission" />
                         <Button
                           size="sm"
                           onClick={() => {

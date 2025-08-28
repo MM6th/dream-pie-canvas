@@ -1,17 +1,19 @@
 import React from 'react';
 
 interface ProductInstructionalTextProps {
-  productType: 'asmr' | 'podcast' | 'video_ad' | 'fashion' | 'astrology';
+  productType: 'asmr' | 'podcast' | 'video_ad' | 'fashion' | 'astrology' | 'cover_submission';
   className?: string;
+  isForSale?: boolean; // Hide instructional text for finalized products that are for sale
 }
 
-const ProductInstructionalText = ({ productType, className = "" }: ProductInstructionalTextProps) => {
+const ProductInstructionalText = ({ productType, className = "", isForSale = false }: ProductInstructionalTextProps) => {
   const getInstructionalText = () => {
     switch (productType) {
       case 'asmr':
       case 'podcast':
         return 'Download audio for in-depth instructions';
       case 'video_ad':
+      case 'cover_submission':
         return 'Download audio for creative purposes';
       case 'fashion':
         return 'View product details and purchase';
@@ -24,7 +26,8 @@ const ProductInstructionalText = ({ productType, className = "" }: ProductInstru
 
   const text = getInstructionalText();
   
-  if (!text) return null;
+  // Don't show instructional text for finalized products that are for sale
+  if (!text || isForSale) return null;
 
   return (
     <p className={`text-xs text-gray-500 mb-2 italic ${className}`}>
