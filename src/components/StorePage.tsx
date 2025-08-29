@@ -761,6 +761,7 @@ const StorePage = () => {
                           } 
                           isForSale={product.access_level === 'paid'}
                           isFree={product.is_free}
+                          isMerchantOnly={product.access_level === 'merchant_only'}
                         />
                         {product.description && (
                           <ExpandableDescription 
