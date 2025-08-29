@@ -27,8 +27,8 @@ const ProductInstructionalText = ({ productType, className = "", isForSale = fal
 
   const text = getInstructionalText();
   
-  // Don't show instructional text for finalized products that are for sale or free products
-  if (!text || isForSale || isFree) return null;
+  // Don't show instructional text for finalized products that are for sale
+  if (!text || isForSale) return null;
 
   return (
     <p className={`text-xs text-gray-500 mb-2 italic ${className}`}>
