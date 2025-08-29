@@ -752,8 +752,9 @@ const StorePage = () => {
                           <p className="text-gray-400 text-sm">by {product.artist_name}</p>
                         )}
                         <ProductInstructionalText 
-                          productType={product.audio_type === 'asmr' || product.audio_type === 'podcast' ? product.audio_type : 'asmr'} 
+                          productType={product.audio_type === 'asmr' || product.audio_type === 'podcast' ? product.audio_type : 'cover_submission'} 
                           isForSale={product.access_level === 'paid'}
+                          isFree={product.is_free}
                         />
                         {product.description && (
                           <ExpandableDescription 

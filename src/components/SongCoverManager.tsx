@@ -202,7 +202,10 @@ const SongCoverManager = () => {
                             </p>
                           </div>
                         </div>
-                        <ProductInstructionalText productType="cover_submission" />
+                        <ProductInstructionalText 
+                          productType="cover_submission" 
+                          isFree={false} 
+                        />
                         <Button
                           size="sm"
                           onClick={() => {

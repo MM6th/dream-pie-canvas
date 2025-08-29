@@ -4,9 +4,10 @@ interface ProductInstructionalTextProps {
   productType: 'asmr' | 'podcast' | 'video_ad' | 'fashion' | 'astrology' | 'cover_submission';
   className?: string;
   isForSale?: boolean; // Hide instructional text for finalized products that are for sale
+  isFree?: boolean; // Hide instructional text for free products
 }
 
-const ProductInstructionalText = ({ productType, className = "", isForSale = false }: ProductInstructionalTextProps) => {
+const ProductInstructionalText = ({ productType, className = "", isForSale = false, isFree = false }: ProductInstructionalTextProps) => {
   const getInstructionalText = () => {
     switch (productType) {
       case 'asmr':
@@ -26,8 +27,8 @@ const ProductInstructionalText = ({ productType, className = "", isForSale = fal
 
   const text = getInstructionalText();
   
-  // Don't show instructional text for finalized products that are for sale
-  if (!text || isForSale) return null;
+  // Don't show instructional text for finalized products that are for sale or free products
+  if (!text || isForSale || isFree) return null;
 
   return (
     <p className={`text-xs text-gray-500 mb-2 italic ${className}`}>
