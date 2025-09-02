@@ -5,14 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { MessageSquare, Image, Video } from "lucide-react";
+import { MessageSquare } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/components/ui/use-toast";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import ImagePicker from "./ImagePicker";
-import VideoUpload from "./VideoUpload";
-import ContentPicker from "./ContentPicker";
 
 interface CurrentThoughtsModalProps {
   onSuccess?: () => void;
@@ -25,10 +21,7 @@ const CurrentThoughtsModal = ({ onSuccess }: CurrentThoughtsModalProps) => {
   const [formData, setFormData] = useState({
     title: "",
     content: "",
-    imageUrl: "",
-    videoUrl: "",
     linkUrl: "",
-    mediaType: "" as "image" | "video" | "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -49,9 +42,6 @@ const CurrentThoughtsModal = ({ onSuccess }: CurrentThoughtsModalProps) => {
         .insert({
           title: formData.title.trim(),
           content: formData.content.trim(),
-          image_url: formData.imageUrl.trim() || null,
-          video_url: formData.videoUrl.trim() || null,
-          media_type: formData.mediaType || null,
           link_url: formData.linkUrl.trim() || null,
           post_type: 'current_thoughts',
           merchant_id: user.id
@@ -67,10 +57,7 @@ const CurrentThoughtsModal = ({ onSuccess }: CurrentThoughtsModalProps) => {
       setFormData({
         title: "",
         content: "",
-        imageUrl: "",
-        videoUrl: "",
         linkUrl: "",
-        mediaType: "",
       });
       setOpen(false);
       onSuccess?.();
@@ -83,24 +70,6 @@ const CurrentThoughtsModal = ({ onSuccess }: CurrentThoughtsModalProps) => {
       });
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleContentSelect = (url: string, type: 'image' | 'video') => {
-    if (type === 'image') {
-      setFormData(prev => ({ 
-        ...prev, 
-        imageUrl: url, 
-        videoUrl: "", 
-        mediaType: 'image' 
-      }));
-    } else {
-      setFormData(prev => ({ 
-        ...prev, 
-        videoUrl: url, 
-        imageUrl: "", 
-        mediaType: 'video' 
-      }));
     }
   };
 
@@ -143,94 +112,6 @@ const CurrentThoughtsModal = ({ onSuccess }: CurrentThoughtsModalProps) => {
               rows={4}
               required
             />
-          </div>
-
-          <div>
-            <Label>Media (Optional)</Label>
-            <Tabs defaultValue="image" className="w-full mt-2">
-              <TabsList className="grid w-full grid-cols-2 bg-gray-700">
-                <TabsTrigger value="image" className="flex items-center gap-2">
-                  <Image className="w-4 h-4" />
-                  Image
-                </TabsTrigger>
-                <TabsTrigger value="video" className="flex items-center gap-2">
-                  <Video className="w-4 h-4" />
-                  Video
-                </TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="image" className="space-y-2">
-                <div className="flex gap-2">
-                  <Input
-                    value={formData.imageUrl}
-                    onChange={(e) => setFormData(prev => ({ 
-                      ...prev, 
-                      imageUrl: e.target.value, 
-                      videoUrl: "", 
-                      mediaType: e.target.value ? 'image' : '' 
-                    }))}
-                    placeholder="Image URL"
-                    className="bg-gray-700 border-gray-600 text-white flex-1"
-                  />
-                  <ImagePicker
-                    onImageSelect={(url) => setFormData(prev => ({ 
-                      ...prev, 
-                      imageUrl: url, 
-                      videoUrl: "", 
-                      mediaType: 'image' 
-                    }))}
-                    currentImageUrl={formData.imageUrl}
-                  />
-                  <ContentPicker
-                    onContentSelect={handleContentSelect}
-                    currentContentUrl={formData.imageUrl}
-                  />
-                </div>
-                {formData.imageUrl && (
-                  <img 
-                    src={formData.imageUrl} 
-                    alt="Preview" 
-                    className="w-full h-32 object-cover rounded"
-                  />
-                )}
-              </TabsContent>
-              
-              <TabsContent value="video" className="space-y-2">
-                <div className="flex gap-2">
-                  <Input
-                    value={formData.videoUrl}
-                    onChange={(e) => setFormData(prev => ({ 
-                      ...prev, 
-                      videoUrl: e.target.value, 
-                      imageUrl: "", 
-                      mediaType: e.target.value ? 'video' : '' 
-                    }))}
-                    placeholder="Video URL"
-                    className="bg-gray-700 border-gray-600 text-white flex-1"
-                  />
-                  <VideoUpload
-                    onVideoSelect={(url) => setFormData(prev => ({ 
-                      ...prev, 
-                      videoUrl: url, 
-                      imageUrl: "", 
-                      mediaType: 'video' 
-                    }))}
-                    currentVideoUrl={formData.videoUrl}
-                  />
-                  <ContentPicker
-                    onContentSelect={handleContentSelect}
-                    currentContentUrl={formData.videoUrl}
-                  />
-                </div>
-                {formData.videoUrl && (
-                  <video 
-                    src={formData.videoUrl} 
-                    controls 
-                    className="w-full h-32 rounded"
-                  />
-                )}
-              </TabsContent>
-            </Tabs>
           </div>
 
           <div>

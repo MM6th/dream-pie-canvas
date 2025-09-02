@@ -67,7 +67,7 @@ const CurrentThoughtsSection = ({ posts, useCarousel = true }: CurrentThoughtsSe
         </div>
         
         <div className="mt-auto">
-          <PostInteractions postId={post.id} />
+          <PostInteractions postId={post.id} disableComments={true} />
         </div>
       </CardContent>
     </Card>

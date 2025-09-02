@@ -9,9 +9,10 @@ import CommentsModal from "./CommentsModal";
 
 interface PostInteractionsProps {
   postId: string;
+  disableComments?: boolean;
 }
 
-const PostInteractions = ({ postId }: PostInteractionsProps) => {
+const PostInteractions = ({ postId, disableComments = false }: PostInteractionsProps) => {
   const { user } = useAuth();
   const [likes, setLikes] = useState<string[]>([]);
   const [commentCount, setCommentCount] = useState(0);
@@ -152,23 +153,27 @@ const PostInteractions = ({ postId }: PostInteractionsProps) => {
           <ThumbsUp className={`w-4 h-4 ${hasLiked ? 'fill-current' : ''}`} />
           {likes.length} {likes.length === 1 ? 'like' : 'likes'}
         </Button>
-        <Button
-          onClick={() => setIsCommentsModalOpen(true)}
-          variant="ghost"
-          size="sm"
-          className="flex items-center gap-1 text-gray-400 hover:text-white"
-        >
-          <MessageCircle className="w-4 h-4" />
-          {commentCount} {commentCount === 1 ? 'comment' : 'comments'}
-        </Button>
+        {!disableComments && (
+          <Button
+            onClick={() => setIsCommentsModalOpen(true)}
+            variant="ghost"
+            size="sm"
+            className="flex items-center gap-1 text-gray-400 hover:text-white"
+          >
+            <MessageCircle className="w-4 h-4" />
+            {commentCount} {commentCount === 1 ? 'comment' : 'comments'}
+          </Button>
+        )}
       </div>
 
-      <CommentsModal
-        postId={postId}
-        isOpen={isCommentsModalOpen}
-        onClose={() => setIsCommentsModalOpen(false)}
-        onCommentCountChange={setCommentCount}
-      />
+      {!disableComments && (
+        <CommentsModal
+          postId={postId}
+          isOpen={isCommentsModalOpen}
+          onClose={() => setIsCommentsModalOpen(false)}
+          onCommentCountChange={setCommentCount}
+        />
+      )}
     </div>
   );
 };
