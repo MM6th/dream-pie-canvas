@@ -38,9 +38,9 @@ const CurrentThoughtsSection = ({ posts, useCarousel = true }: CurrentThoughtsSe
           />
         </CardHeader>
       )}
-      <CardContent className="p-6 flex-grow flex flex-col">
+      <CardContent className="p-4 flex-grow flex flex-col">
         <CardTitle className="text-white text-lg mb-2">{post.title}</CardTitle>
-        <p className="text-gray-300 text-sm mb-4 leading-relaxed line-clamp-4 flex-grow">{post.content}</p>
+        <p className="text-gray-300 text-sm mb-2 leading-relaxed line-clamp-4 flex-grow">{post.content}</p>
         
         <div className="flex items-center gap-4 text-xs text-gray-400 mb-2">
            <div className="flex items-center gap-2">
