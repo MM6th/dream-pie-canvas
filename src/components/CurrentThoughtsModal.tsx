@@ -114,16 +114,6 @@ const CurrentThoughtsModal = ({ onSuccess }: CurrentThoughtsModalProps) => {
             />
           </div>
 
-          <div>
-            <Label htmlFor="linkUrl">Link URL (Optional)</Label>
-            <Input
-              id="linkUrl"
-              value={formData.linkUrl}
-              onChange={(e) => setFormData(prev => ({ ...prev, linkUrl: e.target.value }))}
-              className="bg-gray-700 border-gray-600 text-white"
-              placeholder="https://example.com"
-            />
-          </div>
 
           <div className="flex gap-2">
             <Button 

@@ -118,21 +118,6 @@ const TVGuideModal = ({ onSuccess }: TVGuideModalProps) => {
             />
           </div>
 
-          <div>
-            <Label>Image (Optional)</Label>
-            <div className="flex gap-2 mt-1">
-              <Input
-                value={formData.imageUrl}
-                onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                placeholder="Image URL or select from gallery"
-                className="bg-gray-700 border-gray-600 text-white flex-1"
-              />
-              <ImagePicker
-                onImageSelect={(url) => setFormData({ ...formData, imageUrl: url })}
-                currentImageUrl={formData.imageUrl}
-              />
-            </div>
-          </div>
 
           <div>
             <Label htmlFor="linkUrl">Link URL (Optional)</Label>
