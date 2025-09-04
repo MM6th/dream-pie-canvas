@@ -48,7 +48,7 @@ const RegularPostsSection = ({ posts, useCarousel = true }: RegularPostsSectionP
           />
         </CardHeader>
       )}
-      <CardContent className="p-6 flex-grow flex flex-col">
+      <CardContent className="p-4 flex flex-col">
         <div className="flex items-center justify-between mb-2">
           <CardTitle className="text-white text-lg">{post.title}</CardTitle>
           {post.profiles?.is_admin && (
@@ -58,7 +58,7 @@ const RegularPostsSection = ({ posts, useCarousel = true }: RegularPostsSectionP
             </Badge>
           )}
         </div>
-        <p className="text-gray-300 text-sm mb-4 leading-relaxed line-clamp-4 flex-grow">{post.content}</p>
+        <p className="text-gray-300 text-sm mb-4 leading-relaxed line-clamp-4">{post.content}</p>
         
         <div className="flex items-center gap-4 text-xs text-gray-400 mb-4">
            <div className="flex items-center gap-2">

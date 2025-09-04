@@ -49,9 +49,9 @@ const TVGuideSection = ({ posts, useCarousel = true }: TVGuideSectionProps) => {
           />
         </CardHeader>
       )}
-      <CardContent className="p-6 flex-grow flex flex-col">
+      <CardContent className="p-4 flex flex-col">
         <CardTitle className="text-white text-xl mb-2">{post.title}</CardTitle>
-        <p className="text-gray-300 text-base mb-4 leading-relaxed line-clamp-3 flex-grow">{post.content}</p>
+        <p className="text-gray-300 text-base mb-4 leading-relaxed line-clamp-3">{post.content}</p>
         
         <div className="flex items-center gap-4 text-sm text-gray-400 mb-4">
            <div className="flex items-center gap-2">
