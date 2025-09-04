@@ -29,7 +29,7 @@ const TVGuideSection = ({ posts, useCarousel = true }: TVGuideSectionProps) => {
   }
 
   const renderCard = (post: BulletinPost) => (
-    <Card key={post.id} className="bg-gray-800 border-gray-700 h-full flex flex-col">
+    <Card key={post.id} className="bg-gray-800 border-gray-700 flex flex-col">
       {((post.image_url || post.uploaded_image_url) && post.media_type !== 'video') && (
         <CardHeader className="p-0">
           <img
@@ -88,9 +88,7 @@ const TVGuideSection = ({ posts, useCarousel = true }: TVGuideSectionProps) => {
           </Button>
         )}
         
-        <div className="mt-auto">
-          <PostInteractions postId={post.id} />
-        </div>
+        <PostInteractions postId={post.id} disableComments={true} />
       </CardContent>
     </Card>
   );
