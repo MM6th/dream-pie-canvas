@@ -48,7 +48,7 @@ const ProfilePlaylist = ({ userId, isOwnProfile = false }: ProfilePlaylistProps)
           id,
           display_order,
           audio_product_id,
-          audio_products (
+          audio_products!audio_product_id (
             id,
             title,
             artist_name,

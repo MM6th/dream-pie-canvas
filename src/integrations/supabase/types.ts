@@ -1229,7 +1229,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_user_playlists_audio_product"
+            columns: ["audio_product_id"]
+            isOneToOne: false
+            referencedRelation: "audio_products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_purchases: {
         Row: {
