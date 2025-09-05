@@ -22,6 +22,11 @@ interface UserPlaylist {
   audio_products: AudioProduct;
 }
 
+interface UserProfile {
+  id: string;
+  playlist_public: boolean;
+}
+
 interface ProfilePlaylistProps {
   userId: string;
   isOwnProfile?: boolean;
@@ -31,13 +36,70 @@ const ProfilePlaylist = ({ userId, isOwnProfile = false }: ProfilePlaylistProps)
   const [playlist, setPlaylist] = useState<UserPlaylist[]>([]);
   const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  const fetchUserProfile = async () => {
+    if (!userId) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, playlist_public')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching user profile:', error);
+      } else {
+        setUserProfile(data);
+      }
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+    }
+  };
+
+  const togglePlaylistVisibility = async () => {
+    if (!userProfile || !isOwnProfile) return;
+
+    try {
+      const newVisibility = !userProfile.playlist_public;
+      
+      const { error } = await supabase
+        .from('profiles')
+        .update({ playlist_public: newVisibility })
+        .eq('id', userId);
+
+      if (error) {
+        console.error('Error updating playlist visibility:', error);
+        toast({
+          title: "Error",
+          description: "Failed to update playlist visibility.",
+          variant: "destructive",
+        });
+      } else {
+        setUserProfile(prev => prev ? { ...prev, playlist_public: newVisibility } : null);
+        toast({
+          title: "Success",
+          description: `Playlist is now ${newVisibility ? 'public' : 'private'}.`,
+        });
+      }
+    } catch (error) {
+      console.error('Error updating playlist visibility:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update playlist visibility.",
+        variant: "destructive",
+      });
+    }
+  };
+
   useEffect(() => {
     fetchPlaylist();
+    fetchUserProfile();
   }, [userId]);
 
   const fetchPlaylist = async () => {

@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
 import SupporterProfileModal from "@/components/profile/SupporterProfileModal";
 import PieWelcomeModal from "@/components/PieWelcomeModal";
+import ProfilePlaylist from "@/components/profile/ProfilePlaylist";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -141,7 +142,7 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
                 </TabsContent>
                 
                 <TabsContent value="profile" className="space-y-6">
-                  <div className="flex justify-center">
+                  <div className="flex justify-center mb-6">
                     <SupporterProfileModal
                       profile={userProfile}
                       onProfileUpdate={handleProfileUpdate}
@@ -152,6 +153,7 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
                       </Button>
                     </SupporterProfileModal>
                   </div>
+                  {user && <ProfilePlaylist userId={user.id} isOwnProfile={true} />}
                 </TabsContent>
                 
                 <TabsContent value="background" className="space-y-6">
