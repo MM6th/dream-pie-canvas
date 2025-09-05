@@ -42,16 +42,16 @@ const CurrentThoughtsSection = ({ posts, useCarousel = true }: CurrentThoughtsSe
         <CardTitle className="text-white text-lg mb-2">{post.title}</CardTitle>
         <p className="text-gray-300 text-sm mb-2 leading-relaxed line-clamp-4">{post.content}</p>
         
-        <div className="flex items-center gap-4 text-xs text-gray-400 mb-2">
+        <div className="flex items-center gap-4 text-sm text-gray-400 mb-2">
            <div className="flex items-center gap-2">
               {post.profiles?.avatar_url ? (
                 <img
                   src={post.profiles.avatar_url}
                   alt="Avatar"
-                  className="w-6 h-6 rounded-full object-cover"
+                  className="w-8 h-8 rounded-full object-cover"
                 />
               ) : (
-                <User className="w-4 h-4" />
+                <User className="w-6 h-6" />
               )}
                <Link 
                  to={`/profile/${post.merchant_id}`}
