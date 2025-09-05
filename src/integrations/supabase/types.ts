@@ -1204,6 +1204,33 @@ export type Database = {
         }
         Relationships: []
       }
+      user_playlists: {
+        Row: {
+          audio_product_id: string
+          created_at: string
+          display_order: number
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          audio_product_id: string
+          created_at?: string
+          display_order?: number
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          audio_product_id?: string
+          created_at?: string
+          display_order?: number
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_purchases: {
         Row: {
           amount_paid: number | null
