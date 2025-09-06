@@ -1038,6 +1038,7 @@ export type Database = {
           onlyfans_url: string | null
           paypal_email: string | null
           pinterest_url: string | null
+          playlist_public: boolean | null
           snapchat_url: string | null
           updated_at: string | null
           user_type: string
@@ -1065,6 +1066,7 @@ export type Database = {
           onlyfans_url?: string | null
           paypal_email?: string | null
           pinterest_url?: string | null
+          playlist_public?: boolean | null
           snapchat_url?: string | null
           updated_at?: string | null
           user_type: string
@@ -1092,6 +1094,7 @@ export type Database = {
           onlyfans_url?: string | null
           paypal_email?: string | null
           pinterest_url?: string | null
+          playlist_public?: boolean | null
           snapchat_url?: string | null
           updated_at?: string | null
           user_type?: string

@@ -8,6 +8,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import PostInteractions from "@/components/PostInteractions";
+import PublicPlaylist from "@/components/profile/PublicPlaylist";
 
 interface Profile {
   id: string;
@@ -281,6 +282,9 @@ const ProfilePage = () => {
                 </CardContent>
               </Card>
             )}
+
+            {/* Public Playlist */}
+            {userId && <PublicPlaylist userId={userId} />}
 
             {/* Stats */}
             <Card className="bg-gray-800 border-gray-700">

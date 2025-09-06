@@ -11,8 +11,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
 import SupporterProfileModal from "@/components/profile/SupporterProfileModal";
 import PieWelcomeModal from "@/components/PieWelcomeModal";
-import ProfilePlaylist from "@/components/profile/ProfilePlaylist";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Globe, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface AudioTrack {
@@ -45,6 +47,7 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
   const isMobile = useIsMobile();
   const [userProfile, setUserProfile] = useState<any>(null);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+  const [playlistPublic, setPlaylistPublic] = useState(false);
 
   const fetchUserProfile = async () => {
     if (!user) return;
@@ -60,9 +63,30 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
         console.error('Error fetching supporter profile:', error);
       } else {
         setUserProfile(data);
+        setPlaylistPublic(data?.playlist_public || false);
       }
     } catch (error) {
       console.error('Error fetching supporter profile:', error);
+    }
+  };
+
+  const togglePlaylistVisibility = async (checked: boolean) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ playlist_public: checked })
+        .eq('id', user.id);
+
+      if (error) {
+        console.error('Error updating playlist visibility:', error);
+      } else {
+        setPlaylistPublic(checked);
+        setUserProfile(prev => prev ? { ...prev, playlist_public: checked } : null);
+      }
+    } catch (error) {
+      console.error('Error updating playlist visibility:', error);
     }
   };
 
@@ -153,7 +177,29 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
                       </Button>
                     </SupporterProfileModal>
                   </div>
-                  {user && <ProfilePlaylist userId={user.id} isOwnProfile={true} />}
+                  
+                  <div className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      {playlistPublic ? (
+                        <Globe className="h-5 w-5 text-green-600" />
+                      ) : (
+                        <Lock className="h-5 w-5 text-gray-500" />
+                      )}
+                      <div>
+                        <Label htmlFor="playlist-visibility" className="text-base font-medium">
+                          Public Music Collection
+                        </Label>
+                        <p className="text-sm text-muted-foreground">
+                          Show your purchased music on your profile page
+                        </p>
+                      </div>
+                    </div>
+                    <Switch
+                      id="playlist-visibility"
+                      checked={playlistPublic}
+                      onCheckedChange={togglePlaylistVisibility}
+                    />
+                  </div>
                 </TabsContent>
                 
                 <TabsContent value="background" className="space-y-6">
