@@ -12,6 +12,12 @@ import RestrictedAccess from "./merchant/RestrictedAccess";
 import ModelingApplicationSection from "./merchant/ModelingApplicationSection";
 import PublishingRoyaltiesModal from "@/components/profile/PublishingRoyaltiesModal";
 import ContractOpportunitiesModal from "@/components/profile/ContractOpportunitiesModal";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { useState, useEffect } from "react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface MerchantDashboardProps {
   onSuccess: () => void;
@@ -34,6 +40,51 @@ const MerchantDashboard = ({
 }: MerchantDashboardProps) => {
   const { isAdmin, isApproved, approvalStatus, loading } = useApprovalStatus();
   const isMobile = useIsMobile();
+  const { user } = useAuth();
+  const [playlistPublic, setPlaylistPublic] = useState<boolean>(false);
+
+  const fetchUserProfile = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('playlist_public')
+        .eq('id', user.id)
+        .single();
+
+      if (error) throw error;
+      
+      if (data) {
+        setPlaylistPublic(data.playlist_public || false);
+      }
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+    }
+  };
+
+  const togglePlaylistVisibility = async (checked: boolean) => {
+    if (!user) return;
+    
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ playlist_public: checked })
+        .eq('id', user.id);
+
+      if (error) throw error;
+      
+      setPlaylistPublic(checked);
+    } catch (error) {
+      console.error('Error updating playlist visibility:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      fetchUserProfile();
+    }
+  }, [user]);
 
   if (loading) {
     return (
@@ -75,6 +126,24 @@ const MerchantDashboard = ({
           )}
           
           <ContentManagement />
+
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="text-white">Playlist Settings</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="playlist-public"
+                  checked={playlistPublic}
+                  onCheckedChange={togglePlaylistVisibility}
+                />
+                <Label htmlFor="playlist-public" className="text-white">
+                  Make my playlist public on profile page
+                </Label>
+              </div>
+            </CardContent>
+          </Card>
 
           <MediaPlayers purchasedTracks={purchasedTracks} purchasedPodcasts={purchasedPodcasts} purchasedVideos={purchasedVideos} />
         </>
