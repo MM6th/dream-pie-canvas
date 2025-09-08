@@ -2,7 +2,12 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { AudioLines, Play, Pause, Volume2, VolumeX, SkipBack, SkipForward } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { AudioLines, Play, Pause, Volume2, VolumeX, SkipBack, SkipForward, Globe, Lock } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 interface AudioTrack {
   id: string;
@@ -25,7 +30,9 @@ const AudioPlayer = ({ tracks }: AudioPlayerProps) => {
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
+  const [playlistPublic, setPlaylistPublic] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const { user } = useAuth();
 
   const currentTrack = tracks[currentTrackIndex];
 
@@ -37,6 +44,47 @@ const AudioPlayer = ({ tracks }: AudioPlayerProps) => {
       console.log('Sample track:', tracks[0]);
     }
   }, [tracks]);
+
+  // Fetch user profile to get playlist visibility setting
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (!user) return;
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('playlist_public')
+        .eq('id', user.id)
+        .single();
+
+      if (error) {
+        console.error('Error fetching user profile:', error);
+        return;
+      }
+
+      setPlaylistPublic(data?.playlist_public || false);
+    };
+
+    fetchUserProfile();
+  }, [user]);
+
+  // Toggle playlist visibility
+  const togglePlaylistVisibility = async (checked: boolean) => {
+    if (!user) return;
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({ playlist_public: checked })
+      .eq('id', user.id);
+
+    if (error) {
+      console.error('Error updating playlist visibility:', error);
+      toast.error('Failed to update playlist visibility');
+      return;
+    }
+
+    setPlaylistPublic(checked);
+    toast.success(checked ? 'Playlist is now public' : 'Playlist is now private');
+  };
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -169,6 +217,30 @@ const AudioPlayer = ({ tracks }: AudioPlayerProps) => {
           <AudioLines className="text-gray-400" size={24} />
           <h3 className="text-xl font-bold text-white">Audio Player</h3>
           <span className="text-gray-400 text-sm">({tracks.length} tracks)</span>
+        </div>
+        
+        {/* Playlist Visibility Toggle */}
+        <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg border border-gray-600 mb-4">
+          <div className="flex items-center gap-3">
+            {playlistPublic ? (
+              <Globe className="w-5 h-5 text-green-400" />
+            ) : (
+              <Lock className="w-5 h-5 text-gray-400" />
+            )}
+            <div>
+              <Label htmlFor="playlist_public" className="text-white font-medium">
+                Public Playlist
+              </Label>
+              <p className="text-sm text-gray-400">
+                Show your music collection on your profile page
+              </p>
+            </div>
+          </div>
+          <Switch
+            id="playlist_public"
+            checked={playlistPublic}
+            onCheckedChange={togglePlaylistVisibility}
+          />
         </div>
         
         <div className="bg-gray-900/50 rounded-lg p-4">
