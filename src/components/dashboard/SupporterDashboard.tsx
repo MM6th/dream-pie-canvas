@@ -148,7 +148,25 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
               )}
             </TabsList>
             
-            <TabsContent value="music">
+            <TabsContent value="music" className="space-y-6">
+              <Card className="mb-6">
+                <CardHeader>
+                  <CardTitle className="text-white">Playlist Settings</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="playlist-public"
+                      checked={playlistPublic}
+                      onCheckedChange={togglePlaylistVisibility}
+                    />
+                    <Label htmlFor="playlist-public" className="text-white">
+                      Make my playlist public on profile page
+                    </Label>
+                  </div>
+                </CardContent>
+              </Card>
+              
               <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-2'} gap-6`}>
                 <AudioPlayer tracks={purchasedTracks} />
                 <PodcastAudioPlayer tracks={purchasedPodcasts} />
@@ -178,28 +196,6 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
                     </SupporterProfileModal>
                   </div>
                   
-                  <div className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      {playlistPublic ? (
-                        <Globe className="h-5 w-5 text-green-600" />
-                      ) : (
-                        <Lock className="h-5 w-5 text-gray-500" />
-                      )}
-                      <div>
-                        <Label htmlFor="playlist-visibility" className="text-base font-medium">
-                          Public Music Collection
-                        </Label>
-                        <p className="text-sm text-muted-foreground">
-                          Show your purchased music on your profile page
-                        </p>
-                      </div>
-                    </div>
-                    <Switch
-                      id="playlist-visibility"
-                      checked={playlistPublic}
-                      onCheckedChange={togglePlaylistVisibility}
-                    />
-                  </div>
                 </TabsContent>
                 
                 <TabsContent value="background" className="space-y-6">
