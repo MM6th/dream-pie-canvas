@@ -5,6 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Play, Pause, ShoppingCart, Music } from 'lucide-react';
+import SongDetailModal from '@/components/SongDetailModal';
 
 interface AudioProduct {
   id: string;
@@ -30,6 +31,8 @@ export default function PublicPlaylist({ userId }: PublicPlaylistProps) {
   const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [isPublic, setIsPublic] = useState(false);
+  const [songModalOpen, setSongModalOpen] = useState(false);
+  const [currentSong, setCurrentSong] = useState<AudioProduct | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const navigate = useNavigate();
@@ -117,31 +120,9 @@ export default function PublicPlaylist({ userId }: PublicPlaylistProps) {
         }
         setCurrentlyPlaying(null);
         
-        // Show toast with link to store
-        toast({
-          title: "Preview ended",
-          description: (
-            <div className="flex items-center gap-2">
-              <span>Want to hear the full track?</span>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  navigate('/');
-                  // Dispatch custom event to trigger store view
-                  setTimeout(() => {
-                    window.dispatchEvent(new Event('navigateToStore'));
-                  }, 100);
-                }}
-                className="h-6 px-2 py-1 text-xs"
-              >
-                <ShoppingCart className="h-3 w-3 mr-1" />
-                Visit Store
-              </Button>
-            </div>
-          ),
-          duration: 5000,
-        });
+        // Show song detail modal
+        setCurrentSong(audioProduct);
+        setSongModalOpen(true);
       }, 30000); // 30 seconds
     }
   };
@@ -151,6 +132,14 @@ export default function PublicPlaylist({ userId }: PublicPlaylistProps) {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
+  };
+
+  const handleNavigateToStore = () => {
+    navigate('/');
+    // Dispatch custom event to trigger store view
+    setTimeout(() => {
+      window.dispatchEvent(new Event('navigateToStore'));
+    }, 100);
   };
 
   // Clean up timeout on unmount
@@ -239,13 +228,7 @@ export default function PublicPlaylist({ userId }: PublicPlaylistProps) {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => {
-              navigate('/');
-              // Dispatch custom event to trigger store view
-              setTimeout(() => {
-                window.dispatchEvent(new Event('navigateToStore'));
-              }, 100);
-            }}
+            onClick={handleNavigateToStore}
             className="gap-2"
           >
             <ShoppingCart className="h-4 w-4" />
@@ -253,6 +236,16 @@ export default function PublicPlaylist({ userId }: PublicPlaylistProps) {
           </Button>
         </div>
       </CardContent>
+
+      <SongDetailModal
+        audioProduct={currentSong}
+        isOpen={songModalOpen}
+        onClose={() => setSongModalOpen(false)}
+        onNavigateToStore={() => {
+          setSongModalOpen(false);
+          handleNavigateToStore();
+        }}
+      />
     </Card>
   );
 }

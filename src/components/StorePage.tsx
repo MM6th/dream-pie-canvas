@@ -3,9 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import { AudioLines, Download, DollarSign, Video, Lock, Shirt, Star, Shield } from "lucide-react";
+import { AudioLines, Download, DollarSign, Video, Lock, Shirt, Star, Shield, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import FashionStoreSection from "./FashionStoreSection";
 import AstrologyStoreSection from "./AstrologyStoreSection";
@@ -63,6 +64,7 @@ interface UserProfile {
 
 const StorePage = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [audioProducts, setAudioProducts] = useState<AudioProduct[]>([]);
   const [videoAdOpportunities, setVideoAdOpportunities] = useState<VideoAdOpportunity[]>([]);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -678,8 +680,20 @@ const StorePage = () => {
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800 p-6">
       <div className="max-w-6xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">Content Store</h1>
-          <p className="text-gray-300">Discover amazing astrology, fashion, audio, and video content from creators</p>
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <h1 className="text-4xl font-bold text-white mb-2">Content Store</h1>
+              <p className="text-gray-300">Discover amazing astrology, fashion, audio, and video content from creators</p>
+            </div>
+            <Button
+              onClick={() => navigate('/profiles')}
+              variant="outline"
+              className="border-blue-500/30 text-blue-300 hover:bg-blue-900/20 gap-2"
+            >
+              <Users className="h-4 w-4" />
+              Browse Profiles
+            </Button>
+          </div>
           {userProfile?.adult_content_restricted && (
             <div className="mt-2 p-2 bg-blue-900/20 border border-blue-500/30 rounded-lg">
               <p className="text-blue-300 text-sm flex items-center gap-2">
