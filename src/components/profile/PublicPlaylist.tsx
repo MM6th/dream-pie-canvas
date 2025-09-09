@@ -71,10 +71,12 @@ export default function PublicPlaylist({ userId }: PublicPlaylistProps) {
             artist_name,
             price,
             audio_file_url,
-            thumbnail_url
+            thumbnail_url,
+            audio_type
           )
         `)
         .eq('user_id', userId)
+        .eq('audio_products.audio_type', 'music')
         .order('purchase_date', { ascending: false })
         .limit(5);
 
