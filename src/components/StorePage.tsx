@@ -680,20 +680,10 @@ const StorePage = () => {
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800 p-6">
       <div className="max-w-6xl mx-auto">
         <div className="mb-8">
-          <div className="flex justify-between items-start mb-4">
-            <div>
+            <div className="mb-4">
               <h1 className="text-4xl font-bold text-white mb-2">Content Store</h1>
               <p className="text-gray-300">Discover amazing astrology, fashion, audio, and video content from creators</p>
             </div>
-            <Button
-              onClick={() => navigate('/profiles')}
-              variant="outline"
-              className="border-blue-500/30 text-blue-300 hover:bg-blue-900/20 gap-2"
-            >
-              <Users className="h-4 w-4" />
-              Browse Profiles
-            </Button>
-          </div>
           {userProfile?.adult_content_restricted && (
             <div className="mt-2 p-2 bg-blue-900/20 border border-blue-500/30 rounded-lg">
               <p className="text-blue-300 text-sm flex items-center gap-2">

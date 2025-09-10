@@ -11,9 +11,11 @@ interface AudioProduct {
   id: string;
   title: string;
   artist_name: string;
-  price: number;
+  price: number | null;
   audio_file_url: string;
   thumbnail_url: string;
+  is_free?: boolean;
+  access_level?: string;
 }
 
 interface UserPurchase {
@@ -75,7 +77,9 @@ export default function PublicPlaylist({ userId }: PublicPlaylistProps) {
             price,
             audio_file_url,
             thumbnail_url,
-            audio_type
+            audio_type,
+            is_free,
+            access_level
           )
         `)
         .eq('user_id', userId)

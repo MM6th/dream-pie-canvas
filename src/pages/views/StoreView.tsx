@@ -1,8 +1,9 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, LogOut, Film, MessageSquare } from "lucide-react";
+import { ArrowLeft, LogOut, Film, MessageSquare, Users } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useNavigate } from "react-router-dom";
 import StorePage from "@/components/StorePage";
 
 interface StoreViewProps {
@@ -14,6 +15,7 @@ interface StoreViewProps {
 
 const StoreView = ({ onBackToDashboard, onFilmsView, onBulletinView, onSignOut }: StoreViewProps) => {
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800">
@@ -45,6 +47,14 @@ const StoreView = ({ onBackToDashboard, onFilmsView, onBulletinView, onSignOut }
             >
               <MessageSquare className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
               {isMobile ? 'Bulletin' : 'Browse Bulletin'}
+            </Button>
+            <Button
+              onClick={() => navigate('/profiles')}
+              variant="outline"
+              className={`border-gray-600 text-white bg-transparent hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
+            >
+              <Users className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
+              {isMobile ? 'Profiles' : 'Browse Profiles'}
             </Button>
           </div>
           
