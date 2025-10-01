@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
@@ -24,7 +23,6 @@ const AuthPage = () => {
     const formData = new FormData(e.currentTarget);
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
-    const userType = formData.get("userType") as string;
     const isAdultCreator = formData.get("isAdultCreator") === "on";
 
     try {
@@ -33,7 +31,7 @@ const AuthPage = () => {
         password,
         options: {
           data: {
-            user_type: userType || "supporter",
+            user_type: "supporter",
             is_adult_creator: isAdultCreator
           }
         }

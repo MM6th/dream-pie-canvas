@@ -694,8 +694,8 @@ const StorePage = () => {
           )}
         </div>
 
-        {/* Astrology Products Section */}
-        <div className="mb-12">
+        {/* Astrology Products Section - Hidden until ready */}
+        <div className="mb-12 hidden">
           <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
             <Star className="w-6 h-6" />
             Astrology Readings & Consultations
@@ -703,8 +703,8 @@ const StorePage = () => {
           <AstrologyStoreSection />
         </div>
 
-        {/* Fashion Products Section */}
-        <div className="mb-12">
+        {/* Fashion Products Section - Hidden until ready */}
+        <div className="mb-12 hidden">
           <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
             <Shirt className="w-6 h-6" />
             Fashion
