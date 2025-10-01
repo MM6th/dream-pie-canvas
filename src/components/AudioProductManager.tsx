@@ -92,15 +92,24 @@ const AudioProductManager = () => {
   }, [user, isAdmin, adminStatusLoading]);
 
   const handleDelete = async (productId: string) => {
-    if (!confirm("Are you sure you want to delete this audio product?")) {
+    if (!confirm("Are you sure you want to delete this audio product? This will also remove all related data.")) {
       return;
     }
 
     try {
+      // Delete related records first to avoid foreign key constraints
+      await supabase.from('user_purchases').delete().eq('audio_product_id', productId);
+      await supabase.from('user_playlists').delete().eq('audio_product_id', productId);
+      await supabase.from('song_cover_submissions').delete().eq('audio_product_id', productId);
+      await supabase.from('asmr_submissions').delete().eq('audio_product_id', productId);
+      await supabase.from('asmr_downloads').delete().eq('audio_product_id', productId);
+
+      // Now delete the audio product
       const { error } = await supabase
         .from('audio_products')
         .delete()
-        .eq('id', productId);
+        .eq('id', productId)
+        .eq('merchant_id', user!.id);
 
       if (error) throw error;
 
@@ -114,7 +123,7 @@ const AudioProductManager = () => {
       console.error('Error deleting product:', error);
       toast({
         title: "Error",
-        description: "Failed to delete product",
+        description: error.message || "Failed to delete product",
         variant: "destructive"
       });
     }

@@ -153,8 +153,6 @@ const AuthPage = () => {
           <h1 className="text-2xl font-bold text-white mb-4 tracking-widest">PRIVATE INVESTIGATION ENTERPRISES</h1>
           
           <p className="text-gray-400 mb-6">Your boutique platform for entertainment</p>
-          
-          <UserStatsDisplay />
         </div>
 
         <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
