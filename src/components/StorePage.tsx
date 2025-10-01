@@ -682,7 +682,7 @@ const StorePage = () => {
         <div className="mb-8">
             <div className="mb-4">
               <h1 className="text-4xl font-bold text-white mb-2">Content Store</h1>
-              <p className="text-gray-300">Discover amazing astrology, fashion, audio, and video content from creators</p>
+              <p className="text-gray-300">Your boutique shop for film, music, and content creators</p>
             </div>
           {userProfile?.adult_content_restricted && (
             <div className="mt-2 p-2 bg-blue-900/20 border border-blue-500/30 rounded-lg">

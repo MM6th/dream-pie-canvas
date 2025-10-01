@@ -154,7 +154,7 @@ const AuthPage = () => {
           {/* Company Name */}
           <h1 className="text-2xl font-bold text-white mb-4 tracking-widest">PRIVATE INVESTIGATION ENTERPRISES</h1>
           
-          <p className="text-gray-400 mb-6">Your boutique platform for entertainment and astrology</p>
+          <p className="text-gray-400 mb-6">Your boutique platform for entertainment</p>
           
           <UserStatsDisplay />
         </div>
@@ -271,19 +271,6 @@ const AuthPage = () => {
                         required
                         className="bg-gray-700 border-gray-600 text-white focus:border-blue-500"
                       />
-                    </div>
-                    <div>
-                      <Label className="text-white">Account Type</Label>
-                      <RadioGroup defaultValue="supporter" name="userType" className="mt-2">
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="supporter" id="supporter" className="border-blue-500 text-blue-600" />
-                          <Label htmlFor="supporter" className="text-white">Supporter</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="merchant" id="merchant" className="border-blue-500 text-blue-600" />
-                          <Label htmlFor="merchant" className="text-white">Merchant</Label>
-                        </div>
-                      </RadioGroup>
                     </div>
                     <div className="flex items-center space-x-2">
                       <input
