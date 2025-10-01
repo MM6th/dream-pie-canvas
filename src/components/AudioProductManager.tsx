@@ -23,6 +23,7 @@ interface AudioProduct {
   title: string;
   artist_name: string | null;
   audio_type: string;
+  description: string | null;
   thumbnail_url: string | null;
   audio_file_url: string;
   album_id: string | null;
@@ -53,6 +54,7 @@ const AudioProductManager = () => {
           title,
           artist_name,
           audio_type,
+          description,
           thumbnail_url,
           audio_file_url,
           album_id,

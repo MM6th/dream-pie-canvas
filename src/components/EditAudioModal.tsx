@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -18,6 +19,7 @@ interface AudioProduct {
   title: string;
   artist_name: string | null;
   audio_type: string;
+  description: string | null;
   thumbnail_url: string | null;
   audio_file_url: string;
   album_id: string | null;
@@ -43,6 +45,7 @@ const EditAudioModal = ({ product, onSuccess, onClose }: EditAudioModalProps) =>
   const [formData, setFormData] = useState({
     title: product.title,
     artistName: product.artist_name || "",
+    description: product.description || "",
     audioType: product.audio_type,
     thumbnail: null as File | null,
     albumName: product.albums?.name || "",
@@ -149,6 +152,7 @@ const EditAudioModal = ({ product, onSuccess, onClose }: EditAudioModalProps) =>
         .update({
           title: formData.title,
           artist_name: formData.artistName || null,
+          description: formData.description || null,
           audio_type: formData.audioType,
           thumbnail_url: thumbnailUrl,
           album_id: albumId,
@@ -212,6 +216,18 @@ const EditAudioModal = ({ product, onSuccess, onClose }: EditAudioModalProps) =>
                     onChange={(e) => setFormData(prev => ({ ...prev, artistName: e.target.value }))}
                     placeholder="Enter artist name"
                     className="bg-gray-700 border-gray-600 text-white"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    value={formData.description}
+                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                    placeholder="Enter audio description"
+                    className="bg-gray-700 border-gray-600 text-white"
+                    rows={3}
                   />
                 </div>
                 
