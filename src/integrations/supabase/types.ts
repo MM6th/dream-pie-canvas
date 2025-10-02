@@ -1249,8 +1249,11 @@ export type Database = {
           created_at: string
           id: string
           is_free_download: boolean | null
+          merchant_revenue_after_referral: number | null
           paypal_transaction_id: string | null
           purchase_date: string
+          referrer_commission: number | null
+          referrer_user_id: string | null
           user_id: string
         }
         Insert: {
@@ -1259,8 +1262,11 @@ export type Database = {
           created_at?: string
           id?: string
           is_free_download?: boolean | null
+          merchant_revenue_after_referral?: number | null
           paypal_transaction_id?: string | null
           purchase_date?: string
+          referrer_commission?: number | null
+          referrer_user_id?: string | null
           user_id: string
         }
         Update: {
@@ -1269,8 +1275,11 @@ export type Database = {
           created_at?: string
           id?: string
           is_free_download?: boolean | null
+          merchant_revenue_after_referral?: number | null
           paypal_transaction_id?: string | null
           purchase_date?: string
+          referrer_commission?: number | null
+          referrer_user_id?: string | null
           user_id?: string
         }
         Relationships: [

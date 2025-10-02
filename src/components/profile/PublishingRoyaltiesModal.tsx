@@ -31,35 +31,59 @@ const PublishingRoyaltiesModal = () => {
               Minimum pricing of <strong className="text-white">$2.00</strong> ensures premium quality and early access value.
             </p>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
               <div className="bg-purple-900/20 p-4 rounded border border-purple-600">
                 <h4 className="font-semibold text-purple-400 mb-2">PIE Platform</h4>
                 <p className="text-2xl font-bold text-purple-300">10%</p>
                 <p className="text-sm text-gray-300">After PayPal processing fees</p>
               </div>
               
+              <div className="bg-yellow-900/20 p-4 rounded border border-yellow-600">
+                <h4 className="font-semibold text-yellow-400 mb-2">Supporter Referrer</h4>
+                <p className="text-2xl font-bold text-yellow-300">10%</p>
+                <p className="text-sm text-gray-300">When purchased from profile</p>
+              </div>
+              
               <div className="bg-blue-900/20 p-4 rounded border border-blue-600">
                 <h4 className="font-semibold text-blue-400 mb-2">Main Artist</h4>
                 <p className="text-2xl font-bold text-blue-300">60%</p>
-                <p className="text-sm text-gray-300">After PIE and PayPal fees</p>
+                <p className="text-sm text-gray-300">Of remaining revenue</p>
               </div>
               
               <div className="bg-green-900/20 p-4 rounded border border-green-600">
                 <h4 className="font-semibold text-green-400 mb-2">Cover Model</h4>
                 <p className="text-2xl font-bold text-green-300">30%</p>
-                <p className="text-sm text-gray-300">After PIE and PayPal fees</p>
+                <p className="text-sm text-gray-300">Of remaining revenue</p>
               </div>
             </div>
 
-            <div className="bg-gray-800/50 p-4 rounded">
-              <h4 className="font-medium text-white mb-2">PIE Platform Example ($2.00 purchase):</h4>
-              <ul className="space-y-1 text-sm">
-                <li>• PayPal Processing Fee: <span className="text-gray-400 font-medium">~$0.09 (2.9% + $0.30)</span></li>
-                <li>• After PayPal: <span className="text-white font-medium">$1.91</span></li>
-                <li>• PIE Platform: <span className="text-purple-300 font-medium">$0.19 (10%)</span></li>
-                <li>• Main Artist: <span className="text-blue-300 font-medium">$1.15 (60%)</span></li>
-                <li>• Cover Model: <span className="text-green-300 font-medium">$0.57 (30%)</span></li>
-              </ul>
+            <div className="bg-gray-800/50 p-4 rounded space-y-4">
+              <div>
+                <h4 className="font-medium text-white mb-2">Direct Purchase Example ($2.00):</h4>
+                <ul className="space-y-1 text-sm">
+                  <li>• PayPal Processing Fee: <span className="text-gray-400 font-medium">~$0.09 (2.9% + $0.30)</span></li>
+                  <li>• After PayPal: <span className="text-white font-medium">$1.91</span></li>
+                  <li>• PIE Platform: <span className="text-purple-300 font-medium">$0.19 (10%)</span></li>
+                  <li>• Main Artist: <span className="text-blue-300 font-medium">$1.03 (60% of $1.72)</span></li>
+                  <li>• Cover Model: <span className="text-green-300 font-medium">$0.52 (30% of $1.72)</span></li>
+                </ul>
+              </div>
+              
+              <div className="border-t border-gray-700 pt-4">
+                <h4 className="font-medium text-yellow-300 mb-2">Supporter Referral Purchase Example ($2.00):</h4>
+                <ul className="space-y-1 text-sm">
+                  <li>• PayPal Processing Fee: <span className="text-gray-400 font-medium">~$0.09 (2.9% + $0.30)</span></li>
+                  <li>• After PayPal: <span className="text-white font-medium">$1.91</span></li>
+                  <li>• PIE Platform: <span className="text-purple-300 font-medium">$0.19 (10%)</span></li>
+                  <li>• <strong>Supporter Referrer: <span className="text-yellow-300 font-medium">$0.17 (10% of $1.72)</span></strong></li>
+                  <li>• Main Artist: <span className="text-blue-300 font-medium">$0.93 (60% of $1.55)</span></li>
+                  <li>• Cover Model: <span className="text-green-300 font-medium">$0.46 (30% of $1.55)</span></li>
+                </ul>
+                <p className="text-xs text-yellow-200 mt-2 bg-yellow-900/20 p-2 rounded border border-yellow-600/30">
+                  💡 When a purchase is made through a supporter's public profile playlist, that supporter receives 10% commission! This incentivizes supporters to share their playlists and promote content.
+                </p>
+              </div>
+              
               <p className="text-xs text-gray-400 mt-2">
                 * Revenue splits calculated after PayPal processing fees are deducted from the total purchase amount.
               </p>

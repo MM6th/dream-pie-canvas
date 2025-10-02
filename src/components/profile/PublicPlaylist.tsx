@@ -249,6 +249,7 @@ export default function PublicPlaylist({ userId }: PublicPlaylistProps) {
           setSongModalOpen(false);
           handleNavigateToStore();
         }}
+        referrerId={userId}
       />
     </Card>
   );

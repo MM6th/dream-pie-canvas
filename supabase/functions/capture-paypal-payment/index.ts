@@ -17,6 +17,7 @@ interface PayPalCaptureResponse {
   status: string
   purchase_units: Array<{
     reference_id: string
+    custom_id?: string
     payments: {
       captures: Array<{
         id: string
@@ -166,6 +167,54 @@ Deno.serve(async (req) => {
         )
       }
 
+      // Calculate revenue distribution
+      const referrerId = purchaseUnit.custom_id || null
+      const amountPaid = parseFloat(capture.amount.value)
+      const paypalFee = amountPaid * 0.029 + 0.30
+      const netRevenue = amountPaid - paypalFee
+      const piePlatformShare = netRevenue * 0.10
+      const remainingAfterPie = netRevenue - piePlatformShare
+      
+      let referrerCommission = null
+      let merchantRevenue = null
+      let validReferrerId = null
+
+      // Validate and calculate referrer commission if applicable
+      if (referrerId && referrerId !== user.id) {
+        console.log('Validating referrer:', referrerId)
+        
+        const { data: referrerProfile } = await supabaseAdmin
+          .from('profiles')
+          .select('user_type, playlist_public')
+          .eq('id', referrerId)
+          .single()
+
+        if (referrerProfile && 
+            referrerProfile.user_type === 'supporter' && 
+            referrerProfile.playlist_public === true) {
+          
+          const { data: referrerOwnsProduct } = await supabaseAdmin
+            .from('user_purchases')
+            .select('id')
+            .eq('user_id', referrerId)
+            .eq('audio_product_id', purchaseUnit.reference_id)
+            .single()
+
+          if (referrerOwnsProduct) {
+            validReferrerId = referrerId
+            referrerCommission = remainingAfterPie * 0.10
+            const remainingAfterReferrer = remainingAfterPie - referrerCommission
+            merchantRevenue = remainingAfterReferrer
+            console.log('Valid referrer found. Commission:', referrerCommission)
+          }
+        }
+      }
+
+      if (!validReferrerId) {
+        merchantRevenue = remainingAfterPie
+        console.log('No valid referrer. Full merchant revenue:', merchantRevenue)
+      }
+      
       // Record the purchase in our database using admin client
       const { data: insertedPurchase, error: insertError } = await supabaseAdmin
         .from('user_purchases')
@@ -173,8 +222,11 @@ Deno.serve(async (req) => {
           user_id: user.id,
           audio_product_id: purchaseUnit.reference_id,
           paypal_transaction_id: capture.id,
-          amount_paid: parseFloat(capture.amount.value),
-          is_free_download: false
+          amount_paid: amountPaid,
+          is_free_download: false,
+          referrer_user_id: validReferrerId,
+          referrer_commission: referrerCommission,
+          merchant_revenue_after_referral: merchantRevenue
         })
         .select()
 

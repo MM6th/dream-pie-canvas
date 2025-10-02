@@ -23,9 +23,10 @@ interface SongDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   onNavigateToStore: () => void;
+  referrerId?: string;
 }
 
-export default function SongDetailModal({ audioProduct, isOpen, onClose, onNavigateToStore }: SongDetailModalProps) {
+export default function SongDetailModal({ audioProduct, isOpen, onClose, onNavigateToStore, referrerId }: SongDetailModalProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -113,7 +114,10 @@ export default function SongDetailModal({ audioProduct, isOpen, onClose, onNavig
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('create-paypal-payment', {
-        body: { audioProductId: audioProduct.id },
+        body: { 
+          audioProductId: audioProduct.id,
+          referrerId: referrerId || null
+        },
         headers: {
           Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
         },

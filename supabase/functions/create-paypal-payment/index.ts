@@ -65,8 +65,9 @@ Deno.serve(async (req) => {
 
     console.log('User authenticated:', user.id)
 
-    const { audioProductId } = await req.json()
+    const { audioProductId, referrerId } = await req.json()
     console.log('Audio product ID:', audioProductId)
+    console.log('Referrer ID:', referrerId || 'none')
 
     // Get audio product details using admin client to bypass RLS
     const { data: product, error: productError } = await supabaseAdmin
@@ -150,6 +151,7 @@ Deno.serve(async (req) => {
       },
       purchase_units: [{
         reference_id: audioProductId,
+        custom_id: referrerId || '',
         amount: {
           currency_code: 'USD',
           value: product.price.toString()
