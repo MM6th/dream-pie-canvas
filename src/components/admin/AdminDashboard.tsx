@@ -18,11 +18,15 @@ import AdminBulletinPostManager from "./AdminBulletinPostManager";
 import VideoAdOpportunityManager from "./VideoAdOpportunityManager";
 import SECalculatorModal from "@/components/SECalculatorModal";
 import { useSubmissionCounts } from "@/hooks/useSubmissionCounts";
+import { useAuth } from "@/hooks/useAuth";
+import { useQuarterlyIncome } from "@/hooks/useQuarterlyIncome";
 
 const AdminDashboard = () => {
   const { counts } = useSubmissionCounts();
+  const { user } = useAuth();
   const isMobile = useIsMobile();
   const totalSubmissions = counts.coverSubmissions + counts.modelingApplications;
+  const { currentQuarterIncome } = useQuarterlyIncome(user?.id);
 
   return (
     <div className="space-y-6">
@@ -44,7 +48,7 @@ const AdminDashboard = () => {
                 Tax planning tool for administrative reference and merchant support
               </p>
             </div>
-            <SECalculatorModal />
+            <SECalculatorModal userId={user?.id} autoPopulateIncome={currentQuarterIncome} />
           </div>
         </CardContent>
       </Card>

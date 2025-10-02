@@ -1103,6 +1103,42 @@ export type Database = {
         }
         Relationships: []
       }
+      quarterly_income: {
+        Row: {
+          created_at: string
+          id: string
+          income_type: string
+          quarter: number
+          source_count: number
+          total_income: number
+          updated_at: string
+          user_id: string
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          income_type: string
+          quarter: number
+          source_count?: number
+          total_income?: number
+          updated_at?: string
+          user_id: string
+          year: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          income_type?: string
+          quarter?: number
+          source_count?: number
+          total_income?: number
+          updated_at?: string
+          user_id?: string
+          year?: number
+        }
+        Relationships: []
+      }
       song_cover_submissions: {
         Row: {
           admin_notes: string | null
@@ -1563,6 +1599,10 @@ export type Database = {
       update_merchant_approval: {
         Args: { merchant_id: string; new_status: string }
         Returns: boolean
+      }
+      update_quarterly_income: {
+        Args: { p_amount: number; p_income_type: string; p_user_id: string }
+        Returns: undefined
       }
     }
     Enums: {

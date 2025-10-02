@@ -11,11 +11,13 @@ import SECalculatorModal from "@/components/SECalculatorModal";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
+import { useQuarterlyIncome } from "@/hooks/useQuarterlyIncome";
 
 const ContentManagement = () => {
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const [hasPodcastDownloads, setHasPodcastDownloads] = useState(false);
+  const { currentQuarterIncome } = useQuarterlyIncome(user?.id);
   
   // Check if user is admin - admins don't need cover submission functionality
   // since they can upload covers directly when creating products
@@ -61,7 +63,7 @@ const ContentManagement = () => {
                 Estimate your quarterly tax obligations as an independent contractor
               </p>
             </div>
-            <SECalculatorModal />
+            <SECalculatorModal userId={user?.id} autoPopulateIncome={currentQuarterIncome} />
           </div>
         </CardContent>
       </Card>

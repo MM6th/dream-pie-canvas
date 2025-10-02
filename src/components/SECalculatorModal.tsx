@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -28,15 +28,30 @@ interface TaxResults {
   annualProjection: number;
 }
 
-const SECalculatorModal = () => {
+interface SECalculatorModalProps {
+  userId?: string;
+  autoPopulateIncome?: number;
+}
+
+const SECalculatorModal = ({ userId, autoPopulateIncome = 0 }: SECalculatorModalProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [taxData, setTaxData] = useState<TaxData>({
-    quarterlyIncome: 0,
+    quarterlyIncome: autoPopulateIncome,
     businessExpenses: 0,
     filingStatus: "single",
     previousYearAGI: 0,
   });
   const [results, setResults] = useState<TaxResults | null>(null);
+
+  // Update quarterly income when auto-populate changes
+  useEffect(() => {
+    if (autoPopulateIncome > 0) {
+      setTaxData(prev => ({
+        ...prev,
+        quarterlyIncome: autoPopulateIncome
+      }));
+    }
+  }, [autoPopulateIncome]);
 
   const calculateTaxes = (data: TaxData): TaxResults => {
     const netEarnings = Math.max(0, data.quarterlyIncome - data.businessExpenses);

@@ -16,6 +16,8 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Globe, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useQuarterlyIncome } from "@/hooks/useQuarterlyIncome";
+import SECalculatorModal from "@/components/SECalculatorModal";
 
 interface AudioTrack {
   id: string;
@@ -48,6 +50,7 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
   const [userProfile, setUserProfile] = useState<any>(null);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [playlistPublic, setPlaylistPublic] = useState(false);
+  const { currentQuarterIncome } = useQuarterlyIncome(user?.id);
 
   const fetchUserProfile = async () => {
     if (!user) return;
@@ -111,6 +114,26 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
           What is PIE?
         </Button>
       </PieWelcomeModal>
+
+      {/* Tax Calculator Section - Only show if user has referral income */}
+      {currentQuarterIncome > 0 && (
+        <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm mb-6">
+          <CardHeader>
+            <CardTitle className="text-white">Self-Employment Tax Calculator</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg">
+              <div>
+                <h4 className="text-white font-medium">Quarterly Referral Income Tracker</h4>
+                <p className="text-gray-400 text-sm">
+                  You've earned ${currentQuarterIncome.toFixed(2)} in referral commissions this quarter
+                </p>
+              </div>
+              <SECalculatorModal userId={user?.id} autoPopulateIncome={currentQuarterIncome} />
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm mb-6">
         <CardHeader>

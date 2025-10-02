@@ -244,6 +244,39 @@ Deno.serve(async (req) => {
 
       console.log('Purchase recorded successfully:', insertedPurchase)
 
+      // Get audio product to find merchant_id
+      const { data: audioProduct } = await supabaseAdmin
+        .from('audio_products')
+        .select('merchant_id')
+        .eq('id', purchaseUnit.reference_id)
+        .single()
+
+      if (audioProduct) {
+        // Track income for tax reporting
+        // 1. Track PIE platform fee (10% of net revenue after PayPal)
+        await supabaseAdmin.rpc('update_quarterly_income', {
+          p_user_id: audioProduct.merchant_id,
+          p_income_type: 'platform_fee',
+          p_amount: piePlatformShare
+        })
+
+        // 2. Track merchant revenue
+        await supabaseAdmin.rpc('update_quarterly_income', {
+          p_user_id: audioProduct.merchant_id,
+          p_income_type: 'merchant_revenue',
+          p_amount: merchantRevenue
+        })
+
+        // 3. Track referrer commission if applicable
+        if (validReferrerId && referrerCommission && referrerCommission > 0) {
+          await supabaseAdmin.rpc('update_quarterly_income', {
+            p_user_id: validReferrerId,
+            p_income_type: 'referral_commission',
+            p_amount: referrerCommission
+          })
+        }
+      }
+
       return new Response(
         JSON.stringify({ 
           success: true,
