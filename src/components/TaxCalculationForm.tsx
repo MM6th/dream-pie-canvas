@@ -22,7 +22,6 @@ const formatCurrency = (amount: number) => {
 
 interface TaxData {
   platformIncome: number;
-  externalIncome: number;
   quarterlyIncome: number;
   businessExpenses: number;
   filingStatus: string;
@@ -40,31 +39,22 @@ const TaxCalculationForm = ({ initialData, onCalculate, onReset, platformIncome 
   const [formData, setFormData] = useState<TaxData>(initialData);
   const [errors, setErrors] = useState<Partial<TaxData>>({});
 
-  // Update total income whenever platform or external income changes
+  // Update total income whenever platform income changes
   React.useEffect(() => {
     setFormData(prev => ({
       ...prev,
       platformIncome,
-      quarterlyIncome: platformIncome + prev.externalIncome
+      quarterlyIncome: platformIncome
     }));
   }, [platformIncome]);
 
   const handleInputChange = (field: keyof TaxData, value: string | number) => {
     const numValue = typeof value === 'string' ? parseFloat(value) || 0 : value;
     
-    setFormData(prev => {
-      const updated = {
-        ...prev,
-        [field]: numValue
-      };
-      
-      // Update total income when external income changes
-      if (field === 'externalIncome') {
-        updated.quarterlyIncome = platformIncome + numValue;
-      }
-      
-      return updated;
-    });
+    setFormData(prev => ({
+      ...prev,
+      [field]: numValue
+    }));
     
     // Clear error when user starts typing
     if (errors[field]) {
@@ -104,7 +94,6 @@ const TaxCalculationForm = ({ initialData, onCalculate, onReset, platformIncome 
   const handleReset = () => {
     setFormData({
       platformIncome,
-      externalIncome: 0,
       quarterlyIncome: platformIncome,
       businessExpenses: 0,
       filingStatus: "single",
@@ -124,46 +113,13 @@ const TaxCalculationForm = ({ initialData, onCalculate, onReset, platformIncome 
           {/* Platform Income Display */}
           <div className="bg-blue-900/30 border border-blue-600 rounded-lg p-3">
             <Label className="text-blue-300 text-sm font-medium">
-              Income from PIE Platform (This Quarter)
+              Quarterly Gross Income (PIE Platform)
             </Label>
             <div className="text-2xl font-bold text-blue-400 mt-1">
               {formatCurrency(platformIncome)}
             </div>
             <p className="text-blue-200 text-xs mt-1">
-              Automatically tracked from your platform activity
-            </p>
-          </div>
-
-          {/* External Income Input */}
-          <div>
-            <Label htmlFor="external-income" className="text-gray-300">
-              Additional External Income (This Quarter)
-            </Label>
-            <Input
-              id="external-income"
-              type="number"
-              step="0.01"
-              min="0"
-              value={formData.externalIncome || ''}
-              onChange={(e) => handleInputChange('externalIncome', e.target.value)}
-              className="bg-gray-600 border-gray-500 text-white"
-              placeholder="Income from other sources"
-            />
-            <p className="text-gray-400 text-xs mt-1">
-              Enter income earned outside the PIE platform
-            </p>
-          </div>
-
-          {/* Total Income Display */}
-          <div className="bg-gray-800/50 p-3 rounded-lg">
-            <div className="flex justify-between items-center">
-              <span className="text-gray-300 font-medium">Total Quarterly Income:</span>
-              <span className="text-green-400 text-xl font-bold">
-                {formatCurrency(formData.quarterlyIncome)}
-              </span>
-            </div>
-            <p className="text-gray-400 text-xs mt-1">
-              Platform ({formatCurrency(platformIncome)}) + External ({formatCurrency(formData.externalIncome)})
+              Automatically tracked from your platform activity this quarter
             </p>
           </div>
 
@@ -215,7 +171,7 @@ const TaxCalculationForm = ({ initialData, onCalculate, onReset, platformIncome 
               type="number"
               step="0.01"
               min="0"
-              value={formData.previousYearAGI === 0 ? '0' : (formData.previousYearAGI || '')}
+              value={formData.previousYearAGI || ''}
               onChange={(e) => handleInputChange('previousYearAGI', e.target.value)}
               className="bg-gray-600 border-gray-500 text-white"
               placeholder="Enter 0 if this is your first year"

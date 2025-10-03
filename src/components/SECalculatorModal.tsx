@@ -15,7 +15,6 @@ import QuarterlyDueDates from "./QuarterlyDueDates";
 
 interface TaxData {
   platformIncome: number;
-  externalIncome: number;
   quarterlyIncome: number;
   businessExpenses: number;
   filingStatus: string;
@@ -39,7 +38,6 @@ const SECalculatorModal = ({ userId, autoPopulateIncome = 0 }: SECalculatorModal
   const [isOpen, setIsOpen] = useState(false);
   const [taxData, setTaxData] = useState<TaxData>({
     platformIncome: autoPopulateIncome,
-    externalIncome: 0,
     quarterlyIncome: autoPopulateIncome,
     businessExpenses: 0,
     filingStatus: "single",
@@ -52,7 +50,7 @@ const SECalculatorModal = ({ userId, autoPopulateIncome = 0 }: SECalculatorModal
     setTaxData(prev => ({
       ...prev,
       platformIncome: autoPopulateIncome,
-      quarterlyIncome: autoPopulateIncome + prev.externalIncome
+      quarterlyIncome: autoPopulateIncome
     }));
   }, [autoPopulateIncome]);
 
@@ -102,7 +100,6 @@ const SECalculatorModal = ({ userId, autoPopulateIncome = 0 }: SECalculatorModal
   const handleReset = () => {
     setTaxData({
       platformIncome: autoPopulateIncome,
-      externalIncome: 0,
       quarterlyIncome: autoPopulateIncome,
       businessExpenses: 0,
       filingStatus: "single",
