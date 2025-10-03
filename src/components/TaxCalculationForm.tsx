@@ -13,7 +13,16 @@ import {
 } from "@/components/ui/select";
 import { Calculator, RotateCcw } from "lucide-react";
 
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+  }).format(amount);
+};
+
 interface TaxData {
+  platformIncome: number;
+  externalIncome: number;
   quarterlyIncome: number;
   businessExpenses: number;
   filingStatus: string;
@@ -24,17 +33,38 @@ interface TaxCalculationFormProps {
   initialData: TaxData;
   onCalculate: (data: TaxData) => void;
   onReset: () => void;
+  platformIncome?: number;
 }
 
-const TaxCalculationForm = ({ initialData, onCalculate, onReset }: TaxCalculationFormProps) => {
+const TaxCalculationForm = ({ initialData, onCalculate, onReset, platformIncome = 0 }: TaxCalculationFormProps) => {
   const [formData, setFormData] = useState<TaxData>(initialData);
   const [errors, setErrors] = useState<Partial<TaxData>>({});
 
-  const handleInputChange = (field: keyof TaxData, value: string | number) => {
+  // Update total income whenever platform or external income changes
+  React.useEffect(() => {
     setFormData(prev => ({
       ...prev,
-      [field]: typeof value === 'string' ? parseFloat(value) || 0 : value
+      platformIncome,
+      quarterlyIncome: platformIncome + prev.externalIncome
     }));
+  }, [platformIncome]);
+
+  const handleInputChange = (field: keyof TaxData, value: string | number) => {
+    const numValue = typeof value === 'string' ? parseFloat(value) || 0 : value;
+    
+    setFormData(prev => {
+      const updated = {
+        ...prev,
+        [field]: numValue
+      };
+      
+      // Update total income when external income changes
+      if (field === 'externalIncome') {
+        updated.quarterlyIncome = platformIncome + numValue;
+      }
+      
+      return updated;
+    });
     
     // Clear error when user starts typing
     if (errors[field]) {
@@ -73,7 +103,9 @@ const TaxCalculationForm = ({ initialData, onCalculate, onReset }: TaxCalculatio
 
   const handleReset = () => {
     setFormData({
-      quarterlyIncome: 0,
+      platformIncome,
+      externalIncome: 0,
+      quarterlyIncome: platformIncome,
       businessExpenses: 0,
       filingStatus: "single",
       previousYearAGI: 0,
@@ -89,23 +121,50 @@ const TaxCalculationForm = ({ initialData, onCalculate, onReset }: TaxCalculatio
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Platform Income Display */}
+          <div className="bg-blue-900/30 border border-blue-600 rounded-lg p-3">
+            <Label className="text-blue-300 text-sm font-medium">
+              Income from PIE Platform (This Quarter)
+            </Label>
+            <div className="text-2xl font-bold text-blue-400 mt-1">
+              {formatCurrency(platformIncome)}
+            </div>
+            <p className="text-blue-200 text-xs mt-1">
+              Automatically tracked from your platform activity
+            </p>
+          </div>
+
+          {/* External Income Input */}
           <div>
-            <Label htmlFor="quarterly-income" className="text-gray-300">
-              Quarterly Gross Income *
+            <Label htmlFor="external-income" className="text-gray-300">
+              Additional External Income (This Quarter)
             </Label>
             <Input
-              id="quarterly-income"
+              id="external-income"
               type="number"
               step="0.01"
               min="0"
-              value={formData.quarterlyIncome || ''}
-              onChange={(e) => handleInputChange('quarterlyIncome', e.target.value)}
+              value={formData.externalIncome || ''}
+              onChange={(e) => handleInputChange('externalIncome', e.target.value)}
               className="bg-gray-600 border-gray-500 text-white"
-              placeholder="Enter your quarterly income"
+              placeholder="Income from other sources"
             />
-            {errors.quarterlyIncome !== undefined && (
-              <p className="text-red-400 text-sm mt-1">Quarterly income is required</p>
-            )}
+            <p className="text-gray-400 text-xs mt-1">
+              Enter income earned outside the PIE platform
+            </p>
+          </div>
+
+          {/* Total Income Display */}
+          <div className="bg-gray-800/50 p-3 rounded-lg">
+            <div className="flex justify-between items-center">
+              <span className="text-gray-300 font-medium">Total Quarterly Income:</span>
+              <span className="text-green-400 text-xl font-bold">
+                {formatCurrency(formData.quarterlyIncome)}
+              </span>
+            </div>
+            <p className="text-gray-400 text-xs mt-1">
+              Platform ({formatCurrency(platformIncome)}) + External ({formatCurrency(formData.externalIncome)})
+            </p>
           </div>
 
           <div>
@@ -156,16 +215,16 @@ const TaxCalculationForm = ({ initialData, onCalculate, onReset }: TaxCalculatio
               type="number"
               step="0.01"
               min="0"
-              value={formData.previousYearAGI || ''}
+              value={formData.previousYearAGI === 0 ? '0' : (formData.previousYearAGI || '')}
               onChange={(e) => handleInputChange('previousYearAGI', e.target.value)}
               className="bg-gray-600 border-gray-500 text-white"
-              placeholder="For safe harbor calculations"
+              placeholder="Enter 0 if this is your first year"
             />
             {errors.previousYearAGI !== undefined && (
               <p className="text-red-400 text-sm mt-1">AGI cannot be negative</p>
             )}
             <p className="text-gray-400 text-xs mt-1">
-              Used for safe harbor rule calculations
+              Enter 0 if this is your first year working. Used for safe harbor calculations.
             </p>
           </div>
 

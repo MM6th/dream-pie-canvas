@@ -14,6 +14,8 @@ import TaxResultsDisplay from "./TaxResultsDisplay";
 import QuarterlyDueDates from "./QuarterlyDueDates";
 
 interface TaxData {
+  platformIncome: number;
+  externalIncome: number;
   quarterlyIncome: number;
   businessExpenses: number;
   filingStatus: string;
@@ -36,6 +38,8 @@ interface SECalculatorModalProps {
 const SECalculatorModal = ({ userId, autoPopulateIncome = 0 }: SECalculatorModalProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [taxData, setTaxData] = useState<TaxData>({
+    platformIncome: autoPopulateIncome,
+    externalIncome: 0,
     quarterlyIncome: autoPopulateIncome,
     businessExpenses: 0,
     filingStatus: "single",
@@ -43,14 +47,13 @@ const SECalculatorModal = ({ userId, autoPopulateIncome = 0 }: SECalculatorModal
   });
   const [results, setResults] = useState<TaxResults | null>(null);
 
-  // Update quarterly income when auto-populate changes
+  // Update platform income when auto-populate changes
   useEffect(() => {
-    if (autoPopulateIncome > 0) {
-      setTaxData(prev => ({
-        ...prev,
-        quarterlyIncome: autoPopulateIncome
-      }));
-    }
+    setTaxData(prev => ({
+      ...prev,
+      platformIncome: autoPopulateIncome,
+      quarterlyIncome: autoPopulateIncome + prev.externalIncome
+    }));
   }, [autoPopulateIncome]);
 
   const calculateTaxes = (data: TaxData): TaxResults => {
@@ -98,7 +101,9 @@ const SECalculatorModal = ({ userId, autoPopulateIncome = 0 }: SECalculatorModal
 
   const handleReset = () => {
     setTaxData({
-      quarterlyIncome: 0,
+      platformIncome: autoPopulateIncome,
+      externalIncome: 0,
+      quarterlyIncome: autoPopulateIncome,
       businessExpenses: 0,
       filingStatus: "single",
       previousYearAGI: 0,
@@ -143,6 +148,7 @@ const SECalculatorModal = ({ userId, autoPopulateIncome = 0 }: SECalculatorModal
                 initialData={taxData}
                 onCalculate={handleCalculate}
                 onReset={handleReset}
+                platformIncome={autoPopulateIncome}
               />
             </div>
             
