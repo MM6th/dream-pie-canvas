@@ -8,8 +8,6 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import CurrentThoughtsSection from "@/components/CurrentThoughtsSection";
 import TVGuideSection from "@/components/TVGuideSection";
-import RegularPostsSection from "@/components/RegularPostsSection";
-import AnnouncementPostsSection from "@/components/AnnouncementPostsSection";
 
 const BulletinBoard = () => {
   const navigate = useNavigate();
@@ -47,10 +45,11 @@ const BulletinBoard = () => {
     }
   };
 
-  const currentThoughtsPosts = posts.filter((post) => post.post_type === 'current_thoughts');
+  // Merge announcements with current thoughts
+  const currentThoughtsPosts = posts.filter((post) => 
+    post.post_type === 'current_thoughts' || post.post_type === 'announcement'
+  );
   const tvGuidePosts = posts.filter((post) => post.post_type === 'tv_guide');
-  const regularPosts = posts.filter((post) => post.post_type === 'regular');
-  const announcementPosts = posts.filter((post) => post.post_type === 'announcement');
 
   const handleBackToDashboard = () => {
     navigate('/');
@@ -138,36 +137,48 @@ const BulletinBoard = () => {
       </div>
 
       {/* Main Content */}
-      <div className="relative z-10 max-w-6xl mx-auto p-6">
+      <div className="relative z-10 w-full mx-auto p-6">
         <div className="mb-8 text-center">
           <h1 className="text-4xl font-bold text-white mb-2">Bulletin Board</h1>
           <p className="text-gray-300">Stay updated with the latest from our community</p>
         </div>
 
-        {/* Announcements Section - Always full width */}
-        <div className="mb-12">
-          <AnnouncementPostsSection posts={announcementPosts} />
-        </div>
-
-        {/* Responsive Layout for Other Sections */}
+        {/* Desktop: Ad + Content + Ad Layout */}
         {isMobile ? (
-          // Mobile: Vertical stack
-          <div className="space-y-8">
+          // Mobile: Vertical stack, no ads
+          <div className="space-y-8 max-w-2xl mx-auto">
             <CurrentThoughtsSection posts={currentThoughtsPosts} useCarousel={false} />
             <TVGuideSection posts={tvGuidePosts} useCarousel={false} />
-            <RegularPostsSection posts={regularPosts} useCarousel={false} />
           </div>
         ) : (
-          // Desktop: Three columns
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-1">
-              <CurrentThoughtsSection posts={currentThoughtsPosts} useCarousel={false} />
+          // Desktop: Left Ad + 2 Carousels + Right Ad
+          <div className="flex gap-6 justify-center items-start">
+            {/* Left Ad Space */}
+            <div className="w-48 flex-shrink-0">
+              <div className="sticky top-4">
+                <div className="bg-gradient-to-br from-purple-900/20 to-pink-900/20 border border-purple-700 rounded-lg p-4 h-96 flex items-center justify-center">
+                  <p className="text-gray-400 text-center text-sm">Ad Space<br/>300x600</p>
+                </div>
+              </div>
             </div>
-            <div className="lg:col-span-1">
-              <TVGuideSection posts={tvGuidePosts} useCarousel={false} />
+
+            {/* Main Content - 2 Carousels */}
+            <div className="flex gap-8 max-w-3xl">
+              <div className="flex-1">
+                <CurrentThoughtsSection posts={currentThoughtsPosts} useCarousel={false} />
+              </div>
+              <div className="flex-1">
+                <TVGuideSection posts={tvGuidePosts} useCarousel={false} />
+              </div>
             </div>
-            <div className="lg:col-span-1">
-              <RegularPostsSection posts={regularPosts} useCarousel={false} />
+
+            {/* Right Ad Space */}
+            <div className="w-48 flex-shrink-0">
+              <div className="sticky top-4">
+                <div className="bg-gradient-to-br from-blue-900/20 to-cyan-900/20 border border-blue-700 rounded-lg p-4 h-96 flex items-center justify-center">
+                  <p className="text-gray-400 text-center text-sm">Ad Space<br/>300x600</p>
+                </div>
+              </div>
             </div>
           </div>
         )}
