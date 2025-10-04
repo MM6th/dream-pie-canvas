@@ -38,12 +38,21 @@ const SECalculatorModal = ({ userId, autoPopulateIncome = 0 }: SECalculatorModal
   const [isOpen, setIsOpen] = useState(false);
   const [taxData, setTaxData] = useState<TaxData>({
     platformIncome: autoPopulateIncome,
-    quarterlyIncome: 0,
+    quarterlyIncome: autoPopulateIncome,
     businessExpenses: 0,
     filingStatus: "single",
     previousYearAGI: 0,
   });
   const [results, setResults] = useState<TaxResults | null>(null);
+
+  // Update platform income when auto-populate changes
+  useEffect(() => {
+    setTaxData(prev => ({
+      ...prev,
+      platformIncome: autoPopulateIncome,
+      quarterlyIncome: autoPopulateIncome
+    }));
+  }, [autoPopulateIncome]);
 
   const calculateTaxes = (data: TaxData): TaxResults => {
     const netEarnings = Math.max(0, data.quarterlyIncome - data.businessExpenses);
@@ -91,7 +100,7 @@ const SECalculatorModal = ({ userId, autoPopulateIncome = 0 }: SECalculatorModal
   const handleReset = () => {
     setTaxData({
       platformIncome: autoPopulateIncome,
-      quarterlyIncome: 0,
+      quarterlyIncome: autoPopulateIncome,
       businessExpenses: 0,
       filingStatus: "single",
       previousYearAGI: 0,
