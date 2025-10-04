@@ -39,15 +39,6 @@ const TaxCalculationForm = ({ initialData, onCalculate, onReset, platformIncome 
   const [formData, setFormData] = useState<TaxData>(initialData);
   const [errors, setErrors] = useState<Partial<TaxData>>({});
 
-  // Update total income whenever platform income changes
-  React.useEffect(() => {
-    setFormData(prev => ({
-      ...prev,
-      platformIncome,
-      quarterlyIncome: platformIncome
-    }));
-  }, [platformIncome]);
-
   const handleInputChange = (field: keyof TaxData, value: string | number) => {
     const numValue = typeof value === 'string' ? parseFloat(value) || 0 : value;
     
@@ -93,8 +84,8 @@ const TaxCalculationForm = ({ initialData, onCalculate, onReset, platformIncome 
 
   const handleReset = () => {
     setFormData({
-      platformIncome,
-      quarterlyIncome: platformIncome,
+      platformIncome: 0,
+      quarterlyIncome: 0,
       businessExpenses: 0,
       filingStatus: "single",
       previousYearAGI: 0,
@@ -110,16 +101,40 @@ const TaxCalculationForm = ({ initialData, onCalculate, onReset, platformIncome 
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Platform Income Display */}
-          <div className="bg-blue-900/30 border border-blue-600 rounded-lg p-3">
-            <Label className="text-blue-300 text-sm font-medium">
-              Quarterly Gross Income (PIE Platform)
-            </Label>
-            <div className="text-2xl font-bold text-blue-400 mt-1">
-              {formatCurrency(platformIncome)}
+          {/* Platform Income Info */}
+          {platformIncome > 0 && (
+            <div className="bg-blue-900/30 border border-blue-600 rounded-lg p-3">
+              <Label className="text-blue-300 text-sm font-medium">
+                Tracked Platform Income This Quarter
+              </Label>
+              <div className="text-xl font-bold text-blue-400 mt-1">
+                {formatCurrency(platformIncome)}
+              </div>
+              <p className="text-blue-200 text-xs mt-1">
+                Automatically tracked from your PIE platform activity
+              </p>
             </div>
-            <p className="text-blue-200 text-xs mt-1">
-              Automatically tracked from your platform activity this quarter
+          )}
+
+          <div>
+            <Label htmlFor="quarterly-income" className="text-gray-300">
+              Total Quarterly Gross Income
+            </Label>
+            <Input
+              id="quarterly-income"
+              type="number"
+              step="0.01"
+              min="0"
+              value={formData.quarterlyIncome || ''}
+              onChange={(e) => handleInputChange('quarterlyIncome', e.target.value)}
+              className="bg-gray-600 border-gray-500 text-white"
+              placeholder="Enter your total quarterly income"
+            />
+            {errors.quarterlyIncome !== undefined && (
+              <p className="text-red-400 text-sm mt-1">Quarterly income is required</p>
+            )}
+            <p className="text-gray-400 text-xs mt-1">
+              Include all business income earned this quarter
             </p>
           </div>
 
@@ -171,10 +186,10 @@ const TaxCalculationForm = ({ initialData, onCalculate, onReset, platformIncome 
               type="number"
               step="0.01"
               min="0"
-              value={formData.previousYearAGI || ''}
+              value={formData.previousYearAGI === 0 ? '' : formData.previousYearAGI}
               onChange={(e) => handleInputChange('previousYearAGI', e.target.value)}
               className="bg-gray-600 border-gray-500 text-white"
-              placeholder="Enter 0 if this is your first year"
+              placeholder="0"
             />
             {errors.previousYearAGI !== undefined && (
               <p className="text-red-400 text-sm mt-1">AGI cannot be negative</p>
