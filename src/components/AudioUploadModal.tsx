@@ -45,6 +45,20 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
     isPieExclusive: false
   });
   const [albums, setAlbums] = useState<any[]>([]);
+  
+  const [tracks, setTracks] = useState<Array<{
+    audioFile: File | null;
+    title: string;
+    featuringArtistName: string;
+    featuringArtistPaypal: string;
+    featuringPercentage: number;
+  }>>([{
+    audioFile: null,
+    title: '',
+    featuringArtistName: '',
+    featuringArtistPaypal: '',
+    featuringPercentage: 30
+  }]);
 
   const MAX_AUDIO_SIZE = 200 * 1024 * 1024; // 200MB for audio files
   const MAX_THUMBNAIL_SIZE = 50 * 1024 * 1024; // 50MB for thumbnails
@@ -116,10 +130,199 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
     return publicUrl;
   };
 
+  const addTrack = () => {
+    if (tracks.length >= 20) {
+      toast({ title: "Limit Reached", description: "Maximum 20 tracks per album", variant: "destructive" });
+      return;
+    }
+    setTracks([...tracks, {
+      audioFile: null,
+      title: '',
+      featuringArtistName: '',
+      featuringArtistPaypal: '',
+      featuringPercentage: 30
+    }]);
+  };
+
+  const removeTrack = (index: number) => {
+    if (tracks.length <= 2) {
+      toast({ title: "Minimum Required", description: "Albums must have at least 2 tracks", variant: "destructive" });
+      return;
+    }
+    setTracks(tracks.filter((_, i) => i !== index));
+  };
+
+  const updateTrack = (index: number, field: string, value: any) => {
+    const newTracks = [...tracks];
+    newTracks[index] = { ...newTracks[index], [field]: value };
+    setTracks(newTracks);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
     
+    // Multi-track album upload
+    if (formData.hasAlbum) {
+      setLoading(true);
+      
+      try {
+        // Validation
+        if (tracks.length < 2) {
+          toast({ title: "Error", description: "Albums must have at least 2 tracks", variant: "destructive" });
+          return;
+        }
+
+        const trackTitles = tracks.map(t => t.title);
+        const uniqueTitles = new Set(trackTitles);
+        if (trackTitles.length !== uniqueTitles.size) {
+          toast({ title: "Error", description: "All track titles must be unique", variant: "destructive" });
+          return;
+        }
+
+        // Validate featuring artist data
+        const emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;
+        for (let i = 0; i < tracks.length; i++) {
+          const track = tracks[i];
+          if (!track.audioFile || !track.title) {
+            toast({ title: "Error", description: `Track ${i + 1}: Missing audio file or title`, variant: "destructive" });
+            return;
+          }
+          if (track.featuringArtistName && !track.featuringArtistPaypal) {
+            toast({ title: "Error", description: `Track ${i + 1}: Featuring artist PayPal email is required`, variant: "destructive" });
+            return;
+          }
+          if (track.featuringArtistPaypal && !emailRegex.test(track.featuringArtistPaypal)) {
+            toast({ title: "Error", description: `Track ${i + 1}: Invalid PayPal email format`, variant: "destructive" });
+            return;
+          }
+        }
+
+        // Upload thumbnail once (mandatory)
+        if (!formData.thumbnail) {
+          toast({ title: "Error", description: "Album thumbnail is required", variant: "destructive" });
+          return;
+        }
+
+        const thumbnailUrl = await uploadFile(formData.thumbnail, 'thumbnails', `${user.id}/`);
+
+        // Create album
+        if (!formData.albumName) {
+          toast({ title: "Error", description: "Album name is required", variant: "destructive" });
+          return;
+        }
+
+        const { data: newAlbum, error: albumError } = await supabase
+          .from('albums')
+          .insert({
+            merchant_id: user.id,
+            name: formData.albumName,
+            description: formData.description || null
+          })
+          .select()
+          .single();
+        
+        if (albumError) throw albumError;
+
+        // Upload each track
+        for (let i = 0; i < tracks.length; i++) {
+          const track = tracks[i];
+
+          // Upload audio file
+          const audioUrl = await uploadFile(track.audioFile!, 'audio-files', `${user.id}/`);
+
+          // Create audio product
+          const { data: audioProduct, error: productError } = await supabase
+            .from('audio_products')
+            .insert({
+              merchant_id: user.id,
+              title: track.title,
+              artist_name: formData.artistName || null,
+              audio_type: formData.audioType,
+              thumbnail_url: thumbnailUrl,
+              audio_file_url: audioUrl,
+              album_id: newAlbum.id,
+              access_level: formData.accessLevel,
+              is_free: formData.accessLevel !== 'paid',
+              price: formData.accessLevel === 'paid' ? parseFloat(formData.price) : null,
+              is_adult_content: formData.is_adult_content
+            })
+            .select()
+            .single();
+
+          if (productError) throw productError;
+
+          // Validate featuring artist PayPal if provided
+          let featuringUserId = null;
+          if (track.featuringArtistName && track.featuringArtistPaypal) {
+            const { data: featuringProfile } = await supabase
+              .from('profiles')
+              .select('id')
+              .eq('paypal_email', track.featuringArtistPaypal)
+              .maybeSingle();
+
+            featuringUserId = featuringProfile?.id || null;
+          }
+
+          // Create album_tracks entry
+          const { error: trackError } = await supabase
+            .from('album_tracks')
+            .insert({
+              album_id: newAlbum.id,
+              audio_product_id: audioProduct.id,
+              track_number: i + 1,
+              featuring_artist_name: track.featuringArtistName || null,
+              featuring_artist_paypal: track.featuringArtistPaypal || null,
+              featuring_artist_user_id: featuringUserId,
+              featuring_percentage: track.featuringPercentage
+            });
+
+          if (trackError) throw trackError;
+        }
+
+        toast({ title: "Success", description: `Album "${formData.albumName}" with ${tracks.length} tracks uploaded!` });
+        setOpen(false);
+        setFormData({
+          title: '',
+          artistName: '',
+          audioType: '',
+          description: '',
+          thumbnail: null,
+          audioFile: null,
+          albumName: '',
+          hasAlbum: false,
+          accessLevel: 'public',
+          price: '',
+          pieVideoPrice: '',
+          youtubeMembershipFee: '',
+          maxDownloads: '',
+          is_adult_content: false,
+          backEndRoyalties: false,
+          piePhotoEditing: false,
+          coverPhotos: [],
+          advanceFeeRate: '',
+          numberOfOpportunities: '',
+          isPieExclusive: false
+        });
+        setTracks([{
+          audioFile: null,
+          title: '',
+          featuringArtistName: '',
+          featuringArtistPaypal: '',
+          featuringPercentage: 30
+        }]);
+        onSuccess();
+
+      } catch (error: any) {
+        console.error('Error uploading album:', error);
+        toast({ title: "Error", description: error.message || "Failed to upload album", variant: "destructive" });
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+    
+    // Single file upload logic (existing)
     if (!formData.title || !formData.audioType || !formData.audioFile) {
       toast({
         title: "Error",
@@ -175,9 +378,16 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
         }
       }
 
-      // No photo uploads needed for admin ASMR creation - merchants upload photos when applying
+      // ASMR-specific photo uploads
+      let coverPhotoUrls: string[] = [];
+      if (formData.audioType === 'asmr' && formData.coverPhotos && formData.coverPhotos.length > 0) {
+        coverPhotoUrls = await Promise.all(
+          formData.coverPhotos.map(async (photo) => {
+            return await uploadFile(photo, 'asmr-covers', `${user.id}/`);
+          })
+        );
+      }
       
-      // Create audio product with new fields including ASMR-specific ones
       const insertData: any = {
         merchant_id: user.id,
         title: formData.title,
@@ -205,7 +415,7 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
       if (formData.audioType === 'asmr') {
         insertData.back_end_royalties = formData.backEndRoyalties;
         insertData.pie_photo_editing = formData.piePhotoEditing;
-        insertData.cover_photos = []; // No photos uploaded by admin - merchants upload when applying
+        insertData.cover_photos = coverPhotoUrls;
         insertData.advance_fee_rate = formData.advanceFeeRate ? parseFloat(formData.advanceFeeRate) : null;
         insertData.number_of_opportunities = formData.numberOfOpportunities ? parseInt(formData.numberOfOpportunities) : null;
         insertData.opportunities_exhausted = false;
@@ -270,124 +480,95 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button className="bg-primary hover:bg-primary/90">
-          <Upload className="w-4 h-4 mr-2" />
-          Upload Audio
+        <Button variant="default" className="gap-2">
+          <Upload className="w-4 h-4" />
+          Upload Audio Content
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md max-h-[80vh] bg-gray-800 border-gray-700 text-white">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-gray-900 to-gray-800 text-white">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <AudioLines className="w-5 h-5" />
             Upload Audio Content
           </DialogTitle>
         </DialogHeader>
-        <div className="overflow-y-auto max-h-[60vh] pr-2">
-          <form onSubmit={handleSubmit} className="space-y-4">
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label htmlFor="title">Title *</Label>
-            <Input
-              id="title"
-              value={formData.title}
-              onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-              className="bg-gray-700 border-gray-600 text-white"
-              placeholder="Enter audio title"
+            <Label htmlFor="audioType">Audio Type *</Label>
+            <Select
+              value={formData.audioType}
+              onValueChange={(value) => setFormData(prev => ({ ...prev, audioType: value }))}
               required
-            />
+            >
+              <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
+                <SelectValue placeholder="Select audio type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="music">Music</SelectItem>
+                <SelectItem value="podcast">Podcast</SelectItem>
+                <SelectItem value="asmr">ASMR</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
+
+          {/* Single file upload - only show if not part of album */}
+          {!formData.hasAlbum && (
+            <>
+              <div>
+                <Label htmlFor="title">Title *</Label>
+                <Input
+                  id="title"
+                  value={formData.title}
+                  onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                  className="bg-gray-700 border-gray-600 text-white"
+                  placeholder="Enter title"
+                  required
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="audioFile">Audio File *</Label>
+                <Input
+                  id="audioFile"
+                  type="file"
+                  accept="audio/*"
+                  onChange={handleAudioFileChange}
+                  className="bg-gray-700 border-gray-600 text-white"
+                  required
+                />
+                <p className="text-xs text-gray-400 mt-1">
+                  Recommended formats: MP3, WAV, M4A. Max size: 200MB
+                </p>
+              </div>
+            </>
+          )}
           
           <div>
-            <Label htmlFor="artistName">Artist Name</Label>
+            <Label htmlFor="artistName">Artist Name (Optional)</Label>
             <Input
               id="artistName"
               value={formData.artistName}
               onChange={(e) => setFormData(prev => ({ ...prev, artistName: e.target.value }))}
               className="bg-gray-700 border-gray-600 text-white"
-              placeholder="Enter artist name"
+              placeholder="Artist or creator name"
             />
           </div>
-
-          {/* Description field for podcasts */}
-          {formData.audioType === 'podcast' && (
-            <div>
-              <Label htmlFor="description">Description</Label>
-              <textarea
-                id="description"
-                value={formData.description || ""}
-                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                className="w-full bg-gray-700 border-gray-600 text-white rounded-md px-3 py-2 min-h-[80px] resize-y"
-                placeholder="Describe the podcast opportunity, requirements, and what merchants should know"
-                rows={3}
-              />
-              <p className="text-xs text-gray-400 mt-1">
-                Explain the podcast opportunity for merchants to understand before downloading
-              </p>
-            </div>
-          )}
-
-          {/* Description field for ASMR */}
-          {formData.audioType === 'asmr' && (
-            <div>
-              <Label htmlFor="asmr-description">ASMR Opportunity Description *</Label>
-              <textarea
-                id="asmr-description"
-                value={formData.description || ""}
-                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                className="w-full bg-gray-700 border-gray-600 text-white rounded-md px-3 py-2 min-h-[80px] resize-y"
-                placeholder="Describe the ASMR opportunity, requirements, and what merchants should know"
-                rows={3}
-                required
-              />
-              <p className="text-xs text-gray-400 mt-1">
-                Explain the ASMR opportunity for merchants to understand before downloading
-              </p>
-            </div>
-          )}
           
           <div>
-            <Label htmlFor="audioType">Audio Type *</Label>
-            <Select 
-              value={formData.audioType} 
-              onValueChange={(value) => setFormData(prev => ({ ...prev, audioType: value }))}
-            >
-              <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
-                <SelectValue placeholder="Select audio type" />
-              </SelectTrigger>
-               <SelectContent className="bg-gray-700 border-gray-600">
-                <SelectItem value="music" className="text-white hover:bg-gray-600">Music</SelectItem>
-                <SelectItem value="podcast" className="text-white hover:bg-gray-600">Podcast</SelectItem>
-                <SelectItem value="spoken" className="text-white hover:bg-gray-600">Spoken</SelectItem>
-                <SelectItem value="asmr" className="text-white hover:bg-gray-600">ASMR</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div>
-            <Label htmlFor="audioFile">Audio File * (Max 200MB)</Label>
-            <Input
-              id="audioFile"
-              type="file"
-              accept="audio/*"
-              onChange={handleAudioFileChange}
-              className="bg-gray-700 border-gray-600 text-white"
-              required
-            />
-            <p className="text-xs text-gray-400 mt-1">
-              Recommended formats: MP3, WAV, M4A. Max size: 200MB
-            </p>
-          </div>
-          
-          <div>
-            <Label htmlFor="thumbnail">Thumbnail Image (Optional, Max 50MB)</Label>
+            <Label htmlFor="thumbnail">
+              {formData.hasAlbum ? 'Album Cover (Required) *' : 'Thumbnail Image (Optional, Max 50MB)'}
+            </Label>
             <Input
               id="thumbnail"
               type="file"
               accept="image/*"
               onChange={handleThumbnailChange}
               className="bg-gray-700 border-gray-600 text-white"
+              required={formData.hasAlbum}
             />
             <p className="text-xs text-gray-400 mt-1">
-              Recommended formats: JPG, PNG. Max size: 50MB
+              Recommended formats: JPG, PNG. Max size: 50MB{formData.hasAlbum ? ' - One cover for entire album' : ''}
             </p>
           </div>
           
@@ -404,265 +585,314 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
           </div>
           
           {formData.hasAlbum && (
-            <div>
-              <Label htmlFor="albumName">Album/Collection Name</Label>
-              <Input
-                id="albumName"
-                value={formData.albumName}
-                onChange={(e) => setFormData(prev => ({ ...prev, albumName: e.target.value }))}
-                className="bg-gray-700 border-gray-600 text-white"
-                placeholder="Enter album name"
-              />
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="albumName">Album/Collection Name *</Label>
+                <Input
+                  id="albumName"
+                  value={formData.albumName}
+                  onChange={(e) => setFormData(prev => ({ ...prev, albumName: e.target.value }))}
+                  className="bg-gray-700 border-gray-600 text-white"
+                  placeholder="Enter album name"
+                  required
+                />
+              </div>
+
+              {/* Multi-Track Upload Interface */}
+              <div className="space-y-4 border-t border-gray-700 pt-4">
+                <h3 className="text-sm font-semibold text-white">Album Tracks (Minimum 2)</h3>
+                {tracks.map((track, index) => (
+                  <div key={index} className="space-y-3 p-4 bg-purple-900/20 rounded-lg border border-purple-700">
+                    <div className="flex justify-between items-center">
+                      <Label className="text-sm font-medium">Track {index + 1}</Label>
+                      {tracks.length > 2 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeTrack(index)}
+                          className="h-6 px-2 text-red-400 hover:text-red-300"
+                        >
+                          Remove
+                        </Button>
+                      )}
+                    </div>
+
+                    <div>
+                      <Label htmlFor={`track-file-${index}`}>Audio File *</Label>
+                      <Input
+                        id={`track-file-${index}`}
+                        type="file"
+                        accept="audio/*"
+                        onChange={(e) => updateTrack(index, 'audioFile', e.target.files?.[0] || null)}
+                        className="bg-gray-700 border-gray-600 text-white"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor={`track-title-${index}`}>Track Title *</Label>
+                      <Input
+                        id={`track-title-${index}`}
+                        value={track.title}
+                        onChange={(e) => updateTrack(index, 'title', e.target.value)}
+                        className="bg-gray-700 border-gray-600 text-white"
+                        placeholder="Enter track title"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor={`featuring-artist-${index}`}>Featuring Artist (Optional)</Label>
+                      <Input
+                        id={`featuring-artist-${index}`}
+                        value={track.featuringArtistName}
+                        onChange={(e) => updateTrack(index, 'featuringArtistName', e.target.value)}
+                        className="bg-gray-700 border-gray-600 text-white"
+                        placeholder="e.g., Artist Name"
+                      />
+                    </div>
+
+                    {track.featuringArtistName && (
+                      <>
+                        <div>
+                          <Label htmlFor={`featuring-paypal-${index}`}>Featuring Artist PayPal Email *</Label>
+                          <Input
+                            id={`featuring-paypal-${index}`}
+                            type="email"
+                            value={track.featuringArtistPaypal}
+                            onChange={(e) => updateTrack(index, 'featuringArtistPaypal', e.target.value)}
+                            className="bg-gray-700 border-gray-600 text-white"
+                            placeholder="artist@paypal.com"
+                            required
+                          />
+                        </div>
+
+                        <div>
+                          <Label htmlFor={`featuring-percentage-${index}`}>
+                            Featuring Artist Revenue Share: {track.featuringPercentage}%
+                          </Label>
+                          <Input
+                            id={`featuring-percentage-${index}`}
+                            type="range"
+                            min="10"
+                            max="50"
+                            step="5"
+                            value={track.featuringPercentage}
+                            onChange={(e) => updateTrack(index, 'featuringPercentage', parseInt(e.target.value))}
+                            className="w-full cursor-pointer"
+                          />
+                          <div className="flex justify-between text-xs text-gray-400 mt-1">
+                            <span>10%</span>
+                            <span>50%</span>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                ))}
+
+                {tracks.length < 20 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={addTrack}
+                    className="w-full border-purple-700 text-purple-300 hover:bg-purple-900/30"
+                  >
+                    + Add Track
+                  </Button>
+                )}
+              </div>
             </div>
           )}
           
+          {/* Conditional fields based on audio type */}
+          {formData.audioType === 'podcast' && (
+            <>
+              <div>
+                <Label htmlFor="pieVideoPrice">Pie Video Price (Optional)</Label>
+                <Input
+                  id="pieVideoPrice"
+                  type="number"
+                  value={formData.pieVideoPrice}
+                  onChange={(e) => setFormData(prev => ({ ...prev, pieVideoPrice: e.target.value }))}
+                  className="bg-gray-700 border-gray-600 text-white"
+                  placeholder="Price in USD"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="youtubeMembershipFee">YouTube Membership Fee (Optional)</Label>
+                <Input
+                  id="youtubeMembershipFee"
+                  type="number"
+                  value={formData.youtubeMembershipFee}
+                  onChange={(e) => setFormData(prev => ({ ...prev, youtubeMembershipFee: e.target.value }))}
+                  className="bg-gray-700 border-gray-600 text-white"
+                  placeholder="Fee in USD"
+                />
+              </div>
+            </>
+          )}
+
+          {formData.accessLevel === 'merchant_only' && (
+            <div>
+              <Label htmlFor="maxDownloads">Max Downloads (Merchant Only)</Label>
+              <Input
+                id="maxDownloads"
+                type="number"
+                value={formData.maxDownloads}
+                onChange={(e) => setFormData(prev => ({ ...prev, maxDownloads: e.target.value }))}
+                className="bg-gray-700 border-gray-600 text-white"
+                placeholder="Maximum number of downloads"
+              />
+            </div>
+          )}
+
           <div>
-            <Label>Access Level *</Label>
-            <RadioGroup
+            <Label htmlFor="accessLevel">Access Level *</Label>
+            <Select
               value={formData.accessLevel}
-              onValueChange={(value) => setFormData(prev => ({ 
-                ...prev, 
-                accessLevel: value as "public" | "merchant_only" | "paid"
-              }))}
-              className="mt-2"
+              onValueChange={(value) => setFormData(prev => ({ ...prev, accessLevel: value as "public" | "merchant_only" | "paid" }))}
+              required
             >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="public" id="public" className="text-white" />
-                <Label htmlFor="public" className="text-white">Free for Everyone</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="merchant_only" id="merchant_only" className="text-white" />
-                <Label htmlFor="merchant_only" className="text-white">Merchant Download Only</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="paid" id="paid" className="text-white" />
-                <Label htmlFor="paid" className="text-white">Paid Content</Label>
-              </div>
-            </RadioGroup>
-            <p className="text-xs text-gray-400 mt-1">
-              Merchant-only content is visible to all but only downloadable by other merchants
-            </p>
+              <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
+                <SelectValue placeholder="Select access level" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="public">Public</SelectItem>
+                <SelectItem value="merchant_only">Merchant Only</SelectItem>
+                <SelectItem value="paid">Paid</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-          
+
           {formData.accessLevel === 'paid' && (
             <div>
-              <Label htmlFor="price">Price ($)</Label>
+              <Label htmlFor="price">Price *</Label>
               <Input
                 id="price"
                 type="number"
-                step="0.01"
-                min="0"
                 value={formData.price}
                 onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
                 className="bg-gray-700 border-gray-600 text-white"
-                placeholder="0.00"
+                placeholder="Price in USD"
+                required
               />
             </div>
           )}
 
-           {/* Merchant-only specific fields */}
-           {formData.accessLevel === 'merchant_only' && (
-             <div className="space-y-4 p-4 bg-gray-700/30 rounded-lg border border-gray-600">
-               <h4 className="text-white font-medium">Download Opportunities Settings</h4>
-               
-               <div>
-                 <Label htmlFor="maxDownloads">Number of Download Opportunities</Label>
-                 <Input
-                   id="maxDownloads"
-                   type="number"
-                   min="1"
-                   value={formData.maxDownloads}
-                   onChange={(e) => setFormData(prev => ({ ...prev, maxDownloads: e.target.value }))}
-                   className="bg-gray-700 border-gray-600 text-white"
-                   placeholder="e.g., 5 (Leave empty for unlimited)"
-                 />
-                 <p className="text-xs text-gray-400 mt-1">
-                   First come, first serve. Once exhausted, the download button will be hidden.
-                 </p>
-               </div>
-
-               {/* Podcast-specific fields when merchant_only and podcast type */}
-               {formData.audioType === 'podcast' && (
-                 <>
-                   <div>
-                     <Label htmlFor="pieVideoPrice">PIE Individual Video Price ($)</Label>
-                     <Input
-                       id="pieVideoPrice"
-                       type="number"
-                       step="0.01"
-                       min="0"
-                       value={formData.pieVideoPrice}
-                       onChange={(e) => setFormData(prev => ({ ...prev, pieVideoPrice: e.target.value }))}
-                       className="bg-gray-700 border-gray-600 text-white"
-                       placeholder="Price per individual video on PIE platform"
-                     />
-                     <p className="text-xs text-gray-400 mt-1">
-                       Merchants receive 50% of this price for PIE exclusive content
-                     </p>
-                   </div>
-                   
-                   <div>
-                     <Label htmlFor="youtubeMembershipFee">Monthly YouTube Membership Fee ($)</Label>
-                     <Input
-                       id="youtubeMembershipFee"
-                       type="number"
-                       step="0.01"
-                       min="0"
-                       value={formData.youtubeMembershipFee}
-                       onChange={(e) => setFormData(prev => ({ ...prev, youtubeMembershipFee: e.target.value }))}
-                       className="bg-gray-700 border-gray-600 text-white"
-                       placeholder="Monthly membership tier fee for revenue calculation"
-                     />
-                     <p className="text-xs text-gray-400 mt-1">
-                       For reference: Merchants receive 50% of PIE's 70% share (after YouTube's 30% cut)
-                     </p>
-                   </div>
-                  </>
-                )}
+          {formData.audioType === 'asmr' && (
+            <div className="space-y-4">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="backEndRoyalties"
+                  checked={formData.backEndRoyalties}
+                  onCheckedChange={(checked) => setFormData(prev => ({
+                    ...prev,
+                    backEndRoyalties: checked as boolean
+                  }))}
+                />
+                <Label htmlFor="backEndRoyalties">Back-End Royalties</Label>
               </div>
-            )}
 
-            {/* ASMR-specific fields when merchant_only and ASMR type */}
-            {formData.audioType === 'asmr' && formData.accessLevel === 'merchant_only' && (
-              <div className="space-y-4 p-4 bg-blue-700/20 rounded-lg border border-blue-600">
-                <h4 className="text-white font-medium">ASMR Opportunity Settings</h4>
-                
-                <div>
-                  <Label htmlFor="advanceFeeRate">Advance Fee Rate ($) *</Label>
-                  <Input
-                    id="advanceFeeRate"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={formData.advanceFeeRate}
-                    onChange={(e) => setFormData(prev => ({ ...prev, advanceFeeRate: e.target.value }))}
-                    className="bg-gray-700 border-gray-600 text-white"
-                    placeholder="e.g., 50.00"
-                    required
-                  />
-                  <p className="text-xs text-gray-400 mt-1">
-                    Payment amount per approved ASMR submission
-                  </p>
-                </div>
-
-                <div>
-                  <Label htmlFor="numberOfOpportunities">Number of Opportunities</Label>
-                  <Input
-                    id="numberOfOpportunities"
-                    type="number"
-                    min="1"
-                    value={formData.numberOfOpportunities}
-                    onChange={(e) => setFormData(prev => ({ ...prev, numberOfOpportunities: e.target.value }))}
-                    className="bg-gray-700 border-gray-600 text-white"
-                    placeholder="e.g., 3 (Leave empty for unlimited)"
-                  />
-                  <p className="text-xs text-gray-400 mt-1">
-                    First come, first serve. Once exhausted, the opportunity will be hidden.
-                  </p>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="isPieExclusive"
-                    checked={formData.isPieExclusive}
-                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isPieExclusive: checked as boolean }))}
-                  />
-                  <Label htmlFor="isPieExclusive" className="text-white">PIE Exclusive Deal</Label>
-                </div>
-                <p className="text-xs text-gray-400 ml-6">
-                  Exclusive deals include advance fees + back-end royalties
-                </p>
-
-                {formData.isPieExclusive && (
-                  <div className="ml-6 space-y-4">
-                    <div>
-                      <Label htmlFor="advanceFeeRate">Advance Fee Rate ($)</Label>
-                      <Input
-                        id="advanceFeeRate"
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={formData.advanceFeeRate}
-                        onChange={(e) => setFormData(prev => ({ ...prev, advanceFeeRate: e.target.value }))}
-                        className="bg-gray-700 border-gray-600 text-white"
-                        placeholder="Amount paid upfront to contractors"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="backEndRoyalties"
-                    checked={formData.backEndRoyalties}
-                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, backEndRoyalties: checked as boolean }))}
-                  />
-                  <Label htmlFor="backEndRoyalties" className="text-white">Back-End Royalties</Label>
-                </div>
-                <p className="text-xs text-gray-400 ml-6">
-                  Allow merchants to submit covers for additional revenue sharing (50%)
-                </p>
-
-                {formData.backEndRoyalties && (
-                  <div className="ml-6 space-y-4">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="piePhotoEditing"
-                        checked={formData.piePhotoEditing}
-                        onCheckedChange={(checked) => setFormData(prev => ({ ...prev, piePhotoEditing: checked as boolean }))}
-                      />
-                      <Label htmlFor="piePhotoEditing" className="text-white">PIE Photo Editing Service</Label>
-                    </div>
-                    <p className="text-xs text-gray-400 ml-6">
-                      Have PIE edit merchant photos in Photoshop for covers
-                    </p>
-
-                    {formData.piePhotoEditing && (
-                      <div className="ml-6">
-                        <p className="text-xs text-green-400">
-                          ✓ PIE photo editing service enabled - merchants will upload their photos when applying
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                )}
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="piePhotoEditing"
+                  checked={formData.piePhotoEditing}
+                  onCheckedChange={(checked) => setFormData(prev => ({
+                    ...prev,
+                    piePhotoEditing: checked as boolean
+                  }))}
+                />
+                <Label htmlFor="piePhotoEditing">Pie Photo Editing</Label>
               </div>
-            )}
 
-          {/* Adult Content Toggle */}
-          <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg border border-gray-600">
-            <div className="flex items-center gap-3">
-              <Shield className="w-5 h-5 text-orange-400" />
               <div>
-                <Label htmlFor="adult_content_audio" className="text-white font-medium">
-                  Adult/Mature Content
-                </Label>
-                <p className="text-sm text-gray-400">
-                  Mark this if your audio contains adult or mature themes (18+)
-                </p>
+                <Label>Cover Photos (Multiple)</Label>
+                <MultiImagePicker
+                  selectedImages={formData.coverPhotos}
+                  onImagesChange={(files: File[]) => setFormData(prev => ({ ...prev, coverPhotos: files }))}
+                  maxImages={10}
+                />
+                <p className="text-xs text-gray-400 mt-1">Upload multiple cover photos for ASMR content</p>
+              </div>
+
+              <div>
+                <Label htmlFor="advanceFeeRate">Advance Fee Rate (Optional)</Label>
+                <Input
+                  id="advanceFeeRate"
+                  type="number"
+                  value={formData.advanceFeeRate}
+                  onChange={(e) => setFormData(prev => ({ ...prev, advanceFeeRate: e.target.value }))}
+                  className="bg-gray-700 border-gray-600 text-white"
+                  placeholder="Enter advance fee rate"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="numberOfOpportunities">Number of Opportunities (Optional)</Label>
+                <Input
+                  id="numberOfOpportunities"
+                  type="number"
+                  value={formData.numberOfOpportunities}
+                  onChange={(e) => setFormData(prev => ({ ...prev, numberOfOpportunities: e.target.value }))}
+                  className="bg-gray-700 border-gray-600 text-white"
+                  placeholder="Enter number of opportunities"
+                />
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="isPieExclusive"
+                  checked={formData.isPieExclusive}
+                  onCheckedChange={(checked) => setFormData(prev => ({
+                    ...prev,
+                    isPieExclusive: checked as boolean
+                  }))}
+                />
+                <Label htmlFor="isPieExclusive">Is Pie Exclusive</Label>
               </div>
             </div>
-            <Switch
-              id="adult_content_audio"
-              checked={formData.is_adult_content}
-              onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_adult_content: checked }))}
-            />
-          </div>
+          )}
           
-          <div className="flex gap-2">
-            <Button 
-              type="button" 
-              onClick={() => setOpen(false)} 
-              className="flex-1 bg-primary hover:bg-primary/90 text-white"
-            >
+          {(formData.audioType === 'podcast' || formData.audioType === 'asmr') && (
+            <div>
+              <Label htmlFor="description">Description (Optional)</Label>
+              <Input
+                id="description"
+                value={formData.description}
+                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                className="bg-gray-700 border-gray-600 text-white"
+                placeholder="Describe your content"
+              />
+            </div>
+          )}
+          
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="is_adult_content"
+              checked={formData.is_adult_content}
+              onCheckedChange={(checked) => setFormData(prev => ({ 
+                ...prev, 
+                is_adult_content: checked as boolean 
+              }))}
+            />
+            <Label htmlFor="is_adult_content" className="flex items-center gap-2">
+              <Shield className="w-4 h-4 text-yellow-500" />
+              Mark as Adult/Mature Content
+            </Label>
+          </div>
+
+          <div className="flex gap-2 pt-4">
+            <Button type="submit" disabled={loading} className="flex-1">
+              {loading ? "Uploading..." : formData.hasAlbum ? "Upload Album" : "Upload Audio"}
+            </Button>
+            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={loading} className="flex-1 bg-primary hover:bg-primary/90">
-              {loading ? "Uploading..." : "Upload Audio"}
-            </Button>
           </div>
-          </form>
-        </div>
+        </form>
       </DialogContent>
     </Dialog>
   );

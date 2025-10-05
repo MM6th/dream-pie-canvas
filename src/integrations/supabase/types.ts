@@ -14,6 +14,67 @@ export type Database = {
   }
   public: {
     Tables: {
+      album_tracks: {
+        Row: {
+          album_id: string
+          audio_product_id: string
+          created_at: string | null
+          featuring_artist_name: string | null
+          featuring_artist_paypal: string | null
+          featuring_artist_user_id: string | null
+          featuring_percentage: number | null
+          id: string
+          track_number: number
+          updated_at: string | null
+        }
+        Insert: {
+          album_id: string
+          audio_product_id: string
+          created_at?: string | null
+          featuring_artist_name?: string | null
+          featuring_artist_paypal?: string | null
+          featuring_artist_user_id?: string | null
+          featuring_percentage?: number | null
+          id?: string
+          track_number: number
+          updated_at?: string | null
+        }
+        Update: {
+          album_id?: string
+          audio_product_id?: string
+          created_at?: string | null
+          featuring_artist_name?: string | null
+          featuring_artist_paypal?: string | null
+          featuring_artist_user_id?: string | null
+          featuring_percentage?: number | null
+          id?: string
+          track_number?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "album_tracks_album_id_fkey"
+            columns: ["album_id"]
+            isOneToOne: false
+            referencedRelation: "albums"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "album_tracks_audio_product_id_fkey"
+            columns: ["audio_product_id"]
+            isOneToOne: false
+            referencedRelation: "audio_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "album_tracks_featuring_artist_user_id_fkey"
+            columns: ["featuring_artist_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       albums: {
         Row: {
           created_at: string
@@ -1570,6 +1631,15 @@ export type Database = {
       }
       clean_expired_astrology_cache: {
         Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      distribute_featuring_artist_revenue: {
+        Args: {
+          p_album_id?: string
+          p_audio_product_id: string
+          p_purchase_id: string
+          p_total_net_revenue: number
+        }
         Returns: undefined
       }
       generate_receipt_number: {

@@ -260,12 +260,54 @@ Deno.serve(async (req) => {
           p_amount: piePlatformShare
         })
 
-        // 2. Track merchant revenue
-        await supabaseAdmin.rpc('update_quarterly_income', {
-          p_user_id: audioProduct.merchant_id,
-          p_income_type: 'merchant_revenue',
-          p_amount: merchantRevenue
-        })
+        // 2. Check if this is a track with featuring artist and distribute revenue
+        const { data: albumTrack } = await supabaseAdmin
+          .from('album_tracks')
+          .select('*, albums!inner(*)')
+          .eq('audio_product_id', purchaseUnit.reference_id)
+          .maybeSingle();
+
+        if (albumTrack && albumTrack.featuring_artist_user_id) {
+          // This is a single track purchase with featuring artist
+          await supabaseAdmin.rpc('distribute_featuring_artist_revenue', {
+            p_purchase_id: insertedPurchase[0].id,
+            p_audio_product_id: purchaseUnit.reference_id,
+            p_total_net_revenue: merchantRevenue,
+            p_album_id: null
+          });
+        } else if (audioProduct.album_id) {
+          // Check if album has any featuring artists
+          const { data: albumTracks } = await supabaseAdmin
+            .from('album_tracks')
+            .select('*')
+            .eq('album_id', audioProduct.album_id);
+
+          const hasFeaturing = albumTracks?.some(t => t.featuring_artist_user_id !== null);
+
+          if (hasFeaturing) {
+            // Album purchase with featuring artists
+            await supabaseAdmin.rpc('distribute_featuring_artist_revenue', {
+              p_purchase_id: insertedPurchase[0].id,
+              p_audio_product_id: purchaseUnit.reference_id,
+              p_total_net_revenue: merchantRevenue,
+              p_album_id: audioProduct.album_id
+            });
+          } else {
+            // Regular album, use existing logic
+            await supabaseAdmin.rpc('update_quarterly_income', {
+              p_user_id: audioProduct.merchant_id,
+              p_income_type: 'merchant_revenue',
+              p_amount: merchantRevenue
+            });
+          }
+        } else {
+          // Single track, no featuring artist
+          await supabaseAdmin.rpc('update_quarterly_income', {
+            p_user_id: audioProduct.merchant_id,
+            p_income_type: 'merchant_revenue',
+            p_amount: merchantRevenue
+          });
+        }
 
         // 3. Track referrer commission if applicable
         if (validReferrerId && referrerCommission && referrerCommission > 0) {
