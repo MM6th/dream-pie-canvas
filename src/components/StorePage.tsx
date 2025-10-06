@@ -179,7 +179,7 @@ const StorePage = () => {
       const profile = await fetchUserProfile();
       setUserProfile(profile);
 
-      // Fetch audio products (excluding video ad opportunities that shouldn't be in audio section)
+      // Fetch audio products (excluding video ad opportunities and exhausted ASMR opportunities)
       const { data: audioData, error: audioError } = await supabase
         .from('audio_products')
         .select(`
@@ -195,6 +195,8 @@ const StorePage = () => {
           access_level,
           is_adult_content,
           max_downloads,
+          number_of_opportunities,
+          opportunities_exhausted,
           description,
           pie_photo_editing,
           back_end_royalties,
@@ -206,9 +208,24 @@ const StorePage = () => {
         `)
         .not('title', 'ilike', '%video ad%')
         .not('title', 'ilike', '%dance to dairy queen%')
+        .or('opportunities_exhausted.is.null,opportunities_exhausted.eq.false')
         .order('created_at', { ascending: false });
 
       if (audioError) throw audioError;
+
+      // Filter out ASMR products with approved submissions and signed contracts
+      const { data: signedASMRProducts, error: asmrError } = await supabase
+        .from('asmr_submissions')
+        .select('audio_product_id')
+        .eq('status', 'approved')
+        .not('contract_id', 'is', null);
+
+      if (asmrError) console.error('Error fetching signed ASMR submissions:', asmrError);
+
+      const signedProductIds = new Set(signedASMRProducts?.map(s => s.audio_product_id) || []);
+      const filteredAudioData = audioData?.filter(p => 
+        !(p.audio_type === 'asmr' && signedProductIds.has(p.id))
+      ) || [];
 
       // Fetch video ad opportunities
       const { data: videoAdData, error: videoAdError } = await supabase
@@ -220,18 +237,19 @@ const StorePage = () => {
 
       console.log('User profile:', profile);
       console.log('Raw audio products:', audioData?.length || 0);
+      console.log('Filtered audio products (after ASMR filter):', filteredAudioData.length);
       console.log('Raw video ad opportunities:', videoAdData?.length || 0);
       
-      const adultFilteredAudioData = filterAdultContent(audioData || [], profile);
+      const adultFilteredAudioData = filterAdultContent(filteredAudioData, profile);
       const adultFilteredVideoAdData = filterAdultContent(videoAdData || [], profile);
       
-      const filteredAudioData = filterAccessLevel(adultFilteredAudioData, profile);
+      const finalAudioData = filterAccessLevel(adultFilteredAudioData, profile);
       const filteredVideoAdData = filterAccessLevel(adultFilteredVideoAdData, profile);
       
-      console.log('Final filtered audio products:', filteredAudioData.length);
+      console.log('Final filtered audio products:', finalAudioData.length);
       console.log('Final filtered video ad opportunities:', filteredVideoAdData.length);
 
-      setAudioProducts(filteredAudioData);
+      setAudioProducts(finalAudioData);
       setVideoAdOpportunities(filteredVideoAdData);
     } catch (error: any) {
       console.error('Error fetching products:', error);

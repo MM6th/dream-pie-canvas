@@ -52,7 +52,12 @@ const EditAudioModal = ({ product, onSuccess, onClose }: EditAudioModalProps) =>
     hasAlbum: !!product.album_id,
     accessLevel: (product.access_level || (product.is_free ? "public" : "paid")) as "public" | "merchant_only" | "paid",
     price: product.price?.toString() || "",
-    maxDownloads: product.max_downloads?.toString() || ""
+    maxDownloads: product.max_downloads?.toString() || "",
+    numberOfOpportunities: (product as any).number_of_opportunities?.toString() || "",
+    advanceFeeRate: (product as any).advance_fee_rate?.toString() || "",
+    backEndRoyalties: (product as any).back_end_royalties || false,
+    piePhotoEditing: (product as any).pie_photo_editing || false,
+    isPieExclusive: (product as any).is_pie_exclusive || false
   });
   const [isAdultContent, setIsAdultContent] = useState(product.is_adult_content || false);
   const [albums, setAlbums] = useState<any[]>([]);
@@ -146,22 +151,33 @@ const EditAudioModal = ({ product, onSuccess, onClose }: EditAudioModalProps) =>
         }
       }
       
-      // Update audio product with new access_level field and adult content
+      // Update audio product with new access_level field, adult content, and ASMR fields
+      const updateData: any = {
+        title: formData.title,
+        artist_name: formData.artistName || null,
+        description: formData.description || null,
+        audio_type: formData.audioType,
+        thumbnail_url: thumbnailUrl,
+        album_id: albumId,
+        access_level: formData.accessLevel,
+        is_free: formData.accessLevel !== 'paid',
+        price: formData.accessLevel === 'paid' ? parseFloat(formData.price) : null,
+        max_downloads: formData.accessLevel === 'merchant_only' && formData.maxDownloads ? parseInt(formData.maxDownloads) : null,
+        is_adult_content: isAdultContent
+      };
+
+      // Add ASMR-specific fields if it's an ASMR product
+      if (formData.audioType === 'asmr') {
+        updateData.number_of_opportunities = formData.numberOfOpportunities ? parseInt(formData.numberOfOpportunities) : null;
+        updateData.advance_fee_rate = formData.advanceFeeRate ? parseFloat(formData.advanceFeeRate) : null;
+        updateData.back_end_royalties = formData.backEndRoyalties;
+        updateData.pie_photo_editing = formData.piePhotoEditing;
+        updateData.is_pie_exclusive = formData.isPieExclusive;
+      }
+
       const { error: productError } = await supabase
         .from('audio_products')
-        .update({
-          title: formData.title,
-          artist_name: formData.artistName || null,
-          description: formData.description || null,
-          audio_type: formData.audioType,
-          thumbnail_url: thumbnailUrl,
-          album_id: albumId,
-          access_level: formData.accessLevel,
-          is_free: formData.accessLevel !== 'paid',
-          price: formData.accessLevel === 'paid' ? parseFloat(formData.price) : null,
-          max_downloads: formData.accessLevel === 'merchant_only' && formData.maxDownloads ? parseInt(formData.maxDownloads) : null,
-          is_adult_content: isAdultContent
-        })
+        .update(updateData)
         .eq('id', product.id);
       
       if (productError) throw productError;
@@ -340,7 +356,7 @@ const EditAudioModal = ({ product, onSuccess, onClose }: EditAudioModalProps) =>
                   </div>
                 )}
 
-                {formData.accessLevel === 'merchant_only' && (
+                {formData.accessLevel === 'merchant_only' && formData.audioType !== 'asmr' && (
                   <div>
                     <Label htmlFor="maxDownloads">Number of Download Opportunities</Label>
                     <Input
@@ -356,6 +372,64 @@ const EditAudioModal = ({ product, onSuccess, onClose }: EditAudioModalProps) =>
                       First come, first serve. Once exhausted, the download button will be hidden.
                     </p>
                   </div>
+                )}
+
+                {formData.audioType === 'asmr' && formData.accessLevel === 'merchant_only' && (
+                  <>
+                    <div>
+                      <Label htmlFor="numberOfOpportunities">Number of Opportunities</Label>
+                      <Input
+                        id="numberOfOpportunities"
+                        type="number"
+                        min="1"
+                        value={formData.numberOfOpportunities}
+                        onChange={(e) => setFormData(prev => ({ ...prev, numberOfOpportunities: e.target.value }))}
+                        className="bg-gray-700 border-gray-600 text-white"
+                        placeholder="e.g., 10"
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="advanceFeeRate">Advance Fee Rate ($)</Label>
+                      <Input
+                        id="advanceFeeRate"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={formData.advanceFeeRate}
+                        onChange={(e) => setFormData(prev => ({ ...prev, advanceFeeRate: e.target.value }))}
+                        className="bg-gray-700 border-gray-600 text-white"
+                        placeholder="0.00"
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between p-3 bg-gray-700/50 rounded-lg">
+                      <Label htmlFor="backEndRoyalties">Back-end Royalties</Label>
+                      <Checkbox
+                        id="backEndRoyalties"
+                        checked={formData.backEndRoyalties}
+                        onCheckedChange={(checked) => setFormData(prev => ({ ...prev, backEndRoyalties: checked as boolean }))}
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between p-3 bg-gray-700/50 rounded-lg">
+                      <Label htmlFor="piePhotoEditing">PIE Photo Editing</Label>
+                      <Checkbox
+                        id="piePhotoEditing"
+                        checked={formData.piePhotoEditing}
+                        onCheckedChange={(checked) => setFormData(prev => ({ ...prev, piePhotoEditing: checked as boolean }))}
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between p-3 bg-gray-700/50 rounded-lg">
+                      <Label htmlFor="isPieExclusive">PIE Exclusive</Label>
+                      <Checkbox
+                        id="isPieExclusive"
+                        checked={formData.isPieExclusive}
+                        onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isPieExclusive: checked as boolean }))}
+                      />
+                    </div>
+                  </>
                 )}
 
                 <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg border border-gray-600">

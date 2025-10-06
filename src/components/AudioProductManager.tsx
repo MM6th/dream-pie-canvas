@@ -70,7 +70,19 @@ const AudioProductManager = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setProducts(data || []);
+
+      // Filter out ASMR products that have submissions (they're managed in ASMR Submissions tab)
+      const { data: asmrSubmissions, error: asmrError } = await supabase
+        .from('asmr_submissions')
+        .select('audio_product_id')
+        .in('audio_product_id', (data || []).map(p => p.id));
+
+      if (asmrError) console.error('Error fetching ASMR submissions:', asmrError);
+
+      const asmrProductIds = new Set(asmrSubmissions?.map(s => s.audio_product_id) || []);
+      const filteredProducts = (data || []).filter(p => !asmrProductIds.has(p.id));
+
+      setProducts(filteredProducts);
     } catch (error: any) {
       console.error('Error fetching products:', error);
       toast({
@@ -94,11 +106,30 @@ const AudioProductManager = () => {
   }, [user, isAdmin, adminStatusLoading]);
 
   const handleDelete = async (productId: string) => {
-    if (!confirm("Are you sure you want to delete this audio product? This will also remove all related data.")) {
-      return;
-    }
-
     try {
+      // Check for ASMR submissions first (should not appear due to filtering, but safety check)
+      const { data: asmrSubmissions, error: checkError } = await supabase
+        .from('asmr_submissions')
+        .select('id, contract_id')
+        .eq('audio_product_id', productId);
+
+      if (checkError) throw checkError;
+
+      if (asmrSubmissions && asmrSubmissions.length > 0) {
+        if (asmrSubmissions.some(s => s.contract_id)) {
+          toast({
+            title: "Cannot Delete",
+            description: "This product has signed contracts. Please manage it from the ASMR Submissions tab.",
+            variant: "destructive"
+          });
+          return;
+        }
+      }
+
+      if (!confirm("Are you sure you want to delete this audio product? This will also remove all related data.")) {
+        return;
+      }
+
       // Delete related records first to avoid foreign key constraints
       await supabase.from('user_purchases').delete().eq('audio_product_id', productId);
       await supabase.from('user_playlists').delete().eq('audio_product_id', productId);
