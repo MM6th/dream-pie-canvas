@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import { Trash2, Download, Eye, Calendar, Play, Image, Video, FolderOpen, Upload } from "lucide-react";
+import { Trash2, Download, Eye, Calendar, Play, Image, Video, FolderOpen, Upload, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -33,6 +33,21 @@ interface UserUpload {
   created_at: string;
 }
 
+interface Portfolio {
+  id: string;
+  title: string;
+  description: string | null;
+  is_for_sale: boolean;
+  price: number | null;
+  created_at: string;
+  portfolio_images: { count: number }[];
+}
+
+interface PortfolioUsage {
+  portfolio_id: string;
+  portfolios: { title: string } | null;
+}
+
 const ContentGallery = () => {
   const { user } = useAuth();
   const isMobile = useIsMobile();
@@ -41,12 +56,14 @@ const ContentGallery = () => {
   const [storageUsage, setStorageUsage] = useState<number>(0);
   const [portfolioModalOpen, setPortfolioModalOpen] = useState(false);
   const [userType, setUserType] = useState<string>('');
+  const [portfolios, setPortfolios] = useState<Portfolio[]>([]);
 
   useEffect(() => {
     if (user) {
       fetchUploads();
       fetchStorageUsage();
       fetchUserType();
+      fetchPortfolios();
     }
   }, [user]);
 
@@ -110,6 +127,30 @@ const ContentGallery = () => {
     }
   };
 
+  const fetchPortfolios = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('portfolios')
+        .select(`
+          *,
+          portfolio_images(count)
+        `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching portfolios:', error);
+        return;
+      }
+
+      setPortfolios(data || []);
+    } catch (error) {
+      console.error('Error fetching portfolios:', error);
+    }
+  };
+
   const handleDelete = async (upload: UserUpload) => {
     try {
       // Check if this image is used as background
@@ -128,6 +169,16 @@ const ContentGallery = () => {
             .update({ background_image_url: null })
             .eq('id', user.id);
         }
+      }
+
+      // Cascade delete from portfolio_images
+      const { error: portfolioImageError } = await supabase
+        .from('portfolio_images')
+        .delete()
+        .or(`image_path.eq.${upload.file_path},video_url.eq.${upload.file_path}`);
+
+      if (portfolioImageError) {
+        console.error('Error deleting portfolio images:', portfolioImageError);
       }
 
       // Delete from storage
@@ -152,11 +203,46 @@ const ContentGallery = () => {
 
       fetchUploads();
       fetchStorageUsage();
+      fetchPortfolios();
     } catch (error: any) {
       console.error('Error deleting file:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to delete content",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handlePortfolioDelete = async (portfolioId: string, title: string) => {
+    try {
+      // Delete all portfolio images first
+      const { error: imagesError } = await supabase
+        .from('portfolio_images')
+        .delete()
+        .eq('portfolio_id', portfolioId);
+
+      if (imagesError) throw imagesError;
+
+      // Delete the portfolio
+      const { error: portfolioError } = await supabase
+        .from('portfolios')
+        .delete()
+        .eq('id', portfolioId);
+
+      if (portfolioError) throw portfolioError;
+
+      toast({
+        title: "Success",
+        description: `Portfolio "${title}" deleted successfully!`
+      });
+
+      fetchPortfolios();
+    } catch (error: any) {
+      console.error('Error deleting portfolio:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete portfolio",
         variant: "destructive"
       });
     }
@@ -228,6 +314,7 @@ const ContentGallery = () => {
             description: "Portfolio will appear on your profile page"
           });
           fetchUploads();
+          fetchPortfolios();
         }}
         userType={userType}
         availableImages={uploads.filter(upload => 
@@ -265,7 +352,7 @@ const ContentGallery = () => {
         </Card>
       ) : (
         <Tabs defaultValue="all" className="w-full">
-          <TabsList className={`grid w-full ${isMobile ? 'grid-cols-2 gap-2 h-auto' : 'grid-cols-3'} bg-gray-700`}>
+          <TabsList className={`grid w-full ${isMobile ? 'grid-cols-2 gap-2 h-auto' : 'grid-cols-4'} bg-gray-700`}>
             <TabsTrigger 
               value="all" 
               className={`${isMobile ? 'text-xs px-2 py-2 h-auto' : ''}`}
@@ -277,7 +364,7 @@ const ContentGallery = () => {
               className={`flex items-center gap-2 ${isMobile ? 'text-xs px-2 py-2 h-auto flex-col gap-1' : ''}`}
             >
               <Image className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'}`} />
-              {isMobile ? `Images (${imageUploads.length})` : `Images (${imageUploads.length})`}
+              {isMobile ? `Img (${imageUploads.length})` : `Images (${imageUploads.length})`}
             </TabsTrigger>
             {!isMobile && (
               <TabsTrigger value="videos" className="flex items-center gap-2">
@@ -291,9 +378,16 @@ const ContentGallery = () => {
                 className="flex items-center gap-2 text-xs px-2 py-2 h-auto flex-col gap-1"
               >
                 <Video className="w-3 h-3" />
-                Videos ({videoUploads.length})
+                Vid ({videoUploads.length})
               </TabsTrigger>
             )}
+            <TabsTrigger 
+              value="portfolios" 
+              className={`flex items-center gap-2 ${isMobile ? 'text-xs px-2 py-2 h-auto flex-col gap-1' : ''}`}
+            >
+              <FolderOpen className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'}`} />
+              {isMobile ? `Port (${portfolios.length})` : `Portfolios (${portfolios.length})`}
+            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="all" className="mt-4">
@@ -307,7 +401,13 @@ const ContentGallery = () => {
               <CarouselContent className="-ml-2 md:-ml-4">
                 {uploads.map((upload) => (
                   <CarouselItem key={upload.id} className="pl-2 md:pl-4 basis-full sm:basis-1/2 lg:basis-1/3 xl:basis-1/4">
-                    <ContentCard upload={upload} onDelete={handleDelete} getContentUrl={getContentUrl} formatBytes={formatBytes} />
+                    <ContentCard 
+                      upload={upload} 
+                      onDelete={handleDelete} 
+                      getContentUrl={getContentUrl} 
+                      formatBytes={formatBytes}
+                      userId={user?.id}
+                    />
                   </CarouselItem>
                 ))}
               </CarouselContent>
@@ -327,7 +427,13 @@ const ContentGallery = () => {
               <CarouselContent className="-ml-2 md:-ml-4">
                 {imageUploads.map((upload) => (
                   <CarouselItem key={upload.id} className="pl-2 md:pl-4 basis-full sm:basis-1/2 lg:basis-1/3 xl:basis-1/4">
-                    <ContentCard upload={upload} onDelete={handleDelete} getContentUrl={getContentUrl} formatBytes={formatBytes} />
+                    <ContentCard 
+                      upload={upload} 
+                      onDelete={handleDelete} 
+                      getContentUrl={getContentUrl} 
+                      formatBytes={formatBytes}
+                      userId={user?.id}
+                    />
                   </CarouselItem>
                 ))}
               </CarouselContent>
@@ -347,7 +453,13 @@ const ContentGallery = () => {
               <CarouselContent className="-ml-2 md:-ml-4">
                 {videoUploads.map((upload) => (
                   <CarouselItem key={upload.id} className="pl-2 md:pl-4 basis-full sm:basis-1/2 lg:basis-1/3 xl:basis-1/4">
-                    <ContentCard upload={upload} onDelete={handleDelete} getContentUrl={getContentUrl} formatBytes={formatBytes} />
+                    <ContentCard 
+                      upload={upload} 
+                      onDelete={handleDelete} 
+                      getContentUrl={getContentUrl} 
+                      formatBytes={formatBytes}
+                      userId={user?.id}
+                    />
                   </CarouselItem>
                 ))}
               </CarouselContent>
@@ -355,9 +467,173 @@ const ContentGallery = () => {
               <CarouselNext className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
             </Carousel>
           </TabsContent>
+
+          <TabsContent value="portfolios" className="mt-4">
+            {portfolios.length === 0 ? (
+              <Card className="bg-gray-700/50 border-gray-600">
+                <CardContent className="p-6 text-center">
+                  <p className="text-gray-400 mb-4">No portfolios created yet</p>
+                  <Button
+                    onClick={() => setPortfolioModalOpen(true)}
+                    className="bg-blue-600 hover:bg-blue-700"
+                    disabled={imageUploads.length === 0}
+                  >
+                    <FolderOpen className="w-4 h-4 mr-2" />
+                    Create Portfolio
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <Carousel
+                className="w-full"
+                opts={{
+                  align: "start",
+                  loop: true,
+                }}
+              >
+                <CarouselContent className="-ml-2 md:-ml-4">
+                  {portfolios.map((portfolio) => (
+                    <CarouselItem key={portfolio.id} className="pl-2 md:pl-4 basis-full sm:basis-1/2 lg:basis-1/3 xl:basis-1/4">
+                      <PortfolioCard 
+                        portfolio={portfolio} 
+                        onDelete={handlePortfolioDelete}
+                        userId={user?.id}
+                      />
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
+                <CarouselNext className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
+              </Carousel>
+            )}
+          </TabsContent>
         </Tabs>
       )}
     </div>
+  );
+};
+
+// Portfolio Card Component
+interface PortfolioCardProps {
+  portfolio: Portfolio;
+  onDelete: (portfolioId: string, title: string) => void;
+  userId: string | undefined;
+}
+
+const PortfolioCard = ({ portfolio, onDelete, userId }: PortfolioCardProps) => {
+  const [firstImage, setFirstImage] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchFirstImage = async () => {
+      const { data } = await supabase
+        .from('portfolio_images')
+        .select('image_path, video_url')
+        .eq('portfolio_id', portfolio.id)
+        .order('display_order', { ascending: true })
+        .limit(1)
+        .single();
+
+      if (data) {
+        const filePath = data.image_path || data.video_url;
+        if (filePath) {
+          const { data: urlData } = supabase.storage
+            .from('user-media')
+            .getPublicUrl(filePath);
+          setFirstImage(urlData.publicUrl);
+        }
+      }
+    };
+
+    fetchFirstImage();
+  }, [portfolio.id]);
+
+  const mediaCount = portfolio.portfolio_images?.[0]?.count || 0;
+
+  return (
+    <Card className="bg-gray-700/50 border-gray-600 overflow-hidden h-full">
+      <div className="aspect-video relative">
+        {firstImage ? (
+          <img
+            src={firstImage}
+            alt={portfolio.title}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full bg-gray-600 flex items-center justify-center">
+            <FolderOpen className="w-8 h-8 text-gray-400" />
+          </div>
+        )}
+        {portfolio.is_for_sale && (
+          <div className="absolute top-2 left-2">
+            <Badge className="bg-green-600 text-white">For Sale: ${portfolio.price}</Badge>
+          </div>
+        )}
+        <div className="absolute top-2 right-2">
+          <Badge variant="secondary" className="bg-black/50 text-white">
+            {mediaCount} items
+          </Badge>
+        </div>
+      </div>
+      <CardContent className="p-4">
+        <h4 className="text-white font-medium truncate mb-1">{portfolio.title}</h4>
+        {portfolio.description && (
+          <p className="text-gray-400 text-sm line-clamp-2 mb-3">{portfolio.description}</p>
+        )}
+        <div className="flex items-center text-sm text-gray-400 mb-3">
+          <Calendar className="w-3 h-3 mr-1" />
+          {new Date(portfolio.created_at).toLocaleDateString()}
+        </div>
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            className="flex-1 border-gray-600 text-white bg-gray-700"
+            onClick={() => window.open(`/profile/${userId}`, '_blank')}
+          >
+            <ExternalLink className="w-3 h-3 mr-1" />
+            View
+          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-red-600 text-red-400 bg-gray-700"
+              >
+                <Trash2 className="w-3 h-3" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent className="bg-gray-800 border-gray-700">
+              <AlertDialogHeader>
+                <AlertDialogTitle className="text-white">
+                  ⚠️ WARNING: Delete Portfolio
+                </AlertDialogTitle>
+                <AlertDialogDescription className="text-gray-400 space-y-2">
+                  <p>This will permanently remove "{portfolio.title}" from your profile page and the site entirely.</p>
+                  {portfolio.is_for_sale && (
+                    <p className="text-yellow-400 font-semibold">
+                      If this portfolio has been purchased by others, they will lose access.
+                    </p>
+                  )}
+                  <p className="font-semibold">This action cannot be undone.</p>
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel className="border-gray-600 text-white bg-transparent">
+                  Cancel
+                </AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => onDelete(portfolio.id, portfolio.title)}
+                  className="bg-red-600 hover:bg-red-700"
+                >
+                  Delete Portfolio
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 
@@ -367,11 +643,32 @@ interface ContentCardProps {
   onDelete: (upload: UserUpload) => void;
   getContentUrl: (filePath: string) => string;
   formatBytes: (bytes: number) => string;
+  userId: string | undefined;
 }
 
-const ContentCard = ({ upload, onDelete, getContentUrl, formatBytes }: ContentCardProps) => {
+const ContentCard = ({ upload, onDelete, getContentUrl, formatBytes, userId }: ContentCardProps) => {
   const isImage = upload.file_type.startsWith('image/');
   const isVideo = upload.file_type.startsWith('video/');
+  const [portfolioUsage, setPortfolioUsage] = useState<PortfolioUsage[]>([]);
+  const [checkingUsage, setCheckingUsage] = useState(false);
+
+  const checkPortfolioUsage = async () => {
+    setCheckingUsage(true);
+    try {
+      const { data, error } = await supabase
+        .from('portfolio_images')
+        .select('portfolio_id, portfolios(title)')
+        .or(`image_path.eq.${upload.file_path},video_url.eq.${upload.file_path}`);
+
+      if (!error && data) {
+        setPortfolioUsage(data as PortfolioUsage[]);
+      }
+    } catch (error) {
+      console.error('Error checking portfolio usage:', error);
+    } finally {
+      setCheckingUsage(false);
+    }
+  };
 
   return (
     <Card className="bg-gray-700/50 border-gray-600 overflow-hidden h-full">
@@ -429,6 +726,7 @@ const ContentCard = ({ upload, onDelete, getContentUrl, formatBytes }: ContentCa
                 size="sm"
                 variant="outline"
                 className="border-red-600 text-red-400 bg-gray-700"
+                onClick={checkPortfolioUsage}
               >
                 <Trash2 className="w-3 h-3" />
               </Button>
@@ -436,10 +734,28 @@ const ContentCard = ({ upload, onDelete, getContentUrl, formatBytes }: ContentCa
             <AlertDialogContent className="bg-gray-800 border-gray-700">
               <AlertDialogHeader>
                 <AlertDialogTitle className="text-white">
-                  Delete {isImage ? 'Image' : isVideo ? 'Video' : 'Content'}
+                  {portfolioUsage.length > 0 ? '⚠️ WARNING: Media Used in Portfolio' : `Delete ${isImage ? 'Image' : isVideo ? 'Video' : 'Content'}`}
                 </AlertDialogTitle>
-                <AlertDialogDescription className="text-gray-400">
-                  Are you sure you want to delete "{upload.file_name}"? This action cannot be undone.
+                <AlertDialogDescription className="text-gray-400 space-y-2">
+                  {portfolioUsage.length > 0 ? (
+                    <>
+                      <p>This {isImage ? 'image' : isVideo ? 'video' : 'media'} is currently used in the following portfolio(s):</p>
+                      <ul className="list-disc list-inside text-yellow-400 font-semibold">
+                        {portfolioUsage.map((usage, idx) => (
+                          <li key={idx}>"{usage.portfolios?.title}"</li>
+                        ))}
+                      </ul>
+                      <p className="text-white">
+                        Deleting this media will remove it from these portfolios and may break the display for anyone viewing them.
+                      </p>
+                      <p className="text-yellow-400 font-semibold">
+                        If these portfolios are for sale, purchasers will see broken/missing media.
+                      </p>
+                      <p className="font-semibold">Are you sure you want to proceed?</p>
+                    </>
+                  ) : (
+                    <p>Are you sure you want to delete "{upload.file_name}"? This action cannot be undone.</p>
+                  )}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -450,7 +766,7 @@ const ContentCard = ({ upload, onDelete, getContentUrl, formatBytes }: ContentCa
                   onClick={() => onDelete(upload)}
                   className="bg-red-600 hover:bg-red-700"
                 >
-                  Delete
+                  {portfolioUsage.length > 0 ? 'Delete Anyway' : 'Delete'}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
