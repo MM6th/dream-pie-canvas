@@ -13,7 +13,22 @@ serve(async (req) => {
   }
 
   try {
-    const { orderId, portfolioId } = await req.json();
+    const requestBody = await req.json();
+    const { orderId, portfolioId } = requestBody;
+
+    // Validate input
+    if (!orderId || typeof orderId !== 'string') {
+      throw new Error('Invalid orderId');
+    }
+    if (!portfolioId || typeof portfolioId !== 'string') {
+      throw new Error('Invalid portfolioId');
+    }
+    
+    // Basic UUID validation for portfolioId
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(portfolioId)) {
+      throw new Error('Invalid portfolioId format');
+    }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -82,6 +97,24 @@ serve(async (req) => {
 
     const transactionId = captureData.purchase_units[0].payments.captures[0].id;
 
+    // Check for duplicate purchase (race condition protection)
+    const { data: existingPurchase } = await supabase
+      .from('portfolio_purchases')
+      .select('id, amount_paid')
+      .eq('paypal_transaction_id', transactionId)
+      .maybeSingle();
+
+    if (existingPurchase) {
+      console.log('Purchase already recorded:', existingPurchase.id);
+      return new Response(JSON.stringify({ 
+        success: true,
+        purchaseId: portfolioId,
+        message: 'Purchase already recorded'
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     // Record purchase
     const { error: purchaseError } = await supabase
       .from('portfolio_purchases')
@@ -93,29 +126,41 @@ serve(async (req) => {
       });
 
     if (purchaseError) {
+      // Check if error is due to unique constraint violation
+      if (purchaseError.code === '23505') {
+        console.log('Duplicate purchase prevented by unique constraint');
+        return new Response(JSON.stringify({ 
+          success: true,
+          purchaseId: portfolioId,
+          message: 'Purchase already recorded'
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
       console.error('Error recording purchase:', purchaseError);
       throw purchaseError;
     }
 
-    // Get admin user ID
-    const { data: adminProfile } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('is_admin', true)
-      .limit(1)
-      .single();
+    // Record platform revenue in dedicated table (not tied to specific admin user)
+    const { error: platformRevenueError } = await supabase
+      .from('platform_revenue')
+      .insert({
+        revenue_type: 'portfolio_platform_fee',
+        amount: platformFee,
+        source_transaction_id: transactionId,
+        source_user_id: user.id,
+        metadata: {
+          portfolio_id: portfolioId,
+          gross_amount: grossAmount,
+          merchant_revenue: merchantRevenue
+        }
+      });
 
-    if (!adminProfile) {
-      console.error('No admin user found');
-      throw new Error('Admin user not found');
+    if (platformRevenueError) {
+      console.error('Error recording platform revenue:', platformRevenueError);
+      // Don't fail the entire purchase if platform revenue recording fails
     }
-
-    // Record platform fee for admin
-    await supabase.rpc('update_quarterly_income', {
-      p_user_id: adminProfile.id,
-      p_income_type: 'platform_fee',
-      p_amount: platformFee,
-    });
 
     // Record merchant revenue
     await supabase.rpc('update_quarterly_income', {

@@ -946,6 +946,36 @@ export type Database = {
           },
         ]
       }
+      platform_revenue: {
+        Row: {
+          amount: number
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          revenue_type: string
+          source_transaction_id: string | null
+          source_user_id: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          revenue_type: string
+          source_transaction_id?: string | null
+          source_user_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          revenue_type?: string
+          source_transaction_id?: string | null
+          source_user_id?: string | null
+        }
+        Relationships: []
+      }
       podcast_downloads: {
         Row: {
           audio_product_id: string
@@ -1520,6 +1550,30 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          granted_at: string | null
+          granted_by: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          granted_at?: string | null
+          granted_by?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          granted_at?: string | null
+          granted_by?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_uploads: {
         Row: {
           created_at: string | null
@@ -1789,6 +1843,13 @@ export type Database = {
         Args: { user_uuid: string }
         Returns: number
       }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       is_admin: {
         Args: { user_id: string }
         Returns: boolean
@@ -1816,6 +1877,7 @@ export type Database = {
     }
     Enums: {
       access_level: "public" | "merchant_only" | "paid"
+      app_role: "admin" | "merchant" | "supporter" | "moderator"
       astrology_product_type:
         | "natal_chart_reading"
         | "solar_return_reading"
@@ -1967,6 +2029,7 @@ export const Constants = {
   public: {
     Enums: {
       access_level: ["public", "merchant_only", "paid"],
+      app_role: ["admin", "merchant", "supporter", "moderator"],
       astrology_product_type: [
         "natal_chart_reading",
         "solar_return_reading",
