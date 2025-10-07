@@ -112,8 +112,8 @@ const CurrentThoughtsSection = ({ posts, useCarousel = true }: CurrentThoughtsSe
               </CarouselItem>
             ))}
           </CarouselContent>
-          <CarouselPrevious className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600 top-2 left-1/2 -translate-x-1/2 rotate-90" />
-          <CarouselNext className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600 bottom-2 left-1/2 -translate-x-1/2 rotate-90" />
+          <CarouselPrevious className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600 -top-12 left-1/2 -translate-x-1/2 rotate-90" />
+          <CarouselNext className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600 -bottom-12 left-1/2 -translate-x-1/2 rotate-90" />
         </Carousel>
       )}
     </div>
