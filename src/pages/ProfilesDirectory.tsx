@@ -150,18 +150,16 @@ const ProfilesDirectory = ({
       <div className="sticky top-0 z-50 bg-gray-900/95 backdrop-blur-sm border-b border-gray-700">
         <div className="container mx-auto px-4 py-4">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            {/* Main Navigation - excluding back button */}
+            {/* Main Navigation */}
             <div className={`flex gap-2 ${isMobile ? 'flex-wrap w-full' : ''}`}>
-              {(onBackToDashboard || onStoreView) && (
-                <Button
-                  onClick={onBackToDashboard || (() => navigate('/'))}
-                  variant="outline"
-                  className={`border-gray-600 text-white bg-transparent hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
-                >
-                  <ArrowLeft className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
-                  {isMobile ? 'Dashboard' : 'Back to Dashboard'}
-                </Button>
-              )}
+              <Button
+                onClick={handleGoBack}
+                variant="outline"
+                className={`border-gray-600 text-white bg-transparent hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
+              >
+                <ArrowLeft className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
+                Back
+              </Button>
               {onStoreView && (
                 <Button
                   onClick={() => handleNavigation(onStoreView)}
@@ -238,7 +236,6 @@ const ProfilesDirectory = ({
               { key: "merchants", label: "Merchants", icon: Building },
               { key: "supporters", label: "Supporters", icon: User },
               { key: "admins", label: "Admins", icon: Shield },
-              { key: "creators", label: "Creators", icon: MessageSquare },
             ].map(({ key, label, icon: Icon }) => (
               <Button
                 key={key}
@@ -284,7 +281,7 @@ const ProfilesDirectory = ({
                     className="bg-gray-800 border-gray-700 hover:border-gray-600 transition-colors cursor-pointer group"
                     onClick={() => handleProfileClick(profile.id)}
                   >
-                    <CardContent className="p-4 text-center">
+                    <CardContent className="p-4 text-center h-[240px] flex flex-col justify-between">
                       {/* Avatar */}
                       <div className="mb-4">
                         {profile.avatar_url ? (
@@ -369,7 +366,7 @@ const ProfilesDirectory = ({
                           className="bg-gray-800 border-gray-700 hover:border-gray-600 transition-colors cursor-pointer group"
                           onClick={() => handleProfileClick(profile.id)}
                         >
-                          <CardContent className="p-4 text-center">
+                          <CardContent className="p-4 text-center h-[240px] flex flex-col justify-between">
                             {/* Avatar */}
                             <div className="mb-4">
                               {profile.avatar_url ? (
