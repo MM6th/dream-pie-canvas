@@ -136,7 +136,15 @@ export type Database = {
           negotiation_message?: string | null
           why_me_text?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "asmr_downloads_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       asmr_submissions: {
         Row: {
@@ -966,7 +974,15 @@ export type Database = {
           id?: string
           merchant_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "podcast_downloads_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       post_comments: {
         Row: {
@@ -1450,7 +1466,15 @@ export type Database = {
           merchant_id?: string
           video_ad_opportunity_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "video_ad_downloads_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       video_ad_opportunities: {
         Row: {
