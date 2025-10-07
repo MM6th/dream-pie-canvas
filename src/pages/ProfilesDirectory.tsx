@@ -22,24 +22,10 @@ interface Profile {
   created_at: string;
 }
 
-interface ProfilesDirectoryProps {
-  onBackToDashboard?: () => void;
-  onStoreView?: () => void;
-  onFilmsView?: () => void;
-  onBulletinView?: () => void;
-  onSignOut?: () => void;
-}
-
-const ProfilesDirectory = ({ 
-  onBackToDashboard, 
-  onStoreView, 
-  onFilmsView, 
-  onBulletinView, 
-  onSignOut 
-}: ProfilesDirectoryProps) => {
+const ProfilesDirectory = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [filteredProfiles, setFilteredProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -120,20 +106,33 @@ const ProfilesDirectory = ({
     navigate(`/profile/${profileId}`);
   };
 
-  const handleGoBack = () => {
-    navigate(-1);
+  const handleBackToDashboard = () => {
+    navigate('/');
   };
 
-  const handleNavigation = (action: () => void) => {
-    if (!user) {
-      toast({
-        title: "Access Denied",
-        description: "You must be logged in to access this page.",
-        variant: "destructive"
-      });
-      return;
+  const handleStoreView = () => {
+    navigate('/');
+    setTimeout(() => {
+      window.dispatchEvent(new Event('navigateToStore'));
+    }, 100);
+  };
+
+  const handleFilmsView = () => {
+    navigate('/films');
+  };
+
+  const handleBulletinView = () => {
+    navigate('/bulletin');
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      navigate('/');
+    } catch (error) {
+      console.error('Error signing out:', error);
+      navigate('/');
     }
-    action();
   };
 
   if (loading) {
@@ -151,58 +150,48 @@ const ProfilesDirectory = ({
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           {/* Main Navigation */}
           <div className={`flex gap-2 ${isMobile ? 'flex-wrap w-full' : ''}`}>
-            {onBackToDashboard && (
-              <Button
-                onClick={onBackToDashboard}
-                variant="outline"
-                className={`border-gray-600 text-white bg-transparent hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
-              >
-                <ArrowLeft className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
-                {isMobile ? 'Dashboard' : 'Back to Dashboard'}
-              </Button>
-            )}
-            {onStoreView && (
-              <Button
-                onClick={() => handleNavigation(onStoreView)}
-                variant="outline"
-                className={`border-gray-600 text-white bg-transparent hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
-              >
-                <ShoppingBag className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
-                {isMobile ? 'Store' : 'Browse Store'}
-              </Button>
-            )}
-            {onFilmsView && (
-              <Button
-                onClick={() => handleNavigation(onFilmsView)}
-                variant="outline"
-                className={`border-gray-600 text-white bg-transparent hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
-              >
-                <Film className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
-                {isMobile ? 'Films' : 'Browse Films'}
-              </Button>
-            )}
-            {onBulletinView && (
-              <Button
-                onClick={() => handleNavigation(onBulletinView)}
-                variant="outline"
-                className={`border-gray-600 text-white bg-transparent hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
-              >
-                <MessageSquare className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
-                {isMobile ? 'Bulletin' : 'Browse Bulletin'}
-              </Button>
-            )}
+            <Button
+              onClick={handleBackToDashboard}
+              variant="outline"
+              className={`border-gray-600 text-white bg-transparent hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
+            >
+              <ArrowLeft className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
+              {isMobile ? 'Dashboard' : 'Back to Dashboard'}
+            </Button>
+            <Button
+              onClick={handleStoreView}
+              variant="outline"
+              className={`border-gray-600 text-white bg-transparent hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
+            >
+              <ShoppingBag className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
+              {isMobile ? 'Store' : 'Browse Store'}
+            </Button>
+            <Button
+              onClick={handleFilmsView}
+              variant="outline"
+              className={`border-gray-600 text-white bg-transparent hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
+            >
+              <Film className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
+              {isMobile ? 'Films' : 'Browse Films'}
+            </Button>
+            <Button
+              onClick={handleBulletinView}
+              variant="outline"
+              className={`border-gray-600 text-white bg-transparent hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
+            >
+              <MessageSquare className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
+              {isMobile ? 'Bulletin' : 'Browse Bulletin'}
+            </Button>
           </div>
           
           {/* Sign Out Button */}
-          {onSignOut && (
-            <Button
-              onClick={onSignOut}
-              className={`bg-white text-black hover:bg-gray-100 ${isMobile ? 'text-xs px-3 py-2 h-8 w-full sm:w-auto' : ''}`}
-            >
-              <LogOut className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
-              Sign Out
-            </Button>
-          )}
+          <Button
+            onClick={handleSignOut}
+            className={`bg-white text-black hover:bg-gray-100 ${isMobile ? 'text-xs px-3 py-2 h-8 w-full sm:w-auto' : ''}`}
+          >
+            <LogOut className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
+            Sign Out
+          </Button>
         </div>
       </div>
 
