@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import { Trash2, Download, Eye, Calendar, Play, Image, Video } from "lucide-react";
+import { Trash2, Download, Eye, Calendar, Play, Image, Video, FolderOpen, Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -11,6 +11,7 @@ import { toast } from "@/components/ui/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PhotoUpload from "./PhotoUpload";
 import VideoUpload from "./VideoUpload";
+import PortfolioModal from "./profile/PortfolioModal";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,13 +39,34 @@ const ContentGallery = () => {
   const [uploads, setUploads] = useState<UserUpload[]>([]);
   const [loading, setLoading] = useState(true);
   const [storageUsage, setStorageUsage] = useState<number>(0);
+  const [portfolioModalOpen, setPortfolioModalOpen] = useState(false);
+  const [userType, setUserType] = useState<string>('');
 
   useEffect(() => {
     if (user) {
       fetchUploads();
       fetchStorageUsage();
+      fetchUserType();
     }
   }, [user]);
+
+  const fetchUserType = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('user_type')
+        .eq('id', user.id)
+        .single();
+      
+      if (!error && data) {
+        setUserType(data.user_type);
+      }
+    } catch (error) {
+      console.error('Error fetching user type:', error);
+    }
+  };
 
   const fetchUploads = async () => {
     if (!user) return;
@@ -90,6 +112,24 @@ const ContentGallery = () => {
 
   const handleDelete = async (upload: UserUpload) => {
     try {
+      // Check if this image is used as background
+      if (upload.file_type.startsWith('image/') && user) {
+        const imageUrl = getContentUrl(upload.file_path);
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('background_image_url')
+          .eq('id', user.id)
+          .single();
+
+        if (profile?.background_image_url === imageUrl) {
+          // Remove background image from profile
+          await supabase
+            .from('profiles')
+            .update({ background_image_url: null })
+            .eq('id', user.id);
+        }
+      }
+
       // Delete from storage
       const { error: storageError } = await supabase.storage
         .from('user-media')
@@ -105,7 +145,6 @@ const ContentGallery = () => {
 
       if (dbError) throw dbError;
 
-      const contentType = upload.file_type.startsWith('image/') ? 'content' : 'content';
       toast({
         title: "Success",
         description: `Content deleted successfully!`
@@ -156,18 +195,42 @@ const ContentGallery = () => {
     );
   }
 
+  const availableImageUploads = imageUploads.map(upload => ({
+    id: upload.id,
+    file_path: upload.file_path,
+    file_name: upload.file_name
+  }));
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-xl font-bold text-white">Content Gallery</h3>
-          <p className="text-gray-400">Manage your uploaded images and videos</p>
-        </div>
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <p className="text-gray-400">Manage your uploaded images and videos</p>
         <div className="flex gap-2">
+          <Button
+            onClick={() => setPortfolioModalOpen(true)}
+            className="bg-blue-600 hover:bg-blue-700"
+            disabled={imageUploads.length === 0}
+          >
+            <FolderOpen className="w-4 h-4 mr-2" />
+            Portfolio
+          </Button>
           <PhotoUpload onSuccess={() => { fetchUploads(); fetchStorageUsage(); }} />
           <VideoUpload onVideoSelect={() => { fetchUploads(); fetchStorageUsage(); }} />
         </div>
       </div>
+
+      <PortfolioModal
+        open={portfolioModalOpen}
+        onOpenChange={setPortfolioModalOpen}
+        onSuccess={() => {
+          toast({
+            title: "Success",
+            description: "Portfolio will appear on your profile page"
+          });
+        }}
+        userType={userType}
+        availableImages={availableImageUploads}
+      />
 
       {/* Storage Usage */}
       <Card className="bg-gray-700/50 border-gray-600">

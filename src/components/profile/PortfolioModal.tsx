@@ -1,0 +1,308 @@
+import React, { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "@/components/ui/use-toast";
+import { Loader2, Image as ImageIcon, X } from "lucide-react";
+
+interface PortfolioModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSuccess: () => void;
+  userType: string;
+  availableImages: Array<{ id: string; file_path: string; file_name: string }>;
+}
+
+const PortfolioModal = ({ open, onOpenChange, onSuccess, userType, availableImages }: PortfolioModalProps) => {
+  const { user } = useAuth();
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [isForSale, setIsForSale] = useState(false);
+  const [price, setPrice] = useState("");
+  const [selectedImages, setSelectedImages] = useState<string[]>([]);
+  const [blurredImages, setBlurredImages] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const isMerchant = userType === 'merchant';
+
+  const handleImageToggle = (imagePath: string) => {
+    if (selectedImages.includes(imagePath)) {
+      setSelectedImages(selectedImages.filter(p => p !== imagePath));
+      setBlurredImages(blurredImages.filter(p => p !== imagePath));
+    } else {
+      if (selectedImages.length >= 10) {
+        toast({
+          title: "Limit Reached",
+          description: "You can only select up to 10 images for a portfolio",
+          variant: "destructive"
+        });
+        return;
+      }
+      setSelectedImages([...selectedImages, imagePath]);
+    }
+  };
+
+  const handleBlurToggle = (imagePath: string) => {
+    if (blurredImages.includes(imagePath)) {
+      setBlurredImages(blurredImages.filter(p => p !== imagePath));
+    } else {
+      setBlurredImages([...blurredImages, imagePath]);
+    }
+  };
+
+  const getImageUrl = (filePath: string) => {
+    const { data } = supabase.storage.from('user-media').getPublicUrl(filePath);
+    return data.publicUrl;
+  };
+
+  const handleSubmit = async () => {
+    if (!user) return;
+
+    if (!title.trim()) {
+      toast({
+        title: "Title Required",
+        description: "Please enter a portfolio title",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (selectedImages.length === 0) {
+      toast({
+        title: "Images Required",
+        description: "Please select at least one image",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (isForSale) {
+      const priceNum = parseFloat(price);
+      if (!price || isNaN(priceNum) || priceNum < 2) {
+        toast({
+          title: "Invalid Price",
+          description: "Price must be at least $2.00",
+          variant: "destructive"
+        });
+        return;
+      }
+    }
+
+    setLoading(true);
+
+    try {
+      // Create portfolio
+      const { data: portfolio, error: portfolioError } = await supabase
+        .from('portfolios')
+        .insert({
+          user_id: user.id,
+          title: title.trim(),
+          description: description.trim() || null,
+          is_for_sale: isForSale,
+          price: isForSale ? parseFloat(price) : null
+        })
+        .select()
+        .single();
+
+      if (portfolioError) throw portfolioError;
+
+      // Create portfolio images
+      const portfolioImages = selectedImages.map((imagePath, index) => ({
+        portfolio_id: portfolio.id,
+        image_path: imagePath,
+        display_order: index + 1,
+        is_blurred: blurredImages.includes(imagePath)
+      }));
+
+      const { error: imagesError } = await supabase
+        .from('portfolio_images')
+        .insert(portfolioImages);
+
+      if (imagesError) throw imagesError;
+
+      toast({
+        title: "Success",
+        description: "Portfolio created successfully!"
+      });
+
+      // Reset form
+      setTitle("");
+      setDescription("");
+      setIsForSale(false);
+      setPrice("");
+      setSelectedImages([]);
+      setBlurredImages([]);
+      onOpenChange(false);
+      onSuccess();
+    } catch (error: any) {
+      console.error('Error creating portfolio:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create portfolio",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="bg-gray-800 border-gray-700 max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-white">Create Portfolio</DialogTitle>
+          <DialogDescription className="text-gray-400">
+            Create a portfolio with up to 10 images from your gallery
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4 mt-4">
+          {/* Title */}
+          <div>
+            <Label htmlFor="title" className="text-white">Title *</Label>
+            <Input
+              id="title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Enter portfolio title"
+              className="bg-gray-700 border-gray-600 text-white"
+              maxLength={100}
+            />
+          </div>
+
+          {/* Description */}
+          <div>
+            <Label htmlFor="description" className="text-white">Description</Label>
+            <Textarea
+              id="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Enter portfolio description (optional)"
+              className="bg-gray-700 border-gray-600 text-white"
+              rows={3}
+              maxLength={500}
+            />
+          </div>
+
+          {/* Sale Options (Merchants Only) */}
+          {isMerchant && (
+            <div className="space-y-3">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="isForSale"
+                  checked={isForSale}
+                  onCheckedChange={(checked) => setIsForSale(checked as boolean)}
+                />
+                <Label htmlFor="isForSale" className="text-white cursor-pointer">
+                  Sell this portfolio
+                </Label>
+              </div>
+
+              {isForSale && (
+                <div>
+                  <Label htmlFor="price" className="text-white">Price (USD) *</Label>
+                  <Input
+                    id="price"
+                    type="number"
+                    step="0.01"
+                    min="2.00"
+                    value={price}
+                    onChange={(e) => setPrice(e.target.value)}
+                    placeholder="Minimum $2.00"
+                    className="bg-gray-700 border-gray-600 text-white"
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Image Selection */}
+          <div>
+            <Label className="text-white">
+              Select Images ({selectedImages.length}/10) *
+            </Label>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mt-2 max-h-96 overflow-y-auto p-2 bg-gray-700/50 rounded-lg">
+              {availableImages.map((image) => {
+                const isSelected = selectedImages.includes(image.file_path);
+                const isBlurred = blurredImages.includes(image.file_path);
+
+                return (
+                  <div key={image.id} className="relative group">
+                    <div
+                      className={`relative aspect-square rounded-lg overflow-hidden cursor-pointer border-2 transition-all ${
+                        isSelected ? 'border-blue-500 ring-2 ring-blue-500/50' : 'border-gray-600'
+                      }`}
+                      onClick={() => handleImageToggle(image.file_path)}
+                    >
+                      <img
+                        src={getImageUrl(image.file_path)}
+                        alt={image.file_name}
+                        className={`w-full h-full object-cover ${isBlurred && isMerchant ? 'blur-md' : ''}`}
+                      />
+                      {isSelected && (
+                        <div className="absolute inset-0 bg-blue-500/20 flex items-center justify-center">
+                          <div className="bg-blue-500 rounded-full p-1">
+                            <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Blur Checkbox (Merchants Only) */}
+                    {isSelected && isMerchant && (
+                      <div className="mt-1 flex items-center space-x-2">
+                        <Checkbox
+                          id={`blur-${image.id}`}
+                          checked={isBlurred}
+                          onCheckedChange={() => handleBlurToggle(image.file_path)}
+                        />
+                        <Label htmlFor={`blur-${image.id}`} className="text-xs text-white cursor-pointer">
+                          Blur
+                        </Label>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-3 pt-4">
+            <Button
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              className="flex-1 border-gray-600 text-white"
+              disabled={loading}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSubmit}
+              className="flex-1 bg-blue-600 hover:bg-blue-700"
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                'Create Portfolio'
+              )}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+export default PortfolioModal;

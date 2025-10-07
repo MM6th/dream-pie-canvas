@@ -3,12 +3,13 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, User, Calendar, MapPin, Globe, Shield, Building, MessageSquare, ExternalLink } from "lucide-react";
+import { ArrowLeft, User, Calendar, MapPin, Globe, Shield, Building, MessageSquare, ExternalLink, FolderOpen } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import PostInteractions from "@/components/PostInteractions";
 import PublicPlaylist from "@/components/profile/PublicPlaylist";
+import PortfolioCard from "@/components/profile/PortfolioCard";
 
 interface Profile {
   id: string;
@@ -49,12 +50,14 @@ const ProfilePage = () => {
   const isMobile = useIsMobile();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [userPosts, setUserPosts] = useState<BulletinPost[]>([]);
+  const [portfolios, setPortfolios] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (userId) {
       fetchProfileData();
       fetchUserPosts();
+      fetchPortfolios();
     }
   }, [userId]);
 
@@ -99,7 +102,8 @@ const ProfilePage = () => {
         .from('bulletin_posts')
         .select('*')
         .eq('merchant_id', userId)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(1);
 
       if (error) {
         console.error('Error fetching posts:', error);
@@ -109,6 +113,36 @@ const ProfilePage = () => {
       setUserPosts(data || []);
     } catch (error) {
       console.error('Error fetching posts:', error);
+    }
+  };
+
+  const fetchPortfolios = async () => {
+    if (!userId) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('portfolios')
+        .select(`
+          *,
+          portfolio_images (
+            id,
+            image_path,
+            display_order,
+            is_blurred
+          )
+        `)
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (error) {
+        console.error('Error fetching portfolios:', error);
+        return;
+      }
+
+      setPortfolios(data || []);
+    } catch (error) {
+      console.error('Error fetching portfolios:', error);
     }
   };
 
@@ -300,23 +334,18 @@ const ProfilePage = () => {
             </Card>
           </div>
 
-          {/* Posts Column */}
+          {/* Posts & Portfolio Column */}
           <div className={`${isMobile ? 'w-full' : 'lg:col-span-2'} space-y-6`}>
-            <div className="flex items-center gap-2 mb-6">
-              <MessageSquare className="w-6 h-6 text-white" />
-              <h2 className="text-2xl font-bold text-white">Recent Posts</h2>
-            </div>
+            {/* Most Recent Post */}
+            {userPosts.length > 0 && (
+              <>
+                <div className="flex items-center gap-2 mb-6">
+                  <MessageSquare className="w-6 h-6 text-white" />
+                  <h2 className="text-2xl font-bold text-white">Most Recent Post</h2>
+                </div>
 
-            {userPosts.length === 0 ? (
-              <Card className="bg-gray-800 border-gray-700">
-                <CardContent className="p-8 text-center">
-                  <MessageSquare className="w-12 h-12 text-gray-500 mx-auto mb-4" />
-                  <p className="text-gray-400">No posts yet</p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="space-y-6">
-                {userPosts.map((post) => (
+                <div className="space-y-6">
+                  {userPosts.map((post) => (
                   <Card key={post.id} className="bg-gray-800 border-gray-700">
                     {((post.image_url || post.uploaded_image_url) && post.media_type !== 'video') && (
                       <CardHeader className="p-0">
@@ -372,7 +401,31 @@ const ProfilePage = () => {
                     </CardContent>
                   </Card>
                 ))}
+                </div>
+              </>
+            )}
+
+            {/* Portfolio Section */}
+            {portfolios.length > 0 && (
+              <div className="mt-8">
+                <div className="flex items-center gap-2 mb-6">
+                  <FolderOpen className="w-6 h-6 text-white" />
+                  <h2 className="text-2xl font-bold text-white">Portfolio</h2>
+                </div>
+                {portfolios.map((portfolio) => (
+                  <PortfolioCard key={portfolio.id} portfolio={portfolio} />
+                ))}
               </div>
+            )}
+
+            {/* Empty State */}
+            {userPosts.length === 0 && portfolios.length === 0 && (
+              <Card className="bg-gray-800 border-gray-700">
+                <CardContent className="p-8 text-center">
+                  <MessageSquare className="w-12 h-12 text-gray-500 mx-auto mb-4" />
+                  <p className="text-gray-400">No posts or portfolios yet</p>
+                </CardContent>
+              </Card>
             )}
           </div>
         </div>
