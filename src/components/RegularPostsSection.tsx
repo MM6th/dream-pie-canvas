@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MessageSquare, User, Calendar, ExternalLink, Shield } from "lucide-react";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import PostInteractions from "./PostInteractions";
 import { BulletinPost } from "@/types/bulletin";
 
 interface RegularPostsSectionProps {
@@ -93,8 +92,6 @@ const RegularPostsSection = ({ posts, useCarousel = true }: RegularPostsSectionP
             View Link
           </button>
         )}
-        
-        <PostInteractions postId={post.id} disableComments={true} />
       </CardContent>
     </Card>
   );

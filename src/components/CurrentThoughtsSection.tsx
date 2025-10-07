@@ -4,7 +4,6 @@ import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MessageSquare, User, Calendar } from "lucide-react";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import PostInteractions from "./PostInteractions";
 import { BulletinPost } from "@/types/bulletin";
 
 interface CurrentThoughtsSectionProps {
@@ -68,8 +67,6 @@ const CurrentThoughtsSection = ({ posts, useCarousel = true }: CurrentThoughtsSe
               {new Date(post.created_at).toLocaleDateString()}
             </div>
         </div>
-        
-        <PostInteractions postId={post.id} disableComments={true} />
       </CardContent>
     </Card>
   );

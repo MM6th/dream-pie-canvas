@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar, ExternalLink, Tv, User } from "lucide-react";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import PostInteractions from "./PostInteractions";
 import { BulletinPost } from "@/types/bulletin";
 
 interface TVGuideSectionProps {
@@ -87,8 +86,6 @@ const TVGuideSection = ({ posts, useCarousel = true }: TVGuideSectionProps) => {
             Watch Now
           </Button>
         )}
-        
-        <PostInteractions postId={post.id} disableComments={true} />
       </CardContent>
     </Card>
   );
