@@ -69,14 +69,15 @@ const PortfolioCard = ({ portfolio }: PortfolioCardProps) => {
       return;
     }
 
-    if (portfolio.user_id === user.id) {
-      toast({
-        title: "Cannot Purchase",
-        description: "You cannot purchase your own portfolio",
-        variant: "destructive"
-      });
-      return;
-    }
+    // ⚠️ TEMPORARY: Owner check disabled for testing - RE-ENABLE before production!
+    // if (portfolio.user_id === user.id) {
+    //   toast({
+    //     title: "Cannot Purchase",
+    //     description: "You cannot purchase your own portfolio",
+    //     variant: "destructive"
+    //   });
+    //   return;
+    // }
 
     setLoading(true);
 
