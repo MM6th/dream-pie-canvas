@@ -15,7 +15,7 @@ interface PortfolioModalProps {
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
   userType: string;
-  availableImages: Array<{ id: string; file_path: string; file_name: string }>;
+  availableImages: Array<{ id: string; file_path: string; file_name: string; file_type: string }>;
 }
 
 const PortfolioModal = ({ open, onOpenChange, onSuccess, userType, availableImages }: PortfolioModalProps) => {
@@ -24,26 +24,28 @@ const PortfolioModal = ({ open, onOpenChange, onSuccess, userType, availableImag
   const [description, setDescription] = useState("");
   const [isForSale, setIsForSale] = useState(false);
   const [price, setPrice] = useState("");
-  const [selectedImages, setSelectedImages] = useState<string[]>([]);
+  const [selectedImages, setSelectedImages] = useState<Array<{path: string; type: string}>>([]);
   const [blurredImages, setBlurredImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
   const isMerchant = userType === 'merchant';
 
-  const handleImageToggle = (imagePath: string) => {
-    if (selectedImages.includes(imagePath)) {
-      setSelectedImages(selectedImages.filter(p => p !== imagePath));
+  const handleImageToggle = (imagePath: string, fileType: string) => {
+    const existing = selectedImages.find(img => img.path === imagePath);
+    if (existing) {
+      setSelectedImages(selectedImages.filter(p => p.path !== imagePath));
       setBlurredImages(blurredImages.filter(p => p !== imagePath));
     } else {
       if (selectedImages.length >= 10) {
         toast({
           title: "Limit Reached",
-          description: "You can only select up to 10 images for a portfolio",
+          description: "You can only select up to 10 media items for a portfolio",
           variant: "destructive"
         });
         return;
       }
-      setSelectedImages([...selectedImages, imagePath]);
+      const mediaType = fileType.startsWith('video/') ? 'video' : 'image';
+      setSelectedImages([...selectedImages, { path: imagePath, type: mediaType }]);
     }
   };
 
@@ -111,12 +113,14 @@ const PortfolioModal = ({ open, onOpenChange, onSuccess, userType, availableImag
 
       if (portfolioError) throw portfolioError;
 
-      // Create portfolio images
-      const portfolioImages = selectedImages.map((imagePath, index) => ({
+      // Create portfolio images/videos
+      const portfolioImages = selectedImages.map((media, index) => ({
         portfolio_id: portfolio.id,
-        image_path: imagePath,
+        image_path: media.type === 'image' ? media.path : '',
+        video_url: media.type === 'video' ? media.path : null,
+        media_type: media.type,
         display_order: index + 1,
-        is_blurred: blurredImages.includes(imagePath)
+        is_blurred: blurredImages.includes(media.path)
       }));
 
       const { error: imagesError } = await supabase
@@ -221,29 +225,43 @@ const PortfolioModal = ({ open, onOpenChange, onSuccess, userType, availableImag
             </div>
           )}
 
-          {/* Image Selection */}
+          {/* Media Selection */}
           <div>
             <Label className="text-white">
-              Select Images ({selectedImages.length}/10) *
+              Select Media ({selectedImages.length}/10) *
             </Label>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mt-2 max-h-96 overflow-y-auto p-2 bg-gray-700/50 rounded-lg">
-              {availableImages.map((image) => {
-                const isSelected = selectedImages.includes(image.file_path);
-                const isBlurred = blurredImages.includes(image.file_path);
+              {availableImages.map((media) => {
+                const isSelected = selectedImages.some(img => img.path === media.file_path);
+                const isBlurred = blurredImages.includes(media.file_path);
+                const isVideo = media.file_type.startsWith('video/');
 
                 return (
-                  <div key={image.id} className="relative group">
+                  <div key={media.id} className="relative group">
                     <div
                       className={`relative aspect-square rounded-lg overflow-hidden cursor-pointer border-2 transition-all ${
                         isSelected ? 'border-blue-500 ring-2 ring-blue-500/50' : 'border-gray-600'
                       }`}
-                      onClick={() => handleImageToggle(image.file_path)}
+                      onClick={() => handleImageToggle(media.file_path, media.file_type)}
                     >
-                      <img
-                        src={getImageUrl(image.file_path)}
-                        alt={image.file_name}
-                        className={`w-full h-full object-cover ${isBlurred && isMerchant ? 'blur-md' : ''}`}
-                      />
+                      {isVideo ? (
+                        <video
+                          src={getImageUrl(media.file_path)}
+                          className={`w-full h-full object-cover ${isBlurred && isMerchant ? 'blur-md' : ''}`}
+                          muted
+                        />
+                      ) : (
+                        <img
+                          src={getImageUrl(media.file_path)}
+                          alt={media.file_name}
+                          className={`w-full h-full object-cover ${isBlurred && isMerchant ? 'blur-md' : ''}`}
+                        />
+                      )}
+                      {isVideo && (
+                        <div className="absolute top-1 right-1 bg-black/60 px-1.5 py-0.5 rounded text-xs text-white">
+                          Video
+                        </div>
+                      )}
                       {isSelected && (
                         <div className="absolute inset-0 bg-blue-500/20 flex items-center justify-center">
                           <div className="bg-blue-500 rounded-full p-1">
@@ -259,11 +277,11 @@ const PortfolioModal = ({ open, onOpenChange, onSuccess, userType, availableImag
                     {isSelected && isMerchant && (
                       <div className="mt-1 flex items-center space-x-2">
                         <Checkbox
-                          id={`blur-${image.id}`}
+                          id={`blur-${media.id}`}
                           checked={isBlurred}
-                          onCheckedChange={() => handleBlurToggle(image.file_path)}
+                          onCheckedChange={() => handleBlurToggle(media.file_path)}
                         />
-                        <Label htmlFor={`blur-${image.id}`} className="text-xs text-white cursor-pointer">
+                        <Label htmlFor={`blur-${media.id}`} className="text-xs text-white cursor-pointer">
                           Blur
                         </Label>
                       </div>

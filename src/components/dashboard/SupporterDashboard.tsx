@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import AudioPlayer from "@/components/AudioPlayer";
 import VideoPlayer from "@/components/VideoPlayer";
 import PodcastAudioPlayer from "@/components/PodcastAudioPlayer";
+import PurchasedPortfoliosViewer from "@/components/dashboard/PurchasedPortfoliosViewer";
 import BackgroundUpload from "@/components/BackgroundUpload";
 import ContentGallery from "@/components/ContentGallery";
 import { useAuth } from "@/hooks/useAuth";
@@ -50,7 +51,42 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
   const [userProfile, setUserProfile] = useState<any>(null);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [playlistPublic, setPlaylistPublic] = useState(false);
+  const [purchasedPortfolios, setPurchasedPortfolios] = useState<any[]>([]);
   const { currentQuarterIncome } = useQuarterlyIncome(user?.id);
+
+  const fetchPurchasedPortfolios = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('portfolio_purchases')
+        .select(`
+          id,
+          purchase_date,
+          amount_paid,
+          portfolios:portfolio_id (
+            id,
+            title,
+            description,
+            portfolio_images (
+              id,
+              image_path,
+              video_url,
+              media_type,
+              display_order
+            )
+          )
+        `)
+        .eq('user_id', user.id)
+        .order('purchase_date', { ascending: false });
+
+      if (!error && data) {
+        setPurchasedPortfolios(data);
+      }
+    } catch (error) {
+      console.error('Error fetching purchased portfolios:', error);
+    }
+  };
 
   const fetchUserProfile = async () => {
     if (!user) return;
@@ -100,6 +136,7 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
   useEffect(() => {
     if (user) {
       fetchUserProfile();
+      fetchPurchasedPortfolios();
     }
   }, [user]);
 
@@ -194,6 +231,7 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
                 <AudioPlayer tracks={purchasedTracks} />
                 <PodcastAudioPlayer tracks={purchasedPodcasts} />
               </div>
+              <PurchasedPortfoliosViewer portfolios={purchasedPortfolios} />
             </TabsContent>
             
             <TabsContent value="videos" className="space-y-6">

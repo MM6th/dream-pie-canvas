@@ -21,6 +21,7 @@ const PaymentSuccess = () => {
 
   const orderId = searchParams.get('token');
   const paymentType = searchParams.get('type') || 'audio';
+  const portfolioId = searchParams.get('portfolioId');
 
   useEffect(() => {
     const capturePayment = async () => {
@@ -34,10 +35,18 @@ const PaymentSuccess = () => {
         console.log('Capturing payment for order:', orderId, 'Type:', paymentType);
         
         // Choose the appropriate capture function based on payment type
-        const functionName = paymentType === 'fashion' ? 'capture-fashion-payment' : 'capture-paypal-payment';
+        let functionName = 'capture-paypal-payment';
+        let body: any = { paymentId: orderId };
+        
+        if (paymentType === 'fashion') {
+          functionName = 'capture-fashion-payment';
+        } else if (paymentType === 'portfolio') {
+          functionName = 'capture-portfolio-payment';
+          body = { orderId, portfolioId };
+        }
         
         const { data, error } = await supabase.functions.invoke(functionName, {
-          body: { paymentId: orderId },
+          body,
           headers: {
             Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
           },
@@ -119,6 +128,9 @@ const PaymentSuccess = () => {
   const getSuccessMessage = () => {
     if (paymentType === 'fashion') {
       return "Thank you for your purchase! Your fashion item order has been confirmed.";
+    }
+    if (paymentType === 'portfolio') {
+      return "Thank you for your purchase! The portfolio has been added to your dashboard.";
     }
     return "Thank you for your purchase! Your audio has been added to your music library.";
   };

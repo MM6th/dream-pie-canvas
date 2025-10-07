@@ -42,6 +42,41 @@ const MerchantDashboard = ({
   const isMobile = useIsMobile();
   const { user } = useAuth();
   const [playlistPublic, setPlaylistPublic] = useState<boolean>(false);
+  const [purchasedPortfolios, setPurchasedPortfolios] = useState<any[]>([]);
+
+  const fetchPurchasedPortfolios = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('portfolio_purchases')
+        .select(`
+          id,
+          purchase_date,
+          amount_paid,
+          portfolios:portfolio_id (
+            id,
+            title,
+            description,
+            portfolio_images (
+              id,
+              image_path,
+              video_url,
+              media_type,
+              display_order
+            )
+          )
+        `)
+        .eq('user_id', user.id)
+        .order('purchase_date', { ascending: false });
+
+      if (!error && data) {
+        setPurchasedPortfolios(data);
+      }
+    } catch (error) {
+      console.error('Error fetching purchased portfolios:', error);
+    }
+  };
 
   const fetchUserProfile = async () => {
     if (!user) return;
@@ -83,6 +118,7 @@ const MerchantDashboard = ({
   useEffect(() => {
     if (user) {
       fetchUserProfile();
+      fetchPurchasedPortfolios();
     }
   }, [user]);
 
@@ -145,7 +181,7 @@ const MerchantDashboard = ({
             </CardContent>
           </Card>
 
-          <MediaPlayers purchasedTracks={purchasedTracks} purchasedPodcasts={purchasedPodcasts} purchasedVideos={purchasedVideos} />
+          <MediaPlayers purchasedTracks={purchasedTracks} purchasedPodcasts={purchasedPodcasts} purchasedVideos={purchasedVideos} purchasedPortfolios={purchasedPortfolios} />
         </>
       )}
 

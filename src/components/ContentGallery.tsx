@@ -227,9 +227,12 @@ const ContentGallery = () => {
             title: "Success",
             description: "Portfolio will appear on your profile page"
           });
+          fetchUploads();
         }}
         userType={userType}
-        availableImages={availableImageUploads}
+        availableImages={uploads.filter(upload => 
+          upload.file_type.startsWith('image/') || upload.file_type.startsWith('video/')
+        )}
       />
 
       {/* Storage Usage */}

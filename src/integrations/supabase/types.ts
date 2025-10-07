@@ -991,7 +991,9 @@ export type Database = {
           id: string
           image_path: string
           is_blurred: boolean
+          media_type: string | null
           portfolio_id: string
+          video_url: string | null
         }
         Insert: {
           created_at?: string
@@ -999,7 +1001,9 @@ export type Database = {
           id?: string
           image_path: string
           is_blurred?: boolean
+          media_type?: string | null
           portfolio_id: string
+          video_url?: string | null
         }
         Update: {
           created_at?: string
@@ -1007,7 +1011,9 @@ export type Database = {
           id?: string
           image_path?: string
           is_blurred?: boolean
+          media_type?: string | null
           portfolio_id?: string
+          video_url?: string | null
         }
         Relationships: [
           {
