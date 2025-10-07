@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { ArrowLeft, Users, User, Shield, Building, Search, MessageSquare, Calendar, LogOut, ShoppingBag, Film } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
@@ -207,29 +208,18 @@ const ProfilesDirectory = ({
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-6 py-8">
-        {/* Back Button within content area */}
-        <div className="mb-6">
-          <Button
-            onClick={handleGoBack}
-            variant="outline"
-            className={`border-gray-600 text-white bg-transparent hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
-          >
-            <ArrowLeft className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
-            {isMobile ? 'Back' : 'Go Back'}
-          </Button>
-        </div>
-        {/* Header */}
-        <div className="text-center mb-8">
+      {/* Main Content */}
+      <div className="relative z-10 w-full mx-auto p-6">
+        <div className="mb-8 text-center">
           <h1 className="text-4xl font-bold text-white mb-4 flex items-center justify-center gap-3">
             <Users className="w-8 h-8" />
             Community Profiles
           </h1>
-          <p className="text-gray-300 text-lg">Discover and connect with our community members</p>
+          <p className="text-gray-300">Discover and connect with our community members</p>
         </div>
 
         {/* Search and Filters */}
-        <div className="mb-8 space-y-4">
+        <div className="mb-8 space-y-4 max-w-3xl mx-auto">
           <div className="relative max-w-md mx-auto">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
             <Input
@@ -266,87 +256,187 @@ const ProfilesDirectory = ({
               </Button>
             ))}
           </div>
+
+          {/* Results Count */}
+          <div className="text-center">
+            <p className="text-gray-400">
+              Showing {filteredProfiles.length} of {profiles.length} profiles
+            </p>
+          </div>
         </div>
 
-        {/* Results Count */}
-        <div className="text-center mb-6">
-          <p className="text-gray-400">
-            Showing {filteredProfiles.length} of {profiles.length} profiles
-          </p>
-        </div>
-
-        {/* Profiles Grid */}
-        {filteredProfiles.length === 0 ? (
-          <Card className="bg-gray-800 border-gray-700 max-w-md mx-auto">
-            <CardContent className="p-8 text-center">
-              <Users className="w-12 h-12 text-gray-500 mx-auto mb-4" />
-              <p className="text-gray-400">No profiles found matching your criteria</p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className={`grid gap-6 ${
-            isMobile 
-              ? 'grid-cols-1 sm:grid-cols-2' 
-              : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'
-          }`}>
-            {filteredProfiles.map((profile) => (
-              <Card
-                key={profile.id}
-                className="bg-gray-800 border-gray-700 hover:border-gray-600 transition-colors cursor-pointer group"
-                onClick={() => handleProfileClick(profile.id)}
-              >
-                <CardContent className="p-4 text-center">
-                  {/* Avatar */}
-                  <div className="mb-4">
-                    {profile.avatar_url ? (
-                      <img
-                        src={profile.avatar_url}
-                        alt={profile.display_name}
-                        className="w-16 h-16 rounded-full object-cover mx-auto border-2 border-gray-600 group-hover:border-gray-500 transition-colors"
-                      />
-                    ) : (
-                      <div className="w-16 h-16 bg-gray-600 rounded-full flex items-center justify-center mx-auto border-2 border-gray-600 group-hover:border-gray-500 transition-colors">
-                        <User className="w-8 h-8 text-gray-400" />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Name */}
-                  <h3 className="text-white font-semibold mb-2 group-hover:text-blue-300 transition-colors">
-                    {profile.display_name || 'Anonymous User'}
-                  </h3>
-
-                  {/* Business Name */}
-                  {profile.business_name && (
-                    <p className="text-gray-400 text-sm mb-2">{profile.business_name}</p>
-                  )}
-
-                  {/* Badges */}
-                  <div className="flex flex-wrap justify-center gap-1 mb-3">
-                    <Badge variant="secondary" className="bg-blue-600 text-white text-xs">
-                      {profile.user_type === 'merchant' ? 'Merchant' : 'Supporter'}
-                    </Badge>
-                    {profile.is_admin && (
-                      <Badge variant="secondary" className="bg-orange-600 text-white text-xs flex items-center gap-1">
-                        <Shield className="w-2 h-2" />
-                        Admin
-                      </Badge>
-                    )}
-                    {profile.is_adult_creator && (
-                      <Badge variant="secondary" className="bg-purple-600 text-white text-xs">
-                        Creator
-                      </Badge>
-                    )}
-                  </div>
-
-                  {/* Join Date */}
-                  <div className="flex items-center justify-center gap-1 text-xs text-gray-500">
-                    <Calendar className="w-3 h-3" />
-                    <span>Joined {new Date(profile.created_at).toLocaleDateString()}</span>
-                  </div>
+        {/* Desktop: Ad + Carousel + Ad Layout / Mobile: Simple Grid */}
+        {isMobile ? (
+          // Mobile: Simple grid, no ads
+          <div className="max-w-2xl mx-auto">
+            {filteredProfiles.length === 0 ? (
+              <Card className="bg-gray-800 border-gray-700">
+                <CardContent className="p-8 text-center">
+                  <Users className="w-12 h-12 text-gray-500 mx-auto mb-4" />
+                  <p className="text-gray-400">No profiles found matching your criteria</p>
                 </CardContent>
               </Card>
-            ))}
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {filteredProfiles.map((profile) => (
+                  <Card
+                    key={profile.id}
+                    className="bg-gray-800 border-gray-700 hover:border-gray-600 transition-colors cursor-pointer group"
+                    onClick={() => handleProfileClick(profile.id)}
+                  >
+                    <CardContent className="p-4 text-center">
+                      {/* Avatar */}
+                      <div className="mb-4">
+                        {profile.avatar_url ? (
+                          <img
+                            src={profile.avatar_url}
+                            alt={profile.display_name}
+                            className="w-16 h-16 rounded-full object-cover mx-auto border-2 border-gray-600 group-hover:border-gray-500 transition-colors"
+                          />
+                        ) : (
+                          <div className="w-16 h-16 bg-gray-600 rounded-full flex items-center justify-center mx-auto border-2 border-gray-600 group-hover:border-gray-500 transition-colors">
+                            <User className="w-8 h-8 text-gray-400" />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Name */}
+                      <h3 className="text-white font-semibold mb-2 group-hover:text-blue-300 transition-colors">
+                        {profile.display_name || 'Anonymous User'}
+                      </h3>
+
+                      {/* Business Name */}
+                      {profile.business_name && (
+                        <p className="text-gray-400 text-sm mb-2">{profile.business_name}</p>
+                      )}
+
+                      {/* Badges */}
+                      <div className="flex flex-wrap justify-center gap-1 mb-3">
+                        <Badge variant="secondary" className="bg-blue-600 text-white text-xs">
+                          {profile.user_type === 'merchant' ? 'Merchant' : 'Supporter'}
+                        </Badge>
+                        {profile.is_admin && (
+                          <Badge variant="secondary" className="bg-orange-600 text-white text-xs flex items-center gap-1">
+                            <Shield className="w-2 h-2" />
+                            Admin
+                          </Badge>
+                        )}
+                        {profile.is_adult_creator && (
+                          <Badge variant="secondary" className="bg-purple-600 text-white text-xs">
+                            Creator
+                          </Badge>
+                        )}
+                      </div>
+
+                      {/* Join Date */}
+                      <div className="flex items-center justify-center gap-1 text-xs text-gray-500">
+                        <Calendar className="w-3 h-3" />
+                        <span>Joined {new Date(profile.created_at).toLocaleDateString()}</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : (
+          // Desktop: Left Ad + Carousel + Right Ad
+          <div className="flex gap-6 justify-center items-start">
+            {/* Left Ad Space */}
+            <div className="w-48 flex-shrink-0">
+              <div className="sticky top-4">
+                <div className="bg-gradient-to-br from-purple-900/20 to-pink-900/20 border border-purple-700 rounded-lg p-4 h-96 flex items-center justify-center">
+                  <p className="text-gray-400 text-center text-sm">Ad Space<br/>300x600</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Main Content - Carousel */}
+            <div className="max-w-3xl w-full">
+              {filteredProfiles.length === 0 ? (
+                <Card className="bg-gray-800 border-gray-700">
+                  <CardContent className="p-8 text-center">
+                    <Users className="w-12 h-12 text-gray-500 mx-auto mb-4" />
+                    <p className="text-gray-400">No profiles found matching your criteria</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <Carousel className="w-full">
+                  <CarouselContent className="-ml-4">
+                    {filteredProfiles.map((profile) => (
+                      <CarouselItem key={profile.id} className="pl-4 basis-1/3">
+                        <Card
+                          className="bg-gray-800 border-gray-700 hover:border-gray-600 transition-colors cursor-pointer group"
+                          onClick={() => handleProfileClick(profile.id)}
+                        >
+                          <CardContent className="p-4 text-center">
+                            {/* Avatar */}
+                            <div className="mb-4">
+                              {profile.avatar_url ? (
+                                <img
+                                  src={profile.avatar_url}
+                                  alt={profile.display_name}
+                                  className="w-16 h-16 rounded-full object-cover mx-auto border-2 border-gray-600 group-hover:border-gray-500 transition-colors"
+                                />
+                              ) : (
+                                <div className="w-16 h-16 bg-gray-600 rounded-full flex items-center justify-center mx-auto border-2 border-gray-600 group-hover:border-gray-500 transition-colors">
+                                  <User className="w-8 h-8 text-gray-400" />
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Name */}
+                            <h3 className="text-white font-semibold mb-2 group-hover:text-blue-300 transition-colors line-clamp-1">
+                              {profile.display_name || 'Anonymous User'}
+                            </h3>
+
+                            {/* Business Name */}
+                            {profile.business_name && (
+                              <p className="text-gray-400 text-sm mb-2 line-clamp-1">{profile.business_name}</p>
+                            )}
+
+                            {/* Badges */}
+                            <div className="flex flex-wrap justify-center gap-1 mb-3">
+                              <Badge variant="secondary" className="bg-blue-600 text-white text-xs">
+                                {profile.user_type === 'merchant' ? 'Merchant' : 'Supporter'}
+                              </Badge>
+                              {profile.is_admin && (
+                                <Badge variant="secondary" className="bg-orange-600 text-white text-xs flex items-center gap-1">
+                                  <Shield className="w-2 h-2" />
+                                  Admin
+                                </Badge>
+                              )}
+                              {profile.is_adult_creator && (
+                                <Badge variant="secondary" className="bg-purple-600 text-white text-xs">
+                                  Creator
+                                </Badge>
+                              )}
+                            </div>
+
+                            {/* Join Date */}
+                            <div className="flex items-center justify-center gap-1 text-xs text-gray-500">
+                              <Calendar className="w-3 h-3" />
+                              <span>Joined {new Date(profile.created_at).toLocaleDateString()}</span>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                  <CarouselPrevious className="text-white border-gray-600 hover:bg-gray-700" />
+                  <CarouselNext className="text-white border-gray-600 hover:bg-gray-700" />
+                </Carousel>
+              )}
+            </div>
+
+            {/* Right Ad Space */}
+            <div className="w-48 flex-shrink-0">
+              <div className="sticky top-4">
+                <div className="bg-gradient-to-br from-blue-900/20 to-cyan-900/20 border border-blue-700 rounded-lg p-4 h-96 flex items-center justify-center">
+                  <p className="text-gray-400 text-center text-sm">Ad Space<br/>300x600</p>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
