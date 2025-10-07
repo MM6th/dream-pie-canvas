@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import PostInteractions from "@/components/PostInteractions";
 import PublicPlaylist from "@/components/profile/PublicPlaylist";
-import PortfolioCard from "@/components/PortfolioCard";
+import PortfolioCard from "@/components/profile/PortfolioCard";
 
 interface Profile {
   id: string;
