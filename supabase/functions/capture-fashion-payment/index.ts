@@ -1,15 +1,24 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-interface CaptureRequest {
-  paymentId: string;
-}
+// Define validation schemas
+const captureRequestSchema = z.object({
+  paymentId: z.string().min(1, 'Payment ID is required').max(100, 'Payment ID too long')
+});
+
+const customIdSchema = z.object({
+  userId: z.string().uuid('Invalid user ID format'),
+  fashionProductId: z.string().uuid('Invalid product ID format'),
+  variantId: z.string().uuid('Invalid variant ID format'),
+  quantity: z.number().int('Quantity must be an integer').positive('Quantity must be positive').max(1000, 'Quantity exceeds maximum')
+});
 
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === 'OPTIONS') {
@@ -36,7 +45,24 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('Invalid authentication');
     }
 
-    const { paymentId }: CaptureRequest = await req.json();
+    const requestBody = await req.json();
+    
+    // Validate request body
+    const validationResult = captureRequestSchema.safeParse(requestBody);
+    if (!validationResult.success) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'Invalid request', 
+          details: validationResult.error.errors 
+        }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+    
+    const { paymentId } = validationResult.data;
 
     console.log('Capturing PayPal fashion payment:', paymentId);
 
@@ -77,14 +103,39 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('PayPal payment captured successfully:', captureResult);
 
     // Parse custom_id to get purchase details
-    const customId = captureResult.purchase_units[0].custom_id;
-    const [userId, fashionProductId, variantId, quantity] = customId.split('_');
-    
-    if (userId !== user.id) {
-      throw new Error('User ID mismatch');
+    // Validate and parse custom_id
+    const customIdString = captureResult.purchase_units?.[0]?.custom_id;
+    if (!customIdString || typeof customIdString !== 'string') {
+      throw new Error('Invalid or missing custom_id in PayPal response');
     }
 
-    const purchaseQuantity = parseInt(quantity);
+    const parts = customIdString.split('_');
+    if (parts.length !== 4) {
+      throw new Error(`Invalid custom_id format: expected 4 parts, got ${parts.length}`);
+    }
+
+    const [userId, fashionProductId, variantId, quantityStr] = parts;
+    
+    // Validate parsed values
+    const customIdValidation = customIdSchema.safeParse({
+      userId,
+      fashionProductId,
+      variantId,
+      quantity: parseInt(quantityStr, 10)
+    });
+    
+    if (!customIdValidation.success) {
+      throw new Error(`Invalid custom_id data: ${customIdValidation.error.message}`);
+    }
+
+    const validated = customIdValidation.data;
+
+    // Security check: ensure the purchase belongs to the authenticated user
+    if (validated.userId !== user.id) {
+      throw new Error('Unauthorized: user ID mismatch');
+    }
+
+    const purchaseQuantity = validated.quantity;
     const unitPrice = parseFloat(captureResult.purchase_units[0].amount.breakdown.item_total.value) / purchaseQuantity;
     const shippingCost = parseFloat(captureResult.purchase_units[0].amount.breakdown.shipping.value);
     const taxAmount = parseFloat(captureResult.purchase_units[0].amount.breakdown.tax_total.value);
@@ -95,8 +146,8 @@ const handler = async (req: Request): Promise<Response> => {
       .from('fashion_purchases')
       .insert({
         user_id: user.id,
-        fashion_product_id: fashionProductId,
-        variant_id: variantId,
+        fashion_product_id: validated.fashionProductId,
+        variant_id: validated.variantId,
         quantity: purchaseQuantity,
         unit_price: unitPrice,
         shipping_cost: shippingCost,
@@ -114,7 +165,7 @@ const handler = async (req: Request): Promise<Response> => {
     const { data: variant, error: variantError } = await supabase
       .from('fashion_product_variants')
       .select('stock_quantity')
-      .eq('id', variantId)
+      .eq('id', validated.variantId)
       .single();
 
     if (variantError) {
@@ -130,7 +181,7 @@ const handler = async (req: Request): Promise<Response> => {
         stock_quantity: Math.max(0, newStock),
         updated_at: new Date().toISOString()
       })
-      .eq('id', variantId);
+      .eq('id', validated.variantId);
 
     if (stockError) {
       console.error('Error updating stock:', stockError);

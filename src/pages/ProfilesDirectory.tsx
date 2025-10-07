@@ -42,9 +42,27 @@ const ProfilesDirectory = () => {
 
   const fetchProfiles = async () => {
     try {
+      // Fetch only non-sensitive public profile fields
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, display_name, avatar_url, user_type, is_admin, is_adult_creator, business_name, created_at')
+        .select(`
+          id,
+          display_name,
+          avatar_url,
+          user_type,
+          is_adult_creator,
+          business_name,
+          business_description,
+          website,
+          facebook_url,
+          instagram_url,
+          youtube_url,
+          snapchat_url,
+          pinterest_url,
+          onlyfans_url,
+          background_image_url,
+          created_at
+        `)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -57,7 +75,27 @@ const ProfilesDirectory = () => {
         return;
       }
 
-      setProfiles(data || []);
+      // Fetch admin status from user_roles table
+      if (data && data.length > 0) {
+        const profileIds = data.map(p => p.id);
+        const { data: adminRoles } = await supabase
+          .from('user_roles')
+          .select('user_id')
+          .eq('role', 'admin')
+          .in('user_id', profileIds);
+
+        const adminIds = new Set(adminRoles?.map(r => r.user_id) || []);
+
+        // Add is_admin flag to profiles for display
+        const profilesWithAdmin = data.map(profile => ({
+          ...profile,
+          is_admin: adminIds.has(profile.id)
+        }));
+
+        setProfiles(profilesWithAdmin);
+      } else {
+        setProfiles([]);
+      }
     } catch (error) {
       console.error('Error fetching profiles:', error);
       toast({
