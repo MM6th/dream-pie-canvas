@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import PostInteractions from "@/components/PostInteractions";
 import PublicPlaylist from "@/components/profile/PublicPlaylist";
-import PortfolioCard from "@/components/profile/PortfolioCard";
+import PortfolioCard from "@/components/PortfolioCard";
 
 interface Profile {
   id: string;
@@ -42,6 +42,23 @@ interface BulletinPost {
   post_type?: string;
   created_at: string;
   link_url?: string;
+}
+
+interface PortfolioImage {
+  id: string;
+  image_path: string;
+  display_order: number;
+  is_blurred: boolean;
+}
+
+interface Portfolio {
+  id: string;
+  title: string;
+  description?: string;
+  is_for_sale: boolean;
+  price?: number;
+  created_at: string;
+  portfolio_images: PortfolioImage[];
 }
 
 const ProfilePage = () => {
