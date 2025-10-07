@@ -55,11 +55,10 @@ serve(async (req) => {
       throw new Error('Already purchased');
     }
 
-    // ⚠️ TEMPORARY: Owner check disabled for testing - RE-ENABLE before production!
     // Check if user is the owner
-    // if (portfolio.user_id === user.id) {
-    //   throw new Error('Cannot purchase your own portfolio');
-    // }
+    if (portfolio.user_id === user.id) {
+      throw new Error('Cannot purchase your own portfolio');
+    }
 
     const PAYPAL_CLIENT_ID = Deno.env.get('PAYPAL_CLIENT_ID');
     const PAYPAL_CLIENT_SECRET = Deno.env.get('PAYPAL_CLIENT_SECRET');
