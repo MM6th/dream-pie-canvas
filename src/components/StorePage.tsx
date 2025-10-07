@@ -222,18 +222,42 @@ const StorePage = () => {
 
       if (asmrError) console.error('Error fetching signed ASMR submissions:', asmrError);
 
-      const signedProductIds = new Set(signedASMRProducts?.map(s => s.audio_product_id) || []);
-      const filteredAudioData = audioData?.filter(p => 
-        !(p.audio_type === 'asmr' && signedProductIds.has(p.id))
-      ) || [];
+      // Filter out PODCAST products with signed, approved contracts
+      const { data: signedPodcastProducts, error: podcastError } = await supabase
+        .from('podcast_downloads')
+        .select('audio_product_id, contracts!inner(status, signed_at)')
+        .eq('contracts.status', 'approved')
+        .not('contracts.signed_at', 'is', null);
+
+      if (podcastError) console.error('Error fetching signed podcast contracts:', podcastError);
+
+      // Combine both ASMR and Podcast signed products
+      const signedProductIds = new Set([
+        ...(signedASMRProducts?.map(s => s.audio_product_id) || []),
+        ...(signedPodcastProducts?.map(s => s.audio_product_id) || [])
+      ]);
+
+      const filteredAudioData = audioData?.filter(p => !signedProductIds.has(p.id)) || [];
 
       // Fetch video ad opportunities
-      const { data: videoAdData, error: videoAdError } = await supabase
+      const { data: videoOpportunities, error: videoAdError } = await supabase
         .from('video_ad_opportunities')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (videoAdError) throw videoAdError;
+
+      // Filter out VIDEO AD opportunities with signed, approved contracts
+      const { data: signedVideoAds, error: videoAdContractError } = await supabase
+        .from('video_ad_downloads')
+        .select('video_ad_opportunity_id, contracts!inner(status, signed_at)')
+        .eq('contracts.status', 'approved')
+        .not('contracts.signed_at', 'is', null);
+
+      if (videoAdContractError) console.error('Error fetching signed video ad contracts:', videoAdContractError);
+
+      const signedVideoAdIds = new Set(signedVideoAds?.map(v => v.video_ad_opportunity_id) || []);
+      const videoAdData = videoOpportunities?.filter(v => !signedVideoAdIds.has(v.id));
 
       console.log('User profile:', profile);
       console.log('Raw audio products:', audioData?.length || 0);
