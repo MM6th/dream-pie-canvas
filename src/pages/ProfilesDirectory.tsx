@@ -152,14 +152,6 @@ const ProfilesDirectory = ({
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             {/* Main Navigation */}
             <div className={`flex gap-2 ${isMobile ? 'flex-wrap w-full' : ''}`}>
-              <Button
-                onClick={handleGoBack}
-                variant="outline"
-                className={`border-gray-600 text-white bg-transparent hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
-              >
-                <ArrowLeft className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
-                Back
-              </Button>
               {onStoreView && (
                 <Button
                   onClick={() => handleNavigation(onStoreView)}
@@ -208,6 +200,17 @@ const ProfilesDirectory = ({
 
       {/* Main Content */}
       <div className="relative z-10 w-full mx-auto p-6">
+        {/* Back Button - aligned with content */}
+        <div className={`${isMobile ? 'mb-4' : 'max-w-7xl mx-auto mb-4'}`}>
+          <Button
+            onClick={handleGoBack}
+            variant="outline"
+            className="border-gray-600 text-white bg-transparent hover:bg-gray-700"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back
+          </Button>
+        </div>
         <div className="mb-8 text-center">
           <h1 className="text-4xl font-bold text-white mb-4 flex items-center justify-center gap-3">
             <Users className="w-8 h-8" />
