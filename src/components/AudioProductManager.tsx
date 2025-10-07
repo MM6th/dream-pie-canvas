@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { 
   Carousel, 
   CarouselContent, 
@@ -31,6 +32,7 @@ interface AudioProduct {
   price: number | null;
   access_level: "public" | "merchant_only" | "paid" | null;
   created_at: string;
+  hasSignedContract?: boolean;
   albums?: {
     name: string;
   };
@@ -71,7 +73,7 @@ const AudioProductManager = () => {
 
       if (error) throw error;
 
-      // Filter out ASMR products that have submissions (they're managed in ASMR Submissions tab)
+      // Filter out ASMR products that have submissions and check for signed contracts
       const { data: asmrSubmissions, error: asmrError } = await supabase
         .from('asmr_submissions')
         .select('audio_product_id')
@@ -82,7 +84,54 @@ const AudioProductManager = () => {
       const asmrProductIds = new Set(asmrSubmissions?.map(s => s.audio_product_id) || []);
       const filteredProducts = (data || []).filter(p => !asmrProductIds.has(p.id));
 
-      setProducts(filteredProducts);
+      // Check for signed contracts for each product
+      const productsWithContractStatus = await Promise.all(
+        filteredProducts.map(async (product) => {
+          let hasSignedContract = false;
+          
+          // Check podcast downloads with signed contracts
+          const { data: podcastDownloads } = await supabase
+            .from('podcast_downloads')
+            .select(`
+              contract_id,
+              contracts!inner (
+                status,
+                signed_at
+              )
+            `)
+            .eq('audio_product_id', product.id)
+            .eq('contracts.status', 'approved')
+            .not('contracts.signed_at', 'is', null);
+          
+          if (podcastDownloads && podcastDownloads.length > 0) {
+            hasSignedContract = true;
+          }
+          
+          // Check asmr downloads with signed contracts
+          if (!hasSignedContract) {
+            const { data: asmrDownloads } = await supabase
+              .from('asmr_downloads')
+              .select(`
+                contract_id,
+                contracts!inner (
+                  status,
+                  signed_at
+                )
+              `)
+              .eq('audio_product_id', product.id)
+              .eq('contracts.status', 'approved')
+              .not('contracts.signed_at', 'is', null);
+            
+            if (asmrDownloads && asmrDownloads.length > 0) {
+              hasSignedContract = true;
+            }
+          }
+          
+          return { ...product, hasSignedContract };
+        })
+      );
+
+      setProducts(productsWithContractStatus);
     } catch (error: any) {
       console.error('Error fetching products:', error);
       toast({
@@ -268,25 +317,32 @@ const AudioProductManager = () => {
                             })()}
                           </div>
                           
-                          <div className="flex gap-1">
-                            <Button
-                              size="sm"
-                              onClick={() => setEditingProduct(product)}
-                              className="flex-1 bg-black text-white hover:bg-gray-800 text-xs px-2 py-1"
-                            >
-                              <Edit className="w-3 h-3 mr-1" />
-                              Edit
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleDelete(product.id)}
-                              className="flex-1 border-red-600 text-red-400 hover:bg-red-600 hover:text-white text-xs px-2 py-1"
-                            >
-                              <Trash2 className="w-3 h-3 mr-1" />
-                              Delete
-                            </Button>
-                          </div>
+                          {product.hasSignedContract ? (
+                            <div className="flex items-center justify-center gap-2 p-2 bg-blue-600/20 border border-blue-600 rounded-md">
+                              <Lock className="w-4 h-4 text-blue-400" />
+                              <span className="text-sm text-blue-400 font-medium">Contract Signed</span>
+                            </div>
+                          ) : (
+                            <div className="flex gap-1">
+                              <Button
+                                size="sm"
+                                onClick={() => setEditingProduct(product)}
+                                className="flex-1 bg-black text-white hover:bg-gray-800 text-xs px-2 py-1"
+                              >
+                                <Edit className="w-3 h-3 mr-1" />
+                                Edit
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleDelete(product.id)}
+                                className="flex-1 border-red-600 text-red-400 hover:bg-red-600 hover:text-white text-xs px-2 py-1"
+                              >
+                                <Trash2 className="w-3 h-3 mr-1" />
+                                Delete
+                              </Button>
+                            </div>
+                          )}
                         </div>
                       </CardContent>
                     </Card>

@@ -9,7 +9,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Shield } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Shield, AlertTriangle, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
@@ -28,6 +29,7 @@ interface AudioProduct {
   access_level: "public" | "merchant_only" | "paid" | null;
   is_adult_content?: boolean;
   max_downloads?: number | null;
+  hasSignedContract?: boolean;
   albums?: {
     name: string;
   };
@@ -211,6 +213,14 @@ const EditAudioModal = ({ product, onSuccess, onClose }: EditAudioModalProps) =>
         <div className="flex-1 min-h-0 overflow-hidden">
           <ScrollArea className="h-full pr-4">
             <div className="max-h-[calc(90vh-120px)] overflow-y-auto">
+              {product.hasSignedContract && (
+                <Alert className="mb-4 bg-blue-600/20 border-blue-600">
+                  <Lock className="h-4 w-4 text-blue-400" />
+                  <AlertDescription className="text-blue-400">
+                    This audio product has a signed contract and cannot be edited.
+                  </AlertDescription>
+                </Alert>
+              )}
               <form onSubmit={handleSubmit} className="space-y-4 pb-4">
                 <div>
                   <Label htmlFor="title">Title *</Label>
@@ -220,6 +230,7 @@ const EditAudioModal = ({ product, onSuccess, onClose }: EditAudioModalProps) =>
                     onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
                     placeholder="Enter audio title"
                     className="bg-gray-700 border-gray-600 text-white"
+                    disabled={product.hasSignedContract}
                     required
                   />
                 </div>
@@ -461,11 +472,11 @@ const EditAudioModal = ({ product, onSuccess, onClose }: EditAudioModalProps) =>
           </Button>
           <Button 
             type="submit" 
-            disabled={loading} 
+            disabled={loading || product.hasSignedContract} 
             className="flex-1 bg-blue-600 hover:bg-blue-700"
             onClick={handleSubmit}
           >
-            {loading ? "Updating..." : "Update Product"}
+            {loading ? "Updating..." : product.hasSignedContract ? "Editing Disabled" : "Update Product"}
           </Button>
         </div>
       </DialogContent>
