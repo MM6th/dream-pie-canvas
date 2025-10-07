@@ -147,7 +147,7 @@ const ProfilesDirectory = ({
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
       {/* Header Navigation */}
-      <div className="sticky top-0 z-50 bg-gray-900/95 backdrop-blur-sm">
+      <div className="sticky top-0 z-50 bg-gray-900">
         <div className="container mx-auto px-4 py-4">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             {/* Main Navigation */}
@@ -201,19 +201,15 @@ const ProfilesDirectory = ({
       {/* Main Content */}
       <div className="relative z-10 w-full mx-auto p-6">
         {/* Back Button - aligned with ad space */}
-        <div className={`${isMobile ? 'mb-4' : 'flex gap-6 justify-center mb-4'}`}>
-          {!isMobile && <div className="w-48 flex-shrink-0"></div>}
-          <div className={isMobile ? '' : 'max-w-3xl w-full'}>
-            <Button
-              onClick={handleGoBack}
-              variant="outline"
-              className="border-gray-600 text-white bg-transparent hover:bg-gray-700"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
-            </Button>
-          </div>
-          {!isMobile && <div className="w-48 flex-shrink-0"></div>}
+        <div className={`mb-4 ${isMobile ? '' : 'pl-[calc((100%-48rem)/2+1.5rem)]'}`}>
+          <Button
+            onClick={handleGoBack}
+            variant="outline"
+            className="border-gray-600 text-white bg-transparent hover:bg-gray-700"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back
+          </Button>
         </div>
         <div className="mb-8 text-center">
           <h1 className="text-4xl font-bold text-white mb-4 flex items-center justify-center gap-3">
