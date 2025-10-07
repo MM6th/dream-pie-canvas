@@ -92,7 +92,7 @@ const TVGuideSection = ({ posts, useCarousel = true }: TVGuideSectionProps) => {
 
   return (
     <div className="mb-12">
-      <h2 className="text-2xl lg:text-3xl font-bold text-white mb-6 flex items-center gap-2">
+      <h2 className="text-2xl lg:text-3xl font-bold text-white mb-16 flex items-center gap-2">
         <Tv className="w-6 h-6 lg:w-8 lg:h-8 text-white" />
         TV Guide
       </h2>
