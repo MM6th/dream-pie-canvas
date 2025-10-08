@@ -123,7 +123,7 @@ const ContractOpportunitiesModal = () => {
               <ul className="space-y-1 text-sm">
                 <li>• Audio Production: $150/episode + 65% revenue share</li>
                 <li>• Video Content: $200/episode + 70% YouTube revenue</li>
-                <li>• Modeling: 100% of portfolio sales on your profile page</li>
+                <li>• Modeling: 90% of portfolio sales (after payment processing fees)</li>
                 <li>• Podcast: $100/episode + platform revenue sharing</li>
               </ul>
               <p className="text-xs text-gray-400 mt-2">
