@@ -1826,6 +1826,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      delete_audio_product_cascade: {
+        Args: { p_merchant_id: string; p_product_id: string }
+        Returns: boolean
+      }
       distribute_featuring_artist_revenue: {
         Args: {
           p_album_id?: string

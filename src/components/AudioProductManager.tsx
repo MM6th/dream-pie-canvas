@@ -179,34 +179,11 @@ const AudioProductManager = () => {
         return;
       }
 
-      // Delete related records first to avoid foreign key constraints
-      const { error: purchasesError } = await supabase.from('user_purchases').delete().eq('audio_product_id', productId);
-      if (purchasesError) throw purchasesError;
-
-      const { error: playlistsError } = await supabase.from('user_playlists').delete().eq('audio_product_id', productId);
-      if (playlistsError) throw playlistsError;
-
-      const { error: coversError } = await supabase.from('song_cover_submissions').delete().eq('audio_product_id', productId);
-      if (coversError) throw coversError;
-
-      const { error: submissionsError } = await supabase.from('asmr_submissions').delete().eq('audio_product_id', productId);
-      if (submissionsError) throw submissionsError;
-
-      const { error: downloadsError } = await supabase.from('asmr_downloads').delete().eq('audio_product_id', productId);
-      if (downloadsError) throw downloadsError;
-
-      const { error: podcastError } = await supabase.from('podcast_downloads').delete().eq('audio_product_id', productId);
-      if (podcastError) throw podcastError;
-
-      const { error: tracksError } = await supabase.from('album_tracks').delete().eq('audio_product_id', productId);
-      if (tracksError) throw tracksError;
-
-      // Now delete the audio product
-      const { error } = await supabase
-        .from('audio_products')
-        .delete()
-        .eq('id', productId)
-        .eq('merchant_id', user!.id);
+      // Use secure database function to delete product and all related data
+      const { data, error } = await supabase.rpc('delete_audio_product_cascade', {
+        p_product_id: productId,
+        p_merchant_id: user!.id
+      });
 
       if (error) throw error;
 
