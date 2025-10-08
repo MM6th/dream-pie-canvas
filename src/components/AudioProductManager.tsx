@@ -180,11 +180,26 @@ const AudioProductManager = () => {
       }
 
       // Delete related records first to avoid foreign key constraints
-      await supabase.from('user_purchases').delete().eq('audio_product_id', productId);
-      await supabase.from('user_playlists').delete().eq('audio_product_id', productId);
-      await supabase.from('song_cover_submissions').delete().eq('audio_product_id', productId);
-      await supabase.from('asmr_submissions').delete().eq('audio_product_id', productId);
-      await supabase.from('asmr_downloads').delete().eq('audio_product_id', productId);
+      const { error: purchasesError } = await supabase.from('user_purchases').delete().eq('audio_product_id', productId);
+      if (purchasesError) throw purchasesError;
+
+      const { error: playlistsError } = await supabase.from('user_playlists').delete().eq('audio_product_id', productId);
+      if (playlistsError) throw playlistsError;
+
+      const { error: coversError } = await supabase.from('song_cover_submissions').delete().eq('audio_product_id', productId);
+      if (coversError) throw coversError;
+
+      const { error: submissionsError } = await supabase.from('asmr_submissions').delete().eq('audio_product_id', productId);
+      if (submissionsError) throw submissionsError;
+
+      const { error: downloadsError } = await supabase.from('asmr_downloads').delete().eq('audio_product_id', productId);
+      if (downloadsError) throw downloadsError;
+
+      const { error: podcastError } = await supabase.from('podcast_downloads').delete().eq('audio_product_id', productId);
+      if (podcastError) throw podcastError;
+
+      const { error: tracksError } = await supabase.from('album_tracks').delete().eq('audio_product_id', productId);
+      if (tracksError) throw tracksError;
 
       // Now delete the audio product
       const { error } = await supabase
