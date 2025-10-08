@@ -345,13 +345,13 @@ const ProfilesDirectory = () => {
             )}
           </div>
         ) : (
-          // Desktop: Left Ad + Carousel + Right Ad
-          <div className="flex gap-6 justify-center items-start">
+          // Desktop: Left Ad + Carousel + Right Ad with increased spacing
+          <div className="flex gap-12 justify-center items-start max-w-[1400px] mx-auto">
             {/* Left Ad Space */}
             <div className="w-48 flex-shrink-0">
               <div className="sticky top-4">
                 <div 
-                  className="bg-gradient-to-br from-purple-900/20 to-pink-900/20 border border-purple-700 rounded-lg p-4 h-96 flex items-center justify-center cursor-pointer hover:border-purple-600 transition-colors"
+                  className="bg-gradient-to-br from-purple-900/20 to-pink-900/20 border border-purple-700 rounded-lg p-4 h-96 flex items-center justify-center cursor-pointer hover:border-purple-600 transition-colors pointer-events-auto"
                   onClick={() => toast.info("Ad placements will be available soon!")}
                 >
                   <p className="text-gray-400 text-center text-sm">Ad Space<br/>300x600</p>
@@ -359,8 +359,8 @@ const ProfilesDirectory = () => {
               </div>
             </div>
 
-            {/* Main Content - Carousel */}
-            <div className="max-w-3xl w-full">
+            {/* Main Content - Carousel with wider container */}
+            <div className="max-w-4xl w-full px-12">
               {filteredProfiles.length === 0 ? (
                 <Card className="bg-gray-800 border-gray-700">
                   <CardContent className="p-8 text-center">
@@ -431,8 +431,8 @@ const ProfilesDirectory = () => {
                       </CarouselItem>
                     ))}
                   </CarouselContent>
-                  <CarouselPrevious className="text-white border-gray-600 hover:bg-gray-700" />
-                  <CarouselNext className="text-white border-gray-600 hover:bg-gray-700" />
+                  <CarouselPrevious className="text-white border-gray-600 hover:bg-gray-700 z-10" />
+                  <CarouselNext className="text-white border-gray-600 hover:bg-gray-700 z-10" />
                 </Carousel>
               )}
             </div>
@@ -441,7 +441,7 @@ const ProfilesDirectory = () => {
             <div className="w-48 flex-shrink-0">
               <div className="sticky top-4">
                 <div 
-                  className="bg-gradient-to-br from-blue-900/20 to-cyan-900/20 border border-blue-700 rounded-lg p-4 h-96 flex items-center justify-center cursor-pointer hover:border-blue-600 transition-colors"
+                  className="bg-gradient-to-br from-blue-900/20 to-cyan-900/20 border border-blue-700 rounded-lg p-4 h-96 flex items-center justify-center cursor-pointer hover:border-blue-600 transition-colors pointer-events-auto"
                   onClick={() => toast.info("Ad placements will be available soon!")}
                 >
                   <p className="text-gray-400 text-center text-sm">Ad Space<br/>300x600</p>
