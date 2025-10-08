@@ -133,27 +133,40 @@ const SupporterProfileModal = ({ children, profile: initialProfile, onProfileUpd
     if (!user) return;
 
     try {
-      const { error } = await supabase.auth.admin.deleteUser(user.id);
-      
+      // Call the edge function to delete the user account
+      const { data, error } = await supabase.functions.invoke('delete-user-account', {
+        headers: {
+          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+        }
+      });
+
       if (error) {
-        console.error('Error deleting profile:', error);
+        console.error('Error deleting account:', error);
         toast({
           title: "Error",
-          description: "Failed to delete profile. Please try again.",
+          description: "Failed to delete account. Please try again.",
           variant: "destructive"
         });
         return;
       }
 
+      // Show success message
       toast({
-        title: "Success",
-        description: "Profile deleted successfully!"
+        title: "Account Deleted",
+        description: "Your account has been successfully deleted. You will be signed out.",
       });
+
+      // Sign out the user
+      await supabase.auth.signOut();
+      
+      // Redirect to home page
+      window.location.href = '/';
+      
     } catch (error) {
-      console.error('Error deleting profile:', error);
+      console.error('Error in handleDeleteProfile:', error);
       toast({
         title: "Error",
-        description: "Failed to delete profile. Please try again.",
+        description: "An unexpected error occurred.",
         variant: "destructive"
       });
     }

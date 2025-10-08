@@ -160,26 +160,40 @@ const FullMerchantProfileModal = ({
 
     setDeleteLoading(true);
     try {
-      // Delete the user's profile
-      const { error } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', user.id);
-
-      if (error) throw error;
-
-      toast({
-        title: "Profile Deleted",
-        description: "Your profile has been successfully deleted. You will be signed out.",
+      // Call the edge function to delete the user account
+      const { data, error } = await supabase.functions.invoke('delete-user-account', {
+        headers: {
+          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+        }
       });
 
-      // Sign out the user after successful deletion
-      await signOut();
+      if (error) {
+        console.error('Error deleting account:', error);
+        toast({
+          title: "Error",
+          description: "Failed to delete account. Please try again.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Show success message
+      toast({
+        title: "Account Deleted",
+        description: "Your account has been successfully deleted. You will be signed out.",
+      });
+
+      // Sign out the user
+      await supabase.auth.signOut();
+      
+      // Redirect to home page
+      window.location.href = '/';
+      
     } catch (error) {
-      console.error('Error deleting profile:', error);
+      console.error('Error in handleDeleteProfile:', error);
       toast({
         title: "Error",
-        description: "Failed to delete profile. Please try again.",
+        description: "An unexpected error occurred.",
         variant: "destructive"
       });
     } finally {
