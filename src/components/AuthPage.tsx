@@ -15,6 +15,7 @@ const AuthPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [userType, setUserType] = useState<"supporter" | "merchant">("supporter");
 
   const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -23,7 +24,6 @@ const AuthPage = () => {
     const formData = new FormData(e.currentTarget);
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
-    const isAdultCreator = formData.get("isAdultCreator") === "on";
 
     try {
       const { error } = await supabase.auth.signUp({
@@ -31,8 +31,8 @@ const AuthPage = () => {
         password,
         options: {
           data: {
-            user_type: "supporter",
-            is_adult_creator: isAdultCreator
+            user_type: userType,
+            is_adult_creator: false
           }
         }
       });
@@ -268,17 +268,41 @@ const AuthPage = () => {
                         className="bg-gray-700 border-gray-600 text-white focus:border-blue-500"
                       />
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        id="isAdultCreator"
-                        name="isAdultCreator"
-                        className="rounded border-gray-600 text-blue-600 focus:ring-blue-500 focus:ring-2"
-                      />
-                      <Label htmlFor="isAdultCreator" className="text-white">I am an adult content creator</Label>
+                    <div className="space-y-2">
+                      <Label className="text-white">Account Type</Label>
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="radio"
+                            id="supporter"
+                            name="userType"
+                            value="supporter"
+                            checked={userType === "supporter"}
+                            onChange={(e) => setUserType(e.target.value as "supporter" | "merchant")}
+                            className="border-gray-600 text-blue-600 focus:ring-blue-500 focus:ring-2"
+                          />
+                          <Label htmlFor="supporter" className="text-white font-normal cursor-pointer">
+                            Supporter (Browse and purchase content)
+                          </Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="radio"
+                            id="merchant"
+                            name="userType"
+                            value="merchant"
+                            checked={userType === "merchant"}
+                            onChange={(e) => setUserType(e.target.value as "supporter" | "merchant")}
+                            className="border-gray-600 text-blue-600 focus:ring-blue-500 focus:ring-2"
+                          />
+                          <Label htmlFor="merchant" className="text-white font-normal cursor-pointer">
+                            Merchant (Sell content - requires approval)
+                          </Label>
+                        </div>
+                      </div>
                     </div>
-                    <p className="text-xs text-gray-400">
-                      Adult creators can see and participate in adult/18+ opportunities. Only check this if you create adult content.
+                    <p className="text-xs text-gray-400 text-center">
+                      The content on this website is not made for children.
                     </p>
                     <Button type="submit" className="w-full bg-white text-black hover:bg-gray-100" disabled={isLoading}>
                       {isLoading ? "Creating Account..." : "Create Account"}
