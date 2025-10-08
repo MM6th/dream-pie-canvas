@@ -127,6 +127,18 @@ const MerchantDashboard = ({
     }
   }, [user]);
 
+  useEffect(() => {
+    const hasSeenAdultRestrictionToast = localStorage.getItem('adult_restriction_toast_seen');
+    if (!hasSeenAdultRestrictionToast) {
+      const timer = setTimeout(() => {
+        const { toast } = require('sonner');
+        toast.info('You can change your adult content restrictions in the Profile tab.');
+        localStorage.setItem('adult_restriction_toast_seen', 'true');
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
   if (loading) {
     return (
       <div className={`max-w-6xl mx-auto ${isMobile ? 'p-4' : 'p-6'} pt-20`}>

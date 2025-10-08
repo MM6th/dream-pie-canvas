@@ -145,6 +145,18 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
     }
   }, [user]);
 
+  useEffect(() => {
+    const hasSeenAdultRestrictionToast = localStorage.getItem('adult_restriction_toast_seen');
+    if (!hasSeenAdultRestrictionToast) {
+      const timer = setTimeout(() => {
+        const { toast } = require('sonner');
+        toast.info('You can change your adult content restrictions in the Profile tab.');
+        localStorage.setItem('adult_restriction_toast_seen', 'true');
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
   return (
     <div className={`max-w-6xl mx-auto ${isMobile ? 'p-4' : 'p-6'} pt-20`}>
       {tutorial.isActive && tutorial.currentStepData && (
@@ -191,7 +203,9 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
 
       <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm mb-6">
         <CardHeader>
-          <CardTitle className={`text-white ${isMobile ? 'text-lg' : ''}`}>Welcome to your PIE Dashboard</CardTitle>
+          <CardTitle className={`text-white ${isMobile ? 'text-lg' : ''}`}>
+            Welcome to your PIE Dashboard <span className="text-sm text-gray-400 font-normal">(Change adult privileges in Profile tab)</span>
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="music" className="w-full">
