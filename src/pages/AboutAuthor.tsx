@@ -1,7 +1,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, LogOut, Youtube } from "lucide-react";
+import { ArrowLeft, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -25,9 +25,6 @@ const AboutAuthor = () => {
     }
   };
 
-  const handleYouTubeClick = () => {
-    window.open('https://youtube.com/ratedBenjamin', '_blank', 'noopener,noreferrer');
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black">
@@ -91,16 +88,9 @@ const AboutAuthor = () => {
               </p>
 
               <p>
-                I have helped countless others on my journey, and do sell astrological products alongside entertainment from unique and innovative entertainers within a 'boutique' type of platform. If you want more insight on astrology because you're a newbie check me out on YouTube at ratedBenjamin.
+                I have helped countless others on my journey, and do sell astrological products alongside entertainment from unique and innovative entertainers within a 'boutique' type of platform. If you want more insight on astrology because you're a newbie check me out on YouTube at ratedBenjiman.
               </p>
 
-              <Button
-                onClick={handleYouTubeClick}
-                className="bg-red-600 hover:bg-red-700 text-white mb-6"
-              >
-                <Youtube className="w-4 h-4 mr-2" />
-                Visit YouTube Channel
-              </Button>
 
               <h2 className="text-2xl font-bold text-white mt-8 mb-4">Entertainment Industry Background</h2>
 
