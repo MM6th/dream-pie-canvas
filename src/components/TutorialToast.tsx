@@ -96,7 +96,7 @@ export const TutorialToast = ({
     return () => {
       toast.dismiss(toastId);
     };
-  }, [title, description, currentStep, totalSteps, onNext, onSkip, duration]);
+  }, [title, description, currentStep, totalSteps, duration]);
 
   return null;
 };
