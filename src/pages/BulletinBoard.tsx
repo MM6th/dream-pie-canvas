@@ -8,6 +8,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import CurrentThoughtsSection from "@/components/CurrentThoughtsSection";
 import TVGuideSection from "@/components/TVGuideSection";
+import { toast } from "sonner";
 
 const BulletinBoard = () => {
   const navigate = useNavigate();
@@ -176,7 +177,10 @@ const BulletinBoard = () => {
             {/* Left Ad Space */}
             <div className="w-48 flex-shrink-0">
               <div className="sticky top-4">
-                <div className="bg-gradient-to-br from-purple-900/20 to-pink-900/20 border border-purple-700 rounded-lg p-4 h-96 flex items-center justify-center">
+                <div 
+                  className="bg-gradient-to-br from-purple-900/20 to-pink-900/20 border border-purple-700 rounded-lg p-4 h-96 flex items-center justify-center cursor-pointer hover:border-purple-600 transition-colors"
+                  onClick={() => toast.info("Ad placements will be available soon!")}
+                >
                   <p className="text-gray-400 text-center text-sm">Ad Space<br/>300x600</p>
                 </div>
               </div>
@@ -195,7 +199,10 @@ const BulletinBoard = () => {
             {/* Right Ad Space */}
             <div className="w-48 flex-shrink-0">
               <div className="sticky top-4">
-                <div className="bg-gradient-to-br from-blue-900/20 to-cyan-900/20 border border-blue-700 rounded-lg p-4 h-96 flex items-center justify-center">
+                <div 
+                  className="bg-gradient-to-br from-blue-900/20 to-cyan-900/20 border border-blue-700 rounded-lg p-4 h-96 flex items-center justify-center cursor-pointer hover:border-blue-600 transition-colors"
+                  onClick={() => toast.info("Ad placements will be available soon!")}
+                >
                   <p className="text-gray-400 text-center text-sm">Ad Space<br/>300x600</p>
                 </div>
               </div>

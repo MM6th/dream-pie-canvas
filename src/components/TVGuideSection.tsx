@@ -23,9 +23,7 @@ const TVGuideSection = ({ posts, useCarousel = true }: TVGuideSectionProps) => {
     }
   };
 
-  if (posts.length === 0) {
-    return null;
-  }
+  const hasNoPosts = posts.length === 0;
 
   const renderCard = (post: BulletinPost) => (
     <Card key={post.id} className="bg-gray-800 border-gray-700 flex flex-col">
@@ -97,7 +95,11 @@ const TVGuideSection = ({ posts, useCarousel = true }: TVGuideSectionProps) => {
         TV Guide
       </h2>
       
-      {useCarousel ? (
+      {hasNoPosts ? (
+        <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-8 text-center">
+          <p className="text-gray-400">No TV Guide entries yet. Check back soon!</p>
+        </div>
+      ) : useCarousel ? (
         <Carousel
           opts={{
             align: "start",
