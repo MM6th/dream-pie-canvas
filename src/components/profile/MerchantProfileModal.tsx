@@ -34,6 +34,12 @@ const MerchantProfileModal = ({
   const [businessName, setBusinessName] = useState(profile?.business_name || '');
   const [businessDescription, setBusinessDescription] = useState(profile?.business_description || '');
   const [website, setWebsite] = useState(profile?.website || '');
+  const [youtubeUrl, setYoutubeUrl] = useState(profile?.youtube_url || '');
+  const [instagramUrl, setInstagramUrl] = useState(profile?.instagram_url || '');
+  const [facebookUrl, setFacebookUrl] = useState(profile?.facebook_url || '');
+  const [snapchatUrl, setSnapchatUrl] = useState(profile?.snapchat_url || '');
+  const [pinterestUrl, setPinterestUrl] = useState(profile?.pinterest_url || '');
+  const [onlyfansUrl, setOnlyfansUrl] = useState(profile?.onlyfans_url || '');
   const [isAdultCreator, setIsAdultCreator] = useState(profile?.is_adult_creator || false);
   const [internalOpen, setInternalOpen] = useState(false);
 
@@ -43,6 +49,12 @@ const MerchantProfileModal = ({
       setBusinessName(profile.business_name || '');
       setBusinessDescription(profile.business_description || '');
       setWebsite(profile.website || '');
+      setYoutubeUrl(profile.youtube_url || '');
+      setInstagramUrl(profile.instagram_url || '');
+      setFacebookUrl(profile.facebook_url || '');
+      setSnapchatUrl(profile.snapchat_url || '');
+      setPinterestUrl(profile.pinterest_url || '');
+      setOnlyfansUrl(profile.onlyfans_url || '');
       setIsAdultCreator(profile.is_adult_creator || false);
     }
   }, [profile]);
@@ -60,6 +72,12 @@ const MerchantProfileModal = ({
           business_name: businessName,
           business_description: businessDescription,
           website: website,
+          youtube_url: youtubeUrl,
+          instagram_url: instagramUrl,
+          facebook_url: facebookUrl,
+          snapchat_url: snapchatUrl,
+          pinterest_url: pinterestUrl,
+          onlyfans_url: onlyfansUrl,
           is_adult_creator: isAdultCreator,
           updated_at: new Date().toISOString()
         })
@@ -150,6 +168,78 @@ const MerchantProfileModal = ({
                 placeholder="https://your-website.com"
                 className="bg-gray-700 border-gray-600 text-white"
             />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="youtubeUrl" className="text-white">YouTube URL</Label>
+                <Input
+                  id="youtubeUrl"
+                  value={youtubeUrl}
+                  onChange={(e) => setYoutubeUrl(e.target.value)}
+                  placeholder="https://youtube.com/@username"
+                  className="bg-gray-700 border-gray-600 text-white"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="instagramUrl" className="text-white">Instagram URL</Label>
+                <Input
+                  id="instagramUrl"
+                  value={instagramUrl}
+                  onChange={(e) => setInstagramUrl(e.target.value)}
+                  placeholder="https://instagram.com/username"
+                  className="bg-gray-700 border-gray-600 text-white"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="facebookUrl" className="text-white">Facebook URL</Label>
+                <Input
+                  id="facebookUrl"
+                  value={facebookUrl}
+                  onChange={(e) => setFacebookUrl(e.target.value)}
+                  placeholder="https://facebook.com/username"
+                  className="bg-gray-700 border-gray-600 text-white"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="snapchatUrl" className="text-white">Snapchat URL</Label>
+                <Input
+                  id="snapchatUrl"
+                  value={snapchatUrl}
+                  onChange={(e) => setSnapchatUrl(e.target.value)}
+                  placeholder="https://snapchat.com/add/username"
+                  className="bg-gray-700 border-gray-600 text-white"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="pinterestUrl" className="text-white">Pinterest URL</Label>
+                <Input
+                  id="pinterestUrl"
+                  value={pinterestUrl}
+                  onChange={(e) => setPinterestUrl(e.target.value)}
+                  placeholder="https://pinterest.com/username"
+                  className="bg-gray-700 border-gray-600 text-white"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="onlyfansUrl" className="text-white">OnlyFans URL</Label>
+                <Input
+                  id="onlyfansUrl"
+                  value={onlyfansUrl}
+                  onChange={(e) => setOnlyfansUrl(e.target.value)}
+                  placeholder="https://onlyfans.com/username"
+                  className="bg-gray-700 border-gray-600 text-white"
+                />
+              </div>
             </div>
             
             {/* Adult Creator Toggle */}
@@ -247,6 +337,78 @@ const MerchantProfileModal = ({
               placeholder="https://your-website.com"
               className="bg-gray-700 border-gray-600 text-white"
             />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="youtubeUrl2" className="text-white">YouTube URL</Label>
+              <Input
+                id="youtubeUrl2"
+                value={youtubeUrl}
+                onChange={(e) => setYoutubeUrl(e.target.value)}
+                placeholder="https://youtube.com/@username"
+                className="bg-gray-700 border-gray-600 text-white"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="instagramUrl2" className="text-white">Instagram URL</Label>
+              <Input
+                id="instagramUrl2"
+                value={instagramUrl}
+                onChange={(e) => setInstagramUrl(e.target.value)}
+                placeholder="https://instagram.com/username"
+                className="bg-gray-700 border-gray-600 text-white"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="facebookUrl2" className="text-white">Facebook URL</Label>
+              <Input
+                id="facebookUrl2"
+                value={facebookUrl}
+                onChange={(e) => setFacebookUrl(e.target.value)}
+                placeholder="https://facebook.com/username"
+                className="bg-gray-700 border-gray-600 text-white"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="snapchatUrl2" className="text-white">Snapchat URL</Label>
+              <Input
+                id="snapchatUrl2"
+                value={snapchatUrl}
+                onChange={(e) => setSnapchatUrl(e.target.value)}
+                placeholder="https://snapchat.com/add/username"
+                className="bg-gray-700 border-gray-600 text-white"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="pinterestUrl2" className="text-white">Pinterest URL</Label>
+              <Input
+                id="pinterestUrl2"
+                value={pinterestUrl}
+                onChange={(e) => setPinterestUrl(e.target.value)}
+                placeholder="https://pinterest.com/username"
+                className="bg-gray-700 border-gray-600 text-white"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="onlyfansUrl2" className="text-white">OnlyFans URL</Label>
+              <Input
+                id="onlyfansUrl2"
+                value={onlyfansUrl}
+                onChange={(e) => setOnlyfansUrl(e.target.value)}
+                placeholder="https://onlyfans.com/username"
+                className="bg-gray-700 border-gray-600 text-white"
+              />
+            </div>
           </div>
           
           {/* Adult Creator Toggle */}
