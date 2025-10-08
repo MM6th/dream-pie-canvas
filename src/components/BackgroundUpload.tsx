@@ -1,122 +1,71 @@
 
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
+import ContentPicker from "@/components/ContentPicker";
+import { Image } from "lucide-react";
 
 interface BackgroundUploadProps {
   onUploadSuccess?: (url: string) => void;
 }
 
 const BackgroundUpload = ({ onUploadSuccess }: BackgroundUploadProps) => {
-  const [uploading, setUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [updating, setUpdating] = useState(false);
   const { user } = useAuth();
 
-  const handleFileSelect = () => {
-    fileInputRef.current?.click();
-  };
+  const handleContentSelect = async (url: string, type: 'image' | 'video') => {
+    if (!user) return;
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file || !user) return;
-
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
+    if (type !== 'image') {
       toast({
-        title: "Invalid file type",
-        description: "Please select an image file (JPEG, PNG, or WebP)",
+        title: "Invalid selection",
+        description: "Please select an image for your background",
         variant: "destructive"
       });
       return;
     }
 
-    // Validate file size (50MB limit)
-    if (file.size > 50 * 1024 * 1024) {
-      toast({
-        title: "File too large",
-        description: "Please select an image smaller than 50MB",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setUploading(true);
+    setUpdating(true);
 
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}/background-${Date.now()}.${fileExt}`;
-
-      const { error: uploadError, data } = await supabase.storage
-        .from('backgrounds')
-        .upload(fileName, file);
-
-      if (uploadError) {
-        throw uploadError;
-      }
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('backgrounds')
-        .getPublicUrl(fileName);
-
       // Update user profile with new background image URL
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ background_image_url: publicUrl })
+        .update({ background_image_url: url })
         .eq('id', user.id);
 
       if (updateError) {
         throw updateError;
       }
 
-      // Record the upload in user_uploads table to count towards storage limit
-      await supabase
-        .from('user_uploads')
-        .insert({
-          user_id: user.id,
-          file_name: file.name,
-          file_path: fileName,
-          file_size: file.size,
-          file_type: file.type,
-          storage_bucket: 'backgrounds'
-        });
-
       toast({
         title: "Success",
-        description: "Background image uploaded successfully!"
+        description: "Background image updated successfully!"
       });
 
-      onUploadSuccess?.(publicUrl);
+      onUploadSuccess?.(url);
     } catch (error: any) {
       toast({
-        title: "Upload failed",
+        title: "Update failed",
         description: error.message,
         variant: "destructive"
       });
     } finally {
-      setUploading(false);
+      setUpdating(false);
     }
   };
 
   return (
     <div className="border-2 border-dashed border-gray-600 rounded-lg p-8 text-center">
-      <p className="text-gray-400 mb-2">Drop your background image here</p>
+      <Image className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+      <p className="text-gray-400 mb-2">Select a background image from your content gallery</p>
       <p className="text-sm text-gray-500 mb-4">Recommended: 1000x864 pixels</p>
-      <Button 
-        onClick={handleFileSelect}
-        disabled={uploading}
-        className="bg-gradient-to-r from-gray-600 to-black hover:from-gray-700 hover:to-gray-900"
-      >
-        {uploading ? "Uploading..." : "Choose File"}
-      </Button>
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        onChange={handleFileUpload}
-        className="hidden"
+      <ContentPicker 
+        onContentSelect={handleContentSelect}
       />
+      {updating && <p className="text-sm text-gray-400 mt-2">Updating background...</p>}
     </div>
   );
 };
