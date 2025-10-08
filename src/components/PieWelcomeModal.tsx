@@ -32,16 +32,14 @@ const PieWelcomeModal = ({ children }: PieWelcomeModalProps) => {
         
         <div className="space-y-4">
           <p className="text-gray-300 leading-relaxed">
-            PIE is your 1 stop shop TV/Film & Media hub to be informed when the most uniquely 
-            and innovative selected talents of the new age post, and go live on your favorite platforms.
+            PIE is your 1 stop shop Entertainment hub to be informed when the most uniquely 
+            and innovative selected talents create exclusive content, and get notified when they 
+            create content tailored to your favorite social media sites.
           </p>
           
           <p className="text-gray-300 leading-relaxed">
-            Also be privy to some of their work before it is publicized, and interact on threads with them.
-          </p>
-          
-          <p className="text-gray-300 leading-relaxed">
-            Stay tuned as we also create our own PIE original content.
+            Earn percentages from their exclusive PIE content if you make your playlists live, 
+            and users purchase content creators content from them.
           </p>
         </div>
       </DialogContent>
