@@ -87,7 +87,7 @@ const AboutAuthor = () => {
               </p>
 
               <p>
-                My point there is we are all acting out our natal charts (a celestial guide for our lives determined when we were born) even before we are aware of it. Seeing that is is part of a science Millenia's old is fascinating, and you too can find out how you've done it, what has prevented you from doing it, and what else you have to manifest in the future for yourself.
+                My point there is we are all acting out our natal charts (a celestial guide for our lives determined when we were born) even before we are aware of it. Seeing that it is part of a science millennia old is fascinating, and you too can find out how you've done it, what has prevented you from doing it, and what else you have to manifest in the future for yourself.
               </p>
 
               <p>
