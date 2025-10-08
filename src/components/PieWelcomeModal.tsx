@@ -38,7 +38,7 @@ const PieWelcomeModal = ({ children }: PieWelcomeModalProps) => {
           </p>
           
           <p className="text-gray-300 leading-relaxed">
-            Earn percentages from their exclusive PIE content if you make your playlists live, 
+            Earn 10% from their exclusive PIE content if you make your playlists live, 
             and users purchase content creators content from them.
           </p>
         </div>
