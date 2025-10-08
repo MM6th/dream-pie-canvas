@@ -20,6 +20,9 @@ import SECalculatorModal from "@/components/SECalculatorModal";
 import { useSubmissionCounts } from "@/hooks/useSubmissionCounts";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuarterlyIncome } from "@/hooks/useQuarterlyIncome";
+import { useDashboardTutorial } from "@/hooks/useDashboardTutorial";
+import { adminTutorialSteps } from "@/constants/tutorialContent";
+import { TutorialToast } from "@/components/TutorialToast";
 
 const AdminDashboard = () => {
   const { counts } = useSubmissionCounts();
@@ -27,9 +30,23 @@ const AdminDashboard = () => {
   const isMobile = useIsMobile();
   const totalSubmissions = counts.coverSubmissions + counts.modelingApplications;
   const { currentQuarterIncome } = useQuarterlyIncome(user?.id);
+  
+  const tutorial = useDashboardTutorial('admin', adminTutorialSteps);
 
   return (
     <div className="space-y-6">
+      {tutorial.isActive && tutorial.currentStepData && (
+        <TutorialToast
+          title={tutorial.currentStepData.title}
+          description={tutorial.currentStepData.description}
+          currentStep={tutorial.currentStep}
+          totalSteps={tutorial.totalSteps}
+          onNext={tutorial.nextStep}
+          onSkip={tutorial.skipTutorial}
+          duration={tutorial.currentStepData.duration}
+        />
+      )}
+      
       <div className="text-center mb-8">
         <h1 className="text-4xl font-bold text-white mb-4">Admin Dashboard</h1>
         <p className="text-gray-400 text-lg">Manage merchants, submissions, and platform content</p>

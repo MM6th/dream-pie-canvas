@@ -19,6 +19,9 @@ import { Globe, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuarterlyIncome } from "@/hooks/useQuarterlyIncome";
 import SECalculatorModal from "@/components/SECalculatorModal";
+import { useDashboardTutorial } from "@/hooks/useDashboardTutorial";
+import { supporterTutorialSteps } from "@/constants/tutorialContent";
+import { TutorialToast } from "@/components/TutorialToast";
 
 interface AudioTrack {
   id: string;
@@ -53,6 +56,8 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
   const [playlistPublic, setPlaylistPublic] = useState(false);
   const [purchasedPortfolios, setPurchasedPortfolios] = useState<any[]>([]);
   const { currentQuarterIncome } = useQuarterlyIncome(user?.id);
+  
+  const tutorial = useDashboardTutorial('supporter', supporterTutorialSteps);
 
   const fetchPurchasedPortfolios = async () => {
     if (!user) return;
@@ -142,6 +147,18 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
 
   return (
     <div className={`max-w-6xl mx-auto ${isMobile ? 'p-4' : 'p-6'} pt-20`}>
+      {tutorial.isActive && tutorial.currentStepData && (
+        <TutorialToast
+          title={tutorial.currentStepData.title}
+          description={tutorial.currentStepData.description}
+          currentStep={tutorial.currentStep}
+          totalSteps={tutorial.totalSteps}
+          onNext={tutorial.nextStep}
+          onSkip={tutorial.skipTutorial}
+          duration={tutorial.currentStepData.duration}
+        />
+      )}
+      
       <PieWelcomeModal>
         <Button 
           onClick={() => setShowWelcomeModal(true)}

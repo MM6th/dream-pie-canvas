@@ -18,6 +18,9 @@ import { useState, useEffect } from "react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useDashboardTutorial } from "@/hooks/useDashboardTutorial";
+import { merchantTutorialSteps } from "@/constants/tutorialContent";
+import { TutorialToast } from "@/components/TutorialToast";
 
 interface MerchantDashboardProps {
   onSuccess: () => void;
@@ -43,6 +46,8 @@ const MerchantDashboard = ({
   const { user } = useAuth();
   const [playlistPublic, setPlaylistPublic] = useState<boolean>(false);
   const [purchasedPortfolios, setPurchasedPortfolios] = useState<any[]>([]);
+  
+  const tutorial = useDashboardTutorial('merchant', merchantTutorialSteps);
 
   const fetchPurchasedPortfolios = async () => {
     if (!user) return;
@@ -132,6 +137,18 @@ const MerchantDashboard = ({
 
   return (
     <div className={`max-w-6xl mx-auto ${isMobile ? 'p-4' : 'p-6'} pt-20`}>
+      {tutorial.isActive && tutorial.currentStepData && (
+        <TutorialToast
+          title={tutorial.currentStepData.title}
+          description={tutorial.currentStepData.description}
+          currentStep={tutorial.currentStep}
+          totalSteps={tutorial.totalSteps}
+          onNext={tutorial.nextStep}
+          onSkip={tutorial.skipTutorial}
+          duration={tutorial.currentStepData.duration}
+        />
+      )}
+      
       <ApprovalStatusBanner approvalStatus={approvalStatus} isAdmin={isAdmin} />
 
       {isAdmin && (
