@@ -5,11 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import { ArrowLeft, Users, User, Shield, Building, Search, MessageSquare, Calendar, LogOut, ShoppingBag, Film } from "lucide-react";
+import { ArrowLeft, Users, User, Shield, Building, Search, MessageSquare, Calendar, LogOut, ShoppingBag } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 
 interface Profile {
   id: string;
@@ -67,11 +67,7 @@ const ProfilesDirectory = () => {
 
       if (error) {
         console.error('Error fetching profiles:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load profiles",
-          variant: "destructive",
-        });
+        toast.error("Failed to load profiles");
         return;
       }
 
@@ -98,11 +94,7 @@ const ProfilesDirectory = () => {
       }
     } catch (error) {
       console.error('Error fetching profiles:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load profiles",
-        variant: "destructive",
-      });
+      toast.error("Failed to load profiles");
     } finally {
       setLoading(false);
     }
@@ -155,9 +147,6 @@ const ProfilesDirectory = () => {
     }, 100);
   };
 
-  const handleFilmsView = () => {
-    navigate('/films');
-  };
 
   const handleBulletinView = () => {
     navigate('/bulletin');
@@ -203,14 +192,6 @@ const ProfilesDirectory = () => {
             >
               <ShoppingBag className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
               {isMobile ? 'Store' : 'Browse Store'}
-            </Button>
-            <Button
-              onClick={handleFilmsView}
-              variant="outline"
-              className={`border-gray-600 text-white bg-transparent hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
-            >
-              <Film className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
-              {isMobile ? 'Films' : 'Browse Films'}
             </Button>
             <Button
               onClick={handleBulletinView}
@@ -369,7 +350,10 @@ const ProfilesDirectory = () => {
             {/* Left Ad Space */}
             <div className="w-48 flex-shrink-0">
               <div className="sticky top-4">
-                <div className="bg-gradient-to-br from-purple-900/20 to-pink-900/20 border border-purple-700 rounded-lg p-4 h-96 flex items-center justify-center">
+                <div 
+                  className="bg-gradient-to-br from-purple-900/20 to-pink-900/20 border border-purple-700 rounded-lg p-4 h-96 flex items-center justify-center cursor-pointer hover:border-purple-600 transition-colors"
+                  onClick={() => toast.info("Ad placements will be available soon!")}
+                >
                   <p className="text-gray-400 text-center text-sm">Ad Space<br/>300x600</p>
                 </div>
               </div>
@@ -456,7 +440,10 @@ const ProfilesDirectory = () => {
             {/* Right Ad Space */}
             <div className="w-48 flex-shrink-0">
               <div className="sticky top-4">
-                <div className="bg-gradient-to-br from-blue-900/20 to-cyan-900/20 border border-blue-700 rounded-lg p-4 h-96 flex items-center justify-center">
+                <div 
+                  className="bg-gradient-to-br from-blue-900/20 to-cyan-900/20 border border-blue-700 rounded-lg p-4 h-96 flex items-center justify-center cursor-pointer hover:border-blue-600 transition-colors"
+                  onClick={() => toast.info("Ad placements will be available soon!")}
+                >
                   <p className="text-gray-400 text-center text-sm">Ad Space<br/>300x600</p>
                 </div>
               </div>

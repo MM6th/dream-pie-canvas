@@ -1,19 +1,18 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, LogOut, Film, MessageSquare, Users } from "lucide-react";
+import { ArrowLeft, LogOut, MessageSquare, Users } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useNavigate } from "react-router-dom";
 import StorePage from "@/components/StorePage";
 
 interface StoreViewProps {
   onBackToDashboard: () => void;
-  onFilmsView: () => void;
   onBulletinView: () => void;
   onSignOut: () => void;
 }
 
-const StoreView = ({ onBackToDashboard, onFilmsView, onBulletinView, onSignOut }: StoreViewProps) => {
+const StoreView = ({ onBackToDashboard, onBulletinView, onSignOut }: StoreViewProps) => {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   
@@ -31,14 +30,6 @@ const StoreView = ({ onBackToDashboard, onFilmsView, onBulletinView, onSignOut }
             >
               <ArrowLeft className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
               {isMobile ? 'Dashboard' : 'Back to Dashboard'}
-            </Button>
-            <Button
-              onClick={onFilmsView}
-              variant="outline"
-              className={`border-gray-600 text-white bg-transparent hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
-            >
-              <Film className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
-              {isMobile ? 'Films' : 'Browse Films'}
             </Button>
             <Button
               onClick={onBulletinView}

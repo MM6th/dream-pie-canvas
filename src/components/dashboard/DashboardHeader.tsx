@@ -1,13 +1,12 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { LogOut, ShoppingBag, Film, MessageSquare, User, Users } from "lucide-react";
+import { LogOut, ShoppingBag, MessageSquare, User, Users } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import FullMerchantProfileModal from "@/components/profile/FullMerchantProfileModal";
 
 interface DashboardHeaderProps {
   onStoreView: () => void;
-  onFilmsView: () => void;
   onBulletinView: () => void;
   onProfilesView: () => void;
   onSignOut: () => void;
@@ -19,8 +18,7 @@ interface DashboardHeaderProps {
 
 const DashboardHeader = ({ 
   onStoreView, 
-  onFilmsView, 
-  onBulletinView, 
+  onBulletinView,
   onProfilesView, 
   onSignOut, 
   userType, 
@@ -44,14 +42,6 @@ const DashboardHeader = ({
               >
                 <ShoppingBag className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
                 {isMobile ? 'Store' : 'Browse Store'}
-              </Button>
-              <Button
-                onClick={onFilmsView}
-                variant="outline"
-                className={`border-gray-600 text-white bg-transparent hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
-              >
-                <Film className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
-                {isMobile ? 'Films' : 'Browse Films'}
               </Button>
               <Button
                 onClick={onBulletinView}

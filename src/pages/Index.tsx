@@ -221,17 +221,6 @@ const Index = () => {
     setUserProfile(prev => ({ ...prev, background_image_url: url }));
   };
 
-  const handleFilmsView = () => {
-    if (!user) {
-        toast({
-            title: "Access Denied",
-            description: "You must be logged in to access this page.",
-            variant: "destructive"
-        });
-        return;
-    }
-    navigate('/films');
-  };
 
   const handleBulletinView = () => {
     if (!user) {
@@ -286,7 +275,6 @@ const Index = () => {
     return (
       <StoreView 
         onBackToDashboard={() => setCurrentView("dashboard")}
-        onFilmsView={handleFilmsView}
         onBulletinView={handleBulletinView}
         onSignOut={handleSignOut}
       />
@@ -298,7 +286,6 @@ const Index = () => {
       userProfile={userProfile}
       profileLoading={profileLoading}
       onStoreView={() => setCurrentView("store")}
-      onFilmsView={handleFilmsView}
       onBulletinView={handleBulletinView}
       onProfilesView={handleProfilesView}
       onSignOut={handleSignOut}
