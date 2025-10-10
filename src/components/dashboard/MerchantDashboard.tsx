@@ -47,7 +47,8 @@ const MerchantDashboard = ({
   const [playlistPublic, setPlaylistPublic] = useState<boolean>(false);
   const [purchasedPortfolios, setPurchasedPortfolios] = useState<any[]>([]);
   
-  const tutorial = useDashboardTutorial('merchant', merchantTutorialSteps);
+  // Only show merchant tutorial if user is NOT an admin (admin tutorial takes priority)
+  const tutorial = useDashboardTutorial('merchant', isAdmin ? [] : merchantTutorialSteps);
 
   const fetchPurchasedPortfolios = async () => {
     if (!user) return;
