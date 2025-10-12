@@ -407,14 +407,11 @@ const ProfilePage = () => {
                           onClick={() => handleLinkClick(post.link_url!)}
                           variant="outline"
                           size="sm"
-                          className="mb-4"
                         >
                           <ExternalLink className="w-4 h-4 mr-2" />
                           View Link
                         </Button>
                       )}
-                      
-                      <PostInteractions postId={post.id} />
                     </CardContent>
                   </Card>
                 ))}
