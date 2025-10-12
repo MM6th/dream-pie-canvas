@@ -163,11 +163,6 @@ const PortfolioModal = ({ open, onOpenChange, onSuccess, userType, availableImag
           <DialogDescription className="text-gray-400">
             Create a portfolio with up to 10 images from your gallery
           </DialogDescription>
-          <div className="mt-2 p-3 bg-yellow-900/30 border border-yellow-700 rounded-lg">
-            <p className="text-yellow-200 text-sm">
-              <strong>Important:</strong> Please do not sell nude content in your portfolio. This violates our content policy.
-            </p>
-          </div>
         </DialogHeader>
 
         <div className="space-y-4 mt-4">
