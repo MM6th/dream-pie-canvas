@@ -10,6 +10,10 @@ interface AudioPreviewPlayerProps {
   thumbnailUrl?: string;
   onPreviewEnd?: () => void;
   className?: string;
+  productId?: string;
+  currentlyPlayingId?: string | null;
+  onPlayStart?: () => void;
+  onPlayStop?: () => void;
 }
 
 const AudioPreviewPlayer = ({
@@ -19,12 +23,23 @@ const AudioPreviewPlayer = ({
   thumbnailUrl,
   onPreviewEnd,
   className = "",
+  productId,
+  currentlyPlayingId,
+  onPlayStart,
+  onPlayStop,
 }: AudioPreviewPlayerProps) => {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(previewDuration);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Stop playback if another track starts playing
+  useEffect(() => {
+    if (productId && currentlyPlayingId && currentlyPlayingId !== productId && isPlaying) {
+      stopPreview();
+    }
+  }, [currentlyPlayingId, productId]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -65,6 +80,7 @@ const AudioPreviewPlayer = ({
     const audio = audioRef.current;
     if (!audio) return;
 
+    onPlayStart?.();
     audio.currentTime = previewStartTime;
     audio.play();
     setIsPlaying(true);
@@ -88,6 +104,7 @@ const AudioPreviewPlayer = ({
       timeoutRef.current = null;
     }
 
+    onPlayStop?.();
     onPreviewEnd?.();
   };
 

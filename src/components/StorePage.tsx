@@ -79,6 +79,7 @@ const StorePage = () => {
   const [asmrDownloads, setAsmrDownloads] = useState<string[]>([]);
   const [selectedAsmrProduct, setSelectedAsmrProduct] = useState<AudioProduct | null>(null);
   const [asmrSubmissionModalOpen, setAsmrSubmissionModalOpen] = useState(false);
+  const [currentlyPlayingId, setCurrentlyPlayingId] = useState<string | null>(null);
 
   const fetchUserProfile = async () => {
     if (!user) return null;
@@ -833,6 +834,10 @@ const StorePage = () => {
                               previewStartTime={product.preview_start_time || 0}
                               previewDuration={product.preview_duration || 30}
                               thumbnailUrl={product.thumbnail_url}
+                              productId={product.id}
+                              currentlyPlayingId={currentlyPlayingId}
+                              onPlayStart={() => setCurrentlyPlayingId(product.id)}
+                              onPlayStop={() => setCurrentlyPlayingId(null)}
                             />
                           )}
 
