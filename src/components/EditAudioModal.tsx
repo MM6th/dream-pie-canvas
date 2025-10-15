@@ -8,12 +8,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Shield, AlertTriangle, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
+import AudioPreviewPlayer from "./AudioPreviewPlayer";
 
 interface AudioProduct {
   id: string;
@@ -59,10 +61,12 @@ const EditAudioModal = ({ product, onSuccess, onClose }: EditAudioModalProps) =>
     advanceFeeRate: (product as any).advance_fee_rate?.toString() || "",
     backEndRoyalties: (product as any).back_end_royalties || false,
     piePhotoEditing: (product as any).pie_photo_editing || false,
-    isPieExclusive: (product as any).is_pie_exclusive || false
+    isPieExclusive: (product as any).is_pie_exclusive || false,
+    previewStartTime: (product as any).preview_start_time || 0
   });
   const [isAdultContent, setIsAdultContent] = useState(product.is_adult_content || false);
   const [albums, setAlbums] = useState<any[]>([]);
+  const [audioDuration, setAudioDuration] = useState<number>(0);
 
   const fetchAlbums = async () => {
     if (!user) return;
@@ -82,7 +86,16 @@ const EditAudioModal = ({ product, onSuccess, onClose }: EditAudioModalProps) =>
 
   useEffect(() => {
     fetchAlbums();
-  }, [user]);
+    
+    // Load audio duration for music type
+    if (product.audio_type === 'music' && product.audio_file_url) {
+      const audio = new Audio();
+      audio.src = product.audio_file_url;
+      audio.onloadedmetadata = () => {
+        setAudioDuration(audio.duration);
+      };
+    }
+  }, [user, product]);
 
   const uploadFile = async (file: File, bucket: string, folder: string = '') => {
     const fileExt = file.name.split('.').pop();
@@ -167,6 +180,12 @@ const EditAudioModal = ({ product, onSuccess, onClose }: EditAudioModalProps) =>
         max_downloads: formData.accessLevel === 'merchant_only' && formData.maxDownloads ? parseInt(formData.maxDownloads) : null,
         is_adult_content: isAdultContent
       };
+
+      // Add music preview fields
+      if (formData.audioType === 'music') {
+        updateData.preview_start_time = formData.previewStartTime;
+        updateData.preview_duration = 30;
+      }
 
       // Add ASMR-specific fields if it's an ASMR product
       if (formData.audioType === 'asmr') {
@@ -300,6 +319,45 @@ const EditAudioModal = ({ product, onSuccess, onClose }: EditAudioModalProps) =>
                     className="bg-gray-700 border-gray-600 text-white"
                   />
                 </div>
+
+                {/* Music Preview Selection */}
+                {formData.audioType === 'music' && audioDuration > 0 && (
+                  <div className="space-y-3 p-4 bg-blue-900/20 rounded-lg border border-blue-700">
+                    <Label>30-Second Preview Selection</Label>
+                    <p className="text-xs text-gray-400">
+                      Choose which 30 seconds of your song to use as a preview in the store
+                    </p>
+                    
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span>Preview: {Math.floor(formData.previewStartTime / 60)}:{Math.floor(formData.previewStartTime % 60).toString().padStart(2, '0')}</span>
+                        <span>to {Math.floor((formData.previewStartTime + 30) / 60)}:{Math.floor((formData.previewStartTime + 30) % 60).toString().padStart(2, '0')}</span>
+                      </div>
+                      
+                      <Slider
+                        value={[formData.previewStartTime]}
+                        onValueChange={(value) => setFormData(prev => ({ ...prev, previewStartTime: value[0] }))}
+                        max={Math.max(0, audioDuration - 30)}
+                        min={0}
+                        step={1}
+                        className="w-full"
+                      />
+                      
+                      <div className="flex justify-between text-xs text-gray-400">
+                        <span>0:00</span>
+                        <span>{Math.floor(audioDuration / 60)}:{Math.floor(audioDuration % 60).toString().padStart(2, '0')}</span>
+                      </div>
+
+                      <AudioPreviewPlayer
+                        audioUrl={product.audio_file_url}
+                        previewStartTime={formData.previewStartTime}
+                        previewDuration={30}
+                        thumbnailUrl={product.thumbnail_url}
+                        className="mt-2"
+                      />
+                    </div>
+                  </div>
+                )}
                 
                 <div className="flex items-center space-x-2">
                   <Checkbox

@@ -6,6 +6,7 @@ import { Music, Download, DollarSign, User, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import AudioPreviewPlayer from './AudioPreviewPlayer';
 
 interface AudioProduct {
   id: string;
@@ -16,6 +17,9 @@ interface AudioProduct {
   thumbnail_url: string;
   is_free?: boolean;
   access_level?: string;
+  audio_type?: string;
+  preview_start_time?: number | null;
+  preview_duration?: number | null;
 }
 
 interface SongDetailModalProps {
@@ -181,10 +185,20 @@ export default function SongDetailModal({ audioProduct, isOpen, onClose, onNavig
               </Badge>
             </div>
           </div>
+
+          {/* Music Preview Player */}
+          {audioProduct.audio_type === 'music' && audioProduct.preview_start_time !== null && (
+            <AudioPreviewPlayer
+              audioUrl={audioProduct.audio_file_url}
+              previewStartTime={audioProduct.preview_start_time || 0}
+              previewDuration={audioProduct.preview_duration || 30}
+              thumbnailUrl={audioProduct.thumbnail_url}
+            />
+          )}
           
           <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-3">
             <p className="text-blue-300 text-sm">
-              You heard a 30-second preview. {isFree ? 'Download the full track for free!' : 'Purchase the full track and support the artist!'}
+              {audioProduct.audio_type === 'music' ? 'You heard a 30-second preview.' : ''} {isFree ? 'Download the full track for free!' : 'Purchase the full track and support the artist!'}
             </p>
           </div>
           

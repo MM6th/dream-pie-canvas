@@ -405,6 +405,9 @@ export type Database = {
           pie_photo_editing: boolean | null
           pie_video_price: number | null
           podcast_contract_generated: boolean | null
+          preview_duration: number | null
+          preview_start_time: number | null
+          preview_url: string | null
           price: number | null
           thumbnail_url: string | null
           title: string
@@ -433,6 +436,9 @@ export type Database = {
           pie_photo_editing?: boolean | null
           pie_video_price?: number | null
           podcast_contract_generated?: boolean | null
+          preview_duration?: number | null
+          preview_start_time?: number | null
+          preview_url?: string | null
           price?: number | null
           thumbnail_url?: string | null
           title: string
@@ -461,6 +467,9 @@ export type Database = {
           pie_photo_editing?: boolean | null
           pie_video_price?: number | null
           podcast_contract_generated?: boolean | null
+          preview_duration?: number | null
+          preview_start_time?: number | null
+          preview_url?: string | null
           price?: number | null
           thumbnail_url?: string | null
           title?: string

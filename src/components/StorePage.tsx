@@ -16,6 +16,7 @@ import VideoAdSubmissionModal from "./VideoAdSubmissionModal";
 import ExpandableDescription from "@/components/ui/ExpandableDescription";
 import ProductInstructionalText from "@/components/ui/ProductInstructionalText";
 import ASMRSubmissionModal from "./ASMRSubmissionModal";
+import AudioPreviewPlayer from "./AudioPreviewPlayer";
 
 interface AudioProduct {
   id: string;
@@ -36,6 +37,9 @@ interface AudioProduct {
   back_end_royalties: boolean | null;
   advance_fee_rate: number | null;
   created_at: string;
+  preview_start_time?: number | null;
+  preview_duration?: number | null;
+  preview_url?: string | null;
   albums?: {
     name: string;
   };
@@ -201,6 +205,9 @@ const StorePage = () => {
           pie_photo_editing,
           back_end_royalties,
           advance_fee_rate,
+          preview_start_time,
+          preview_duration,
+          preview_url,
           created_at,
           albums (
             name
@@ -819,6 +826,16 @@ const StorePage = () => {
                       </CardHeader>
                       <CardContent className="p-4 pt-0">
                         <div className="space-y-4">
+                          {/* Music Preview Player */}
+                          {product.audio_type === 'music' && product.preview_start_time !== null && (
+                            <AudioPreviewPlayer
+                              audioUrl={product.audio_file_url}
+                              previewStartTime={product.preview_start_time || 0}
+                              previewDuration={product.preview_duration || 30}
+                              thumbnailUrl={product.thumbnail_url}
+                            />
+                          )}
+
                           <div className="flex items-center justify-between flex-wrap gap-2">
                             <Badge variant="secondary" className="capitalize text-xs px-2 py-1">
                               {product.audio_type}

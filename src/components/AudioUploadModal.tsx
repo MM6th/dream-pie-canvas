@@ -8,10 +8,12 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Slider } from "@/components/ui/slider";
 import { Upload, AudioLines, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
+import AudioPreviewPlayer from "@/components/AudioPreviewPlayer";
 
 interface AudioUploadModalProps {
   onSuccess: () => void;
@@ -42,8 +44,12 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
     coverPhotos: [] as File[],
     advanceFeeRate: "",
     numberOfOpportunities: "",
-    isPieExclusive: false
+    isPieExclusive: false,
+    // Music preview fields
+    previewStartTime: 0
   });
+  const [audioDuration, setAudioDuration] = useState<number>(0);
+  const audioPreviewRef = React.useRef<HTMLAudioElement>(null);
   const [albums, setAlbums] = useState<any[]>([]);
   
   const [tracks, setTracks] = useState<Array<{
@@ -81,9 +87,20 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
     const file = e.target.files?.[0];
     if (file && validateFileSize(file, 'audio')) {
       setFormData(prev => ({ ...prev, audioFile: file }));
+      
+      // Load audio duration for music type
+      if (formData.audioType === 'music' && file) {
+        const audio = new Audio();
+        audio.src = URL.createObjectURL(file);
+        audio.onloadedmetadata = () => {
+          setAudioDuration(audio.duration);
+          URL.revokeObjectURL(audio.src);
+        };
+      }
     } else {
       e.target.value = '';
       setFormData(prev => ({ ...prev, audioFile: null }));
+      setAudioDuration(0);
     }
   };
 
@@ -302,7 +319,8 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
           coverPhotos: [],
           advanceFeeRate: '',
           numberOfOpportunities: '',
-          isPieExclusive: false
+          isPieExclusive: false,
+          previewStartTime: 0
         });
         setTracks([{
           audioFile: null,
@@ -403,7 +421,10 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
         youtube_membership_fee: formData.audioType === 'podcast' && formData.youtubeMembershipFee ? parseFloat(formData.youtubeMembershipFee) : null,
         podcast_contract_generated: false,
         max_downloads: formData.accessLevel === 'merchant_only' && formData.maxDownloads ? parseInt(formData.maxDownloads) : null,
-        is_adult_content: formData.is_adult_content
+        is_adult_content: formData.is_adult_content,
+        // Music preview fields
+        preview_start_time: formData.audioType === 'music' ? formData.previewStartTime : 0,
+        preview_duration: formData.audioType === 'music' ? 30 : null
       };
 
       // Add description for podcasts and ASMR if provided
@@ -454,7 +475,8 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
         coverPhotos: [],
         advanceFeeRate: "",
         numberOfOpportunities: "",
-        isPieExclusive: false
+        isPieExclusive: false,
+        previewStartTime: 0
       });
       onSuccess();
       
@@ -541,6 +563,46 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
                   Recommended formats: MP3, WAV, M4A. Max size: 200MB
                 </p>
               </div>
+
+              {/* Music Preview Selection */}
+              {formData.audioType === 'music' && formData.audioFile && audioDuration > 0 && (
+                <div className="space-y-3 p-4 bg-blue-900/20 rounded-lg border border-blue-700">
+                  <Label>30-Second Preview Selection</Label>
+                  <p className="text-xs text-gray-400">
+                    Choose which 30 seconds of your song to use as a preview in the store
+                  </p>
+                  
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Preview: {Math.floor(formData.previewStartTime / 60)}:{Math.floor(formData.previewStartTime % 60).toString().padStart(2, '0')}</span>
+                      <span>to {Math.floor((formData.previewStartTime + 30) / 60)}:{Math.floor((formData.previewStartTime + 30) % 60).toString().padStart(2, '0')}</span>
+                    </div>
+                    
+                    <Slider
+                      value={[formData.previewStartTime]}
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, previewStartTime: value[0] }))}
+                      max={Math.max(0, audioDuration - 30)}
+                      min={0}
+                      step={1}
+                      className="w-full"
+                    />
+                    
+                    <div className="flex justify-between text-xs text-gray-400">
+                      <span>0:00</span>
+                      <span>{Math.floor(audioDuration / 60)}:{Math.floor(audioDuration % 60).toString().padStart(2, '0')}</span>
+                    </div>
+
+                    {formData.audioFile && (
+                      <AudioPreviewPlayer
+                        audioUrl={URL.createObjectURL(formData.audioFile)}
+                        previewStartTime={formData.previewStartTime}
+                        previewDuration={30}
+                        className="mt-2"
+                      />
+                    )}
+                  </div>
+                </div>
+              )}
             </>
           )}
           
