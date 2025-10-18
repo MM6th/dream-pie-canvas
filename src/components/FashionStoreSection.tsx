@@ -62,18 +62,18 @@ const FashionStoreSection = () => {
     }
   };
 
-  const filterAdultContent = (products: FashionProduct[]): FashionProduct[] => {
-    if (!userProfile?.adult_content_restricted) return products;
+  const filterAdultContent = (products: FashionProduct[], profile: { adult_content_restricted: boolean | null } | null): FashionProduct[] => {
+    if (!profile?.adult_content_restricted) return products;
     return products.filter(product => !product.is_adult_content);
   };
 
-  const filterAccessLevel = (products: FashionProduct[]): FashionProduct[] => {
-    if (!userProfile) return products;
+  const filterAccessLevel = (products: FashionProduct[], profile: { user_type: string } | null): FashionProduct[] => {
+    if (!profile) return products;
     
-    console.log('filterAccessLevel - userProfile.user_type:', userProfile.user_type);
+    console.log('filterAccessLevel - profile.user_type:', profile.user_type);
     
     // Supporters can only see public products
-    if (userProfile.user_type === 'supporter') {
+    if (profile.user_type === 'supporter') {
       const filtered = products.filter(product => {
         const accessLevel = product.access_level || 'public';
         console.log(`Product "${product.title}": access_level="${accessLevel}", will show: ${accessLevel === 'public'}`);
@@ -91,7 +91,7 @@ const FashionStoreSection = () => {
     try {
       // Fetch user profile first
       const profile = await fetchUserProfile();
-      setUserProfile(profile);
+      setUserProfile(profile); // Update state for UI
 
       const { data, error } = await supabase
         .from('fashion_products')
@@ -126,8 +126,8 @@ const FashionStoreSection = () => {
         fashion_product_images: product.fashion_product_images.sort((a, b) => a.display_order - b.display_order)
       }));
 
-      // Filter adult content and access level based on user preferences
-      const filteredProducts = filterAccessLevel(filterAdultContent(productsWithSortedImages));
+      // Filter adult content and access level using the fetched profile directly
+      const filteredProducts = filterAccessLevel(filterAdultContent(productsWithSortedImages, profile), profile);
       setProducts(filteredProducts);
     } catch (error: any) {
       console.error('Error fetching fashion products:', error);
