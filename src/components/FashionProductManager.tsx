@@ -24,7 +24,7 @@ type FashionProductWithRelations = {
   tax_rate: number;
   materials: string | null;
   admin_id: string;
-  access_level: string;
+  access_level: "public" | "merchant_only" | "paid" | null;
   is_adult_content: boolean | null;
   created_at: string;
   updated_at: string;

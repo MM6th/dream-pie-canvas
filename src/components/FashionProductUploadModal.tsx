@@ -33,6 +33,7 @@ const FashionProductUploadModal = ({ isOpen, onClose, onSuccess }: FashionProduc
   const [price, setPrice] = useState("");
   const [shippingCost, setShippingCost] = useState("0");
   const [isAdultContent, setIsAdultContent] = useState(false);
+  const [accessLevel, setAccessLevel] = useState<"public" | "merchant_only">("public");
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [variants, setVariants] = useState<Array<{
     size: SizeType;
@@ -48,6 +49,7 @@ const FashionProductUploadModal = ({ isOpen, onClose, onSuccess }: FashionProduc
     setPrice("");
     setShippingCost("0");
     setIsAdultContent(false);
+    setAccessLevel("public");
     setSelectedImages([]);
     setVariants([]);
     setNewColor("");
@@ -152,7 +154,8 @@ const FashionProductUploadModal = ({ isOpen, onClose, onSuccess }: FashionProduc
           materials: materials.trim() || null,
           price: parseFloat(price),
           shipping_cost: parseFloat(shippingCost),
-          is_adult_content: isAdultContent
+          is_adult_content: isAdultContent,
+          access_level: accessLevel
         })
         .select()
         .single();
@@ -300,6 +303,23 @@ const FashionProductUploadModal = ({ isOpen, onClose, onSuccess }: FashionProduc
               rows={3}
               className="bg-gray-700 border-gray-600 text-white"
             />
+          </div>
+
+          {/* Access Level Selector */}
+          <div>
+            <Label htmlFor="access_level">Access Level *</Label>
+            <select
+              id="access_level"
+              value={accessLevel}
+              onChange={(e) => setAccessLevel(e.target.value as "public" | "merchant_only")}
+              className="w-full bg-gray-700 border-gray-600 text-white rounded px-3 py-2"
+            >
+              <option value="public">Public (Everyone can purchase)</option>
+              <option value="merchant_only">Merchants Only</option>
+            </select>
+            <p className="text-sm text-gray-400 mt-1">
+              Merchants Only products are only visible and purchasable by approved merchants
+            </p>
           </div>
 
           {/* Adult Content Toggle */}

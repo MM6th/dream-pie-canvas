@@ -84,7 +84,6 @@ const FashionStoreSection = () => {
     try {
       // Fetch user profile first
       const profile = await fetchUserProfile();
-      console.log('User profile:', profile);
       setUserProfile(profile);
 
       const { data, error } = await supabase
@@ -121,12 +120,7 @@ const FashionStoreSection = () => {
       }));
 
       // Filter adult content and access level based on user preferences
-      const afterAdultFilter = filterAdultContent(productsWithSortedImages);
-      const filteredProducts = filterAccessLevel(afterAdultFilter);
-      console.log('Total products:', productsWithSortedImages.length);
-      console.log('After adult filter:', afterAdultFilter.length);
-      console.log('After access filter:', filteredProducts.length);
-      console.log('Filtered products:', filteredProducts.map(p => ({ title: p.title, access_level: p.access_level })));
+      const filteredProducts = filterAccessLevel(filterAdultContent(productsWithSortedImages));
       setProducts(filteredProducts);
     } catch (error: any) {
       console.error('Error fetching fashion products:', error);

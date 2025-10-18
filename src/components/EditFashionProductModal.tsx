@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Minus, Trash2, Save, X } from "lucide-react";
+import { Plus, Minus, Trash2, Save, X, Shield } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import MultiImagePicker from "./MultiImagePicker";
@@ -17,6 +18,8 @@ interface FashionProduct {
   materials: string | null;
   price: number;
   shipping_cost: number;
+  is_adult_content: boolean | null;
+  access_level: "public" | "merchant_only" | "paid" | null;
   fashion_product_images: Array<{
     id: string;
     image_url: string;
@@ -50,6 +53,8 @@ const EditFashionProductModal = ({ isOpen, onClose, product, onSuccess }: EditFa
   const [materials, setMaterials] = useState("");
   const [price, setPrice] = useState("");
   const [shippingCost, setShippingCost] = useState("");
+  const [accessLevel, setAccessLevel] = useState<"public" | "merchant_only">("public");
+  const [isAdultContent, setIsAdultContent] = useState(false);
   const [existingImages, setExistingImages] = useState<Array<{
     id: string;
     image_url: string;
@@ -74,6 +79,8 @@ const EditFashionProductModal = ({ isOpen, onClose, product, onSuccess }: EditFa
       setMaterials(product.materials || "");
       setPrice(product.price.toString());
       setShippingCost(product.shipping_cost.toString());
+      setAccessLevel((product.access_level as "public" | "merchant_only") || "public");
+      setIsAdultContent(product.is_adult_content || false);
       setExistingImages(product.fashion_product_images.map(img => ({ ...img, toDelete: false })));
       setVariants(product.fashion_product_variants.map(v => ({
         ...v,
@@ -91,6 +98,8 @@ const EditFashionProductModal = ({ isOpen, onClose, product, onSuccess }: EditFa
     setMaterials("");
     setPrice("");
     setShippingCost("");
+    setAccessLevel("public");
+    setIsAdultContent(false);
     setExistingImages([]);
     setNewImages([]);
     setVariants([]);
@@ -191,6 +200,8 @@ const EditFashionProductModal = ({ isOpen, onClose, product, onSuccess }: EditFa
           materials: materials.trim() || null,
           price: parseFloat(price),
           shipping_cost: parseFloat(shippingCost),
+          access_level: accessLevel,
+          is_adult_content: isAdultContent,
           updated_at: new Date().toISOString()
         })
         .eq('id', product.id);
@@ -395,6 +406,43 @@ const EditFashionProductModal = ({ isOpen, onClose, product, onSuccess }: EditFa
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
               className="bg-gray-700 border-gray-600 text-white"
+            />
+          </div>
+
+          {/* Access Level Selector */}
+          <div>
+            <Label htmlFor="access_level">Access Level *</Label>
+            <select
+              id="access_level"
+              value={accessLevel}
+              onChange={(e) => setAccessLevel(e.target.value as "public" | "merchant_only")}
+              className="w-full bg-gray-700 border-gray-600 text-white rounded px-3 py-2"
+            >
+              <option value="public">Public (Everyone can purchase)</option>
+              <option value="merchant_only">Merchants Only</option>
+            </select>
+            <p className="text-sm text-gray-400 mt-1">
+              Merchants Only products are only visible and purchasable by approved merchants
+            </p>
+          </div>
+
+          {/* Adult Content Toggle */}
+          <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg border border-gray-600">
+            <div className="flex items-center gap-3">
+              <Shield className="w-5 h-5 text-orange-400" />
+              <div>
+                <Label htmlFor="adult_content_fashion_edit" className="text-white font-medium">
+                  Adult/Mature Content
+                </Label>
+                <p className="text-sm text-gray-400">
+                  Mark this if your fashion item is intended for adult/mature audiences (18+)
+                </p>
+              </div>
+            </div>
+            <Switch
+              id="adult_content_fashion_edit"
+              checked={isAdultContent}
+              onCheckedChange={setIsAdultContent}
             />
           </div>
 
