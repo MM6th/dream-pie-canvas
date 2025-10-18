@@ -68,12 +68,17 @@ const FashionStoreSection = () => {
   const filterAccessLevel = (products: FashionProduct[]): FashionProduct[] => {
     if (!userProfile) return products;
     
+    console.log('filterAccessLevel - userProfile.user_type:', userProfile.user_type);
+    
     // Supporters can only see public products
     if (userProfile.user_type === 'supporter') {
-      return products.filter(product => {
+      const filtered = products.filter(product => {
         const accessLevel = product.access_level || 'public';
+        console.log(`Product "${product.title}": access_level="${accessLevel}", will show: ${accessLevel === 'public'}`);
         return accessLevel === 'public';
       });
+      console.log(`Filtered ${products.length - filtered.length} merchant-only products for supporter`);
+      return filtered;
     }
     
     // Merchants and admins can see all products
