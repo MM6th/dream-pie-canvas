@@ -42,6 +42,8 @@ const FashionStoreSection = () => {
   const [selectedProduct, setSelectedProduct] = useState<FashionProduct | null>(null);
   const [detailModalProduct, setDetailModalProduct] = useState<FashionProduct | null>(null);
 
+  console.log('[FashionStoreSection] Component rendered, user:', user?.id, 'userProfile:', userProfile);
+
   const fetchUserProfile = async () => {
     if (!user) return null;
     
