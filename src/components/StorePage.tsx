@@ -753,8 +753,8 @@ const StorePage = () => {
           <AstrologyStoreSection />
         </div>
 
-        {/* Fashion Products Section - Hidden until ready */}
-        <div className="mb-12 hidden">
+        {/* Fashion Products Section */}
+        <div className="mb-12">
           <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
             <Shirt className="w-6 h-6" />
             Fashion
