@@ -14,6 +14,7 @@ interface FashionProduct {
   id: string;
   title: string;
   price: number;
+  access_level: "public" | "merchant_only" | "paid" | null;
   fashion_product_images: Array<{
     image_url: string;
   }>;
@@ -33,6 +34,7 @@ const ModelingApplicationModal = ({ isOpen, onClose, onSuccess }: ModelingApplic
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [userType, setUserType] = useState<string>('');
 
   useEffect(() => {
     if (isOpen && user) {
@@ -45,6 +47,15 @@ const ModelingApplicationModal = ({ isOpen, onClose, onSuccess }: ModelingApplic
 
     setLoading(true);
     try {
+      // Fetch user type first
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('user_type')
+        .eq('id', user.id)
+        .single();
+      
+      setUserType(profileData?.user_type || '');
+
       const { data, error } = await supabase
         .from('fashion_purchases')
         .select(`
@@ -53,6 +64,7 @@ const ModelingApplicationModal = ({ isOpen, onClose, onSuccess }: ModelingApplic
             id,
             title,
             price,
+            access_level,
             fashion_product_images (
               image_url
             )
@@ -74,7 +86,17 @@ const ModelingApplicationModal = ({ isOpen, onClose, onSuccess }: ModelingApplic
         }
       });
 
-      setPurchasedProducts(Array.from(uniqueProducts.values()));
+      let filteredProducts = Array.from(uniqueProducts.values());
+      
+      // Filter out merchant-only products for supporters
+      if (profileData?.user_type === 'supporter') {
+        filteredProducts = filteredProducts.filter(product => {
+          const accessLevel = product.access_level || 'public';
+          return accessLevel === 'public';
+        });
+      }
+
+      setPurchasedProducts(filteredProducts);
     } catch (error) {
       console.error('Error fetching purchased products:', error);
     } finally {
