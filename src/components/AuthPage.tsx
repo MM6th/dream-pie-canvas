@@ -219,7 +219,7 @@ const AuthPage = () => {
           {/* Company Name */}
           <h1 className="text-2xl font-bold text-white mb-4 tracking-widest">PRIVATE INVESTIGATION ENTERPRISES</h1>
           
-          <p className="text-gray-400 mb-6">Your boutique platform for entertainment</p>
+          <p className="text-gray-400 mb-6">Your spiritually guided boutique platform for entertainment</p>
         </div>
 
         <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
@@ -354,7 +354,7 @@ const AuthPage = () => {
                             className="border-gray-600 text-blue-600 focus:ring-blue-500 focus:ring-2"
                           />
                           <Label htmlFor="supporter" className="text-white font-normal cursor-pointer">
-                            Supporter (Browse and purchase content)
+                            Supporter
                           </Label>
                         </div>
                         <div className="flex items-center space-x-2">
@@ -368,7 +368,7 @@ const AuthPage = () => {
                             className="border-gray-600 text-blue-600 focus:ring-blue-500 focus:ring-2"
                           />
                           <Label htmlFor="merchant" className="text-white font-normal cursor-pointer">
-                            Merchant (Sell content - requires approval)
+                            Merchant
                           </Label>
                         </div>
                       </div>
