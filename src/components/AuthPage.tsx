@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { User, Upload } from "lucide-react";
 import UserStatsDisplay from "./UserStatsDisplay";
 
 const AuthPage = () => {
@@ -16,6 +17,8 @@ const AuthPage = () => {
   const [emailSent, setEmailSent] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [userType, setUserType] = useState<"supporter" | "merchant">("supporter");
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
   const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -24,32 +27,84 @@ const AuthPage = () => {
     const formData = new FormData(e.currentTarget);
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
+    const displayName = formData.get("displayName") as string;
+
+    // Validate merchant requirements
+    if (userType === "merchant") {
+      if (!displayName || displayName.trim() === "") {
+        toast({
+          title: "Error",
+          description: "Display name is required for merchant accounts",
+          variant: "destructive"
+        });
+        setIsLoading(false);
+        return;
+      }
+      if (!avatarFile) {
+        toast({
+          title: "Error",
+          description: "Profile picture is required for merchant accounts",
+          variant: "destructive"
+        });
+        setIsLoading(false);
+        return;
+      }
+    }
 
     try {
-      const { error } = await supabase.auth.signUp({
+      // Sign up user first
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
             user_type: userType,
-            is_adult_creator: false
+            is_adult_creator: false,
+            display_name: displayName || null
           }
         }
       });
 
-      if (error) {
+      if (authError) {
         toast({
           title: "Error",
-          description: error.message,
+          description: authError.message,
           variant: "destructive"
         });
-      } else {
-        setEmailSent(true);
-        toast({
-          title: "Success",
-          description: "Please check your email to confirm your account."
-        });
+        setIsLoading(false);
+        return;
       }
+
+      // If merchant and has avatar, upload it
+      if (userType === "merchant" && avatarFile && authData.user) {
+        const fileExt = avatarFile.name.split('.').pop();
+        const fileName = `${authData.user.id}/avatar.${fileExt}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('avatars')
+          .upload(fileName, avatarFile, { upsert: true });
+
+        if (uploadError) {
+          console.error('Error uploading avatar:', uploadError);
+        } else {
+          // Get public URL
+          const { data: { publicUrl } } = supabase.storage
+            .from('avatars')
+            .getPublicUrl(fileName);
+
+          // Update profile with avatar URL
+          await supabase
+            .from('profiles')
+            .update({ avatar_url: publicUrl })
+            .eq('id', authData.user.id);
+        }
+      }
+
+      setEmailSent(true);
+      toast({
+        title: "Success",
+        description: "Please check your email to confirm your account."
+      });
     } catch (error: any) {
       toast({
         title: "Error",
@@ -58,6 +113,18 @@ const AuthPage = () => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setAvatarFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAvatarPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -278,7 +345,12 @@ const AuthPage = () => {
                             name="userType"
                             value="supporter"
                             checked={userType === "supporter"}
-                            onChange={(e) => setUserType(e.target.value as "supporter" | "merchant")}
+                            onChange={(e) => {
+                              setUserType(e.target.value as "supporter" | "merchant");
+                              // Reset merchant-specific fields when switching to supporter
+                              setAvatarFile(null);
+                              setAvatarPreview(null);
+                            }}
                             className="border-gray-600 text-blue-600 focus:ring-blue-500 focus:ring-2"
                           />
                           <Label htmlFor="supporter" className="text-white font-normal cursor-pointer">
@@ -301,6 +373,65 @@ const AuthPage = () => {
                         </div>
                       </div>
                     </div>
+                    
+                    {/* Merchant-specific required fields */}
+                    {userType === "merchant" && (
+                      <>
+                        <div>
+                          <Label htmlFor="displayName" className="text-white">
+                            Display Name <span className="text-red-400">*</span>
+                          </Label>
+                          <Input
+                            id="displayName"
+                            name="displayName"
+                            type="text"
+                            required
+                            className="bg-gray-700 border-gray-600 text-white focus:border-blue-500"
+                            placeholder="Enter your display name"
+                          />
+                        </div>
+                        
+                        <div>
+                          <Label className="text-white">
+                            Profile Picture <span className="text-red-400">*</span>
+                          </Label>
+                          <div className="flex flex-col items-center space-y-3 mt-2">
+                            {avatarPreview ? (
+                              <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-gray-600">
+                                <img 
+                                  src={avatarPreview} 
+                                  alt="Avatar preview" 
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                            ) : (
+                              <div className="w-20 h-20 rounded-full bg-gray-700 border-2 border-gray-600 flex items-center justify-center">
+                                <User className="w-10 h-10 text-gray-400" />
+                              </div>
+                            )}
+                            <div className="relative">
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={handleAvatarChange}
+                                required
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                id="avatar-upload-signup"
+                              />
+                              <Button
+                                type="button"
+                                variant="outline"
+                                className="border-gray-600 text-white bg-gray-700 hover:bg-gray-600"
+                              >
+                                <Upload className="w-4 h-4 mr-2" />
+                                {avatarPreview ? "Change Picture" : "Upload Picture"}
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                    
                     <p className="text-xs text-gray-400 text-center">
                       The content on this website is not made for children.
                     </p>
