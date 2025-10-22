@@ -1831,10 +1831,7 @@ export type Database = {
         Args: { new_file_size: number; user_uuid: string }
         Returns: boolean
       }
-      clean_expired_astrology_cache: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      clean_expired_astrology_cache: { Args: never; Returns: undefined }
       delete_audio_product_cascade: {
         Args: { p_merchant_id: string; p_product_id: string }
         Returns: boolean
@@ -1848,14 +1845,8 @@ export type Database = {
         }
         Returns: undefined
       }
-      generate_receipt_number: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      get_user_storage_usage: {
-        Args: { user_uuid: string }
-        Returns: number
-      }
+      generate_receipt_number: { Args: never; Returns: string }
+      get_user_storage_usage: { Args: { user_uuid: string }; Returns: number }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1863,14 +1854,8 @@ export type Database = {
         }
         Returns: boolean
       }
-      is_admin: {
-        Args: { user_id: string }
-        Returns: boolean
-      }
-      is_approved_merchant: {
-        Args: { user_id: string }
-        Returns: boolean
-      }
+      is_admin: { Args: { user_id: string }; Returns: boolean }
+      is_approved_merchant: { Args: { user_id: string }; Returns: boolean }
       update_cover_submission_status: {
         Args: {
           admin_notes_text?: string
