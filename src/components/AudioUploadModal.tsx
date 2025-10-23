@@ -534,6 +534,21 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
             </Select>
           </div>
 
+          {/* Part of album toggle - only show for music */}
+          {formData.audioType === 'music' && (
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="hasAlbum"
+                checked={formData.hasAlbum}
+                onCheckedChange={(checked) => setFormData(prev => ({ 
+                  ...prev, 
+                  hasAlbum: checked as boolean 
+                }))}
+              />
+              <Label htmlFor="hasAlbum">Part of an album/collection</Label>
+            </div>
+          )}
+
           {/* Single file upload - only show if not part of album */}
           {!formData.hasAlbum && (
             <>
@@ -632,18 +647,6 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
             <p className="text-xs text-gray-400 mt-1">
               Recommended formats: JPG, PNG. Max size: 50MB{formData.hasAlbum ? ' - One cover for entire album' : ''}
             </p>
-          </div>
-          
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="hasAlbum"
-              checked={formData.hasAlbum}
-              onCheckedChange={(checked) => setFormData(prev => ({ 
-                ...prev, 
-                hasAlbum: checked as boolean 
-              }))}
-            />
-            <Label htmlFor="hasAlbum">Part of an album/collection</Label>
           </div>
           
           {formData.hasAlbum && (
