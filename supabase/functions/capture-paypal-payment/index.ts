@@ -247,9 +247,45 @@ Deno.serve(async (req) => {
       // Get audio product to find merchant_id
       const { data: audioProduct } = await supabaseAdmin
         .from('audio_products')
-        .select('merchant_id')
+        .select('merchant_id, album_id')
         .eq('id', purchaseUnit.reference_id)
         .single()
+
+      // Check if this is an album purchase - if so, add all album tracks to user's library
+      if (audioProduct?.album_id) {
+        console.log('Album purchase detected. Adding all tracks to library...')
+        
+        // Get all tracks in the album
+        const { data: albumTracks } = await supabaseAdmin
+          .from('audio_products')
+          .select('id')
+          .eq('album_id', audioProduct.album_id)
+          .neq('id', purchaseUnit.reference_id); // Exclude the track we already added
+
+        if (albumTracks && albumTracks.length > 0) {
+          // Add all other tracks to user's library
+          const additionalPurchases = albumTracks.map(track => ({
+            user_id: user.id,
+            audio_product_id: track.id,
+            paypal_transaction_id: capture.id,
+            amount_paid: 0, // Only the first track counts towards payment
+            is_free_download: false,
+            referrer_user_id: validReferrerId,
+            referrer_commission: null,
+            merchant_revenue_after_referral: null
+          }));
+
+          const { error: bulkInsertError } = await supabaseAdmin
+            .from('user_purchases')
+            .insert(additionalPurchases);
+
+          if (bulkInsertError) {
+            console.error('Error adding album tracks:', bulkInsertError);
+          } else {
+            console.log(`Added ${albumTracks.length} additional album tracks to library`);
+          }
+        }
+      }
 
       if (audioProduct) {
         // Track income for tax reporting

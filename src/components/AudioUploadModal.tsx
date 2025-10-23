@@ -190,6 +190,12 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
           return;
         }
 
+        // Validate artist name for music albums
+        if (!formData.artistName) {
+          toast({ title: "Error", description: "Artist name is required for music albums", variant: "destructive" });
+          return;
+        }
+
         const trackTitles = tracks.map(t => t.title);
         const uniqueTitles = new Set(trackTitles);
         if (trackTitles.length !== uniqueTitles.size) {
@@ -345,6 +351,16 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
       toast({
         title: "Error",
         description: "Please fill in all required fields",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Validate artist name for music type
+    if (formData.audioType === 'music' && !formData.artistName) {
+      toast({
+        title: "Error",
+        description: "Artist name is required for music uploads",
         variant: "destructive"
       });
       return;
@@ -622,13 +638,16 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
           )}
           
           <div>
-            <Label htmlFor="artistName">Artist Name (Optional)</Label>
+            <Label htmlFor="artistName">
+              Artist Name {formData.audioType === 'music' && '*'}
+            </Label>
             <Input
               id="artistName"
               value={formData.artistName}
               onChange={(e) => setFormData(prev => ({ ...prev, artistName: e.target.value }))}
               className="bg-gray-700 border-gray-600 text-white"
               placeholder="Artist or creator name"
+              required={formData.audioType === 'music'}
             />
           </div>
           

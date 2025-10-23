@@ -41,8 +41,12 @@ interface AudioProduct {
   preview_duration?: number | null;
   preview_url?: string | null;
   albums?: {
+    id: string;
     name: string;
+    description?: string | null;
   };
+  isAlbum?: boolean;
+  albumId?: string;
 }
 
 interface VideoAdOpportunity {
@@ -211,7 +215,9 @@ const StorePage = () => {
           preview_url,
           created_at,
           albums (
-            name
+            id,
+            name,
+            description
           )
         `)
         .not('title', 'ilike', '%video ad%')
@@ -245,7 +251,31 @@ const StorePage = () => {
         ...(signedPodcastProducts?.map(s => s.audio_product_id) || [])
       ]);
 
-      const filteredAudioData = audioData?.filter(p => !signedProductIds.has(p.id)) || [];
+      let filteredAudioData = audioData?.filter(p => !signedProductIds.has(p.id)) || [];
+
+      // Group albums: Keep only first track per album, others will be accessed via album purchase
+      const albumGroups = new Map();
+      const nonAlbumProducts: AudioProduct[] = [];
+      
+      filteredAudioData.forEach(product => {
+        if (product.album_id && product.albums) {
+          if (!albumGroups.has(product.album_id)) {
+            // Store first track as the album representative
+            albumGroups.set(product.album_id, {
+              ...product,
+              title: product.albums.name, // Use album name as title
+              description: product.albums.description || product.description,
+              isAlbum: true,
+              albumId: product.album_id
+            });
+          }
+        } else {
+          nonAlbumProducts.push(product);
+        }
+      });
+
+      // Combine albums (represented by first track) with non-album products
+      filteredAudioData = [...Array.from(albumGroups.values()), ...nonAlbumProducts];
 
       // Fetch video ad opportunities
       const { data: videoOpportunities, error: videoAdError } = await supabase
@@ -471,6 +501,60 @@ const StorePage = () => {
     try {
       console.log('Processing free download for product:', product.id);
       
+      // Check if this is an album purchase
+      const isAlbumPurchase = product.album_id && (product as any).isAlbum;
+      
+      if (isAlbumPurchase) {
+        // Fetch all tracks in the album
+        const { data: albumTracks, error: tracksError } = await supabase
+          .from('audio_products')
+          .select('id')
+          .eq('album_id', product.album_id);
+
+        if (tracksError) throw tracksError;
+
+        // Check if any track already purchased
+        const trackIds = albumTracks?.map(t => t.id) || [];
+        const { data: existingPurchases, error: checkError } = await supabase
+          .from('user_purchases')
+          .select('audio_product_id')
+          .eq('user_id', user.id)
+          .in('audio_product_id', trackIds);
+
+        if (checkError) throw checkError;
+
+        if (existingPurchases && existingPurchases.length > 0) {
+          toast({
+            title: "Already in your library",
+            description: "This album is already available in your audio player",
+          });
+          return;
+        }
+
+        // Add all album tracks to user's library
+        const purchases = trackIds.map(trackId => ({
+          user_id: user.id,
+          audio_product_id: trackId,
+          is_free_download: true,
+          amount_paid: 0,
+          paypal_transaction_id: null
+        }));
+
+        const { error: insertError } = await supabase
+          .from('user_purchases')
+          .insert(purchases);
+
+        if (insertError) throw insertError;
+
+        toast({
+          title: "Album added to library!",
+          description: `All ${trackIds.length} tracks have been added to your audio player`,
+        });
+
+        return;
+      }
+
+      // Single track download
       const { data: existingPurchase, error: checkError } = await supabase
         .from('user_purchases')
         .select('id')
@@ -845,9 +929,9 @@ const StorePage = () => {
                             <Badge variant="secondary" className="capitalize text-xs px-2 py-1">
                               {product.audio_type}
                             </Badge>
-                            {product.albums && (
-                              <Badge variant="outline" className="text-xs bg-white text-black border-white px-2 py-1">
-                                {product.albums.name}
+                         {(product as any).isAlbum && (
+                              <Badge variant="outline" className="text-xs bg-purple-600 hover:bg-purple-700 text-white border-purple-500 px-2 py-1">
+                                Album
                               </Badge>
                             )}
                           </div>
