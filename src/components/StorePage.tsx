@@ -17,6 +17,7 @@ import ExpandableDescription from "@/components/ui/ExpandableDescription";
 import ProductInstructionalText from "@/components/ui/ProductInstructionalText";
 import ASMRSubmissionModal from "./ASMRSubmissionModal";
 import AudioPreviewPlayer from "./AudioPreviewPlayer";
+import AlbumTracklistHover from "./AlbumTracklistHover";
 
 interface AudioProduct {
   id: string;
@@ -253,28 +254,68 @@ const StorePage = () => {
 
       let filteredAudioData = audioData?.filter(p => !signedProductIds.has(p.id)) || [];
 
-      // Group albums: Keep only first track per album, others will be accessed via album purchase
+      // Group albums: Keep only track #1 per album as representative
       const albumGroups = new Map();
       const nonAlbumProducts: AudioProduct[] = [];
       
-      filteredAudioData.forEach(product => {
-        if (product.album_id && product.albums) {
-          if (!albumGroups.has(product.album_id)) {
-            // Store first track as the album representative
-            albumGroups.set(product.album_id, {
-              ...product,
-              title: product.albums.name, // Use album name as title
-              description: product.albums.description || product.description,
-              isAlbum: true,
-              albumId: product.album_id
-            });
-          }
-        } else {
-          nonAlbumProducts.push(product);
-        }
-      });
+      // First, fetch album tracks to get proper ordering
+      const albumIds = [...new Set(filteredAudioData.filter(p => p.album_id).map(p => p.album_id))];
+      
+      if (albumIds.length > 0) {
+        const { data: albumTracksData } = await supabase
+          .from('album_tracks')
+          .select('album_id, audio_product_id, track_number')
+          .in('album_id', albumIds)
+          .order('track_number', { ascending: true });
 
-      // Combine albums (represented by first track) with non-album products
+        // Group tracks by album
+        const tracksByAlbum = new Map<string, any[]>();
+        albumTracksData?.forEach(track => {
+          if (!tracksByAlbum.has(track.album_id)) {
+            tracksByAlbum.set(track.album_id, []);
+          }
+          tracksByAlbum.get(track.album_id)!.push(track);
+        });
+
+        filteredAudioData.forEach(product => {
+          if (product.album_id && product.albums) {
+            const albumTracks = tracksByAlbum.get(product.album_id) || [];
+            const track1 = albumTracks.find(t => t.track_number === 1);
+            
+            // Only use this product if it's track #1 or if track #1 isn't found (use first available)
+            if (!albumGroups.has(product.album_id)) {
+              if (!track1 || track1.audio_product_id === product.id) {
+                albumGroups.set(product.album_id, {
+                  ...product,
+                  title: product.albums.name, // Use album name as title
+                  description: product.albums.description || product.description,
+                  isAlbum: true,
+                  albumId: product.album_id
+                });
+              } else if (track1.audio_product_id !== product.id && albumTracks[0]?.audio_product_id === product.id) {
+                // Fallback: use first track if track #1 doesn't exist
+                albumGroups.set(product.album_id, {
+                  ...product,
+                  title: product.albums.name,
+                  description: product.albums.description || product.description,
+                  isAlbum: true,
+                  albumId: product.album_id
+                });
+              }
+            }
+          } else {
+            nonAlbumProducts.push(product);
+          }
+        });
+      } else {
+        filteredAudioData.forEach(product => {
+          if (!product.album_id) {
+            nonAlbumProducts.push(product);
+          }
+        });
+      }
+
+      // Combine albums (represented by track #1) with non-album products
       filteredAudioData = [...Array.from(albumGroups.values()), ...nonAlbumProducts];
 
       // Fetch video ad opportunities
@@ -929,10 +970,11 @@ const StorePage = () => {
                             <Badge variant="secondary" className="capitalize text-xs px-2 py-1">
                               {product.audio_type}
                             </Badge>
-                         {(product as any).isAlbum && (
-                              <Badge variant="outline" className="text-xs bg-purple-600 hover:bg-purple-700 text-white border-purple-500 px-2 py-1">
-                                Album
-                              </Badge>
+                            {(product as any).isAlbum && (product as any).albumId && (
+                              <AlbumTracklistHover 
+                                albumId={(product as any).albumId} 
+                                albumName={product.title}
+                              />
                             )}
                           </div>
                           

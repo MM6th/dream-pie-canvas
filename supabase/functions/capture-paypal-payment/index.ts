@@ -255,34 +255,40 @@ Deno.serve(async (req) => {
       if (audioProduct?.album_id) {
         console.log('Album purchase detected. Adding all tracks to library...')
         
-        // Get all tracks in the album
+        // Get all tracks in the album via album_tracks join
         const { data: albumTracks } = await supabaseAdmin
-          .from('audio_products')
-          .select('id')
-          .eq('album_id', audioProduct.album_id)
-          .neq('id', purchaseUnit.reference_id); // Exclude the track we already added
+          .from('album_tracks')
+          .select('audio_product_id')
+          .eq('album_id', audioProduct.album_id);
 
         if (albumTracks && albumTracks.length > 0) {
-          // Add all other tracks to user's library
-          const additionalPurchases = albumTracks.map(track => ({
-            user_id: user.id,
-            audio_product_id: track.id,
-            paypal_transaction_id: capture.id,
-            amount_paid: 0, // Only the first track counts towards payment
-            is_free_download: false,
-            referrer_user_id: validReferrerId,
-            referrer_commission: null,
-            merchant_revenue_after_referral: null
-          }));
+          // Get track IDs that aren't already added
+          const additionalTrackIds = albumTracks
+            .map(t => t.audio_product_id)
+            .filter(id => id !== purchaseUnit.reference_id);
 
-          const { error: bulkInsertError } = await supabaseAdmin
-            .from('user_purchases')
-            .insert(additionalPurchases);
+          if (additionalTrackIds.length > 0) {
+            // Add all other tracks to user's library
+            const additionalPurchases = additionalTrackIds.map(trackId => ({
+              user_id: user.id,
+              audio_product_id: trackId,
+              paypal_transaction_id: capture.id,
+              amount_paid: 0, // Only the first track counts towards payment
+              is_free_download: false,
+              referrer_user_id: validReferrerId,
+              referrer_commission: null,
+              merchant_revenue_after_referral: null
+            }));
 
-          if (bulkInsertError) {
-            console.error('Error adding album tracks:', bulkInsertError);
-          } else {
-            console.log(`Added ${albumTracks.length} additional album tracks to library`);
+            const { error: bulkInsertError } = await supabaseAdmin
+              .from('user_purchases')
+              .insert(additionalPurchases);
+
+            if (bulkInsertError) {
+              console.error('Error adding album tracks:', bulkInsertError);
+            } else {
+              console.log(`Added ${additionalTrackIds.length} additional album tracks to library`);
+            }
           }
         }
       }
