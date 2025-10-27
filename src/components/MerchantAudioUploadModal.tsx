@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Upload, Plus, AudioLines, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -29,7 +30,9 @@ const MerchantAudioUploadModal = ({ onSuccess }: MerchantAudioUploadModalProps) 
     hasAlbum: false,
     previewStartTime: 0,
     is_adult_content: false,
-    description: ""
+    description: "",
+    isFree: true,
+    price: ""
   });
   const [audioDuration, setAudioDuration] = useState<number>(0);
   const [albums, setAlbums] = useState<any[]>([]);
@@ -252,7 +255,8 @@ const MerchantAudioUploadModal = ({ onSuccess }: MerchantAudioUploadModalProps) 
               audio_file_url: audioUrl,
               album_id: newAlbum.id,
               access_level: 'public',
-              is_free: true,
+              is_free: formData.isFree,
+              price: formData.isFree ? null : parseFloat(formData.price),
               is_adult_content: formData.is_adult_content
             })
             .select()
@@ -299,7 +303,9 @@ const MerchantAudioUploadModal = ({ onSuccess }: MerchantAudioUploadModalProps) 
           hasAlbum: false,
           previewStartTime: 0,
           is_adult_content: false,
-          description: ''
+          description: '',
+          isFree: true,
+          price: ''
         });
         setTracks([{
           audioFile: null,
@@ -329,6 +335,16 @@ const MerchantAudioUploadModal = ({ onSuccess }: MerchantAudioUploadModalProps) 
       return;
     }
 
+    // Validate price if not free
+    if (!formData.isFree && (!formData.price || parseFloat(formData.price) <= 0)) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid price for paid content",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
     
     try {
@@ -350,7 +366,8 @@ const MerchantAudioUploadModal = ({ onSuccess }: MerchantAudioUploadModalProps) 
           audio_file_url: audioUrl,
           album_id: null,
           access_level: 'public',
-          is_free: true,
+          is_free: formData.isFree,
+          price: formData.isFree ? null : parseFloat(formData.price),
           is_adult_content: formData.is_adult_content,
           preview_start_time: formData.previewStartTime,
           preview_duration: 30
@@ -373,7 +390,9 @@ const MerchantAudioUploadModal = ({ onSuccess }: MerchantAudioUploadModalProps) 
         hasAlbum: false,
         previewStartTime: 0,
         is_adult_content: false,
-        description: ""
+        description: "",
+        isFree: true,
+        price: ""
       });
       onSuccess();
       
@@ -401,14 +420,14 @@ const MerchantAudioUploadModal = ({ onSuccess }: MerchantAudioUploadModalProps) 
       <DialogTrigger asChild>
         <Button className="bg-black text-white hover:bg-gray-800">
           <Plus className="w-4 h-4 mr-2" />
-          Upload Music
+          Upload Audio
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-gray-900 to-gray-800 text-white">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <AudioLines className="w-5 h-5" />
-            Upload Music
+            Upload Audio
           </DialogTitle>
         </DialogHeader>
         
@@ -541,17 +560,6 @@ const MerchantAudioUploadModal = ({ onSuccess }: MerchantAudioUploadModalProps) 
                 />
               </div>
 
-              <div>
-                <Label htmlFor="description">Album Description (Optional)</Label>
-                <Input
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  className="bg-gray-700 border-gray-600 text-white"
-                  placeholder="Describe your album"
-                />
-              </div>
-
               {/* Multi-Track Upload Interface */}
               <div className="space-y-4 border-t border-gray-700 pt-4">
                 <h3 className="text-sm font-semibold text-white">Album Tracks (Minimum 2)</h3>
@@ -660,6 +668,45 @@ const MerchantAudioUploadModal = ({ onSuccess }: MerchantAudioUploadModalProps) 
             </div>
           )}
           
+          {/* Pricing Section */}
+          <div className="space-y-4 pt-4 border-t border-gray-700">
+            <Label>Pricing</Label>
+            <RadioGroup
+              value={formData.isFree ? "free" : "paid"}
+              onValueChange={(value) => 
+                setFormData(prev => ({...prev, isFree: value === "free", price: value === "free" ? '' : prev.price}))
+              }
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="free" id="free" />
+                <Label htmlFor="free" className="font-normal cursor-pointer">Free</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="paid" id="paid" />
+                <Label htmlFor="paid" className="font-normal cursor-pointer">Paid</Label>
+              </div>
+            </RadioGroup>
+
+            {!formData.isFree && (
+              <div className="space-y-2">
+                <Label htmlFor="price">Price (USD)</Label>
+                <Input
+                  id="price"
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  placeholder="9.99"
+                  value={formData.price}
+                  onChange={(e) => setFormData(prev => ({...prev, price: e.target.value}))}
+                  className="bg-gray-700 border-gray-600 text-white"
+                />
+                <p className="text-xs text-gray-400">
+                  Revenue split: 70% to you, 30% platform fee. Payment via PayPal.
+                </p>
+              </div>
+            )}
+          </div>
+
           <div className="flex items-center space-x-2">
             <Checkbox
               id="is_adult_content"
