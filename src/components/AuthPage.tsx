@@ -29,26 +29,25 @@ const AuthPage = () => {
     const password = formData.get("password") as string;
     const displayName = formData.get("displayName") as string;
 
-    // Validate merchant requirements
-    if (userType === "merchant") {
-      if (!displayName || displayName.trim() === "") {
-        toast({
-          title: "Error",
-          description: "Display name is required for merchant accounts",
-          variant: "destructive"
-        });
-        setIsLoading(false);
-        return;
-      }
-      if (!avatarFile) {
-        toast({
-          title: "Error",
-          description: "Profile picture is required for merchant accounts",
-          variant: "destructive"
-        });
-        setIsLoading(false);
-        return;
-      }
+    // Validate requirements for both user types
+    if (!displayName || displayName.trim() === "") {
+      toast({
+        title: "Error",
+        description: `Display name is required for ${userType} accounts`,
+        variant: "destructive"
+      });
+      setIsLoading(false);
+      return;
+    }
+    
+    if (!avatarFile) {
+      toast({
+        title: "Error",
+        description: `Profile picture is required for ${userType} accounts`,
+        variant: "destructive"
+      });
+      setIsLoading(false);
+      return;
     }
 
     try {
@@ -75,8 +74,8 @@ const AuthPage = () => {
         return;
       }
 
-      // If merchant and has avatar, upload it
-      if (userType === "merchant" && avatarFile && authData.user) {
+      // Upload avatar for both user types
+      if (avatarFile && authData.user) {
         const fileExt = avatarFile.name.split('.').pop();
         const fileName = `${authData.user.id}/avatar.${fileExt}`;
 
@@ -335,6 +334,64 @@ const AuthPage = () => {
                         className="bg-gray-700 border-gray-600 text-white focus:border-blue-500"
                       />
                     </div>
+                    
+                    {/* Supporter-specific required fields */}
+                    {userType === "supporter" && (
+                      <>
+                        <div>
+                          <Label htmlFor="displayName" className="text-white">
+                            Display Name <span className="text-red-400">*</span>
+                          </Label>
+                          <Input
+                            id="displayName"
+                            name="displayName"
+                            type="text"
+                            required
+                            className="bg-gray-700 border-gray-600 text-white focus:border-blue-500"
+                            placeholder="Enter your display name"
+                          />
+                        </div>
+                        
+                        <div>
+                          <Label className="text-white">
+                            Profile Picture <span className="text-red-400">*</span>
+                          </Label>
+                          <div className="flex flex-col items-center space-y-3 mt-2">
+                            {avatarPreview ? (
+                              <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-gray-600">
+                                <img 
+                                  src={avatarPreview} 
+                                  alt="Avatar preview" 
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                            ) : (
+                              <div className="w-20 h-20 rounded-full bg-gray-700 border-2 border-gray-600 flex items-center justify-center">
+                                <User className="w-10 h-10 text-gray-400" />
+                              </div>
+                            )}
+                            <div className="relative">
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={handleAvatarChange}
+                                required
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                id="avatar-upload-supporter"
+                              />
+                              <Button
+                                type="button"
+                                variant="outline"
+                                className="border-gray-600 text-white bg-gray-700 hover:bg-gray-600"
+                              >
+                                <Upload className="w-4 h-4 mr-2" />
+                                {avatarPreview ? "Change Picture" : "Upload Picture"}
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    )}
                     <div className="space-y-2">
                       <Label className="text-white">Account Type</Label>
                       <div className="space-y-2">
@@ -345,12 +402,7 @@ const AuthPage = () => {
                             name="userType"
                             value="supporter"
                             checked={userType === "supporter"}
-                            onChange={(e) => {
-                              setUserType(e.target.value as "supporter" | "merchant");
-                              // Reset merchant-specific fields when switching to supporter
-                              setAvatarFile(null);
-                              setAvatarPreview(null);
-                            }}
+                             onChange={(e) => setUserType(e.target.value as "supporter" | "merchant")}
                             className="border-gray-600 text-blue-600 focus:ring-blue-500 focus:ring-2"
                           />
                           <Label htmlFor="supporter" className="text-white font-normal cursor-pointer">

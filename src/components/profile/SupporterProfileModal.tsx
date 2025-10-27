@@ -88,6 +88,25 @@ const SupporterProfileModal = ({ children, profile: initialProfile, onProfileUpd
   const handleSave = async () => {
     if (!user) return;
 
+    // Validate required fields for supporters
+    if (!profile.display_name || profile.display_name.trim() === "") {
+      toast({
+        title: "Display Name Required",
+        description: "Please enter a display name for your profile.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!profile.avatar_url || profile.avatar_url.trim() === "") {
+      toast({
+        title: "Avatar Required",
+        description: "Please upload an avatar for your profile.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
       const { error } = await supabase
@@ -212,13 +231,16 @@ const SupporterProfileModal = ({ children, profile: initialProfile, onProfileUpd
           </div>
           
           <div>
-            <Label htmlFor="display_name" className="text-white">Display Name</Label>
+            <Label htmlFor="display_name" className="text-white">
+              Display Name <span className="text-red-400">*</span>
+            </Label>
             <Input
               id="display_name"
               value={profile.display_name}
               onChange={(e) => setProfile({...profile, display_name: e.target.value})}
               className="bg-gray-700 border-gray-600 text-white"
               placeholder="Enter your display name"
+              required
             />
           </div>
 

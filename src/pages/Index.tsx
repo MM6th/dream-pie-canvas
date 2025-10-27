@@ -100,6 +100,20 @@ const Index = () => {
       } else {
         console.log('Profile fetched:', data);
         setUserProfile(data);
+
+        // Check if supporter is missing required profile info
+        if (data?.user_type === 'supporter') {
+          const missingAvatar = !data.avatar_url || data.avatar_url.trim() === '';
+          const missingDisplayName = !data.display_name || data.display_name.trim() === '';
+          
+          if (missingAvatar || missingDisplayName) {
+            toast({
+              title: "Complete Your Profile",
+              description: "Please add a display name and avatar to your profile to get the full experience.",
+              variant: "destructive"
+            });
+          }
+        }
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
