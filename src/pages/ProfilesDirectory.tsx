@@ -111,6 +111,11 @@ const ProfilesDirectory = () => {
       );
     }
 
+    // Hide supporters from default "all" view (but show them when searching or when "supporters" filter is active)
+    if (selectedFilter === "all" && !searchTerm) {
+      filtered = filtered.filter(profile => profile.user_type !== "supporter");
+    }
+
     // Filter by type
     if (selectedFilter !== "all") {
       filtered = filtered.filter(profile => {
