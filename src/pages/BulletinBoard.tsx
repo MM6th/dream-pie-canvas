@@ -29,7 +29,8 @@ const BulletinBoard = () => {
           *,
           profiles (
             display_name,
-            avatar_url
+            avatar_url,
+            user_type
           )
         `)
         .order('created_at', { ascending: false });
@@ -46,9 +47,9 @@ const BulletinBoard = () => {
     }
   };
 
-  // Merge announcements with current thoughts
+  // Merge announcements with current affirmations
   const currentThoughtsPosts = posts.filter((post) => 
-    post.post_type === 'current_thoughts' || post.post_type === 'announcement'
+    post.post_type === 'current_affirmations' || post.post_type === 'announcement'
   );
   const tvGuidePosts = posts.filter((post) => post.post_type === 'tv_guide');
 

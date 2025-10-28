@@ -43,7 +43,7 @@ const CurrentThoughtsModal = ({ onSuccess }: CurrentThoughtsModalProps) => {
           title: formData.title.trim(),
           content: formData.content.trim(),
           link_url: formData.linkUrl.trim() || null,
-          post_type: 'current_thoughts',
+          post_type: 'current_affirmations',
           merchant_id: user.id
         });
 
@@ -51,7 +51,7 @@ const CurrentThoughtsModal = ({ onSuccess }: CurrentThoughtsModalProps) => {
 
       toast({
         title: "Success",
-        description: "Current thoughts shared successfully!"
+        description: "Current affirmations shared successfully!"
       });
 
       setFormData({
@@ -78,14 +78,14 @@ const CurrentThoughtsModal = ({ onSuccess }: CurrentThoughtsModalProps) => {
       <DialogTrigger asChild>
         <Button className="bg-blue-600 hover:bg-blue-700">
           <MessageSquare className="w-4 h-4 mr-2" />
-          Share Current Thoughts
+          Share Current Affirmations
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md bg-gray-800 border-gray-700 text-white max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <MessageSquare className="w-5 h-5" />
-            Share Current Thoughts
+            Share Current Affirmations
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -124,7 +124,7 @@ const CurrentThoughtsModal = ({ onSuccess }: CurrentThoughtsModalProps) => {
               Cancel
             </Button>
             <Button type="submit" disabled={loading} className="flex-1 bg-blue-600 hover:bg-blue-700">
-              {loading ? "Sharing..." : "Share Thoughts"}
+              {loading ? "Sharing..." : "Share Affirmations"}
             </Button>
           </div>
         </form>

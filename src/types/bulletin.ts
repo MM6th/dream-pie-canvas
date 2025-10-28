@@ -15,5 +15,6 @@ export interface BulletinPost {
     display_name: string;
     avatar_url: string;
     is_admin?: boolean;
+    user_type?: string;
   };
 }
