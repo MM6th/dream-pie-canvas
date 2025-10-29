@@ -54,9 +54,12 @@ export default function SupporterCurrentAffirmationsModal({ onSuccess }: Support
       setFormData({ title: '', content: '', link_url: '', linkedContentTitle: '' });
       setOpen(false);
       if (onSuccess) onSuccess();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating affirmation:', error);
-      toast.error('Failed to share affirmation. Please try again.');
+      console.error('Error details:', JSON.stringify(error, null, 2));
+      console.error('Error message:', error?.message);
+      console.error('Error code:', error?.code);
+      toast.error(`Failed to share affirmation: ${error?.message || 'Please try again.'}`);
     } finally {
       setLoading(false);
     }

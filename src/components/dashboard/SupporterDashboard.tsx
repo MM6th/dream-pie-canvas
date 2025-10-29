@@ -218,6 +218,26 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
         </Card>
       )}
 
+      {/* Always show SE calculator for supporters, even with $0 income */}
+      {currentQuarterIncome === 0 && (
+        <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm mb-6">
+          <CardHeader>
+            <CardTitle className="text-white">Self-Employment Tax Calculator</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg">
+              <div>
+                <h4 className="text-white font-medium">Track Your Referral Income</h4>
+                <p className="text-gray-400 text-sm">
+                  Earn referral commissions by sharing your public playlist. Income will be tracked here for tax reporting.
+                </p>
+              </div>
+              <SECalculatorModal userId={user?.id} autoPopulateIncome={0} />
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm mb-6">
         <CardHeader>
           <CardTitle className={`text-white ${isMobile ? 'text-lg' : ''}`}>Welcome to your PIE Dashboard</CardTitle>
