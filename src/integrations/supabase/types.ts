@@ -1247,6 +1247,87 @@ export type Database = {
           },
         ]
       }
+      profile_follow_requests: {
+        Row: {
+          created_at: string
+          id: string
+          intent_message: string
+          requester_id: string
+          status: string
+          target_merchant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          intent_message: string
+          requester_id: string
+          status?: string
+          target_merchant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          intent_message?: string
+          requester_id?: string
+          status?: string
+          target_merchant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_follow_requests_requester_id_fkey"
+            columns: ["requester_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profile_follow_requests_target_merchant_id_fkey"
+            columns: ["target_merchant_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profile_followers: {
+        Row: {
+          followed_at: string
+          follower_id: string
+          id: string
+          merchant_id: string
+        }
+        Insert: {
+          followed_at?: string
+          follower_id: string
+          id?: string
+          merchant_id: string
+        }
+        Update: {
+          followed_at?: string
+          follower_id?: string
+          id?: string
+          merchant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_followers_follower_id_fkey"
+            columns: ["follower_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profile_followers_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           adult_content_restricted: boolean | null
@@ -1265,6 +1346,7 @@ export type Database = {
           instagram_url: string | null
           is_admin: boolean | null
           is_adult_creator: boolean | null
+          is_private: boolean | null
           last_name: string | null
           onlyfans_url: string | null
           paypal_email: string | null
@@ -1293,6 +1375,7 @@ export type Database = {
           instagram_url?: string | null
           is_admin?: boolean | null
           is_adult_creator?: boolean | null
+          is_private?: boolean | null
           last_name?: string | null
           onlyfans_url?: string | null
           paypal_email?: string | null
@@ -1321,6 +1404,7 @@ export type Database = {
           instagram_url?: string | null
           is_admin?: boolean | null
           is_adult_creator?: boolean | null
+          is_private?: boolean | null
           last_name?: string | null
           onlyfans_url?: string | null
           paypal_email?: string | null
@@ -1829,6 +1913,10 @@ export type Database = {
     Functions: {
       can_user_upload: {
         Args: { new_file_size: number; user_uuid: string }
+        Returns: boolean
+      }
+      can_view_private_profile: {
+        Args: { profile_id: string; viewer_id: string }
         Returns: boolean
       }
       clean_expired_astrology_cache: { Args: never; Returns: undefined }

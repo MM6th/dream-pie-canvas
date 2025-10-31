@@ -10,6 +10,11 @@ import { toast } from "@/components/ui/use-toast";
 import PostInteractions from "@/components/PostInteractions";
 import PublicPlaylist from "@/components/profile/PublicPlaylist";
 import PortfolioCard from "@/components/profile/PortfolioCard";
+import { PrivateProfileOverlay } from "@/components/profile/PrivateProfileOverlay";
+import { usePrivacyCheck } from "@/hooks/usePrivacyCheck";
+import { useFollowRequest } from "@/hooks/useFollowRequest";
+import { useAuth } from "@/hooks/useAuth";
+import type { FollowStatus } from "@/hooks/useFollowRequest";
 
 interface Profile {
   id: string;
@@ -65,18 +70,35 @@ const ProfilePage = () => {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { user } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [userPosts, setUserPosts] = useState<BulletinPost[]>([]);
   const [portfolios, setPortfolios] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [followStatus, setFollowStatus] = useState<FollowStatus>('none');
+  
+  const { isPrivate, canView, loading: privacyLoading, refetch: refetchPrivacy } = usePrivacyCheck(userId || '');
+  const { checkFollowStatus } = useFollowRequest();
 
   useEffect(() => {
     if (userId) {
       fetchProfileData();
       fetchUserPosts();
       fetchPortfolios();
+      updateFollowStatus();
     }
   }, [userId]);
+
+  const updateFollowStatus = async () => {
+    if (!userId) return;
+    const status = await checkFollowStatus(userId);
+    setFollowStatus(status);
+  };
+
+  const handleRequestSent = () => {
+    setFollowStatus('pending');
+    refetchPrivacy();
+  };
 
   const fetchProfileData = async () => {
     if (!userId) return;
@@ -177,7 +199,7 @@ const ProfilePage = () => {
     }
   };
 
-  if (loading) {
+  if (loading || privacyLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
         <div className="text-white text-xl">Loading profile...</div>
@@ -277,92 +299,109 @@ const ProfilePage = () => {
               </CardContent>
             </Card>
 
-            {/* Business Info (for merchants) */}
-            {profile.user_type === 'merchant' && (profile.business_name || profile.business_description) && (
-              <Card className="bg-gray-800 border-gray-700">
-                <CardHeader>
-                  <CardTitle className="text-white flex items-center gap-2">
-                    <Building className="w-5 h-5" />
-                    Business Information
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {profile.business_name && (
-                    <div>
-                      <h3 className="text-lg font-semibold text-white">{profile.business_name}</h3>
+            {/* Show private overlay or full content */}
+            {isPrivate && !canView && user?.id !== userId ? (
+              null /* Private content hidden */
+            ) : (
+              <>
+                {/* Business Info (for merchants) */}
+                {profile.user_type === 'merchant' && (profile.business_name || profile.business_description) && (
+                  <Card className="bg-gray-800 border-gray-700">
+                    <CardHeader>
+                      <CardTitle className="text-white flex items-center gap-2">
+                        <Building className="w-5 h-5" />
+                        Business Information
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {profile.business_name && (
+                        <div>
+                          <h3 className="text-lg font-semibold text-white">{profile.business_name}</h3>
+                        </div>
+                      )}
+                      {profile.business_description && (
+                        <p className="text-gray-300 text-sm">{profile.business_description}</p>
+                      )}
+                      {profile.website && (
+                        <Button
+                          onClick={() => handleSocialClick(profile.website!)}
+                          variant="outline"
+                          size="sm"
+                          className="w-full"
+                        >
+                          <Globe className="w-4 h-4 mr-2" />
+                          Visit Website
+                        </Button>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Social Media Links */}
+                {socialLinks.length > 0 && (
+                  <Card className="bg-gray-800 border-gray-700">
+                    <CardHeader>
+                      <CardTitle className="text-white">Social Media</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-2 gap-3">
+                        {socialLinks.map((link, index) => (
+                          <Button
+                            key={index}
+                            onClick={() => handleSocialClick(link.url!)}
+                            variant="outline"
+                            size="sm"
+                            className="w-full text-xs"
+                          >
+                            {link.icon}
+                          </Button>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Public Playlist */}
+                {userId && <PublicPlaylist userId={userId} />}
+
+                {/* Stats */}
+                <Card className="bg-gray-800 border-gray-700">
+                  <CardHeader>
+                    <CardTitle className="text-white">Statistics</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center gap-2 text-gray-300">
+                      <MessageSquare className="w-4 h-4" />
+                      <span>{userPosts.length} Posts</span>
                     </div>
-                  )}
-                  {profile.business_description && (
-                    <p className="text-gray-300 text-sm">{profile.business_description}</p>
-                  )}
-                  {profile.website && (
-                    <Button
-                      onClick={() => handleSocialClick(profile.website!)}
-                      variant="outline"
-                      size="sm"
-                      className="w-full"
-                    >
-                      <Globe className="w-4 h-4 mr-2" />
-                      Visit Website
-                    </Button>
-                  )}
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </>
             )}
-
-            {/* Social Media Links */}
-            {socialLinks.length > 0 && (
-              <Card className="bg-gray-800 border-gray-700">
-                <CardHeader>
-                  <CardTitle className="text-white">Social Media</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 gap-3">
-                    {socialLinks.map((link, index) => (
-                      <Button
-                        key={index}
-                        onClick={() => handleSocialClick(link.url!)}
-                        variant="outline"
-                        size="sm"
-                        className="w-full text-xs"
-                      >
-                        {link.icon}
-                      </Button>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Public Playlist */}
-            {userId && <PublicPlaylist userId={userId} />}
-
-            {/* Stats */}
-            <Card className="bg-gray-800 border-gray-700">
-              <CardHeader>
-                <CardTitle className="text-white">Statistics</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center gap-2 text-gray-300">
-                  <MessageSquare className="w-4 h-4" />
-                  <span>{userPosts.length} Posts</span>
-                </div>
-              </CardContent>
-            </Card>
           </div>
 
           {/* Posts & Portfolio Column */}
           <div className={`${isMobile ? 'w-full' : 'lg:col-span-2'} space-y-6`}>
-            {/* Most Recent Post */}
-            {userPosts.length > 0 && (
+            {/* Show private overlay or content */}
+            {isPrivate && !canView && user?.id !== userId ? (
+              <PrivateProfileOverlay
+                merchantId={userId || ''}
+                merchantName={profile?.display_name || 'this user'}
+                followStatus={followStatus}
+                onRequestSent={handleRequestSent}
+              />
+            ) : (
               <>
-                <div className="flex items-center gap-2 mb-6">
-                  <MessageSquare className="w-6 h-6 text-white" />
-                  <h2 className="text-2xl font-bold text-white">Most Recent Post</h2>
-                </div>
+                {/* Most Recent Post */}
+                {userPosts.length > 0 && (
+                  <>
+                    <div className="flex items-center gap-2 mb-6">
+                      <MessageSquare className="w-6 h-6 text-white" />
+                      <h2 className="text-2xl font-bold text-white">Most Recent Post</h2>
+                    </div>
 
-                <div className="space-y-6">
-                  {userPosts.map((post) => (
+                    <div className="space-y-6">
+                      {userPosts.map((post) => (
                   <Card key={post.id} className="bg-gray-800 border-gray-700">
                     {((post.image_url || post.uploaded_image_url) && post.media_type !== 'video') && (
                       <CardHeader className="p-0">
@@ -441,11 +480,13 @@ const ProfilePage = () => {
                 </CardContent>
               </Card>
             )}
-          </div>
-        </div>
+          </>
+        )}
       </div>
     </div>
-  );
+  </div>
+</div>
+);
 };
 
 export default ProfilePage;

@@ -9,7 +9,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import AvatarUpload from "./AvatarUpload";
-import { Trash2 } from "lucide-react";
+import { Trash2, Lock, Shield } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 
 interface FullMerchantProfileModalProps {
   isOpen?: boolean;
@@ -45,6 +46,8 @@ const FullMerchantProfileModal = ({
   const [pinterestUrl, setPinterestUrl] = useState('');
   const [onlyfansUrl, setOnlyfansUrl] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
+  const [isPrivate, setIsPrivate] = useState(false);
+  const [isAdultCreator, setIsAdultCreator] = useState(false);
   const [internalOpen, setInternalOpen] = useState(false);
   const [currentProfile, setCurrentProfile] = useState(profile);
 
@@ -73,6 +76,8 @@ const FullMerchantProfileModal = ({
       setPinterestUrl(profileToUse.pinterest_url || '');
       setOnlyfansUrl(profileToUse.onlyfans_url || '');
       setAvatarUrl(profileToUse.avatar_url || '');
+      setIsPrivate(profileToUse.is_private || false);
+      setIsAdultCreator(profileToUse.is_adult_creator || false);
     }
   }, [profile, currentProfile]);
 
@@ -127,6 +132,8 @@ const FullMerchantProfileModal = ({
           pinterest_url: pinterestUrl,
           onlyfans_url: onlyfansUrl,
           avatar_url: avatarUrl,
+          is_private: isPrivate,
+          is_adult_creator: isAdultCreator,
           updated_at: new Date().toISOString()
         })
         .eq('id', user.id);
@@ -372,6 +379,46 @@ const FullMerchantProfileModal = ({
                 </div>
               </div>
               
+              {/* Adult Creator Toggle */}
+              <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg border border-gray-600">
+                <div className="flex items-center gap-3">
+                  <Shield className="w-5 h-5 text-blue-400" />
+                  <div>
+                    <Label htmlFor="isAdultCreator" className="text-white font-medium">
+                      I am an Adult Content Creator
+                    </Label>
+                    <p className="text-sm text-gray-400">
+                      Check this if you create adult content. This will allow you to see and participate in adult/18+ opportunities.
+                    </p>
+                  </div>
+                </div>
+                <Switch
+                  id="isAdultCreator"
+                  checked={isAdultCreator}
+                  onCheckedChange={setIsAdultCreator}
+                />
+              </div>
+
+              {/* Private Profile Toggle */}
+              <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg border border-gray-600">
+                <div className="flex items-center gap-3">
+                  <Lock className="w-5 h-5 text-blue-400" />
+                  <div>
+                    <Label htmlFor="isPrivate" className="text-white font-medium">
+                      Make Profile Private
+                    </Label>
+                    <p className="text-sm text-gray-400">
+                      Only approved followers can view your posts, social links, and playlist
+                    </p>
+                  </div>
+                </div>
+                <Switch
+                  id="isPrivate"
+                  checked={isPrivate}
+                  onCheckedChange={setIsPrivate}
+                />
+              </div>
+              
               <div className="flex justify-between items-center gap-2 pt-4">
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
@@ -590,6 +637,46 @@ const FullMerchantProfileModal = ({
                   className="bg-gray-700 border-gray-600 text-white"
                 />
               </div>
+            </div>
+            
+            {/* Adult Creator Toggle */}
+            <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg border border-gray-600">
+              <div className="flex items-center gap-3">
+                <Shield className="w-5 h-5 text-blue-400" />
+                <div>
+                  <Label htmlFor="isAdultCreator2" className="text-white font-medium">
+                    I am an Adult Content Creator
+                  </Label>
+                  <p className="text-sm text-gray-400">
+                    Check this if you create adult content. This will allow you to see and participate in adult/18+ opportunities.
+                  </p>
+                </div>
+              </div>
+              <Switch
+                id="isAdultCreator2"
+                checked={isAdultCreator}
+                onCheckedChange={setIsAdultCreator}
+              />
+            </div>
+
+            {/* Private Profile Toggle */}
+            <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg border border-gray-600">
+              <div className="flex items-center gap-3">
+                <Lock className="w-5 h-5 text-blue-400" />
+                <div>
+                  <Label htmlFor="isPrivate2" className="text-white font-medium">
+                    Make Profile Private
+                  </Label>
+                  <p className="text-sm text-gray-400">
+                    Only approved followers can view your posts, social links, and playlist
+                  </p>
+                </div>
+              </div>
+              <Switch
+                id="isPrivate2"
+                checked={isPrivate}
+                onCheckedChange={setIsPrivate}
+              />
             </div>
             
             <div className="flex justify-between items-center gap-2 pt-4">

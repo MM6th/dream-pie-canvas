@@ -18,9 +18,13 @@ import { useState, useEffect } from "react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useDashboardTutorial } from "@/hooks/useDashboardTutorial";
 import { merchantTutorialSteps } from "@/constants/tutorialContent";
 import { TutorialToast } from "@/components/TutorialToast";
+import { FollowRequestsManager } from "@/components/profile/FollowRequestsManager";
+import { Users } from "lucide-react";
 
 interface MerchantDashboardProps {
   onSuccess: () => void;
@@ -46,6 +50,9 @@ const MerchantDashboard = ({
   const { user } = useAuth();
   const [playlistPublic, setPlaylistPublic] = useState<boolean>(false);
   const [purchasedPortfolios, setPurchasedPortfolios] = useState<any[]>([]);
+  const [isPrivate, setIsPrivate] = useState<boolean>(false);
+  const [pendingRequestsCount, setPendingRequestsCount] = useState<number>(0);
+  const [showFollowRequests, setShowFollowRequests] = useState(false);
   
   // Only show merchant tutorial if user is NOT an admin (admin tutorial takes priority)
   const tutorial = useDashboardTutorial('merchant', isAdmin ? [] : merchantTutorialSteps);
@@ -90,7 +97,7 @@ const MerchantDashboard = ({
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('playlist_public')
+        .select('playlist_public, is_private')
         .eq('id', user.id)
         .single();
 
@@ -98,9 +105,28 @@ const MerchantDashboard = ({
       
       if (data) {
         setPlaylistPublic(data.playlist_public || false);
+        setIsPrivate(data.is_private || false);
       }
     } catch (error) {
       console.error('Error fetching user profile:', error);
+    }
+  };
+
+  const fetchPendingRequestsCount = async () => {
+    if (!user) return;
+    
+    try {
+      const { count, error } = await supabase
+        .from('profile_follow_requests')
+        .select('*', { count: 'exact', head: true })
+        .eq('target_merchant_id', user.id)
+        .eq('status', 'pending');
+
+      if (!error && count !== null) {
+        setPendingRequestsCount(count);
+      }
+    } catch (error) {
+      console.error('Error fetching pending requests count:', error);
     }
   };
 
@@ -125,6 +151,7 @@ const MerchantDashboard = ({
     if (user) {
       fetchUserProfile();
       fetchPurchasedPortfolios();
+      fetchPendingRequestsCount();
     }
   }, [user]);
 
@@ -182,6 +209,31 @@ const MerchantDashboard = ({
           
           <ContentManagement />
 
+          {isPrivate && pendingRequestsCount > 0 && (
+            <Card className="mb-6 bg-blue-600/10 border-blue-500">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Users className="w-5 h-5" />
+                    Follow Requests
+                  </div>
+                  <Badge variant="secondary" className="bg-blue-600 text-white">
+                    {pendingRequestsCount} pending
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-300 text-sm mb-4">
+                  You have {pendingRequestsCount} pending follow request{pendingRequestsCount !== 1 ? 's' : ''} for your private profile.
+                </p>
+                <Button onClick={() => setShowFollowRequests(true)} className="bg-blue-600 hover:bg-blue-700 text-white">
+                  <Users className="w-4 h-4 mr-2" />
+                  Manage Requests
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
           <Card className="mb-6">
             <CardHeader>
               <CardTitle className="text-white">Playlist Settings</CardTitle>
@@ -199,6 +251,14 @@ const MerchantDashboard = ({
               </div>
             </CardContent>
           </Card>
+
+          <FollowRequestsManager 
+            isOpen={showFollowRequests} 
+            onClose={() => {
+              setShowFollowRequests(false);
+              fetchPendingRequestsCount();
+            }} 
+          />
 
           <MediaPlayers purchasedTracks={purchasedTracks} purchasedPodcasts={purchasedPodcasts} purchasedVideos={purchasedVideos} purchasedPortfolios={purchasedPortfolios} />
         </>

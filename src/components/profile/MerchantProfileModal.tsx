@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
-import { Shield } from "lucide-react";
+import { Shield, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -41,6 +41,7 @@ const MerchantProfileModal = ({
   const [pinterestUrl, setPinterestUrl] = useState(profile?.pinterest_url || '');
   const [onlyfansUrl, setOnlyfansUrl] = useState(profile?.onlyfans_url || '');
   const [isAdultCreator, setIsAdultCreator] = useState(profile?.is_adult_creator || false);
+  const [isPrivate, setIsPrivate] = useState(profile?.is_private || false);
   const [internalOpen, setInternalOpen] = useState(false);
 
   useEffect(() => {
@@ -56,6 +57,7 @@ const MerchantProfileModal = ({
       setPinterestUrl(profile.pinterest_url || '');
       setOnlyfansUrl(profile.onlyfans_url || '');
       setIsAdultCreator(profile.is_adult_creator || false);
+      setIsPrivate(profile.is_private || false);
     }
   }, [profile]);
 
@@ -79,6 +81,7 @@ const MerchantProfileModal = ({
           pinterest_url: pinterestUrl,
           onlyfans_url: onlyfansUrl,
           is_adult_creator: isAdultCreator,
+          is_private: isPrivate,
           updated_at: new Date().toISOString()
         })
         .eq('id', user.id);
@@ -261,6 +264,26 @@ const MerchantProfileModal = ({
                 onCheckedChange={setIsAdultCreator}
               />
             </div>
+
+            {/* Private Profile Toggle */}
+            <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg border border-gray-600">
+              <div className="flex items-center gap-3">
+                <Lock className="w-5 h-5 text-blue-400" />
+                <div>
+                  <Label htmlFor="isPrivate" className="text-white font-medium">
+                    Make Profile Private
+                  </Label>
+                  <p className="text-sm text-gray-400">
+                    Only approved followers can view your posts, social links, and playlist
+                  </p>
+                </div>
+              </div>
+              <Switch
+                id="isPrivate"
+                checked={isPrivate}
+                onCheckedChange={setIsPrivate}
+              />
+            </div>
             
             <div className="flex justify-end gap-2">
               <Button
@@ -428,6 +451,26 @@ const MerchantProfileModal = ({
               id="isAdultCreator2"
               checked={isAdultCreator}
               onCheckedChange={setIsAdultCreator}
+            />
+          </div>
+
+          {/* Private Profile Toggle */}
+          <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg border border-gray-600">
+            <div className="flex items-center gap-3">
+              <Lock className="w-5 h-5 text-blue-400" />
+              <div>
+                <Label htmlFor="isPrivate2" className="text-white font-medium">
+                  Make Profile Private
+                </Label>
+                <p className="text-sm text-gray-400">
+                  Only approved followers can view your posts, social links, and playlist
+                </p>
+              </div>
+            </div>
+            <Switch
+              id="isPrivate2"
+              checked={isPrivate}
+              onCheckedChange={setIsPrivate}
             />
           </div>
           
