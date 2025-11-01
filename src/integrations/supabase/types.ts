@@ -394,6 +394,10 @@ export type Database = {
           cover_photos: string[] | null
           created_at: string
           description: string | null
+          featuring_artist_name: string | null
+          featuring_artist_paypal: string | null
+          featuring_artist_user_id: string | null
+          featuring_percentage: number | null
           id: string
           is_adult_content: boolean | null
           is_free: boolean
@@ -409,6 +413,8 @@ export type Database = {
           preview_start_time: number | null
           preview_url: string | null
           price: number | null
+          published_at: string | null
+          status: string
           thumbnail_url: string | null
           title: string
           updated_at: string
@@ -425,6 +431,10 @@ export type Database = {
           cover_photos?: string[] | null
           created_at?: string
           description?: string | null
+          featuring_artist_name?: string | null
+          featuring_artist_paypal?: string | null
+          featuring_artist_user_id?: string | null
+          featuring_percentage?: number | null
           id?: string
           is_adult_content?: boolean | null
           is_free?: boolean
@@ -440,6 +450,8 @@ export type Database = {
           preview_start_time?: number | null
           preview_url?: string | null
           price?: number | null
+          published_at?: string | null
+          status?: string
           thumbnail_url?: string | null
           title: string
           updated_at?: string
@@ -456,6 +468,10 @@ export type Database = {
           cover_photos?: string[] | null
           created_at?: string
           description?: string | null
+          featuring_artist_name?: string | null
+          featuring_artist_paypal?: string | null
+          featuring_artist_user_id?: string | null
+          featuring_percentage?: number | null
           id?: string
           is_adult_content?: boolean | null
           is_free?: boolean
@@ -471,6 +487,8 @@ export type Database = {
           preview_start_time?: number | null
           preview_url?: string | null
           price?: number | null
+          published_at?: string | null
+          status?: string
           thumbnail_url?: string | null
           title?: string
           updated_at?: string
@@ -482,6 +500,13 @@ export type Database = {
             columns: ["album_id"]
             isOneToOne: false
             referencedRelation: "albums"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audio_products_featuring_artist_user_id_fkey"
+            columns: ["featuring_artist_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,9 +30,11 @@ const MerchantAudioUploadModal = ({ onSuccess }: MerchantAudioUploadModalProps) 
     hasAlbum: false,
     previewStartTime: 0,
     is_adult_content: false,
-    description: "",
     isFree: true,
-    price: ""
+    price: "",
+    featuringArtistName: "",
+    featuringArtistPaypal: "",
+    featuringPercentage: 30,
   });
   const [audioDuration, setAudioDuration] = useState<number>(0);
   const [albums, setAlbums] = useState<any[]>([]);
@@ -73,7 +75,6 @@ const MerchantAudioUploadModal = ({ onSuccess }: MerchantAudioUploadModalProps) 
     if (file && validateFileSize(file, 'audio')) {
       setFormData(prev => ({ ...prev, audioFile: file }));
       
-      // Load audio duration for preview
       const audio = new Audio();
       audio.src = URL.createObjectURL(file);
       audio.onloadedmetadata = () => {
@@ -164,7 +165,7 @@ const MerchantAudioUploadModal = ({ onSuccess }: MerchantAudioUploadModalProps) 
     return publicUrl;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent, isDraft: boolean = false) => {
     e.preventDefault();
     if (!user) return;
     
@@ -179,7 +180,6 @@ const MerchantAudioUploadModal = ({ onSuccess }: MerchantAudioUploadModalProps) 
           return;
         }
 
-        // Validate artist name for music albums
         if (!formData.artistName) {
           toast({ title: "Error", description: "Artist name is required for music albums", variant: "destructive" });
           return;
@@ -192,7 +192,6 @@ const MerchantAudioUploadModal = ({ onSuccess }: MerchantAudioUploadModalProps) 
           return;
         }
 
-        // Validate featuring artist data
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         for (let i = 0; i < tracks.length; i++) {
           const track = tracks[i];
@@ -210,7 +209,6 @@ const MerchantAudioUploadModal = ({ onSuccess }: MerchantAudioUploadModalProps) 
           }
         }
 
-        // Upload thumbnail once (mandatory)
         if (!formData.thumbnail) {
           toast({ title: "Error", description: "Album thumbnail is required", variant: "destructive" });
           return;
@@ -218,7 +216,6 @@ const MerchantAudioUploadModal = ({ onSuccess }: MerchantAudioUploadModalProps) 
 
         const thumbnailUrl = await uploadFile(formData.thumbnail, 'thumbnails', `${user.id}/`);
 
-        // Create album
         if (!formData.albumName) {
           toast({ title: "Error", description: "Album name is required", variant: "destructive" });
           return;
@@ -229,21 +226,16 @@ const MerchantAudioUploadModal = ({ onSuccess }: MerchantAudioUploadModalProps) 
           .insert({
             merchant_id: user.id,
             name: formData.albumName,
-            description: formData.description || null
           })
           .select()
           .single();
         
         if (albumError) throw albumError;
 
-        // Upload each track
         for (let i = 0; i < tracks.length; i++) {
           const track = tracks[i];
-
-          // Upload audio file
           const audioUrl = await uploadFile(track.audioFile!, 'audio-files', `${user.id}/`);
 
-          // Create audio product
           const { data: audioProduct, error: productError } = await supabase
             .from('audio_products')
             .insert({
@@ -257,14 +249,15 @@ const MerchantAudioUploadModal = ({ onSuccess }: MerchantAudioUploadModalProps) 
               access_level: 'public',
               is_free: formData.isFree,
               price: formData.isFree ? null : parseFloat(formData.price),
-              is_adult_content: formData.is_adult_content
+              is_adult_content: formData.is_adult_content,
+              status: isDraft ? 'draft' : 'published',
+              published_at: isDraft ? null : new Date().toISOString(),
             })
             .select()
             .single();
 
           if (productError) throw productError;
 
-          // Validate featuring artist PayPal if provided
           let featuringUserId = null;
           if (track.featuringArtistName && track.featuringArtistPaypal) {
             const { data: featuringProfile } = await supabase
@@ -276,7 +269,6 @@ const MerchantAudioUploadModal = ({ onSuccess }: MerchantAudioUploadModalProps) 
             featuringUserId = featuringProfile?.id || null;
           }
 
-          // Create album_tracks entry
           const { error: trackError } = await supabase
             .from('album_tracks')
             .insert({
@@ -292,7 +284,12 @@ const MerchantAudioUploadModal = ({ onSuccess }: MerchantAudioUploadModalProps) 
           if (trackError) throw trackError;
         }
 
-        toast({ title: "Success", description: `Album "${formData.albumName}" with ${tracks.length} tracks uploaded!` });
+        toast({ 
+          title: "Success", 
+          description: isDraft 
+            ? `Album "${formData.albumName}" saved as draft with ${tracks.length} tracks!`
+            : `Album "${formData.albumName}" published with ${tracks.length} tracks!`
+        });
         setOpen(false);
         setFormData({
           title: '',
@@ -303,9 +300,11 @@ const MerchantAudioUploadModal = ({ onSuccess }: MerchantAudioUploadModalProps) 
           hasAlbum: false,
           previewStartTime: 0,
           is_adult_content: false,
-          description: '',
           isFree: true,
-          price: ''
+          price: '',
+          featuringArtistName: '',
+          featuringArtistPaypal: '',
+          featuringPercentage: 30,
         });
         setTracks([{
           audioFile: null,
@@ -335,7 +334,15 @@ const MerchantAudioUploadModal = ({ onSuccess }: MerchantAudioUploadModalProps) 
       return;
     }
 
-    // Validate price if not free
+    if (formData.featuringArtistName && !formData.featuringArtistPaypal) {
+      toast({
+        title: "Error",
+        description: "Please enter PayPal email for featuring artist",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!formData.isFree && (!formData.price || parseFloat(formData.price) <= 0)) {
       toast({
         title: "Error",
@@ -370,14 +377,19 @@ const MerchantAudioUploadModal = ({ onSuccess }: MerchantAudioUploadModalProps) 
           price: formData.isFree ? null : parseFloat(formData.price),
           is_adult_content: formData.is_adult_content,
           preview_start_time: formData.previewStartTime,
-          preview_duration: 30
+          preview_duration: 30,
+          featuring_artist_name: formData.featuringArtistName || null,
+          featuring_artist_paypal: formData.featuringArtistPaypal || null,
+          featuring_percentage: formData.featuringArtistName ? formData.featuringPercentage : null,
+          status: isDraft ? 'draft' : 'published',
+          published_at: isDraft ? null : new Date().toISOString(),
         });
       
       if (productError) throw productError;
       
       toast({
         title: "Success",
-        description: "Music track uploaded successfully!"
+        description: isDraft ? "Music track saved as draft!" : "Music track published successfully!"
       });
       
       setOpen(false);
@@ -390,9 +402,11 @@ const MerchantAudioUploadModal = ({ onSuccess }: MerchantAudioUploadModalProps) 
         hasAlbum: false,
         previewStartTime: 0,
         is_adult_content: false,
-        description: "",
         isFree: true,
-        price: ""
+        price: "",
+        featuringArtistName: "",
+        featuringArtistPaypal: "",
+        featuringPercentage: 30,
       });
       onSuccess();
       
@@ -431,8 +445,7 @@ const MerchantAudioUploadModal = ({ onSuccess }: MerchantAudioUploadModalProps) 
           </DialogTitle>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Part of album toggle */}
+        <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
           <div className="flex items-center space-x-2">
             <Switch
               id="hasAlbum"
@@ -445,7 +458,6 @@ const MerchantAudioUploadModal = ({ onSuccess }: MerchantAudioUploadModalProps) 
             <Label htmlFor="hasAlbum">Part of an album/collection</Label>
           </div>
 
-          {/* Single file upload - only show if not part of album */}
           {!formData.hasAlbum && (
             <>
               <div>
@@ -475,7 +487,6 @@ const MerchantAudioUploadModal = ({ onSuccess }: MerchantAudioUploadModalProps) 
                 </p>
               </div>
 
-              {/* Music Preview Selection */}
               {formData.audioFile && audioDuration > 0 && (
                 <div className="space-y-3 p-4 bg-blue-900/20 rounded-lg border border-blue-700">
                   <Label>30-Second Preview Selection</Label>
@@ -513,6 +524,54 @@ const MerchantAudioUploadModal = ({ onSuccess }: MerchantAudioUploadModalProps) 
                     )}
                   </div>
                 </div>
+              )}
+
+              <div>
+                <Label htmlFor="featuring-artist">Featuring Artist (Optional)</Label>
+                <Input
+                  id="featuring-artist"
+                  value={formData.featuringArtistName}
+                  onChange={(e) => setFormData(prev => ({ ...prev, featuringArtistName: e.target.value }))}
+                  className="bg-gray-700 border-gray-600 text-white"
+                  placeholder="Enter featuring artist name"
+                />
+              </div>
+
+              {formData.featuringArtistName && (
+                <>
+                  <div>
+                    <Label htmlFor="featuring-paypal">Featuring Artist PayPal *</Label>
+                    <Input
+                      id="featuring-paypal"
+                      type="email"
+                      value={formData.featuringArtistPaypal}
+                      onChange={(e) => setFormData(prev => ({ ...prev, featuringArtistPaypal: e.target.value }))}
+                      className="bg-gray-700 border-gray-600 text-white"
+                      placeholder="featuring@artist.com"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="featuring-percentage">
+                      Featuring Artist Revenue Share: {formData.featuringPercentage}%
+                    </Label>
+                    <Input
+                      id="featuring-percentage"
+                      type="range"
+                      min="10"
+                      max="50"
+                      step="5"
+                      value={formData.featuringPercentage}
+                      onChange={(e) => setFormData(prev => ({ ...prev, featuringPercentage: parseInt(e.target.value) }))}
+                      className="w-full cursor-pointer"
+                    />
+                    <div className="flex justify-between text-xs text-gray-400 mt-1">
+                      <span>10%</span>
+                      <span>50%</span>
+                    </div>
+                  </div>
+                </>
               )}
             </>
           )}
@@ -560,7 +619,6 @@ const MerchantAudioUploadModal = ({ onSuccess }: MerchantAudioUploadModalProps) 
                 />
               </div>
 
-              {/* Multi-Track Upload Interface */}
               <div className="space-y-4 border-t border-gray-700 pt-4">
                 <h3 className="text-sm font-semibold text-white">Album Tracks (Minimum 2)</h3>
                 {tracks.map((track, index) => (
@@ -668,7 +726,6 @@ const MerchantAudioUploadModal = ({ onSuccess }: MerchantAudioUploadModalProps) 
             </div>
           )}
           
-          {/* Pricing Section */}
           <div className="space-y-4 pt-4 border-t border-gray-700">
             <Label>Pricing</Label>
             <RadioGroup
@@ -722,14 +779,30 @@ const MerchantAudioUploadModal = ({ onSuccess }: MerchantAudioUploadModalProps) 
             </Label>
           </div>
 
-          <div className="flex gap-2 pt-4">
-            <Button type="submit" disabled={loading} className="flex-1">
-              {loading ? "Uploading..." : formData.hasAlbum ? "Upload Album" : "Upload Track"}
-            </Button>
+          <DialogFooter className="gap-2">
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Cancel
             </Button>
-          </div>
+            <Button 
+              type="button" 
+              variant="secondary"
+              onClick={(e) => handleSubmit(e, true)}
+              disabled={loading}
+            >
+              {loading ? "Saving..." : "Save Draft"}
+            </Button>
+            <Button 
+              type="button"
+              onClick={(e) => {
+                if (window.confirm("⚠️ Once published, you cannot edit or delete this music. You'll need to contact administration to remove it. Are you sure you want to publish?")) {
+                  handleSubmit(e, false);
+                }
+              }}
+              disabled={loading}
+            >
+              {loading ? "Publishing..." : "Publish"}
+            </Button>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
