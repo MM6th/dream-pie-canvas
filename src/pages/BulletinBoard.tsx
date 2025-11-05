@@ -124,7 +124,7 @@ const BulletinBoard = () => {
               className={`border-gray-600 text-white bg-transparent hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
             >
               <MessageSquare className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
-              {isMobile ? 'Bulletin' : 'Browse Bulletin'}
+              {isMobile ? 'Community' : 'Browse Community'}
             </Button>
             <Button
               onClick={handleProfilesView}
@@ -149,10 +149,6 @@ const BulletinBoard = () => {
 
       {/* Main Content */}
       <div className="relative z-10 w-full mx-auto p-6">
-        <div className="mb-8 text-center">
-          <h1 className="text-4xl font-bold text-white mb-2">Bulletin Board</h1>
-          <p className="text-gray-300">Stay updated with the latest from our community</p>
-        </div>
 
         {/* Desktop: Ad + Content + Ad Layout */}
         {isMobile ? (
@@ -177,7 +173,7 @@ const BulletinBoard = () => {
             </div>
 
             {/* Main Content - 2 Carousels */}
-            <div className="flex gap-8 max-w-3xl">
+            <div className="flex gap-2 max-w-3xl">
               <div className="flex-1">
                 <CurrentThoughtsSection posts={currentThoughtsPosts} useCarousel={false} />
               </div>

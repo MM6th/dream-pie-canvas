@@ -204,7 +204,7 @@ const ProfilesDirectory = () => {
               className={`border-gray-600 text-white bg-transparent hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
             >
               <MessageSquare className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
-              {isMobile ? 'Bulletin' : 'Browse Bulletin'}
+              {isMobile ? 'Community' : 'Browse Community'}
             </Button>
           </div>
           
