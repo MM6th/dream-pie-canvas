@@ -127,9 +127,9 @@ const TVGuideSection = ({ posts, useCarousel = true }: TVGuideSectionProps) => {
             className="w-full"
             orientation="vertical"
           >
-            <CarouselContent className="-mt-2 h-[800px]">
+            <CarouselContent className="-mt-1 h-[800px]">
               {posts.map((post) => (
-                <CarouselItem key={post.id} className="pt-2 basis-1/3">
+                <CarouselItem key={post.id} className="pt-1 basis-1/3">
                   {renderCard(post)}
                 </CarouselItem>
               ))}
