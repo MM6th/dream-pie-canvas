@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Music, Video, User, FolderOpen, DollarSign } from "lucide-react";
+import { Music, Video, User, FolderOpen, DollarSign, MessageSquare } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import AudioPlayer from "@/components/AudioPlayer";
 import VideoPlayer from "@/components/VideoPlayer";
@@ -8,6 +8,7 @@ import PodcastAudioPlayer from "@/components/PodcastAudioPlayer";
 import PurchasedPortfoliosViewer from "@/components/dashboard/PurchasedPortfoliosViewer";
 import BackgroundUpload from "@/components/BackgroundUpload";
 import ContentGallery from "@/components/ContentGallery";
+import BulletinPostManager from "@/components/BulletinPostManager";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
 import SupporterProfileModal from "@/components/profile/SupporterProfileModal";
@@ -244,7 +245,7 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="music" className="w-full">
-            <TabsList className={`grid w-full ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-5'}`}>
+            <TabsList className={`grid w-full ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-6'}`}>
               <TabsTrigger value="music" className={`flex items-center gap-2 ${isMobile ? 'text-xs px-2 py-1 h-8' : ''}`}>
                 <Music className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'}`} />
                 {isMobile ? 'Media' : 'Music & Podcasts'}
@@ -255,6 +256,10 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
               </TabsTrigger>
               {!isMobile && (
                 <>
+                  <TabsTrigger value="posts" className="flex items-center gap-2">
+                    <MessageSquare className="w-4 h-4" />
+                    Community Posts
+                  </TabsTrigger>
                   <TabsTrigger value="content" className="flex items-center gap-2">
                     <FolderOpen className="w-4 h-4" />
                     Content Gallery
@@ -306,6 +311,10 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
             
             {!isMobile && (
               <>
+                <TabsContent value="posts" className="space-y-6">
+                  <BulletinPostManager />
+                </TabsContent>
+                
                 <TabsContent value="content" className="space-y-6">
                   <ContentGallery />
                 </TabsContent>
@@ -334,6 +343,15 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
             {isMobile && (
               <TabsContent value="more" className="space-y-6">
                 <div className="grid grid-cols-1 gap-4">
+                  <Card className="bg-gray-700/50 border-gray-600">
+                    <CardHeader>
+                      <CardTitle className="text-white text-sm">Community Posts</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <BulletinPostManager />
+                    </CardContent>
+                  </Card>
+                  
                   <Card className="bg-gray-700/50 border-gray-600">
                     <CardHeader>
                       <CardTitle className="text-white text-sm">Content Gallery</CardTitle>
