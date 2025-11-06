@@ -22,7 +22,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useQuarterlyIncome } from "@/hooks/useQuarterlyIncome";
 import { useDashboardTutorial } from "@/hooks/useDashboardTutorial";
 import { adminTutorialSteps } from "@/constants/tutorialContent";
-import { TutorialToast } from "@/components/TutorialToast";
+import { TutorialTooltip } from "@/components/TutorialTooltip";
+import { TutorialSpotlight } from "@/components/TutorialSpotlight";
 
 const AdminDashboard = () => {
   const { counts } = useSubmissionCounts();
@@ -36,15 +37,22 @@ const AdminDashboard = () => {
   return (
     <div className="space-y-6">
       {tutorial.isActive && tutorial.currentStepData && (
-        <TutorialToast
-          title={tutorial.currentStepData.title}
-          description={tutorial.currentStepData.description}
-          currentStep={tutorial.currentStep}
-          totalSteps={tutorial.totalSteps}
-          onNext={tutorial.nextStep}
-          onSkip={tutorial.skipTutorial}
-          duration={tutorial.currentStepData.duration}
-        />
+        <>
+          <TutorialSpotlight 
+            targetElement={tutorial.targetElement}
+            isActive={tutorial.isActive}
+          />
+          <TutorialTooltip
+            title={tutorial.currentStepData.title}
+            description={tutorial.currentStepData.description}
+            currentStep={tutorial.currentStep}
+            totalSteps={tutorial.totalSteps}
+            onNext={tutorial.nextStep}
+            onSkip={tutorial.skipTutorial}
+            targetElement={tutorial.targetElement}
+            preferredPlacement={tutorial.currentStepData.placement}
+          />
+        </>
       )}
       
       <div className="text-center mb-8">
@@ -53,7 +61,7 @@ const AdminDashboard = () => {
       </div>
 
       {/* SE Tax Calculator Section */}
-      <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+      <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm" data-tutorial="tax-calculator">
         <CardHeader>
           <CardTitle className="text-white">Administrative Tools</CardTitle>
         </CardHeader>
@@ -75,6 +83,7 @@ const AdminDashboard = () => {
           <TabsTrigger 
             value="merchants" 
             className={`text-white data-[state=active]:bg-gray-700 ${isMobile ? 'text-xs px-2 py-2 h-auto flex-col gap-1' : ''}`}
+            data-tutorial="merchants-tab"
           >
             <Users className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4 mr-2'}`} />
             Merchants
@@ -82,6 +91,7 @@ const AdminDashboard = () => {
           <TabsTrigger 
             value="submissions" 
             className={`text-white data-[state=active]:bg-gray-700 relative ${isMobile ? 'text-xs px-2 py-2 h-auto flex-col gap-1' : ''}`}
+            data-tutorial="submissions-tab"
           >
             <div className={`flex ${isMobile ? 'flex-col' : ''} items-center gap-1`}>
               <FileText className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4 mr-2'}`} />
@@ -98,6 +108,7 @@ const AdminDashboard = () => {
               <TabsTrigger 
                 value="reviews" 
                 className="text-white data-[state=active]:bg-gray-700"
+                data-tutorial="reviews-tab"
               >
                 <Star className="w-4 h-4 mr-2" />
                 Reviews
@@ -105,6 +116,7 @@ const AdminDashboard = () => {
               <TabsTrigger 
                 value="gallery" 
                 className="text-white data-[state=active]:bg-gray-700"
+                data-tutorial="gallery-tab"
               >
                 <Image className="w-4 h-4 mr-2" />
                 Admin Content Gallery
@@ -112,6 +124,7 @@ const AdminDashboard = () => {
               <TabsTrigger 
                 value="bulletin" 
                 className="text-white data-[state=active]:bg-gray-700"
+                data-tutorial="bulletin-tab"
               >
                 <MessageSquare className="w-4 h-4 mr-2" />
                 Bulletin Posts
@@ -188,7 +201,7 @@ const AdminDashboard = () => {
       </Tabs>
 
       {/* Video Ad Opportunities Management */}
-      <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+      <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm" data-tutorial="video-ads">
         <CardHeader>
           <CardTitle className="text-white">Video Ad Opportunities Management</CardTitle>
         </CardHeader>

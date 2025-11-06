@@ -22,7 +22,8 @@ import { useQuarterlyIncome } from "@/hooks/useQuarterlyIncome";
 import SECalculatorModal from "@/components/SECalculatorModal";
 import { useDashboardTutorial } from "@/hooks/useDashboardTutorial";
 import { supporterTutorialSteps } from "@/constants/tutorialContent";
-import { TutorialToast } from "@/components/TutorialToast";
+import { TutorialTooltip } from "@/components/TutorialTooltip";
+import { TutorialSpotlight } from "@/components/TutorialSpotlight";
 import SupporterCurrentAffirmationsModal from "@/components/SupporterCurrentAffirmationsModal";
 
 interface AudioTrack {
@@ -151,15 +152,22 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
   return (
     <div className={`max-w-6xl mx-auto ${isMobile ? 'p-4' : 'p-6'} pt-20`}>
       {tutorial.isActive && tutorial.currentStepData && (
-        <TutorialToast
-          title={tutorial.currentStepData.title}
-          description={tutorial.currentStepData.description}
-          currentStep={tutorial.currentStep}
-          totalSteps={tutorial.totalSteps}
-          onNext={tutorial.nextStep}
-          onSkip={tutorial.skipTutorial}
-          duration={tutorial.currentStepData.duration}
-        />
+        <>
+          <TutorialSpotlight 
+            targetElement={tutorial.targetElement}
+            isActive={tutorial.isActive}
+          />
+          <TutorialTooltip
+            title={tutorial.currentStepData.title}
+            description={tutorial.currentStepData.description}
+            currentStep={tutorial.currentStep}
+            totalSteps={tutorial.totalSteps}
+            onNext={tutorial.nextStep}
+            onSkip={tutorial.skipTutorial}
+            targetElement={tutorial.targetElement}
+            preferredPlacement={tutorial.currentStepData.placement}
+          />
+        </>
       )}
       
       <PieWelcomeModal>
@@ -179,7 +187,7 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
 
       {/* Tax Calculator Section - Only show if user has referral income >= $600 */}
       {currentQuarterIncome >= 600 && (
-        <Card className="p-6 mb-6 border-primary/20 bg-primary/5 bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+        <Card className="p-6 mb-6 border-primary/20 bg-primary/5 bg-gray-800/50 border-gray-700 backdrop-blur-sm" data-tutorial="tax-calculator">
           <div className="flex items-start gap-4">
             <div className="p-3 rounded-lg bg-primary/10">
               <DollarSign className="h-6 w-6 text-primary" />
@@ -201,7 +209,7 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
 
       {/* Show income tracker even if below $600 */}
       {currentQuarterIncome > 0 && currentQuarterIncome < 600 && (
-        <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm mb-6">
+        <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm mb-6" data-tutorial="tax-calculator">
           <CardHeader>
             <CardTitle className="text-white">Self-Employment Tax Calculator</CardTitle>
           </CardHeader>
@@ -221,7 +229,7 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
 
       {/* Always show SE calculator for supporters, even with $0 income */}
       {currentQuarterIncome === 0 && (
-        <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm mb-6">
+        <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm mb-6" data-tutorial="tax-calculator">
           <CardHeader>
             <CardTitle className="text-white">Self-Employment Tax Calculator</CardTitle>
           </CardHeader>
@@ -246,11 +254,11 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
         <CardContent>
           <Tabs defaultValue="music" className="w-full">
             <TabsList className={`grid w-full ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-6'}`}>
-              <TabsTrigger value="music" className={`flex items-center gap-2 ${isMobile ? 'text-xs px-2 py-1 h-8' : ''}`}>
+              <TabsTrigger value="music" className={`flex items-center gap-2 ${isMobile ? 'text-xs px-2 py-1 h-8' : ''}`} data-tutorial="music-tab">
                 <Music className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'}`} />
                 {isMobile ? 'Media' : 'Music & Podcasts'}
               </TabsTrigger>
-              <TabsTrigger value="videos" className={`flex items-center gap-2 ${isMobile ? 'text-xs px-2 py-1 h-8' : ''}`}>
+              <TabsTrigger value="videos" className={`flex items-center gap-2 ${isMobile ? 'text-xs px-2 py-1 h-8' : ''}`} data-tutorial="videos-tab">
                 <Video className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'}`} />
                 Videos
               </TabsTrigger>
@@ -260,15 +268,15 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
                     <MessageSquare className="w-4 h-4" />
                     Community Posts
                   </TabsTrigger>
-                  <TabsTrigger value="content" className="flex items-center gap-2">
+                  <TabsTrigger value="content" className="flex items-center gap-2" data-tutorial="gallery-tab">
                     <FolderOpen className="w-4 h-4" />
                     Content Gallery
                   </TabsTrigger>
-                  <TabsTrigger value="profile" className="flex items-center gap-2">
+                  <TabsTrigger value="profile" className="flex items-center gap-2" data-tutorial="profile-tab">
                     <User className="w-4 h-4" />
                     Profile
                   </TabsTrigger>
-                  <TabsTrigger value="background">Background</TabsTrigger>
+                  <TabsTrigger value="background" data-tutorial="background-tab">Background</TabsTrigger>
                 </>
               )}
               {isMobile && (
@@ -280,7 +288,7 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
             </TabsList>
             
             <TabsContent value="music" className="space-y-6">
-              <Card className="mb-6">
+              <Card className="mb-6" data-tutorial="playlist-public">
                 <CardHeader>
                   <CardTitle className="text-white">Playlist Settings</CardTitle>
                 </CardHeader>

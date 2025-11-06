@@ -1,10 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 interface TutorialStep {
   id: string;
   title: string;
   description: string;
   duration?: number;
+  target?: string;
+  placement?: 'top' | 'bottom' | 'left' | 'right';
 }
 
 interface UseDashboardTutorialReturn {
@@ -12,6 +14,7 @@ interface UseDashboardTutorialReturn {
   currentStep: number;
   totalSteps: number;
   currentStepData: TutorialStep | null;
+  targetElement: HTMLElement | null;
   nextStep: () => void;
   skipTutorial: () => void;
   restartTutorial: () => void;
@@ -24,16 +27,51 @@ export const useDashboardTutorial = (
   const storageKey = `tutorial_completed_${userType}`;
   const [isActive, setIsActive] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
+  const [targetElement, setTargetElement] = useState<HTMLElement | null>(null);
+
+  const scrollToTarget = useCallback((element: HTMLElement) => {
+    element.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center',
+      inline: 'center',
+    });
+  }, []);
+
+  const findAndSetTarget = useCallback(() => {
+    const step = steps[currentStep];
+    if (!step?.target) {
+      setTargetElement(null);
+      return;
+    }
+
+    // Small delay to ensure DOM is updated (e.g., tabs have switched)
+    setTimeout(() => {
+      const element = document.querySelector(step.target!) as HTMLElement;
+      if (element) {
+        setTargetElement(element);
+        scrollToTarget(element);
+      } else {
+        console.warn(`Tutorial target not found: ${step.target}`);
+        setTargetElement(null);
+      }
+    }, 300);
+  }, [currentStep, steps, scrollToTarget]);
 
   useEffect(() => {
     const isCompleted = localStorage.getItem(storageKey);
     if (!isCompleted && steps.length > 0) {
-      // Small delay to let the dashboard render first
+      // Delay to let the dashboard render first
       setTimeout(() => {
         setIsActive(true);
-      }, 1000);
+      }, 1500);
     }
   }, [storageKey, steps.length]);
+
+  useEffect(() => {
+    if (isActive) {
+      findAndSetTarget();
+    }
+  }, [isActive, currentStep, findAndSetTarget]);
 
   const nextStep = () => {
     if (currentStep < steps.length - 1) {
@@ -65,6 +103,7 @@ export const useDashboardTutorial = (
     currentStep,
     totalSteps: steps.length,
     currentStepData,
+    targetElement,
     nextStep,
     skipTutorial,
     restartTutorial,

@@ -24,7 +24,7 @@ const DashboardWidgets = ({ onSuccess, onViewStore, onBackgroundUpload, isAdmin 
     <div className="max-w-6xl mx-auto">
       {/* Astrology Products - Admin Only */}
       {isAdmin && (
-        <div className="grid grid-cols-1 lg:grid-cols-1 gap-6 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-1 gap-6 mb-8" data-tutorial="astrology-products">
           <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
@@ -66,7 +66,7 @@ const DashboardWidgets = ({ onSuccess, onViewStore, onBackgroundUpload, isAdmin 
 
       {/* Fashion Products - Admin Only */}
       {isAdmin && (
-        <div className="grid grid-cols-1 lg:grid-cols-1 gap-6 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-1 gap-6 mb-8" data-tutorial="fashion-products">
           <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">

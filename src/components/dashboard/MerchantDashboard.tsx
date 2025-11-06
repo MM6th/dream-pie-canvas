@@ -22,7 +22,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useDashboardTutorial } from "@/hooks/useDashboardTutorial";
 import { merchantTutorialSteps } from "@/constants/tutorialContent";
-import { TutorialToast } from "@/components/TutorialToast";
+import { TutorialTooltip } from "@/components/TutorialTooltip";
+import { TutorialSpotlight } from "@/components/TutorialSpotlight";
 import { FollowRequestsManager } from "@/components/profile/FollowRequestsManager";
 import { Users } from "lucide-react";
 
@@ -167,18 +168,27 @@ const MerchantDashboard = ({
   return (
     <div className={`max-w-6xl mx-auto ${isMobile ? 'p-4' : 'p-6'} pt-20`}>
       {tutorial.isActive && tutorial.currentStepData && (
-        <TutorialToast
-          title={tutorial.currentStepData.title}
-          description={tutorial.currentStepData.description}
-          currentStep={tutorial.currentStep}
-          totalSteps={tutorial.totalSteps}
-          onNext={tutorial.nextStep}
-          onSkip={tutorial.skipTutorial}
-          duration={tutorial.currentStepData.duration}
-        />
+        <>
+          <TutorialSpotlight 
+            targetElement={tutorial.targetElement}
+            isActive={tutorial.isActive}
+          />
+          <TutorialTooltip
+            title={tutorial.currentStepData.title}
+            description={tutorial.currentStepData.description}
+            currentStep={tutorial.currentStep}
+            totalSteps={tutorial.totalSteps}
+            onNext={tutorial.nextStep}
+            onSkip={tutorial.skipTutorial}
+            targetElement={tutorial.targetElement}
+            preferredPlacement={tutorial.currentStepData.placement}
+          />
+        </>
       )}
       
-      <ApprovalStatusBanner approvalStatus={approvalStatus} isAdmin={isAdmin} />
+      <div data-tutorial="approval-status">
+        <ApprovalStatusBanner approvalStatus={approvalStatus} isAdmin={isAdmin} />
+      </div>
 
       {isAdmin && (
         <div className="mb-12">
@@ -189,7 +199,9 @@ const MerchantDashboard = ({
       {(isApproved || isAdmin) && (
         <>
           {isApproved && !isAdmin && (
-            <AccountSetup userProfile={userProfile} onProfileUpdate={onSuccess} />
+            <div data-tutorial="account-setup">
+              <AccountSetup userProfile={userProfile} onProfileUpdate={onSuccess} />
+            </div>
           )}
 
           <DashboardWidgets 
@@ -202,12 +214,14 @@ const MerchantDashboard = ({
           
           {/* Only show modeling applications for approved merchants (not admins) */}
           {isApproved && !isAdmin && (
-            <div className="mb-8">
+            <div className="mb-8" data-tutorial="modeling">
               <ModelingApplicationSection onSuccess={onSuccess} />
             </div>
           )}
           
-          <ContentManagement />
+          <div data-tutorial="audio-products">
+            <ContentManagement />
+          </div>
 
           {isPrivate && pendingRequestsCount > 0 && (
             <Card className="mb-6 bg-blue-600/10 border-blue-500">
@@ -234,7 +248,7 @@ const MerchantDashboard = ({
             </Card>
           )}
 
-          <Card className="mb-6">
+          <Card className="mb-6" data-tutorial="playlist-settings">
             <CardHeader>
               <CardTitle className="text-white">Playlist Settings</CardTitle>
             </CardHeader>
@@ -260,7 +274,9 @@ const MerchantDashboard = ({
             }} 
           />
 
-          <MediaPlayers purchasedTracks={purchasedTracks} purchasedPodcasts={purchasedPodcasts} purchasedVideos={purchasedVideos} purchasedPortfolios={purchasedPortfolios} />
+          <div data-tutorial="media-players">
+            <MediaPlayers purchasedTracks={purchasedTracks} purchasedPodcasts={purchasedPodcasts} purchasedVideos={purchasedVideos} purchasedPortfolios={purchasedPortfolios} />
+          </div>
         </>
       )}
 
