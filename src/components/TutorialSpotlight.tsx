@@ -35,26 +35,18 @@ export const TutorialSpotlight = ({ targetElement, isActive }: TutorialSpotlight
   if (!isActive || !targetElement) return null;
 
   return (
-    <>
-      {/* Dark overlay */}
-      <div 
-        className="fixed inset-0 bg-black/75 backdrop-blur-sm transition-opacity duration-300 z-[9998]"
-        style={{ pointerEvents: 'none' }}
-      />
-      
-      {/* Spotlight cutout */}
-      <div
-        className="fixed z-[9999] transition-all duration-300 pointer-events-none"
-        style={{
-          top: `${dimensions.top - 8}px`,
-          left: `${dimensions.left - 8}px`,
-          width: `${dimensions.width + 16}px`,
-          height: `${dimensions.height + 16}px`,
-          boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.75), 0 0 20px 4px rgba(59, 130, 246, 0.5), inset 0 0 20px 4px rgba(59, 130, 246, 0.3)',
-          borderRadius: '8px',
-          animation: 'pulse 2s ease-in-out infinite',
-        }}
-      />
-    </>
+    <div
+      className="fixed z-[9999] transition-all duration-300 pointer-events-none"
+      style={{
+        top: `${dimensions.top - 8}px`,
+        left: `${dimensions.left - 8}px`,
+        width: `${dimensions.width + 16}px`,
+        height: `${dimensions.height + 16}px`,
+        boxShadow: '0 0 20px 4px rgba(59, 130, 246, 0.6), inset 0 0 20px 4px rgba(59, 130, 246, 0.4)',
+        borderRadius: '8px',
+        border: '2px solid rgba(59, 130, 246, 0.8)',
+        animation: 'pulse 2s ease-in-out infinite',
+      }}
+    />
   );
 };
