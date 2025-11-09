@@ -275,6 +275,11 @@ const AstrologyStoreSection = () => {
                             <span className="text-lg text-gray-400 line-through">${product.base_price}</span>
                             <span className="text-2xl font-bold text-green-400">${displayPrice}</span>
                             <span className="text-xs text-green-400">{product.discount_percentage}% OFF</span>
+                            {product.sale_end_date && (
+                              <span className="text-xs text-green-400 mt-1">
+                                Sale ends: {new Date(product.sale_end_date).toLocaleDateString()}
+                              </span>
+                            )}
                           </>
                         ) : (
                           <span className="text-2xl font-bold text-white">${displayPrice}</span>
