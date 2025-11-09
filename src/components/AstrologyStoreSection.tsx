@@ -194,18 +194,6 @@ const AstrologyStoreSection = () => {
               : "No astrology services available yet. Check back soon!"
             }
           </p>
-          
-          {/* Adult Content Guidelines for Supporters */}
-          {user && (
-            <div className="mt-6 p-4 bg-orange-900/20 border border-orange-600/30 rounded-lg">
-              <p className="text-orange-300 text-sm">
-                <strong>Content Guidelines:</strong> Content that may be sexually suggestive, 
-                seductive, reveals excessive skin, or contains wardrobe malfunctions is marked 
-                for mature audiences. Use the adult content restriction toggle in your profile 
-                to filter such content.
-              </p>
-            </div>
-          )}
         </CardContent>
       </Card>
     );
@@ -213,18 +201,6 @@ const AstrologyStoreSection = () => {
 
   return (
     <>
-      {/* Adult Content Guidelines */}
-      {user && (
-        <div className="mb-6 p-4 bg-orange-900/20 border border-orange-600/30 rounded-lg">
-          <p className="text-orange-300 text-sm">
-            <strong>Content Guidelines:</strong> Some content may be marked for mature audiences (18+). 
-            Content that is sexually suggestive, seductive, reveals excessive skin, or contains 
-            wardrobe malfunctions falls under this category. You can manage your content preferences 
-            in your profile settings.
-          </p>
-        </div>
-      )}
-
       <Carousel
         className="w-full"
         opts={{
