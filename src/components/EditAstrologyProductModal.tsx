@@ -59,12 +59,26 @@ const getBasePrice = (productType: string, deliveryType: string): number => {
 
 const EditAstrologyProductModal = ({ product, isOpen, onClose, onSuccess }: EditAstrologyProductModalProps) => {
   const [loading, setLoading] = useState(false);
+  
+  // Calculate discount percentage from existing prices if not set
+  const calculateExistingDiscount = () => {
+    if (product.discount_percentage && product.discount_percentage > 0) {
+      return product.discount_percentage.toString();
+    }
+    // If total_price is less than base_price, calculate the discount
+    if (product.total_price < product.base_price) {
+      const discount = ((product.base_price - product.total_price) / product.base_price) * 100;
+      return Math.round(discount).toString();
+    }
+    return '';
+  };
+  
   const [formData, setFormData] = useState({
     product_type: product.product_type,
     description: product.description || '',
     delivery_type: product.delivery_type,
     hours_selected: product.hours_selected,
-    discount_percentage: product.discount_percentage?.toString() || ''
+    discount_percentage: calculateExistingDiscount()
   });
   const [thumbnailUrl, setThumbnailUrl] = useState(product.thumbnail_url || '');
   const [isAdultContent, setIsAdultContent] = useState(product.is_adult_content || false);
