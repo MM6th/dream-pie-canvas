@@ -62,7 +62,8 @@ const EditAstrologyProductModal = ({ product, isOpen, onClose, onSuccess }: Edit
     product_type: product.product_type,
     description: product.description || '',
     delivery_type: product.delivery_type,
-    hours_selected: product.hours_selected
+    hours_selected: product.hours_selected,
+    discount_percentage: 0
   });
   const [thumbnailUrl, setThumbnailUrl] = useState(product.thumbnail_url || '');
   const [isAdultContent, setIsAdultContent] = useState(product.is_adult_content || false);
@@ -72,11 +73,17 @@ const EditAstrologyProductModal = ({ product, isOpen, onClose, onSuccess }: Edit
     
     const basePrice = getBasePrice(formData.product_type, formData.delivery_type);
     
+    let price = basePrice;
     if (formData.delivery_type === 'telephone') {
-      return basePrice * formData.hours_selected;
+      price = basePrice * formData.hours_selected;
     }
     
-    return basePrice;
+    // Apply discount if any
+    if (formData.discount_percentage > 0) {
+      price = price - (price * (formData.discount_percentage / 100));
+    }
+    
+    return parseFloat(price.toFixed(2));
   };
 
   const getTitle = () => {
@@ -233,6 +240,21 @@ const EditAstrologyProductModal = ({ product, isOpen, onClose, onSuccess }: Edit
               />
             </div>
           )}
+
+          <div>
+            <Label htmlFor="discount">Discount Percentage (Optional)</Label>
+            <input
+              id="discount"
+              type="number"
+              min="0"
+              max="100"
+              value={formData.discount_percentage}
+              onChange={(e) => setFormData(prev => ({ ...prev, discount_percentage: parseFloat(e.target.value) || 0 }))}
+              placeholder="0"
+              className="w-full bg-gray-700 border border-gray-600 text-white rounded px-3 py-2"
+            />
+            <p className="text-sm text-gray-400 mt-1">Enter a percentage (0-100) to discount the final price</p>
+          </div>
 
           {/* Adult Content Toggle */}
           <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg border border-gray-600">
