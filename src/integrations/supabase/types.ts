@@ -1377,6 +1377,7 @@ export type Database = {
           paypal_email: string | null
           pinterest_url: string | null
           playlist_public: boolean | null
+          profile_complete: boolean | null
           snapchat_url: string | null
           updated_at: string | null
           user_type: string
@@ -1406,6 +1407,7 @@ export type Database = {
           paypal_email?: string | null
           pinterest_url?: string | null
           playlist_public?: boolean | null
+          profile_complete?: boolean | null
           snapchat_url?: string | null
           updated_at?: string | null
           user_type: string
@@ -1435,6 +1437,7 @@ export type Database = {
           paypal_email?: string | null
           pinterest_url?: string | null
           playlist_public?: boolean | null
+          profile_complete?: boolean | null
           snapchat_url?: string | null
           updated_at?: string | null
           user_type?: string

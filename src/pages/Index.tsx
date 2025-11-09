@@ -8,6 +8,8 @@ import { useApprovalStatus } from "@/hooks/useApprovalStatus";
 import { toast } from "@/hooks/use-toast";
 import StoreView from "@/pages/views/StoreView";
 import DashboardView from "@/pages/views/DashboardView";
+import ProfileCompletionModal from "@/components/ProfileCompletionModal";
+import { useProfileCompletion } from "@/hooks/useProfileCompletion";
 
 interface AudioTrack {
   id: string;
@@ -31,6 +33,7 @@ interface VideoTrack {
 const Index = () => {
   const { user, loading, signOut } = useAuth();
   const { isAdmin, isApproved } = useApprovalStatus();
+  const { isProfileComplete, loading: profileCompletionLoading, markProfileComplete } = useProfileCompletion();
   const navigate = useNavigate();
   const [userProfile, setUserProfile] = useState<any>(null);
   const [profileLoading, setProfileLoading] = useState(false);
@@ -274,6 +277,11 @@ const Index = () => {
 
   if (!user) {
     return <AuthPage />;
+  }
+
+  // Show profile completion modal if user hasn't completed their profile
+  if (user && !profileCompletionLoading && isProfileComplete === false) {
+    return <ProfileCompletionModal isOpen={true} onComplete={markProfileComplete} />;
   }
 
   if (currentView === "store") {

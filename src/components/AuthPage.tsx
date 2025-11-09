@@ -51,7 +51,27 @@ const AuthPage = () => {
     }
 
     try {
-      // Sign up user first
+      // Upload avatar first to get URL
+      let avatarUrl = '';
+      if (avatarFile) {
+        // Generate temporary user ID for upload
+        const tempUserId = crypto.randomUUID();
+        const fileExt = avatarFile.name.split('.').pop();
+        const fileName = `${tempUserId}/avatar.${fileExt}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('avatars')
+          .upload(fileName, avatarFile, { upsert: true });
+
+        if (!uploadError) {
+          const { data: { publicUrl } } = supabase.storage
+            .from('avatars')
+            .getPublicUrl(fileName);
+          avatarUrl = publicUrl;
+        }
+      }
+
+      // Sign up user with avatar URL in metadata
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
@@ -59,7 +79,8 @@ const AuthPage = () => {
           data: {
             user_type: userType,
             is_adult_creator: false,
-            display_name: displayName || null
+            display_name: displayName || null,
+            avatar_url: avatarUrl
           }
         }
       });
@@ -74,27 +95,27 @@ const AuthPage = () => {
         return;
       }
 
-      // Upload avatar for both user types
-      if (avatarFile && authData.user) {
-        const fileExt = avatarFile.name.split('.').pop();
-        const fileName = `${authData.user.id}/avatar.${fileExt}`;
+      // Rename avatar file with actual user ID if needed
+      if (avatarUrl && authData.user) {
+        const fileExt = avatarFile!.name.split('.').pop();
+        const oldFileName = avatarUrl.split('/').slice(-2).join('/'); // Get last two segments
+        const newFileName = `${authData.user.id}/avatar.${fileExt}`;
 
-        const { error: uploadError } = await supabase.storage
+        // Move the file to the correct location with user's actual ID
+        const { error: moveError } = await supabase.storage
           .from('avatars')
-          .upload(fileName, avatarFile, { upsert: true });
+          .move(oldFileName, newFileName);
 
-        if (uploadError) {
-          console.error('Error uploading avatar:', uploadError);
-        } else {
-          // Get public URL
+        if (!moveError) {
+          // Update the avatar URL with the new location
           const { data: { publicUrl } } = supabase.storage
             .from('avatars')
-            .getPublicUrl(fileName);
+            .getPublicUrl(newFileName);
 
-          // Update profile with avatar URL
+          // Update profile with final avatar URL
           await supabase
             .from('profiles')
-            .update({ avatar_url: publicUrl })
+            .update({ avatar_url: publicUrl, profile_complete: true })
             .eq('id', authData.user.id);
         }
       }
@@ -352,13 +373,16 @@ const AuthPage = () => {
                           />
                         </div>
                         
-                        <div>
+                        <div className={`p-4 rounded-lg border-2 ${!avatarFile ? 'border-red-500/50 bg-red-500/5' : 'border-gray-600 bg-gray-800/30'} transition-colors`}>
                           <Label className="text-white">
-                            Profile Picture <span className="text-red-400">*</span>
+                            Profile Picture <span className="text-red-400">* REQUIRED</span>
                           </Label>
-                          <div className="flex flex-col items-center space-y-3 mt-2">
+                          <p className="text-xs text-gray-400 mt-1 mb-3">
+                            All users must upload a profile picture to create an account
+                          </p>
+                          <div className="flex flex-col items-center space-y-3">
                             {avatarPreview ? (
-                              <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-gray-600">
+                              <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-blue-500 shadow-lg shadow-blue-500/30">
                                 <img 
                                   src={avatarPreview} 
                                   alt="Avatar preview" 
@@ -366,8 +390,8 @@ const AuthPage = () => {
                                 />
                               </div>
                             ) : (
-                              <div className="w-20 h-20 rounded-full bg-gray-700 border-2 border-gray-600 flex items-center justify-center">
-                                <User className="w-10 h-10 text-gray-400" />
+                              <div className="w-24 h-24 rounded-full bg-gray-700 border-2 border-dashed border-red-400 flex items-center justify-center animate-pulse">
+                                <User className="w-12 h-12 text-gray-400" />
                               </div>
                             )}
                             <div className="relative">
@@ -382,7 +406,7 @@ const AuthPage = () => {
                               <Button
                                 type="button"
                                 variant="outline"
-                                className="border-gray-600 text-white bg-gray-700 hover:bg-gray-600"
+                                className={`${!avatarFile ? 'border-red-400 text-red-400 bg-red-500/10 hover:bg-red-500/20' : 'border-blue-500 text-blue-400 bg-blue-500/10 hover:bg-blue-500/20'}`}
                               >
                                 <Upload className="w-4 h-4 mr-2" />
                                 {avatarPreview ? "Change Picture" : "Upload Picture"}
@@ -443,13 +467,16 @@ const AuthPage = () => {
                           />
                         </div>
                         
-                        <div>
+                        <div className={`p-4 rounded-lg border-2 ${!avatarFile ? 'border-red-500/50 bg-red-500/5' : 'border-gray-600 bg-gray-800/30'} transition-colors`}>
                           <Label className="text-white">
-                            Profile Picture <span className="text-red-400">*</span>
+                            Profile Picture <span className="text-red-400">* REQUIRED</span>
                           </Label>
-                          <div className="flex flex-col items-center space-y-3 mt-2">
+                          <p className="text-xs text-gray-400 mt-1 mb-3">
+                            All users must upload a profile picture to create an account
+                          </p>
+                          <div className="flex flex-col items-center space-y-3">
                             {avatarPreview ? (
-                              <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-gray-600">
+                              <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-blue-500 shadow-lg shadow-blue-500/30">
                                 <img 
                                   src={avatarPreview} 
                                   alt="Avatar preview" 
@@ -457,8 +484,8 @@ const AuthPage = () => {
                                 />
                               </div>
                             ) : (
-                              <div className="w-20 h-20 rounded-full bg-gray-700 border-2 border-gray-600 flex items-center justify-center">
-                                <User className="w-10 h-10 text-gray-400" />
+                              <div className="w-24 h-24 rounded-full bg-gray-700 border-2 border-dashed border-red-400 flex items-center justify-center animate-pulse">
+                                <User className="w-12 h-12 text-gray-400" />
                               </div>
                             )}
                             <div className="relative">
@@ -473,7 +500,7 @@ const AuthPage = () => {
                               <Button
                                 type="button"
                                 variant="outline"
-                                className="border-gray-600 text-white bg-gray-700 hover:bg-gray-600"
+                                className={`${!avatarFile ? 'border-red-400 text-red-400 bg-red-500/10 hover:bg-red-500/20' : 'border-blue-500 text-blue-400 bg-blue-500/10 hover:bg-blue-500/20'}`}
                               >
                                 <Upload className="w-4 h-4 mr-2" />
                                 {avatarPreview ? "Change Picture" : "Upload Picture"}
