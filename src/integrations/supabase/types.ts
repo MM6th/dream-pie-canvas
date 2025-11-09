@@ -238,6 +238,7 @@ export type Database = {
           id: string
           is_adult_content: boolean | null
           product_type: Database["public"]["Enums"]["astrology_product_type"]
+          sale_end_date: string | null
           thumbnail_url: string | null
           title: string
           total_price: number
@@ -256,6 +257,7 @@ export type Database = {
           id?: string
           is_adult_content?: boolean | null
           product_type: Database["public"]["Enums"]["astrology_product_type"]
+          sale_end_date?: string | null
           thumbnail_url?: string | null
           title: string
           total_price: number
@@ -274,6 +276,7 @@ export type Database = {
           id?: string
           is_adult_content?: boolean | null
           product_type?: Database["public"]["Enums"]["astrology_product_type"]
+          sale_end_date?: string | null
           thumbnail_url?: string | null
           title?: string
           total_price?: number

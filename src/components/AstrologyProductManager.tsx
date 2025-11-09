@@ -26,6 +26,8 @@ interface AstrologyProduct {
   total_price: number;
   buyer_email: string | null;
   created_at: string;
+  discount_percentage?: number;
+  sale_end_date?: string | null;
 }
 
 const AstrologyProductManager = () => {
@@ -37,7 +39,7 @@ const AstrologyProductManager = () => {
     try {
       const { data, error } = await supabase
         .from('astrology_products')
-        .select('*')
+        .select('*, discount_percentage, sale_end_date')
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -141,7 +143,13 @@ const AstrologyProductManager = () => {
             <div className="relative">
               <Carousel className="w-full">
                 <CarouselContent className="-ml-2 md:-ml-4">
-                  {products.map((product) => (
+                  {products.map((product) => {
+                    // Check if sale has expired
+                    const isSaleExpired = product.sale_end_date && new Date(product.sale_end_date) < new Date();
+                    const hasDiscount = product.discount_percentage && product.discount_percentage > 0 && !isSaleExpired;
+                    const displayPrice = isSaleExpired ? product.base_price : product.total_price;
+                    
+                    return (
                     <CarouselItem key={product.id} className="pl-2 md:pl-4 basis-full md:basis-1/2 lg:basis-1/4">
                       <Card className="bg-gray-700/50 border-gray-600 h-full">
                         <CardContent className="p-4">
@@ -165,19 +173,36 @@ const AstrologyProductManager = () => {
                               <p className="text-gray-400 text-xs line-clamp-3">{product.description}</p>
                             )}
 
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-1">
-                                {getDeliveryTypeIcon(product.delivery_type)}
-                                <span className="text-gray-300 text-xs">
-                                  {getDeliveryTypeLabel(product.delivery_type)}
-                                </span>
+                            <div className="flex flex-col gap-2">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-1">
+                                  {getDeliveryTypeIcon(product.delivery_type)}
+                                  <span className="text-gray-300 text-xs">
+                                    {getDeliveryTypeLabel(product.delivery_type)}
+                                  </span>
+                                </div>
+                                <div className="flex flex-col items-end">
+                                  {hasDiscount && (
+                                    <span className="text-xs text-gray-400 line-through">${product.base_price}</span>
+                                  )}
+                                  <Badge className={hasDiscount ? "bg-green-600 text-xs" : "bg-green-600 text-xs"}>
+                                    ${displayPrice}
+                                    {product.delivery_type === 'telephone' && product.hours_selected > 1 && (
+                                      <span className="text-xs ml-1">({product.hours_selected}h)</span>
+                                    )}
+                                  </Badge>
+                                </div>
                               </div>
-                              <Badge className="bg-green-600 text-xs">
-                                ${product.total_price}
-                                {product.delivery_type === 'telephone' && product.hours_selected > 1 && (
-                                  <span className="text-xs ml-1">({product.hours_selected}h)</span>
-                                )}
-                              </Badge>
+                              {hasDiscount && (
+                                <Badge className="bg-green-600 text-xs w-fit">
+                                  {product.discount_percentage}% OFF - On Sale
+                                </Badge>
+                              )}
+                              {isSaleExpired && product.discount_percentage && product.discount_percentage > 0 && (
+                                <Badge variant="outline" className="text-xs w-fit border-gray-500 text-gray-400">
+                                  Sale Ended
+                                </Badge>
+                              )}
                             </div>
 
                             <div className="flex justify-between gap-2 pt-2">
@@ -202,7 +227,8 @@ const AstrologyProductManager = () => {
                         </CardContent>
                       </Card>
                     </CarouselItem>
-                  ))}
+                    );
+                  })}
                 </CarouselContent>
                 <CarouselPrevious className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600 -left-4" />
                 <CarouselNext className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600 -right-4" />

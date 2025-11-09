@@ -6,11 +6,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Upload, Loader2, Shield } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Upload, Loader2, Shield, CalendarIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import ImagePicker from "./ImagePicker";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface AstrologyProductUploadModalProps {
   isOpen: boolean;
@@ -54,6 +58,7 @@ const AstrologyProductUploadModal = ({ isOpen, onClose, onSuccess }: AstrologyPr
     discount_percentage: ''
   });
   const [thumbnailUrl, setThumbnailUrl] = useState('');
+  const [saleEndDate, setSaleEndDate] = useState<Date | undefined>(undefined);
 
   const calculateTotalPrice = () => {
     if (!formData.product_type || !formData.delivery_type) return 0;
@@ -104,7 +109,8 @@ const AstrologyProductUploadModal = ({ isOpen, onClose, onSuccess }: AstrologyPr
           buyer_email: null,
           thumbnail_url: thumbnailUrl || null,
           is_adult_content: formData.is_adult_content,
-          discount_percentage: discountValue
+          discount_percentage: discountValue,
+          sale_end_date: saleEndDate ? saleEndDate.toISOString() : null
         });
 
       if (error) {
@@ -128,6 +134,7 @@ const AstrologyProductUploadModal = ({ isOpen, onClose, onSuccess }: AstrologyPr
         discount_percentage: ''
       });
       setThumbnailUrl('');
+      setSaleEndDate(undefined);
     } catch (error: any) {
       console.error('Error creating astrology product:', error);
       toast({
@@ -246,6 +253,38 @@ const AstrologyProductUploadModal = ({ isOpen, onClose, onSuccess }: AstrologyPr
             />
             <p className="text-sm text-gray-400 mt-1">Enter a percentage (0-100) to discount the final price</p>
           </div>
+
+          {/* Sale End Date Picker */}
+          {formData.discount_percentage && parseFloat(formData.discount_percentage) > 0 && (
+            <div>
+              <Label>Sale End Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal bg-gray-700 border-gray-600 text-white hover:bg-gray-600",
+                      !saleEndDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {saleEndDate ? format(saleEndDate, "PPP") : <span>Pick a date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0 bg-gray-800 border-gray-600" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={saleEndDate}
+                    onSelect={setSaleEndDate}
+                    disabled={(date) => date < new Date()}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
+              <p className="text-sm text-gray-400 mt-1">Select when the sale should end (price will revert to base price)</p>
+            </div>
+          )}
 
           {/* Adult Content Toggle */}
           <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg border border-gray-600">

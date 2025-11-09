@@ -24,6 +24,7 @@ interface AstrologyProduct {
   access_level: "public" | "merchant_only" | "paid" | null;
   created_at: string;
   discount_percentage?: number;
+  sale_end_date?: string | null;
 }
 
 interface ProductReviewCount {
@@ -112,7 +113,7 @@ const AstrologyStoreSection = () => {
 
       const { data, error } = await supabase
         .from('astrology_products')
-        .select('*, is_adult_content, access_level, discount_percentage')
+        .select('*, is_adult_content, access_level, discount_percentage, sale_end_date')
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -213,6 +214,11 @@ const AstrologyStoreSection = () => {
           {products.map((product) => {
             const reviewCount = reviewCounts[product.id] || 0;
             
+            // Check if sale has expired
+            const isSaleExpired = product.sale_end_date && new Date(product.sale_end_date) < new Date();
+            const hasDiscount = product.discount_percentage && product.discount_percentage > 0 && !isSaleExpired;
+            const displayPrice = isSaleExpired ? product.base_price : product.total_price;
+            
             return (
               <CarouselItem key={product.id} className="pl-2 md:pl-4 basis-full sm:basis-1/2 lg:basis-1/3">
                 <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm hover:bg-gray-700/50 transition-colors h-full">
@@ -229,7 +235,7 @@ const AstrologyStoreSection = () => {
                     <div className="flex items-start justify-between mb-3">
                       <CardTitle className="text-white text-lg">{product.title}</CardTitle>
                       <div className="flex items-center gap-1 flex-wrap">
-                        {product.discount_percentage && product.discount_percentage > 0 && (
+                        {hasDiscount && (
                           <Badge className="bg-green-600 hover:bg-green-700 text-xs">
                             On Sale
                           </Badge>
@@ -264,14 +270,14 @@ const AstrologyStoreSection = () => {
                     
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex flex-col">
-                        {product.discount_percentage && product.discount_percentage > 0 ? (
+                        {hasDiscount ? (
                           <>
                             <span className="text-lg text-gray-400 line-through">${product.base_price}</span>
-                            <span className="text-2xl font-bold text-green-400">${product.total_price}</span>
+                            <span className="text-2xl font-bold text-green-400">${displayPrice}</span>
                             <span className="text-xs text-green-400">{product.discount_percentage}% OFF</span>
                           </>
                         ) : (
-                          <span className="text-2xl font-bold text-white">${product.total_price}</span>
+                          <span className="text-2xl font-bold text-white">${displayPrice}</span>
                         )}
                       </div>
                       {product.delivery_type && (
@@ -284,7 +290,7 @@ const AstrologyStoreSection = () => {
                     
                     <div className="space-y-2">
                       <Button
-                        onClick={() => handlePurchase(product.id, product.total_price)}
+                        onClick={() => handlePurchase(product.id, displayPrice)}
                         className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                       >
                         Book Reading
