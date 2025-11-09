@@ -63,7 +63,7 @@ const EditAstrologyProductModal = ({ product, isOpen, onClose, onSuccess }: Edit
     description: product.description || '',
     delivery_type: product.delivery_type,
     hours_selected: product.hours_selected,
-    discount_percentage: 0
+    discount_percentage: ''
   });
   const [thumbnailUrl, setThumbnailUrl] = useState(product.thumbnail_url || '');
   const [isAdultContent, setIsAdultContent] = useState(product.is_adult_content || false);
@@ -79,8 +79,9 @@ const EditAstrologyProductModal = ({ product, isOpen, onClose, onSuccess }: Edit
     }
     
     // Apply discount if any
-    if (formData.discount_percentage > 0) {
-      price = price - (price * (formData.discount_percentage / 100));
+    const discountValue = parseFloat(formData.discount_percentage as any) || 0;
+    if (discountValue > 0) {
+      price = price - (price * (discountValue / 100));
     }
     
     return parseFloat(price.toFixed(2));
@@ -249,7 +250,7 @@ const EditAstrologyProductModal = ({ product, isOpen, onClose, onSuccess }: Edit
               min="0"
               max="100"
               value={formData.discount_percentage}
-              onChange={(e) => setFormData(prev => ({ ...prev, discount_percentage: parseFloat(e.target.value) || 0 }))}
+              onChange={(e) => setFormData(prev => ({ ...prev, discount_percentage: e.target.value }))}
               placeholder="0"
               className="w-full bg-gray-700 border border-gray-600 text-white rounded px-3 py-2"
             />

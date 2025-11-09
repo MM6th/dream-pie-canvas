@@ -51,7 +51,7 @@ const AstrologyProductUploadModal = ({ isOpen, onClose, onSuccess }: AstrologyPr
     delivery_type: '',
     hours_selected: 1,
     is_adult_content: false,
-    discount_percentage: 0
+    discount_percentage: ''
   });
   const [thumbnailUrl, setThumbnailUrl] = useState('');
 
@@ -66,8 +66,9 @@ const AstrologyProductUploadModal = ({ isOpen, onClose, onSuccess }: AstrologyPr
     }
     
     // Apply discount if any
-    if (formData.discount_percentage > 0) {
-      price = price - (price * (formData.discount_percentage / 100));
+    const discountValue = parseFloat(formData.discount_percentage as any) || 0;
+    if (discountValue > 0) {
+      price = price - (price * (discountValue / 100));
     }
     
     return parseFloat(price.toFixed(2));
@@ -121,7 +122,7 @@ const AstrologyProductUploadModal = ({ isOpen, onClose, onSuccess }: AstrologyPr
         delivery_type: '',
         hours_selected: 1,
         is_adult_content: false,
-        discount_percentage: 0
+        discount_percentage: ''
       });
       setThumbnailUrl('');
     } catch (error: any) {
@@ -236,7 +237,7 @@ const AstrologyProductUploadModal = ({ isOpen, onClose, onSuccess }: AstrologyPr
               min="0"
               max="100"
               value={formData.discount_percentage}
-              onChange={(e) => setFormData(prev => ({ ...prev, discount_percentage: parseFloat(e.target.value) || 0 }))}
+              onChange={(e) => setFormData(prev => ({ ...prev, discount_percentage: e.target.value }))}
               placeholder="0"
               className="w-full bg-gray-700 border border-gray-600 text-white rounded px-3 py-2"
             />
