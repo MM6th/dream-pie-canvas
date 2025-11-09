@@ -20,6 +20,7 @@ interface AstrologyProduct {
   total_price: number;
   created_at: string;
   is_adult_content?: boolean;
+  discount_percentage?: number;
 }
 
 interface AstrologyProductDetailModalProps {
@@ -36,6 +37,11 @@ const AstrologyProductDetailModal = ({ product, isOpen, onClose, onPurchase }: A
         <DialogHeader>
           <DialogTitle className="text-xl font-bold text-white flex items-center gap-2">
             {product.title}
+            {product.discount_percentage && product.discount_percentage > 0 && (
+              <Badge className="bg-green-600 text-white">
+                {product.discount_percentage}% OFF
+              </Badge>
+            )}
             {product.is_adult_content && (
               <Badge variant="destructive" className="bg-red-600 text-white">
                 <AlertTriangle className="w-3 h-3 mr-1" />
@@ -69,7 +75,16 @@ const AstrologyProductDetailModal = ({ product, isOpen, onClose, onPurchase }: A
           {/* Product Details */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <div className="text-2xl font-bold text-white">${product.total_price}</div>
+              <div className="flex flex-col">
+                {product.discount_percentage && product.discount_percentage > 0 ? (
+                  <>
+                    <span className="text-lg text-gray-400 line-through">${product.base_price}</span>
+                    <span className="text-2xl font-bold text-green-400">${product.total_price}</span>
+                  </>
+                ) : (
+                  <span className="text-2xl font-bold text-white">${product.total_price}</span>
+                )}
+              </div>
               {product.delivery_type && (
                 <div className="flex items-center gap-2 text-gray-400">
                   <Clock className="w-4 h-4" />

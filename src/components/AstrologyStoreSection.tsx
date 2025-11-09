@@ -23,6 +23,7 @@ interface AstrologyProduct {
   is_adult_content: boolean | null;
   access_level: "public" | "merchant_only" | "paid" | null;
   created_at: string;
+  discount_percentage?: number;
 }
 
 interface ProductReviewCount {
@@ -111,7 +112,7 @@ const AstrologyStoreSection = () => {
 
       const { data, error } = await supabase
         .from('astrology_products')
-        .select('*, is_adult_content, access_level')
+        .select('*, is_adult_content, access_level, discount_percentage')
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -228,6 +229,11 @@ const AstrologyStoreSection = () => {
                     <div className="flex items-start justify-between mb-3">
                       <CardTitle className="text-white text-lg">{product.title}</CardTitle>
                       <div className="flex items-center gap-1 flex-wrap">
+                        {product.discount_percentage && product.discount_percentage > 0 && (
+                          <Badge className="bg-green-600 hover:bg-green-700 text-xs">
+                            On Sale
+                          </Badge>
+                        )}
                         {product.is_adult_content && !userProfile?.adult_content_restricted && (
                           <Badge className="bg-orange-600 hover:bg-orange-700 text-xs flex items-center gap-1">
                             <Shield className="w-3 h-3" />
@@ -257,7 +263,17 @@ const AstrologyStoreSection = () => {
                     )}
                     
                     <div className="flex items-center justify-between mb-4">
-                      <span className="text-2xl font-bold text-white">${product.total_price}</span>
+                      <div className="flex flex-col">
+                        {product.discount_percentage && product.discount_percentage > 0 ? (
+                          <>
+                            <span className="text-lg text-gray-400 line-through">${product.base_price}</span>
+                            <span className="text-2xl font-bold text-green-400">${product.total_price}</span>
+                            <span className="text-xs text-green-400">{product.discount_percentage}% OFF</span>
+                          </>
+                        ) : (
+                          <span className="text-2xl font-bold text-white">${product.total_price}</span>
+                        )}
+                      </div>
                       {product.delivery_type && (
                         <div className="flex items-center gap-1 text-gray-400">
                           <Clock className="w-4 h-4" />

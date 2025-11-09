@@ -233,6 +233,7 @@ export type Database = {
           created_at: string
           delivery_type: Database["public"]["Enums"]["delivery_type"]
           description: string | null
+          discount_percentage: number | null
           hours_selected: number | null
           id: string
           is_adult_content: boolean | null
@@ -250,6 +251,7 @@ export type Database = {
           created_at?: string
           delivery_type: Database["public"]["Enums"]["delivery_type"]
           description?: string | null
+          discount_percentage?: number | null
           hours_selected?: number | null
           id?: string
           is_adult_content?: boolean | null
@@ -267,6 +269,7 @@ export type Database = {
           created_at?: string
           delivery_type?: Database["public"]["Enums"]["delivery_type"]
           description?: string | null
+          discount_percentage?: number | null
           hours_selected?: number | null
           id?: string
           is_adult_content?: boolean | null

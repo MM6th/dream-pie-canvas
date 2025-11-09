@@ -23,6 +23,7 @@ interface AstrologyProduct {
   total_price: number;
   buyer_email: string | null;
   is_adult_content?: boolean;
+  discount_percentage?: number;
 }
 
 interface EditAstrologyProductModalProps {
@@ -63,7 +64,7 @@ const EditAstrologyProductModal = ({ product, isOpen, onClose, onSuccess }: Edit
     description: product.description || '',
     delivery_type: product.delivery_type,
     hours_selected: product.hours_selected,
-    discount_percentage: ''
+    discount_percentage: product.discount_percentage?.toString() || ''
   });
   const [thumbnailUrl, setThumbnailUrl] = useState(product.thumbnail_url || '');
   const [isAdultContent, setIsAdultContent] = useState(product.is_adult_content || false);
@@ -100,6 +101,8 @@ const EditAstrologyProductModal = ({ product, isOpen, onClose, onSuccess }: Edit
       const totalPrice = calculateTotalPrice();
       const title = getTitle();
 
+      const discountValue = parseFloat(formData.discount_percentage as any) || 0;
+      
       const { error } = await supabase
         .from('astrology_products')
         .update({
@@ -113,6 +116,7 @@ const EditAstrologyProductModal = ({ product, isOpen, onClose, onSuccess }: Edit
           buyer_email: null,
           thumbnail_url: thumbnailUrl || null,
           is_adult_content: isAdultContent,
+          discount_percentage: discountValue,
           updated_at: new Date().toISOString()
         })
         .eq('id', product.id);

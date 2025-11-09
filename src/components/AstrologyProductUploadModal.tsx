@@ -88,6 +88,8 @@ const AstrologyProductUploadModal = ({ isOpen, onClose, onSuccess }: AstrologyPr
       const totalPrice = calculateTotalPrice();
       const title = getTitle();
 
+      const discountValue = parseFloat(formData.discount_percentage as any) || 0;
+      
       const { error } = await supabase
         .from('astrology_products')
         .insert({
@@ -101,7 +103,8 @@ const AstrologyProductUploadModal = ({ isOpen, onClose, onSuccess }: AstrologyPr
           total_price: totalPrice,
           buyer_email: null,
           thumbnail_url: thumbnailUrl || null,
-          is_adult_content: formData.is_adult_content
+          is_adult_content: formData.is_adult_content,
+          discount_percentage: discountValue
         });
 
       if (error) {
