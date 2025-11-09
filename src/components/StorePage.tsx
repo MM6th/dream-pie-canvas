@@ -869,8 +869,8 @@ const StorePage = () => {
           )}
         </div>
 
-        {/* Astrology Products Section - Hidden until ready */}
-        <div className="mb-12 hidden">
+        {/* Astrology Products Section */}
+        <div className="mb-12">
           <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
             <Star className="w-6 h-6" />
             Astrology Readings & Consultations
