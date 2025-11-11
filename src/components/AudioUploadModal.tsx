@@ -84,6 +84,7 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
   };
 
   const handleAudioFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.stopPropagation();
     const file = e.target.files?.[0];
     if (file && validateFileSize(file, 'audio')) {
       setFormData(prev => ({ ...prev, audioFile: file }));
@@ -105,6 +106,7 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
   };
 
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.stopPropagation();
     const file = e.target.files?.[0];
     if (file && validateFileSize(file, 'thumbnail')) {
       setFormData(prev => ({ ...prev, thumbnail: file }));
@@ -523,7 +525,16 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
           Upload Audio Content
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-gray-900 to-gray-800 text-white">
+      <DialogContent 
+        className="max-w-2xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-gray-900 to-gray-800 text-white"
+        onInteractOutside={(e) => {
+          // Prevent closing when file input is triggered on mobile
+          const target = e.target as HTMLElement;
+          if (target.tagName === 'INPUT' && target.getAttribute('type') === 'file') {
+            e.preventDefault();
+          }
+        }}
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <AudioLines className="w-5 h-5" />
