@@ -32,6 +32,8 @@ interface AudioProduct {
   price: number | null;
   access_level: "public" | "merchant_only" | "paid" | null;
   created_at: string;
+  status?: string;
+  published_at?: string | null;
   hasSignedContract?: boolean;
   albums?: {
     name: string;
@@ -44,6 +46,7 @@ const AudioProductManager = () => {
   const [products, setProducts] = useState<AudioProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingProduct, setEditingProduct] = useState<AudioProduct | null>(null);
+  const [filterStatus, setFilterStatus] = useState<'all' | 'published' | 'draft'>('all');
 
   const fetchProducts = async () => {
     if (!user) return;
@@ -64,6 +67,8 @@ const AudioProductManager = () => {
           price,
           access_level,
           created_at,
+          status,
+          published_at,
           albums (
             name
           )
@@ -227,7 +232,31 @@ const AudioProductManager = () => {
       <div className="space-y-6">
         <div>
           <h3 className="text-xl font-bold text-white mb-4">Your Audio Products</h3>
-          <p className="text-gray-400 mb-6">Manage your uploaded audio content</p>
+          <p className="text-gray-400 mb-4">Manage your uploaded audio content</p>
+          
+          <div className="flex gap-2 mb-6">
+            <Button
+              variant={filterStatus === 'all' ? 'default' : 'outline'}
+              onClick={() => setFilterStatus('all')}
+              size="sm"
+            >
+              All ({products.length})
+            </Button>
+            <Button
+              variant={filterStatus === 'published' ? 'default' : 'outline'}
+              onClick={() => setFilterStatus('published')}
+              size="sm"
+            >
+              Published ({products.filter(p => p.status === 'published').length})
+            </Button>
+            <Button
+              variant={filterStatus === 'draft' ? 'default' : 'outline'}
+              onClick={() => setFilterStatus('draft')}
+              size="sm"
+            >
+              Drafts ({products.filter(p => p.status === 'draft' || !p.status).length})
+            </Button>
+          </div>
         </div>
 
         {products.length === 0 ? (
@@ -242,7 +271,14 @@ const AudioProductManager = () => {
           <div className="relative">
             <Carousel className="w-full">
               <CarouselContent className="-ml-2 md:-ml-4">
-                {products.map((product) => (
+                {products
+                  .filter(p => {
+                    if (filterStatus === 'all') return true;
+                    if (filterStatus === 'published') return p.status === 'published';
+                    if (filterStatus === 'draft') return p.status === 'draft' || !p.status;
+                    return true;
+                  })
+                  .map((product) => (
                   <CarouselItem key={product.id} className="pl-2 md:pl-4 basis-full md:basis-1/2 lg:basis-1/4">
                     <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm h-full">
                       <CardHeader className="p-3">
@@ -264,13 +300,22 @@ const AudioProductManager = () => {
                       </CardHeader>
                       <CardContent className="p-3 pt-0">
                         <div className="space-y-2">
-                          <div className="flex items-center justify-between">
+                          <div className="flex items-center justify-between flex-wrap gap-1">
                             <Badge variant="secondary" className="capitalize text-xs">
                               {product.audio_type}
                             </Badge>
                             {product.albums && (
                               <Badge variant="outline" className="text-xs bg-white text-black border-white">
                                 {product.albums.name}
+                              </Badge>
+                            )}
+                            {product.status === 'draft' || !product.status ? (
+                              <Badge variant="outline" className="text-xs bg-yellow-600 text-white border-yellow-600">
+                                Draft
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline" className="text-xs bg-green-600 text-white border-green-600">
+                                Published
                               </Badge>
                             )}
                           </div>
@@ -309,10 +354,12 @@ const AudioProductManager = () => {
                             })()}
                           </div>
                           
-                          {product.hasSignedContract ? (
+                          {product.hasSignedContract || product.status === 'published' ? (
                             <div className="flex items-center justify-center gap-2 p-2 bg-blue-600/20 border border-blue-600 rounded-md">
                               <Lock className="w-4 h-4 text-blue-400" />
-                              <span className="text-sm text-blue-400 font-medium">Contract Signed</span>
+                              <span className="text-sm text-blue-400 font-medium">
+                                {product.hasSignedContract ? 'Contract Signed' : 'Published - Locked'}
+                              </span>
                             </div>
                           ) : (
                             <div className="flex gap-1">

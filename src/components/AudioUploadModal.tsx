@@ -177,7 +177,7 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
     setTracks(newTracks);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent, isDraft: boolean = false) => {
     e.preventDefault();
     if (!user) return;
     
@@ -442,7 +442,10 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
         is_adult_content: formData.is_adult_content,
         // Music preview fields
         preview_start_time: formData.audioType === 'music' ? formData.previewStartTime : 0,
-        preview_duration: formData.audioType === 'music' ? 30 : null
+        preview_duration: formData.audioType === 'music' ? 30 : null,
+        // Draft/Published status
+        status: isDraft ? 'draft' : 'published',
+        published_at: isDraft ? null : new Date().toISOString()
       };
 
       // Add description for podcasts and ASMR if provided
@@ -469,7 +472,7 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
       
       toast({
         title: "Success",
-        description: "Audio product uploaded successfully!"
+        description: isDraft ? "Audio product saved as draft!" : "Audio product uploaded successfully!"
       });
       
       setOpen(false);
@@ -980,11 +983,29 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
           </div>
 
           <div className="flex gap-2 pt-4">
-            <Button type="submit" disabled={loading} className="flex-1">
-              {loading ? "Uploading..." : formData.hasAlbum ? "Upload Album" : "Upload Audio"}
-            </Button>
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Cancel
+            </Button>
+            <Button 
+              type="button" 
+              variant="secondary" 
+              disabled={loading} 
+              onClick={(e) => handleSubmit(e as any, true)}
+              className="flex-1"
+            >
+              {loading ? "Saving..." : "Save Draft"}
+            </Button>
+            <Button 
+              type="button" 
+              disabled={loading} 
+              onClick={(e) => {
+                if (window.confirm("⚠️ Once published, you cannot edit or delete this music. You'll need to contact administration to remove it. Are you sure you want to publish?")) {
+                  handleSubmit(e as any, false);
+                }
+              }}
+              className="flex-1"
+            >
+              {loading ? "Publishing..." : "Publish"}
             </Button>
           </div>
         </form>

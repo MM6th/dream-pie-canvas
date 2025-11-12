@@ -306,6 +306,16 @@ const EditAudioModal = ({ product, onSuccess, onClose }: EditAudioModalProps) =>
 
           <div className="space-y-2">
             <Label htmlFor="thumbnail">Thumbnail Image</Label>
+            {product.thumbnail_url && (
+              <div className="mb-2 p-2 bg-secondary rounded-lg">
+                <p className="text-xs text-muted-foreground mb-1">Current thumbnail:</p>
+                <img 
+                  src={product.thumbnail_url} 
+                  alt="Current thumbnail" 
+                  className="w-32 h-32 object-cover rounded"
+                />
+              </div>
+            )}
             <Input
               id="thumbnail"
               type="file"
@@ -313,6 +323,24 @@ const EditAudioModal = ({ product, onSuccess, onClose }: EditAudioModalProps) =>
               onChange={(e) => setFormData({ ...formData, thumbnail: e.target.files?.[0] || null })}
               disabled={isPublished}
             />
+            <p className="text-xs text-muted-foreground">
+              {product.thumbnail_url ? "Choose a new file to replace current thumbnail" : "Upload a thumbnail image"}
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Current Audio File</Label>
+            <div className="p-3 bg-secondary rounded-lg space-y-2">
+              <p className="text-sm text-muted-foreground">
+                {product.title} - {product.artist_name || 'Unknown Artist'}
+              </p>
+              <audio controls className="w-full" src={product.audio_file_url}>
+                Your browser does not support the audio element.
+              </audio>
+              <p className="text-xs text-muted-foreground">
+                Audio files cannot be changed after upload. Contact administration if you need to replace this file.
+              </p>
+            </div>
           </div>
 
           {formData.audioType === 'music' && audioDuration > 0 && (
