@@ -1,8 +1,8 @@
 
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, LogOut, ShoppingBag, Users, MessageSquare } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { ArrowLeft, LogOut, ShoppingBag, Users, MessageSquare, BookOpen } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,10 +12,13 @@ import { toast } from "sonner";
 
 const BulletinBoard = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { signOut, user } = useAuth();
   const isMobile = useIsMobile();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const isActivePage = (path: string) => location.pathname === path;
 
   useEffect(() => {
     fetchPosts();
@@ -114,7 +117,7 @@ const BulletinBoard = () => {
             <Button
               onClick={handleStoreView}
               variant="outline"
-              className={`border-gray-600 text-white bg-transparent hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
+              className={`border ${isActivePage('/') && !isActivePage('/bulletin') ? 'bg-primary border-primary' : 'bg-transparent border-gray-600'} text-white hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
             >
               <ShoppingBag className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
               {isMobile ? 'Store' : 'Browse Store'}
@@ -122,7 +125,7 @@ const BulletinBoard = () => {
             <Button
               onClick={() => navigate('/bulletin')}
               variant="outline"
-              className={`border-gray-600 text-white bg-transparent hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
+              className={`border ${isActivePage('/bulletin') ? 'bg-primary border-primary' : 'bg-transparent border-gray-600'} text-white hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
             >
               <MessageSquare className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
               {isMobile ? 'Community' : 'Browse Community'}
@@ -130,10 +133,18 @@ const BulletinBoard = () => {
             <Button
               onClick={handleProfilesView}
               variant="outline"
-              className={`border-gray-600 text-white bg-transparent hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
+              className={`border ${isActivePage('/profiles') ? 'bg-primary border-primary' : 'bg-transparent border-gray-600'} text-white hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
             >
               <Users className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
               {isMobile ? 'Profiles' : 'Browse Profiles'}
+            </Button>
+            <Button
+              onClick={() => navigate('/about-author')}
+              variant="outline"
+              className={`border ${isActivePage('/about-author') ? 'bg-primary border-primary' : 'bg-transparent border-gray-600'} text-white hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
+            >
+              <BookOpen className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
+              {isMobile ? 'Founder' : 'About Founder'}
             </Button>
           </div>
           
