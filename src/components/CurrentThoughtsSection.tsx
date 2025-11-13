@@ -96,7 +96,7 @@ const CurrentThoughtsSection = ({ posts, useCarousel = true }: CurrentThoughtsSe
           }}
           className="w-full"
         >
-          <CarouselContent className="-ml-1 gap-2">
+          <CarouselContent className="-ml-1 gap-1">
             {posts.map((post) => (
               <CarouselItem key={post.id} className="pl-1 md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
                 {renderCard(post)}
