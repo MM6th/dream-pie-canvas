@@ -83,7 +83,7 @@ const CurrentThoughtsSection = ({ posts, useCarousel = true }: CurrentThoughtsSe
 
   return (
     <div className="mb-12">
-      <h2 className="text-2xl lg:text-3xl font-bold text-white mb-6 flex items-center gap-2">
+      <h2 className="text-2xl lg:text-3xl font-bold text-white mb-16 flex items-center gap-2">
         <MessageSquare className="w-6 h-6 lg:w-8 lg:h-8 text-white" />
         Current Affirmations
       </h2>
@@ -96,7 +96,7 @@ const CurrentThoughtsSection = ({ posts, useCarousel = true }: CurrentThoughtsSe
           }}
           className="w-full"
         >
-          <CarouselContent className="-ml-1">
+          <CarouselContent className="-ml-1 gap-2">
             {posts.map((post) => (
               <CarouselItem key={post.id} className="pl-1 md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
                 {renderCard(post)}
