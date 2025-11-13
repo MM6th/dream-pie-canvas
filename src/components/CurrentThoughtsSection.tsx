@@ -72,7 +72,7 @@ const CurrentThoughtsSection = ({ posts, useCarousel = true }: CurrentThoughtsSe
               {new Date(post.created_at).toLocaleDateString()}
             </div>
         </div>
-        {!isSupporterPost(post) && (
+        {!isSupporterPost(post) && !post.profiles?.is_admin && (
           <div className="mt-2">
             <PostInteractions postId={post.id} />
           </div>
