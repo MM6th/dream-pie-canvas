@@ -30,7 +30,8 @@ const BulletinBoard = () => {
           profiles (
             display_name,
             avatar_url,
-            user_type
+            user_type,
+            is_admin
           )
         `)
         .order('created_at', { ascending: false });
