@@ -275,7 +275,7 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
               </SelectTrigger>
               <SelectContent className="bg-gray-700 border-gray-600">
                 <SelectItem value="tv_guide">TV Guide</SelectItem>
-                <SelectItem value="current_thoughts">Current Thoughts</SelectItem>
+                <SelectItem value="current_affirmations">Current Affirmations</SelectItem>
                 <SelectItem value="announcement">Announcement</SelectItem>
                 <SelectItem value="regular">Regular</SelectItem>
               </SelectContent>
