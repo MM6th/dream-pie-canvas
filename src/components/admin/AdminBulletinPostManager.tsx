@@ -202,7 +202,7 @@ const AdminBulletinPostManager = () => {
               >
                 <option value="all">All Types</option>
                 <option value="tv_guide">TV Guide</option>
-                <option value="current_thoughts">Current Thoughts</option>
+                <option value="current_affirmations">Current Affirmations</option>
                 <option value="announcement">Announcements</option>
                 <option value="regular">Regular</option>
               </select>
