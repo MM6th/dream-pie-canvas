@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, CreditCard } from 'lucide-react';
+import { CreditPurchaseModal } from './CreditPurchaseModal';
 
 interface MessageComposerProps {
   open: boolean;
@@ -36,9 +37,28 @@ export const MessageComposer = ({
   const [subject, setSubject] = useState('');
   const [body, setBody] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showCreditPurchase, setShowCreditPurchase] = useState(false);
   const { toast } = useToast();
 
   const creditsRequired = isFree ? 0 : 1; // Free for merchant-to-merchant
+
+  const handleCreditSectionClick = () => {
+    if (currentBalance < creditsRequired) {
+      toast({
+        title: 'Purchase Messaging Credits',
+        description: 'You need at least 1 credit to send a message. Select a package to continue.',
+      });
+      setShowCreditPurchase(true);
+    }
+  };
+
+  const handlePurchaseComplete = () => {
+    onMessageSent?.(); // This will trigger balance refresh
+    toast({
+      title: 'Credits Added!',
+      description: 'Your credits have been added. You can now send your message.',
+    });
+  };
 
   const handleSend = async () => {
     if (subject.length < 5) {
@@ -131,7 +151,14 @@ export const MessageComposer = ({
 
         <div className="space-y-4 py-4">
           {!isFree && (
-            <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+            <div 
+              onClick={handleCreditSectionClick}
+              className={`flex items-center justify-between p-3 rounded-lg transition-all cursor-pointer ${
+                currentBalance < creditsRequired 
+                  ? 'bg-amber-500/10 border-2 border-amber-500/50 hover:bg-amber-500/20 animate-pulse' 
+                  : 'bg-muted hover:bg-muted/80'
+              }`}
+            >
               <div className="flex items-center gap-2">
                 <CreditCard className="w-4 h-4 text-primary" />
                 <span className="text-sm font-medium">
@@ -139,8 +166,8 @@ export const MessageComposer = ({
                 </span>
               </div>
               {currentBalance < creditsRequired && (
-                <span className="text-xs text-destructive font-medium">
-                  Insufficient credits
+                <span className="text-xs text-amber-600 dark:text-amber-400 font-medium">
+                  Click to purchase
                 </span>
               )}
             </div>
@@ -203,6 +230,12 @@ export const MessageComposer = ({
           </Button>
         </div>
       </DialogContent>
+
+      <CreditPurchaseModal
+        open={showCreditPurchase}
+        onOpenChange={setShowCreditPurchase}
+        onPurchaseComplete={handlePurchaseComplete}
+      />
     </Dialog>
   );
 };
