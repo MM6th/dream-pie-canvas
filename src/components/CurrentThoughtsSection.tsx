@@ -111,7 +111,7 @@ const CurrentThoughtsSection = ({ posts, useCarousel = true }: CurrentThoughtsSe
           <Carousel
             opts={{
               align: "start",
-              loop: posts.length > 1,
+              loop: posts.length > 4,
             }}
             className="w-full"
             orientation="vertical"

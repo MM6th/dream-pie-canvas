@@ -122,14 +122,14 @@ const RegularPostsSection = ({ posts, useCarousel = true }: RegularPostsSectionP
           <CarouselNext className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
         </Carousel>
       ) : (
-        <Carousel
-          opts={{
-            align: "start",
-            loop: posts.length > 1,
-          }}
-          className="w-full"
-          orientation="vertical"
-        >
+          <Carousel
+            opts={{
+              align: "start",
+              loop: posts.length > 4,
+            }}
+            className="w-full"
+            orientation="vertical"
+          >
           <CarouselContent className="-mt-4 h-[600px]">
             {posts.map((post) => (
               <CarouselItem key={post.id} className="pt-4 basis-auto min-h-[400px]">
