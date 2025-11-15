@@ -20,6 +20,7 @@ interface MessageComposerProps {
   recipientId: string;
   recipientName?: string;
   currentBalance?: number;
+  isFree?: boolean;
   onMessageSent?: () => void;
 }
 
@@ -29,6 +30,7 @@ export const MessageComposer = ({
   recipientId,
   recipientName,
   currentBalance = 0,
+  isFree = false,
   onMessageSent,
 }: MessageComposerProps) => {
   const [subject, setSubject] = useState('');
@@ -36,7 +38,7 @@ export const MessageComposer = ({
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  const creditsRequired = 1; // Could be fetched from message_settings
+  const creditsRequired = isFree ? 0 : 1; // Free for merchant-to-merchant
 
   const handleSend = async () => {
     if (subject.length < 5) {
@@ -66,7 +68,7 @@ export const MessageComposer = ({
       return;
     }
 
-    if (currentBalance < creditsRequired) {
+    if (!isFree && currentBalance < creditsRequired) {
       toast({
         title: 'Insufficient Credits',
         description: `You need ${creditsRequired} credit(s) but have ${currentBalance}. Please purchase more credits.`,
@@ -90,7 +92,9 @@ export const MessageComposer = ({
 
       toast({
         title: 'Message Sent!',
-        description: `Your message has been sent. ${data.remainingBalance} credits remaining.`,
+        description: data.isFree 
+          ? 'Your message has been sent for free (merchant-to-merchant).' 
+          : `Your message has been sent. ${data.remainingBalance} credits remaining.`,
       });
 
       setSubject('');
@@ -116,26 +120,31 @@ export const MessageComposer = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Send Message to {recipientName || 'Merchant'}</DialogTitle>
+          <DialogTitle>Send Message to {recipientName || 'User'}</DialogTitle>
           <DialogDescription>
-            This message will cost {creditsRequired} credit{creditsRequired !== 1 ? 's' : ''}
+            {isFree 
+              ? 'Merchant-to-merchant messaging is free' 
+              : `This message will cost ${creditsRequired} credit${creditsRequired !== 1 ? 's' : ''}`
+            }
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-            <div className="flex items-center gap-2">
-              <CreditCard className="w-4 h-4 text-primary" />
-              <span className="text-sm font-medium">
-                Current Balance: {currentBalance} credits
-              </span>
+          {!isFree && (
+            <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+              <div className="flex items-center gap-2">
+                <CreditCard className="w-4 h-4 text-primary" />
+                <span className="text-sm font-medium">
+                  Current Balance: {currentBalance} credits
+                </span>
+              </div>
+              {currentBalance < creditsRequired && (
+                <span className="text-xs text-destructive font-medium">
+                  Insufficient credits
+                </span>
+              )}
             </div>
-            {currentBalance < creditsRequired && (
-              <span className="text-xs text-destructive font-medium">
-                Insufficient credits
-              </span>
-            )}
-          </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="subject">Subject</Label>

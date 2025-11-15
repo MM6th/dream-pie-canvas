@@ -47,18 +47,18 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Verify sender is a supporter
+    // Get sender profile
     const { data: senderProfile, error: senderError } = await supabaseAdmin
       .from('profiles')
       .select('user_type')
       .eq('id', user.id)
       .single();
 
-    if (senderError || senderProfile?.user_type !== 'supporter') {
-      throw new Error('Only supporters can send paid messages');
+    if (senderError || !senderProfile) {
+      throw new Error('Sender profile not found');
     }
 
-    // Verify recipient exists and is a merchant
+    // Get recipient profile
     const { data: recipientProfile, error: recipientError } = await supabaseAdmin
       .from('profiles')
       .select('user_type, display_name')
@@ -69,37 +69,46 @@ Deno.serve(async (req) => {
       throw new Error('Recipient not found');
     }
 
-    if (recipientProfile.user_type !== 'merchant') {
-      throw new Error('Can only send messages to merchants');
+    // Block supporter-to-supporter messaging
+    if (senderProfile.user_type === 'supporter' && recipientProfile.user_type === 'supporter') {
+      throw new Error('Cannot send messages to other supporters');
     }
 
-    // Get merchant's message settings (default to 1 credit if not set)
-    const { data: messageSettings } = await supabaseAdmin
-      .from('message_settings')
-      .select('credits_per_message, enabled')
-      .eq('merchant_id', recipientId)
-      .single();
+    // Determine if message is free (merchant-to-merchant)
+    const isMerchantToMerchant = senderProfile.user_type === 'merchant' && recipientProfile.user_type === 'merchant';
+    
+    let creditsRequired = 0;
+    
+    // Only check credits and settings for paid messages (supporter-to-merchant)
+    if (!isMerchantToMerchant) {
+      // Get merchant's message settings (default to 1 credit if not set)
+      const { data: messageSettings } = await supabaseAdmin
+        .from('message_settings')
+        .select('credits_per_message, enabled')
+        .eq('merchant_id', recipientId)
+        .single();
 
-    const creditsRequired = messageSettings?.credits_per_message || 1;
-    const messagingEnabled = messageSettings?.enabled !== false;
+      creditsRequired = messageSettings?.credits_per_message || 1;
+      const messagingEnabled = messageSettings?.enabled !== false;
 
-    if (!messagingEnabled) {
-      throw new Error('This merchant has disabled messaging');
-    }
+      if (!messagingEnabled) {
+        throw new Error('This merchant has disabled messaging');
+      }
 
-    // Check sender's credit balance
-    const { data: senderCredits, error: creditsError } = await supabaseAdmin
-      .from('messaging_credits')
-      .select('balance')
-      .eq('user_id', user.id)
-      .single();
+      // Check sender's credit balance
+      const { data: senderCredits, error: creditsError } = await supabaseAdmin
+        .from('messaging_credits')
+        .select('balance')
+        .eq('user_id', user.id)
+        .single();
 
-    if (creditsError || !senderCredits) {
-      throw new Error('No credits found. Please purchase credits first.');
-    }
+      if (creditsError || !senderCredits) {
+        throw new Error('No credits found. Please purchase credits first.');
+      }
 
-    if (senderCredits.balance < creditsRequired) {
-      throw new Error(`Insufficient credits. You need ${creditsRequired} credit(s), but have ${senderCredits.balance}.`);
+      if (senderCredits.balance < creditsRequired) {
+        throw new Error(`Insufficient credits. You need ${creditsRequired} credit(s), but have ${senderCredits.balance}.`);
+      }
     }
 
     // Rate limiting: check messages sent in last hour
