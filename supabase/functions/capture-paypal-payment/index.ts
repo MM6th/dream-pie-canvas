@@ -172,7 +172,7 @@ Deno.serve(async (req) => {
       const amountPaid = parseFloat(capture.amount.value)
       const paypalFee = amountPaid * 0.029 + 0.30
       const netRevenue = amountPaid - paypalFee
-      const piePlatformShare = netRevenue * 0.10
+      const piePlatformShare = netRevenue * 0.30
       const remainingAfterPie = netRevenue - piePlatformShare
       
       let referrerCommission = null

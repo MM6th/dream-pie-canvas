@@ -91,9 +91,9 @@ serve(async (req) => {
     const paypalFee = parseFloat(captureData.purchase_units[0].payments.captures[0].seller_receivable_breakdown.paypal_fee.value);
     const netRevenue = grossAmount - paypalFee;
 
-    // Calculate revenue split: 10% PIE, 90% Merchant
-    const platformFee = netRevenue * 0.10;
-    const merchantRevenue = netRevenue * 0.90;
+    // Calculate revenue split: 30% PIE, 70% Merchant
+    const platformFee = netRevenue * 0.30;
+    const merchantRevenue = netRevenue * 0.70;
 
     const transactionId = captureData.purchase_units[0].payments.captures[0].id;
 

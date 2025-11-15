@@ -11,7 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calculator, RotateCcw } from "lucide-react";
+import { Calculator, RotateCcw, DollarSign, Info } from "lucide-react";
+import RevenueBreakdownModal from "./RevenueBreakdownModal";
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('en-US', {
@@ -122,6 +123,34 @@ const TaxCalculationForm = ({ initialData, onCalculate, onReset, platformIncome 
               Automatically tracked from your platform activity this quarter
             </p>
           </div>
+
+          {/* Platform Income Info */}
+          {platformIncome > 0 && (
+            <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <div className="bg-blue-500 rounded-full p-2">
+                  <DollarSign className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h4 className="text-blue-400 font-semibold mb-2">
+                    Merchant Revenue (70% Share)
+                  </h4>
+                  <p className="text-sm text-gray-400 mb-3">
+                    This income represents your <strong>70% merchant share</strong> after PayPal processing fees and PIE's 30% platform fee.
+                    PIE handles distribution of this amount to your PayPal account when payment thresholds are met.
+                  </p>
+                  <RevenueBreakdownModal 
+                    trigger={
+                      <Button variant="outline" size="sm" className="text-xs">
+                        <Info className="w-3 h-3 mr-1" />
+                        View Revenue Split Details
+                      </Button>
+                    }
+                  />
+                </div>
+              </div>
+            </div>
+          )}
 
           <div>
             <Label htmlFor="business-expenses" className="text-gray-300">

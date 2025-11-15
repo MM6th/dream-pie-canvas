@@ -130,10 +130,10 @@ Deno.serve(async (req) => {
 
     if (transactionError) throw transactionError;
 
-    // Calculate and record platform revenue (10% platform fee)
+    // Calculate and record platform revenue (30% platform fee)
     const packagePrices: Record<number, number> = { 50: 5.00, 100: 9.00, 200: 16.00 };
     const totalAmount = packagePrices[creditAmount] || 0;
-    const platformFee = totalAmount * 0.10;
+    const platformFee = totalAmount * 0.30;
 
     const { error: revenueError } = await supabaseAdmin
       .from('platform_revenue')

@@ -2,7 +2,8 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { DollarSign, TrendingUp, AlertTriangle, Download } from "lucide-react";
+import { DollarSign, TrendingUp, AlertTriangle, Download, Info } from "lucide-react";
+import RevenueBreakdownModal from "./RevenueBreakdownModal";
 
 interface TaxResults {
   netEarnings: number;
@@ -80,12 +81,29 @@ const TaxResultsDisplay = ({ results, taxData }: TaxResultsDisplayProps) => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Revenue Breakdown Info */}
+        <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
+          <div className="flex items-start justify-between gap-3 mb-3">
+            <div className="flex items-start gap-2">
+              <Info className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <h4 className="text-blue-400 font-semibold mb-1">Your Merchant Revenue (70%)</h4>
+                <p className="text-sm text-gray-400">
+                  Income shown is your 70% merchant share after PayPal fees and PIE's 30% platform fee.
+                  PIE handles distribution to your PayPal account.
+                </p>
+              </div>
+            </div>
+            <RevenueBreakdownModal />
+          </div>
+        </div>
+
         {/* Income Summary */}
         <div className="bg-gray-800/50 p-3 rounded-lg">
           <h4 className="text-gray-300 font-medium mb-2">Income Summary</h4>
           <div className="space-y-1 text-sm">
             <div className="flex justify-between">
-              <span className="text-gray-400">Gross Income:</span>
+              <span className="text-gray-400">Merchant Revenue (70%):</span>
               <span className="text-white">{formatCurrency(taxData.quarterlyIncome)}</span>
             </div>
             <div className="flex justify-between">
