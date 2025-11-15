@@ -15,6 +15,7 @@ import { usePrivacyCheck } from "@/hooks/usePrivacyCheck";
 import { useFollowRequest } from "@/hooks/useFollowRequest";
 import { useAuth } from "@/hooks/useAuth";
 import type { FollowStatus } from "@/hooks/useFollowRequest";
+import { MessageButton } from "@/components/profile/MessageButton";
 
 interface Profile {
   id: string;
@@ -483,6 +484,17 @@ const ProfilePage = () => {
                 {portfolios.map((portfolio) => (
                   <PortfolioCard key={portfolio.id} portfolio={portfolio} />
                 ))}
+              </div>
+            )}
+
+            {/* Message Button */}
+            {profile && user && user.id !== userId && (
+              <div className="mt-6">
+                <MessageButton
+                  recipientId={profile.id}
+                  recipientName={profile.display_name}
+                  recipientType={profile.user_type}
+                />
               </div>
             )}
 
