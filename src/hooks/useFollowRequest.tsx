@@ -51,7 +51,7 @@ export const useFollowRequest = () => {
         .select('id')
         .eq('follower_id', user.id)
         .eq('merchant_id', targetId)
-        .single();
+        .maybeSingle();
 
       if (followerData) return 'following';
 
@@ -62,7 +62,7 @@ export const useFollowRequest = () => {
         .eq('requester_id', user.id)
         .eq('target_merchant_id', targetId)
         .eq('status', 'pending')
-        .single();
+        .maybeSingle();
 
       if (requestData) return 'pending';
 
