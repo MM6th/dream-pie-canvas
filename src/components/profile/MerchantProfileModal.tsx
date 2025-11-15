@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
+import { SkillsInput } from "@/components/profile/SkillsInput";
 
 interface MerchantProfileModalProps {
   isOpen?: boolean;
@@ -42,6 +43,7 @@ const MerchantProfileModal = ({
   const [onlyfansUrl, setOnlyfansUrl] = useState(profile?.onlyfans_url || '');
   const [isAdultCreator, setIsAdultCreator] = useState(profile?.is_adult_creator || false);
   const [isPrivate, setIsPrivate] = useState(profile?.is_private || false);
+  const [skills, setSkills] = useState<string[]>(profile?.skills || []);
   const [internalOpen, setInternalOpen] = useState(false);
 
   useEffect(() => {
@@ -58,6 +60,7 @@ const MerchantProfileModal = ({
       setOnlyfansUrl(profile.onlyfans_url || '');
       setIsAdultCreator(profile.is_adult_creator || false);
       setIsPrivate(profile.is_private || false);
+      setSkills(profile.skills || []);
     }
   }, [profile]);
 
@@ -82,6 +85,7 @@ const MerchantProfileModal = ({
           onlyfans_url: onlyfansUrl,
           is_adult_creator: isAdultCreator,
           is_private: isPrivate,
+          skills: skills,
           updated_at: new Date().toISOString()
         })
         .eq('id', user.id);
@@ -161,6 +165,12 @@ const MerchantProfileModal = ({
                 className="bg-gray-700 border-gray-600 text-white"
               />
             </div>
+            
+            {/* Skills Input */}
+            <SkillsInput
+              skills={skills}
+              onSkillsChange={setSkills}
+            />
             
             <div>
               <Label htmlFor="website" className="text-white">Website</Label>

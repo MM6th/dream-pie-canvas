@@ -18,6 +18,7 @@ import { toast } from "@/components/ui/use-toast";
 import ContentPicker from "@/components/ContentPicker";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User } from "lucide-react";
+import { SkillsInput } from "@/components/profile/SkillsInput";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -44,6 +45,7 @@ const SupporterProfileModal = ({ children, profile: initialProfile, onProfileUpd
     display_name: "",
     adult_content_restricted: false,
     avatar_url: "",
+    skills: [] as string[],
   });
 
   useEffect(() => {
@@ -52,6 +54,7 @@ const SupporterProfileModal = ({ children, profile: initialProfile, onProfileUpd
         display_name: initialProfile.display_name || "",
         adult_content_restricted: initialProfile.adult_content_restricted || false,
         avatar_url: initialProfile.avatar_url || "",
+        skills: initialProfile.skills || [],
       });
     } else if (user && isOpen) {
       fetchProfile();
@@ -78,6 +81,7 @@ const SupporterProfileModal = ({ children, profile: initialProfile, onProfileUpd
           display_name: data.display_name || "",
           adult_content_restricted: data.adult_content_restricted || false,
           avatar_url: data.avatar_url || "",
+          skills: data.skills || [],
         });
       }
     } catch (error) {
@@ -115,6 +119,7 @@ const SupporterProfileModal = ({ children, profile: initialProfile, onProfileUpd
           display_name: profile.display_name,
           adult_content_restricted: profile.adult_content_restricted,
           avatar_url: profile.avatar_url,
+          skills: profile.skills,
           updated_at: new Date().toISOString(),
         })
         .eq('id', user.id);
@@ -243,6 +248,12 @@ const SupporterProfileModal = ({ children, profile: initialProfile, onProfileUpd
               required
             />
           </div>
+
+          {/* Skills Input */}
+          <SkillsInput
+            skills={profile.skills}
+            onSkillsChange={(skills) => setProfile({...profile, skills})}
+          />
 
           {/* Adult Content Restriction Toggle */}
           <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg border border-gray-600">

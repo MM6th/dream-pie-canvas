@@ -20,6 +20,7 @@ interface Profile {
   is_adult_creator?: boolean;
   business_name?: string;
   created_at: string;
+  skills?: string[];
 }
 
 const ProfilesDirectory = () => {
@@ -64,7 +65,8 @@ const ProfilesDirectory = () => {
           pinterest_url,
           onlyfans_url,
           background_image_url,
-          created_at
+          created_at,
+          skills
         `)
         .order('created_at', { ascending: false });
 
@@ -354,6 +356,21 @@ const ProfilesDirectory = () => {
                             Creator
                           </Badge>
                         )}
+                        {/* Skills */}
+                        {profile.skills && profile.skills.length > 0 && (
+                          <>
+                            {profile.skills.slice(0, 3).map((skill, index) => (
+                              <Badge key={index} variant="outline" className="bg-teal-500/10 text-teal-400 border-teal-500/30 text-xs">
+                                {skill}
+                              </Badge>
+                            ))}
+                            {profile.skills.length > 3 && (
+                              <Badge variant="outline" className="bg-teal-500/10 text-teal-400 border-teal-500/30 text-xs">
+                                +{profile.skills.length - 3}
+                              </Badge>
+                            )}
+                          </>
+                        )}
                       </div>
 
                       {/* Join Date */}
@@ -441,6 +458,21 @@ const ProfilesDirectory = () => {
                                 <Badge variant="secondary" className="bg-purple-600 text-white text-xs">
                                   Creator
                                 </Badge>
+                              )}
+                              {/* Skills */}
+                              {profile.skills && profile.skills.length > 0 && (
+                                <>
+                                  {profile.skills.slice(0, 3).map((skill, index) => (
+                                    <Badge key={index} variant="outline" className="bg-teal-500/10 text-teal-400 border-teal-500/30 text-xs">
+                                      {skill}
+                                    </Badge>
+                                  ))}
+                                  {profile.skills.length > 3 && (
+                                    <Badge variant="outline" className="bg-teal-500/10 text-teal-400 border-teal-500/30 text-xs">
+                                      +{profile.skills.length - 3}
+                                    </Badge>
+                                  )}
+                                </>
                               )}
                             </div>
 

@@ -34,6 +34,7 @@ interface Profile {
   pinterest_url?: string;
   onlyfans_url?: string;
   created_at: string;
+  skills?: string[];
 }
 
 interface BulletinPost {
@@ -293,6 +294,17 @@ const ProfilePage = () => {
                       </Badge>
                     )}
                   </div>
+
+                  {/* Skills */}
+                  {profile.skills && profile.skills.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {profile.skills.map((skill, index) => (
+                        <Badge key={index} variant="outline" className="bg-teal-500/10 text-teal-400 border-teal-500/30">
+                          {skill}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
 
                   <div className="flex items-center gap-2 text-sm text-gray-400 mb-4">
                     <Calendar className="w-4 h-4" />

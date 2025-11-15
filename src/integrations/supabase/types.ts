@@ -1543,6 +1543,7 @@ export type Database = {
           pinterest_url: string | null
           playlist_public: boolean | null
           profile_complete: boolean | null
+          skills: string[] | null
           snapchat_url: string | null
           updated_at: string | null
           user_type: string
@@ -1573,6 +1574,7 @@ export type Database = {
           pinterest_url?: string | null
           playlist_public?: boolean | null
           profile_complete?: boolean | null
+          skills?: string[] | null
           snapchat_url?: string | null
           updated_at?: string | null
           user_type: string
@@ -1603,6 +1605,7 @@ export type Database = {
           pinterest_url?: string | null
           playlist_public?: boolean | null
           profile_complete?: boolean | null
+          skills?: string[] | null
           snapchat_url?: string | null
           updated_at?: string | null
           user_type?: string
