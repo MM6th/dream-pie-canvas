@@ -96,9 +96,9 @@ const CurrentThoughtsSection = ({ posts, useCarousel = true }: CurrentThoughtsSe
           }}
           className="w-full"
         >
-          <CarouselContent className="-ml-0">
+          <CarouselContent className="-ml-4">
             {posts.map((post) => (
-              <CarouselItem key={post.id} className="pl-0 md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
+              <CarouselItem key={post.id} className="pl-4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
                 {renderCard(post)}
               </CarouselItem>
             ))}
@@ -116,15 +116,15 @@ const CurrentThoughtsSection = ({ posts, useCarousel = true }: CurrentThoughtsSe
             className="w-full"
             orientation="vertical"
           >
-            <CarouselContent className="-mt-0 h-[800px]">
+            <CarouselContent className="-mt-4 h-[800px]">
               {posts.map((post) => (
-                <CarouselItem key={post.id} className="pt-0 basis-1/3">
+                <CarouselItem key={post.id} className="pt-4 basis-1/3">
                   {renderCard(post)}
                 </CarouselItem>
               ))}
             </CarouselContent>
-            <CarouselPrevious className="text-white bg-gray-800/90 hover:bg-gray-700 border-gray-600 top-4 left-1/2 -translate-x-1/2 z-10" />
-            <CarouselNext className="text-white bg-gray-800/90 hover:bg-gray-700 border-gray-600 bottom-4 left-1/2 -translate-x-1/2 z-10" />
+            <CarouselPrevious className="text-white bg-gray-800/90 hover:bg-gray-700 border-gray-600 left-1/2 -translate-x-1/2 z-10" />
+            <CarouselNext className="text-white bg-gray-800/90 hover:bg-gray-700 border-gray-600 left-1/2 -translate-x-1/2 z-10" />
           </Carousel>
         </div>
       )}
