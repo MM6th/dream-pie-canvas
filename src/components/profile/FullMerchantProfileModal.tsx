@@ -11,6 +11,7 @@ import { toast } from "@/hooks/use-toast";
 import AvatarUpload from "./AvatarUpload";
 import { Trash2, Lock, Shield } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { SkillsInput } from "@/components/profile/SkillsInput";
 
 interface FullMerchantProfileModalProps {
   isOpen?: boolean;
@@ -48,6 +49,7 @@ const FullMerchantProfileModal = ({
   const [avatarUrl, setAvatarUrl] = useState('');
   const [isPrivate, setIsPrivate] = useState(false);
   const [isAdultCreator, setIsAdultCreator] = useState(false);
+  const [skills, setSkills] = useState<string[]>([]);
   const [internalOpen, setInternalOpen] = useState(false);
   const [currentProfile, setCurrentProfile] = useState(profile);
 
@@ -78,6 +80,7 @@ const FullMerchantProfileModal = ({
       setAvatarUrl(profileToUse.avatar_url || '');
       setIsPrivate(profileToUse.is_private || false);
       setIsAdultCreator(profileToUse.is_adult_creator || false);
+      setSkills(profileToUse.skills || []);
     }
   }, [profile, currentProfile]);
 
@@ -134,6 +137,7 @@ const FullMerchantProfileModal = ({
           avatar_url: avatarUrl,
           is_private: isPrivate,
           is_adult_creator: isAdultCreator,
+          skills: skills,
           updated_at: new Date().toISOString()
         })
         .eq('id', user.id);
@@ -269,6 +273,12 @@ const FullMerchantProfileModal = ({
                   className="bg-gray-700 border-gray-600 text-white"
                 />
               </div>
+              
+              {/* Skills Input */}
+              <SkillsInput
+                skills={skills}
+                onSkillsChange={setSkills}
+              />
               
               <div>
                 <Label htmlFor="website" className="text-white">Website</Label>
