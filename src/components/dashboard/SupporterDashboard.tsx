@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Music, Video, User, FolderOpen, DollarSign, MessageSquare } from "lucide-react";
+import { Music, Video, User, FolderOpen, DollarSign, MessageSquare, Mail } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import AudioPlayer from "@/components/AudioPlayer";
 import VideoPlayer from "@/components/VideoPlayer";
@@ -25,6 +25,10 @@ import { supporterTutorialSteps } from "@/constants/tutorialContent";
 import { TutorialTooltip } from "@/components/TutorialTooltip";
 import { TutorialSpotlight } from "@/components/TutorialSpotlight";
 import SupporterCurrentAffirmationsModal from "@/components/SupporterCurrentAffirmationsModal";
+import { MessageCreditsDisplay } from "@/components/messaging/MessageCreditsDisplay";
+import { CreditPurchaseModal } from "@/components/messaging/CreditPurchaseModal";
+import { MessagingInbox } from "@/components/messaging/MessagingInbox";
+import { CreditTransactionHistory } from "@/components/messaging/CreditTransactionHistory";
 
 interface AudioTrack {
   id: string;
@@ -59,6 +63,8 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
   const [playlistPublic, setPlaylistPublic] = useState(false);
   const [purchasedPortfolios, setPurchasedPortfolios] = useState<any[]>([]);
   const { currentQuarterIncome } = useQuarterlyIncome(user?.id);
+  const [showCreditPurchaseModal, setShowCreditPurchaseModal] = useState(false);
+  const [creditBalance, setCreditBalance] = useState(0);
   
   const tutorial = useDashboardTutorial('supporter', supporterTutorialSteps);
 
@@ -141,10 +147,25 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
     fetchUserProfile();
   };
 
+  const fetchCreditBalance = async () => {
+    if (!user) return;
+    try {
+      const { data } = await supabase
+        .from('messaging_credits')
+        .select('balance')
+        .eq('user_id', user.id)
+        .single();
+      setCreditBalance(data?.balance || 0);
+    } catch (error) {
+      console.error('Error fetching credit balance:', error);
+    }
+  };
+
   useEffect(() => {
     if (user) {
       fetchUserProfile();
       fetchPurchasedPortfolios();
+      fetchCreditBalance();
     }
   }, [user]);
 
@@ -253,7 +274,7 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="music" className="w-full">
-            <TabsList className={`grid w-full ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-6'}`}>
+            <TabsList className={`grid w-full ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-7'}`}>
               <TabsTrigger value="music" className={`flex items-center gap-2 ${isMobile ? 'text-xs px-2 py-1 h-8' : ''}`} data-tutorial="music-tab">
                 <Music className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'}`} />
                 {isMobile ? 'Media' : 'Music & Podcasts'}
@@ -267,6 +288,10 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
                   <TabsTrigger value="posts" className="flex items-center gap-2">
                     <MessageSquare className="w-4 h-4" />
                     Community Posts
+                  </TabsTrigger>
+                  <TabsTrigger value="messaging" className="flex items-center gap-2">
+                    <Mail className="w-4 h-4" />
+                    Messages
                   </TabsTrigger>
                   <TabsTrigger value="content" className="flex items-center gap-2" data-tutorial="gallery-tab">
                     <FolderOpen className="w-4 h-4" />
@@ -321,6 +346,11 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
               <>
                 <TabsContent value="posts" className="space-y-6">
                   <BulletinPostManager />
+                </TabsContent>
+                
+                <TabsContent value="messaging" className="space-y-6">
+                  <MessagingInbox />
+                  <CreditTransactionHistory />
                 </TabsContent>
                 
                 <TabsContent value="content" className="space-y-6">
@@ -400,6 +430,12 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
           </Tabs>
         </CardContent>
       </Card>
+
+      <CreditPurchaseModal 
+        open={showCreditPurchaseModal}
+        onOpenChange={setShowCreditPurchaseModal}
+        onPurchaseComplete={fetchCreditBalance}
+      />
     </div>
   );
 };
