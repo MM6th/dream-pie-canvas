@@ -132,7 +132,7 @@ const RegularPostsSection = ({ posts, useCarousel = true }: RegularPostsSectionP
         >
           <CarouselContent className="-mt-4 h-[600px]">
             {posts.map((post) => (
-              <CarouselItem key={post.id} className="pt-4 basis-full">
+              <CarouselItem key={post.id} className="pt-4 basis-auto min-h-[400px]">
                 {renderCard(post)}
               </CarouselItem>
             ))}
