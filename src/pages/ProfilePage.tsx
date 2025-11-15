@@ -76,6 +76,7 @@ const ProfilePage = () => {
   const [portfolios, setPortfolios] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [followStatus, setFollowStatus] = useState<FollowStatus>('none');
+  const [followStatusLoading, setFollowStatusLoading] = useState(true);
   
   const { isPrivate, canView, loading: privacyLoading, refetch: refetchPrivacy } = usePrivacyCheck(userId || '');
   const { checkFollowStatus } = useFollowRequest();
@@ -87,12 +88,14 @@ const ProfilePage = () => {
       fetchPortfolios();
       updateFollowStatus();
     }
-  }, [userId]);
+  }, [userId, user?.id]); // Re-check when user changes
 
   const updateFollowStatus = async () => {
     if (!userId) return;
+    setFollowStatusLoading(true);
     const status = await checkFollowStatus(userId);
     setFollowStatus(status);
+    setFollowStatusLoading(false);
   };
 
   const handleRequestSent = () => {
@@ -199,7 +202,7 @@ const ProfilePage = () => {
     }
   };
 
-  if (loading || privacyLoading) {
+  if (loading || privacyLoading || followStatusLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
         <div className="text-white text-xl">Loading profile...</div>
