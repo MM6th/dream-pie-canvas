@@ -314,7 +314,7 @@ const ProfilesDirectory = () => {
                     className="bg-gray-800 border-gray-700 hover:border-gray-600 transition-colors cursor-pointer group"
                     onClick={() => handleProfileClick(profile.id)}
                   >
-                    <CardContent className="p-4 text-center h-[240px] flex flex-col justify-between">
+                    <CardContent className="p-4 text-center h-[280px] flex flex-col justify-between">
                       {/* Avatar */}
                       <div className="mb-4">
                         {profile.avatar_url ? (
@@ -331,17 +331,17 @@ const ProfilesDirectory = () => {
                       </div>
 
                       {/* Name */}
-                      <h3 className="text-white font-semibold mb-2 group-hover:text-blue-300 transition-colors">
+                      <h3 className="text-white font-semibold mb-1 group-hover:text-blue-300 transition-colors line-clamp-1">
                         {profile.display_name || 'Anonymous User'}
                       </h3>
 
                       {/* Business Name */}
                       {profile.business_name && (
-                        <p className="text-gray-400 text-sm mb-2">{profile.business_name}</p>
+                        <p className="text-gray-400 text-xs mb-2 line-clamp-1">{profile.business_name}</p>
                       )}
 
                       {/* Badges */}
-                      <div className="flex flex-wrap justify-center gap-1 mb-3">
+                      <div className="flex flex-wrap justify-center gap-1 mb-2">
                         <Badge variant="secondary" className="bg-blue-600 text-white text-xs">
                           {profile.user_type === 'merchant' ? 'Merchant' : 'Supporter'}
                         </Badge>
@@ -356,22 +356,23 @@ const ProfilesDirectory = () => {
                             Creator
                           </Badge>
                         )}
-                        {/* Skills */}
-                        {profile.skills && profile.skills.length > 0 && (
-                          <>
-                            {profile.skills.slice(0, 3).map((skill, index) => (
-                              <Badge key={index} variant="outline" className="bg-teal-500/10 text-teal-400 border-teal-500/30 text-xs">
-                                {skill}
-                              </Badge>
-                            ))}
-                            {profile.skills.length > 3 && (
-                              <Badge variant="outline" className="bg-teal-500/10 text-teal-400 border-teal-500/30 text-xs">
-                                +{profile.skills.length - 3}
-                              </Badge>
-                            )}
-                          </>
-                        )}
                       </div>
+                      
+                      {/* Skills - Separate row */}
+                      {profile.skills && profile.skills.length > 0 && (
+                        <div className="flex flex-wrap justify-center gap-1 mb-2 min-h-[20px]">
+                          {profile.skills.slice(0, 2).map((skill, index) => (
+                            <Badge key={index} variant="outline" className="bg-teal-500/10 text-teal-400 border-teal-500/30 text-[10px] px-2 py-0">
+                              {skill}
+                            </Badge>
+                          ))}
+                          {profile.skills.length > 2 && (
+                            <Badge variant="outline" className="bg-teal-500/10 text-teal-400 border-teal-500/30 text-[10px] px-2 py-0">
+                              +{profile.skills.length - 2}
+                            </Badge>
+                          )}
+                        </div>
+                      )}
 
                       {/* Join Date */}
                       <div className="flex items-center justify-center gap-1 text-xs text-gray-500">
@@ -417,7 +418,7 @@ const ProfilesDirectory = () => {
                           className="bg-gray-800 border-gray-700 hover:border-gray-600 transition-colors cursor-pointer group"
                           onClick={() => handleProfileClick(profile.id)}
                         >
-                          <CardContent className="p-4 text-center h-[240px] flex flex-col justify-between">
+                          <CardContent className="p-4 text-center h-[280px] flex flex-col justify-between">
                             {/* Avatar */}
                             <div className="mb-4">
                               {profile.avatar_url ? (
@@ -434,17 +435,17 @@ const ProfilesDirectory = () => {
                             </div>
 
                             {/* Name */}
-                            <h3 className="text-white font-semibold mb-2 group-hover:text-blue-300 transition-colors line-clamp-1">
+                            <h3 className="text-white font-semibold mb-1 group-hover:text-blue-300 transition-colors line-clamp-1">
                               {profile.display_name || 'Anonymous User'}
                             </h3>
 
                             {/* Business Name */}
                             {profile.business_name && (
-                              <p className="text-gray-400 text-sm mb-2 line-clamp-1">{profile.business_name}</p>
+                              <p className="text-gray-400 text-xs mb-2 line-clamp-1">{profile.business_name}</p>
                             )}
 
                             {/* Badges */}
-                            <div className="flex flex-wrap justify-center gap-1 mb-3">
+                            <div className="flex flex-wrap justify-center gap-1 mb-2">
                               <Badge variant="secondary" className="bg-blue-600 text-white text-xs">
                                 {profile.user_type === 'merchant' ? 'Merchant' : 'Supporter'}
                               </Badge>
@@ -459,22 +460,23 @@ const ProfilesDirectory = () => {
                                   Creator
                                 </Badge>
                               )}
-                              {/* Skills */}
-                              {profile.skills && profile.skills.length > 0 && (
-                                <>
-                                  {profile.skills.slice(0, 3).map((skill, index) => (
-                                    <Badge key={index} variant="outline" className="bg-teal-500/10 text-teal-400 border-teal-500/30 text-xs">
-                                      {skill}
-                                    </Badge>
-                                  ))}
-                                  {profile.skills.length > 3 && (
-                                    <Badge variant="outline" className="bg-teal-500/10 text-teal-400 border-teal-500/30 text-xs">
-                                      +{profile.skills.length - 3}
-                                    </Badge>
-                                  )}
-                                </>
-                              )}
                             </div>
+                            
+                            {/* Skills - Separate row */}
+                            {profile.skills && profile.skills.length > 0 && (
+                              <div className="flex flex-wrap justify-center gap-1 mb-2 min-h-[20px]">
+                                {profile.skills.slice(0, 2).map((skill, index) => (
+                                  <Badge key={index} variant="outline" className="bg-teal-500/10 text-teal-400 border-teal-500/30 text-[10px] px-2 py-0">
+                                    {skill}
+                                  </Badge>
+                                ))}
+                                {profile.skills.length > 2 && (
+                                  <Badge variant="outline" className="bg-teal-500/10 text-teal-400 border-teal-500/30 text-[10px] px-2 py-0">
+                                    +{profile.skills.length - 2}
+                                  </Badge>
+                                )}
+                              </div>
+                            )}
 
                             {/* Join Date */}
                             <div className="flex items-center justify-center gap-1 text-xs text-gray-500">
