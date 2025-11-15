@@ -70,7 +70,7 @@ const ProfilePage = () => {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [userPosts, setUserPosts] = useState<BulletinPost[]>([]);
   const [portfolios, setPortfolios] = useState<any[]>([]);
@@ -82,16 +82,16 @@ const ProfilePage = () => {
   const { checkFollowStatus } = useFollowRequest();
 
   useEffect(() => {
-    if (userId) {
+    if (userId && !authLoading) {
       fetchProfileData();
       fetchUserPosts();
       fetchPortfolios();
       updateFollowStatus();
     }
-  }, [userId, user?.id]); // Re-check when user changes
+  }, [userId, user?.id, authLoading]); // Re-check when user changes or auth completes
 
   const updateFollowStatus = async () => {
-    if (!userId) return;
+    if (!userId || authLoading) return;
     setFollowStatusLoading(true);
     const status = await checkFollowStatus(userId);
     setFollowStatus(status);
@@ -202,7 +202,7 @@ const ProfilePage = () => {
     }
   };
 
-  if (loading || privacyLoading || followStatusLoading) {
+  if (loading || privacyLoading || followStatusLoading || authLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
         <div className="text-white text-xl">Loading profile...</div>
