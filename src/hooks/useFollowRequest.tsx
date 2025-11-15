@@ -1,14 +1,12 @@
-import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from './useAuth';
 import { toast } from 'sonner';
 
 export type FollowStatus = 'none' | 'pending' | 'following';
 
 export const useFollowRequest = () => {
-  const { user } = useAuth();
-
   const sendFollowRequest = async (targetId: string, intentMessage: string) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    
     if (!user) {
       toast.error('You must be logged in to send a follow request');
       return { error: 'Not authenticated' };
@@ -42,6 +40,8 @@ export const useFollowRequest = () => {
   };
 
   const checkFollowStatus = async (targetId: string): Promise<FollowStatus> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    
     if (!user) return 'none';
 
     try {
@@ -74,6 +74,8 @@ export const useFollowRequest = () => {
   };
 
   const getReceivedRequests = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    
     if (!user) return [];
 
     try {
