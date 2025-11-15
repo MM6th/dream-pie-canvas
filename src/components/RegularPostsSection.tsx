@@ -137,8 +137,8 @@ const RegularPostsSection = ({ posts, useCarousel = true }: RegularPostsSectionP
               </CarouselItem>
             ))}
           </CarouselContent>
-            <CarouselPrevious className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600 top-2 left-1/2 -translate-x-1/2 z-10" />
-            <CarouselNext className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600 bottom-2 left-1/2 -translate-x-1/2 z-10" />
+            <CarouselPrevious className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600 left-1/2 -translate-x-1/2 z-10" />
+            <CarouselNext className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600 left-1/2 -translate-x-1/2 z-10" />
         </Carousel>
       )}
     </div>
