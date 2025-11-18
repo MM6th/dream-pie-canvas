@@ -12,6 +12,7 @@ import { Edit, Loader2, Shield, CalendarIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import ImagePicker from "./ImagePicker";
+import VideoUpload from "./VideoUpload";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -86,6 +87,7 @@ const EditAstrologyProductModal = ({ product, isOpen, onClose, onSuccess }: Edit
     discount_percentage: calculateExistingDiscount()
   });
   const [thumbnailUrl, setThumbnailUrl] = useState(product.thumbnail_url || '');
+  const [advertisementVideoUrl, setAdvertisementVideoUrl] = useState((product as any).advertisement_video_url || '');
   const [isAdultContent, setIsAdultContent] = useState(product.is_adult_content || false);
   const [saleEndDate, setSaleEndDate] = useState<Date | undefined>(
     product.sale_end_date ? new Date(product.sale_end_date) : undefined
@@ -137,6 +139,7 @@ const EditAstrologyProductModal = ({ product, isOpen, onClose, onSuccess }: Edit
           total_price: totalPrice,
           buyer_email: null,
           thumbnail_url: thumbnailUrl || null,
+          advertisement_video_url: advertisementVideoUrl || null,
           is_adult_content: isAdultContent,
           discount_percentage: discountValue,
           sale_end_date: saleEndDate ? saleEndDate.toISOString() : null,
@@ -232,6 +235,20 @@ const EditAstrologyProductModal = ({ product, isOpen, onClose, onSuccess }: Edit
                   className="w-32 h-32 object-cover rounded-lg border border-gray-600"
                 />
               </div>
+            )}
+          </div>
+
+          <div>
+            <Label className="text-gray-200">Advertisement Video (Optional)</Label>
+            <p className="text-xs text-muted-foreground mb-2">
+              Upload a video to showcase your product in the store
+            </p>
+            <VideoUpload
+              onVideoSelect={setAdvertisementVideoUrl}
+              currentVideoUrl={advertisementVideoUrl}
+            />
+            {advertisementVideoUrl && (
+              <p className="text-xs text-green-500 mt-1">Video uploaded successfully</p>
             )}
           </div>
 

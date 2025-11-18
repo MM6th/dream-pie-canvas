@@ -4,11 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import { Clock, Shield, Lock } from "lucide-react";
+import { Clock, Shield, Lock, Play } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import AstrologyProductDetailModal from "./AstrologyProductDetailModal";
+import AstrologyVideoPlayerModal from "./AstrologyVideoPlayerModal";
 import ProductReviewsSection from "./reviews/ProductReviewsSection";
 import ProductInstructionalText from "./ui/ProductInstructionalText";
 
@@ -18,6 +19,7 @@ interface AstrologyProduct {
   description: string | null;
   base_price: number;
   thumbnail_url: string | null;
+  advertisement_video_url?: string | null;
   delivery_type: string | null;
   total_price: number;
   is_adult_content: boolean | null;
@@ -37,6 +39,7 @@ const AstrologyStoreSection = () => {
   const [userProfile, setUserProfile] = useState<{ adult_content_restricted: boolean | null; user_type: string; approval_status: string | null } | null>(null);
   const [loading, setLoading] = useState(true);
   const [detailModalProduct, setDetailModalProduct] = useState<AstrologyProduct | null>(null);
+  const [videoModalProduct, setVideoModalProduct] = useState<AstrologyProduct | null>(null);
   const [showReviews, setShowReviews] = useState<string | null>(null);
   const [reviewCounts, setReviewCounts] = useState<ProductReviewCount>({});
 
@@ -223,12 +226,24 @@ const AstrologyStoreSection = () => {
               <CarouselItem key={product.id} className="pl-2 md:pl-4 basis-full sm:basis-1/2 lg:basis-1/3">
                 <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm hover:bg-gray-700/50 transition-colors h-full">
                   {product.thumbnail_url && (
-                    <CardHeader className="p-0">
-                      <img
-                        src={product.thumbnail_url}
-                        alt={product.title}
-                        className="w-full h-48 object-fill rounded-t-lg"
-                      />
+                    <CardHeader className="p-0 relative">
+                      <div className="relative aspect-video group">
+                        <img
+                          src={product.thumbnail_url}
+                          alt={product.title}
+                          className="w-full h-48 object-fill rounded-t-lg"
+                        />
+                        {product.advertisement_video_url && (
+                          <div 
+                            className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-t-lg cursor-pointer transition-opacity hover:bg-black/60"
+                            onClick={() => setVideoModalProduct(product)}
+                          >
+                            <div className="bg-primary rounded-full p-4 shadow-lg transform transition-transform group-hover:scale-110">
+                              <Play className="w-8 h-8 text-primary-foreground fill-current" />
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </CardHeader>
                   )}
                   <CardContent className="p-6">
@@ -332,6 +347,15 @@ const AstrologyStoreSection = () => {
           isOpen={!!detailModalProduct}
           onClose={() => setDetailModalProduct(null)}
           onPurchase={handlePurchase}
+        />
+      )}
+
+      {videoModalProduct && videoModalProduct.advertisement_video_url && (
+        <AstrologyVideoPlayerModal
+          isOpen={!!videoModalProduct}
+          onClose={() => setVideoModalProduct(null)}
+          videoUrl={videoModalProduct.advertisement_video_url}
+          productTitle={videoModalProduct.title}
         />
       )}
     </>
