@@ -172,7 +172,7 @@ Deno.serve(async (req) => {
       const amountPaid = parseFloat(capture.amount.value)
       const paypalFee = amountPaid * 0.029 + 0.30
       const netRevenue = amountPaid - paypalFee
-      const piePlatformShare = netRevenue * 0.30
+      const piePlatformShare = netRevenue * 0.10 // 10% to PIE
       const remainingAfterPie = netRevenue - piePlatformShare
       
       let referrerCommission = null
@@ -202,17 +202,17 @@ Deno.serve(async (req) => {
 
           if (referrerOwnsProduct) {
             validReferrerId = referrerId
-            referrerCommission = remainingAfterPie * 0.10
+            referrerCommission = remainingAfterPie * 0.10 // 10% to referrer
             const remainingAfterReferrer = remainingAfterPie - referrerCommission
-            merchantRevenue = remainingAfterReferrer
-            console.log('Valid referrer found. Commission:', referrerCommission)
+            merchantRevenue = remainingAfterReferrer // 80% to merchant (90% - 10% referrer)
+            console.log('Valid referrer found. Merchant: 80%, Referrer: 10%, PIE: 10%')
           }
         }
       }
 
       if (!validReferrerId) {
-        merchantRevenue = remainingAfterPie
-        console.log('No valid referrer. Full merchant revenue:', merchantRevenue)
+        merchantRevenue = remainingAfterPie // 90% to merchant (100% - 10% PIE)
+        console.log('No valid referrer. Merchant: 90%, PIE: 10%')
       }
       
       // Record the purchase in our database using admin client

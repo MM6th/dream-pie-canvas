@@ -26,8 +26,8 @@ const RevenueBreakdownModal = ({ trigger }: RevenueBreakdownModalProps) => {
   const exampleSale = 100.00;
   const paypalFee = exampleSale * 0.029 + 0.30; // 2.9% + $0.30
   const netRevenue = exampleSale - paypalFee;
-  const piePlatformFee = netRevenue * 0.30; // 30%
-  const merchantRevenue = netRevenue * 0.70; // 70%
+  const piePlatformFee = netRevenue * 0.10; // 10%
+  const merchantRevenue = netRevenue * 0.90; // 90%
 
   return (
     <Dialog>
@@ -81,8 +81,8 @@ const RevenueBreakdownModal = ({ trigger }: RevenueBreakdownModalProps) => {
                     <p className="font-medium">Revenue Split Applied</p>
                     <p className="text-muted-foreground">
                       After PayPal fees, the remaining amount is split:
-                      <br />• 70% to Merchant (You)
-                      <br />• 30% to PIE Platform
+                      <br />• 90% to Merchant (You)
+                      <br />• 10% to PIE Platform
                     </p>
                   </div>
                 </div>
@@ -94,7 +94,7 @@ const RevenueBreakdownModal = ({ trigger }: RevenueBreakdownModalProps) => {
                   <div>
                     <p className="font-medium">PIE Distributes Your Share</p>
                     <p className="text-muted-foreground">
-                      PIE manages distribution of your 70% share to your PayPal account when payment thresholds are met
+                      PIE manages distribution of your 90% share to your PayPal account when payment thresholds are met
                     </p>
                   </div>
                 </div>
@@ -105,7 +105,7 @@ const RevenueBreakdownModal = ({ trigger }: RevenueBreakdownModalProps) => {
           {/* Example Breakdown */}
           <Card>
             <CardContent className="pt-6">
-              <h3 className="font-semibold text-lg mb-4">Example: {formatCurrency(exampleSale)} Sale</h3>
+              <h3 className="font-semibold text-lg mb-4">Example: Direct Purchase of {formatCurrency(exampleSale)}</h3>
               <div className="space-y-3">
                 <div className="flex justify-between items-center py-2 border-b">
                   <span className="text-muted-foreground">Gross Sale Amount</span>
@@ -128,7 +128,7 @@ const RevenueBreakdownModal = ({ trigger }: RevenueBreakdownModalProps) => {
                 <div className="flex justify-between items-center py-2 border-b">
                   <div className="flex items-center gap-2">
                     <TrendingDown className="w-4 h-4 text-destructive" />
-                    <span className="text-muted-foreground">PIE Platform Fee (30%)</span>
+                    <span className="text-muted-foreground">PIE Platform Fee (10%)</span>
                   </div>
                   <span className="text-destructive">-{formatCurrency(piePlatformFee)}</span>
                 </div>
@@ -136,10 +136,68 @@ const RevenueBreakdownModal = ({ trigger }: RevenueBreakdownModalProps) => {
                 <div className="flex justify-between items-center py-3 bg-green-500/10 rounded-lg px-3 mt-2">
                   <div className="flex items-center gap-2">
                     <Wallet className="w-5 h-5 text-green-600" />
-                    <span className="font-semibold text-green-600">Your Merchant Revenue (70%)</span>
+                    <span className="font-semibold text-green-600">Your Merchant Revenue (90%)</span>
                   </div>
                   <span className="font-bold text-green-600 text-lg">{formatCurrency(merchantRevenue)}</span>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Referral Purchase Example */}
+          <Card className="border-yellow-500/20">
+            <CardContent className="pt-6">
+              <h3 className="font-semibold text-lg mb-2">Playlist Referral Purchases</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                When a customer purchases through a supporter's public playlist, that supporter earns a 10% referral commission:
+              </p>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center py-2 border-b">
+                  <span className="text-muted-foreground">Gross Sale Amount</span>
+                  <span className="font-semibold">{formatCurrency(exampleSale)}</span>
+                </div>
+
+                <div className="flex justify-between items-center py-2 border-b">
+                  <div className="flex items-center gap-2">
+                    <TrendingDown className="w-4 h-4 text-destructive" />
+                    <span className="text-muted-foreground">PayPal Processing Fee</span>
+                  </div>
+                  <span className="text-destructive">-{formatCurrency(paypalFee)}</span>
+                </div>
+
+                <div className="flex justify-between items-center py-2 border-b font-medium">
+                  <span>Net Revenue (After PayPal)</span>
+                  <span>{formatCurrency(netRevenue)}</span>
+                </div>
+
+                <div className="flex justify-between items-center py-2 border-b">
+                  <div className="flex items-center gap-2">
+                    <TrendingDown className="w-4 h-4 text-destructive" />
+                    <span className="text-muted-foreground">PIE Platform Fee (10%)</span>
+                  </div>
+                  <span className="text-destructive">-{formatCurrency(piePlatformFee)}</span>
+                </div>
+
+                <div className="flex justify-between items-center py-2 border-b">
+                  <div className="flex items-center gap-2">
+                    <TrendingDown className="w-4 h-4 text-yellow-600" />
+                    <span className="text-muted-foreground">Supporter Referral Commission (10%)</span>
+                  </div>
+                  <span className="text-yellow-600">-{formatCurrency((netRevenue - piePlatformFee) * 0.10)}</span>
+                </div>
+
+                <div className="flex justify-between items-center py-3 bg-green-500/10 rounded-lg px-3 mt-2">
+                  <div className="flex items-center gap-2">
+                    <Wallet className="w-5 h-5 text-green-600" />
+                    <span className="font-semibold text-green-600">Your Merchant Revenue (80%)</span>
+                  </div>
+                  <span className="font-bold text-green-600 text-lg">{formatCurrency((netRevenue - piePlatformFee) * 0.90)}</span>
+                </div>
+              </div>
+              <div className="mt-4 p-3 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
+                <p className="text-xs text-yellow-600">
+                  💡 This incentivizes supporters to share their public playlists and promote your music!
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -150,15 +208,15 @@ const RevenueBreakdownModal = ({ trigger }: RevenueBreakdownModalProps) => {
               <h3 className="font-semibold text-lg mb-4">Payment Thresholds & Distribution</h3>
               <div className="space-y-3 text-sm">
                 <p className="text-muted-foreground">
-                  PIE manages the distribution of your 70% merchant share to your registered PayPal account.
+                  PIE manages the distribution of your 90% merchant share to your registered PayPal account.
                   Payments are distributed when your accumulated earnings reach minimum payout thresholds.
                 </p>
                 <div className="bg-muted/50 p-4 rounded-lg space-y-2">
                   <p className="font-medium">Important Notes:</p>
                   <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                    <li>Your tax calculations are based on your 70% merchant share</li>
+                    <li>Your tax calculations are based on your 90% merchant share</li>
                     <li>PayPal processing fees are business expenses you can deduct</li>
-                    <li>Quarterly income tracking reflects your 70% merchant revenue</li>
+                    <li>Quarterly income tracking reflects your 90% merchant revenue</li>
                     <li>Contact support for specific payout schedule details</li>
                   </ul>
                 </div>
@@ -174,7 +232,7 @@ const RevenueBreakdownModal = ({ trigger }: RevenueBreakdownModalProps) => {
                 <div className="space-y-2 text-sm">
                   <p className="font-medium text-blue-600">Tax & Accounting</p>
                   <p className="text-muted-foreground">
-                    The amounts shown in your tax calculator and quarterly income reports represent your 70% merchant share.
+                    The amounts shown in your tax calculator and quarterly income reports represent your 90% merchant share.
                     This is the income you'll report for tax purposes. PayPal processing fees can be claimed as business expenses.
                   </p>
                 </div>

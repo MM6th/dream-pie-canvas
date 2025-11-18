@@ -769,7 +769,7 @@ const MerchantAudioUploadModal = ({ onSuccess }: MerchantAudioUploadModalProps) 
                   className="bg-gray-700 border-gray-600 text-white"
                 />
                 <p className="text-xs text-gray-400">
-                  Revenue split: 70% to you, 30% platform fee. Payment via PayPal.
+                  Revenue split: 90% to you, 10% platform fee. Payment via PayPal.
                 </p>
               </div>
             )}
