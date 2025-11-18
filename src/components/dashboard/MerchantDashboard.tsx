@@ -26,6 +26,8 @@ import { TutorialTooltip } from "@/components/TutorialTooltip";
 import { TutorialSpotlight } from "@/components/TutorialSpotlight";
 import { FollowRequestsManager } from "@/components/profile/FollowRequestsManager";
 import { Users } from "lucide-react";
+import { NotificationsList } from "@/components/NotificationsList";
+import { AstrologyDeliveryManager } from "@/components/astrology/AstrologyDeliveryManager";
 
 interface MerchantDashboardProps {
   onSuccess: () => void;
@@ -198,6 +200,18 @@ const MerchantDashboard = ({
 
       {(isApproved || isAdmin) && (
         <>
+          {/* Notifications Section */}
+          <div className="mb-6">
+            <NotificationsList />
+          </div>
+
+          {/* Astrology Delivery Manager (Admin Only) */}
+          {isAdmin && (
+            <div className="mb-6">
+              <AstrologyDeliveryManager />
+            </div>
+          )}
+
           {isApproved && !isAdmin && (
             <div data-tutorial="account-setup">
               <AccountSetup userProfile={userProfile} onProfileUpdate={onSuccess} />
