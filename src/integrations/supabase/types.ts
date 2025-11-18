@@ -224,6 +224,72 @@ export type Database = {
         }
         Relationships: []
       }
+      astrology_deliveries: {
+        Row: {
+          admin_id: string
+          admin_video_url: string | null
+          astrology_product_id: string
+          buyer_id: string
+          buyer_video_url: string | null
+          created_at: string
+          delivered_at: string | null
+          delivery_deadline: string
+          id: string
+          is_overdue: boolean | null
+          overdue_message_sent: boolean | null
+          purchase_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_id: string
+          admin_video_url?: string | null
+          astrology_product_id: string
+          buyer_id: string
+          buyer_video_url?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          delivery_deadline: string
+          id?: string
+          is_overdue?: boolean | null
+          overdue_message_sent?: boolean | null
+          purchase_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_id?: string
+          admin_video_url?: string | null
+          astrology_product_id?: string
+          buyer_id?: string
+          buyer_video_url?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          delivery_deadline?: string
+          id?: string
+          is_overdue?: boolean | null
+          overdue_message_sent?: boolean | null
+          purchase_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "astrology_deliveries_astrology_product_id_fkey"
+            columns: ["astrology_product_id"]
+            isOneToOne: false
+            referencedRelation: "astrology_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "astrology_deliveries_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
+            referencedRelation: "astrology_purchases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       astrology_products: {
         Row: {
           access_level: Database["public"]["Enums"]["access_level"] | null
@@ -1147,6 +1213,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          read: boolean | null
+          related_delivery_id: string | null
+          title: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          read?: boolean | null
+          related_delivery_id?: string | null
+          title: string
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          read?: boolean | null
+          related_delivery_id?: string | null
+          title?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       platform_revenue: {
         Row: {
@@ -2118,6 +2220,7 @@ export type Database = {
         Args: { profile_id: string; viewer_id: string }
         Returns: boolean
       }
+      check_overdue_deliveries: { Args: never; Returns: undefined }
       clean_expired_astrology_cache: { Args: never; Returns: undefined }
       delete_audio_product_cascade: {
         Args: { p_merchant_id: string; p_product_id: string }
