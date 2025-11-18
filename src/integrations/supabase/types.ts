@@ -228,6 +228,7 @@ export type Database = {
         Row: {
           access_level: Database["public"]["Enums"]["access_level"] | null
           admin_id: string
+          advertisement_video_url: string | null
           base_price: number
           buyer_email: string | null
           created_at: string
@@ -247,6 +248,7 @@ export type Database = {
         Insert: {
           access_level?: Database["public"]["Enums"]["access_level"] | null
           admin_id: string
+          advertisement_video_url?: string | null
           base_price: number
           buyer_email?: string | null
           created_at?: string
@@ -266,6 +268,7 @@ export type Database = {
         Update: {
           access_level?: Database["public"]["Enums"]["access_level"] | null
           admin_id?: string
+          advertisement_video_url?: string | null
           base_price?: number
           buyer_email?: string | null
           created_at?: string

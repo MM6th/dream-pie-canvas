@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import ImagePicker from "./ImagePicker";
+import VideoUpload from "./VideoUpload";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -58,6 +59,7 @@ const AstrologyProductUploadModal = ({ isOpen, onClose, onSuccess }: AstrologyPr
     discount_percentage: ''
   });
   const [thumbnailUrl, setThumbnailUrl] = useState('');
+  const [advertisementVideoUrl, setAdvertisementVideoUrl] = useState('');
   const [saleEndDate, setSaleEndDate] = useState<Date | undefined>(undefined);
 
   const calculateTotalPrice = () => {
@@ -108,6 +110,7 @@ const AstrologyProductUploadModal = ({ isOpen, onClose, onSuccess }: AstrologyPr
           total_price: totalPrice,
           buyer_email: null,
           thumbnail_url: thumbnailUrl || null,
+          advertisement_video_url: advertisementVideoUrl || null,
           is_adult_content: formData.is_adult_content,
           discount_percentage: discountValue,
           sale_end_date: saleEndDate ? saleEndDate.toISOString() : null
@@ -203,6 +206,20 @@ const AstrologyProductUploadModal = ({ isOpen, onClose, onSuccess }: AstrologyPr
               onImageSelect={setThumbnailUrl}
               currentImageUrl={thumbnailUrl}
             />
+          </div>
+
+          <div>
+            <Label className="text-gray-200">Advertisement Video (Optional)</Label>
+            <p className="text-xs text-muted-foreground mb-2">
+              Upload a video to showcase your product in the store
+            </p>
+            <VideoUpload
+              onVideoSelect={setAdvertisementVideoUrl}
+              currentVideoUrl={advertisementVideoUrl}
+            />
+            {advertisementVideoUrl && (
+              <p className="text-xs text-green-500 mt-1">Video uploaded successfully</p>
+            )}
           </div>
 
           <div>
