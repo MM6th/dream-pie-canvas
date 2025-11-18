@@ -87,9 +87,9 @@ const TaxResultsDisplay = ({ results, taxData }: TaxResultsDisplayProps) => {
             <div className="flex items-start gap-2">
               <Info className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
               <div>
-                <h4 className="text-blue-400 font-semibold mb-1">Your Merchant Revenue (70%)</h4>
+                <h4 className="text-blue-400 font-semibold mb-1">Your Merchant Revenue (90%)</h4>
                 <p className="text-sm text-gray-400">
-                  Income shown is your 70% merchant share after PayPal fees and PIE's 30% platform fee.
+                  Income shown is your 90% merchant share after PayPal fees and PIE's 10% platform fee.
                   PIE handles distribution to your PayPal account.
                 </p>
               </div>
@@ -103,7 +103,7 @@ const TaxResultsDisplay = ({ results, taxData }: TaxResultsDisplayProps) => {
           <h4 className="text-gray-300 font-medium mb-2">Income Summary</h4>
           <div className="space-y-1 text-sm">
             <div className="flex justify-between">
-              <span className="text-gray-400">Merchant Revenue (70%):</span>
+              <span className="text-gray-400">Merchant Revenue (90%):</span>
               <span className="text-white">{formatCurrency(taxData.quarterlyIncome)}</span>
             </div>
             <div className="flex justify-between">

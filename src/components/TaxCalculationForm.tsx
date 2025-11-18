@@ -133,10 +133,10 @@ const TaxCalculationForm = ({ initialData, onCalculate, onReset, platformIncome 
                 </div>
                 <div className="flex-1">
                   <h4 className="text-blue-400 font-semibold mb-2">
-                    Merchant Revenue (70% Share)
+                    Merchant Revenue (90% Share)
                   </h4>
                   <p className="text-sm text-gray-400 mb-3">
-                    This income represents your <strong>70% merchant share</strong> after PayPal processing fees and PIE's 30% platform fee.
+                    This income represents your <strong>90% merchant share</strong> after PayPal processing fees and PIE's 10% platform fee.
                     PIE handles distribution of this amount to your PayPal account when payment thresholds are met.
                   </p>
                   <RevenueBreakdownModal 
