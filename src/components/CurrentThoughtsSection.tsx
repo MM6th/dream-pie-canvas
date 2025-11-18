@@ -107,7 +107,7 @@ const CurrentThoughtsSection = ({ posts, useCarousel = true }: CurrentThoughtsSe
           <CarouselNext className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
         </Carousel>
       ) : (
-        <div className="relative">
+        <div className="relative pb-16">
           <Carousel
             opts={{
               align: "start",
@@ -123,8 +123,8 @@ const CurrentThoughtsSection = ({ posts, useCarousel = true }: CurrentThoughtsSe
                 </CarouselItem>
               ))}
             </CarouselContent>
-            <CarouselPrevious className="text-white bg-gray-800/90 hover:bg-gray-700 border-gray-600 left-1/2 -translate-x-1/2 z-10" />
-            <CarouselNext className="text-white bg-gray-800/90 hover:bg-gray-700 border-gray-600 left-1/2 -translate-x-1/2 z-10" />
+            <CarouselPrevious className="text-white bg-gray-800/90 hover:bg-gray-700 border-gray-600 -top-12 left-1/2 -translate-x-1/2 z-20 w-12 h-12 md:w-8 md:h-8" />
+            <CarouselNext className="text-white bg-gray-800/90 hover:bg-gray-700 border-gray-600 -bottom-12 left-1/2 -translate-x-1/2 z-20 w-12 h-12 md:w-8 md:h-8" />
           </Carousel>
         </div>
       )}
