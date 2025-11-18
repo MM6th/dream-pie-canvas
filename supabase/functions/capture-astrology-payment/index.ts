@@ -103,7 +103,7 @@ serve(async (req) => {
     const transactionId = captureData.purchase_units?.[0]?.payments?.captures?.[0]?.id;
     const amountPaid = parseFloat(captureData.purchase_units?.[0]?.payments?.captures?.[0]?.amount?.value || '0');
 
-    const { error: purchaseError } = await supabase
+    const { data: purchase, error: purchaseError } = await supabase
       .from('astrology_purchases')
       .insert({
         user_id: userId,
@@ -114,7 +114,33 @@ serve(async (req) => {
         delivery_type: product.delivery_type,
         hours_purchased: product.hours_selected,
         status: 'completed'
-      });
+      })
+      .select()
+      .single();
+
+    if (purchaseError) throw purchaseError;
+
+    // Notify admin about the purchase and create delivery record
+    if (purchase && product.admin_id) {
+      try {
+        await fetch(`${supabaseUrl}/functions/v1/notify-admin-astrology-purchase`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${supabaseServiceKey}`,
+          },
+          body: JSON.stringify({
+            purchaseId: purchase.id,
+            productId: productId,
+            buyerId: userId,
+            adminId: product.admin_id
+          })
+        });
+      } catch (notifyError) {
+        console.error('Error notifying admin:', notifyError);
+        // Don't fail the payment if notification fails
+      }
+    }
 
     if (purchaseError) {
       console.error('Error recording astrology purchase:', purchaseError);
