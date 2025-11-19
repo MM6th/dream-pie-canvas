@@ -120,44 +120,66 @@ const TaxResultsDisplay = ({ results, taxData }: TaxResultsDisplayProps) => {
         {/* Detailed SE Tax Breakdown */}
         <div className="bg-gray-800/50 p-3 rounded-lg">
           <h4 className="text-gray-300 font-medium mb-3">Self-Employment Tax Breakdown</h4>
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-gray-400">1. Net Earnings:</span>
-              <span className="text-white">{formatCurrency(results.netEarnings)}</span>
-            </div>
-            
-            <div className="bg-blue-900/20 p-2 rounded space-y-1">
+          {results.netEarnings <= 400 ? (
+            <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-blue-300">2. SE Tax Base (92.35% of net):</span>
-                <span className="text-blue-200">{formatCurrency(results.netEarnings * 0.9235)}</span>
+                <span className="text-gray-400">1. Net Earnings:</span>
+                <span className="text-white">{formatCurrency(results.netEarnings)}</span>
               </div>
-              <p className="text-blue-200 text-xs italic pl-2">
-                This accounts for the employer portion deduction under FICA
-              </p>
-            </div>
-
-            <div className="bg-purple-900/20 p-2 rounded space-y-1">
-              <div className="text-purple-300 font-medium">3. SE Tax Rate: 15.3%</div>
-              <div className="pl-2 space-y-1">
-                <div className="flex justify-between text-xs">
-                  <span className="text-purple-200">• Social Security (12.4%):</span>
-                  <span className="text-purple-200">{formatCurrency(results.netEarnings * 0.9235 * 0.124)}</span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-purple-200">• Medicare (2.9%):</span>
-                  <span className="text-purple-200">{formatCurrency(results.netEarnings * 0.9235 * 0.029)}</span>
-                </div>
+              
+              <div className="bg-green-900/20 border border-green-600/30 p-3 rounded">
+                <p className="text-green-300 font-medium mb-1">✓ No SE Tax Owed</p>
+                <p className="text-green-200 text-xs">
+                  Self-employment tax only applies when net earnings exceed $400.00. 
+                  Your current net earnings of {formatCurrency(results.netEarnings)} are below this threshold.
+                </p>
               </div>
-              <p className="text-purple-200 text-xs italic pl-2 mt-1">
-                Self-employed individuals pay both employee (7.65%) and employer (7.65%) portions
-              </p>
-            </div>
 
-            <div className="flex justify-between font-medium border-t border-gray-600 pt-2">
-              <span className="text-yellow-400">4. Total SE Tax:</span>
-              <span className="text-yellow-400 font-bold">{formatCurrency(results.selfEmploymentTax)}</span>
+              <div className="flex justify-between font-medium border-t border-gray-600 pt-2">
+                <span className="text-yellow-400">2. Total SE Tax:</span>
+                <span className="text-yellow-400 font-bold">{formatCurrency(0)}</span>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-400">1. Net Earnings:</span>
+                <span className="text-white">{formatCurrency(results.netEarnings)}</span>
+              </div>
+              
+              <div className="bg-blue-900/20 p-2 rounded space-y-1">
+                <div className="flex justify-between">
+                  <span className="text-blue-300">2. SE Tax Base (92.35% of net):</span>
+                  <span className="text-blue-200">{formatCurrency(results.netEarnings * 0.9235)}</span>
+                </div>
+                <p className="text-blue-200 text-xs italic pl-2">
+                  This accounts for the employer portion deduction under FICA
+                </p>
+              </div>
+
+              <div className="bg-purple-900/20 p-2 rounded space-y-1">
+                <div className="text-purple-300 font-medium">3. SE Tax Rate: 15.3%</div>
+                <div className="pl-2 space-y-1">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-purple-200">• Social Security (12.4%):</span>
+                    <span className="text-purple-200">{formatCurrency(results.netEarnings * 0.9235 * 0.124)}</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-purple-200">• Medicare (2.9%):</span>
+                    <span className="text-purple-200">{formatCurrency(results.netEarnings * 0.9235 * 0.029)}</span>
+                  </div>
+                </div>
+                <p className="text-purple-200 text-xs italic pl-2 mt-1">
+                  Self-employed individuals pay both employee (7.65%) and employer (7.65%) portions
+                </p>
+              </div>
+
+              <div className="flex justify-between font-medium border-t border-gray-600 pt-2">
+                <span className="text-yellow-400">4. Total SE Tax:</span>
+                <span className="text-yellow-400 font-bold">{formatCurrency(results.selfEmploymentTax)}</span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* State Tax */}
