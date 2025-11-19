@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -6,6 +6,21 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, TestTube, Trash2 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+interface AudioProduct {
+  id: string;
+  title: string;
+  artist_name: string | null;
+  price: number | null;
+  is_free: boolean;
+}
 
 const TestPurchaseSimulator = () => {
   const [audioProductId, setAudioProductId] = useState("");
@@ -13,7 +28,35 @@ const TestPurchaseSimulator = () => {
   const [isSimulating, setIsSimulating] = useState(false);
   const [isCleaningUp, setIsCleaningUp] = useState(false);
   const [lastResult, setLastResult] = useState<any>(null);
+  const [audioProducts, setAudioProducts] = useState<AudioProduct[]>([]);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const { toast } = useToast();
+
+  useEffect(() => {
+    fetchAudioProducts();
+  }, []);
+
+  const fetchAudioProducts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('audio_products')
+        .select('id, title, artist_name, price, is_free')
+        .eq('status', 'published')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setAudioProducts(data || []);
+    } catch (error: any) {
+      console.error('Error fetching audio products:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load audio products",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoadingProducts(false);
+    }
+  };
 
   const runSimulation = async () => {
     if (!audioProductId) {
@@ -91,14 +134,25 @@ const TestPurchaseSimulator = () => {
 
         <div className="space-y-3">
           <div>
-            <Label htmlFor="productId" className="text-gray-300">Audio Product ID *</Label>
-            <Input
-              id="productId"
-              value={audioProductId}
-              onChange={(e) => setAudioProductId(e.target.value)}
-              placeholder="Enter audio product ID"
-              className="bg-gray-900 border-gray-600 text-white"
-            />
+            <Label htmlFor="productId" className="text-gray-300">Select Audio Product *</Label>
+            <Select value={audioProductId} onValueChange={setAudioProductId}>
+              <SelectTrigger className="bg-gray-900 border-gray-600 text-white">
+                <SelectValue placeholder={isLoadingProducts ? "Loading products..." : "Choose a music product"} />
+              </SelectTrigger>
+              <SelectContent className="bg-gray-900 border-gray-600">
+                {audioProducts.map((product) => (
+                  <SelectItem 
+                    key={product.id} 
+                    value={product.id}
+                    className="text-white hover:bg-gray-800"
+                  >
+                    {product.title} 
+                    {product.artist_name && ` - ${product.artist_name}`}
+                    {product.is_free ? ' (Free)' : product.price ? ` ($${product.price})` : ''}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div>
