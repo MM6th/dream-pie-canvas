@@ -224,20 +224,24 @@ const EditAstrologyProductModal = ({ product, isOpen, onClose, onSuccess }: Edit
 
           <div>
             <Label>Thumbnail Image</Label>
-            <ImagePicker
-              onImageSelect={setThumbnailUrl}
-              currentImageUrl={thumbnailUrl}
-            />
-            {thumbnailUrl && (
-              <div className="mt-2">
-                <p className="text-sm text-gray-400 mb-2">Current thumbnail:</p>
-                <img
-                  src={thumbnailUrl}
-                  alt="Current thumbnail"
-                  className="w-32 h-32 object-cover rounded-lg border border-gray-600"
-                />
-              </div>
-            )}
+            <div className="space-y-2">
+              <ImagePicker
+                onImageSelect={setThumbnailUrl}
+                currentImageUrl={thumbnailUrl}
+              />
+              {thumbnailUrl && (
+                <div className="relative w-full h-32 rounded-lg overflow-hidden border border-gray-600">
+                  <img
+                    src={thumbnailUrl}
+                    alt="Thumbnail preview"
+                    className="w-full h-full object-cover"
+                  />
+                  <p className="absolute bottom-0 left-0 right-0 bg-green-500/90 text-white text-xs text-center py-1">
+                    Image uploaded successfully
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
 
           <div>
