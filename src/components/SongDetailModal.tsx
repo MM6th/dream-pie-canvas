@@ -130,8 +130,25 @@ export default function SongDetailModal({ audioProduct, isOpen, onClose, onNavig
       if (error) throw error;
 
       if (data?.approvalUrl) {
-        window.open(data.approvalUrl, '_blank');
-        onClose();
+        // Try to open in new tab
+        const paypalWindow = window.open(data.approvalUrl, '_blank');
+        
+        // Check if popup was blocked
+        if (!paypalWindow || paypalWindow.closed || typeof paypalWindow.closed === 'undefined') {
+          // Popup blocked - redirect in same window
+          toast({
+            title: "Redirecting to PayPal",
+            description: "Please complete your purchase",
+          });
+          window.location.href = data.approvalUrl;
+        } else {
+          // Popup opened successfully
+          toast({
+            title: "Complete your purchase",
+            description: "A PayPal checkout window has been opened. Return here after completing payment.",
+          });
+          onClose();
+        }
       } else {
         throw new Error('No approval URL received from PayPal');
       }
