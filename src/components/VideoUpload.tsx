@@ -67,12 +67,27 @@ const VideoUpload = ({ onVideoSelect, currentVideoUrl }: VideoUploadProps) => {
     try {
       const fileName = `${user.id}/${Date.now()}-${file.name}`;
       
-      // Upload to Supabase storage
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('user-media')
-        .upload(fileName, file);
+      // Use resumable upload for files larger than 50MB
+      if (file.size > 50 * 1024 * 1024) {
+        console.log('Using resumable upload for large file');
+        
+        // Upload using resumable upload
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('user-media')
+          .upload(fileName, file, {
+            cacheControl: '3600',
+            upsert: false
+          });
 
-      if (uploadError) throw uploadError;
+        if (uploadError) throw uploadError;
+      } else {
+        // Standard upload for smaller files
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('user-media')
+          .upload(fileName, file);
+
+        if (uploadError) throw uploadError;
+      }
 
       // Record in user_uploads table
       const { error: dbError } = await supabase
@@ -104,7 +119,7 @@ const VideoUpload = ({ onVideoSelect, currentVideoUrl }: VideoUploadProps) => {
       console.error('Error uploading video:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to upload video",
+        description: error.message || "Failed to upload video. Files larger than 50MB may not be supported by storage.",
         variant: "destructive"
       });
     } finally {
