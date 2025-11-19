@@ -83,19 +83,17 @@ const TaxResultsDisplay = ({ results, taxData }: TaxResultsDisplayProps) => {
       <CardContent className="space-y-4">
         {/* Revenue Breakdown Info */}
         <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
-          <div className="flex items-start justify-between gap-3 mb-3">
-            <div className="flex items-start gap-2">
-              <Info className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
-              <div>
-                <h4 className="text-blue-400 font-semibold mb-1">Your Merchant Revenue (90%)</h4>
-                <p className="text-sm text-gray-400">
-                  Income shown is your 90% merchant share after PayPal fees and PIE's 10% platform fee.
-                  PIE handles distribution to your PayPal account.
-                </p>
-              </div>
+          <div className="flex items-start gap-2 mb-3">
+            <Info className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+            <div>
+              <h4 className="text-blue-400 font-semibold mb-1">Your Merchant Revenue (90%)</h4>
+              <p className="text-sm text-gray-400">
+                Income shown is your 90% merchant share after PayPal fees and PIE's 10% platform fee.
+                PIE handles distribution to your PayPal account.
+              </p>
             </div>
-            <RevenueBreakdownModal />
           </div>
+          <RevenueBreakdownModal />
         </div>
 
         {/* Income Summary */}
