@@ -204,10 +204,24 @@ const AstrologyProductUploadModal = ({ isOpen, onClose, onSuccess }: AstrologyPr
 
           <div>
             <Label>Thumbnail Image</Label>
-            <ImagePicker
-              onImageSelect={setThumbnailUrl}
-              currentImageUrl={thumbnailUrl}
-            />
+            <div className="space-y-2">
+              <ImagePicker
+                onImageSelect={setThumbnailUrl}
+                currentImageUrl={thumbnailUrl}
+              />
+              {thumbnailUrl && (
+                <div className="relative w-full h-32 rounded-lg overflow-hidden border border-gray-600">
+                  <img 
+                    src={thumbnailUrl} 
+                    alt="Thumbnail preview" 
+                    className="w-full h-full object-cover"
+                  />
+                  <p className="absolute bottom-0 left-0 right-0 bg-green-500/90 text-white text-xs text-center py-1">
+                    Image uploaded successfully
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
 
           <div>
