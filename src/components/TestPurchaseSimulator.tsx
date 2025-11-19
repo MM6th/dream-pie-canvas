@@ -80,9 +80,13 @@ const TestPurchaseSimulator = () => {
       if (error) throw error;
 
       setLastResult(data);
+      
+      // Refresh quarterly income to update SE Calculator
+      window.location.reload();
+      
       toast({
         title: "✅ Simulation Complete",
-        description: "Test purchase created successfully. Check SE Calculator for updates.",
+        description: "Test purchase created successfully. SE Calculator has been updated with new income.",
       });
     } catch (error: any) {
       console.error('Simulation error:', error);
@@ -211,15 +215,15 @@ const TestPurchaseSimulator = () => {
             <div className="text-xs text-gray-300 space-y-1">
               <p>Purchase ID: <span className="text-white">{lastResult.purchaseId}</span></p>
               <p className="font-semibold mt-2">Revenue Breakdown:</p>
-              <p>• Product Price: ${lastResult.breakdown.productPrice.toFixed(2)}</p>
-              <p>• PayPal Fee: ${lastResult.breakdown.paypalFee.toFixed(2)}</p>
-              <p>• Platform Fee: ${lastResult.breakdown.platformFee.toFixed(2)}</p>
-              <p>• Merchant Revenue: ${lastResult.breakdown.merchantRevenue.toFixed(2)}</p>
+              <p>• Product Price: ${lastResult.breakdown.productPrice.toFixed(2)} (100%)</p>
+              <p>• PayPal Fee: ${lastResult.breakdown.paypalFee.toFixed(2)} ({((lastResult.breakdown.paypalFee / lastResult.breakdown.productPrice) * 100).toFixed(1)}%)</p>
+              <p>• Platform Fee: ${lastResult.breakdown.platformFee.toFixed(2)} ({((lastResult.breakdown.platformFee / lastResult.breakdown.productPrice) * 100).toFixed(1)}%)</p>
+              <p>• Merchant Revenue: ${lastResult.breakdown.merchantRevenue.toFixed(2)} ({((lastResult.breakdown.merchantRevenue / lastResult.breakdown.productPrice) * 100).toFixed(1)}%)</p>
               {lastResult.breakdown.referrerCommission > 0 && (
-                <p>• Referrer Commission: ${lastResult.breakdown.referrerCommission.toFixed(2)}</p>
+                <p>• Referrer Commission: ${lastResult.breakdown.referrerCommission.toFixed(2)} ({((lastResult.breakdown.referrerCommission / lastResult.breakdown.productPrice) * 100).toFixed(1)}%)</p>
               )}
               {lastResult.breakdown.featuringArtistRevenue > 0 && (
-                <p>• Featuring Artist Revenue: ${lastResult.breakdown.featuringArtistRevenue.toFixed(2)}</p>
+                <p>• Featuring Artist Revenue: ${lastResult.breakdown.featuringArtistRevenue.toFixed(2)} ({((lastResult.breakdown.featuringArtistRevenue / lastResult.breakdown.productPrice) * 100).toFixed(1)}%)</p>
               )}
             </div>
           </div>
