@@ -43,7 +43,7 @@ const getBasePrice = (productType: string, deliveryType: string): number => {
     solar_return_reading: { telephone: 75, audio_file: 350, video_file: 400 },
     north_node_reading: { telephone: 75, audio_file: 400, video_file: 450 },
     career_path_reading: { telephone: 75, audio_file: 500, video_file: 550 },
-    horoscope_reading: { telephone: 75, audio_file: 150, video_file: 200 }
+    horoscope_reading: { telephone: 75, audio_file: 75, video_file: 100 }
   };
   
   return prices[productType]?.[deliveryType] || 0;
