@@ -48,11 +48,12 @@ Deno.serve(async (req) => {
     // Get product details
     const { data: product, error: productError } = await supabaseClient
       .from('audio_products')
-      .select('*, profiles!audio_products_merchant_id_fkey(paypal_email)')
+      .select('*')
       .eq('id', audioProductId)
       .single();
 
     if (productError || !product) {
+      console.error('Product fetch error:', productError);
       throw new Error('Product not found');
     }
 
