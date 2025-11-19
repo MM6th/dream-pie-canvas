@@ -30,12 +30,12 @@ const VideoUpload = ({ onVideoSelect, currentVideoUrl }: VideoUploadProps) => {
       return;
     }
 
-    // Validate file size (50MB limit)
-    const maxSize = 50 * 1024 * 1024; // 50MB in bytes
+    // Validate file size (1GB limit)
+    const maxSize = 1024 * 1024 * 1024; // 1GB in bytes
     if (file.size > maxSize) {
       toast({
         title: "Error", 
-        description: "Video file must be smaller than 50MB",
+        description: "Video file must be smaller than 1GB",
         variant: "destructive"
       });
       return;
