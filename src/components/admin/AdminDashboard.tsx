@@ -17,6 +17,7 @@ import AdminContentGallery from "./AdminContentGallery";
 import AdminBulletinPostManager from "./AdminBulletinPostManager";
 import VideoAdOpportunityManager from "./VideoAdOpportunityManager";
 import SECalculatorModal from "@/components/SECalculatorModal";
+import TestPurchaseSimulator from "@/components/TestPurchaseSimulator";
 import { useSubmissionCounts } from "@/hooks/useSubmissionCounts";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuarterlyIncome } from "@/hooks/useQuarterlyIncome";
@@ -65,7 +66,7 @@ const AdminDashboard = () => {
         <CardHeader>
           <CardTitle className="text-white">Administrative Tools</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
           <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg">
             <div>
               <h4 className="text-white font-medium">Self-Employment Tax Calculator</h4>
@@ -75,6 +76,8 @@ const AdminDashboard = () => {
             </div>
             <SECalculatorModal userId={user?.id} autoPopulateIncome={currentQuarterIncome} />
           </div>
+          
+          <TestPurchaseSimulator />
         </CardContent>
       </Card>
 
