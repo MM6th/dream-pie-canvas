@@ -249,13 +249,24 @@ const EditAstrologyProductModal = ({ product, isOpen, onClose, onSuccess }: Edit
             <p className="text-xs text-muted-foreground mb-2">
               Upload a video to showcase your product in the store
             </p>
-            <VideoUpload
-              onVideoSelect={setAdvertisementVideoUrl}
-              currentVideoUrl={advertisementVideoUrl}
-            />
-            {advertisementVideoUrl && (
-              <p className="text-xs text-green-500 mt-1">Video uploaded successfully</p>
-            )}
+            <div className="space-y-2">
+              <VideoUpload
+                onVideoSelect={setAdvertisementVideoUrl}
+                currentVideoUrl={advertisementVideoUrl}
+              />
+              {advertisementVideoUrl && (
+                <div className="relative w-full rounded-lg overflow-hidden border border-gray-600 bg-gray-900">
+                  <video 
+                    src={advertisementVideoUrl} 
+                    controls
+                    className="w-full h-48 object-contain"
+                  />
+                  <p className="absolute bottom-0 left-0 right-0 bg-green-500/90 text-white text-xs text-center py-1">
+                    Video uploaded successfully
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
 
           <div>
