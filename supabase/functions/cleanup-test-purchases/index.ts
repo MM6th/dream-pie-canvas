@@ -133,14 +133,38 @@ Deno.serve(async (req) => {
           });
         }
 
-    // Get delivery IDs first to properly delete related notifications
+    // Get deliveries with video URLs to delete from storage
     const { data: deliveries } = await supabaseClient
       .from('astrology_deliveries')
-      .select('id')
+      .select('id, admin_video_url, buyer_video_url, draft_video_url')
       .eq('purchase_id', purchase.id);
 
     if (deliveries && deliveries.length > 0) {
       const deliveryIds = deliveries.map(d => d.id);
+      
+      // Delete video files from storage
+      for (const delivery of deliveries) {
+        const videoPaths: string[] = [];
+        
+        if (delivery.admin_video_url) {
+          const path = delivery.admin_video_url.split('/videos/')[1];
+          if (path) videoPaths.push(path);
+        }
+        if (delivery.buyer_video_url) {
+          const path = delivery.buyer_video_url.split('/videos/')[1];
+          if (path) videoPaths.push(path);
+        }
+        if (delivery.draft_video_url) {
+          const path = delivery.draft_video_url.split('/videos/')[1];
+          if (path) videoPaths.push(path);
+        }
+        
+        if (videoPaths.length > 0) {
+          await supabaseClient.storage
+            .from('videos')
+            .remove(videoPaths);
+        }
+      }
       
       // Delete notifications related to these deliveries
       await supabaseClient
@@ -149,7 +173,7 @@ Deno.serve(async (req) => {
         .in('related_delivery_id', deliveryIds);
     }
 
-    // Delete related delivery records
+    // Delete delivery records
     await supabaseClient
       .from('astrology_deliveries')
       .delete()
