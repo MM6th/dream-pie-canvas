@@ -27,6 +27,33 @@ export const BuyerAstrologyLibrary = () => {
 
   useEffect(() => {
     fetchReadings();
+    
+    // Set up realtime subscription for delivery updates
+    const channel = supabase
+      .channel("astrology-deliveries-changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "astrology_deliveries",
+        },
+        (payload) => {
+          console.log("📡 Delivery update received:", payload);
+          fetchReadings(); // Refresh when deliveries change
+        }
+      )
+      .subscribe();
+
+    // Poll for updates every 30 seconds
+    const interval = setInterval(() => {
+      fetchReadings();
+    }, 30000);
+
+    return () => {
+      supabase.removeChannel(channel);
+      clearInterval(interval);
+    };
   }, []);
 
   const fetchReadings = async () => {
@@ -150,9 +177,9 @@ export const BuyerAstrologyLibrary = () => {
                           Close Video
                         </Button>
                       </div>
-                    ) : (
-                      <div className="flex gap-2">
-                        <Button onClick={() => setPlayingVideo(reading.id)}>
+                     ) : (
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <Button onClick={() => setPlayingVideo(reading.id)} className="w-full sm:w-auto">
                           <Play className="w-4 h-4 mr-2" />
                           Watch Reading
                         </Button>
@@ -164,6 +191,7 @@ export const BuyerAstrologyLibrary = () => {
                               reading.astrology_products.title
                             )
                           }
+                          className="w-full sm:w-auto"
                         >
                           <Download className="w-4 h-4 mr-2" />
                           Download
