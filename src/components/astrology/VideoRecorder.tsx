@@ -1,0 +1,226 @@
+import { useState, useRef, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { toast } from "sonner";
+import { Video, Square, Play, Upload, X, Camera } from "lucide-react";
+
+interface VideoRecorderProps {
+  onVideoRecorded: (blob: Blob) => void;
+  onCancel: () => void;
+  isUploading?: boolean;
+}
+
+export const VideoRecorder = ({ onVideoRecorded, onCancel, isUploading = false }: VideoRecorderProps) => {
+  const [isRecording, setIsRecording] = useState(false);
+  const [isPreviewing, setIsPreviewing] = useState(false);
+  const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const [hasCamera, setHasCamera] = useState(false);
+
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    return () => {
+      stopCamera();
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, []);
+
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: 1280, height: 720 },
+        audio: true,
+      });
+
+      streamRef.current = stream;
+      setHasCamera(true);
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.muted = true;
+      }
+    } catch (error) {
+      console.error("Error accessing camera:", error);
+      toast.error("Failed to access camera. Please check permissions.");
+    }
+  };
+
+  const stopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+    setHasCamera(false);
+  };
+
+  const startRecording = () => {
+    if (!streamRef.current) return;
+
+    chunksRef.current = [];
+    const mediaRecorder = new MediaRecorder(streamRef.current, {
+      mimeType: "video/webm",
+    });
+
+    mediaRecorder.ondataavailable = (event) => {
+      if (event.data.size > 0) {
+        chunksRef.current.push(event.data);
+      }
+    };
+
+    mediaRecorder.onstop = () => {
+      const blob = new Blob(chunksRef.current, { type: "video/webm" });
+      setRecordedBlob(blob);
+      setIsPreviewing(true);
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+        videoRef.current.src = URL.createObjectURL(blob);
+        videoRef.current.muted = false;
+      }
+    };
+
+    mediaRecorderRef.current = mediaRecorder;
+    mediaRecorder.start();
+    setIsRecording(true);
+    setRecordingTime(0);
+
+    timerRef.current = setInterval(() => {
+      setRecordingTime((prev) => prev + 1);
+    }, 1000);
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      stopCamera();
+    }
+  };
+
+  const handleRetake = () => {
+    setRecordedBlob(null);
+    setIsPreviewing(false);
+    setRecordingTime(0);
+    startCamera();
+  };
+
+  const handleSubmit = () => {
+    if (recordedBlob) {
+      onVideoRecorded(recordedBlob);
+    }
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  return (
+    <Card className="p-6 space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold">Record Astrology Reading</h3>
+        <Button variant="ghost" size="icon" onClick={onCancel}>
+          <X className="w-4 h-4" />
+        </Button>
+      </div>
+
+      <div className="relative bg-black rounded-lg overflow-hidden aspect-video">
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          className="w-full h-full object-contain"
+        />
+        
+        {isRecording && (
+          <div className="absolute top-4 left-4 flex items-center gap-2 bg-red-500 text-white px-3 py-1.5 rounded-full">
+            <div className="w-3 h-3 bg-white rounded-full animate-pulse" />
+            <span className="font-mono font-semibold">{formatTime(recordingTime)}</span>
+          </div>
+        )}
+
+        {!hasCamera && !isPreviewing && (
+          <div className="absolute inset-0 flex items-center justify-center bg-muted/80">
+            <div className="text-center space-y-4">
+              <Camera className="w-16 h-16 mx-auto text-muted-foreground" />
+              <p className="text-muted-foreground">Camera preview will appear here</p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="flex items-center justify-center gap-3">
+        {!hasCamera && !isPreviewing && (
+          <Button onClick={startCamera} size="lg">
+            <Camera className="w-4 h-4 mr-2" />
+            Start Camera
+          </Button>
+        )}
+
+        {hasCamera && !isRecording && !isPreviewing && (
+          <>
+            <Button onClick={startRecording} size="lg" variant="destructive">
+              <Video className="w-4 h-4 mr-2" />
+              Start Recording
+            </Button>
+            <Button onClick={onCancel} variant="outline" size="lg">
+              Cancel
+            </Button>
+          </>
+        )}
+
+        {isRecording && (
+          <Button onClick={stopRecording} size="lg" variant="destructive">
+            <Square className="w-4 h-4 mr-2" />
+            Stop Recording
+          </Button>
+        )}
+
+        {isPreviewing && (
+          <>
+            <Button
+              onClick={() => {
+                if (videoRef.current) {
+                  if (videoRef.current.paused) {
+                    videoRef.current.play();
+                  } else {
+                    videoRef.current.pause();
+                  }
+                }
+              }}
+              variant="outline"
+              size="lg"
+            >
+              <Play className="w-4 h-4 mr-2" />
+              Play/Pause
+            </Button>
+            <Button onClick={handleRetake} variant="outline" size="lg">
+              <Video className="w-4 h-4 mr-2" />
+              Retake
+            </Button>
+            <Button onClick={handleSubmit} size="lg" disabled={isUploading}>
+              <Upload className="w-4 h-4 mr-2" />
+              {isUploading ? "Uploading..." : "Submit Reading"}
+            </Button>
+          </>
+        )}
+      </div>
+
+      {isPreviewing && (
+        <p className="text-sm text-center text-muted-foreground">
+          Preview your recording. Click Submit to upload or Retake to record again.
+        </p>
+      )}
+    </Card>
+  );
+};
