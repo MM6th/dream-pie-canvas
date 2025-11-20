@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Upload, CheckCircle, Clock, AlertTriangle } from "lucide-react";
+import { CheckCircle, Clock, AlertTriangle, Video } from "lucide-react";
+import { VideoRecorder } from "./VideoRecorder";
+import { Button } from "@/components/ui/button";
 
 interface Delivery {
   id: string;
@@ -26,6 +26,7 @@ export const AstrologyDeliveryManager = () => {
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState<string | null>(null);
+  const [recordingDeliveryId, setRecordingDeliveryId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchDeliveries();
@@ -57,17 +58,18 @@ export const AstrologyDeliveryManager = () => {
     }
   };
 
-  const handleVideoUpload = async (deliveryId: string, file: File) => {
+  const handleVideoUpload = async (deliveryId: string, blob: Blob) => {
     try {
       setUploading(deliveryId);
 
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${deliveryId}-${Date.now()}.${fileExt}`;
+      const fileName = `${deliveryId}-${Date.now()}.webm`;
       const filePath = `astrology-deliveries/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from("user-media")
-        .upload(filePath, file);
+        .upload(filePath, blob, {
+          contentType: "video/webm",
+        });
 
       if (uploadError) throw uploadError;
 
@@ -101,6 +103,7 @@ export const AstrologyDeliveryManager = () => {
       }
 
       toast.success("Video uploaded successfully!");
+      setRecordingDeliveryId(null);
       fetchDeliveries();
     } catch (error) {
       console.error("Error uploading video:", error);
@@ -171,23 +174,22 @@ export const AstrologyDeliveryManager = () => {
                   )}
                 </div>
 
-                {delivery.status === "pending" && (
-                  <div className="flex items-center gap-4">
-                    <Input
-                      type="file"
-                      accept="video/*"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) handleVideoUpload(delivery.id, file);
-                      }}
-                      disabled={uploading === delivery.id}
-                      className="max-w-md"
-                    />
-                    <Button disabled={uploading === delivery.id}>
-                      <Upload className="w-4 h-4 mr-2" />
-                      {uploading === delivery.id ? "Uploading..." : "Upload Reading"}
-                    </Button>
-                  </div>
+                {delivery.status === "pending" && recordingDeliveryId !== delivery.id && (
+                  <Button 
+                    onClick={() => setRecordingDeliveryId(delivery.id)}
+                    disabled={uploading === delivery.id}
+                  >
+                    <Video className="w-4 h-4 mr-2" />
+                    Record Reading
+                  </Button>
+                )}
+
+                {recordingDeliveryId === delivery.id && (
+                  <VideoRecorder
+                    onVideoRecorded={(blob) => handleVideoUpload(delivery.id, blob)}
+                    onCancel={() => setRecordingDeliveryId(null)}
+                    isUploading={uploading === delivery.id}
+                  />
                 )}
 
                 {delivery.admin_video_url && (
