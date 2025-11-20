@@ -245,11 +245,11 @@ const TestPurchaseSimulator = () => {
           </TabsContent>
         </Tabs>
 
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-3">
           <Button
             onClick={runSimulation}
             disabled={isSimulating || (productType === "audio" ? !audioProductId : !astrologyProductId)}
-            className="flex-1"
+            className="w-full sm:flex-1"
           >
             {isSimulating ? (
               <>
@@ -268,6 +268,7 @@ const TestPurchaseSimulator = () => {
             onClick={cleanupTests}
             disabled={isCleaningUp}
             variant="destructive"
+            className="w-full sm:w-auto"
           >
             {isCleaningUp ? (
               <>
