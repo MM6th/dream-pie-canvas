@@ -2271,6 +2271,7 @@ export type Database = {
         | "solar_return_reading"
         | "north_node_reading"
         | "career_path_reading"
+        | "horoscope_reading"
       audio_type_enum: "music" | "podcast" | "asmr" | "spoken"
       delivery_type: "telephone" | "audio_file" | "video_file"
       fashion_color:
@@ -2423,6 +2424,7 @@ export const Constants = {
         "solar_return_reading",
         "north_node_reading",
         "career_path_reading",
+        "horoscope_reading",
       ],
       audio_type_enum: ["music", "podcast", "asmr", "spoken"],
       delivery_type: ["telephone", "audio_file", "video_file"],
