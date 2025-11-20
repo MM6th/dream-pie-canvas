@@ -32,9 +32,29 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, isUploading = false }
 
   const startCamera = async () => {
     try {
+      console.log("=== CAMERA ACCESS ATTEMPT ===");
+      
+      // Check if getUserMedia is supported
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error("Camera not supported on this browser");
+      }
+
+      // Check permission state if available
+      if ('permissions' in navigator) {
+        try {
+          const cameraPermission = await navigator.permissions.query({ name: 'camera' as PermissionName });
+          const micPermission = await navigator.permissions.query({ name: 'microphone' as PermissionName });
+          console.log("Camera permission state:", cameraPermission.state);
+          console.log("Microphone permission state:", micPermission.state);
+        } catch (e) {
+          console.log("Permission API not fully supported, proceeding with getUserMedia");
+        }
+      }
+
       // Try with flexible constraints first (better for mobile)
       let stream;
       try {
+        console.log("Requesting camera with ideal constraints...");
         stream = await navigator.mediaDevices.getUserMedia({
           video: { 
             facingMode: "user",
@@ -45,13 +65,14 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, isUploading = false }
         });
       } catch (e) {
         // Fallback to basic constraints if ideal fails
-        console.log("Trying basic camera constraints...");
+        console.log("Trying basic camera constraints...", e);
         stream = await navigator.mediaDevices.getUserMedia({
           video: true,
           audio: true,
         });
       }
 
+      console.log("Camera access successful!", stream.getTracks().map(t => t.kind));
       streamRef.current = stream;
       setHasCamera(true);
 
@@ -60,13 +81,25 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, isUploading = false }
         videoRef.current.muted = true;
       }
     } catch (error: any) {
-      console.error("Error accessing camera:", error);
-      const errorMessage = error.name === "NotAllowedError" 
-        ? "Camera access denied. Please allow camera permissions in your browser settings and reload the page."
-        : error.name === "NotFoundError"
-        ? "No camera found on this device."
-        : `Camera error: ${error.message || "Unknown error"}`;
-      toast.error(errorMessage);
+      console.error("=== CAMERA ACCESS FAILED ===");
+      console.error("Error name:", error.name);
+      console.error("Error message:", error.message);
+      console.error("Full error:", error);
+      
+      let errorMessage = "";
+      if (error.name === "NotAllowedError") {
+        errorMessage = "Camera blocked. Try: 1) Tap the lock/info icon in address bar 2) Reset camera permission 3) Reload page 4) Click camera button again";
+      } else if (error.name === "NotFoundError") {
+        errorMessage = "No camera detected on this device";
+      } else if (error.name === "NotReadableError") {
+        errorMessage = "Camera is in use by another app. Close other apps using the camera and try again";
+      } else if (error.name === "OverconstrainedError") {
+        errorMessage = "Camera doesn't support the requested settings. Try a different device";
+      } else {
+        errorMessage = `Camera error (${error.name}): ${error.message}`;
+      }
+      
+      toast.error(errorMessage, { duration: 8000 });
     }
   };
 
