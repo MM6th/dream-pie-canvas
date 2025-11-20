@@ -32,10 +32,25 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, isUploading = false }
 
   const startCamera = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: 1280, height: 720 },
-        audio: true,
-      });
+      // Try with flexible constraints first (better for mobile)
+      let stream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { 
+            facingMode: "user",
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          },
+          audio: true,
+        });
+      } catch (e) {
+        // Fallback to basic constraints if ideal fails
+        console.log("Trying basic camera constraints...");
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: true,
+        });
+      }
 
       streamRef.current = stream;
       setHasCamera(true);
@@ -44,9 +59,14 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, isUploading = false }
         videoRef.current.srcObject = stream;
         videoRef.current.muted = true;
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error accessing camera:", error);
-      toast.error("Failed to access camera. Please check permissions.");
+      const errorMessage = error.name === "NotAllowedError" 
+        ? "Camera access denied. Please allow camera permissions in your browser settings and reload the page."
+        : error.name === "NotFoundError"
+        ? "No camera found on this device."
+        : `Camera error: ${error.message || "Unknown error"}`;
+      toast.error(errorMessage);
     }
   };
 
