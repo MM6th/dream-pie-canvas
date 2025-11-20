@@ -61,37 +61,72 @@ export const AstrologyDeliveryManager = () => {
   const handleVideoUpload = async (deliveryId: string, blob: Blob) => {
     try {
       setUploading(deliveryId);
+      
+      console.log("🎥 === VIDEO UPLOAD STARTED ===");
+      console.log("Delivery ID:", deliveryId);
+      console.log("Blob size:", blob.size, "bytes", `(${(blob.size / 1024 / 1024).toFixed(2)} MB)`);
+      console.log("Blob type:", blob.type);
+
+      // Validate blob
+      if (blob.size === 0) {
+        throw new Error("Video file is empty");
+      }
+
+      if (blob.size > 100 * 1024 * 1024) { // 100MB limit
+        throw new Error("Video file is too large (max 100MB)");
+      }
+
+      toast.loading("Uploading video...", { id: "upload" });
 
       const fileName = `${deliveryId}-${Date.now()}.webm`;
       const filePath = `astrology-deliveries/${fileName}`;
 
-      const { error: uploadError } = await supabase.storage
+      console.log("📤 Uploading to:", filePath);
+
+      const { error: uploadError, data: uploadData } = await supabase.storage
         .from("user-media")
         .upload(filePath, blob, {
           contentType: "video/webm",
+          upsert: false,
         });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error("❌ Storage upload error:", uploadError);
+        throw uploadError;
+      }
+
+      console.log("✅ Upload successful:", uploadData);
 
       const { data: { publicUrl } } = supabase.storage
         .from("user-media")
         .getPublicUrl(filePath);
 
-      const { error: updateError } = await supabase
+      console.log("🔗 Public URL:", publicUrl);
+
+      toast.loading("Processing delivery...", { id: "upload" });
+
+      const { error: updateError, data: updateData } = await supabase
         .from("astrology_deliveries")
         .update({
           admin_video_url: publicUrl,
           status: "delivered",
           delivered_at: new Date().toISOString(),
         })
-        .eq("id", deliveryId);
+        .eq("id", deliveryId)
+        .select();
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error("❌ Database update error:", updateError);
+        throw updateError;
+      }
+
+      console.log("✅ Delivery updated:", updateData);
 
       // Get delivery details for notification
       const delivery = deliveries.find(d => d.id === deliveryId);
       if (delivery) {
-        await supabase
+        console.log("📧 Sending notification to buyer:", delivery.buyer_id);
+        const { error: notifError } = await supabase
           .from("notifications")
           .insert({
             user_id: delivery.buyer_id,
@@ -100,14 +135,27 @@ export const AstrologyDeliveryManager = () => {
             type: "ready",
             related_delivery_id: deliveryId,
           });
+
+        if (notifError) {
+          console.warn("⚠️ Notification error (non-critical):", notifError);
+        } else {
+          console.log("✅ Notification sent successfully");
+        }
       }
 
-      toast.success("Video uploaded successfully!");
+      toast.success("Video uploaded and delivered!", { id: "upload" });
+      console.log("🎉 === UPLOAD COMPLETE ===");
+      
       setRecordingDeliveryId(null);
-      fetchDeliveries();
-    } catch (error) {
-      console.error("Error uploading video:", error);
-      toast.error("Failed to upload video");
+      await fetchDeliveries();
+    } catch (error: any) {
+      console.error("❌ === UPLOAD FAILED ===");
+      console.error("Error type:", error?.name);
+      console.error("Error message:", error?.message);
+      console.error("Full error:", error);
+      
+      const errorMessage = error?.message || "Unknown error occurred";
+      toast.error(`Upload failed: ${errorMessage}`, { id: "upload", duration: 5000 });
     } finally {
       setUploading(null);
     }

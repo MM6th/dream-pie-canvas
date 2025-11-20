@@ -179,9 +179,9 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, isUploading = false }
   };
 
   return (
-    <Card className="p-6 space-y-4">
+    <Card className="p-4 sm:p-6 space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Record Astrology Reading</h3>
+        <h3 className="text-base sm:text-lg font-semibold">Record Astrology Reading</h3>
         <Button variant="ghost" size="icon" onClick={onCancel}>
           <X className="w-4 h-4" />
         </Button>
@@ -198,23 +198,23 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, isUploading = false }
         {isRecording && (
           <div className="absolute top-4 left-4 flex items-center gap-2 bg-red-500 text-white px-3 py-1.5 rounded-full">
             <div className="w-3 h-3 bg-white rounded-full animate-pulse" />
-            <span className="font-mono font-semibold">{formatTime(recordingTime)}</span>
+            <span className="font-mono text-sm sm:text-base font-semibold">{formatTime(recordingTime)}</span>
           </div>
         )}
 
         {!hasCamera && !isPreviewing && (
           <div className="absolute inset-0 flex items-center justify-center bg-muted/80">
-            <div className="text-center space-y-4">
-              <Camera className="w-16 h-16 mx-auto text-muted-foreground" />
-              <p className="text-muted-foreground">Camera preview will appear here</p>
+            <div className="text-center space-y-4 p-4">
+              <Camera className="w-12 h-12 sm:w-16 sm:h-16 mx-auto text-muted-foreground" />
+              <p className="text-sm sm:text-base text-muted-foreground">Camera preview will appear here</p>
             </div>
           </div>
         )}
       </div>
 
-      <div className="flex items-center justify-center gap-3">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2 sm:gap-3">
         {!hasCamera && !isPreviewing && (
-          <Button onClick={startCamera} size="lg">
+          <Button onClick={startCamera} size="lg" className="w-full sm:w-auto">
             <Camera className="w-4 h-4 mr-2" />
             Start Camera
           </Button>
@@ -222,18 +222,18 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, isUploading = false }
 
         {hasCamera && !isRecording && !isPreviewing && (
           <>
-            <Button onClick={startRecording} size="lg" variant="destructive">
+            <Button onClick={startRecording} size="lg" variant="destructive" className="w-full sm:w-auto">
               <Video className="w-4 h-4 mr-2" />
               Start Recording
             </Button>
-            <Button onClick={onCancel} variant="outline" size="lg">
+            <Button onClick={onCancel} variant="outline" size="lg" className="w-full sm:w-auto">
               Cancel
             </Button>
           </>
         )}
 
         {isRecording && (
-          <Button onClick={stopRecording} size="lg" variant="destructive">
+          <Button onClick={stopRecording} size="lg" variant="destructive" className="w-full sm:w-auto">
             <Square className="w-4 h-4 mr-2" />
             Stop Recording
           </Button>
@@ -253,15 +253,16 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, isUploading = false }
               }}
               variant="outline"
               size="lg"
+              className="w-full sm:w-auto"
             >
               <Play className="w-4 h-4 mr-2" />
               Play/Pause
             </Button>
-            <Button onClick={handleRetake} variant="outline" size="lg">
+            <Button onClick={handleRetake} variant="outline" size="lg" className="w-full sm:w-auto">
               <Video className="w-4 h-4 mr-2" />
               Retake
             </Button>
-            <Button onClick={handleSubmit} size="lg" disabled={isUploading}>
+            <Button onClick={handleSubmit} size="lg" disabled={isUploading} className="w-full sm:w-auto">
               <Upload className="w-4 h-4 mr-2" />
               {isUploading ? "Uploading..." : "Submit Reading"}
             </Button>
@@ -270,7 +271,7 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, isUploading = false }
       </div>
 
       {isPreviewing && (
-        <p className="text-sm text-center text-muted-foreground">
+        <p className="text-xs sm:text-sm text-center text-muted-foreground px-2">
           Preview your recording. Click Submit to upload or Retake to record again.
         </p>
       )}
