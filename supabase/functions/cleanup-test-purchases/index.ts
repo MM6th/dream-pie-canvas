@@ -133,17 +133,27 @@ Deno.serve(async (req) => {
           });
         }
 
-        // Delete related delivery records
-        await supabaseClient
-          .from('astrology_deliveries')
-          .delete()
-          .eq('purchase_id', purchase.id);
+    // Get delivery IDs first to properly delete related notifications
+    const { data: deliveries } = await supabaseClient
+      .from('astrology_deliveries')
+      .select('id')
+      .eq('purchase_id', purchase.id);
 
-        // Delete related notifications
-        await supabaseClient
-          .from('notifications')
-          .delete()
-          .eq('related_delivery_id', purchase.id);
+    if (deliveries && deliveries.length > 0) {
+      const deliveryIds = deliveries.map(d => d.id);
+      
+      // Delete notifications related to these deliveries
+      await supabaseClient
+        .from('notifications')
+        .delete()
+        .in('related_delivery_id', deliveryIds);
+    }
+
+    // Delete related delivery records
+    await supabaseClient
+      .from('astrology_deliveries')
+      .delete()
+      .eq('purchase_id', purchase.id);
       }
 
       // Delete astrology platform revenue records
