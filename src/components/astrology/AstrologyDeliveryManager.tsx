@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { CheckCircle, Clock, AlertTriangle, Video } from "lucide-react";
+import { CheckCircle, Clock, AlertTriangle, Video, FileText, Send } from "lucide-react";
 import { VideoRecorder } from "./VideoRecorder";
 import { Button } from "@/components/ui/button";
 
@@ -16,6 +16,8 @@ interface Delivery {
   is_overdue: boolean;
   admin_video_url: string | null;
   buyer_video_url: string | null;
+  draft_video_url: string | null;
+  draft_saved_at: string | null;
   status: string;
   astrology_products: {
     title: string;
@@ -58,6 +60,63 @@ export const AstrologyDeliveryManager = () => {
     }
   };
 
+  const handleDraftSave = async (deliveryId: string, blob: Blob) => {
+    try {
+      setUploading(deliveryId);
+      
+      console.log("💾 === DRAFT SAVE STARTED ===");
+      console.log("Delivery ID:", deliveryId);
+      console.log("Blob size:", blob.size, "bytes", `(${(blob.size / 1024 / 1024).toFixed(2)} MB)`);
+
+      if (blob.size === 0) {
+        throw new Error("Video file is empty");
+      }
+
+      if (blob.size > 100 * 1024 * 1024) {
+        throw new Error("Video file is too large (max 100MB)");
+      }
+
+      toast.loading("Saving draft...", { id: "draft" });
+
+      const fileName = `draft-${deliveryId}-${Date.now()}.webm`;
+      const filePath = `astrology-deliveries/drafts/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("user-media")
+        .upload(filePath, blob, {
+          contentType: "video/webm",
+          upsert: true,
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from("user-media")
+        .getPublicUrl(filePath);
+
+      const { error: updateError } = await supabase
+        .from("astrology_deliveries")
+        .update({
+          draft_video_url: publicUrl,
+          draft_saved_at: new Date().toISOString(),
+        })
+        .eq("id", deliveryId);
+
+      if (updateError) throw updateError;
+
+      toast.success("Draft saved! You can review and submit later.", { id: "draft" });
+      console.log("✅ === DRAFT SAVED ===");
+      
+      setRecordingDeliveryId(null);
+      await fetchDeliveries();
+    } catch (error: any) {
+      console.error("❌ Draft save failed:", error);
+      toast.error(`Failed to save draft: ${error?.message}`, { id: "draft", duration: 5000 });
+    } finally {
+      setUploading(null);
+    }
+  };
+
   const handleVideoUpload = async (deliveryId: string, blob: Blob) => {
     try {
       setUploading(deliveryId);
@@ -65,14 +124,12 @@ export const AstrologyDeliveryManager = () => {
       console.log("🎥 === VIDEO UPLOAD STARTED ===");
       console.log("Delivery ID:", deliveryId);
       console.log("Blob size:", blob.size, "bytes", `(${(blob.size / 1024 / 1024).toFixed(2)} MB)`);
-      console.log("Blob type:", blob.type);
 
-      // Validate blob
       if (blob.size === 0) {
         throw new Error("Video file is empty");
       }
 
-      if (blob.size > 100 * 1024 * 1024) { // 100MB limit
+      if (blob.size > 100 * 1024 * 1024) {
         throw new Error("Video file is too large (max 100MB)");
       }
 
@@ -81,51 +138,35 @@ export const AstrologyDeliveryManager = () => {
       const fileName = `${deliveryId}-${Date.now()}.webm`;
       const filePath = `astrology-deliveries/${fileName}`;
 
-      console.log("📤 Uploading to:", filePath);
-
-      const { error: uploadError, data: uploadData } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from("user-media")
         .upload(filePath, blob, {
           contentType: "video/webm",
           upsert: false,
         });
 
-      if (uploadError) {
-        console.error("❌ Storage upload error:", uploadError);
-        throw uploadError;
-      }
-
-      console.log("✅ Upload successful:", uploadData);
+      if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage
         .from("user-media")
         .getPublicUrl(filePath);
 
-      console.log("🔗 Public URL:", publicUrl);
-
       toast.loading("Processing delivery...", { id: "upload" });
 
-      const { error: updateError, data: updateData } = await supabase
+      const { error: updateError } = await supabase
         .from("astrology_deliveries")
         .update({
           admin_video_url: publicUrl,
           status: "delivered",
           delivered_at: new Date().toISOString(),
+          draft_video_url: null, // Clear draft when submitting
         })
-        .eq("id", deliveryId)
-        .select();
+        .eq("id", deliveryId);
 
-      if (updateError) {
-        console.error("❌ Database update error:", updateError);
-        throw updateError;
-      }
+      if (updateError) throw updateError;
 
-      console.log("✅ Delivery updated:", updateData);
-
-      // Get delivery details for notification
       const delivery = deliveries.find(d => d.id === deliveryId);
       if (delivery) {
-        console.log("📧 Sending notification to buyer:", delivery.buyer_id);
         const { error: notifError } = await supabase
           .from("notifications")
           .insert({
@@ -136,11 +177,7 @@ export const AstrologyDeliveryManager = () => {
             related_delivery_id: deliveryId,
           });
 
-        if (notifError) {
-          console.warn("⚠️ Notification error (non-critical):", notifError);
-        } else {
-          console.log("✅ Notification sent successfully");
-        }
+        if (notifError) console.warn("⚠️ Notification error:", notifError);
       }
 
       toast.success("Video uploaded and delivered!", { id: "upload" });
@@ -149,13 +186,50 @@ export const AstrologyDeliveryManager = () => {
       setRecordingDeliveryId(null);
       await fetchDeliveries();
     } catch (error: any) {
-      console.error("❌ === UPLOAD FAILED ===");
-      console.error("Error type:", error?.name);
-      console.error("Error message:", error?.message);
-      console.error("Full error:", error);
-      
-      const errorMessage = error?.message || "Unknown error occurred";
-      toast.error(`Upload failed: ${errorMessage}`, { id: "upload", duration: 5000 });
+      console.error("❌ Upload failed:", error);
+      toast.error(`Upload failed: ${error?.message}`, { id: "upload", duration: 5000 });
+    } finally {
+      setUploading(null);
+    }
+  };
+
+  const handleSubmitDraft = async (deliveryId: string) => {
+    const delivery = deliveries.find(d => d.id === deliveryId);
+    if (!delivery?.draft_video_url) return;
+
+    try {
+      setUploading(deliveryId);
+      toast.loading("Submitting draft to buyer...", { id: "submit-draft" });
+
+      const { error: updateError } = await supabase
+        .from("astrology_deliveries")
+        .update({
+          admin_video_url: delivery.draft_video_url,
+          status: "delivered",
+          delivered_at: new Date().toISOString(),
+          draft_video_url: null,
+        })
+        .eq("id", deliveryId);
+
+      if (updateError) throw updateError;
+
+      const { error: notifError } = await supabase
+        .from("notifications")
+        .insert({
+          user_id: delivery.buyer_id,
+          title: "Astrology Reading Ready",
+          message: "Your personalized astrology reading is ready! You can now view and download it.",
+          type: "ready",
+          related_delivery_id: deliveryId,
+        });
+
+      if (notifError) console.warn("⚠️ Notification error:", notifError);
+
+      toast.success("Draft submitted to buyer!", { id: "submit-draft" });
+      await fetchDeliveries();
+    } catch (error: any) {
+      console.error("❌ Submit draft failed:", error);
+      toast.error(`Failed to submit: ${error?.message}`, { id: "submit-draft" });
     } finally {
       setUploading(null);
     }
@@ -164,6 +238,9 @@ export const AstrologyDeliveryManager = () => {
   const getStatusBadge = (delivery: Delivery) => {
     if (delivery.status === "delivered") {
       return <Badge className="bg-green-500"><CheckCircle className="w-3 h-3 mr-1" />Delivered</Badge>;
+    }
+    if (delivery.draft_video_url) {
+      return <Badge variant="secondary"><FileText className="w-3 h-3 mr-1" />Draft Saved</Badge>;
     }
     if (delivery.is_overdue) {
       return <Badge variant="destructive"><AlertTriangle className="w-3 h-3 mr-1" />Overdue</Badge>;
@@ -220,9 +297,46 @@ export const AstrologyDeliveryManager = () => {
                       Delivered: {new Date(delivery.delivered_at).toLocaleDateString()}
                     </p>
                   )}
+                  {delivery.draft_saved_at && delivery.status === "pending" && (
+                    <p className="text-blue-600">
+                      Draft saved: {new Date(delivery.draft_saved_at).toLocaleDateString()}
+                    </p>
+                  )}
                 </div>
 
-                {delivery.status === "pending" && recordingDeliveryId !== delivery.id && (
+                {delivery.draft_video_url && delivery.status === "pending" && (
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-sm font-medium mb-2">Draft Preview:</p>
+                      <video
+                        src={delivery.draft_video_url}
+                        controls
+                        className="w-full max-w-2xl rounded-lg"
+                      />
+                    </div>
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <Button
+                        onClick={() => setRecordingDeliveryId(delivery.id)}
+                        variant="outline"
+                        disabled={uploading === delivery.id}
+                        className="w-full sm:w-auto"
+                      >
+                        <Video className="w-4 h-4 mr-2" />
+                        Re-record
+                      </Button>
+                      <Button
+                        onClick={() => handleSubmitDraft(delivery.id)}
+                        disabled={uploading === delivery.id}
+                        className="w-full sm:w-auto"
+                      >
+                        <Send className="w-4 h-4 mr-2" />
+                        Submit to Buyer
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {delivery.status === "pending" && !delivery.draft_video_url && recordingDeliveryId !== delivery.id && (
                   <Button 
                     onClick={() => setRecordingDeliveryId(delivery.id)}
                     disabled={uploading === delivery.id}
@@ -234,14 +348,21 @@ export const AstrologyDeliveryManager = () => {
 
                 {recordingDeliveryId === delivery.id && (
                   <VideoRecorder
-                    onVideoRecorded={(blob) => handleVideoUpload(delivery.id, blob)}
+                    onVideoRecorded={(blob, isDraft) => {
+                      if (isDraft) {
+                        handleDraftSave(delivery.id, blob);
+                      } else {
+                        handleVideoUpload(delivery.id, blob);
+                      }
+                    }}
                     onCancel={() => setRecordingDeliveryId(null)}
                     isUploading={uploading === delivery.id}
                   />
                 )}
 
-                {delivery.admin_video_url && (
+                {delivery.admin_video_url && delivery.status === "delivered" && (
                   <div>
+                    <p className="text-sm font-medium mb-2">Delivered Video:</p>
                     <video
                       src={delivery.admin_video_url}
                       controls
