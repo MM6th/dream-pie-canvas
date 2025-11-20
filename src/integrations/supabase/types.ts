@@ -234,12 +234,15 @@ export type Database = {
           created_at: string
           delivered_at: string | null
           delivery_deadline: string
+          draft_saved_at: string | null
+          draft_video_url: string | null
           id: string
           is_overdue: boolean | null
           overdue_message_sent: boolean | null
           purchase_id: string | null
           status: string
           updated_at: string
+          video_segments: Json | null
         }
         Insert: {
           admin_id: string
@@ -250,12 +253,15 @@ export type Database = {
           created_at?: string
           delivered_at?: string | null
           delivery_deadline: string
+          draft_saved_at?: string | null
+          draft_video_url?: string | null
           id?: string
           is_overdue?: boolean | null
           overdue_message_sent?: boolean | null
           purchase_id?: string | null
           status?: string
           updated_at?: string
+          video_segments?: Json | null
         }
         Update: {
           admin_id?: string
@@ -266,12 +272,15 @@ export type Database = {
           created_at?: string
           delivered_at?: string | null
           delivery_deadline?: string
+          draft_saved_at?: string | null
+          draft_video_url?: string | null
           id?: string
           is_overdue?: boolean | null
           overdue_message_sent?: boolean | null
           purchase_id?: string | null
           status?: string
           updated_at?: string
+          video_segments?: Json | null
         }
         Relationships: [
           {
