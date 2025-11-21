@@ -218,11 +218,11 @@ Deno.serve(async (req) => {
     }
 
     // Clean up any rounding errors - zero out quarterly income near zero
-    const { data: allRecords, error: fetchError } = await supabaseClient
+    const { data: allRecords, error: roundingFetchError } = await supabaseClient
       .from('quarterly_income')
       .select('id, total_income, user_id, income_type');
 
-    if (!fetchError && allRecords) {
+    if (!roundingFetchError && allRecords) {
       const nearZeroRecords = allRecords.filter(r => 
         Math.abs(r.total_income) > 0 && Math.abs(r.total_income) < 0.10
       );
