@@ -59,7 +59,8 @@ const SECalculatorModal = ({ userId, autoPopulateIncome = 0 }: SECalculatorModal
     const netEarnings = Math.max(0, data.quarterlyIncome - data.businessExpenses);
     
     // Self-employment tax calculation (15.3% of net earnings × 0.9235)
-    const selfEmploymentTax = netEarnings > 400 ? netEarnings * 0.153 * 0.9235 : 0;
+    // Calculate for all income levels for security and accuracy purposes
+    const selfEmploymentTax = netEarnings * 0.153 * 0.9235;
     
     // Basic NY state tax estimation (simplified progressive calculation)
     let nyStateTax = 0;
