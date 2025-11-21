@@ -3,9 +3,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Bell, Check, Calendar } from "lucide-react";
+import { Bell, Check, Calendar, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { AstrologyBirthInfoModal } from "./AstrologyBirthInfoModal";
+import { BirthInfoDetailModal } from "./BirthInfoDetailModal";
 
 interface Notification {
   id: string;
@@ -21,8 +22,11 @@ export const NotificationsList = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [birthInfoModalOpen, setBirthInfoModalOpen] = useState(false);
+  const [birthInfoDetailModalOpen, setBirthInfoDetailModalOpen] = useState(false);
   const [selectedDeliveryId, setSelectedDeliveryId] = useState<string>("");
   const [userId, setUserId] = useState<string>("");
+  const [productType, setProductType] = useState<string>("other");
+  const [deliveryBuyerIds, setDeliveryBuyerIds] = useState<Record<string, string>>({});
 
   useEffect(() => {
     fetchNotifications();
@@ -65,14 +69,60 @@ export const NotificationsList = () => {
       
       setNotifications(data || []);
       setUnreadCount(data?.filter(n => !n.read).length || 0);
+
+      // Fetch buyer IDs for purchase notifications
+      const purchaseNotifications = data?.filter(n => n.type === 'purchase' && n.related_delivery_id) || [];
+      if (purchaseNotifications.length > 0) {
+        const deliveryIds = purchaseNotifications.map(n => n.related_delivery_id!);
+        const { data: deliveries } = await supabase
+          .from('astrology_deliveries')
+          .select('id, buyer_id')
+          .in('id', deliveryIds);
+
+        if (deliveries) {
+          const buyerMap: Record<string, string> = {};
+          deliveries.forEach(d => {
+            buyerMap[d.id] = d.buyer_id;
+          });
+          setDeliveryBuyerIds(buyerMap);
+        }
+      }
     } catch (error) {
       console.error("Error fetching notifications:", error);
     }
   };
 
-  const handleSubmitBirthInfo = (deliveryId: string) => {
+  const handleSubmitBirthInfo = async (deliveryId: string) => {
+    try {
+      // Fetch product type for this delivery
+      const { data: delivery } = await supabase
+        .from('astrology_deliveries')
+        .select('astrology_product_id')
+        .eq('id', deliveryId)
+        .single();
+
+      if (delivery) {
+        const { data: product } = await supabase
+          .from('astrology_products')
+          .select('product_type')
+          .eq('id', delivery.astrology_product_id)
+          .single();
+
+        setProductType(product?.product_type || 'other');
+      }
+
+      setSelectedDeliveryId(deliveryId);
+      setBirthInfoModalOpen(true);
+    } catch (error) {
+      console.error('Error fetching product type:', error);
+      setSelectedDeliveryId(deliveryId);
+      setBirthInfoModalOpen(true);
+    }
+  };
+
+  const handleViewBirthInfo = (deliveryId: string) => {
     setSelectedDeliveryId(deliveryId);
-    setBirthInfoModalOpen(true);
+    setBirthInfoDetailModalOpen(true);
   };
 
   const markAsRead = async (notificationId: string) => {
@@ -169,7 +219,9 @@ export const NotificationsList = () => {
                         <p className="text-xs text-muted-foreground mt-2">
                           {new Date(notification.created_at).toLocaleString()}
                         </p>
-                        {notification.type === 'purchase' && notification.related_delivery_id && (
+                        {notification.type === 'purchase' && 
+                         notification.related_delivery_id && 
+                         deliveryBuyerIds[notification.related_delivery_id] === userId && (
                           <Button
                             variant="outline"
                             size="sm"
@@ -178,6 +230,18 @@ export const NotificationsList = () => {
                           >
                             <Calendar className="w-4 h-4 mr-2" />
                             Submit Birth Information
+                          </Button>
+                        )}
+                        {notification.type === 'birth_info_submitted' && 
+                         notification.related_delivery_id && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="mt-3"
+                            onClick={() => handleViewBirthInfo(notification.related_delivery_id!)}
+                          >
+                            <Eye className="w-4 h-4 mr-2" />
+                            View Details
                           </Button>
                         )}
                       </div>
@@ -204,6 +268,13 @@ export const NotificationsList = () => {
         onOpenChange={setBirthInfoModalOpen}
         deliveryId={selectedDeliveryId}
         userId={userId}
+        productType={productType}
+      />
+
+      <BirthInfoDetailModal
+        open={birthInfoDetailModalOpen}
+        onOpenChange={setBirthInfoDetailModalOpen}
+        deliveryId={selectedDeliveryId}
       />
     </div>
   );
