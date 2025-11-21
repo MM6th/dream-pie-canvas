@@ -22,15 +22,17 @@ serve(async (req) => {
       throw new Error('No authorization header');
     }
 
+    const token = authHeader.replace('Bearer ', '');
+
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      { global: { headers: { Authorization: authHeader } } }
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
     );
 
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token);
     if (userError || !user) {
-      throw new Error('Failed to get user');
+      console.error('Auth error:', userError);
+      throw new Error('Failed to authenticate user');
     }
     
     console.log('Creating astrology payment for:', { astrologyProductId, deliveryType, totalPrice, userId: user.id });
