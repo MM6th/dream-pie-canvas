@@ -17,10 +17,11 @@ serve(async (req) => {
     const url = new URL(req.url);
     const token = url.searchParams.get('token');
     const productId = url.searchParams.get('productId');
+    const userId = url.searchParams.get('userId');
     
-    console.log('Capturing astrology payment for token:', token, 'productId:', productId);
+    console.log('Capturing astrology payment for token:', token, 'productId:', productId, 'userId:', userId);
 
-    if (!token || !productId) {
+    if (!token || !productId || !userId) {
       throw new Error('Missing required parameters');
     }
 
@@ -80,25 +81,6 @@ serve(async (req) => {
       throw new Error('Product not found');
     }
 
-    // Extract user ID from the JWT token in the authorization header
-    const authHeader = req.headers.get('authorization');
-    let userId = null;
-    
-    if (authHeader) {
-      try {
-        const jwt = authHeader.replace('Bearer ', '');
-        const { data: { user } } = await supabase.auth.getUser(jwt);
-        userId = user?.id;
-      } catch (error) {
-        console.error('Error getting user from token:', error);
-      }
-    }
-
-    if (!userId) {
-      // Try to get user from the order details or use a placeholder
-      console.log('No user ID found, will need to handle this appropriately');
-    }
-
     // Record the purchase in the database
     const transactionId = captureData.purchase_units?.[0]?.payments?.captures?.[0]?.id;
     const amountPaid = parseFloat(captureData.purchase_units?.[0]?.payments?.captures?.[0]?.amount?.value || '0');
@@ -142,20 +124,31 @@ serve(async (req) => {
       }
     }
 
-    if (purchaseError) {
-      console.error('Error recording astrology purchase:', purchaseError);
-      throw new Error('Failed to record purchase');
-    }
-
     console.log('Astrology purchase recorded successfully');
 
+    // Get the base URL from the referer header
+    const referer = req.headers.get('referer');
+    let baseUrl = 'https://lovable.app';
+    if (referer) {
+      const refererUrl = new URL(referer);
+      baseUrl = `${refererUrl.protocol}//${refererUrl.host}`;
+    }
+
     // Redirect to success page
-    return Response.redirect('https://your-app-domain.com/payment-success', 302);
+    return Response.redirect(`${baseUrl}/payment-success?orderId=${captureData.id}&paymentType=astrology`, 302);
 
   } catch (error) {
     console.error('Error in capture-astrology-payment:', error);
     
+    // Get the base URL from the referer header
+    const referer = req.headers.get('referer');
+    let baseUrl = 'https://lovable.app';
+    if (referer) {
+      const refererUrl = new URL(referer);
+      baseUrl = `${refererUrl.protocol}//${refererUrl.host}`;
+    }
+    
     // Redirect to error page
-    return Response.redirect('https://your-app-domain.com/payment-cancelled', 302);
+    return Response.redirect(`${baseUrl}/payment-cancelled`, 302);
   }
 });

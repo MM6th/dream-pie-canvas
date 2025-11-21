@@ -1,5 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -15,7 +16,24 @@ serve(async (req) => {
   try {
     const { astrologyProductId, deliveryType, totalPrice } = await req.json();
     
-    console.log('Creating astrology payment for:', { astrologyProductId, deliveryType, totalPrice });
+    // Get authenticated user
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      throw new Error('No authorization header');
+    }
+
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+    if (userError || !user) {
+      throw new Error('Failed to get user');
+    }
+    
+    console.log('Creating astrology payment for:', { astrologyProductId, deliveryType, totalPrice, userId: user.id });
 
     // Get PayPal access token using live credentials
     const clientId = Deno.env.get('PAYPAL_CLIENT_ID');
@@ -57,8 +75,8 @@ serve(async (req) => {
         description: `Astrology ${deliveryType.replace('_', ' ')} service`
       }],
       application_context: {
-        return_url: `https://veaupehwfsbagzfuvach.supabase.co/functions/v1/capture-astrology-payment?productId=${astrologyProductId}`,
-        cancel_url: 'https://your-app-domain.com/payment-cancelled',
+        return_url: `https://veaupehwfsbagzfuvach.supabase.co/functions/v1/capture-astrology-payment?productId=${astrologyProductId}&userId=${user.id}`,
+        cancel_url: 'https://lovable.app/payment-cancelled',
         shipping_preference: 'NO_SHIPPING',
         user_action: 'PAY_NOW'
       }

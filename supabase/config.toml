@@ -71,3 +71,9 @@ verify_jwt = false
 
 [functions.delete-user-account]
 verify_jwt = true
+
+[functions.create-astrology-payment]
+verify_jwt = true
+
+[functions.capture-astrology-payment]
+verify_jwt = false
