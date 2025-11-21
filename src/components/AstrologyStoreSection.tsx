@@ -27,6 +27,8 @@ interface AstrologyProduct {
   created_at: string;
   discount_percentage?: number;
   sale_end_date?: string | null;
+  hours_selected?: number | null;
+  product_type?: string;
 }
 
 interface ProductReviewCount {
