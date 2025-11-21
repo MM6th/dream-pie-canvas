@@ -13,7 +13,7 @@ Deno.serve(async (req) => {
   try {
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
     const authHeader = req.headers.get('Authorization')!;
@@ -24,7 +24,7 @@ Deno.serve(async (req) => {
       throw new Error('Unauthorized');
     }
 
-    console.log('Starting cleanup of test purchases');
+    console.log('Starting cleanup of test purchases with admin privileges');
 
     // Clean up audio test purchases
     const { data: testPurchases, error: fetchError } = await supabaseClient
@@ -59,6 +59,10 @@ Deno.serve(async (req) => {
 
     console.log(`Found ${audioCount} audio and ${astrologyCount} astrology test purchases to clean up`);
 
+    let merchantRevenueReversed = 0;
+    let referrerCommissionReversed = 0;
+    let featuringRevenueReversed = 0;
+
     // Clean up audio purchases
     if (testPurchases && testPurchases.length > 0) {
       for (const purchase of testPurchases) {
@@ -70,29 +74,44 @@ Deno.serve(async (req) => {
 
         if (product) {
           // Reverse merchant revenue
-          await supabaseClient.rpc('update_quarterly_income', {
+          const { error: merchantError } = await supabaseClient.rpc('update_quarterly_income', {
             p_user_id: product.merchant_id,
             p_amount: -purchase.merchant_revenue_after_referral,
             p_income_type: 'merchant_revenue'
           });
+          if (merchantError) {
+            console.error('Error reversing merchant revenue:', merchantError);
+          } else {
+            merchantRevenueReversed += purchase.merchant_revenue_after_referral;
+          }
 
           // Reverse referrer commission if applicable
           if (purchase.referrer_user_id && purchase.referrer_commission) {
-            await supabaseClient.rpc('update_quarterly_income', {
+            const { error: referrerError } = await supabaseClient.rpc('update_quarterly_income', {
               p_user_id: purchase.referrer_user_id,
               p_amount: -purchase.referrer_commission,
               p_income_type: 'referral_commission'
             });
+            if (referrerError) {
+              console.error('Error reversing referrer commission:', referrerError);
+            } else {
+              referrerCommissionReversed += purchase.referrer_commission;
+            }
           }
 
           // Reverse featuring artist revenue if applicable
           if (product.featuring_artist_user_id && product.featuring_percentage) {
             const featuringRevenue = purchase.merchant_revenue_after_referral * (product.featuring_percentage / 100);
-            await supabaseClient.rpc('update_quarterly_income', {
+            const { error: featuringError } = await supabaseClient.rpc('update_quarterly_income', {
               p_user_id: product.featuring_artist_user_id,
               p_amount: -featuringRevenue,
               p_income_type: 'featuring_artist_revenue'
             });
+            if (featuringError) {
+              console.error('Error reversing featuring revenue:', featuringError);
+            } else {
+              featuringRevenueReversed += featuringRevenue;
+            }
           }
         }
       }
@@ -126,11 +145,16 @@ Deno.serve(async (req) => {
           const adminRevenue = afterPayPalFee * 0.90;
 
           // Reverse admin revenue
-          await supabaseClient.rpc('update_quarterly_income', {
+          const { error: adminError } = await supabaseClient.rpc('update_quarterly_income', {
             p_user_id: product.admin_id,
             p_amount: -adminRevenue,
             p_income_type: 'merchant_revenue'
           });
+          if (adminError) {
+            console.error('Error reversing admin revenue:', adminError);
+          } else {
+            merchantRevenueReversed += adminRevenue;
+          }
         }
 
     // Get deliveries with video URLs to delete from storage
@@ -194,11 +218,17 @@ Deno.serve(async (req) => {
     }
 
     console.log('Cleanup completed successfully');
+    console.log(`Revenue reversed - Merchant: $${merchantRevenueReversed.toFixed(2)}, Referrer: $${referrerCommissionReversed.toFixed(2)}, Featuring: $${featuringRevenueReversed.toFixed(2)}`);
 
     return new Response(
       JSON.stringify({
         success: true,
-        message: `Cleaned up ${audioCount} audio and ${astrologyCount} astrology test purchases with all related data`
+        message: `Cleaned up ${audioCount} audio and ${astrologyCount} astrology test purchases with all related data`,
+        revenueReversed: {
+          merchant: merchantRevenueReversed,
+          referrer: referrerCommissionReversed,
+          featuring: featuringRevenueReversed
+        }
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
