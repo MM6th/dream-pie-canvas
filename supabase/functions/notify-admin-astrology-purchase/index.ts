@@ -32,7 +32,7 @@ serve(async (req) => {
     deliveryDeadline.setDate(deliveryDeadline.getDate() + 3);
 
     // Create delivery record
-    const { error: deliveryError } = await supabase
+    const { data: delivery, error: deliveryError } = await supabase
       .from("astrology_deliveries")
       .insert({
         astrology_product_id: productId,
@@ -41,7 +41,9 @@ serve(async (req) => {
         purchase_id: purchaseId,
         delivery_deadline: deliveryDeadline.toISOString(),
         status: "pending",
-      });
+      })
+      .select()
+      .single();
 
     if (deliveryError) throw deliveryError;
 
@@ -53,6 +55,7 @@ serve(async (req) => {
         title: "New Astrology Reading Purchase",
         message: "A new astrology reading has been purchased. Please deliver within 3 days.",
         type: "purchase",
+        related_delivery_id: delivery.id,
       });
 
     if (notificationError) throw notificationError;
@@ -63,8 +66,9 @@ serve(async (req) => {
       .insert({
         user_id: buyerId,
         title: "Astrology Reading Ordered",
-        message: "Your astrology reading has been ordered. It will be delivered within 3 days.",
-        type: "pending",
+        message: "Your astrology reading has been ordered. It will be delivered within 3 days. Please submit your birth information.",
+        type: "purchase",
+        related_delivery_id: delivery.id,
       });
 
     if (buyerNotificationError) throw buyerNotificationError;
