@@ -218,19 +218,29 @@ Deno.serve(async (req) => {
     }
 
     // Clean up any rounding errors - zero out quarterly income near zero
-    const { data: nearZeroRecords } = await supabaseClient
+    const { data: allRecords, error: fetchError } = await supabaseClient
       .from('quarterly_income')
-      .select('id')
-      .or('total_income.lt.0.10,total_income.gt.-0.10')
-      .not('total_income', 'eq', 0);
+      .select('id, total_income, user_id, income_type');
 
-    if (nearZeroRecords && nearZeroRecords.length > 0) {
-      await supabaseClient
-        .from('quarterly_income')
-        .update({ total_income: 0, source_count: 0 })
-        .in('id', nearZeroRecords.map(r => r.id));
-      
-      console.log(`Zeroed out ${nearZeroRecords.length} near-zero quarterly income records`);
+    if (!fetchError && allRecords) {
+      const nearZeroRecords = allRecords.filter(r => 
+        Math.abs(r.total_income) > 0 && Math.abs(r.total_income) < 0.10
+      );
+
+      if (nearZeroRecords.length > 0) {
+        console.log(`Found ${nearZeroRecords.length} near-zero records to clean up`);
+        
+        for (const record of nearZeroRecords) {
+          await supabaseClient
+            .from('quarterly_income')
+            .update({ total_income: 0, source_count: 0 })
+            .eq('id', record.id);
+        }
+        
+        console.log(`Zeroed out ${nearZeroRecords.length} near-zero quarterly income records`);
+      } else {
+        console.log('No near-zero records found');
+      }
     }
 
     console.log('Cleanup completed successfully');
