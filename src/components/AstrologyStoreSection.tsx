@@ -321,7 +321,12 @@ const AstrologyStoreSection = () => {
                         variant="outline"
                         className="w-full border-gray-600 text-white bg-transparent hover:bg-gray-700"
                       >
-                        {showReviews === product.id ? "Hide Reviews" : `View Reviews (${reviewCount})`}
+                        {showReviews === product.id 
+                          ? "Hide Reviews" 
+                          : reviewCount > 0 
+                            ? `View Reviews (${reviewCount})` 
+                            : "View Reviews"
+                        }
                       </Button>
                     </div>
 
