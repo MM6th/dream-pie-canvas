@@ -217,6 +217,22 @@ Deno.serve(async (req) => {
         .like('paypal_transaction_id', 'TEST_ASTRO_%');
     }
 
+    // Clean up any rounding errors - zero out quarterly income near zero
+    const { data: nearZeroRecords } = await supabaseClient
+      .from('quarterly_income')
+      .select('id')
+      .or('total_income.lt.0.10,total_income.gt.-0.10')
+      .not('total_income', 'eq', 0);
+
+    if (nearZeroRecords && nearZeroRecords.length > 0) {
+      await supabaseClient
+        .from('quarterly_income')
+        .update({ total_income: 0, source_count: 0 })
+        .in('id', nearZeroRecords.map(r => r.id));
+      
+      console.log(`Zeroed out ${nearZeroRecords.length} near-zero quarterly income records`);
+    }
+
     console.log('Cleanup completed successfully');
     console.log(`Revenue reversed - Merchant: $${merchantRevenueReversed.toFixed(2)}, Referrer: $${referrerCommissionReversed.toFixed(2)}, Featuring: $${featuringRevenueReversed.toFixed(2)}`);
 
