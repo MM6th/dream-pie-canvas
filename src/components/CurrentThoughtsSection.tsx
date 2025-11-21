@@ -92,7 +92,7 @@ const CurrentThoughtsSection = ({ posts, useCarousel = true }: CurrentThoughtsSe
         <Carousel
           opts={{
             align: "start",
-            loop: posts.length > 2,
+            loop: false,
           }}
           className="w-full"
         >
@@ -111,7 +111,7 @@ const CurrentThoughtsSection = ({ posts, useCarousel = true }: CurrentThoughtsSe
           <Carousel
             opts={{
               align: "start",
-              loop: posts.length > 4,
+              loop: false,
             }}
             className="w-full"
             orientation="vertical"
