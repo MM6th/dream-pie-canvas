@@ -3,8 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Bell, Check } from "lucide-react";
+import { Bell, Check, Calendar } from "lucide-react";
 import { toast } from "sonner";
+import { AstrologyBirthInfoModal } from "./AstrologyBirthInfoModal";
 
 interface Notification {
   id: string;
@@ -13,11 +14,15 @@ interface Notification {
   type: string;
   read: boolean;
   created_at: string;
+  related_delivery_id?: string | null;
 }
 
 export const NotificationsList = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [birthInfoModalOpen, setBirthInfoModalOpen] = useState(false);
+  const [selectedDeliveryId, setSelectedDeliveryId] = useState<string>("");
+  const [userId, setUserId] = useState<string>("");
 
   useEffect(() => {
     fetchNotifications();
@@ -47,6 +52,8 @@ export const NotificationsList = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      setUserId(user.id);
+
       const { data, error } = await supabase
         .from("notifications")
         .select("*")
@@ -61,6 +68,11 @@ export const NotificationsList = () => {
     } catch (error) {
       console.error("Error fetching notifications:", error);
     }
+  };
+
+  const handleSubmitBirthInfo = (deliveryId: string) => {
+    setSelectedDeliveryId(deliveryId);
+    setBirthInfoModalOpen(true);
   };
 
   const markAsRead = async (notificationId: string) => {
@@ -157,6 +169,17 @@ export const NotificationsList = () => {
                         <p className="text-xs text-muted-foreground mt-2">
                           {new Date(notification.created_at).toLocaleString()}
                         </p>
+                        {notification.type === 'purchase' && notification.related_delivery_id && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="mt-3"
+                            onClick={() => handleSubmitBirthInfo(notification.related_delivery_id!)}
+                          >
+                            <Calendar className="w-4 h-4 mr-2" />
+                            Submit Birth Information
+                          </Button>
+                        )}
                       </div>
                       {!notification.read && (
                         <Button
@@ -175,6 +198,13 @@ export const NotificationsList = () => {
           ))
         )}
       </div>
+
+      <AstrologyBirthInfoModal
+        open={birthInfoModalOpen}
+        onOpenChange={setBirthInfoModalOpen}
+        deliveryId={selectedDeliveryId}
+        userId={userId}
+      />
     </div>
   );
 };
