@@ -140,6 +140,9 @@ const TestPurchaseSimulator = () => {
         title: "✅ Cleanup Complete",
         description: data.message,
       });
+      
+      // Reload page to refresh quarterly income data
+      setTimeout(() => window.location.reload(), 1000);
     } catch (error: any) {
       console.error('Cleanup error:', error);
       toast({
