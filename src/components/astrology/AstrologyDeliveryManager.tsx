@@ -3,8 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { CheckCircle, Clock, AlertTriangle, Video, FileText, Send } from "lucide-react";
+import { CheckCircle, Clock, AlertTriangle, Video, FileText, Send, Upload } from "lucide-react";
 import { VideoRecorder } from "./VideoRecorder";
+import { VideoFileUploader } from "./VideoFileUploader";
 import { Button } from "@/components/ui/button";
 
 interface Delivery {
@@ -29,6 +30,7 @@ export const AstrologyDeliveryManager = () => {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState<string | null>(null);
   const [recordingDeliveryId, setRecordingDeliveryId] = useState<string | null>(null);
+  const [uploadingDeliveryId, setUploadingDeliveryId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchDeliveries();
@@ -314,7 +316,7 @@ export const AstrologyDeliveryManager = () => {
                         className="w-full max-w-2xl rounded-lg"
                       />
                     </div>
-                    <div className="flex flex-col sm:flex-row gap-2">
+                     <div className="flex flex-col sm:flex-row gap-2">
                       <Button
                         onClick={() => setRecordingDeliveryId(delivery.id)}
                         variant="outline"
@@ -323,6 +325,15 @@ export const AstrologyDeliveryManager = () => {
                       >
                         <Video className="w-4 h-4 mr-2" />
                         Re-record
+                      </Button>
+                      <Button
+                        onClick={() => setUploadingDeliveryId(delivery.id)}
+                        variant="outline"
+                        disabled={uploading === delivery.id}
+                        className="w-full sm:w-auto"
+                      >
+                        <Upload className="w-4 h-4 mr-2" />
+                        Re-upload
                       </Button>
                       <Button
                         onClick={() => handleSubmitDraft(delivery.id)}
@@ -336,14 +347,30 @@ export const AstrologyDeliveryManager = () => {
                   </div>
                 )}
 
-                {delivery.status === "pending" && !delivery.draft_video_url && recordingDeliveryId !== delivery.id && (
-                  <Button 
-                    onClick={() => setRecordingDeliveryId(delivery.id)}
-                    disabled={uploading === delivery.id}
-                  >
-                    <Video className="w-4 h-4 mr-2" />
-                    Record Reading
-                  </Button>
+                {delivery.status === "pending" && 
+                 !delivery.draft_video_url && 
+                 recordingDeliveryId !== delivery.id && 
+                 uploadingDeliveryId !== delivery.id && (
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <Button 
+                      onClick={() => setRecordingDeliveryId(delivery.id)}
+                      disabled={uploading === delivery.id}
+                      variant="outline"
+                      className="w-full sm:w-auto"
+                    >
+                      <Video className="w-4 h-4 mr-2" />
+                      Record Video
+                    </Button>
+                    <Button 
+                      onClick={() => setUploadingDeliveryId(delivery.id)}
+                      disabled={uploading === delivery.id}
+                      variant="outline"
+                      className="w-full sm:w-auto"
+                    >
+                      <Upload className="w-4 h-4 mr-2" />
+                      Upload Video
+                    </Button>
+                  </div>
                 )}
 
                 {recordingDeliveryId === delivery.id && (
@@ -356,6 +383,16 @@ export const AstrologyDeliveryManager = () => {
                       }
                     }}
                     onCancel={() => setRecordingDeliveryId(null)}
+                    isUploading={uploading === delivery.id}
+                  />
+                )}
+
+                {uploadingDeliveryId === delivery.id && (
+                  <VideoFileUploader
+                    deliveryId={delivery.id}
+                    onDraftSave={(blob) => handleDraftSave(delivery.id, blob)}
+                    onSubmit={(blob) => handleVideoUpload(delivery.id, blob)}
+                    onCancel={() => setUploadingDeliveryId(null)}
                     isUploading={uploading === delivery.id}
                   />
                 )}
