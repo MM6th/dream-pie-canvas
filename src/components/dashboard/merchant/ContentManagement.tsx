@@ -67,14 +67,16 @@ const ContentManagement = () => {
           <CardTitle className="text-white">Tax Planning Tools</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg">
-            <div>
-              <h4 className="text-white font-medium">Self-Employment Tax Calculator</h4>
-              <p className="text-gray-400 text-sm">
+          <div className={`${isMobile ? 'flex-col items-start gap-3' : 'flex-row items-center justify-between'} flex p-4 bg-gray-700/50 rounded-lg`}>
+            <div className={isMobile ? 'w-full' : ''}>
+              <h4 className="text-white font-medium text-sm">Self-Employment Tax Calculator</h4>
+              <p className="text-gray-400 text-xs">
                 Estimate your quarterly tax obligations as an independent contractor
               </p>
             </div>
-            <SECalculatorModal userId={user?.id} autoPopulateIncome={currentQuarterIncome} />
+            <div className={isMobile ? 'w-full flex justify-end' : ''}>
+              <SECalculatorModal userId={user?.id} autoPopulateIncome={currentQuarterIncome} />
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -110,18 +112,18 @@ const ContentManagement = () => {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="cover-submissions" className="w-full">
-              <TabsList className={`grid w-full ${isMobile ? 'grid-cols-1 gap-2 h-auto' : 'grid-cols-2'} bg-gray-700 border-gray-600`}>
+              <TabsList className={`${isMobile ? 'flex flex-col w-full gap-2 h-auto bg-gray-700/50' : 'grid w-full grid-cols-2 bg-gray-700'} border-gray-600`}>
                 <TabsTrigger 
                   value="cover-submissions" 
-                  className={`text-white data-[state=active]:bg-gray-600 ${isMobile ? 'text-sm px-3 py-2 h-auto whitespace-normal' : ''}`}
+                  className={`text-white data-[state=active]:bg-gray-600 ${isMobile ? 'w-full text-xs px-3 py-2.5 h-auto' : ''}`}
                 >
-                  {isMobile ? 'Submit Covers' : 'Submit New Covers'}
+                  {isMobile ? 'Submit New Covers' : 'Submit New Covers'}
                 </TabsTrigger>
                 <TabsTrigger 
                   value="my-submissions" 
-                  className={`text-white data-[state=active]:bg-gray-600 ${isMobile ? 'text-sm px-3 py-2 h-auto whitespace-normal' : ''}`}
+                  className={`text-white data-[state=active]:bg-gray-600 ${isMobile ? 'w-full text-xs px-3 py-2.5 h-auto' : ''}`}
                 >
-                  {isMobile ? 'My Submissions' : 'My Submissions'}
+                  My Submissions
                 </TabsTrigger>
               </TabsList>
 
