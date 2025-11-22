@@ -7,7 +7,9 @@ import {
   FileText, 
   Star, 
   Image,
-  MessageSquare
+  MessageSquare,
+  ChevronDown,
+  FlaskConical
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import MerchantsManagement from "./MerchantsManagement";
@@ -16,8 +18,8 @@ import ReviewsManagement from "./ReviewsManagement";
 import AdminContentGallery from "./AdminContentGallery";
 import AdminBulletinPostManager from "./AdminBulletinPostManager";
 import VideoAdOpportunityManager from "./VideoAdOpportunityManager";
-import SECalculatorModal from "@/components/SECalculatorModal";
 import TestPurchaseSimulator from "@/components/TestPurchaseSimulator";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useSubmissionCounts } from "@/hooks/useSubmissionCounts";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuarterlyIncome } from "@/hooks/useQuarterlyIncome";
@@ -31,7 +33,6 @@ const AdminDashboard = () => {
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const totalSubmissions = counts.coverSubmissions + counts.modelingApplications;
-  const { currentQuarterIncome } = useQuarterlyIncome(user?.id);
   
   const tutorial = useDashboardTutorial('admin', adminTutorialSteps);
 
@@ -60,26 +61,6 @@ const AdminDashboard = () => {
         <h1 className="text-4xl font-bold text-white mb-4">Admin Dashboard</h1>
         <p className="text-gray-400 text-lg">Manage merchants, submissions, and platform content</p>
       </div>
-
-      {/* SE Tax Calculator Section */}
-      <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm" data-tutorial="tax-calculator">
-        <CardHeader>
-          <CardTitle className="text-white">Administrative Tools</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg">
-            <div>
-              <h4 className="text-white font-medium">Self-Employment Tax Calculator</h4>
-              <p className="text-gray-400 text-sm">
-                Tax planning tool for administrative reference and merchant support
-              </p>
-            </div>
-            <SECalculatorModal userId={user?.id} autoPopulateIncome={currentQuarterIncome} />
-          </div>
-          
-          <TestPurchaseSimulator />
-        </CardContent>
-      </Card>
 
       <Tabs defaultValue="merchants" className="w-full">
         <TabsList className={`grid w-full ${isMobile ? 'grid-cols-2 gap-2 h-auto' : 'grid-cols-5'} bg-gray-800 border-gray-700`}>
@@ -212,6 +193,33 @@ const AdminDashboard = () => {
           <VideoAdOpportunityManager />
         </CardContent>
       </Card>
+
+      {/* Developer Tools - Collapsible Section */}
+      <Collapsible defaultOpen={false} className="mt-6">
+        <Card className="bg-gray-800/30 border-gray-700/50 backdrop-blur-sm">
+          <CollapsibleTrigger className="w-full">
+            <CardHeader className="cursor-pointer hover:bg-gray-700/20 transition-colors">
+              <CardTitle className="text-white text-sm flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <FlaskConical className="w-4 h-4 text-gray-400" />
+                  <span className="text-gray-400">Developer Tools (Testing Only)</span>
+                </div>
+                <ChevronDown className="w-4 h-4 text-gray-400 transition-transform" />
+              </CardTitle>
+            </CardHeader>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <CardContent className="pt-0">
+              <div className="bg-yellow-900/10 border border-yellow-600/30 rounded-lg p-4 mb-4">
+                <p className="text-yellow-200 text-xs">
+                  ⚠️ <strong>Test Environment:</strong> Data created here is marked as test data and excluded from financial reports.
+                </p>
+              </div>
+              <TestPurchaseSimulator />
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
     </div>
   );
 };

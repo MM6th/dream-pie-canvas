@@ -1,10 +1,13 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { LogOut, ShoppingBag, MessageSquare, User, Users, BookOpen } from "lucide-react";
+import { LogOut, ShoppingBag, MessageSquare, User, Users, BookOpen, DollarSign } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useNavigate } from "react-router-dom";
 import FullMerchantProfileModal from "@/components/profile/FullMerchantProfileModal";
+import SECalculatorModal from "@/components/SECalculatorModal";
+import { useQuarterlyIncome } from "@/hooks/useQuarterlyIncome";
+import { useAuth } from "@/hooks/useAuth";
 
 interface DashboardHeaderProps {
   onStoreView: () => void;
@@ -29,9 +32,37 @@ const DashboardHeader = ({
 }: DashboardHeaderProps) => {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { currentQuarterIncome, companyIncome, contractorIncome } = useQuarterlyIncome(user?.id);
 
   return (
     <div className="max-w-6xl mx-auto px-4 pt-4 pb-4">
+      {/* Financial Reports Section - Prominent Position */}
+      {(isApproved || isAdmin) && (
+        <div className="mb-4 flex items-center justify-between gap-4 px-6 py-4 bg-gradient-to-r from-green-900/30 to-emerald-900/20 border border-green-600/30 rounded-lg backdrop-blur-sm">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-green-600/20 rounded-lg">
+              <DollarSign className="w-6 h-6 text-green-400" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xs text-gray-400 uppercase tracking-wider">Q4 2025 Income</span>
+              <span className="text-2xl font-bold text-green-400">
+                ${currentQuarterIncome.toFixed(2)}
+              </span>
+              {(companyIncome > 0 || contractorIncome > 0) && (
+                <span className="text-xs text-green-300/70">
+                  Company: ${companyIncome.toFixed(2)} {contractorIncome > 0 && `• Contractor: $${contractorIncome.toFixed(2)}`}
+                </span>
+              )}
+            </div>
+          </div>
+          <SECalculatorModal 
+            userId={user?.id} 
+            autoPopulateIncome={currentQuarterIncome} 
+          />
+        </div>
+      )}
+      
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         {/* Main Navigation */}
         <div className={`flex gap-2 ${isMobile ? 'flex-wrap w-full' : ''}`}>
