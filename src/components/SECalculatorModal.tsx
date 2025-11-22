@@ -15,6 +15,7 @@ import TaxCalculationForm from "./TaxCalculationForm";
 import TaxResultsDisplay from "./TaxResultsDisplay";
 import QuarterlyDueDates from "./QuarterlyDueDates";
 import { useAuth } from "@/hooks/useAuth";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useQuarterlyIncome } from "@/hooks/useQuarterlyIncome";
 
 const formatCurrency = (amount: number) => {
@@ -47,6 +48,7 @@ interface SECalculatorModalProps {
 
 const SECalculatorModal = ({ userId, autoPopulateIncome = 0 }: SECalculatorModalProps) => {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const { currentQuarterIncome, companyIncome, contractorIncome } = useQuarterlyIncome(user?.id);
   
   const [isOpen, setIsOpen] = useState(false);
@@ -129,10 +131,10 @@ const SECalculatorModal = ({ userId, autoPopulateIncome = 0 }: SECalculatorModal
       <DialogTrigger asChild>
         <Button 
           variant="outline" 
-          className="border-green-600 text-green-400 hover:bg-green-600 hover:text-white"
+          className={`border-green-600 text-green-400 hover:bg-green-600 hover:text-white ${isMobile ? 'text-xs px-3 whitespace-nowrap' : ''}`}
         >
-          <Calculator className="w-4 h-4 mr-2" />
-          View Tax Calculator
+          <Calculator className={`${isMobile ? 'w-3 h-3 mr-1' : 'w-4 h-4 mr-2'}`} />
+          {isMobile ? 'Tax Calc' : 'View Tax Calculator'}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-gray-800 border-gray-700">
