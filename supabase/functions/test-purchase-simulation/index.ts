@@ -112,23 +112,25 @@ Deno.serve(async (req) => {
 
     console.log('Test purchase created:', purchase.id);
 
-    // Update quarterly income for merchant
+    // Update quarterly income for merchant (TEST DATA)
     const { error: merchantIncomeError } = await supabaseClient.rpc('update_quarterly_income', {
       p_user_id: product.merchant_id,
       p_amount: merchantRevenueAfterReferral,
-      p_income_type: 'merchant_revenue'
+      p_income_type: 'company_revenue',
+      p_is_test_data: true
     });
 
     if (merchantIncomeError) {
       console.error('Merchant income update error:', merchantIncomeError);
     }
 
-    // Update quarterly income for referrer if applicable
+    // Update quarterly income for referrer if applicable (TEST DATA)
     if (referrerId && referrerCommission > 0) {
       const { error: referrerIncomeError } = await supabaseClient.rpc('update_quarterly_income', {
         p_user_id: referrerId,
         p_amount: referrerCommission,
-        p_income_type: 'referral_commission'
+        p_income_type: 'referral_commission',
+        p_is_test_data: true
       });
 
       if (referrerIncomeError) {
@@ -136,12 +138,13 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Update quarterly income for featuring artist if applicable
+    // Update quarterly income for featuring artist if applicable (TEST DATA)
     if (product.featuring_artist_user_id && featuringArtistRevenue > 0) {
       const { error: featuringIncomeError } = await supabaseClient.rpc('update_quarterly_income', {
         p_user_id: product.featuring_artist_user_id,
         p_amount: featuringArtistRevenue,
-        p_income_type: 'featuring_artist_revenue'
+        p_income_type: 'featuring_revenue',
+        p_is_test_data: true
       });
 
       if (featuringIncomeError) {

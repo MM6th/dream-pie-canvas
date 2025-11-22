@@ -294,13 +294,19 @@ Deno.serve(async (req) => {
       }
 
       if (audioProduct) {
-        // Track income for tax reporting
-        // 1. Track PIE platform fee (10% of net revenue after PayPal)
-        await supabaseAdmin.rpc('update_quarterly_income', {
-          p_user_id: audioProduct.merchant_id,
-          p_income_type: 'platform_fee',
-          p_amount: piePlatformShare
-        })
+        // Record platform operational cost
+        await supabaseAdmin
+          .from('platform_revenue')
+          .insert({
+            amount: piePlatformShare,
+            revenue_type: 'platform_operational_cost',
+            source_transaction_id: capture.id,
+            source_user_id: user.id,
+            metadata: { 
+              product_type: 'audio',
+              audio_product_id: purchaseUnit.reference_id 
+            }
+          })
 
         // 2. Check if this is a track with featuring artist and distribute revenue
         const { data: albumTrack } = await supabaseAdmin
@@ -335,19 +341,21 @@ Deno.serve(async (req) => {
               p_album_id: audioProduct.album_id
             });
           } else {
-            // Regular album, use existing logic
+            // Regular album - company revenue
             await supabaseAdmin.rpc('update_quarterly_income', {
               p_user_id: audioProduct.merchant_id,
-              p_income_type: 'merchant_revenue',
-              p_amount: merchantRevenue
+              p_income_type: 'company_revenue',
+              p_amount: merchantRevenue,
+              p_is_test_data: false
             });
           }
         } else {
-          // Single track, no featuring artist
+          // Single track, no featuring artist - company revenue
           await supabaseAdmin.rpc('update_quarterly_income', {
             p_user_id: audioProduct.merchant_id,
-            p_income_type: 'merchant_revenue',
-            p_amount: merchantRevenue
+            p_income_type: 'company_revenue',
+            p_amount: merchantRevenue,
+            p_is_test_data: false
           });
         }
 

@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -12,6 +13,15 @@ import { Calculator } from "lucide-react";
 import TaxCalculationForm from "./TaxCalculationForm";
 import TaxResultsDisplay from "./TaxResultsDisplay";
 import QuarterlyDueDates from "./QuarterlyDueDates";
+import { useAuth } from "@/hooks/useAuth";
+import { useQuarterlyIncome } from "@/hooks/useQuarterlyIncome";
+
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+  }).format(amount);
+};
 
 interface TaxData {
   platformIncome: number;
@@ -35,6 +45,9 @@ interface SECalculatorModalProps {
 }
 
 const SECalculatorModal = ({ userId, autoPopulateIncome = 0 }: SECalculatorModalProps) => {
+  const { user } = useAuth();
+  const { currentQuarterIncome, companyIncome, contractorIncome } = useQuarterlyIncome(user?.id);
+  
   const [isOpen, setIsOpen] = useState(false);
   const [taxData, setTaxData] = useState<TaxData>({
     platformIncome: autoPopulateIncome,
@@ -127,6 +140,25 @@ const SECalculatorModal = ({ userId, autoPopulateIncome = 0 }: SECalculatorModal
             <Calculator className="w-5 h-5" />
             Self-Employment Tax Calculator
           </DialogTitle>
+          <DialogDescription className="text-gray-400 space-y-2">
+            <p>Calculate your estimated self-employment and New York state taxes based on your quarterly income.</p>
+            {companyIncome > 0 && (
+              <div className="bg-blue-900/20 border border-blue-600/30 rounded p-3 text-sm">
+                <p className="text-blue-300 font-medium mb-1">Income Breakdown:</p>
+                <p className="text-blue-200">
+                  • PIE Company Revenue: {formatCurrency(companyIncome)} (Business income)
+                </p>
+                {contractorIncome > 0 && (
+                  <p className="text-blue-200">
+                    • Contractor Income: {formatCurrency(contractorIncome)} (Personal 1099 income)
+                  </p>
+                )}
+                <p className="text-blue-200 text-xs mt-2 italic">
+                  This calculator uses your total income. Company revenue is subject to business tax, while contractor income is subject to SE tax.
+                </p>
+              </div>
+            )}
+          </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-6">

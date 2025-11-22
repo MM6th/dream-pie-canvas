@@ -188,6 +188,43 @@ const handler = async (req: Request): Promise<Response> => {
       // Don't throw here as payment was successful
     }
 
+    // Get fashion product to find admin_id
+    const { data: fashionProduct } = await supabase
+      .from('fashion_products')
+      .select('admin_id')
+      .eq('id', validated.fashionProductId)
+      .single();
+
+    if (fashionProduct) {
+      // Calculate revenue splits
+      const paypalFee = (totalAmount * 0.0349) + 0.49;
+      const netRevenue = totalAmount - paypalFee;
+      const platformFee = netRevenue * 0.10;
+      const adminRevenue = netRevenue * 0.90;
+
+      // Track company revenue for admin
+      await supabase.rpc('update_quarterly_income', {
+        p_user_id: fashionProduct.admin_id,
+        p_income_type: 'company_revenue',
+        p_amount: adminRevenue,
+        p_is_test_data: false
+      });
+
+      // Record platform operational cost
+      await supabase
+        .from('platform_revenue')
+        .insert({
+          amount: platformFee,
+          revenue_type: 'platform_operational_cost',
+          source_transaction_id: captureResult.id,
+          source_user_id: user.id,
+          metadata: { 
+            product_type: 'fashion',
+            fashion_product_id: validated.fashionProductId 
+          }
+        });
+    }
+
     console.log('Fashion purchase recorded successfully');
 
     return new Response(JSON.stringify({
