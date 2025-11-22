@@ -59,17 +59,16 @@ Deno.serve(async (req) => {
 
     const productPrice = product.total_price || 0;
     
-    // Calculate revenue splits (same logic as audio products)
+    // Calculate revenue splits - PIE OWNED PRODUCT (100% to company after PayPal fees)
     const paypalFee = productPrice * 0.0349 + 0.49;
     const afterPayPalFee = productPrice - paypalFee;
-    const platformFee = afterPayPalFee * 0.10;
-    const adminRevenue = afterPayPalFee * 0.90;
+    // For PIE's own astrology products, no platform fee - 100% goes to company
+    const adminRevenue = afterPayPalFee; // 100% to PIE
 
     console.log('Revenue breakdown:', {
       productPrice,
       paypalFee,
-      platformFee,
-      adminRevenue
+      adminRevenue // 100% to PIE after PayPal fees
     });
 
     // Create test astrology purchase record
@@ -150,6 +149,7 @@ Deno.serve(async (req) => {
     }
 
     // Update quarterly income for admin (TEST DATA)
+    // PIE receives 100% of net revenue (after PayPal fees) for own products
     const { error: adminIncomeError } = await supabaseClient.rpc('update_quarterly_income', {
       p_user_id: product.admin_id,
       p_amount: adminRevenue,
@@ -161,20 +161,7 @@ Deno.serve(async (req) => {
       console.error('Admin income update error:', adminIncomeError);
     }
 
-    // Record platform fee
-    const { error: platformRevenueError } = await supabaseClient
-      .from('platform_revenue')
-      .insert({
-        amount: platformFee,
-        revenue_type: 'platform_fee',
-        source_transaction_id: purchase.id,
-        source_user_id: user.id,
-        metadata: { test_astrology_simulation: true }
-      });
-
-    if (platformRevenueError) {
-      console.error('Platform revenue error:', platformRevenueError);
-    }
+    // NO PLATFORM FEE - PIE's own astrology products get 100% of net revenue
 
     return new Response(
       JSON.stringify({
@@ -185,8 +172,7 @@ Deno.serve(async (req) => {
         breakdown: {
           productPrice,
           paypalFee,
-          platformFee,
-          adminRevenue,
+          adminRevenue, // 100% to PIE after PayPal fees
           deliveryDeadline: deliveryDeadline.toISOString()
         }
       }),
