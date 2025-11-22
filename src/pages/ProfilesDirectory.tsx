@@ -34,7 +34,7 @@ const ProfilesDirectory = () => {
   const [filteredProfiles, setFilteredProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedFilter, setSelectedFilter] = useState<string>("all");
+  const [selectedFilter, setSelectedFilter] = useState<string>("merchants");
 
   useEffect(() => {
     fetchProfiles();
@@ -116,30 +116,23 @@ const ProfilesDirectory = () => {
       );
     }
 
-    // Hide supporters from default "all" view (but show them when searching or when "supporters" filter is active)
-    if (selectedFilter === "all" && !searchTerm) {
-      filtered = filtered.filter(profile => profile.user_type !== "supporter");
-    }
-
     // Filter by type
-    if (selectedFilter !== "all") {
-      filtered = filtered.filter(profile => {
-        switch (selectedFilter) {
-          case "merchants":
-            return profile.user_type === "merchant";
-          case "supporters":
-            return profile.user_type === "supporter";
-          case "admins":
-            return profile.is_admin === true;
-          case "creators":
-            return profile.is_adult_creator === true;
-          case "industries":
-            return profile.skills && profile.skills.length > 0;
-          default:
-            return true;
-        }
-      });
-    }
+    filtered = filtered.filter(profile => {
+      switch (selectedFilter) {
+        case "merchants":
+          return profile.user_type === "merchant";
+        case "supporters":
+          return profile.user_type === "supporter";
+        case "admins":
+          return profile.is_admin === true;
+        case "creators":
+          return profile.is_adult_creator === true;
+        case "industries":
+          return profile.skills && profile.skills.length > 0;
+        default:
+          return true;
+      }
+    });
 
     setFilteredProfiles(filtered);
   };
@@ -267,7 +260,6 @@ const ProfilesDirectory = () => {
           {/* Filter Buttons */}
           <div className="flex flex-wrap justify-center gap-2">
             {[
-              { key: "all", label: "All", icon: Users },
               { key: "merchants", label: "Merchants", icon: Building },
               { key: "supporters", label: "Supporters", icon: User },
               { key: "admins", label: "Admins", icon: Shield },
