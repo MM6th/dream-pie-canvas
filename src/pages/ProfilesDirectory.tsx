@@ -363,7 +363,7 @@ const ProfilesDirectory = () => {
                       
                       {/* Skills - Separate row */}
                       {profile.skills && profile.skills.length > 0 && 
-                       !(selectedFilter === "supporters" && profile.user_type === "supporter") && (
+                       selectedFilter === "industries" && (
                         <div className="flex flex-wrap justify-center gap-1 mb-2 min-h-[20px]">
                           {profile.skills.slice(0, 2).map((skill, index) => (
                             <Badge key={index} variant="outline" className="bg-teal-500/10 text-teal-400 border-teal-500/30 text-[10px] px-2 py-0">
@@ -468,7 +468,7 @@ const ProfilesDirectory = () => {
                             
                             {/* Skills - Separate row */}
                             {profile.skills && profile.skills.length > 0 && 
-                             !(selectedFilter === "supporters" && profile.user_type === "supporter") && (
+                             selectedFilter === "industries" && (
                               <div className="flex flex-wrap justify-center gap-1 mb-2 min-h-[20px]">
                                 {profile.skills.slice(0, 2).map((skill, index) => (
                                   <Badge key={index} variant="outline" className="bg-teal-500/10 text-teal-400 border-teal-500/30 text-[10px] px-2 py-0">
