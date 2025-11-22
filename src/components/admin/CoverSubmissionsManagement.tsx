@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileText, Eye, CheckCircle, XCircle, Clock, AlertCircle, ScrollText, Video, AudioLines } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "@/hooks/use-toast";
 import CoverSubmissionDetailModal from "@/components/CoverSubmissionDetailModal";
 import SignedContractsSection from "./SignedContractsSection";
@@ -31,6 +32,7 @@ interface CoverSubmissionData {
 }
 
 const CoverSubmissionsManagement = () => {
+  const isMobile = useIsMobile();
   const [submissions, setSubmissions] = useState<CoverSubmissionData[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedSubmission, setSelectedSubmission] = useState<CoverSubmissionData | null>(null);
@@ -270,33 +272,33 @@ Both parties acknowledge they have read, understood, and agree to be legally bou
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="submissions" className="w-full">
-            <TabsList className="grid w-full grid-cols-4 bg-gray-700 border-gray-600">
+            <TabsList className={`${isMobile ? 'flex flex-col w-full gap-2 h-auto bg-gray-700/50' : 'grid w-full grid-cols-4 bg-gray-700'} border-gray-600`}>
               <TabsTrigger 
                 value="submissions" 
-                className="text-white data-[state=active]:bg-gray-600"
+                className={`text-white data-[state=active]:bg-gray-600 ${isMobile ? 'w-full text-xs px-3 py-2.5 h-auto justify-start' : ''}`}
               >
-                <FileText className="w-4 h-4 mr-2" />
+                <FileText className={`${isMobile ? 'w-3 h-3 mr-2' : 'w-4 h-4 mr-2'}`} />
                 Cover Submissions
               </TabsTrigger>
               <TabsTrigger 
                 value="asmr-submissions" 
-                className="text-white data-[state=active]:bg-gray-600"
+                className={`text-white data-[state=active]:bg-gray-600 ${isMobile ? 'w-full text-xs px-3 py-2.5 h-auto justify-start' : ''}`}
               >
-                <AudioLines className="w-4 h-4 mr-2" />
+                <AudioLines className={`${isMobile ? 'w-3 h-3 mr-2' : 'w-4 h-4 mr-2'}`} />
                 ASMR Submissions
               </TabsTrigger>
               <TabsTrigger 
                 value="video-submissions" 
-                className="text-white data-[state=active]:bg-gray-600"
+                className={`text-white data-[state=active]:bg-gray-600 ${isMobile ? 'w-full text-xs px-3 py-2.5 h-auto justify-start' : ''}`}
               >
-                <Video className="w-4 h-4 mr-2" />
+                <Video className={`${isMobile ? 'w-3 h-3 mr-2' : 'w-4 h-4 mr-2'}`} />
                 Video Ad Submissions
               </TabsTrigger>
               <TabsTrigger 
                 value="contracts" 
-                className="text-white data-[state=active]:bg-gray-600"
+                className={`text-white data-[state=active]:bg-gray-600 ${isMobile ? 'w-full text-xs px-3 py-2.5 h-auto justify-start' : ''}`}
               >
-                <ScrollText className="w-4 h-4 mr-2" />
+                <ScrollText className={`${isMobile ? 'w-3 h-3 mr-2' : 'w-4 h-4 mr-2'}`} />
                 Signed Contracts
               </TabsTrigger>
             </TabsList>
