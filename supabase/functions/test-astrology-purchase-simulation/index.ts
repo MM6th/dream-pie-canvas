@@ -149,11 +149,12 @@ Deno.serve(async (req) => {
       console.error('Buyer notification error:', buyerNotifError);
     }
 
-    // Update quarterly income for admin
+    // Update quarterly income for admin (TEST DATA)
     const { error: adminIncomeError } = await supabaseClient.rpc('update_quarterly_income', {
       p_user_id: product.admin_id,
       p_amount: adminRevenue,
-      p_income_type: 'merchant_revenue'
+      p_income_type: 'company_revenue',
+      p_is_test_data: true
     });
 
     if (adminIncomeError) {

@@ -85,6 +85,12 @@ serve(async (req) => {
     const transactionId = captureData.purchase_units?.[0]?.payments?.captures?.[0]?.id;
     const amountPaid = parseFloat(captureData.purchase_units?.[0]?.payments?.captures?.[0]?.amount?.value || '0');
 
+    // Calculate revenue splits
+    const paypalFee = (amountPaid * 0.0349) + 0.49;
+    const netRevenue = amountPaid - paypalFee;
+    const platformFee = netRevenue * 0.10; // PIE company takes 10%
+    const adminRevenue = netRevenue * 0.90; // Admin receives 90%
+
     const { data: purchase, error: purchaseError } = await supabase
       .from('astrology_purchases')
       .insert({
@@ -101,6 +107,28 @@ serve(async (req) => {
       .single();
 
     if (purchaseError) throw purchaseError;
+
+    // Track quarterly income for admin (REAL PURCHASE - Company Revenue)
+    await supabase.rpc('update_quarterly_income', {
+      p_user_id: product.admin_id,
+      p_income_type: 'company_revenue',
+      p_amount: adminRevenue,
+      p_is_test_data: false
+    });
+
+    // Record platform operational cost
+    await supabase
+      .from('platform_revenue')
+      .insert({
+        amount: platformFee,
+        revenue_type: 'platform_operational_cost',
+        source_transaction_id: transactionId,
+        source_user_id: userId,
+        metadata: { 
+          product_type: 'astrology',
+          astrology_product_id: productId 
+        }
+      });
 
     // Notify admin about the purchase and create delivery record
     if (purchase && product.admin_id) {

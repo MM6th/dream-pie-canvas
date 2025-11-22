@@ -142,15 +142,16 @@ serve(async (req) => {
       throw purchaseError;
     }
 
-    // Record platform revenue in dedicated table (not tied to specific admin user)
+    // Record platform revenue in dedicated table
     const { error: platformRevenueError } = await supabase
       .from('platform_revenue')
       .insert({
-        revenue_type: 'portfolio_platform_fee',
+        revenue_type: 'platform_operational_cost',
         amount: platformFee,
         source_transaction_id: transactionId,
         source_user_id: user.id,
         metadata: {
+          product_type: 'portfolio',
           portfolio_id: portfolioId,
           gross_amount: grossAmount,
           merchant_revenue: merchantRevenue
@@ -162,11 +163,12 @@ serve(async (req) => {
       // Don't fail the entire purchase if platform revenue recording fails
     }
 
-    // Record merchant revenue
+    // Record merchant revenue (Company Revenue for portfolio sales)
     await supabase.rpc('update_quarterly_income', {
       p_user_id: portfolio.user_id,
-      p_income_type: 'portfolio_revenue',
+      p_income_type: 'company_revenue',
       p_amount: merchantRevenue,
+      p_is_test_data: false
     });
 
     console.log('Revenue distribution completed:', {

@@ -1733,6 +1733,7 @@ export type Database = {
           created_at: string
           id: string
           income_type: string
+          is_test_data: boolean | null
           quarter: number
           source_count: number
           total_income: number
@@ -1744,6 +1745,7 @@ export type Database = {
           created_at?: string
           id?: string
           income_type: string
+          is_test_data?: boolean | null
           quarter: number
           source_count?: number
           total_income?: number
@@ -1755,6 +1757,7 @@ export type Database = {
           created_at?: string
           id?: string
           income_type?: string
+          is_test_data?: boolean | null
           quarter?: number
           source_count?: number
           total_income?: number
@@ -2267,10 +2270,20 @@ export type Database = {
         Args: { merchant_id: string; new_status: string }
         Returns: boolean
       }
-      update_quarterly_income: {
-        Args: { p_amount: number; p_income_type: string; p_user_id: string }
-        Returns: undefined
-      }
+      update_quarterly_income:
+        | {
+            Args: { p_amount: number; p_income_type: string; p_user_id: string }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              p_amount: number
+              p_income_type: string
+              p_is_test_data?: boolean
+              p_user_id: string
+            }
+            Returns: undefined
+          }
     }
     Enums: {
       access_level: "public" | "merchant_only" | "paid"
