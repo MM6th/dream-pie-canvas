@@ -115,69 +115,85 @@ const TaxResultsDisplay = ({ results, taxData }: TaxResultsDisplayProps) => {
           </div>
         </div>
 
-        {/* Detailed SE Tax Breakdown */}
+        {/* Detailed SE Tax Breakdown - ALWAYS SHOWN */}
         <div className="bg-gray-800/50 p-3 rounded-lg">
           <h4 className="text-gray-300 font-medium mb-3">Self-Employment Tax Breakdown</h4>
-          {results.netEarnings <= 400 ? (
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-400">1. Net Earnings:</span>
-                <span className="text-white">{formatCurrency(results.netEarnings)}</span>
-              </div>
-              
-              <div className="bg-green-900/20 border border-green-600/30 p-3 rounded">
-                <p className="text-green-300 font-medium mb-1">✓ No SE Tax Owed</p>
-                <p className="text-green-200 text-xs">
-                  Self-employment tax only applies when net earnings exceed $400.00. 
-                  Your current net earnings of {formatCurrency(results.netEarnings)} are below this threshold.
-                </p>
-              </div>
-
-              <div className="flex justify-between font-medium border-t border-gray-600 pt-2">
-                <span className="text-yellow-400">2. Total SE Tax:</span>
-                <span className="text-yellow-400 font-bold">{formatCurrency(0)}</span>
-              </div>
+          <div className="space-y-2 text-sm">
+            {/* Step 1: Net Earnings */}
+            <div className="flex justify-between">
+              <span className="text-gray-400">1. Net Earnings (Gross - Expenses):</span>
+              <span className="text-white">{formatCurrency(results.netEarnings)}</span>
             </div>
-          ) : (
-            <div className="space-y-2 text-sm">
+            
+            {/* Step 2: FICA Taxable Amount (92.35%) */}
+            <div className="bg-blue-900/20 p-2 rounded space-y-1">
               <div className="flex justify-between">
-                <span className="text-gray-400">1. Net Earnings:</span>
-                <span className="text-white">{formatCurrency(results.netEarnings)}</span>
+                <span className="text-blue-300">2. FICA Taxable (92.35% of Net):</span>
+                <span className="text-blue-200">{formatCurrency(results.netEarnings * 0.9235)}</span>
               </div>
-              
-              <div className="bg-blue-900/20 p-2 rounded space-y-1">
-                <div className="flex justify-between">
-                  <span className="text-blue-300">2. SE Tax Base (92.35% of net):</span>
-                  <span className="text-blue-200">{formatCurrency(results.netEarnings * 0.9235)}</span>
-                </div>
-                <p className="text-blue-200 text-xs italic pl-2">
-                  This accounts for the employer portion deduction under FICA
-                </p>
-              </div>
-
-              <div className="bg-purple-900/20 p-2 rounded space-y-1">
-                <div className="text-purple-300 font-medium">3. SE Tax Rate: 15.3%</div>
-                <div className="pl-2 space-y-1">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-purple-200">• Social Security (12.4%):</span>
-                    <span className="text-purple-200">{formatCurrency(results.netEarnings * 0.9235 * 0.124)}</span>
-                  </div>
-                  <div className="flex justify-between text-xs">
-                    <span className="text-purple-200">• Medicare (2.9%):</span>
-                    <span className="text-purple-200">{formatCurrency(results.netEarnings * 0.9235 * 0.029)}</span>
-                  </div>
-                </div>
-                <p className="text-purple-200 text-xs italic pl-2 mt-1">
-                  Self-employed individuals pay both employee (7.65%) and employer (7.65%) portions
-                </p>
-              </div>
-
-              <div className="flex justify-between font-medium border-t border-gray-600 pt-2">
-                <span className="text-yellow-400">4. Total SE Tax:</span>
-                <span className="text-yellow-400 font-bold">{formatCurrency(results.selfEmploymentTax)}</span>
-              </div>
+              <p className="text-blue-200 text-xs italic pl-2">
+                The 92.35% accounts for the employer-equivalent portion deduction
+              </p>
             </div>
-          )}
+
+            {/* Step 3: SE Tax Calculation (15.3%) */}
+            <div className="bg-purple-900/20 p-2 rounded space-y-1">
+              <div className="text-purple-300 font-medium">3. SE Tax Rate: 15.3%</div>
+              <div className="pl-2 space-y-1">
+                <div className="flex justify-between text-xs">
+                  <span className="text-purple-200">• Social Security (12.4%):</span>
+                  <span className="text-purple-200">{formatCurrency(results.netEarnings * 0.9235 * 0.124)}</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-purple-200">• Medicare (2.9%):</span>
+                  <span className="text-purple-200">{formatCurrency(results.netEarnings * 0.9235 * 0.029)}</span>
+                </div>
+              </div>
+              <p className="text-purple-200 text-xs italic pl-2 mt-1">
+                Self-employed pay both employee (7.65%) and employer (7.65%) portions
+              </p>
+            </div>
+
+            {/* Step 4: Total SE Tax */}
+            <div className="flex justify-between font-medium border-t border-gray-600 pt-2">
+              <span className="text-yellow-400">4. Total SE Tax Calculated:</span>
+              <span className="text-yellow-400 font-bold">{formatCurrency(results.selfEmploymentTax)}</span>
+            </div>
+
+            {/* Step 5: Employer Portion (50% deductible on Form 1040) */}
+            <div className="bg-green-900/20 p-2 rounded space-y-1">
+              <div className="flex justify-between">
+                <span className="text-green-300">5. Employer Portion (50% deductible):</span>
+                <span className="text-green-200 font-bold">{formatCurrency(results.selfEmploymentTax * 0.5)}</span>
+              </div>
+              <p className="text-green-200 text-xs italic pl-2">
+                This amount is deductible as an adjustment to income on Form 1040
+              </p>
+            </div>
+
+            {/* IRS $400 Threshold Message */}
+            {results.netEarnings < 400 ? (
+              <div className="bg-orange-900/30 border border-orange-600 p-3 rounded mt-2">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="w-4 h-4 text-orange-400 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-orange-300 font-medium mb-1">IRS $400 Threshold Note</p>
+                    <p className="text-orange-200 text-xs">
+                      While the SE tax calculation is shown above ({formatCurrency(results.selfEmploymentTax)}), 
+                      the IRS does not require SE tax payment when net earnings are below $400. 
+                      <strong className="text-orange-100"> However, NY State tax is still calculated and owed.</strong>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-green-900/30 border border-green-600 p-3 rounded mt-2">
+                <p className="text-green-300 text-xs">
+                  ✓ Net earnings exceed $400 - Full SE tax applies and must be paid quarterly
+                </p>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* State Tax */}
@@ -191,14 +207,35 @@ const TaxResultsDisplay = ({ results, taxData }: TaxResultsDisplayProps) => {
           </div>
         </div>
 
-        {/* Total Payment Due */}
-        <div className="bg-yellow-900/30 border border-yellow-600 p-3 rounded-lg">
-          <div className="flex justify-between items-center">
-            <span className="text-yellow-400 font-medium">Total Quarterly Payment:</span>
-            <span className="text-yellow-400 text-2xl font-bold">{formatCurrency(results.totalQuarterlyPayment)}</span>
+        {/* Total Payment Due - WITH TRANSPARENT BREAKDOWN */}
+        <div className="bg-yellow-900/30 border border-yellow-600 p-4 rounded-lg">
+          <h4 className="text-yellow-400 font-semibold mb-3 text-lg">Total Quarterly Payment Breakdown</h4>
+          
+          {/* Detailed Breakdown */}
+          <div className="space-y-2 mb-3">
+            <div className="flex justify-between items-center bg-yellow-900/20 p-2 rounded">
+              <span className="text-yellow-200">Federal SE Tax:</span>
+              <span className="text-yellow-100 font-bold text-lg">{formatCurrency(results.selfEmploymentTax)}</span>
+            </div>
+            
+            <div className="flex justify-between items-center bg-yellow-900/20 p-2 rounded">
+              <span className="text-yellow-200">NY State Income Tax:</span>
+              <span className="text-yellow-100 font-bold text-lg">{formatCurrency(results.nyStateTax)}</span>
+            </div>
+            
+            <div className="border-t-2 border-yellow-500 pt-2 mt-2"></div>
+            
+            <div className="flex justify-between items-center">
+              <span className="text-yellow-300 font-bold text-lg">Total Payment Due:</span>
+              <span className="text-yellow-300 text-3xl font-bold">{formatCurrency(results.totalQuarterlyPayment)}</span>
+            </div>
           </div>
-          <p className="text-yellow-200 text-xs mt-1">
-            SE Tax + State Tax = {formatCurrency(results.selfEmploymentTax)} + {formatCurrency(results.nyStateTax)}
+          
+          <p className="text-yellow-200 text-sm">
+            {results.netEarnings < 400 
+              ? "⚠️ Only NY State tax is due this quarter (SE tax below IRS $400 threshold). NY requires tax payment regardless of federal thresholds."
+              : "Both federal self-employment tax and NY state tax are due this quarter."
+            }
           </p>
         </div>
 
@@ -230,17 +267,6 @@ const TaxResultsDisplay = ({ results, taxData }: TaxResultsDisplayProps) => {
           </div>
         )}
 
-        {/* Warnings */}
-        {results.netEarnings < 400 && (
-          <div className="bg-yellow-900/30 border border-yellow-600 p-3 rounded-lg">
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-yellow-400" />
-              <span className="text-yellow-400 text-sm">
-                Net earnings under $400 - Self-employment tax may not apply
-              </span>
-            </div>
-          </div>
-        )}
 
         {/* Action Buttons */}
         <div className="flex gap-2 pt-2">
