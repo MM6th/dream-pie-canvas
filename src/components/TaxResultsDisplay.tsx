@@ -160,84 +160,21 @@ const TaxResultsDisplay = ({ results, taxData }: TaxResultsDisplayProps) => {
               <span className="text-yellow-400 font-bold">{formatCurrency(results.selfEmploymentTax)}</span>
             </div>
 
-            {/* Step 5: Employer Portion (50% deductible on Form 1040) */}
+            {/* Step 5: Amount You Owe on Form 1040 */}
             <div className="bg-green-900/20 p-2 rounded space-y-1">
               <div className="flex justify-between">
-                <span className="text-green-300">5. Employer Portion (50% deductible):</span>
+                <span className="text-green-300">5. Amount You Owe on Form 1040:</span>
                 <span className="text-green-200 font-bold">{formatCurrency(results.selfEmploymentTax * 0.5)}</span>
               </div>
               <p className="text-green-200 text-xs italic pl-2">
-                This amount is deductible as an adjustment to income on Form 1040
+                This is what you must pay when filing your quarterly Form 1040
               </p>
             </div>
 
-            {/* IRS $400 Threshold Message */}
-            {results.netEarnings < 400 ? (
-              <div className="bg-orange-900/30 border border-orange-600 p-3 rounded mt-2">
-                <div className="flex items-start gap-2">
-                  <AlertTriangle className="w-4 h-4 text-orange-400 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-orange-300 font-medium mb-1">IRS $400 Threshold Note</p>
-                    <p className="text-orange-200 text-xs">
-                      While the SE tax calculation is shown above ({formatCurrency(results.selfEmploymentTax)}), 
-                      the IRS does not require SE tax payment when net earnings are below $400. 
-                      <strong className="text-orange-100"> However, NY State tax is still calculated and owed.</strong>
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="bg-green-900/30 border border-green-600 p-3 rounded mt-2">
-                <p className="text-green-300 text-xs">
-                  ✓ Net earnings exceed $400 - Full SE tax applies and must be paid quarterly
-                </p>
-              </div>
-            )}
           </div>
         </div>
 
-        {/* State Tax */}
-        <div className="bg-gray-800/50 p-3 rounded-lg">
-          <h4 className="text-gray-300 font-medium mb-2">State Tax</h4>
-          <div className="space-y-1 text-sm">
-            <div className="flex justify-between">
-              <span className="text-gray-400">NY State Income Tax:</span>
-              <span className="text-white">{formatCurrency(results.nyStateTax)}</span>
-            </div>
-          </div>
-        </div>
 
-        {/* Total Payment Due - WITH TRANSPARENT BREAKDOWN */}
-        <div className="bg-yellow-900/30 border border-yellow-600 p-4 rounded-lg">
-          <h4 className="text-yellow-400 font-semibold mb-3 text-lg">Total Quarterly Payment Breakdown</h4>
-          
-          {/* Detailed Breakdown */}
-          <div className="space-y-2 mb-3">
-            <div className="flex justify-between items-center bg-yellow-900/20 p-2 rounded">
-              <span className="text-yellow-200">Federal SE Tax:</span>
-              <span className="text-yellow-100 font-bold text-lg">{formatCurrency(results.selfEmploymentTax)}</span>
-            </div>
-            
-            <div className="flex justify-between items-center bg-yellow-900/20 p-2 rounded">
-              <span className="text-yellow-200">NY State Income Tax:</span>
-              <span className="text-yellow-100 font-bold text-lg">{formatCurrency(results.nyStateTax)}</span>
-            </div>
-            
-            <div className="border-t-2 border-yellow-500 pt-2 mt-2"></div>
-            
-            <div className="flex justify-between items-center">
-              <span className="text-yellow-300 font-bold text-lg">Total Payment Due:</span>
-              <span className="text-yellow-300 text-3xl font-bold">{formatCurrency(results.totalQuarterlyPayment)}</span>
-            </div>
-          </div>
-          
-          <p className="text-yellow-200 text-sm">
-            {results.netEarnings < 400 
-              ? "⚠️ Only NY State tax is due this quarter (SE tax below IRS $400 threshold). NY requires tax payment regardless of federal thresholds."
-              : "Both federal self-employment tax and NY state tax are due this quarter."
-            }
-          </p>
-        </div>
 
         {/* Annual Projection */}
         <div className="bg-blue-900/30 border border-blue-600 p-3 rounded-lg">
