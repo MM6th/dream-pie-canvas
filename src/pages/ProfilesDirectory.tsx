@@ -133,6 +133,8 @@ const ProfilesDirectory = () => {
             return profile.is_admin === true;
           case "creators":
             return profile.is_adult_creator === true;
+          case "industries":
+            return profile.skills && profile.skills.length > 0;
           default:
             return true;
         }
@@ -269,6 +271,7 @@ const ProfilesDirectory = () => {
               { key: "merchants", label: "Merchants", icon: Building },
               { key: "supporters", label: "Supporters", icon: User },
               { key: "admins", label: "Admins", icon: Shield },
+              { key: "industries", label: "Industries", icon: Building },
             ].map(({ key, label, icon: Icon }) => (
               <Button
                 key={key}
@@ -359,7 +362,8 @@ const ProfilesDirectory = () => {
                       </div>
                       
                       {/* Skills - Separate row */}
-                      {profile.skills && profile.skills.length > 0 && (
+                      {profile.skills && profile.skills.length > 0 && 
+                       !(selectedFilter === "supporters" && profile.user_type === "supporter") && (
                         <div className="flex flex-wrap justify-center gap-1 mb-2 min-h-[20px]">
                           {profile.skills.slice(0, 2).map((skill, index) => (
                             <Badge key={index} variant="outline" className="bg-teal-500/10 text-teal-400 border-teal-500/30 text-[10px] px-2 py-0">
@@ -463,7 +467,8 @@ const ProfilesDirectory = () => {
                             </div>
                             
                             {/* Skills - Separate row */}
-                            {profile.skills && profile.skills.length > 0 && (
+                            {profile.skills && profile.skills.length > 0 && 
+                             !(selectedFilter === "supporters" && profile.user_type === "supporter") && (
                               <div className="flex flex-wrap justify-center gap-1 mb-2 min-h-[20px]">
                                 {profile.skills.slice(0, 2).map((skill, index) => (
                                   <Badge key={index} variant="outline" className="bg-teal-500/10 text-teal-400 border-teal-500/30 text-[10px] px-2 py-0">
