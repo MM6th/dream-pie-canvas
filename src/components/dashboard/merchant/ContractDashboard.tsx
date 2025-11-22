@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { FileText, Calendar, CheckCircle, Clock, AlertCircle, Eye, Download, EyeOff, ChevronLeft, ChevronRight, Video, RotateCcw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "@/hooks/use-toast";
 import TuneCoreContractModal from "@/components/TuneCoreContractModal";
 import ContractPreviewModal from "@/components/ContractPreviewModal";
@@ -36,6 +37,7 @@ interface ContractWithDetails {
 
 const ContractDashboard = () => {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const [contracts, setContracts] = useState<ContractWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const [hiddenContracts, setHiddenContracts] = useState<Set<string>>(new Set());
@@ -490,19 +492,19 @@ const ContractDashboard = () => {
     <>
       <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className={`flex ${isMobile ? 'flex-col gap-3' : 'items-center justify-between'}`}>
             <CardTitle className="flex items-center gap-2 text-white">
               <FileText className="w-5 h-5" />
               Contract Opportunities
             </CardTitle>
             {contracts.length > 0 && (
-              <div className="flex items-center gap-2">
+              <div className={`flex ${isMobile ? 'flex-col' : 'items-center'} gap-2`}>
                 {hiddenContracts.size > 0 && (
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setShowHidden(!showHidden)}
-                    className="bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600"
+                    className={`bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600 ${isMobile ? 'w-full' : ''}`}
                   >
                     {showHidden ? <EyeOff className="w-4 h-4 mr-1" /> : <Eye className="w-4 h-4 mr-1" />}
                     {showHidden ? 'Hide' : 'Show'} Hidden ({hiddenContracts.size})
@@ -513,7 +515,7 @@ const ContractDashboard = () => {
                     onClick={scrollLeft}
                     variant="outline"
                     size="sm"
-                    className="border-gray-600 text-gray-300 hover:bg-gray-700"
+                    className={`border-gray-600 text-gray-300 hover:bg-gray-700 ${isMobile ? 'flex-1' : ''}`}
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </Button>
@@ -521,7 +523,7 @@ const ContractDashboard = () => {
                     onClick={scrollRight}
                     variant="outline"
                     size="sm"
-                    className="border-gray-600 text-gray-300 hover:bg-gray-700"
+                    className={`border-gray-600 text-gray-300 hover:bg-gray-700 ${isMobile ? 'flex-1' : ''}`}
                   >
                     <ChevronRight className="w-4 h-4" />
                   </Button>
@@ -549,33 +551,33 @@ const ContractDashboard = () => {
                 {(showHidden ? contracts : contracts.filter(contract => !hiddenContracts.has(contract.id))).map((contract) => {
                   const isHidden = hiddenContracts.has(contract.id);
                   return (
-                    <div key={contract.id} className={`bg-gray-700/50 p-4 rounded-lg min-w-[320px] max-w-[320px] min-h-[240px] flex-shrink-0 ${isHidden ? 'opacity-60 border border-gray-600' : ''}`}>
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex-1">
-                          <div className="flex items-center flex-wrap gap-2 mb-2">
-                            <h4 className={`font-medium whitespace-normal break-words ${isHidden ? 'text-gray-400' : 'text-white'}`}>
+                    <div key={contract.id} className={`bg-gray-700/50 p-4 rounded-lg ${isMobile ? 'min-w-[280px] max-w-[280px]' : 'min-w-[320px] max-w-[320px]'} min-h-[240px] flex-shrink-0 ${isHidden ? 'opacity-60 border border-gray-600' : ''}`}>
+                      <div className="flex items-start justify-between mb-3 gap-2">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-col gap-2 mb-2">
+                            <h4 className={`font-medium text-sm leading-tight ${isHidden ? 'text-gray-400' : 'text-white'} line-clamp-2`}>
                               {contract.submission_title}
                               {isHidden && <span className="text-orange-400 ml-2">(Hidden)</span>}
                             </h4>
-                            <Badge className={`${getStatusColor(contract.status)} text-white shrink-0`}>
+                            <Badge className={`${getStatusColor(contract.status)} text-white w-fit text-xs`}>
                               <span className="flex items-center gap-1">
                                 {getStatusIcon(contract.status)}
-                                {contract.status}
+                                <span className="truncate">{contract.status}</span>
                               </span>
                             </Badge>
                           </div>
-                          <p className={`text-sm mb-2 whitespace-normal break-words ${isHidden ? 'text-gray-500' : 'text-gray-400'}`}>
+                          <p className={`text-xs mb-2 leading-tight ${isHidden ? 'text-gray-500' : 'text-gray-400'} line-clamp-2`}>
                             {getStatusDescription(contract)}
                           </p>
-                          <div className="flex items-center gap-4 text-xs text-gray-400">
-                            <span className="flex items-center gap-1">
-                              <Calendar className="w-3 h-3" />
-                              Created: {new Date(contract.created_at).toLocaleDateString()}
+                          <div className={`flex ${isMobile ? 'flex-col' : 'items-center'} ${isMobile ? 'gap-1' : 'gap-3'} text-xs text-gray-400`}>
+                            <span className="flex items-center gap-1 whitespace-nowrap">
+                              <Calendar className="w-3 h-3 flex-shrink-0" />
+                              <span className="truncate">Created: {new Date(contract.created_at).toLocaleDateString()}</span>
                             </span>
                             {contract.signed_at && (
-                              <span className="flex items-center gap-1">
-                                <CheckCircle className="w-3 h-3" />
-                                Signed: {new Date(contract.signed_at).toLocaleDateString()}
+                              <span className="flex items-center gap-1 whitespace-nowrap">
+                                <CheckCircle className="w-3 h-3 flex-shrink-0" />
+                                <span className="truncate">Signed: {new Date(contract.signed_at).toLocaleDateString()}</span>
                               </span>
                             )}
                           </div>
@@ -585,7 +587,7 @@ const ContractDashboard = () => {
                             variant="ghost"
                             size="sm"
                             onClick={() => handleRestoreContract(contract.id)}
-                            className="text-green-400 hover:text-green-300 hover:bg-green-900/20 ml-2"
+                            className="text-green-400 hover:text-green-300 hover:bg-green-900/20 flex-shrink-0"
                           >
                             <RotateCcw className="w-4 h-4" />
                           </Button>
@@ -594,7 +596,7 @@ const ContractDashboard = () => {
                             variant="ghost"
                             size="sm"
                             onClick={() => handleHideContract(contract.id)}
-                            className="text-gray-400 hover:text-gray-300 hover:bg-gray-700/50 ml-2"
+                            className="text-gray-400 hover:text-gray-300 hover:bg-gray-700/50 flex-shrink-0"
                           >
                             <EyeOff className="w-4 h-4" />
                           </Button>
