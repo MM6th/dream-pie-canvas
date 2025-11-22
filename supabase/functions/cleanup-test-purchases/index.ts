@@ -77,7 +77,8 @@ Deno.serve(async (req) => {
           const { error: merchantError } = await supabaseClient.rpc('update_quarterly_income', {
             p_user_id: product.merchant_id,
             p_amount: -purchase.merchant_revenue_after_referral,
-            p_income_type: 'merchant_revenue'
+            p_income_type: 'company_revenue',
+            p_is_test_data: true
           });
           if (merchantError) {
             console.error('Error reversing merchant revenue:', merchantError);
@@ -90,7 +91,8 @@ Deno.serve(async (req) => {
             const { error: referrerError } = await supabaseClient.rpc('update_quarterly_income', {
               p_user_id: purchase.referrer_user_id,
               p_amount: -purchase.referrer_commission,
-              p_income_type: 'referral_commission'
+              p_income_type: 'referral_commission',
+              p_is_test_data: true
             });
             if (referrerError) {
               console.error('Error reversing referrer commission:', referrerError);
@@ -105,7 +107,8 @@ Deno.serve(async (req) => {
             const { error: featuringError } = await supabaseClient.rpc('update_quarterly_income', {
               p_user_id: product.featuring_artist_user_id,
               p_amount: -featuringRevenue,
-              p_income_type: 'featuring_artist_revenue'
+              p_income_type: 'featuring_revenue',
+              p_is_test_data: true
             });
             if (featuringError) {
               console.error('Error reversing featuring revenue:', featuringError);
@@ -148,7 +151,8 @@ Deno.serve(async (req) => {
           const { error: adminError } = await supabaseClient.rpc('update_quarterly_income', {
             p_user_id: product.admin_id,
             p_amount: -adminRevenue,
-            p_income_type: 'merchant_revenue'
+            p_income_type: 'company_revenue',
+            p_is_test_data: true
           });
           if (adminError) {
             console.error('Error reversing admin revenue:', adminError);
@@ -215,6 +219,18 @@ Deno.serve(async (req) => {
         .from('astrology_purchases')
         .delete()
         .like('paypal_transaction_id', 'TEST_ASTRO_%');
+    }
+
+    // Delete all test data records directly
+    const { error: deleteTestError } = await supabaseClient
+      .from('quarterly_income')
+      .delete()
+      .eq('is_test_data', true);
+
+    if (deleteTestError) {
+      console.error('Error deleting test data records:', deleteTestError);
+    } else {
+      console.log('Deleted all test data records from quarterly_income');
     }
 
     // Clean up any rounding errors - zero out quarterly income near zero
