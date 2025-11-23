@@ -1068,6 +1068,7 @@ export type Database = {
           body: string
           created_at: string
           id: string
+          parent_message_id: string | null
           read_at: string | null
           recipient_id: string
           sender_id: string
@@ -1077,6 +1078,7 @@ export type Database = {
           body: string
           created_at?: string
           id?: string
+          parent_message_id?: string | null
           read_at?: string | null
           recipient_id: string
           sender_id: string
@@ -1086,12 +1088,20 @@ export type Database = {
           body?: string
           created_at?: string
           id?: string
+          parent_message_id?: string | null
           read_at?: string | null
           recipient_id?: string
           sender_id?: string
           subject?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "messages_parent_message_id_fkey"
+            columns: ["parent_message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "messages_recipient_id_fkey"
             columns: ["recipient_id"]

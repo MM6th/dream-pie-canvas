@@ -23,6 +23,9 @@ interface MessageComposerProps {
   currentBalance?: number;
   isFree?: boolean;
   onMessageSent?: () => void;
+  replyToMessageId?: string;
+  originalSubject?: string;
+  originalBody?: string;
 }
 
 export const MessageComposer = ({
@@ -33,14 +36,18 @@ export const MessageComposer = ({
   currentBalance = 0,
   isFree = false,
   onMessageSent,
+  replyToMessageId,
+  originalSubject,
+  originalBody,
 }: MessageComposerProps) => {
-  const [subject, setSubject] = useState('');
+  const isReply = !!replyToMessageId;
+  const [subject, setSubject] = useState(isReply && originalSubject ? `Re: ${originalSubject.replace(/^Re:\s*/, '')}` : '');
   const [body, setBody] = useState('');
   const [loading, setLoading] = useState(false);
   const [showCreditPurchase, setShowCreditPurchase] = useState(false);
   const { toast } = useToast();
 
-  const creditsRequired = isFree ? 0 : 1; // Free for merchant-to-merchant
+  const creditsRequired = isFree ? 0 : 1; // Free for merchant-to-merchant and merchant replies
 
   const handleCreditSectionClick = () => {
     if (currentBalance < creditsRequired) {
@@ -105,6 +112,7 @@ export const MessageComposer = ({
           recipientId,
           subject,
           body,
+          parentMessageId: replyToMessageId,
         },
       });
 
@@ -140,16 +148,22 @@ export const MessageComposer = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Send Message to {recipientName || 'User'}</DialogTitle>
+          <DialogTitle>{isReply ? 'Reply to' : 'Send Message to'} {recipientName || 'User'}</DialogTitle>
           <DialogDescription>
             {isFree 
-              ? 'Merchant-to-merchant messaging is free' 
+              ? isReply ? 'Replies are free for merchants' : 'Merchant-to-merchant messaging is free'
               : `This message will cost ${creditsRequired} credit${creditsRequired !== 1 ? 's' : ''}`
             }
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
+          {isReply && originalBody && (
+            <div className="p-3 bg-muted rounded-lg border-l-4 border-primary">
+              <p className="text-xs text-muted-foreground mb-1">Original message:</p>
+              <p className="text-sm line-clamp-3 whitespace-pre-wrap">{originalBody}</p>
+            </div>
+          )}
           {!isFree && (
             <div 
               onClick={handleCreditSectionClick}

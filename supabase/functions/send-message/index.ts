@@ -22,7 +22,7 @@ Deno.serve(async (req) => {
       throw new Error('Unauthorized');
     }
 
-    const { recipientId, subject, body } = await req.json();
+    const { recipientId, subject, body, parentMessageId } = await req.json();
 
     // Validate input
     if (!recipientId || !subject || !body) {
@@ -74,13 +74,39 @@ Deno.serve(async (req) => {
       throw new Error('Cannot send messages to other supporters');
     }
 
-    // Determine if message is free (merchant-to-merchant)
+    // Determine if message is free
     const isMerchantToMerchant = senderProfile.user_type === 'merchant' && recipientProfile.user_type === 'merchant';
     
-    let creditsRequired = 0;
+    // Check if this is a merchant replying to a supporter's message
+    let isMerchantReplyToSupporter = false;
+    if (parentMessageId && senderProfile.user_type === 'merchant') {
+      const { data: parentMessage } = await supabaseAdmin
+        .from('messages')
+        .select('sender_id')
+        .eq('id', parentMessageId)
+        .single();
+      
+      if (parentMessage) {
+        const { data: parentSenderProfile } = await supabaseAdmin
+          .from('profiles')
+          .select('user_type')
+          .eq('id', parentMessage.sender_id)
+          .single();
+        
+        isMerchantReplyToSupporter = parentSenderProfile?.user_type === 'supporter';
+      }
+    }
     
-    // Only check credits and settings for paid messages (supporter-to-merchant)
-    if (!isMerchantToMerchant) {
+    let creditsRequired = 0;
+    let isFree = false;
+    
+    // Determine if message should be free
+    if (isMerchantToMerchant || isMerchantReplyToSupporter) {
+      isFree = true;
+    }
+    
+    // Only check credits and settings for paid messages
+    if (!isFree) {
       // Get merchant's message settings (default to 1 credit if not set)
       const { data: messageSettings } = await supabaseAdmin
         .from('message_settings')
@@ -135,41 +161,44 @@ Deno.serve(async (req) => {
         recipient_id: recipientId,
         subject,
         body,
+        parent_message_id: parentMessageId || null,
       })
       .select()
       .single();
 
     if (messageError) throw messageError;
 
-    // Deduct credits
-    const { error: deductError } = await supabaseAdmin
-      .from('messaging_credits')
-      .update({
-        balance: senderCredits.balance - creditsRequired,
-        total_spent: (await supabaseAdmin
-          .from('messaging_credits')
-          .select('total_spent')
-          .eq('user_id', user.id)
-          .single()
-        ).data!.total_spent + creditsRequired,
-      })
-      .eq('user_id', user.id);
+    // Deduct credits and record transaction only if not free
+    if (!isFree) {
+      const { error: deductError } = await supabaseAdmin
+        .from('messaging_credits')
+        .update({
+          balance: senderCredits.balance - creditsRequired,
+          total_spent: (await supabaseAdmin
+            .from('messaging_credits')
+            .select('total_spent')
+            .eq('user_id', user.id)
+            .single()
+          ).data!.total_spent + creditsRequired,
+        })
+        .eq('user_id', user.id);
 
-    if (deductError) throw deductError;
+      if (deductError) throw deductError;
 
-    // Record transaction
-    const { error: transactionError } = await supabaseAdmin
-      .from('credit_transactions')
-      .insert({
-        user_id: user.id,
-        type: 'spent',
-        amount: creditsRequired,
-        description: `Message to ${recipientProfile.display_name || 'merchant'}`,
-        related_message_id: newMessage.id,
-      });
+      // Record transaction
+      const { error: transactionError } = await supabaseAdmin
+        .from('credit_transactions')
+        .insert({
+          user_id: user.id,
+          type: 'spent',
+          amount: creditsRequired,
+          description: `Message to ${recipientProfile.display_name || 'merchant'}`,
+          related_message_id: newMessage.id,
+        });
 
-    if (transactionError) {
-      console.error('Error recording transaction:', transactionError);
+      if (transactionError) {
+        console.error('Error recording transaction:', transactionError);
+      }
     }
 
     // Get updated balance
@@ -184,6 +213,8 @@ Deno.serve(async (req) => {
       from: user.id, 
       to: recipientId,
       credits_spent: creditsRequired,
+      is_free: isFree,
+      is_reply: !!parentMessageId,
     });
 
     return new Response(
@@ -192,6 +223,7 @@ Deno.serve(async (req) => {
         messageId: newMessage.id,
         creditsSpent: creditsRequired,
         remainingBalance: updatedCredits?.balance || 0,
+        isFree,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
