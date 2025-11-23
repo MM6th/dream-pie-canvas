@@ -6,6 +6,7 @@ import { Upload, X, Save, Send, AlertCircle, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import * as tus from "tus-js-client";
 
 interface VideoFileUploaderProps {
   deliveryId: string;
@@ -123,9 +124,11 @@ export const VideoFileUploader = ({
     }, 1000);
 
     try {
-      abortControllerRef.current = new AbortController();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("User not authenticated");
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) throw new Error("User not authenticated");
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("No active session");
 
       const fileName = isDraft 
         ? `draft-${deliveryId}-${Date.now()}.${file.name.split('.').pop()}`
@@ -137,39 +140,60 @@ export const VideoFileUploader = ({
 
       toast.loading(isDraft ? "Uploading draft..." : "Uploading video...", { id: "upload" });
 
-      // Use resumable upload for better progress tracking
-      const { data, error } = await supabase.storage
-        .from("user-media")
-        .upload(filePath, file, {
-          cacheControl: "3600",
-          upsert: false,
-          // Note: Progress tracking via events is handled by monitoring the upload
+      const projectId = "veaupehwfsbagzfuvach";
+      const bucketName = "user-media";
+      
+      // Use TUS for resumable upload with progress tracking
+      await new Promise<void>((resolve, reject) => {
+        const upload = new tus.Upload(file, {
+          endpoint: `https://${projectId}.supabase.co/storage/v1/upload/resumable`,
+          retryDelays: [0, 3000, 5000, 10000, 20000],
+          headers: {
+            authorization: `Bearer ${session.access_token}`,
+            'x-upsert': 'false',
+          },
+          uploadDataDuringCreation: true,
+          removeFingerprintOnSuccess: true,
+          metadata: {
+            bucketName: bucketName,
+            objectName: filePath,
+            contentType: file.type,
+            cacheControl: '3600',
+          },
+          chunkSize: 6 * 1024 * 1024, // 6MB chunks
+          onError: (error) => {
+            console.error('TUS upload error:', error);
+            reject(error);
+          },
+          onProgress: (bytesUploaded, bytesTotal) => {
+            const progress = Math.round((bytesUploaded / bytesTotal) * 100);
+            setUploadProgress(progress);
+            setBytesUploaded(bytesUploaded);
+            
+            const elapsed = (Date.now() - startTimeRef.current) / 1000;
+            const speed = bytesUploaded / elapsed;
+            setUploadSpeed(speed);
+            
+            const remaining = (bytesTotal - bytesUploaded) / speed;
+            setEstimatedTimeRemaining(Math.round(remaining));
+          },
+          onSuccess: () => {
+            console.log('Upload completed successfully');
+            resolve();
+          },
         });
 
-      if (error) throw error;
+        // Store upload instance for cancellation
+        abortControllerRef.current = { abort: () => upload.abort() } as any;
 
-      // Simulate progress for large files (Supabase doesn't provide built-in progress yet)
-      const totalSize = file.size;
-      let uploaded = 0;
-      const chunkSize = 1024 * 1024; // 1MB chunks
-      
-      while (uploaded < totalSize && !abortControllerRef.current.signal.aborted) {
-        uploaded += chunkSize;
-        if (uploaded > totalSize) uploaded = totalSize;
-        
-        const progress = Math.round((uploaded / totalSize) * 100);
-        setUploadProgress(progress);
-        setBytesUploaded(uploaded);
-        
-        const elapsed = (Date.now() - startTimeRef.current) / 1000;
-        const speed = uploaded / elapsed;
-        setUploadSpeed(speed);
-        
-        const remaining = (totalSize - uploaded) / speed;
-        setEstimatedTimeRemaining(Math.round(remaining));
-        
-        await new Promise(resolve => setTimeout(resolve, 100));
-      }
+        // Start the upload
+        upload.findPreviousUploads().then((previousUploads) => {
+          if (previousUploads.length) {
+            upload.resumeFromPreviousUpload(previousUploads[0]);
+          }
+          upload.start();
+        });
+      });
 
       const { data: { publicUrl } } = supabase.storage
         .from("user-media")
