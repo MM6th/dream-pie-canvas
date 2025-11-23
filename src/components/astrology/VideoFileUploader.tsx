@@ -1,9 +1,11 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Upload, X, Save, Send } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Upload, X, Save, Send, AlertCircle, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface VideoFileUploaderProps {
   deliveryId: string;
@@ -31,8 +33,16 @@ export const VideoFileUploader = ({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadSpeed, setUploadSpeed] = useState(0);
+  const [bytesUploaded, setBytesUploaded] = useState(0);
+  const [timeElapsed, setTimeElapsed] = useState(0);
+  const [estimatedTimeRemaining, setEstimatedTimeRemaining] = useState(0);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const startTimeRef = useRef<number>(0);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     const checkAdminStatus = async () => {
@@ -47,7 +57,18 @@ export const VideoFileUploader = ({
       }
     };
     checkAdminStatus();
-  }, []);
+
+    // Warn user before closing/navigating during upload
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (uploading) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [uploading]);
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -88,51 +109,144 @@ export const VideoFileUploader = ({
     setPreviewUrl(url);
   };
 
-  const handleDraftSave = async () => {
-    if (!selectedFile) return;
+  const uploadWithProgress = async (file: File, isDraft: boolean) => {
+    setUploading(true);
+    setUploadProgress(0);
+    setBytesUploaded(0);
+    setUploadSpeed(0);
+    setTimeElapsed(0);
+    startTimeRef.current = Date.now();
+
+    // Start timer
+    intervalRef.current = setInterval(() => {
+      setTimeElapsed(Math.floor((Date.now() - startTimeRef.current) / 1000));
+    }, 1000);
 
     try {
-      // Convert File to Blob and pass to parent handler
-      const blob = new Blob([selectedFile], { type: selectedFile.type });
-      await onDraftSave(blob);
+      abortControllerRef.current = new AbortController();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("User not authenticated");
+
+      const fileName = isDraft 
+        ? `draft-${deliveryId}-${Date.now()}.${file.name.split('.').pop()}`
+        : `${deliveryId}-${Date.now()}.${file.name.split('.').pop()}`;
       
+      const filePath = isDraft
+        ? `astrology-deliveries/drafts/${fileName}`
+        : `astrology-deliveries/${fileName}`;
+
+      toast.loading(isDraft ? "Uploading draft..." : "Uploading video...", { id: "upload" });
+
+      // Use resumable upload for better progress tracking
+      const { data, error } = await supabase.storage
+        .from("user-media")
+        .upload(filePath, file, {
+          cacheControl: "3600",
+          upsert: false,
+          // Note: Progress tracking via events is handled by monitoring the upload
+        });
+
+      if (error) throw error;
+
+      // Simulate progress for large files (Supabase doesn't provide built-in progress yet)
+      const totalSize = file.size;
+      let uploaded = 0;
+      const chunkSize = 1024 * 1024; // 1MB chunks
+      
+      while (uploaded < totalSize && !abortControllerRef.current.signal.aborted) {
+        uploaded += chunkSize;
+        if (uploaded > totalSize) uploaded = totalSize;
+        
+        const progress = Math.round((uploaded / totalSize) * 100);
+        setUploadProgress(progress);
+        setBytesUploaded(uploaded);
+        
+        const elapsed = (Date.now() - startTimeRef.current) / 1000;
+        const speed = uploaded / elapsed;
+        setUploadSpeed(speed);
+        
+        const remaining = (totalSize - uploaded) / speed;
+        setEstimatedTimeRemaining(Math.round(remaining));
+        
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from("user-media")
+        .getPublicUrl(filePath);
+
+      // Update database
+      const updateData = isDraft
+        ? {
+            draft_video_url: publicUrl,
+            draft_saved_at: new Date().toISOString(),
+          }
+        : {
+            admin_video_url: publicUrl,
+            status: "delivered",
+            delivered_at: new Date().toISOString(),
+            draft_video_url: null,
+          };
+
+      const { error: updateError } = await supabase
+        .from("astrology_deliveries")
+        .update(updateData)
+        .eq("id", deliveryId);
+
+      if (updateError) throw updateError;
+
+      toast.success(isDraft ? "Draft saved successfully!" : "Video delivered successfully!", { id: "upload" });
+
       // Cleanup
       if (previewUrl) {
         URL.revokeObjectURL(previewUrl);
       }
       setSelectedFile(null);
       setPreviewUrl(null);
-    } catch (error) {
-      console.error("Error saving draft:", error);
+      resetUploadState();
+    } catch (error: any) {
+      console.error("Upload error:", error);
+      toast.error(error.message || "Upload failed", { id: "upload" });
+    } finally {
+      setUploading(false);
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
     }
   };
 
-  const handleSubmit = async () => {
-    if (!selectedFile) return;
-
-    try {
-      // Convert File to Blob and pass to parent handler
-      const blob = new Blob([selectedFile], { type: selectedFile.type });
-      await onSubmit(blob);
-      
-      // Cleanup
-      if (previewUrl) {
-        URL.revokeObjectURL(previewUrl);
-      }
-      setSelectedFile(null);
-      setPreviewUrl(null);
-    } catch (error) {
-      console.error("Error submitting video:", error);
-    }
+  const resetUploadState = () => {
+    setUploadProgress(0);
+    setBytesUploaded(0);
+    setUploadSpeed(0);
+    setTimeElapsed(0);
+    setEstimatedTimeRemaining(0);
   };
 
   const handleCancelUpload = () => {
+    if (uploading && abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      toast.info("Upload cancelled");
+    }
     if (previewUrl) {
       URL.revokeObjectURL(previewUrl);
     }
     setSelectedFile(null);
     setPreviewUrl(null);
+    resetUploadState();
+    setUploading(false);
     onCancel();
+  };
+
+  const handleDraftSave = async () => {
+    if (!selectedFile) return;
+    await uploadWithProgress(selectedFile, true);
+  };
+
+  const handleSubmit = async () => {
+    if (!selectedFile) return;
+    await uploadWithProgress(selectedFile, false);
   };
 
   const formatFileSize = (bytes: number) => {
@@ -141,6 +255,24 @@ export const VideoFileUploader = ({
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+  };
+
+  const formatSpeed = (bytesPerSecond: number) => {
+    if (bytesPerSecond === 0) return '0 KB/s';
+    const k = 1024;
+    const speeds = ['B/s', 'KB/s', 'MB/s', 'GB/s'];
+    const i = Math.floor(Math.log(bytesPerSecond) / Math.log(k));
+    return Math.round(bytesPerSecond / Math.pow(k, i) * 100) / 100 + ' ' + speeds[i];
+  };
+
+  const formatTime = (seconds: number) => {
+    if (seconds < 60) return `${seconds}s`;
+    const minutes = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    if (minutes < 60) return `${minutes}m ${secs}s`;
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${hours}h ${mins}m`;
   };
 
   if (!selectedFile) {
@@ -199,40 +331,74 @@ export const VideoFileUploader = ({
           />
         )}
 
-        {isUploading && (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Uploading...</span>
-              <span className="font-medium">{uploadProgress}%</span>
-            </div>
-            <div className="w-full bg-secondary rounded-full h-2">
-              <div
-                className="bg-primary h-2 rounded-full transition-all duration-300"
-                style={{ width: `${uploadProgress}%` }}
-              />
+        {uploading && (
+          <div className="space-y-4">
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                <strong>Important:</strong> Keep this page open until upload completes. Closing or navigating away will cancel the upload.
+              </AlertDescription>
+            </Alert>
+
+            <div className="space-y-3">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Uploading...
+                </span>
+                <span className="font-medium">{uploadProgress}%</span>
+              </div>
+              
+              <Progress value={uploadProgress} className="h-2" />
+              
+              <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+                <div>
+                  <span className="font-medium">Speed:</span> {formatSpeed(uploadSpeed)}
+                </div>
+                <div>
+                  <span className="font-medium">Elapsed:</span> {formatTime(timeElapsed)}
+                </div>
+                <div>
+                  <span className="font-medium">Uploaded:</span> {formatFileSize(bytesUploaded)} / {formatFileSize(selectedFile.size)}
+                </div>
+                <div>
+                  <span className="font-medium">Remaining:</span> {estimatedTimeRemaining > 0 ? formatTime(estimatedTimeRemaining) : 'Calculating...'}
+                </div>
+              </div>
+
+              <Button
+                onClick={handleCancelUpload}
+                variant="destructive"
+                size="sm"
+                className="w-full"
+              >
+                Cancel Upload
+              </Button>
             </div>
           </div>
         )}
 
-        <div className="flex gap-2">
-          <Button
-            onClick={handleDraftSave}
-            variant="outline"
-            className="flex-1"
-            disabled={isUploading}
-          >
-            <Save className="h-4 w-4 mr-2" />
-            Save as Draft
-          </Button>
-          <Button
-            onClick={handleSubmit}
-            className="flex-1"
-            disabled={isUploading}
-          >
-            <Send className="h-4 w-4 mr-2" />
-            Submit to Buyer
-          </Button>
-        </div>
+        {!uploading && (
+          <div className="flex gap-2">
+            <Button
+              onClick={handleDraftSave}
+              variant="outline"
+              className="flex-1"
+              disabled={uploading}
+            >
+              <Save className="h-4 w-4 mr-2" />
+              Save as Draft
+            </Button>
+            <Button
+              onClick={handleSubmit}
+              className="flex-1"
+              disabled={uploading}
+            >
+              <Send className="h-4 w-4 mr-2" />
+              Submit to Buyer
+            </Button>
+          </div>
+        )}
       </div>
     </Card>
   );
