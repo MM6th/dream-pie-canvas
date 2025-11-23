@@ -31,8 +31,21 @@ export const AstrologyDeliveryManager = () => {
   const [uploading, setUploading] = useState<string | null>(null);
   const [recordingDeliveryId, setRecordingDeliveryId] = useState<string | null>(null);
   const [uploadingDeliveryId, setUploadingDeliveryId] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
+    const checkAdminStatus = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('is_admin')
+          .eq('id', user.id)
+          .single();
+        setIsAdmin(profile?.is_admin || false);
+      }
+    };
+    checkAdminStatus();
     fetchDeliveries();
   }, []);
 
@@ -74,7 +87,8 @@ export const AstrologyDeliveryManager = () => {
         throw new Error("Video file is empty");
       }
 
-      if (blob.size > 100 * 1024 * 1024) {
+      // Only check file size for non-admins
+      if (!isAdmin && blob.size > 100 * 1024 * 1024) {
         throw new Error("Video file is too large (max 100MB)");
       }
 
@@ -131,7 +145,8 @@ export const AstrologyDeliveryManager = () => {
         throw new Error("Video file is empty");
       }
 
-      if (blob.size > 100 * 1024 * 1024) {
+      // Only check file size for non-admins
+      if (!isAdmin && blob.size > 100 * 1024 * 1024) {
         throw new Error("Video file is too large (max 100MB)");
       }
 
