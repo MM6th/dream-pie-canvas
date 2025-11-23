@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Upload, X, Save, Send } from "lucide-react";
@@ -31,7 +31,23 @@ export const VideoFileUploader = ({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [isAdmin, setIsAdmin] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('is_admin')
+          .eq('id', user.id)
+          .single();
+        setIsAdmin(profile?.is_admin || false);
+      }
+    };
+    checkAdminStatus();
+  }, []);
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -43,27 +59,28 @@ export const VideoFileUploader = ({
       return;
     }
 
-    // Validate file size
-    if (file.size > MAX_FILE_SIZE) {
-      toast.error(`File size must be less than ${MAX_FILE_SIZE / (1024 * 1024)}MB`);
-      return;
-    }
+    // For non-admins, validate file size and check storage quota
+    if (!isAdmin) {
+      if (file.size > MAX_FILE_SIZE) {
+        toast.error(`File size must be less than ${MAX_FILE_SIZE / (1024 * 1024)}MB`);
+        return;
+      }
 
-    // Check storage quota
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      toast.error("You must be logged in to upload videos");
-      return;
-    }
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("You must be logged in to upload videos");
+        return;
+      }
 
-    const { data: canUpload } = await supabase.rpc('can_user_upload', {
-      user_uuid: user.id,
-      new_file_size: file.size
-    });
+      const { data: canUpload } = await supabase.rpc('can_user_upload', {
+        user_uuid: user.id,
+        new_file_size: file.size
+      });
 
-    if (!canUpload) {
-      toast.error("Storage quota exceeded. Please delete some files to free up space.");
-      return;
+      if (!canUpload) {
+        toast.error("Storage quota exceeded. Please delete some files to free up space.");
+        return;
+      }
     }
 
     setSelectedFile(file);
@@ -139,7 +156,9 @@ export const VideoFileUploader = ({
         <Upload className="h-12 w-12 text-muted-foreground" />
         <div className="text-center">
           <p className="text-sm font-medium mb-1">Upload a video from your device</p>
-          <p className="text-xs text-muted-foreground">MP4, WebM, MOV, or AVI (max 100MB)</p>
+          <p className="text-xs text-muted-foreground">
+            MP4, WebM, MOV, or AVI {isAdmin ? '(unlimited size)' : '(max 100MB)'}
+          </p>
         </div>
         <Button
           onClick={() => fileInputRef.current?.click()}

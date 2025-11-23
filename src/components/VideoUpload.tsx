@@ -14,6 +14,21 @@ interface VideoUploadProps {
 const VideoUpload = ({ onVideoSelect, currentVideoUrl }: VideoUploadProps) => {
   const { user } = useAuth();
   const [uploading, setUploading] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  React.useEffect(() => {
+    const checkAdminStatus = async () => {
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('is_admin')
+          .eq('id', user.id)
+          .single();
+        setIsAdmin(profile?.is_admin || false);
+      }
+    };
+    checkAdminStatus();
+  }, [user]);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -30,36 +45,39 @@ const VideoUpload = ({ onVideoSelect, currentVideoUrl }: VideoUploadProps) => {
       return;
     }
 
-    // Validate file size (1GB limit)
-    const maxSize = 1024 * 1024 * 1024; // 1GB in bytes
-    if (file.size > maxSize) {
-      toast({
-        title: "Error", 
-        description: "Video file must be smaller than 1GB",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    // Check user's remaining storage quota
-    try {
-      const { data: storageUsage } = await supabase.rpc('get_user_storage_usage', {
-        user_uuid: user.id
-      });
-
-      const currentUsage = storageUsage || 0;
-      const maxStorage = 2 * 1024 * 1024 * 1024; // 2GB
-      
-      if (currentUsage + file.size > maxStorage) {
+    // For non-admins, validate file size and check storage quota
+    if (!isAdmin) {
+      // Validate file size (1GB limit)
+      const maxSize = 1024 * 1024 * 1024; // 1GB in bytes
+      if (file.size > maxSize) {
         toast({
-          title: "Storage Limit Exceeded",
-          description: "This video would exceed your 2GB storage limit. Please delete some content first.",
+          title: "Error", 
+          description: "Video file must be smaller than 1GB",
           variant: "destructive"
         });
         return;
       }
-    } catch (error) {
-      console.error('Error checking storage:', error);
+
+      // Check user's remaining storage quota
+      try {
+        const { data: storageUsage } = await supabase.rpc('get_user_storage_usage', {
+          user_uuid: user.id
+        });
+
+        const currentUsage = storageUsage || 0;
+        const maxStorage = 2 * 1024 * 1024 * 1024; // 2GB
+        
+        if (currentUsage + file.size > maxStorage) {
+          toast({
+            title: "Storage Limit Exceeded",
+            description: "This video would exceed your 2GB storage limit. Please delete some content first.",
+            variant: "destructive"
+          });
+          return;
+        }
+      } catch (error) {
+        console.error('Error checking storage:', error);
+      }
     }
 
     setUploading(true);
