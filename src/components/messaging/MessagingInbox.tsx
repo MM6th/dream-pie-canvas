@@ -3,10 +3,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
-import { Mail, MailOpen } from 'lucide-react';
+import { Mail, MailOpen, Reply } from 'lucide-react';
+import { MessageComposer } from './MessageComposer';
+import { useMessagingCredits } from '@/hooks/useMessagingCredits';
 
 interface Message {
   id: string;
@@ -26,6 +29,9 @@ export const MessagingInbox = () => {
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
   const [loading, setLoading] = useState(true);
   const [userType, setUserType] = useState<string>('');
+  const [userId, setUserId] = useState<string>('');
+  const [showReplyComposer, setShowReplyComposer] = useState(false);
+  const { balance, refetch: refetchCredits } = useMessagingCredits(userId);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -36,6 +42,8 @@ export const MessagingInbox = () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+
+      setUserId(user.id);
 
       // Get user type
       const { data: profile } = await supabase
@@ -108,6 +116,21 @@ export const MessagingInbox = () => {
       markAsRead(message.id);
     }
   };
+
+  const handleReply = () => {
+    if (selectedMessage) {
+      setShowReplyComposer(true);
+    }
+  };
+
+  const handleMessageSent = () => {
+    setShowReplyComposer(false);
+    fetchMessages();
+    refetchCredits();
+  };
+
+  // Determine if reply is free (merchant replying to supporter)
+  const isReplyFree = userType === 'merchant' && selectedMessage?.sender_id !== userId;
 
   const unreadCount = receivedMessages.filter((msg) => !msg.read_at).length;
 
@@ -238,9 +261,17 @@ export const MessagingInbox = () => {
           </CardHeader>
           <CardContent>
             {selectedMessage ? (
-              <div className="prose prose-sm max-w-none">
-                <p className="whitespace-pre-wrap">{selectedMessage.body}</p>
-              </div>
+              <>
+                <div className="prose prose-sm max-w-none mb-4">
+                  <p className="whitespace-pre-wrap">{selectedMessage.body}</p>
+                </div>
+                <div className="flex justify-end pt-4 border-t">
+                  <Button onClick={handleReply} size="sm">
+                    <Reply className="w-4 h-4 mr-2" />
+                    Reply {isReplyFree && '(Free)'}
+                  </Button>
+                </div>
+              </>
             ) : (
               <p className="text-muted-foreground text-center py-8">
                 Select a message to read its content
@@ -249,6 +280,21 @@ export const MessagingInbox = () => {
           </CardContent>
         </Card>
       </div>
+
+      {selectedMessage && (
+        <MessageComposer
+          open={showReplyComposer}
+          onOpenChange={setShowReplyComposer}
+          recipientId={selectedMessage.sender_id}
+          recipientName={selectedMessage.sender?.display_name}
+          currentBalance={balance}
+          isFree={isReplyFree}
+          onMessageSent={handleMessageSent}
+          replyToMessageId={selectedMessage.id}
+          originalSubject={selectedMessage.subject}
+          originalBody={selectedMessage.body}
+        />
+      )}
     </div>
   );
 };
