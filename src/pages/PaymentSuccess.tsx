@@ -68,58 +68,44 @@ const PaymentSuccess = () => {
       }
 
       try {
-        console.log('Capturing payment for order:', orderId, 'Type:', paymentType);
-        
-        // Choose the appropriate capture function based on payment type
-        let functionName = 'capture-paypal-payment';
-        let body: any = { paymentId: orderId };
-        
-        if (paymentType === 'fashion') {
-          functionName = 'capture-fashion-payment';
-        } else if (paymentType === 'portfolio') {
-          functionName = 'capture-portfolio-payment';
-          body = { orderId, portfolioId };
-        } else if (paymentType === 'credit') {
-          functionName = 'capture-credit-payment';
-          const creditAmount = parseInt(searchParams.get('credits') || '50');
-          body = { orderId, creditAmount };
-        }
-        
-        const { data, error } = await supabase.functions.invoke(functionName, {
-          body,
-          headers: {
-            Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-          },
-        });
+        let result;
 
-        console.log('Capture response:', data, 'Error:', error);
-
-        if (error) {
-          console.error('Supabase function error:', error);
-          throw error;
-        }
-
-        if (data?.success) {
+        if (paymentType === "audio") {
+          result = await supabase.functions.invoke('capture-paypal-payment', {
+            body: { orderId }
+          });
+        } else if (paymentType === "portfolio") {
+          result = await supabase.functions.invoke('capture-portfolio-payment', {
+            body: { orderId, portfolioId }
+          });
+        } else if (paymentType === "astrology" || paymentType === "credit") {
+          // Astrology and credit payments are captured by the edge function before redirecting here
           setSuccess(true);
-          setPaymentDetails({
-            transactionId: data.purchaseId || data.transactionId,
-            amountPaid: data.amountPaid || (paymentType === 'credit' ? searchParams.get('credits') : undefined)
-          });
+          setProcessing(false);
           
-          const productType = paymentType === 'fashion' ? 'fashion item' : 
-                            paymentType === 'credit' ? 'credits' : 'audio';
-          toast({
-            title: "Payment Successful!",
-            description: data.message || `Your ${productType} purchase was completed successfully!`,
+          if (paymentType === "credit") {
+            const creditsAmount = searchParams.get('credits');
+            toast({
+              title: "Purchase Successful",
+              description: `You have successfully purchased ${creditsAmount} messaging credits!`
+            });
+          }
+          return;
+        } else if (paymentType === "fashion") {
+          result = await supabase.functions.invoke('capture-fashion-payment', {
+            body: { orderId }
           });
-
-          // Refresh the page data to show the new purchase
-          setTimeout(() => {
-            window.location.href = '/';
-          }, 3000);
-        } else {
-          throw new Error(data?.error || 'Payment capture failed');
         }
+
+        if (result?.error) {
+          throw result.error;
+        }
+
+        setSuccess(true);
+        toast({
+          title: "Purchase Successful",
+          description: "Your payment has been processed successfully!"
+        });
       } catch (error: any) {
         console.error('Payment capture error:', error);
         

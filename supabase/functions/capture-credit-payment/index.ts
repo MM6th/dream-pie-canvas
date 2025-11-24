@@ -1,239 +1,210 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+const CREDIT_PACKAGES = {
+  50: { credits: 50, price: 5.00 },
+  100: { credits: 100, price: 9.00 },
+  200: { credits: 200, price: 16.00 },
 };
 
-interface PayPalAccessTokenResponse {
-  access_token: string;
-}
-
-interface PayPalCaptureResponse {
-  id: string;
-  status: string;
-  purchase_units: Array<{
-    payments: {
-      captures: Array<{ id: string }>;
-    };
-  }>;
-}
-
-Deno.serve(async (req) => {
+serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
-    );
+    const url = new URL(req.url);
+    const token = url.searchParams.get('token');
+    const credits = url.searchParams.get('credits');
+    const userId = url.searchParams.get('userId');
+    
+    console.log('Capturing credit payment for token:', token, 'credits:', credits, 'userId:', userId);
 
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
-    if (userError || !user) {
-      throw new Error('Unauthorized');
+    if (!token || !credits || !userId) {
+      throw new Error('Missing required parameters');
     }
 
-    const { orderId, creditAmount } = await req.json();
-
-    // Get PayPal credentials
-    const paypalClientId = Deno.env.get('PAYPAL_CLIENT_ID');
-    const paypalClientSecret = Deno.env.get('PAYPAL_CLIENT_SECRET');
-
-    if (!paypalClientId || !paypalClientSecret) {
-      throw new Error('PayPal credentials not configured');
+    // Validate credit package
+    const packageInfo = CREDIT_PACKAGES[parseInt(credits) as keyof typeof CREDIT_PACKAGES];
+    if (!packageInfo) {
+      throw new Error('Invalid credit package');
     }
 
     // Get PayPal access token
-    const auth = btoa(`${paypalClientId}:${paypalClientSecret}`);
-    const tokenResponse = await fetch('https://api-m.paypal.com/v1/oauth2/token', {
+    const clientId = Deno.env.get('PAYPAL_CLIENT_ID');
+    const clientSecret = Deno.env.get('PAYPAL_CLIENT_SECRET');
+    
+    if (!clientId || !clientSecret) {
+      throw new Error('PayPal credentials not configured');
+    }
+
+    const authResponse = await fetch('https://api-m.paypal.com/v1/oauth2/token', {
       method: 'POST',
       headers: {
-        'Authorization': `Basic ${auth}`,
         'Content-Type': 'application/x-www-form-urlencoded',
+        'Authorization': `Basic ${btoa(`${clientId}:${clientSecret}`)}`,
       },
       body: 'grant_type=client_credentials',
     });
 
-    const { access_token } = await tokenResponse.json() as PayPalAccessTokenResponse;
-
-    // Capture PayPal order
-    const captureResponse = await fetch(
-      `https://api-m.paypal.com/v2/checkout/orders/${orderId}/capture`,
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${access_token}`,
-          'Content-Type': 'application/json',
-        },
-      }
-    );
-
-    const captureData = await captureResponse.json() as PayPalCaptureResponse;
-
-    if (captureData.status !== 'COMPLETED') {
-      throw new Error('Payment capture failed');
+    if (!authResponse.ok) {
+      throw new Error('PayPal authentication failed');
     }
 
-    const transactionId = captureData.purchase_units[0]?.payments?.captures[0]?.id;
+    const { access_token } = await authResponse.json();
 
-    // Use admin client for database operations
-    const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    // Capture the payment
+    const captureResponse = await fetch(`https://api-m.paypal.com/v2/checkout/orders/${token}/capture`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${access_token}`,
+      },
+    });
 
-    // Get or create user's credit record
-    const { data: existingCredits } = await supabaseAdmin
+    if (!captureResponse.ok) {
+      const errorText = await captureResponse.text();
+      console.error('PayPal capture error:', errorText);
+      throw new Error('Failed to capture PayPal payment');
+    }
+
+    const captureData = await captureResponse.json();
+    console.log('Payment captured:', captureData);
+
+    // Initialize Supabase client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Get transaction details
+    const transactionId = captureData.purchase_units?.[0]?.payments?.captures?.[0]?.id;
+    const amountPaid = parseFloat(captureData.purchase_units?.[0]?.payments?.captures?.[0]?.amount?.value || '0');
+
+    // Calculate revenue splits
+    const paypalFee = (amountPaid * 0.0349) + 0.49;
+    const netRevenue = amountPaid - paypalFee;
+
+    // Update or create messaging credits record
+    const { data: existingCredits } = await supabase
       .from('messaging_credits')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .single();
 
     if (existingCredits) {
-      // Update existing record
-      const { error: updateError } = await supabaseAdmin
+      await supabase
         .from('messaging_credits')
         .update({
-          balance: existingCredits.balance + creditAmount,
-          total_purchased: existingCredits.total_purchased + creditAmount,
+          balance: existingCredits.balance + packageInfo.credits,
+          total_purchased: existingCredits.total_purchased + packageInfo.credits,
           updated_at: new Date().toISOString(),
         })
-        .eq('user_id', user.id);
-
-      if (updateError) throw updateError;
+        .eq('user_id', userId);
     } else {
-      // Create new record
-      const { error: insertError } = await supabaseAdmin
+      await supabase
         .from('messaging_credits')
         .insert({
-          user_id: user.id,
-          balance: creditAmount,
-          total_purchased: creditAmount,
+          user_id: userId,
+          balance: packageInfo.credits,
+          total_purchased: packageInfo.credits,
+          total_spent: 0,
         });
-
-      if (insertError) throw insertError;
     }
 
-    // Record transaction
-    const { error: transactionError } = await supabaseAdmin
+    // Record the transaction
+    await supabase
       .from('credit_transactions')
       .insert({
-        user_id: user.id,
+        user_id: userId,
         type: 'purchase',
-        amount: creditAmount,
-        description: `Purchased ${creditAmount} credits`,
+        amount: packageInfo.credits,
+        description: `Purchased ${packageInfo.credits} messaging credits`,
         paypal_order_id: transactionId,
       });
 
-    if (transactionError) throw transactionError;
-
-    // Calculate revenue breakdown
-    const packagePrices: Record<number, number> = { 50: 5.00, 100: 9.00, 200: 16.00 };
-    const totalAmount = packagePrices[creditAmount] || 0;
-    const platformFee = totalAmount * 0.30;
-    const paypalProcessingFee = (totalAmount * 0.029) + 0.30;
-
-    // Record platform revenue (30% platform fee)
-    const { error: revenueError } = await supabaseAdmin
+    // Record platform revenue
+    await supabase
       .from('platform_revenue')
       .insert({
-        amount: platformFee,
-        revenue_type: 'messaging_credits',
-        source_user_id: user.id,
+        amount: netRevenue,
+        revenue_type: 'credit_purchase',
+        source_user_id: userId,
         source_transaction_id: transactionId,
         metadata: {
-          credits_purchased: creditAmount,
-          total_amount: totalAmount,
-        },
+          credits_purchased: packageInfo.credits,
+          price: packageInfo.price,
+          paypal_fee: paypalFee,
+        }
       });
 
-    if (revenueError) {
-      console.error('Error recording platform revenue:', revenueError);
-    }
-
-    // Get admin user ID for quarterly income tracking
-    const { data: adminProfile } = await supabaseAdmin
+    // Get admin user ID
+    const { data: adminProfile } = await supabase
       .from('profiles')
       .select('id')
       .eq('is_admin', true)
       .single();
 
     if (adminProfile) {
-      // Track platform fee as company revenue
-      await supabaseAdmin.rpc('update_quarterly_income', {
+      // Update quarterly income for admin (company revenue)
+      await supabase.rpc('update_quarterly_income', {
         p_user_id: adminProfile.id,
         p_income_type: 'company_revenue',
-        p_amount: platformFee,
+        p_amount: netRevenue,
+        p_is_test_data: false
       });
 
-      // Track PayPal processing fee
-      await supabaseAdmin.rpc('update_quarterly_income', {
-        p_user_id: adminProfile.id,
-        p_income_type: 'processing_fees',
-        p_amount: paypalProcessingFee,
-      });
-    }
-
-    // Get user's display name for notifications
-    const { data: userProfile } = await supabaseAdmin
-      .from('profiles')
-      .select('display_name')
-      .eq('id', user.id)
-      .single();
-
-    // Create notification for buyer
-    await supabaseAdmin
-      .from('notifications')
-      .insert({
-        user_id: user.id,
-        type: 'credit_purchase',
-        title: 'Credits Added!',
-        message: `Your ${creditAmount} messaging credits have been added to your account.`,
-      });
-
-    // Create notification for admin
-    if (adminProfile) {
-      await supabaseAdmin
+      // Notify admin
+      await supabase
         .from('notifications')
         .insert({
           user_id: adminProfile.id,
-          type: 'admin_revenue',
-          title: 'Credit Purchase',
-          message: `${userProfile?.display_name || 'A user'} purchased ${creditAmount} messaging credits for $${totalAmount.toFixed(2)}`,
+          type: 'credit_purchase',
+          title: 'New Credit Purchase',
+          message: `A user purchased ${packageInfo.credits} messaging credits for $${packageInfo.price}`
         });
     }
 
-    // Get updated balance
-    const { data: updatedCredits } = await supabaseAdmin
-      .from('messaging_credits')
-      .select('balance')
-      .eq('user_id', user.id)
-      .single();
+    // Notify buyer
+    await supabase
+      .from('notifications')
+      .insert({
+        user_id: userId,
+        type: 'credit_purchase',
+        title: 'Credits Purchased',
+        message: `You successfully purchased ${packageInfo.credits} messaging credits!`
+      });
 
-    console.log('Credit purchase completed:', { 
-      user_id: user.id, 
-      credits: creditAmount,
-      platform_fee: platformFee,
-      paypal_fee: paypalProcessingFee,
-    });
+    console.log('Credit purchase recorded successfully');
 
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        newBalance: updatedCredits?.balance || creditAmount,
-        creditsAdded: creditAmount,
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    // Get the base URL from the referer header
+    const referer = req.headers.get('referer');
+    let baseUrl = 'https://lovable.app';
+    if (referer) {
+      const refererUrl = new URL(referer);
+      baseUrl = `${refererUrl.protocol}//${refererUrl.host}`;
+    }
+
+    // Redirect to success page
+    return Response.redirect(`${baseUrl}/payment-success?orderId=${captureData.id}&paymentType=credit&credits=${packageInfo.credits}`, 302);
 
   } catch (error) {
     console.error('Error in capture-credit-payment:', error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    
+    // Get the base URL from the referer header
+    const referer = req.headers.get('referer');
+    let baseUrl = 'https://lovable.app';
+    if (referer) {
+      const refererUrl = new URL(referer);
+      baseUrl = `${refererUrl.protocol}//${refererUrl.host}`;
+    }
+    
+    // Redirect to error page
+    return Response.redirect(`${baseUrl}/payment-cancelled`, 302);
   }
 });
