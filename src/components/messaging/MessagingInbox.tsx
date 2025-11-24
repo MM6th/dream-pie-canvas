@@ -19,6 +19,7 @@ interface Message {
   body: string;
   read_at: string | null;
   created_at: string;
+  attachment_url: string | null;
   sender?: { display_name: string; avatar_url: string | null };
   recipient?: { display_name: string; avatar_url: string | null };
 }
@@ -264,6 +265,15 @@ export const MessagingInbox = () => {
               <>
                 <div className="prose prose-sm max-w-none mb-4">
                   <p className="whitespace-pre-wrap">{selectedMessage.body}</p>
+                  {selectedMessage.attachment_url && (
+                    <div className="mt-4">
+                      <img 
+                        src={selectedMessage.attachment_url} 
+                        alt="Message attachment" 
+                        className="max-w-full h-auto rounded-lg border"
+                      />
+                    </div>
+                  )}
                 </div>
                 <div className="flex justify-end pt-4 border-t">
                   <Button onClick={handleReply} size="sm">

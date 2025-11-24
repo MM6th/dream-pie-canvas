@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -65,7 +65,7 @@ export const CreditPurchaseModal = ({
   };
 
   // Check for completed payment on mount
-  useState(() => {
+  useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const paymentCompleted = urlParams.get('payment');
 
@@ -77,7 +77,7 @@ export const CreditPurchaseModal = ({
         localStorage.removeItem('pendingCreditPurchase');
       }
     }
-  });
+  }, []);
 
   const capturePayment = async (orderId: string, creditAmount: number) => {
     try {

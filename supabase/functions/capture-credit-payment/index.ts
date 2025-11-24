@@ -130,11 +130,13 @@ Deno.serve(async (req) => {
 
     if (transactionError) throw transactionError;
 
-    // Calculate and record platform revenue (30% platform fee)
+    // Calculate revenue breakdown
     const packagePrices: Record<number, number> = { 50: 5.00, 100: 9.00, 200: 16.00 };
     const totalAmount = packagePrices[creditAmount] || 0;
     const platformFee = totalAmount * 0.30;
+    const paypalProcessingFee = (totalAmount * 0.029) + 0.30;
 
+    // Record platform revenue (30% platform fee)
     const { error: revenueError } = await supabaseAdmin
       .from('platform_revenue')
       .insert({
@@ -152,6 +154,58 @@ Deno.serve(async (req) => {
       console.error('Error recording platform revenue:', revenueError);
     }
 
+    // Get admin user ID for quarterly income tracking
+    const { data: adminProfile } = await supabaseAdmin
+      .from('profiles')
+      .select('id')
+      .eq('is_admin', true)
+      .single();
+
+    if (adminProfile) {
+      // Track platform fee as company revenue
+      await supabaseAdmin.rpc('update_quarterly_income', {
+        p_user_id: adminProfile.id,
+        p_income_type: 'company_revenue',
+        p_amount: platformFee,
+      });
+
+      // Track PayPal processing fee
+      await supabaseAdmin.rpc('update_quarterly_income', {
+        p_user_id: adminProfile.id,
+        p_income_type: 'processing_fees',
+        p_amount: paypalProcessingFee,
+      });
+    }
+
+    // Get user's display name for notifications
+    const { data: userProfile } = await supabaseAdmin
+      .from('profiles')
+      .select('display_name')
+      .eq('id', user.id)
+      .single();
+
+    // Create notification for buyer
+    await supabaseAdmin
+      .from('notifications')
+      .insert({
+        user_id: user.id,
+        type: 'credit_purchase',
+        title: 'Credits Added!',
+        message: `Your ${creditAmount} messaging credits have been added to your account.`,
+      });
+
+    // Create notification for admin
+    if (adminProfile) {
+      await supabaseAdmin
+        .from('notifications')
+        .insert({
+          user_id: adminProfile.id,
+          type: 'admin_revenue',
+          title: 'Credit Purchase',
+          message: `${userProfile?.display_name || 'A user'} purchased ${creditAmount} messaging credits for $${totalAmount.toFixed(2)}`,
+        });
+    }
+
     // Get updated balance
     const { data: updatedCredits } = await supabaseAdmin
       .from('messaging_credits')
@@ -159,7 +213,12 @@ Deno.serve(async (req) => {
       .eq('user_id', user.id)
       .single();
 
-    console.log('Credit purchase completed:', { user_id: user.id, credits: creditAmount });
+    console.log('Credit purchase completed:', { 
+      user_id: user.id, 
+      credits: creditAmount,
+      platform_fee: platformFee,
+      paypal_fee: paypalProcessingFee,
+    });
 
     return new Response(
       JSON.stringify({ 

@@ -12,8 +12,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, CreditCard } from 'lucide-react';
+import { Loader2, CreditCard, Image as ImageIcon, X } from 'lucide-react';
 import { CreditPurchaseModal } from './CreditPurchaseModal';
+import ImagePicker from '@/components/ImagePicker';
 
 interface MessageComposerProps {
   open: boolean;
@@ -45,6 +46,7 @@ export const MessageComposer = ({
   const [body, setBody] = useState('');
   const [loading, setLoading] = useState(false);
   const [showCreditPurchase, setShowCreditPurchase] = useState(false);
+  const [attachmentUrl, setAttachmentUrl] = useState<string>('');
   const { toast } = useToast();
 
   const creditsRequired = isFree ? 0 : 1; // Free for merchant-to-merchant and merchant replies
@@ -113,6 +115,7 @@ export const MessageComposer = ({
           subject,
           body,
           parentMessageId: replyToMessageId,
+          attachmentUrl: attachmentUrl || null,
         },
       });
 
@@ -127,6 +130,7 @@ export const MessageComposer = ({
 
       setSubject('');
       setBody('');
+      setAttachmentUrl('');
       onMessageSent?.();
       onOpenChange(false);
     } catch (error: any) {
@@ -216,6 +220,39 @@ export const MessageComposer = ({
               rows={6}
               className="resize-none"
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Photo Attachment (Optional)</Label>
+            {attachmentUrl ? (
+              <div className="relative">
+                <img 
+                  src={attachmentUrl} 
+                  alt="Attachment" 
+                  className="w-full h-32 object-cover rounded-lg border"
+                />
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="destructive"
+                  className="absolute top-2 right-2"
+                  onClick={() => setAttachmentUrl('')}
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+            ) : (
+              <ImagePicker
+                onImageSelect={setAttachmentUrl}
+                currentImageUrl={attachmentUrl}
+                trigger={
+                  <Button type="button" variant="outline" className="w-full">
+                    <ImageIcon className="w-4 h-4 mr-2" />
+                    Attach Photo
+                  </Button>
+                }
+              />
+            )}
           </div>
         </div>
 
