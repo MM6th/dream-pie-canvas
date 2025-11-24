@@ -40,9 +40,28 @@ const AstrologyVideoPlayerModal = ({
             autoPlay
             className="w-full h-full object-contain"
             preload="metadata"
+            onError={(e) => {
+              console.error('Video player error:', {
+                error: e.currentTarget.error,
+                src: videoUrl,
+                networkState: e.currentTarget.networkState,
+                readyState: e.currentTarget.readyState,
+              });
+            }}
+            onLoadedMetadata={(e) => {
+              console.log('Video loaded successfully:', {
+                duration: e.currentTarget.duration,
+                width: e.currentTarget.videoWidth,
+                height: e.currentTarget.videoHeight,
+              });
+            }}
           >
             Your browser does not support the video tag.
           </video>
+        </div>
+        
+        <div className="text-sm text-muted-foreground text-center">
+          If the video doesn't play, try opening it in a new tab or downloading it.
         </div>
       </DialogContent>
     </Dialog>
