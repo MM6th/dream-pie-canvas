@@ -22,7 +22,7 @@ Deno.serve(async (req) => {
       throw new Error('Unauthorized');
     }
 
-    const { recipientId, subject, body, parentMessageId } = await req.json();
+    const { recipientId, subject, body, parentMessageId, attachmentUrl } = await req.json();
 
     // Validate input
     if (!recipientId || !subject || !body) {
@@ -50,7 +50,7 @@ Deno.serve(async (req) => {
     // Get sender profile
     const { data: senderProfile, error: senderError } = await supabaseAdmin
       .from('profiles')
-      .select('user_type')
+      .select('user_type, display_name')
       .eq('id', user.id)
       .single();
 
@@ -99,6 +99,7 @@ Deno.serve(async (req) => {
     
     let creditsRequired = 0;
     let isFree = false;
+    let senderCredits: any = null;
     
     // Determine if message should be free
     if (isMerchantToMerchant || isMerchantReplyToSupporter) {
@@ -122,15 +123,17 @@ Deno.serve(async (req) => {
       }
 
       // Check sender's credit balance
-      const { data: senderCredits, error: creditsError } = await supabaseAdmin
+      const { data: credits, error: creditsError } = await supabaseAdmin
         .from('messaging_credits')
         .select('balance')
         .eq('user_id', user.id)
         .single();
 
-      if (creditsError || !senderCredits) {
+      if (creditsError || !credits) {
         throw new Error('No credits found. Please purchase credits first.');
       }
+
+      senderCredits = credits;
 
       if (senderCredits.balance < creditsRequired) {
         throw new Error(`Insufficient credits. You need ${creditsRequired} credit(s), but have ${senderCredits.balance}.`);
@@ -162,6 +165,7 @@ Deno.serve(async (req) => {
         subject,
         body,
         parent_message_id: parentMessageId || null,
+        attachment_url: attachmentUrl || null,
       })
       .select()
       .single();
@@ -169,7 +173,7 @@ Deno.serve(async (req) => {
     if (messageError) throw messageError;
 
     // Deduct credits and record transaction only if not free
-    if (!isFree) {
+    if (!isFree && senderCredits) {
       const { error: deductError } = await supabaseAdmin
         .from('messaging_credits')
         .update({
@@ -199,6 +203,34 @@ Deno.serve(async (req) => {
       if (transactionError) {
         console.error('Error recording transaction:', transactionError);
       }
+
+      // Track revenue for merchant (recipient) immediately
+      const merchantRevenue = creditsRequired * 0.10; // 1 credit = $0.10
+      await supabaseAdmin.rpc('update_quarterly_income', {
+        p_user_id: recipientId,
+        p_income_type: 'merchant_revenue',
+        p_amount: merchantRevenue,
+      });
+
+      // Create notification for recipient merchant about paid message
+      await supabaseAdmin
+        .from('notifications')
+        .insert({
+          user_id: recipientId,
+          type: 'paid_message',
+          title: 'New Paid Message',
+          message: `${senderProfile.display_name || 'A supporter'} sent you a paid message ($${merchantRevenue.toFixed(2)} earned)`,
+        });
+    } else {
+      // Create notification for free message
+      await supabaseAdmin
+        .from('notifications')
+        .insert({
+          user_id: recipientId,
+          type: 'message',
+          title: 'New Message',
+          message: `${senderProfile.display_name || 'Someone'} sent you a message`,
+        });
     }
 
     // Get updated balance
@@ -215,6 +247,7 @@ Deno.serve(async (req) => {
       credits_spent: creditsRequired,
       is_free: isFree,
       is_reply: !!parentMessageId,
+      has_attachment: !!attachmentUrl,
     });
 
     return new Response(

@@ -1065,6 +1065,7 @@ export type Database = {
       }
       messages: {
         Row: {
+          attachment_url: string | null
           body: string
           created_at: string
           id: string
@@ -1075,6 +1076,7 @@ export type Database = {
           subject: string
         }
         Insert: {
+          attachment_url?: string | null
           body: string
           created_at?: string
           id?: string
@@ -1085,6 +1087,7 @@ export type Database = {
           subject: string
         }
         Update: {
+          attachment_url?: string | null
           body?: string
           created_at?: string
           id?: string
