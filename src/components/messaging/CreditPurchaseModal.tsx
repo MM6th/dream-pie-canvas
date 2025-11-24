@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -44,13 +44,7 @@ export const CreditPurchaseModal = ({
       if (error) throw error;
 
       if (data.approvalUrl) {
-        // Store purchase info for capture on return
-        localStorage.setItem('pendingCreditPurchase', JSON.stringify({
-          orderId: data.orderId,
-          creditAmount: data.credits,
-        }));
-
-        // Redirect to PayPal
+        // Redirect to PayPal (PaymentSuccess page will handle capture)
         window.location.href = data.approvalUrl;
       }
     } catch (error) {
@@ -61,46 +55,6 @@ export const CreditPurchaseModal = ({
         variant: 'destructive',
       });
       setLoading(false);
-    }
-  };
-
-  // Check for completed payment on mount
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const paymentCompleted = urlParams.get('payment');
-
-    if (paymentCompleted === 'success') {
-      const pendingPurchase = localStorage.getItem('pendingCreditPurchase');
-      if (pendingPurchase) {
-        const { orderId, creditAmount } = JSON.parse(pendingPurchase);
-        capturePayment(orderId, creditAmount);
-        localStorage.removeItem('pendingCreditPurchase');
-      }
-    }
-  }, []);
-
-  const capturePayment = async (orderId: string, creditAmount: number) => {
-    try {
-      const { data, error } = await supabase.functions.invoke('capture-credit-payment', {
-        body: { orderId, creditAmount },
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: 'Credits Added!',
-        description: `${data.creditsAdded} credits have been added to your account.`,
-      });
-
-      onPurchaseComplete?.();
-      onOpenChange(false);
-    } catch (error) {
-      console.error('Error capturing payment:', error);
-      toast({
-        title: 'Payment Capture Error',
-        description: 'Payment was approved but failed to process. Please contact support.',
-        variant: 'destructive',
-      });
     }
   };
 

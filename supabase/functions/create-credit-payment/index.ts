@@ -89,8 +89,8 @@ Deno.serve(async (req) => {
           }),
         }],
         application_context: {
-          return_url: `${req.headers.get('origin')}/`,
-          cancel_url: `${req.headers.get('origin')}/`,
+          return_url: `${req.headers.get('origin')}/payment-success?type=credit&credits=${credits}`,
+          cancel_url: `${req.headers.get('origin')}/payment-cancelled`,
           brand_name: 'Messaging Credits',
           user_action: 'PAY_NOW',
         },
