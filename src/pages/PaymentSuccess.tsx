@@ -43,6 +43,10 @@ const PaymentSuccess = () => {
         } else if (paymentType === 'portfolio') {
           functionName = 'capture-portfolio-payment';
           body = { orderId, portfolioId };
+        } else if (paymentType === 'credit') {
+          functionName = 'capture-credit-payment';
+          const creditAmount = parseInt(searchParams.get('credits') || '50');
+          body = { orderId, creditAmount };
         }
         
         const { data, error } = await supabase.functions.invoke(functionName, {
@@ -63,10 +67,11 @@ const PaymentSuccess = () => {
           setSuccess(true);
           setPaymentDetails({
             transactionId: data.purchaseId || data.transactionId,
-            amountPaid: data.amountPaid
+            amountPaid: data.amountPaid || (paymentType === 'credit' ? searchParams.get('credits') : undefined)
           });
           
-          const productType = paymentType === 'fashion' ? 'fashion item' : 'audio';
+          const productType = paymentType === 'fashion' ? 'fashion item' : 
+                            paymentType === 'credit' ? 'credits' : 'audio';
           toast({
             title: "Payment Successful!",
             description: data.message || `Your ${productType} purchase was completed successfully!`,
@@ -101,7 +106,7 @@ const PaymentSuccess = () => {
     };
 
     capturePayment();
-  }, [orderId, user, paymentType]);
+  }, [orderId, user, paymentType, searchParams]);
 
   const handleBackToDashboard = () => {
     navigate('/');
@@ -131,6 +136,10 @@ const PaymentSuccess = () => {
     }
     if (paymentType === 'portfolio') {
       return "Thank you for your purchase! The portfolio has been added to your dashboard.";
+    }
+    if (paymentType === 'credit') {
+      const credits = searchParams.get('credits') || '50';
+      return `Thank you! ${credits} messaging credits have been added to your account.`;
     }
     return "Thank you for your purchase! Your audio has been added to your music library.";
   };
