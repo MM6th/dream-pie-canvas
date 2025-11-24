@@ -101,6 +101,8 @@ Deno.serve(async (req) => {
     const approvalUrl = orderData.links.find(link => link.rel === 'approve')?.href;
 
     console.log('PayPal order created:', orderData.id);
+    console.log('Return URL sent to PayPal:', `${req.headers.get('origin')}/payment-success?type=credit&credits=${credits}`);
+    console.log('Approval URL:', approvalUrl);
 
     return new Response(
       JSON.stringify({ 

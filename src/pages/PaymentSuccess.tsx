@@ -28,7 +28,13 @@ const PaymentSuccess = () => {
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      console.log('Auth session:', session?.user?.id);
+      console.log('PaymentSuccess - Auth session loaded:', session?.user?.id);
+      console.log('PaymentSuccess - URL params:', {
+        orderId,
+        paymentType,
+        credits: searchParams.get('credits'),
+        allParams: Object.fromEntries(searchParams.entries())
+      });
       setAuthLoading(false);
     };
     checkAuth();
@@ -36,14 +42,21 @@ const PaymentSuccess = () => {
 
   useEffect(() => {
     const capturePayment = async () => {
-      // Wait for auth to load
-      if (authLoading) {
-        console.log('Waiting for auth to load...');
+      console.log('PaymentSuccess - capturePayment called', {
+        authLoading,
+        orderId,
+        hasUser: !!user,
+        paymentType
+      });
+
+      // Wait for both auth to load AND user to be available
+      if (authLoading || !user) {
+        console.log('PaymentSuccess - Waiting for auth/user...', { authLoading, hasUser: !!user });
         return;
       }
 
       if (!orderId) {
-        console.error('Missing orderId:', { orderId });
+        console.error('PaymentSuccess - Missing orderId');
         toast({
           title: "Invalid Payment Link",
           description: "The payment link is invalid or expired.",
@@ -51,17 +64,6 @@ const PaymentSuccess = () => {
         });
         setProcessing(false);
         setSuccess(false);
-        return;
-      }
-
-      if (!user) {
-        console.error('User not authenticated');
-        toast({
-          title: "Authentication Required",
-          description: "Please log in to complete your purchase.",
-          variant: "destructive"
-        });
-        navigate('/');
         return;
       }
 
@@ -140,7 +142,7 @@ const PaymentSuccess = () => {
     };
 
     capturePayment();
-  }, [orderId, user, paymentType, searchParams, authLoading, navigate]);
+  }, [authLoading, user, orderId, paymentType, searchParams]);
 
   const handleBackToDashboard = () => {
     navigate('/');
@@ -178,14 +180,18 @@ const PaymentSuccess = () => {
     return "Thank you for your purchase! Your audio has been added to your music library.";
   };
 
-  if (processing) {
+  if (processing || authLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800 flex items-center justify-center">
         <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm max-w-md w-full mx-4">
           <CardContent className="p-8 text-center">
             <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-white mx-auto mb-4"></div>
-            <h2 className="text-xl font-bold text-white mb-2">Processing Payment...</h2>
-            <p className="text-gray-400">Please wait while we confirm your purchase.</p>
+            <h2 className="text-xl font-bold text-white mb-2">
+              {authLoading ? 'Loading...' : 'Processing Payment...'}
+            </h2>
+            <p className="text-gray-400">
+              {authLoading ? 'Please wait while we verify your session.' : 'Please wait while we confirm your purchase.'}
+            </p>
           </CardContent>
         </Card>
       </div>
