@@ -37,8 +37,24 @@ export const CreditPurchaseModal = ({
     try {
       setLoading(true);
 
+      // Get the current session to ensure we have a valid auth token
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast({
+          title: 'Authentication Required',
+          description: 'Please log in to purchase credits.',
+          variant: 'destructive',
+        });
+        setLoading(false);
+        return;
+      }
+
       const { data, error } = await supabase.functions.invoke('create-credit-payment', {
         body: { creditAmount: selectedPackage },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
       });
 
       if (error) throw error;
