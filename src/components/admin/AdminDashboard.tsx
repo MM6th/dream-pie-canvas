@@ -9,8 +9,7 @@ import {
   Image,
   MessageSquare,
   ChevronDown,
-  FlaskConical,
-  Sparkles
+  FlaskConical
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import MerchantsManagement from "./MerchantsManagement";
@@ -21,8 +20,6 @@ import AdminBulletinPostManager from "./AdminBulletinPostManager";
 import VideoAdOpportunityManager from "./VideoAdOpportunityManager";
 import TestPurchaseSimulator from "@/components/TestPurchaseSimulator";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import AstrologyProductManager from "@/components/AstrologyProductManager";
-import { AstrologyDeliveryManager } from "@/components/astrology/AstrologyDeliveryManager";
 import { useSubmissionCounts } from "@/hooks/useSubmissionCounts";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuarterlyIncome } from "@/hooks/useQuarterlyIncome";
@@ -187,34 +184,8 @@ const AdminDashboard = () => {
         )}
       </Tabs>
 
-      {/* Astrology Products Management */}
-      <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
-        <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
-            <Sparkles className="w-5 h-5" />
-            Astrology Products Management
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <AstrologyProductManager />
-        </CardContent>
-      </Card>
-
-      {/* Astrology Deliveries Management */}
-      <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm mt-6">
-        <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
-            <Sparkles className="w-5 h-5" />
-            Astrology Deliveries Tracking
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <AstrologyDeliveryManager />
-        </CardContent>
-      </Card>
-
       {/* Video Ad Opportunities Management */}
-      <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm mt-6" data-tutorial="video-ads">
+      <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm" data-tutorial="video-ads">
         <CardHeader>
           <CardTitle className="text-white">Video Ad Opportunities Management</CardTitle>
         </CardHeader>
