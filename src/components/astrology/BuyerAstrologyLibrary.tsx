@@ -98,8 +98,39 @@ export const BuyerAstrologyLibrary = () => {
       toast.success("Download started");
     } catch (error) {
       console.error("Error downloading video:", error);
-      toast.error("Failed to download video");
+      toast.error("Failed to download video. Try opening the video URL directly.");
     }
+  };
+
+  const handleTestVideoUrl = (videoUrl: string) => {
+    console.log('Testing video URL:', videoUrl);
+    window.open(videoUrl, '_blank');
+    toast.info("Opening video in new tab");
+  };
+
+  const handleVideoError = (e: React.SyntheticEvent<HTMLVideoElement>, reading: AstrologyReading) => {
+    const video = e.currentTarget;
+    console.error('Video playback error:', {
+      error: video.error,
+      errorCode: video.error?.code,
+      errorMessage: video.error?.message,
+      networkState: video.networkState,
+      readyState: video.readyState,
+      src: video.src,
+      readingId: reading.id,
+    });
+    
+    toast.error(`Video playback error (code: ${video.error?.code}). Try downloading instead.`);
+  };
+
+  const handleVideoLoaded = (e: React.SyntheticEvent<HTMLVideoElement>) => {
+    const video = e.currentTarget;
+    console.log('Video metadata loaded successfully:', {
+      duration: video.duration,
+      videoWidth: video.videoWidth,
+      videoHeight: video.videoHeight,
+      readyState: video.readyState,
+    });
   };
 
   const getStatusInfo = (reading: AstrologyReading) => {
@@ -162,13 +193,21 @@ export const BuyerAstrologyLibrary = () => {
                 {reading.admin_video_url ? (
                   <div className="space-y-4">
                     {playingVideo === reading.id ? (
-                      <div>
+                      <div className="space-y-2">
                         <video
                           src={reading.admin_video_url}
                           controls
                           autoPlay
                           className="w-full max-w-2xl rounded-lg"
-                        />
+                          onError={(e) => handleVideoError(e, reading)}
+                          onLoadedMetadata={handleVideoLoaded}
+                          preload="metadata"
+                        >
+                          Your browser does not support the video tag.
+                        </video>
+                        <div className="text-xs text-muted-foreground text-center">
+                          If video doesn't play, try opening it in a new tab or downloading it
+                        </div>
                         <Button
                           variant="outline"
                           onClick={() => setPlayingVideo(null)}
@@ -178,23 +217,33 @@ export const BuyerAstrologyLibrary = () => {
                         </Button>
                       </div>
                      ) : (
-                      <div className="flex flex-col sm:flex-row gap-2">
-                        <Button onClick={() => setPlayingVideo(reading.id)} className="w-full sm:w-auto">
-                          <Play className="w-4 h-4 mr-2" />
-                          Watch Reading
-                        </Button>
+                      <div className="space-y-2">
+                        <div className="flex flex-col sm:flex-row gap-2">
+                          <Button onClick={() => setPlayingVideo(reading.id)} className="w-full sm:w-auto">
+                            <Play className="w-4 h-4 mr-2" />
+                            Watch Reading
+                          </Button>
+                          <Button
+                            variant="outline"
+                            onClick={() =>
+                              handleDownload(
+                                reading.admin_video_url!,
+                                reading.astrology_products.title
+                              )
+                            }
+                            className="w-full sm:w-auto"
+                          >
+                            <Download className="w-4 h-4 mr-2" />
+                            Download
+                          </Button>
+                        </div>
                         <Button
-                          variant="outline"
-                          onClick={() =>
-                            handleDownload(
-                              reading.admin_video_url!,
-                              reading.astrology_products.title
-                            )
-                          }
+                          onClick={() => handleTestVideoUrl(reading.admin_video_url!)}
                           className="w-full sm:w-auto"
+                          variant="ghost"
+                          size="sm"
                         >
-                          <Download className="w-4 h-4 mr-2" />
-                          Download
+                          Test Video URL (Opens in New Tab)
                         </Button>
                       </div>
                     )}

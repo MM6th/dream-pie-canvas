@@ -99,9 +99,11 @@ Deno.serve(async (req) => {
 
     const orderData = await orderResponse.json() as PayPalOrderResponse;
     const approvalUrl = orderData.links.find(link => link.rel === 'approve')?.href;
+    
+    const actualReturnUrl = `https://veaupehwfsbagzfuvach.supabase.co/functions/v1/capture-credit-payment?credits=${credits}&userId=${user.id}`;
 
     console.log('PayPal order created:', orderData.id);
-    console.log('Return URL sent to PayPal:', `${req.headers.get('origin')}/payment-success?type=credit&credits=${credits}`);
+    console.log('Actual Return URL sent to PayPal:', actualReturnUrl);
     console.log('Approval URL:', approvalUrl);
 
     return new Response(
