@@ -14,6 +14,7 @@ const PaymentSuccess = () => {
   const { user } = useAuth();
   const [processing, setProcessing] = useState(true);
   const [success, setSuccess] = useState(false);
+  const [authLoading, setAuthLoading] = useState(true);
   const [paymentDetails, setPaymentDetails] = useState<{
     transactionId?: string;
     amountPaid?: string;
@@ -23,11 +24,44 @@ const PaymentSuccess = () => {
   const paymentType = searchParams.get('type') || 'audio';
   const portfolioId = searchParams.get('portfolioId');
 
+  // Wait for auth to load
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      console.log('Auth session:', session?.user?.id);
+      setAuthLoading(false);
+    };
+    checkAuth();
+  }, []);
+
   useEffect(() => {
     const capturePayment = async () => {
-      if (!orderId || !user) {
-        console.error('Missing orderId or user:', { orderId, user });
+      // Wait for auth to load
+      if (authLoading) {
+        console.log('Waiting for auth to load...');
+        return;
+      }
+
+      if (!orderId) {
+        console.error('Missing orderId:', { orderId });
+        toast({
+          title: "Invalid Payment Link",
+          description: "The payment link is invalid or expired.",
+          variant: "destructive"
+        });
         setProcessing(false);
+        setSuccess(false);
+        return;
+      }
+
+      if (!user) {
+        console.error('User not authenticated');
+        toast({
+          title: "Authentication Required",
+          description: "Please log in to complete your purchase.",
+          variant: "destructive"
+        });
+        navigate('/');
         return;
       }
 
@@ -106,7 +140,7 @@ const PaymentSuccess = () => {
     };
 
     capturePayment();
-  }, [orderId, user, paymentType, searchParams]);
+  }, [orderId, user, paymentType, searchParams, authLoading, navigate]);
 
   const handleBackToDashboard = () => {
     navigate('/');
