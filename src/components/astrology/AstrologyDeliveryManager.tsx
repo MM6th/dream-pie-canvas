@@ -76,6 +76,66 @@ export const AstrologyDeliveryManager = () => {
     }
   };
 
+  const handleClearDraft = async (deliveryId: string) => {
+    const delivery = deliveries.find(d => d.id === deliveryId);
+    if (!delivery) return;
+
+    try {
+      toast.loading("Clearing draft...", { id: "clear-draft" });
+
+      // Delete all segment files from storage if they exist
+      if (delivery.video_segments && Array.isArray(delivery.video_segments)) {
+        for (const segment of delivery.video_segments as Array<{ url: string }>) {
+          try {
+            const url = new URL(segment.url);
+            const filePath = url.pathname.split('/storage/v1/object/public/user-media/')[1];
+            if (filePath) {
+              await supabase.storage
+                .from('user-media')
+                .remove([filePath]);
+            }
+          } catch (err) {
+            console.warn('Error deleting segment:', err);
+          }
+        }
+      }
+
+      // Also delete the draft video URL if it exists
+      if (delivery.draft_video_url) {
+        try {
+          const url = new URL(delivery.draft_video_url);
+          const filePath = url.pathname.split('/storage/v1/object/public/user-media/')[1];
+          if (filePath) {
+            await supabase.storage
+              .from('user-media')
+              .remove([filePath]);
+          }
+        } catch (err) {
+          console.warn('Error deleting draft video:', err);
+        }
+      }
+
+      // Clear draft data from database
+      const { error } = await supabase
+        .from('astrology_deliveries')
+        .update({
+          draft_video_url: null,
+          video_segments: null,
+          draft_saved_at: null,
+        })
+        .eq('id', deliveryId);
+
+      if (error) throw error;
+
+      toast.success("Draft cleared successfully", { id: "clear-draft" });
+      await fetchDeliveries();
+    } catch (error: any) {
+      console.error('Error clearing draft:', error);
+      toast.error("Failed to clear draft", { id: "clear-draft" });
+      throw error; // Re-throw so VideoRecorder knows it failed
+    }
+  };
+
   const handleDraftSave = async (deliveryId: string, data: any) => {
     try {
       setUploading(deliveryId);
@@ -539,6 +599,7 @@ export const AstrologyDeliveryManager = () => {
                       }
                     }}
                     onCancel={() => setRecordingDeliveryId(null)}
+                    onClearDraft={async () => await handleClearDraft(delivery.id)}
                     isUploading={uploading === delivery.id}
                     existingSegments={delivery.video_segments as any || []}
                   />

@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 interface VideoRecorderProps {
   onVideoRecorded: (data: VideoSegment[] | Blob, isDraft: boolean) => void;
   onCancel: () => void;
+  onClearDraft?: () => Promise<void>;
   isUploading?: boolean;
   existingSegments?: Array<{ id: string; url: string; duration: number; order: number }>;
 }
@@ -18,7 +19,7 @@ interface VideoSegment {
   duration: number;
 }
 
-export const VideoRecorder = ({ onVideoRecorded, onCancel, isUploading = false, existingSegments = [] }: VideoRecorderProps) => {
+export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, isUploading = false, existingSegments = [] }: VideoRecorderProps) => {
   const [isRecording, setIsRecording] = useState(false);
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
@@ -236,7 +237,12 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, isUploading = false, 
     }
   };
 
-  const handleRetake = () => {
+  const handleRetake = async () => {
+    // Clear draft from database if exists
+    if (onClearDraft) {
+      await onClearDraft();
+    }
+    
     setRecordedBlob(null);
     setIsPreviewing(false);
     setRecordingTime(0);
