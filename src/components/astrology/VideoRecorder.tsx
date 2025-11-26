@@ -141,10 +141,12 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, isUploading = false }
       
       setSegments(prev => [...prev, newSegment]);
       
+      // Always show preview after recording
+      setIsPreviewing(true);
+      
       // If first segment, show preview
       if (segments.length === 0) {
         setRecordedBlob(blob);
-        setIsPreviewing(true);
         if (videoRef.current) {
           videoRef.current.srcObject = null;
           videoRef.current.src = URL.createObjectURL(blob);
