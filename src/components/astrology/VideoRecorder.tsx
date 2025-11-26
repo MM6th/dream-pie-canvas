@@ -188,7 +188,10 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, isUploading = false }
     if (segmentsToMerge.length === 1) {
       setRecordedBlob(segmentsToMerge[0].blob);
       if (videoRef.current) {
+        videoRef.current.srcObject = null;
         videoRef.current.src = URL.createObjectURL(segmentsToMerge[0].blob);
+        videoRef.current.muted = false;
+        videoRef.current.load();
       }
       return;
     }
@@ -201,7 +204,10 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, isUploading = false }
     
     setRecordedBlob(mergedBlob);
     if (videoRef.current) {
+      videoRef.current.srcObject = null;
       videoRef.current.src = URL.createObjectURL(mergedBlob);
+      videoRef.current.muted = false;
+      videoRef.current.load();
     }
   };
 
@@ -318,6 +324,7 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, isUploading = false }
           ref={videoRef}
           autoPlay
           playsInline
+          controls={isPreviewing}
           className="w-full h-full object-contain"
         />
         
