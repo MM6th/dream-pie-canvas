@@ -123,7 +123,7 @@ export const AstrologyDeliveryManager = () => {
       toast.success("Draft saved! You can review and submit later.", { id: "draft" });
       console.log("✅ === DRAFT SAVED ===");
       
-      setRecordingDeliveryId(null);
+      // Don't close the recorder after draft save - allow user to continue working
       await fetchDeliveries();
     } catch (error: any) {
       console.error("❌ Draft save failed:", error);
