@@ -24,12 +24,14 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, isUploading = false }
   const [recordingTime, setRecordingTime] = useState(0);
   const [hasCamera, setHasCamera] = useState(false);
   const [segments, setSegments] = useState<VideoSegment[]>([]);
+  const [playingSegmentId, setPlayingSegmentId] = useState<string | null>(null);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const recordingTimeRef = useRef<number>(0);
 
   useEffect(() => {
     return () => {
@@ -134,7 +136,7 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, isUploading = false }
       const newSegment: VideoSegment = {
         id: Date.now().toString(),
         blob: blob,
-        duration: recordingTime,
+        duration: recordingTimeRef.current, // Use ref instead of state to avoid stale closure
       };
       
       setSegments(prev => [...prev, newSegment]);
@@ -158,9 +160,11 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, isUploading = false }
     mediaRecorder.start();
     setIsRecording(true);
     setRecordingTime(0);
+    recordingTimeRef.current = 0;
 
     timerRef.current = setInterval(() => {
-      setRecordingTime((prev) => prev + 1);
+      recordingTimeRef.current += 1;
+      setRecordingTime(recordingTimeRef.current);
     }, 1000);
   };
 
@@ -215,7 +219,9 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, isUploading = false }
     setRecordedBlob(null);
     setIsPreviewing(false);
     setRecordingTime(0);
+    recordingTimeRef.current = 0;
     setSegments([]);
+    setPlayingSegmentId(null);
     startCamera();
   };
 
@@ -240,6 +246,16 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, isUploading = false }
     return segments.reduce((acc, seg) => acc + seg.duration, 0);
   };
 
+  const playSegment = (segment: VideoSegment) => {
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+      videoRef.current.src = URL.createObjectURL(segment.blob);
+      videoRef.current.muted = false;
+      videoRef.current.play();
+      setPlayingSegmentId(segment.id);
+    }
+  };
+
   return (
     <Card className="p-4 sm:p-6 space-y-4">
       <div className="flex items-center justify-between">
@@ -261,18 +277,34 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, isUploading = false }
           <p className="text-sm font-medium">Recorded Segments:</p>
           <div className="space-y-2">
             {segments.map((segment, index) => (
-              <div key={segment.id} className="flex items-center justify-between p-2 bg-muted rounded-lg">
+              <div 
+                key={segment.id} 
+                className={`flex items-center justify-between p-2 rounded-lg ${
+                  playingSegmentId === segment.id ? 'bg-primary/20 border border-primary' : 'bg-muted'
+                }`}
+              >
                 <div className="flex items-center gap-2">
                   <Badge variant="secondary">Segment {index + 1}</Badge>
                   <span className="text-sm text-muted-foreground">{formatTime(segment.duration)}</span>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => deleteSegment(segment.id)}
-                >
-                  <Trash2 className="w-4 h-4 text-destructive" />
-                </Button>
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => playSegment(segment)}
+                    title="Play segment"
+                  >
+                    <Play className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => deleteSegment(segment.id)}
+                    title="Delete segment"
+                  >
+                    <Trash2 className="w-4 h-4 text-destructive" />
+                  </Button>
+                </div>
               </div>
             ))}
           </div>
