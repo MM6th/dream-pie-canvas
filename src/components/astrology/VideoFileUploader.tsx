@@ -44,6 +44,7 @@ export const VideoFileUploader = ({
   const startTimeRef = useRef<number>(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const isCancelledRef = useRef<boolean>(false);
 
   useEffect(() => {
     const checkAdminStatus = async () => {
@@ -117,6 +118,7 @@ export const VideoFileUploader = ({
     setUploadSpeed(0);
     setTimeElapsed(0);
     startTimeRef.current = Date.now();
+    isCancelledRef.current = false;
 
     // Start timer
     intervalRef.current = setInterval(() => {
@@ -195,6 +197,12 @@ export const VideoFileUploader = ({
         });
       });
 
+      // Check if upload was cancelled
+      if (isCancelledRef.current) {
+        console.log('Upload was cancelled, skipping database update');
+        return;
+      }
+
       const { data: { publicUrl } } = supabase.storage
         .from("user-media")
         .getPublicUrl(filePath);
@@ -250,7 +258,17 @@ export const VideoFileUploader = ({
 
   const handleCancelUpload = () => {
     if (uploading && abortControllerRef.current) {
+      isCancelledRef.current = true;
       abortControllerRef.current.abort();
+      setUploading(false);
+      resetUploadState();
+      
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      
+      toast.dismiss("upload");
       toast.info("Upload cancelled");
     }
     if (previewUrl) {
