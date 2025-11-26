@@ -20,6 +20,7 @@ interface Delivery {
   draft_video_url: string | null;
   draft_saved_at: string | null;
   status: string;
+  video_segments: any;
   astrology_products: {
     title: string;
   };
@@ -75,50 +76,94 @@ export const AstrologyDeliveryManager = () => {
     }
   };
 
-  const handleDraftSave = async (deliveryId: string, blob: Blob) => {
+  const handleDraftSave = async (deliveryId: string, data: any) => {
     try {
       setUploading(deliveryId);
       
       console.log("💾 === DRAFT SAVE STARTED ===");
       console.log("Delivery ID:", deliveryId);
-      console.log("Blob size:", blob.size, "bytes", `(${(blob.size / 1024 / 1024).toFixed(2)} MB)`);
-
-      if (blob.size === 0) {
-        throw new Error("Video file is empty");
-      }
-
-      // Only check file size for non-admins
-      if (!isAdmin && blob.size > 100 * 1024 * 1024) {
-        throw new Error("Video file is too large (max 100MB)");
-      }
 
       toast.loading("Saving draft...", { id: "draft" });
 
-      const fileName = `draft-${deliveryId}-${Date.now()}.webm`;
-      const filePath = `astrology-deliveries/drafts/${fileName}`;
+      // Handle multiple segments
+      if (Array.isArray(data)) {
+        const segments = data as Array<{ id: string; blob: Blob; duration: number }>;
+        const uploadedSegments = [];
 
-      const { error: uploadError } = await supabase.storage
-        .from("user-media")
-        .upload(filePath, blob, {
-          contentType: "video/webm",
-          upsert: true,
-        });
+        // Upload each segment
+        for (let i = 0; i < segments.length; i++) {
+          const segment = segments[i];
+          const filePath = `astrology-deliveries/${deliveryId}/segment-${i + 1}-${Date.now()}.webm`;
 
-      if (uploadError) throw uploadError;
+          const { error: uploadError } = await supabase.storage
+            .from("user-media")
+            .upload(filePath, segment.blob, {
+              contentType: "video/webm",
+              upsert: true,
+            });
 
-      const { data: { publicUrl } } = supabase.storage
-        .from("user-media")
-        .getPublicUrl(filePath);
+          if (uploadError) throw uploadError;
 
-      const { error: updateError } = await supabase
-        .from("astrology_deliveries")
-        .update({
-          draft_video_url: publicUrl,
-          draft_saved_at: new Date().toISOString(),
-        })
-        .eq("id", deliveryId);
+          const { data: { publicUrl } } = supabase.storage
+            .from("user-media")
+            .getPublicUrl(filePath);
 
-      if (updateError) throw updateError;
+          uploadedSegments.push({
+            id: segment.id,
+            url: publicUrl,
+            duration: segment.duration,
+            order: i + 1,
+          });
+        }
+
+        // Save segment metadata
+        const { error: updateError } = await supabase
+          .from("astrology_deliveries")
+          .update({
+            video_segments: uploadedSegments,
+            draft_saved_at: new Date().toISOString(),
+          })
+          .eq("id", deliveryId);
+
+        if (updateError) throw updateError;
+      } else {
+        // Handle single blob (backward compatibility)
+        const blob = data as Blob;
+        
+        if (blob.size === 0) {
+          throw new Error("Video file is empty");
+        }
+
+        if (!isAdmin && blob.size > 100 * 1024 * 1024) {
+          throw new Error("Video file is too large (max 100MB)");
+        }
+
+        const fileName = `draft-${deliveryId}-${Date.now()}.webm`;
+        const filePath = `astrology-deliveries/drafts/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("user-media")
+          .upload(filePath, blob, {
+            contentType: "video/webm",
+            upsert: true,
+          });
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from("user-media")
+          .getPublicUrl(filePath);
+
+        const { error: updateError } = await supabase
+          .from("astrology_deliveries")
+          .update({
+            draft_video_url: publicUrl,
+            draft_saved_at: new Date().toISOString(),
+          })
+          .eq("id", deliveryId);
+
+        if (updateError) throw updateError;
+      }
 
       toast.success("Draft saved! You can review and submit later.", { id: "draft" });
       console.log("✅ === DRAFT SAVED ===");
@@ -133,55 +178,102 @@ export const AstrologyDeliveryManager = () => {
     }
   };
 
-  const handleVideoUpload = async (deliveryId: string, blob: Blob) => {
+  const handleVideoUpload = async (deliveryId: string, data: any) => {
     try {
       setUploading(deliveryId);
       
       console.log("🎥 === VIDEO UPLOAD STARTED ===");
       console.log("Delivery ID:", deliveryId);
-      console.log("Blob size:", blob.size, "bytes", `(${(blob.size / 1024 / 1024).toFixed(2)} MB)`);
-
-      if (blob.size === 0) {
-        throw new Error("Video file is empty");
-      }
-
-      // Only check file size for non-admins
-      if (!isAdmin && blob.size > 100 * 1024 * 1024) {
-        throw new Error("Video file is too large (max 100MB)");
-      }
 
       toast.loading("Uploading video...", { id: "upload" });
 
-      const fileName = `${deliveryId}-${Date.now()}.webm`;
-      const filePath = `astrology-deliveries/${fileName}`;
+      // Handle multiple segments
+      if (Array.isArray(data)) {
+        const segments = data as Array<{ id: string; blob: Blob; duration: number }>;
+        const uploadedSegments = [];
 
-      const { error: uploadError } = await supabase.storage
-        .from("user-media")
-        .upload(filePath, blob, {
-          contentType: "video/webm",
-          upsert: false,
-        });
+        // Upload each segment
+        for (let i = 0; i < segments.length; i++) {
+          const segment = segments[i];
+          const filePath = `astrology-deliveries/${deliveryId}/final-segment-${i + 1}-${Date.now()}.webm`;
 
-      if (uploadError) throw uploadError;
+          const { error: uploadError } = await supabase.storage
+            .from("user-media")
+            .upload(filePath, segment.blob, {
+              contentType: "video/webm",
+              upsert: true,
+            });
 
-      const { data: { publicUrl } } = supabase.storage
-        .from("user-media")
-        .getPublicUrl(filePath);
+          if (uploadError) throw uploadError;
 
-      toast.loading("Processing delivery...", { id: "upload" });
+          const { data: { publicUrl } } = supabase.storage
+            .from("user-media")
+            .getPublicUrl(filePath);
 
-      const { error: updateError } = await supabase
-        .from("astrology_deliveries")
-        .update({
-          admin_video_url: publicUrl,
-          status: "delivered",
-          delivered_at: new Date().toISOString(),
-          draft_video_url: null, // Clear draft when submitting
-        })
-        .eq("id", deliveryId);
+          uploadedSegments.push({
+            id: segment.id,
+            url: publicUrl,
+            duration: segment.duration,
+            order: i + 1,
+          });
+        }
 
-      if (updateError) throw updateError;
+        // Submit final video
+        const { error: updateError } = await supabase
+          .from("astrology_deliveries")
+          .update({
+            admin_video_url: uploadedSegments[0].url, // Use first segment as main URL
+            video_segments: uploadedSegments,
+            status: "delivered",
+            delivered_at: new Date().toISOString(),
+          })
+          .eq("id", deliveryId);
 
+        if (updateError) throw updateError;
+      } else {
+        // Handle single blob
+        const blob = data as Blob;
+        
+        if (blob.size === 0) {
+          throw new Error("Video file is empty");
+        }
+
+        if (!isAdmin && blob.size > 100 * 1024 * 1024) {
+          throw new Error("Video file is too large (max 100MB)");
+        }
+
+        const fileName = `${deliveryId}-${Date.now()}.webm`;
+        const filePath = `astrology-deliveries/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("user-media")
+          .upload(filePath, blob, {
+            contentType: "video/webm",
+            upsert: true,
+          });
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from("user-media")
+          .getPublicUrl(filePath);
+
+        const { error: updateError } = await supabase
+          .from("astrology_deliveries")
+          .update({
+            admin_video_url: publicUrl,
+            status: "delivered",
+            delivered_at: new Date().toISOString(),
+          })
+          .eq("id", deliveryId);
+
+        if (updateError) throw updateError;
+      }
+
+      toast.success("Video uploaded successfully!", { id: "upload" });
+      console.log("✅ === VIDEO UPLOADED ===");
+      setRecordingDeliveryId(null);
+      
       const delivery = deliveries.find(d => d.id === deliveryId);
       if (delivery) {
         const { error: notifError } = await supabase
@@ -439,15 +531,16 @@ export const AstrologyDeliveryManager = () => {
 
                 {recordingDeliveryId === delivery.id && (
                   <VideoRecorder
-                    onVideoRecorded={(blob, isDraft) => {
+                    onVideoRecorded={(data, isDraft) => {
                       if (isDraft) {
-                        handleDraftSave(delivery.id, blob);
+                        handleDraftSave(delivery.id, data);
                       } else {
-                        handleVideoUpload(delivery.id, blob);
+                        handleVideoUpload(delivery.id, data);
                       }
                     }}
                     onCancel={() => setRecordingDeliveryId(null)}
                     isUploading={uploading === delivery.id}
+                    existingSegments={delivery.video_segments as any || []}
                   />
                 )}
 
