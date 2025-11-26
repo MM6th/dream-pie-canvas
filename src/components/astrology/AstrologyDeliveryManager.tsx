@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { CheckCircle, Clock, AlertTriangle, Video, FileText, Send, Upload } from "lucide-react";
+import { CheckCircle, Clock, AlertTriangle, Video, FileText, Send, Upload, Trash2 } from "lucide-react";
 import { VideoRecorder } from "./VideoRecorder";
 import { VideoFileUploader } from "./VideoFileUploader";
 import { Button } from "@/components/ui/button";
@@ -210,6 +210,46 @@ export const AstrologyDeliveryManager = () => {
     }
   };
 
+  const handleDeleteDraft = async (deliveryId: string) => {
+    const delivery = deliveries.find(d => d.id === deliveryId);
+    if (!delivery?.draft_video_url) return;
+
+    try {
+      setUploading(deliveryId);
+      toast.loading("Deleting draft...", { id: "delete-draft" });
+
+      // Extract file path from URL
+      const url = new URL(delivery.draft_video_url);
+      const filePath = url.pathname.split('/storage/v1/object/public/user-media/')[1];
+
+      if (filePath) {
+        const { error: deleteError } = await supabase.storage
+          .from("user-media")
+          .remove([filePath]);
+
+        if (deleteError) console.warn("⚠️ Storage delete error:", deleteError);
+      }
+
+      const { error: updateError } = await supabase
+        .from("astrology_deliveries")
+        .update({
+          draft_video_url: null,
+          draft_saved_at: null,
+        })
+        .eq("id", deliveryId);
+
+      if (updateError) throw updateError;
+
+      toast.success("Draft deleted", { id: "delete-draft" });
+      await fetchDeliveries();
+    } catch (error: any) {
+      console.error("❌ Delete draft failed:", error);
+      toast.error(`Failed to delete: ${error?.message}`, { id: "delete-draft" });
+    } finally {
+      setUploading(null);
+    }
+  };
+
   const handleSubmitDraft = async (deliveryId: string) => {
     const delivery = deliveries.find(d => d.id === deliveryId);
     if (!delivery?.draft_video_url) return;
@@ -331,7 +371,7 @@ export const AstrologyDeliveryManager = () => {
                         className="w-full max-w-2xl rounded-lg"
                       />
                     </div>
-                     <div className="flex flex-col sm:flex-row gap-2">
+                    <div className="flex flex-col sm:flex-row gap-2">
                       <Button
                         onClick={() => setRecordingDeliveryId(delivery.id)}
                         variant="outline"
@@ -349,6 +389,15 @@ export const AstrologyDeliveryManager = () => {
                       >
                         <Upload className="w-4 h-4 mr-2" />
                         Re-upload
+                      </Button>
+                      <Button
+                        onClick={() => handleDeleteDraft(delivery.id)}
+                        variant="outline"
+                        disabled={uploading === delivery.id}
+                        className="w-full sm:w-auto"
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Delete Draft
                       </Button>
                       <Button
                         onClick={() => handleSubmitDraft(delivery.id)}
