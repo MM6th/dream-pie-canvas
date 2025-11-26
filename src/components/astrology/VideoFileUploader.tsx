@@ -282,11 +282,9 @@ export const VideoFileUploader = ({
   };
 
   const formatSpeed = (bytesPerSecond: number) => {
-    if (bytesPerSecond === 0) return '0 KB/s';
-    const k = 1024;
-    const speeds = ['B/s', 'KB/s', 'MB/s', 'GB/s'];
-    const i = Math.floor(Math.log(bytesPerSecond) / Math.log(k));
-    return Math.round(bytesPerSecond / Math.pow(k, i) * 100) / 100 + ' ' + speeds[i];
+    if (bytesPerSecond === 0) return '0 Mbps';
+    const mbps = (bytesPerSecond * 8) / 1000000; // Convert bytes/s to megabits/s
+    return mbps.toFixed(2) + ' Mbps';
   };
 
   const formatTime = (seconds: number) => {
