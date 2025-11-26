@@ -6,9 +6,10 @@ import { Video, Square, Play, Upload, X, Camera, Save, Trash2 } from "lucide-rea
 import { Badge } from "@/components/ui/badge";
 
 interface VideoRecorderProps {
-  onVideoRecorded: (blob: Blob, isDraft: boolean) => void;
+  onVideoRecorded: (data: VideoSegment[] | Blob, isDraft: boolean) => void;
   onCancel: () => void;
   isUploading?: boolean;
+  existingSegments?: Array<{ id: string; url: string; duration: number; order: number }>;
 }
 
 interface VideoSegment {
@@ -17,7 +18,7 @@ interface VideoSegment {
   duration: number;
 }
 
-export const VideoRecorder = ({ onVideoRecorded, onCancel, isUploading = false }: VideoRecorderProps) => {
+export const VideoRecorder = ({ onVideoRecorded, onCancel, isUploading = false, existingSegments = [] }: VideoRecorderProps) => {
   const [isRecording, setIsRecording] = useState(false);
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
@@ -35,6 +36,32 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, isUploading = false }
   const recordingTimeRef = useRef<number>(0);
 
   useEffect(() => {
+    // Load existing segments from URLs
+    const loadExistingSegments = async () => {
+      if (existingSegments.length > 0) {
+        const loadedSegments: VideoSegment[] = [];
+        for (const seg of existingSegments) {
+          try {
+            const response = await fetch(seg.url);
+            const blob = await response.blob();
+            loadedSegments.push({
+              id: seg.id,
+              blob,
+              duration: seg.duration,
+            });
+          } catch (error) {
+            console.error("Failed to load segment:", error);
+          }
+        }
+        setSegments(loadedSegments);
+        if (loadedSegments.length > 0) {
+          setIsPreviewing(true);
+        }
+      }
+    };
+    
+    loadExistingSegments();
+    
     return () => {
       stopCamera();
       if (timerRef.current) clearInterval(timerRef.current);
@@ -228,20 +255,8 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, isUploading = false }
   const handleSubmit = async (isDraft: boolean) => {
     if (segments.length === 0) return;
     
-    // For single segment, use it directly
-    if (segments.length === 1) {
-      onVideoRecorded(segments[0].blob, isDraft);
-      return;
-    }
-    
-    // For multiple segments, we need to merge them properly
-    // Note: Simple blob concatenation doesn't work for video
-    // We'll submit the first segment for now and note this needs proper merging
-    const mergedBlob = new Blob(
-      segments.map(s => s.blob),
-      { type: "video/webm" }
-    );
-    onVideoRecorded(mergedBlob, isDraft);
+    // Pass all segments to parent for proper multi-file upload
+    onVideoRecorded(segments, isDraft);
   };
 
   const formatTime = (seconds: number) => {
