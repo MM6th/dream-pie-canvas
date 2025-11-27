@@ -364,9 +364,9 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, isUploa
         )}
       </div>
 
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2 sm:gap-3">
+      <div className="flex flex-col gap-2">
         {!hasCamera && !isPreviewing && (
-          <Button onClick={startCamera} size="lg" className="w-full sm:w-auto">
+          <Button onClick={startCamera} size="lg" className="w-full">
             <Camera className="w-4 h-4 mr-2" />
             Start Camera
           </Button>
@@ -374,23 +374,23 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, isUploa
 
         {hasCamera && !isRecording && !isPreviewing && (
           <>
-            <Button onClick={startRecording} size="lg" variant="destructive" className="w-full sm:w-auto">
+            <Button onClick={startRecording} size="lg" variant="destructive" className="w-full">
               <Video className="w-4 h-4 mr-2" />
               {segments.length > 0 ? "Record Next Segment" : "Start Recording"}
             </Button>
             {segments.length > 0 && (
-              <Button onClick={() => { playSegmentByIndex(0); setIsPreviewing(true); }} size="lg" className="w-full sm:w-auto">
+              <Button onClick={() => { playSegmentByIndex(0); setIsPreviewing(true); }} size="lg" className="w-full">
                 Preview All Segments
               </Button>
             )}
-            <Button onClick={onCancel} variant="outline" size="lg" className="w-full sm:w-auto">
+            <Button onClick={onCancel} variant="outline" size="lg" className="w-full">
               Cancel
             </Button>
           </>
         )}
 
         {isRecording && (
-          <Button onClick={stopRecording} size="lg" variant="destructive" className="w-full sm:w-auto">
+          <Button onClick={stopRecording} size="lg" variant="destructive" className="w-full">
             <Square className="w-4 h-4 mr-2" />
             Stop Recording
           </Button>
@@ -399,7 +399,7 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, isUploa
         {isPreviewing && (
           <>
             {segments.length > 1 && (
-              <div className="flex items-center gap-2">
+              <div className="flex flex-col sm:flex-row items-center gap-2 w-full">
                 <Button
                   onClick={() => playSegmentByIndex(currentSegmentIndex - 1)}
                   disabled={currentSegmentIndex === 0}
@@ -409,7 +409,7 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, isUploa
                 >
                   Previous
                 </Button>
-                <span className="text-sm text-muted-foreground">
+                <span className="text-sm text-muted-foreground whitespace-nowrap">
                   Segment {currentSegmentIndex + 1} of {segments.length}
                 </span>
                 <Button
@@ -423,19 +423,19 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, isUploa
                 </Button>
               </div>
             )}
-            <Button onClick={handleAddSegment} variant="outline" size="lg" className="w-full sm:w-auto">
+            <Button onClick={handleAddSegment} variant="outline" size="lg" className="w-full">
               <Video className="w-4 h-4 mr-2" />
               Add Segment
             </Button>
-            <Button onClick={handleRetake} variant="outline" size="lg" className="w-full sm:w-auto">
+            <Button onClick={handleRetake} variant="outline" size="lg" className="w-full">
               <Trash2 className="w-4 h-4 mr-2" />
               Clear All
             </Button>
-            <Button onClick={() => handleSubmit(true)} variant="secondary" size="lg" disabled={isUploading} className="w-full sm:w-auto">
+            <Button onClick={() => handleSubmit(true)} variant="secondary" size="lg" disabled={isUploading} className="w-full">
               <Save className="w-4 h-4 mr-2" />
               {isUploading ? "Saving..." : "Save Draft"}
             </Button>
-            <Button onClick={() => handleSubmit(false)} size="lg" disabled={isUploading} className="w-full sm:w-auto">
+            <Button onClick={() => handleSubmit(false)} size="lg" disabled={isUploading} className="w-full">
               <Upload className="w-4 h-4 mr-2" />
               {isUploading ? "Uploading..." : "Submit to Buyer"}
             </Button>
