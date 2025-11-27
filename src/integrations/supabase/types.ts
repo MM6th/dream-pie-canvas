@@ -229,6 +229,8 @@ export type Database = {
           admin_id: string
           admin_video_url: string | null
           astrology_product_id: string
+          attachment_filename: string | null
+          attachment_url: string | null
           buyer_id: string
           buyer_video_url: string | null
           created_at: string
@@ -248,6 +250,8 @@ export type Database = {
           admin_id: string
           admin_video_url?: string | null
           astrology_product_id: string
+          attachment_filename?: string | null
+          attachment_url?: string | null
           buyer_id: string
           buyer_video_url?: string | null
           created_at?: string
@@ -267,6 +271,8 @@ export type Database = {
           admin_id?: string
           admin_video_url?: string | null
           astrology_product_id?: string
+          attachment_filename?: string | null
+          attachment_url?: string | null
           buyer_id?: string
           buyer_video_url?: string | null
           created_at?: string
