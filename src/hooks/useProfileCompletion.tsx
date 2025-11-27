@@ -20,18 +20,21 @@ export const useProfileCompletion = () => {
           .from('profiles')
           .select('profile_complete, avatar_url')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
 
         if (error) {
           console.error('Error checking profile completion:', error);
           setIsProfileComplete(null);
-        } else {
+        } else if (data) {
           // Profile is complete if flag is true AND avatar_url exists
           setIsProfileComplete(
             data.profile_complete === true && 
             data.avatar_url !== null && 
             data.avatar_url !== ''
           );
+        } else {
+          // Profile doesn't exist yet
+          setIsProfileComplete(false);
         }
       } catch (error) {
         console.error('Error checking profile completion:', error);

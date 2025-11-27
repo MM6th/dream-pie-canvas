@@ -39,10 +39,11 @@ export const useApprovalStatus = (): ApprovalStatus => {
           .from('profiles')
           .select('is_admin, approval_status, user_type')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
 
         if (error) {
           console.error('Error fetching approval status:', error);
+          setStatus(prev => ({ ...prev, loading: false }));
           return;
         }
 
@@ -53,6 +54,15 @@ export const useApprovalStatus = (): ApprovalStatus => {
             approvalStatus: data.approval_status || 'pending',
             userType: data.user_type || '',
             loading: false
+          });
+        } else {
+          // Profile doesn't exist yet
+          setStatus({
+            isAdmin: false,
+            isApproved: false,
+            approvalStatus: 'pending',
+            loading: false,
+            userType: ''
           });
         }
       } catch (error) {

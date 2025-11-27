@@ -41,12 +41,11 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, onAutoS
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const recordingTimeRef = useRef<number>(0);
+  const segmentStartTimeRef = useRef<number>(0);
 
   useEffect(() => {
     // Load existing segments from URLs
     const loadExistingSegments = async () => {
-      console.log('🔍 VideoRecorder useEffect triggered with existingSegments:', existingSegments);
-      
       if (existingSegments.length > 0) {
         setIsLoadingSegments(true);
         toast.loading(`Loading ${existingSegments.length} saved segment${existingSegments.length !== 1 ? 's' : ''}...`, { id: 'load-segments' });
@@ -220,10 +219,11 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, onAutoS
 
       mediaRecorder.onstop = async () => {
         const blob = new Blob(chunksRef.current, { type: "video/webm" });
+        const segmentDuration = recordingTimeRef.current - segmentStartTimeRef.current;
         const newSegment: VideoSegment = {
           id: Date.now().toString(),
           blob: blob,
-          duration: recordingTimeRef.current,
+          duration: segmentDuration,
         };
         
         setEstimatedSize(0);
@@ -266,8 +266,8 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, onAutoS
       mediaRecorderRef.current = mediaRecorder;
       mediaRecorder.start(1000); // Collect data every second for size estimation
       setIsRecording(true);
-      setRecordingTime(0);
-      recordingTimeRef.current = 0;
+      // Record when this segment started (for calculating segment duration)
+      segmentStartTimeRef.current = recordingTimeRef.current;
 
       timerRef.current = setInterval(() => {
         recordingTimeRef.current += 1;

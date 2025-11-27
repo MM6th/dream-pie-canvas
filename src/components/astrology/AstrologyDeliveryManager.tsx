@@ -742,23 +742,20 @@ export const AstrologyDeliveryManager = () => {
                 )}
 
                 {recordingDeliveryId === delivery.id && (
-                  <>
-                    {console.log('🎬 Rendering VideoRecorder with segments:', delivery.video_segments)}
-                    <VideoRecorder
-                      onVideoRecorded={(data, isDraft, attachment) => {
-                        if (isDraft) {
-                          handleDraftSave(delivery.id, data, attachment);
-                        } else {
-                          handleVideoUpload(delivery.id, data, attachment);
-                        }
-                      }}
-                      onCancel={() => setRecordingDeliveryId(null)}
-                      onClearDraft={async () => await handleClearDraft(delivery.id)}
-                      onAutoSaveSegment={(segment, index) => handleAutoSaveSegment(delivery.id, segment, index)}
-                      isUploading={uploading === delivery.id}
-                      existingSegments={delivery.video_segments as any || []}
-                    />
-                  </>
+                  <VideoRecorder
+                    onVideoRecorded={(data, isDraft, attachment) => {
+                      if (isDraft) {
+                        handleDraftSave(delivery.id, data, attachment);
+                      } else {
+                        handleVideoUpload(delivery.id, data, attachment);
+                      }
+                    }}
+                    onCancel={() => setRecordingDeliveryId(null)}
+                    onClearDraft={async () => await handleClearDraft(delivery.id)}
+                    onAutoSaveSegment={(segment, index) => handleAutoSaveSegment(delivery.id, segment, index)}
+                    isUploading={uploading === delivery.id}
+                    existingSegments={delivery.video_segments as any || []}
+                  />
                 )}
 
                 {uploadingDeliveryId === delivery.id && (
