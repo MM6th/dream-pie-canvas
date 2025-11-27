@@ -54,7 +54,7 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, onAutoS
         
         for (const seg of existingSegments) {
           try {
-            console.log(`Loading segment from: ${seg.url}`);
+            console.log(`Loading segment from: ${seg.url}, duration: ${seg.duration}`);
             const response = await fetch(seg.url);
             if (!response.ok) {
               throw new Error(`HTTP ${response.status}`);
@@ -65,7 +65,7 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, onAutoS
               blob,
               duration: seg.duration,
             });
-            console.log(`✅ Segment ${seg.id} loaded successfully`);
+            console.log(`✅ Segment ${seg.id} loaded successfully with duration: ${seg.duration}`);
           } catch (error) {
             console.error("❌ Failed to load segment:", seg.id, error);
             failedCount++;
@@ -78,6 +78,7 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, onAutoS
         if (loadedSegments.length > 0) {
           // Set recording time to match total duration of loaded segments
           const totalDuration = loadedSegments.reduce((acc, seg) => acc + seg.duration, 0);
+          console.log(`📊 Total duration of ${loadedSegments.length} segments: ${totalDuration}s`);
           setRecordingTime(totalDuration);
           recordingTimeRef.current = totalDuration;
           
