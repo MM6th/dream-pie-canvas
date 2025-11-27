@@ -78,6 +78,68 @@ export const AstrologyDeliveryManager = () => {
     }
   };
 
+  const handleAutoSaveSegment = async (
+    deliveryId: string,
+    segment: Blob,
+    segmentIndex: number
+  ) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      // Upload segment to storage
+      const segmentPath = `${user.id}/${deliveryId}/segment-${segmentIndex}-${Date.now()}.webm`;
+      const { error: uploadError } = await supabase.storage
+        .from('user-media')
+        .upload(segmentPath, segment, { 
+          contentType: 'video/webm',
+          upsert: false 
+        });
+
+      if (uploadError) throw uploadError;
+
+      // Get existing delivery
+      const { data: delivery, error: fetchError } = await supabase
+        .from('astrology_deliveries')
+        .select('video_segments')
+        .eq('id', deliveryId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from("user-media")
+        .getPublicUrl(segmentPath);
+
+      const existingSegments = (delivery?.video_segments as any[]) || [];
+      const updatedSegments = [
+        ...existingSegments,
+        {
+          id: Date.now().toString(),
+          url: publicUrl,
+          duration: 0, // Will be updated on final submit
+          order: segmentIndex + 1,
+        }
+      ];
+
+      // Update database with new segment
+      const { error: updateError } = await supabase
+        .from('astrology_deliveries')
+        .update({ 
+          video_segments: updatedSegments,
+          draft_saved_at: new Date().toISOString()
+        })
+        .eq('id', deliveryId);
+
+      if (updateError) throw updateError;
+
+      console.log(`✅ Auto-saved segment ${segmentIndex} for delivery ${deliveryId}`);
+    } catch (error) {
+      console.error('❌ Error auto-saving segment:', error);
+      throw error;
+    }
+  };
+
   const handleClearDraft = async (deliveryId: string) => {
     const delivery = deliveries.find(d => d.id === deliveryId);
     if (!delivery) return;
@@ -652,6 +714,7 @@ export const AstrologyDeliveryManager = () => {
                     }}
                     onCancel={() => setRecordingDeliveryId(null)}
                     onClearDraft={async () => await handleClearDraft(delivery.id)}
+                    onAutoSaveSegment={(segment, index) => handleAutoSaveSegment(delivery.id, segment, index)}
                     isUploading={uploading === delivery.id}
                     existingSegments={delivery.video_segments as any || []}
                   />

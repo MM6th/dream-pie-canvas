@@ -9,6 +9,7 @@ interface VideoRecorderProps {
   onVideoRecorded: (data: VideoSegment[] | Blob, isDraft: boolean, attachment?: File) => void;
   onCancel: () => void;
   onClearDraft?: () => Promise<void>;
+  onAutoSaveSegment?: (segment: Blob, index: number) => Promise<void>;
   isUploading?: boolean;
   existingSegments?: Array<{ id: string; url: string; duration: number; order: number }>;
 }
@@ -19,7 +20,7 @@ interface VideoSegment {
   duration: number;
 }
 
-export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, isUploading = false, existingSegments = [] }: VideoRecorderProps) => {
+export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, onAutoSaveSegment, isUploading = false, existingSegments = [] }: VideoRecorderProps) => {
   const [isRecording, setIsRecording] = useState(false);
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
@@ -29,6 +30,9 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, isUploa
   const [playingSegmentId, setPlayingSegmentId] = useState<string | null>(null);
   const [currentSegmentIndex, setCurrentSegmentIndex] = useState(0);
   const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
+  const [isSavingSegment, setIsSavingSegment] = useState(false);
+  const [estimatedSize, setEstimatedSize] = useState(0);
+  const [recordingError, setRecordingError] = useState<string | null>(null);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -150,43 +154,101 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, isUploa
   const startRecording = () => {
     if (!streamRef.current) return;
 
-    chunksRef.current = [];
-    const mediaRecorder = new MediaRecorder(streamRef.current, {
-      mimeType: "video/webm",
-    });
+    try {
+      setRecordingError(null);
+      chunksRef.current = [];
+      const mediaRecorder = new MediaRecorder(streamRef.current, {
+        mimeType: "video/webm",
+      });
 
-    mediaRecorder.ondataavailable = (event) => {
-      if (event.data.size > 0) {
-        chunksRef.current.push(event.data);
-      }
-    };
+      let accumulatedSize = 0;
 
-    mediaRecorder.onstop = () => {
-      const blob = new Blob(chunksRef.current, { type: "video/webm" });
-      const newSegment: VideoSegment = {
-        id: Date.now().toString(),
-        blob: blob,
-        duration: recordingTimeRef.current,
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          chunksRef.current.push(event.data);
+          accumulatedSize += event.data.size;
+          setEstimatedSize(accumulatedSize);
+          
+          // Warn if approaching 100MB
+          if (accumulatedSize > 100 * 1024 * 1024 && accumulatedSize < 105 * 1024 * 1024) {
+            toast.warning("Recording is over 100MB. Consider stopping soon to avoid memory issues.", {
+              duration: 5000,
+            });
+          }
+        }
       };
-      
-      const updatedSegments = [...segments, newSegment];
-      setSegments(updatedSegments);
-      setIsPreviewing(true);
-      
-      // Play the newly recorded segment
-      playSegmentByIndex(updatedSegments.length - 1, updatedSegments);
-    };
 
-    mediaRecorderRef.current = mediaRecorder;
-    mediaRecorder.start();
-    setIsRecording(true);
-    setRecordingTime(0);
-    recordingTimeRef.current = 0;
+      mediaRecorder.onerror = (event: any) => {
+        console.error('MediaRecorder error:', event);
+        setRecordingError('Recording failed. Please try again.');
+        toast.error("Recording error occurred. Your previous segments are safe.", {
+          duration: 5000,
+        });
+        setIsRecording(false);
+      };
 
-    timerRef.current = setInterval(() => {
-      recordingTimeRef.current += 1;
-      setRecordingTime(recordingTimeRef.current);
-    }, 1000);
+      mediaRecorder.onstop = async () => {
+        const blob = new Blob(chunksRef.current, { type: "video/webm" });
+        const newSegment: VideoSegment = {
+          id: Date.now().toString(),
+          blob: blob,
+          duration: recordingTimeRef.current,
+        };
+        
+        setEstimatedSize(0);
+        
+        // Auto-save segment immediately
+        if (onAutoSaveSegment) {
+          setIsSavingSegment(true);
+          try {
+            const segmentIndex = segments.length;
+            await onAutoSaveSegment(blob, segmentIndex);
+            const updatedSegments = [...segments, newSegment];
+            setSegments(updatedSegments);
+            setIsPreviewing(true);
+            playSegmentByIndex(updatedSegments.length - 1, updatedSegments);
+            toast.success(`Segment ${segmentIndex + 1} saved to cloud storage`, {
+              duration: 3000,
+            });
+          } catch (error) {
+            console.error('Error auto-saving segment:', error);
+            toast.error("Auto-save failed. Segment will be saved when you submit. Please save draft manually.", {
+              duration: 5000,
+            });
+            // Still add to local state so user can manually save
+            const updatedSegments = [...segments, newSegment];
+            setSegments(updatedSegments);
+            setIsPreviewing(true);
+            playSegmentByIndex(updatedSegments.length - 1, updatedSegments);
+          } finally {
+            setIsSavingSegment(false);
+          }
+        } else {
+          // Fallback if no auto-save handler
+          const updatedSegments = [...segments, newSegment];
+          setSegments(updatedSegments);
+          setIsPreviewing(true);
+          playSegmentByIndex(updatedSegments.length - 1, updatedSegments);
+        }
+      };
+
+      mediaRecorderRef.current = mediaRecorder;
+      mediaRecorder.start(1000); // Collect data every second for size estimation
+      setIsRecording(true);
+      setRecordingTime(0);
+      recordingTimeRef.current = 0;
+
+      timerRef.current = setInterval(() => {
+        recordingTimeRef.current += 1;
+        setRecordingTime(recordingTimeRef.current);
+      }, 1000);
+    } catch (error: any) {
+      console.error('Error starting recording:', error);
+      setRecordingError('Failed to start recording');
+      toast.error("Could not start recording. Please check camera permissions.", {
+        duration: 5000,
+      });
+    }
   };
 
   const stopRecording = () => {
@@ -314,6 +376,7 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, isUploa
           {segments.length > 0 && (
             <p className="text-xs text-muted-foreground mt-1">
               {segments.length} segment{segments.length !== 1 ? 's' : ''} · {formatTime(getTotalDuration())} total
+              {onAutoSaveSegment && <span className="ml-2 text-green-600 dark:text-green-400">• Auto-saved to cloud</span>}
             </p>
           )}
         </div>
@@ -321,6 +384,19 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, isUploa
           <X className="w-4 h-4" />
         </Button>
       </div>
+
+      {isSavingSegment && (
+        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 flex items-center gap-2">
+          <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-500 border-t-transparent"></div>
+          <span className="text-sm text-blue-700 dark:text-blue-300">Saving segment to cloud storage...</span>
+        </div>
+      )}
+
+      {recordingError && (
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
+          <span className="text-sm text-red-700 dark:text-red-300">{recordingError}</span>
+        </div>
+      )}
 
       {segments.length > 0 && !isPreviewing && (
         <div className="space-y-2">
@@ -372,9 +448,16 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, isUploa
         />
         
         {isRecording && (
-          <div className="absolute top-4 left-4 flex items-center gap-2 bg-red-500 text-white px-3 py-1.5 rounded-full">
-            <div className="w-3 h-3 bg-white rounded-full animate-pulse" />
-            <span className="font-mono text-sm sm:text-base font-semibold">{formatTime(recordingTime)}</span>
+          <div className="absolute top-4 left-4 space-y-2">
+            <div className="flex items-center gap-2 bg-red-500 text-white px-3 py-1.5 rounded-full">
+              <div className="w-3 h-3 bg-white rounded-full animate-pulse" />
+              <span className="font-mono text-sm sm:text-base font-semibold">{formatTime(recordingTime)}</span>
+            </div>
+            {estimatedSize > 0 && (
+              <div className="bg-black/70 text-white px-3 py-1 rounded-full text-xs">
+                ~{(estimatedSize / (1024 * 1024)).toFixed(1)}MB
+              </div>
+            )}
           </div>
         )}
 
@@ -446,7 +529,7 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, isUploa
 
         {hasCamera && !isRecording && !isPreviewing && (
           <>
-            <Button onClick={startRecording} size="lg" variant="destructive" className="w-full">
+            <Button onClick={startRecording} size="lg" variant="destructive" className="w-full" disabled={isSavingSegment}>
               <Video className="w-4 h-4 mr-2" />
               {segments.length > 0 ? "Record Next Segment" : "Start Recording"}
             </Button>
