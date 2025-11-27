@@ -76,6 +76,11 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, onAutoS
         setIsLoadingSegments(false);
         
         if (loadedSegments.length > 0) {
+          // Set recording time to match total duration of loaded segments
+          const totalDuration = loadedSegments.reduce((acc, seg) => acc + seg.duration, 0);
+          setRecordingTime(totalDuration);
+          recordingTimeRef.current = totalDuration;
+          
           setIsPreviewing(true);
           playSegmentByIndex(0, loadedSegments);
           toast.success(`${loadedSegments.length} segment${loadedSegments.length !== 1 ? 's' : ''} restored from cloud`, { id: 'load-segments' });
