@@ -21,6 +21,8 @@ interface Delivery {
   draft_saved_at: string | null;
   status: string;
   video_segments: any;
+  attachment_url?: string | null;
+  attachment_filename?: string | null;
   astrology_products: {
     title: string;
   };
@@ -136,7 +138,7 @@ export const AstrologyDeliveryManager = () => {
     }
   };
 
-  const handleDraftSave = async (deliveryId: string, data: any) => {
+  const handleDraftSave = async (deliveryId: string, data: any, attachment?: File) => {
     try {
       setUploading(deliveryId);
       
@@ -144,6 +146,9 @@ export const AstrologyDeliveryManager = () => {
       console.log("Delivery ID:", deliveryId);
 
       toast.loading("Saving draft...", { id: "draft" });
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("User not authenticated");
 
       // Handle multiple segments
       if (Array.isArray(data)) {
@@ -153,7 +158,7 @@ export const AstrologyDeliveryManager = () => {
         // Upload each segment
         for (let i = 0; i < segments.length; i++) {
           const segment = segments[i];
-          const filePath = `astrology-deliveries/${deliveryId}/segment-${i + 1}-${Date.now()}.webm`;
+          const filePath = `${user.id}/${deliveryId}/segment-${i + 1}-${Date.now()}.webm`;
 
           const { error: uploadError } = await supabase.storage
             .from("user-media")
@@ -176,12 +181,34 @@ export const AstrologyDeliveryManager = () => {
           });
         }
 
+        // Handle attachment upload if provided
+        let attachmentUrl = null;
+        let attachmentFilename = null;
+        
+        if (attachment) {
+          const attachmentPath = `${user.id}/${deliveryId}/attachment-${Date.now()}-${attachment.name}`;
+          const { error: attachmentError } = await supabase.storage
+            .from("user-media")
+            .upload(attachmentPath, attachment);
+
+          if (attachmentError) throw attachmentError;
+
+          const { data: { publicUrl: attachmentPublicUrl } } = supabase.storage
+            .from("user-media")
+            .getPublicUrl(attachmentPath);
+
+          attachmentUrl = attachmentPublicUrl;
+          attachmentFilename = attachment.name;
+        }
+
         // Save segment metadata
         const { error: updateError } = await supabase
           .from("astrology_deliveries")
           .update({
             video_segments: uploadedSegments,
             draft_saved_at: new Date().toISOString(),
+            attachment_url: attachmentUrl,
+            attachment_filename: attachmentFilename,
           })
           .eq("id", deliveryId);
 
@@ -238,7 +265,7 @@ export const AstrologyDeliveryManager = () => {
     }
   };
 
-  const handleVideoUpload = async (deliveryId: string, data: any) => {
+  const handleVideoUpload = async (deliveryId: string, data: any, attachment?: File) => {
     try {
       setUploading(deliveryId);
       
@@ -246,6 +273,9 @@ export const AstrologyDeliveryManager = () => {
       console.log("Delivery ID:", deliveryId);
 
       toast.loading("Uploading video...", { id: "upload" });
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("User not authenticated");
 
       // Handle multiple segments
       if (Array.isArray(data)) {
@@ -255,7 +285,7 @@ export const AstrologyDeliveryManager = () => {
         // Upload each segment
         for (let i = 0; i < segments.length; i++) {
           const segment = segments[i];
-          const filePath = `astrology-deliveries/${deliveryId}/final-segment-${i + 1}-${Date.now()}.webm`;
+          const filePath = `${user.id}/${deliveryId}/final-segment-${i + 1}-${Date.now()}.webm`;
 
           const { error: uploadError } = await supabase.storage
             .from("user-media")
@@ -278,6 +308,26 @@ export const AstrologyDeliveryManager = () => {
           });
         }
 
+        // Handle attachment upload if provided
+        let attachmentUrl = null;
+        let attachmentFilename = null;
+        
+        if (attachment) {
+          const attachmentPath = `${user.id}/${deliveryId}/attachment-${Date.now()}-${attachment.name}`;
+          const { error: attachmentError } = await supabase.storage
+            .from("user-media")
+            .upload(attachmentPath, attachment);
+
+          if (attachmentError) throw attachmentError;
+
+          const { data: { publicUrl: attachmentPublicUrl } } = supabase.storage
+            .from("user-media")
+            .getPublicUrl(attachmentPath);
+
+          attachmentUrl = attachmentPublicUrl;
+          attachmentFilename = attachment.name;
+        }
+
         // Submit final video
         const { error: updateError } = await supabase
           .from("astrology_deliveries")
@@ -286,6 +336,8 @@ export const AstrologyDeliveryManager = () => {
             video_segments: uploadedSegments,
             status: "delivered",
             delivered_at: new Date().toISOString(),
+            attachment_url: attachmentUrl,
+            attachment_filename: attachmentFilename,
           })
           .eq("id", deliveryId);
 
@@ -591,11 +643,11 @@ export const AstrologyDeliveryManager = () => {
 
                 {recordingDeliveryId === delivery.id && (
                   <VideoRecorder
-                    onVideoRecorded={(data, isDraft) => {
+                    onVideoRecorded={(data, isDraft, attachment) => {
                       if (isDraft) {
-                        handleDraftSave(delivery.id, data);
+                        handleDraftSave(delivery.id, data, attachment);
                       } else {
-                        handleVideoUpload(delivery.id, data);
+                        handleVideoUpload(delivery.id, data, attachment);
                       }
                     }}
                     onCancel={() => setRecordingDeliveryId(null)}

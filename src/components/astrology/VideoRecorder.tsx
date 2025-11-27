@@ -6,7 +6,7 @@ import { Video, Square, Play, Upload, X, Camera, Save, Trash2 } from "lucide-rea
 import { Badge } from "@/components/ui/badge";
 
 interface VideoRecorderProps {
-  onVideoRecorded: (data: VideoSegment[] | Blob, isDraft: boolean) => void;
+  onVideoRecorded: (data: VideoSegment[] | Blob, isDraft: boolean, attachment?: File) => void;
   onCancel: () => void;
   onClearDraft?: () => Promise<void>;
   isUploading?: boolean;
@@ -28,6 +28,7 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, isUploa
   const [segments, setSegments] = useState<VideoSegment[]>([]);
   const [playingSegmentId, setPlayingSegmentId] = useState<string | null>(null);
   const [currentSegmentIndex, setCurrentSegmentIndex] = useState(0);
+  const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -261,8 +262,31 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, isUploa
   const handleSubmit = async (isDraft: boolean) => {
     if (segments.length === 0) return;
     
-    // Pass all segments to parent for proper multi-file upload
-    onVideoRecorded(segments, isDraft);
+    // Pass all segments and optional attachment to parent
+    onVideoRecorded(segments, isDraft, attachmentFile || undefined);
+  };
+
+  const handleAttachmentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file type (images only)
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please select an image file');
+        return;
+      }
+      // Validate file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error('File size must be less than 10MB');
+        return;
+      }
+      setAttachmentFile(file);
+      toast.success('Attachment added');
+    }
+  };
+
+  const handleRemoveAttachment = () => {
+    setAttachmentFile(null);
+    toast.success('Attachment removed');
   };
 
   const formatTime = (seconds: number) => {
@@ -363,6 +387,54 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, isUploa
           </div>
         )}
       </div>
+
+      {/* Photo Attachment Section - Only show when at least one segment exists */}
+      {segments.length > 0 && (
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-foreground">
+            Attach Photo Document (Optional)
+          </label>
+          <p className="text-xs text-muted-foreground">
+            Add a clarification document for the client
+          </p>
+          {attachmentFile ? (
+            <div className="flex items-center gap-2 p-3 bg-secondary rounded-lg">
+              <div className="flex-1">
+                <p className="text-sm font-medium">{attachmentFile.name}</p>
+                <p className="text-xs text-muted-foreground">
+                  {(attachmentFile.size / 1024 / 1024).toFixed(2)} MB
+                </p>
+              </div>
+              <Button
+                onClick={handleRemoveAttachment}
+                variant="ghost"
+                size="sm"
+              >
+                Remove
+              </Button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <input
+                type="file"
+                id="attachment-upload"
+                accept="image/*"
+                onChange={handleAttachmentChange}
+                className="hidden"
+              />
+              <Button
+                onClick={() => document.getElementById('attachment-upload')?.click()}
+                variant="outline"
+                size="sm"
+                className="w-full"
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Choose File
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="flex flex-col gap-2">
         {!hasCamera && !isPreviewing && (
