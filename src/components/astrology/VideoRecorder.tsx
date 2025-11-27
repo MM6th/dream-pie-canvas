@@ -45,6 +45,8 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, onAutoS
   useEffect(() => {
     // Load existing segments from URLs
     const loadExistingSegments = async () => {
+      console.log('🔍 VideoRecorder useEffect triggered with existingSegments:', existingSegments);
+      
       if (existingSegments.length > 0) {
         setIsLoadingSegments(true);
         toast.loading(`Loading ${existingSegments.length} saved segment${existingSegments.length !== 1 ? 's' : ''}...`, { id: 'load-segments' });
