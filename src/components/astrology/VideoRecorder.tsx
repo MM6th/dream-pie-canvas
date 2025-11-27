@@ -33,6 +33,7 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, onAutoS
   const [isSavingSegment, setIsSavingSegment] = useState(false);
   const [estimatedSize, setEstimatedSize] = useState(0);
   const [recordingError, setRecordingError] = useState<string | null>(null);
+  const [isLoadingSegments, setIsLoadingSegments] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -45,23 +46,45 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, onAutoS
     // Load existing segments from URLs
     const loadExistingSegments = async () => {
       if (existingSegments.length > 0) {
+        setIsLoadingSegments(true);
+        toast.loading(`Loading ${existingSegments.length} saved segment${existingSegments.length !== 1 ? 's' : ''}...`, { id: 'load-segments' });
+        
         const loadedSegments: VideoSegment[] = [];
+        let failedCount = 0;
+        
         for (const seg of existingSegments) {
           try {
+            console.log(`Loading segment from: ${seg.url}`);
             const response = await fetch(seg.url);
+            if (!response.ok) {
+              throw new Error(`HTTP ${response.status}`);
+            }
             const blob = await response.blob();
             loadedSegments.push({
               id: seg.id,
               blob,
               duration: seg.duration,
             });
+            console.log(`✅ Segment ${seg.id} loaded successfully`);
           } catch (error) {
-            console.error("Failed to load segment:", error);
+            console.error("❌ Failed to load segment:", seg.id, error);
+            failedCount++;
           }
         }
+        
         setSegments(loadedSegments);
+        setIsLoadingSegments(false);
+        
         if (loadedSegments.length > 0) {
           setIsPreviewing(true);
+          playSegmentByIndex(0, loadedSegments);
+          toast.success(`${loadedSegments.length} segment${loadedSegments.length !== 1 ? 's' : ''} restored from cloud`, { id: 'load-segments' });
+        } else {
+          toast.error('Failed to load saved segments', { id: 'load-segments' });
+        }
+        
+        if (failedCount > 0) {
+          toast.warning(`${failedCount} segment${failedCount !== 1 ? 's' : ''} could not be loaded`);
         }
       }
     };
@@ -72,7 +95,7 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, onAutoS
       stopCamera();
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, []);
+  }, [existingSegments]);
 
   const startCamera = async () => {
     try {
@@ -384,6 +407,13 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, onAutoS
           <X className="w-4 h-4" />
         </Button>
       </div>
+
+      {isLoadingSegments && (
+        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 flex items-center gap-2">
+          <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-500 border-t-transparent"></div>
+          <span className="text-sm text-blue-700 dark:text-blue-300">Loading saved segments from cloud...</span>
+        </div>
+      )}
 
       {isSavingSegment && (
         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 flex items-center gap-2">
