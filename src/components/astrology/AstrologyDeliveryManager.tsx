@@ -732,7 +732,8 @@ export const AstrologyDeliveryManager = () => {
                 {/* Auto-saved segments preview */}
                 {delivery.status === "pending" && 
                  !delivery.draft_video_url && 
-                 recordingDeliveryId !== delivery.id && (
+                 recordingDeliveryId !== delivery.id && 
+                 uploadingDeliveryId !== delivery.id && (
                   <div className="space-y-3 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                     <div className="flex items-center gap-2">
                       <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
@@ -837,25 +838,39 @@ export const AstrologyDeliveryManager = () => {
                  (!delivery.video_segments || !Array.isArray(delivery.video_segments) || delivery.video_segments.length === 0) &&
                  recordingDeliveryId !== delivery.id && 
                  uploadingDeliveryId !== delivery.id && (
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    <Button 
-                      onClick={() => setRecordingDeliveryId(delivery.id)}
-                      disabled={uploading === delivery.id}
-                      variant="outline"
-                      className="w-full sm:w-auto"
-                    >
-                      <Video className="w-4 h-4 mr-2" />
-                      Record Video
-                    </Button>
-                    <Button 
-                      onClick={() => setUploadingDeliveryId(delivery.id)}
-                      disabled={uploading === delivery.id}
-                      variant="outline"
-                      className="w-full sm:w-auto"
-                    >
-                      <Upload className="w-4 h-4 mr-2" />
-                      Upload Video
-                    </Button>
+                  <div className="space-y-4">
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <Button 
+                        onClick={() => setRecordingDeliveryId(delivery.id)}
+                        disabled={uploading === delivery.id}
+                        variant="outline"
+                        className="w-full sm:w-auto"
+                      >
+                        <Video className="w-4 h-4 mr-2" />
+                        Record Video
+                      </Button>
+                      <Button 
+                        onClick={() => setUploadingDeliveryId(delivery.id)}
+                        disabled={uploading === delivery.id}
+                        variant="outline"
+                        className="w-full sm:w-auto"
+                      >
+                        <Upload className="w-4 h-4 mr-2" />
+                        Upload Video
+                      </Button>
+                      <Button
+                        onClick={() => handleRecoverSegments(delivery.id)}
+                        variant="outline"
+                        disabled={recovering === delivery.id}
+                        className="w-full sm:w-auto"
+                      >
+                        <RefreshCw className={`w-4 h-4 mr-2 ${recovering === delivery.id ? 'animate-spin' : ''}`} />
+                        Recover Segments
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Try "Recover Segments" if you had auto-saved progress that's not showing
+                    </p>
                   </div>
                 )}
 
