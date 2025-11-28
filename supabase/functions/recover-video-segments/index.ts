@@ -44,19 +44,25 @@ Deno.serve(async (req) => {
     // Get the delivery to find the folder path
     const { data: delivery, error: deliveryError } = await supabase
       .from('astrology_deliveries')
-      .select('*')
+      .select('*, astrology_products(admin_id)')
       .eq('id', deliveryId)
       .single();
 
     if (deliveryError) throw deliveryError;
 
-    // List all files in the delivery folder
-    const folderPath = `${delivery.buyer_id}/${deliveryId}`;
+    // Files are saved in the admin's folder, not the buyer's folder
+    const adminId = (delivery.astrology_products as any).admin_id;
+    const folderPath = `${adminId}/${deliveryId}`;
+    console.log('Looking in folder:', folderPath);
+    
     const { data: files, error: listError } = await supabase.storage
       .from('user-media')
       .list(folderPath);
 
-    if (listError) throw listError;
+    if (listError) {
+      console.error('List error:', listError);
+      throw listError;
+    }
 
     console.log('Found files:', files?.length || 0);
 
