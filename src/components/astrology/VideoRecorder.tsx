@@ -97,7 +97,26 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, onAutoS
           const totalDuration = loadedSegments.reduce((acc, seg) => acc + seg.duration, 0);
           setRecordingTime(totalDuration);
           recordingTimeRef.current = totalDuration;
+          setSegments(loadedSegments);
+          setCurrentSegmentIndex(0);
           setIsPreviewing(true);
+          
+          // Load first segment into player (without auto-playing)
+          setTimeout(() => {
+            if (videoRef.current && loadedSegments[0]) {
+              const firstSegment = loadedSegments[0];
+              videoRef.current.srcObject = null;
+              if (firstSegment.url) {
+                videoRef.current.src = firstSegment.url;
+              } else if (firstSegment.blob) {
+                videoRef.current.src = URL.createObjectURL(firstSegment.blob);
+              }
+              videoRef.current.muted = false;
+              videoRef.current.load();
+              setPlayingSegmentId(firstSegment.id);
+            }
+          }, 100);
+          
           toast.success(`${loadedSegments.length} segment${loadedSegments.length !== 1 ? 's' : ''} ready to play`, { id: 'load-segments' });
         }
       }
@@ -502,7 +521,6 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, onAutoS
       <div className="relative bg-black rounded-lg overflow-hidden aspect-video">
         <video
           ref={videoRef}
-          autoPlay
           playsInline
           controls={isPreviewing}
           onEnded={handleVideoEnded}
