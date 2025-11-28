@@ -10,6 +10,7 @@ interface VideoRecorderProps {
   onCancel: () => void;
   onClearDraft?: () => Promise<void>;
   onAutoSaveSegment?: (segment: Blob, index: number) => Promise<void>;
+  onUpdateSegmentDurations?: (segments: Array<{ id: string; url: string; duration: number; order: number }>) => Promise<void>;
   isUploading?: boolean;
   existingSegments?: Array<{ id: string; url: string; duration: number; order: number }>;
 }
@@ -21,7 +22,7 @@ interface VideoSegment {
   duration: number;
 }
 
-export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, onAutoSaveSegment, isUploading = false, existingSegments = [] }: VideoRecorderProps) => {
+export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, onAutoSaveSegment, onUpdateSegmentDurations, isUploading = false, existingSegments = [] }: VideoRecorderProps) => {
   const [isRecording, setIsRecording] = useState(false);
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
@@ -53,20 +54,35 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, onAutoS
         
         const loadedSegments: VideoSegment[] = [];
         
-        // Helper to get duration from video URL using metadata
+        // Helper to get duration from video URL using metadata with robust timeout
         const getDurationFromUrl = (url: string): Promise<number> => {
-          return new Promise((resolve, reject) => {
+          return new Promise((resolve) => {
             const video = document.createElement('video');
             video.preload = 'metadata';
+            
+            const timeout = setTimeout(() => {
+              console.warn('⚠️ Timeout getting duration for:', url.slice(-30));
+              video.remove();
+              resolve(0); // Fallback to 0 rather than reject
+            }, 15000); // 15 second timeout for network loading
+            
             video.onloadedmetadata = () => {
-              resolve(video.duration);
+              clearTimeout(timeout);
+              const duration = video.duration;
+              console.log('✓ Duration from URL:', url.slice(-30), '=', duration);
               video.remove();
+              resolve(isFinite(duration) && duration > 0 ? duration : 0);
             };
+            
             video.onerror = () => {
-              reject(new Error('Failed to load video metadata'));
+              clearTimeout(timeout);
+              console.error('❌ Error loading video for duration:', url.slice(-30));
               video.remove();
+              resolve(0); // Fallback to 0 on error
             };
+            
             video.src = url;
+            video.load(); // Explicitly trigger loading
           });
         };
         
@@ -95,11 +111,31 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, onAutoS
         
         if (loadedSegments.length > 0) {
           const totalDuration = loadedSegments.reduce((acc, seg) => acc + seg.duration, 0);
+          console.log('📊 Total duration of all segments:', totalDuration);
           setRecordingTime(totalDuration);
           recordingTimeRef.current = totalDuration;
-          setSegments(loadedSegments);
           setCurrentSegmentIndex(0);
           setIsPreviewing(true);
+          
+          // Check if any durations were successfully fetched and differ from stored values
+          // This backfills durations that were stored as 0
+          const needsUpdate = loadedSegments.some((seg, idx) => {
+            const storedDuration = existingSegments[idx]?.duration || 0;
+            return seg.duration > 0 && seg.duration !== storedDuration;
+          });
+          
+          if (needsUpdate && onUpdateSegmentDurations) {
+            console.log('🔄 Updating segment durations in database...');
+            const segmentsToUpdate = loadedSegments.map((seg, idx) => ({
+              id: existingSegments[idx].id,
+              url: seg.url!,
+              duration: seg.duration,
+              order: existingSegments[idx].order,
+            }));
+            onUpdateSegmentDurations(segmentsToUpdate).catch(err => {
+              console.error('Failed to update segment durations:', err);
+            });
+          }
           
           // Load first segment into player (without auto-playing)
           setTimeout(() => {

@@ -87,20 +87,39 @@ export const AstrologyDeliveryManager = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      // Get duration from blob using video metadata
+      // Get duration from blob using video metadata with robust timeout and retry
       const getDurationFromBlob = (blob: Blob): Promise<number> => {
         return new Promise((resolve, reject) => {
           const video = document.createElement('video');
+          const objectUrl = URL.createObjectURL(blob);
           video.preload = 'metadata';
+          
+          const timeout = setTimeout(() => {
+            URL.revokeObjectURL(objectUrl);
+            video.remove();
+            console.warn('Timeout loading video metadata from blob');
+            reject(new Error('Timeout loading video metadata'));
+          }, 10000); // 10 second timeout
+          
           video.onloadedmetadata = () => {
-            resolve(video.duration);
+            clearTimeout(timeout);
+            const duration = video.duration;
+            console.log('✓ Duration extracted from blob:', duration);
+            URL.revokeObjectURL(objectUrl);
             video.remove();
+            resolve(isFinite(duration) && duration > 0 ? duration : 0);
           };
+          
           video.onerror = () => {
-            reject(new Error('Failed to load video metadata'));
+            clearTimeout(timeout);
+            URL.revokeObjectURL(objectUrl);
             video.remove();
+            console.error('Failed to load video metadata from blob');
+            reject(new Error('Failed to load video metadata'));
           };
-          video.src = URL.createObjectURL(blob);
+          
+          video.src = objectUrl;
+          video.load(); // Explicitly trigger loading
         });
       };
 
@@ -154,6 +173,25 @@ export const AstrologyDeliveryManager = () => {
     } catch (error) {
       console.error('Error auto-saving segment:', error);
       throw error;
+    }
+  };
+
+  const handleUpdateSegmentDurations = async (deliveryId: string, segments: Array<{ id: string; url: string; duration: number; order: number }>) => {
+    try {
+      console.log('📝 Updating segment durations in database for delivery:', deliveryId);
+      const { error } = await supabase
+        .from('astrology_deliveries')
+        .update({ video_segments: segments })
+        .eq('id', deliveryId);
+
+      if (error) throw error;
+      console.log('✅ Segment durations updated successfully');
+      
+      // Refresh deliveries to show updated durations
+      await fetchDeliveries();
+    } catch (error) {
+      console.error('❌ Error updating segment durations:', error);
+      // Don't throw - this is a non-critical background update
     }
   };
 
@@ -770,6 +808,7 @@ export const AstrologyDeliveryManager = () => {
                     onCancel={() => setRecordingDeliveryId(null)}
                     onClearDraft={async () => await handleClearDraft(delivery.id)}
                     onAutoSaveSegment={(segment, index) => handleAutoSaveSegment(delivery.id, segment, index)}
+                    onUpdateSegmentDurations={async (segments) => await handleUpdateSegmentDurations(delivery.id, segments)}
                     isUploading={uploading === delivery.id}
                     existingSegments={delivery.video_segments as any || []}
                   />
