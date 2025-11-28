@@ -732,15 +732,14 @@ export const AstrologyDeliveryManager = () => {
                 {/* Auto-saved segments preview */}
                 {delivery.status === "pending" && 
                  !delivery.draft_video_url && 
-                 delivery.video_segments && 
-                 Array.isArray(delivery.video_segments) && 
-                 delivery.video_segments.length > 0 && 
                  recordingDeliveryId !== delivery.id && (
                   <div className="space-y-3 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                     <div className="flex items-center gap-2">
                       <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                       <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                        {delivery.video_segments.length} segment{delivery.video_segments.length !== 1 ? 's' : ''} auto-saved to cloud
+                        {delivery.video_segments && Array.isArray(delivery.video_segments) && delivery.video_segments.length > 0 
+                          ? `${delivery.video_segments.length} segment${delivery.video_segments.length !== 1 ? 's' : ''} auto-saved to cloud`
+                          : 'No segments found - try recovering from storage'}
                       </p>
                     </div>
                     <div className="flex flex-col sm:flex-row gap-2">
