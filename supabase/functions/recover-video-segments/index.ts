@@ -100,15 +100,15 @@ Deno.serve(async (req) => {
     const recoveredSegments: any[] = [];
     
     for (const [segmentNumber, segments] of segmentMap.entries()) {
-      // Sort by timestamp descending (LATEST first) - gets most recent state
-      segments.sort((a, b) => b.timestamp - a.timestamp);
-      const latestSegment = segments[0]; // Use the LATEST one
+      // Sort by timestamp ascending (earliest first)
+      segments.sort((a, b) => a.timestamp - b.timestamp);
+      const originalSegment = segments[0]; // Use the earliest one
       
-      console.log(`Segment ${segmentNumber}: Using ${latestSegment.fileName} (latest of ${segments.length} files)`);
+      console.log(`Segment ${segmentNumber}: Using ${originalSegment.fileName} (earliest of ${segments.length} files)`);
       
       recoveredSegments.push({
-        id: latestSegment.timestamp.toString(),
-        url: latestSegment.url,
+        id: originalSegment.timestamp.toString(),
+        url: originalSegment.url,
         duration: 0 // Will be set when video loads in UI
       });
     }
