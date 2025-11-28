@@ -9,7 +9,7 @@ interface VideoRecorderProps {
   onVideoRecorded: (data: VideoSegment[] | Blob, isDraft: boolean, attachment?: File) => void;
   onCancel: () => void;
   onClearDraft?: () => Promise<void>;
-  onAutoSaveSegment?: (segment: Blob, index: number, duration: number) => Promise<void>;
+  onAutoSaveSegment?: (segment: Blob, index: number, duration: number, segmentId: string) => Promise<void>;
   onUpdateSegmentDurations?: (segments: Array<{ id: string; url: string; duration: number; order: number }>) => Promise<void>;
   onDeleteSegment?: (segmentId: string, segmentUrl: string) => Promise<void>;
   isUploading?: boolean;
@@ -212,11 +212,14 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, onAutoS
       setHasCamera(true);
 
       if (videoRef.current) {
-        // Clear any existing src before setting srcObject
         videoRef.current.src = '';
         videoRef.current.srcObject = stream;
         videoRef.current.muted = true;
-        // Let autoPlay attribute handle playback
+        try {
+          await videoRef.current.play();
+        } catch (e) {
+          console.log('Camera auto-play prevented by browser:', e);
+        }
       }
     } catch (error: any) {
       console.error("=== CAMERA ACCESS FAILED ===");
@@ -290,8 +293,10 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, onAutoS
         const segmentDuration = recordingTimeRef.current - segmentStartTimeRef.current;
         console.log(`✓ Segment ${segments.length + 1} duration tracked: ${segmentDuration.toFixed(2)}s`);
         
+        const segmentId = Date.now().toString();
+        
         const newSegment: VideoSegment = {
-          id: Date.now().toString(),
+          id: segmentId,
           blob: blob,
           duration: segmentDuration,
         };
@@ -303,7 +308,7 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, onAutoS
           setIsSavingSegment(true);
           try {
             const segmentIndex = segments.length;
-            await onAutoSaveSegment(blob, segmentIndex, segmentDuration);
+            await onAutoSaveSegment(blob, segmentIndex, segmentDuration, segmentId);
             const updatedSegments = [...segments, newSegment];
             setSegments(updatedSegments);
             setIsPreviewing(true);
@@ -609,9 +614,9 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, onAutoS
             <video
               ref={videoRef}
               playsInline
-              autoPlay={hasCamera && !isPreviewing}
-              muted={!isPreviewing}
-              controls={isPreviewing}
+              autoPlay={hasCamera && isRecording}
+              muted={isRecording}
+              controls={!isRecording}
               onEnded={handleVideoEnded}
               className="w-full h-full object-contain"
             />

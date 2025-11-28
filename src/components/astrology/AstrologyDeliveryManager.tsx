@@ -82,7 +82,8 @@ export const AstrologyDeliveryManager = () => {
     deliveryId: string,
     segment: Blob,
     segmentIndex: number,
-    duration: number
+    duration: number,
+    segmentId: string
   ) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -118,7 +119,7 @@ export const AstrologyDeliveryManager = () => {
       const updatedSegments = [
         ...existingSegments,
         {
-          id: Date.now().toString(),
+          id: segmentId,
           url: publicUrl,
           duration: duration,
           order: segmentIndex + 1,
@@ -815,7 +816,7 @@ export const AstrologyDeliveryManager = () => {
                     }}
                     onCancel={() => setRecordingDeliveryId(null)}
                     onClearDraft={async () => await handleClearDraft(delivery.id)}
-                    onAutoSaveSegment={(segment, index, duration) => handleAutoSaveSegment(delivery.id, segment, index, duration)}
+                    onAutoSaveSegment={(segment, index, duration, segmentId) => handleAutoSaveSegment(delivery.id, segment, index, duration, segmentId)}
                     onUpdateSegmentDurations={async (segments) => await handleUpdateSegmentDurations(delivery.id, segments)}
                     onDeleteSegment={(segmentId, segmentUrl) => handleDeleteSegment(delivery.id, segmentId, segmentUrl)}
                     isUploading={uploading === delivery.id}
