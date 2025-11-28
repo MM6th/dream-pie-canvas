@@ -21,6 +21,7 @@ interface SegmentInfo {
   timestamp: number;
   fileName: string;
   url: string;
+  fileSize: number;
 }
 
 Deno.serve(async (req) => {
@@ -76,6 +77,7 @@ Deno.serve(async (req) => {
       if (match) {
         const segmentNumber = parseInt(match[1]);
         const timestamp = parseInt(match[2]);
+        const fileSize = file.metadata?.size || 0;
         
         const { data: urlData } = supabase.storage
           .from('user-media')
@@ -85,30 +87,43 @@ Deno.serve(async (req) => {
           segmentMap.set(segmentNumber, []);
         }
         
+        console.log(`Found ${file.name}: ${fileSize} bytes`);
+        
         segmentMap.get(segmentNumber)!.push({
           segmentNumber,
           timestamp,
           fileName: file.name,
-          url: urlData.publicUrl
+          url: urlData.publicUrl,
+          fileSize
         });
       }
     }
 
     console.log('Segment groups found:', segmentMap.size);
 
-    // For each segment number, select the EARLIEST timestamp (original auto-save)
+    // For each segment number, select the file with LARGEST size (most complete)
     const recoveredSegments: any[] = [];
     
     for (const [segmentNumber, segments] of segmentMap.entries()) {
-      // Sort by timestamp ascending (earliest first)
-      segments.sort((a, b) => a.timestamp - b.timestamp);
-      const originalSegment = segments[0]; // Use the earliest one
+      // Sort by file size descending (largest first)
+      segments.sort((a, b) => b.fileSize - a.fileSize);
       
-      console.log(`Segment ${segmentNumber}: Using ${originalSegment.fileName} (earliest of ${segments.length} files)`);
+      // Filter out corrupted/tiny files (under 10KB)
+      const validSegments = segments.filter(s => s.fileSize > 10000);
+      
+      if (validSegments.length === 0) {
+        console.warn(`Segment ${segmentNumber}: All files are too small (corrupted), skipping`);
+        continue;
+      }
+      
+      const bestSegment = validSegments[0];
+      const fileSizeKB = (bestSegment.fileSize / 1024).toFixed(2);
+      
+      console.log(`Segment ${segmentNumber}: Using ${bestSegment.fileName} (${fileSizeKB} KB, largest of ${segments.length} versions)`);
       
       recoveredSegments.push({
-        id: originalSegment.timestamp.toString(),
-        url: originalSegment.url,
+        id: bestSegment.timestamp.toString(),
+        url: bestSegment.url,
         duration: 0 // Will be set when video loads in UI
       });
     }
