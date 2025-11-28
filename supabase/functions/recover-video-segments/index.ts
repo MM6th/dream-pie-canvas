@@ -68,8 +68,8 @@ Deno.serve(async (req) => {
 
     console.log('Found files:', files?.length || 0);
 
-    // Parse segment files and group by segment number
-    const segmentMap = new Map<number, SegmentInfo[]>();
+    // Step 1: Collect all valid files (>10KB) regardless of segment number
+    const allValidFiles: SegmentInfo[] = [];
     
     for (const file of (files as StorageFile[]) || []) {
       // Match pattern: segment-{number}-{timestamp}.webm
@@ -83,61 +83,55 @@ Deno.serve(async (req) => {
           .from('user-media')
           .getPublicUrl(`${folderPath}/${file.name}`);
         
-        if (!segmentMap.has(segmentNumber)) {
-          segmentMap.set(segmentNumber, []);
+        // Only include valid files (>10KB)
+        if (fileSize > 10000) {
+          console.log(`Valid file: ${file.name} (${(fileSize/1024).toFixed(2)} KB)`);
+          allValidFiles.push({
+            segmentNumber,
+            timestamp,
+            fileName: file.name,
+            url: urlData.publicUrl,
+            fileSize
+          });
+        } else {
+          console.log(`Skipping corrupted: ${file.name} (${fileSize} bytes)`);
         }
-        
-        console.log(`Found ${file.name}: ${fileSize} bytes`);
-        
-        segmentMap.get(segmentNumber)!.push({
-          segmentNumber,
-          timestamp,
-          fileName: file.name,
-          url: urlData.publicUrl,
-          fileSize
-        });
       }
     }
 
-    console.log('Segment groups found:', segmentMap.size);
+    console.log(`Total valid files: ${allValidFiles.length}`);
 
-    // For each segment number, select the file with LARGEST size (most complete)
-    const recoveredSegments: any[] = [];
-    
-    for (const [segmentNumber, segments] of segmentMap.entries()) {
-      // Sort by file size descending (largest first)
-      segments.sort((a, b) => b.fileSize - a.fileSize);
-      
-      // Filter out corrupted/tiny files (under 10KB)
-      const validSegments = segments.filter(s => s.fileSize > 10000);
-      
-      if (validSegments.length === 0) {
-        console.warn(`Segment ${segmentNumber}: All files are too small (corrupted), skipping`);
-        continue;
+    // Step 2: Deduplicate by file size (files with same size are duplicates)
+    const uniqueBySize = new Map<number, SegmentInfo>();
+
+    for (const file of allValidFiles) {
+      // Keep file if we haven't seen this size, or if this has earlier timestamp
+      if (!uniqueBySize.has(file.fileSize) || 
+          file.timestamp < uniqueBySize.get(file.fileSize)!.timestamp) {
+        uniqueBySize.set(file.fileSize, file);
       }
+    }
+
+    console.log(`Unique files after deduplication: ${uniqueBySize.size}`);
+
+    // Step 3: Sort by timestamp (chronological recording order)
+    const chronologicalFiles = Array.from(uniqueBySize.values())
+      .sort((a, b) => a.timestamp - b.timestamp);
+
+    // Step 4: Build final segment list (renumbered sequentially)
+    const recoveredSegments = chronologicalFiles.map((file, index) => {
+      const recordedAt = new Date(file.timestamp).toISOString();
+      const fileSizeKB = (file.fileSize / 1024).toFixed(2);
+      console.log(`Segment ${index}: ${file.fileName} (recorded ${recordedAt}, ${fileSizeKB} KB)`);
       
-      const bestSegment = validSegments[0];
-      const fileSizeKB = (bestSegment.fileSize / 1024).toFixed(2);
-      
-      console.log(`Segment ${segmentNumber}: Using ${bestSegment.fileName} (${fileSizeKB} KB, largest of ${segments.length} versions)`);
-      
-      recoveredSegments.push({
-        id: bestSegment.timestamp.toString(),
-        url: bestSegment.url,
+      return {
+        id: file.timestamp.toString(),
+        url: file.url,
         duration: 0 // Will be set when video loads in UI
-      });
-    }
-
-    // Sort by segment number (0-indexed in storage becomes 1-indexed in DB)
-    recoveredSegments.sort((a, b) => {
-      const aMatch = a.url.match(/segment-(\d+)-/);
-      const bMatch = b.url.match(/segment-(\d+)-/);
-      const aNum = aMatch ? parseInt(aMatch[1]) : 0;
-      const bNum = bMatch ? parseInt(bMatch[1]) : 0;
-      return aNum - bNum;
+      };
     });
 
-    console.log('Recovered segments:', recoveredSegments.length);
+    console.log(`Recovered ${recoveredSegments.length} segments in chronological order`);
 
     // Safety check: don't update if no segments were found
     if (recoveredSegments.length === 0) {
