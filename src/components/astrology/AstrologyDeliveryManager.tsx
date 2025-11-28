@@ -81,49 +81,14 @@ export const AstrologyDeliveryManager = () => {
   const handleAutoSaveSegment = async (
     deliveryId: string,
     segment: Blob,
-    segmentIndex: number
+    segmentIndex: number,
+    duration: number
   ) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      // Get duration from blob using video metadata with robust timeout and retry
-      const getDurationFromBlob = (blob: Blob): Promise<number> => {
-        return new Promise((resolve, reject) => {
-          const video = document.createElement('video');
-          const objectUrl = URL.createObjectURL(blob);
-          video.preload = 'metadata';
-          
-          const timeout = setTimeout(() => {
-            URL.revokeObjectURL(objectUrl);
-            video.remove();
-            console.warn('Timeout loading video metadata from blob');
-            reject(new Error('Timeout loading video metadata'));
-          }, 10000); // 10 second timeout
-          
-          video.onloadedmetadata = () => {
-            clearTimeout(timeout);
-            const duration = video.duration;
-            console.log('✓ Duration extracted from blob:', duration);
-            URL.revokeObjectURL(objectUrl);
-            video.remove();
-            resolve(isFinite(duration) && duration > 0 ? duration : 0);
-          };
-          
-          video.onerror = () => {
-            clearTimeout(timeout);
-            URL.revokeObjectURL(objectUrl);
-            video.remove();
-            console.error('Failed to load video metadata from blob');
-            reject(new Error('Failed to load video metadata'));
-          };
-          
-          video.src = objectUrl;
-          video.load(); // Explicitly trigger loading
-        });
-      };
-
-      const duration = await getDurationFromBlob(segment);
+      console.log(`💾 Auto-saving segment ${segmentIndex + 1} with duration: ${duration.toFixed(2)}s`);
 
       // Upload segment to storage
       const segmentPath = `${user.id}/${deliveryId}/segment-${segmentIndex}-${Date.now()}.webm`;
@@ -170,6 +135,7 @@ export const AstrologyDeliveryManager = () => {
         .eq('id', deliveryId);
 
       if (updateError) throw updateError;
+      console.log(`✅ Segment ${segmentIndex + 1} saved successfully with duration: ${duration.toFixed(2)}s`);
     } catch (error) {
       console.error('Error auto-saving segment:', error);
       throw error;
@@ -807,7 +773,7 @@ export const AstrologyDeliveryManager = () => {
                     }}
                     onCancel={() => setRecordingDeliveryId(null)}
                     onClearDraft={async () => await handleClearDraft(delivery.id)}
-                    onAutoSaveSegment={(segment, index) => handleAutoSaveSegment(delivery.id, segment, index)}
+                    onAutoSaveSegment={(segment, index, duration) => handleAutoSaveSegment(delivery.id, segment, index, duration)}
                     onUpdateSegmentDurations={async (segments) => await handleUpdateSegmentDurations(delivery.id, segments)}
                     isUploading={uploading === delivery.id}
                     existingSegments={delivery.video_segments as any || []}
