@@ -212,7 +212,9 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, onAutoS
       setHasCamera(true);
 
       if (videoRef.current) {
-        videoRef.current.src = '';
+        videoRef.current.pause();
+        videoRef.current.removeAttribute('src');
+        videoRef.current.load(); // Clear any previous content
         videoRef.current.srcObject = stream;
         videoRef.current.muted = true;
         try {
@@ -474,11 +476,12 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, onAutoS
 
   const handleAddSegment = async () => {
     setIsPreviewing(false);
+    setPlayingSegmentId(null); // Clear any playing segment
     
     // Clear the video element properly before starting camera
     if (videoRef.current) {
       videoRef.current.pause();
-      videoRef.current.src = '';
+      videoRef.current.removeAttribute('src'); // Properly remove src attribute
       videoRef.current.srcObject = null;
       videoRef.current.load();
     }
