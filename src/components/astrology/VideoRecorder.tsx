@@ -11,8 +11,10 @@ interface VideoRecorderProps {
   onClearDraft?: () => Promise<void>;
   onAutoSaveSegment?: (segment: Blob, index: number, duration: number) => Promise<void>;
   onUpdateSegmentDurations?: (segments: Array<{ id: string; url: string; duration: number; order: number }>) => Promise<void>;
+  onDeleteSegment?: (segmentId: string, segmentUrl: string) => Promise<void>;
   isUploading?: boolean;
   existingSegments?: Array<{ id: string; url: string; duration: number; order: number }>;
+  existingAttachment?: { url: string; filename: string };
 }
 
 interface VideoSegment {
@@ -22,7 +24,7 @@ interface VideoSegment {
   duration: number;
 }
 
-export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, onAutoSaveSegment, onUpdateSegmentDurations, isUploading = false, existingSegments = [] }: VideoRecorderProps) => {
+export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, onAutoSaveSegment, onUpdateSegmentDurations, onDeleteSegment, isUploading = false, existingSegments = [] }: VideoRecorderProps) => {
   const [isRecording, setIsRecording] = useState(false);
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
@@ -211,6 +213,7 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, onAutoS
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         videoRef.current.muted = true;
+        videoRef.current.play().catch(e => console.log('Auto-play prevented:', e));
       }
     } catch (error: any) {
       console.error("=== CAMERA ACCESS FAILED ===");
@@ -398,17 +401,50 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, onAutoS
     }
   };
 
-  const deleteSegment = (segmentId: string) => {
+  const deleteSegment = async (segmentId: string) => {
+    const segmentToDelete = segments.find(s => s.id === segmentId);
+    
+    // Call parent handler to delete from database and storage
+    if (segmentToDelete?.url && onDeleteSegment) {
+      try {
+        await onDeleteSegment(segmentId, segmentToDelete.url);
+      } catch (error) {
+        console.error('Failed to delete segment from database:', error);
+        toast.error('Failed to delete segment');
+        return; // Don't update local state if database delete failed
+      }
+    }
+    
     const newSegments = segments.filter(s => s.id !== segmentId);
     setSegments(newSegments);
+    
+    // Recalculate total time from remaining segments
+    const totalDuration = newSegments.reduce((acc, seg) => acc + seg.duration, 0);
+    setRecordingTime(totalDuration);
+    recordingTimeRef.current = totalDuration;
     
     if (newSegments.length === 0) {
       setRecordedBlob(null);
       setIsPreviewing(false);
       setCurrentSegmentIndex(0);
     } else {
-      // Play first segment after deletion
-      playSegmentByIndex(0, newSegments);
+      // If we were previewing the deleted segment, stop preview
+      if (isPreviewing && currentSegmentIndex !== null) {
+        const deletedIndex = segments.findIndex(s => s.id === segmentId);
+        if (deletedIndex === currentSegmentIndex) {
+          setIsPreviewing(false);
+          setCurrentSegmentIndex(null);
+          if (videoRef.current) {
+            videoRef.current.srcObject = streamRef.current;
+          }
+        } else {
+          // Play first segment after deletion
+          playSegmentByIndex(0, newSegments);
+        }
+      } else {
+        // Play first segment after deletion
+        playSegmentByIndex(0, newSegments);
+      }
     }
   };
 
@@ -517,7 +553,7 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, onAutoS
         </div>
       )}
 
-      {segments.length > 0 && !isPreviewing && (
+      {segments.length > 0 && (
         <div className="space-y-2">
           <p className="text-sm font-medium">Recorded Segments:</p>
           <div className="space-y-2">
@@ -546,6 +582,7 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, onAutoS
                     size="sm"
                     onClick={() => deleteSegment(segment.id)}
                     title="Delete segment"
+                    disabled={isSavingSegment}
                   >
                     <Trash2 className="w-4 h-4 text-destructive" />
                   </Button>
@@ -557,13 +594,15 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, onAutoS
       )}
 
       <div className="relative bg-black rounded-lg overflow-hidden aspect-video">
-        <video
-          ref={videoRef}
-          playsInline
-          controls={isPreviewing}
-          onEnded={handleVideoEnded}
-          className="w-full h-full object-contain"
-        />
+            <video
+              ref={videoRef}
+              playsInline
+              autoPlay={hasCamera && !isPreviewing}
+              muted={hasCamera && !isPreviewing}
+              controls={isPreviewing}
+              onEnded={handleVideoEnded}
+              className="w-full h-full object-contain"
+            />
         
         {isRecording && (
           <div className="absolute top-4 left-4 space-y-2">
