@@ -44,15 +44,16 @@ Deno.serve(async (req) => {
     // Get the delivery to find the folder path
     const { data: delivery, error: deliveryError } = await supabase
       .from('astrology_deliveries')
-      .select('*, astrology_products(admin_id)')
+      .select('*')
       .eq('id', deliveryId)
       .single();
 
     if (deliveryError) throw deliveryError;
 
-    // Files are saved in the admin's folder, not the buyer's folder
-    const adminId = (delivery.astrology_products as any).admin_id;
+    // Files are saved in the admin's folder
+    const adminId = delivery.admin_id;
     const folderPath = `${adminId}/${deliveryId}`;
+    console.log('Recovering segments for admin:', adminId);
     console.log('Looking in folder:', folderPath);
     
     const { data: files, error: listError } = await supabase.storage
@@ -122,6 +123,11 @@ Deno.serve(async (req) => {
     });
 
     console.log('Recovered segments:', recoveredSegments.length);
+
+    // Safety check: don't update if no segments were found
+    if (recoveredSegments.length === 0) {
+      throw new Error('No segment files found in storage. Check that files exist at path: ' + folderPath);
+    }
 
     // Update the delivery with recovered segments
     const { error: updateError } = await supabase
