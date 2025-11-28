@@ -16,7 +16,8 @@ interface VideoRecorderProps {
 
 interface VideoSegment {
   id: string;
-  blob: Blob;
+  blob?: Blob;      // Only for newly recorded segments
+  url?: string;     // For segments loaded from cloud
   duration: number;
 }
 
@@ -44,36 +45,48 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, onAutoS
   const segmentStartTimeRef = useRef<number>(0);
 
   useEffect(() => {
-    // Load existing segments from URLs
+    // Load existing segments from URLs (streaming, no download)
     const loadExistingSegments = async () => {
       if (existingSegments.length > 0) {
         setIsLoadingSegments(true);
         toast.loading(`Loading ${existingSegments.length} saved segment${existingSegments.length !== 1 ? 's' : ''}...`, { id: 'load-segments' });
         
         const loadedSegments: VideoSegment[] = [];
-        let failedCount = 0;
+        
+        // Helper to get duration from video URL using metadata
+        const getDurationFromUrl = (url: string): Promise<number> => {
+          return new Promise((resolve, reject) => {
+            const video = document.createElement('video');
+            video.preload = 'metadata';
+            video.onloadedmetadata = () => {
+              resolve(video.duration);
+              video.remove();
+            };
+            video.onerror = () => {
+              reject(new Error('Failed to load video metadata'));
+              video.remove();
+            };
+            video.src = url;
+          });
+        };
         
         for (const seg of existingSegments) {
           try {
-            const response = await fetch(seg.url);
-            if (!response.ok) {
-              throw new Error(`HTTP ${response.status}`);
-            }
-            const blob = await response.blob();
-            
-            // Validate it's a video blob
-            if (!blob.type.includes('video')) {
-              throw new Error('Invalid video format');
-            }
-            
+            // Get actual duration from video metadata
+            const duration = await getDurationFromUrl(seg.url);
             loadedSegments.push({
               id: seg.id,
-              blob,
-              duration: seg.duration,
+              url: seg.url,
+              duration: duration,
             });
           } catch (error) {
-            console.error("Failed to load segment:", seg.id, error);
-            failedCount++;
+            console.error("Failed to load segment metadata:", seg.id, error);
+            // Use stored duration as fallback
+            loadedSegments.push({
+              id: seg.id,
+              url: seg.url,
+              duration: seg.duration || 0,
+            });
           }
         }
         
@@ -81,20 +94,11 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, onAutoS
         setIsLoadingSegments(false);
         
         if (loadedSegments.length > 0) {
-          // Set recording time to match total duration of loaded segments
           const totalDuration = loadedSegments.reduce((acc, seg) => acc + seg.duration, 0);
           setRecordingTime(totalDuration);
           recordingTimeRef.current = totalDuration;
-          
-          // Don't auto-play, just set to preview mode
           setIsPreviewing(true);
-          toast.success(`${loadedSegments.length} segment${loadedSegments.length !== 1 ? 's' : ''} restored from cloud`, { id: 'load-segments' });
-        } else {
-          toast.error('Failed to load saved segments', { id: 'load-segments' });
-        }
-        
-        if (failedCount > 0) {
-          toast.warning(`${failedCount} segment${failedCount !== 1 ? 's' : ''} could not be loaded`);
+          toast.success(`${loadedSegments.length} segment${loadedSegments.length !== 1 ? 's' : ''} ready to play`, { id: 'load-segments' });
         }
       }
     };
@@ -307,8 +311,16 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, onAutoS
     if (videoRef.current) {
       try {
         videoRef.current.srcObject = null;
-        const url = URL.createObjectURL(segment.blob);
-        videoRef.current.src = url;
+        
+        // If segment has URL (from cloud), stream it directly
+        if (segment.url) {
+          videoRef.current.src = segment.url;
+        } else if (segment.blob) {
+          // If segment has blob (newly recorded), use object URL
+          const url = URL.createObjectURL(segment.blob);
+          videoRef.current.src = url;
+        }
+        
         videoRef.current.muted = false;
         videoRef.current.load();
         videoRef.current.play().catch((err) => {

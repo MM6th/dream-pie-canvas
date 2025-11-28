@@ -87,6 +87,25 @@ export const AstrologyDeliveryManager = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
+      // Get duration from blob using video metadata
+      const getDurationFromBlob = (blob: Blob): Promise<number> => {
+        return new Promise((resolve, reject) => {
+          const video = document.createElement('video');
+          video.preload = 'metadata';
+          video.onloadedmetadata = () => {
+            resolve(video.duration);
+            video.remove();
+          };
+          video.onerror = () => {
+            reject(new Error('Failed to load video metadata'));
+            video.remove();
+          };
+          video.src = URL.createObjectURL(blob);
+        });
+      };
+
+      const duration = await getDurationFromBlob(segment);
+
       // Upload segment to storage
       const segmentPath = `${user.id}/${deliveryId}/segment-${segmentIndex}-${Date.now()}.webm`;
       const { error: uploadError } = await supabase.storage
@@ -98,7 +117,11 @@ export const AstrologyDeliveryManager = () => {
 
       if (uploadError) throw uploadError;
 
-      // Get existing delivery
+      const { data: { publicUrl } } = supabase.storage
+        .from("user-media")
+        .getPublicUrl(segmentPath);
+
+      // Get existing segments
       const { data: delivery, error: fetchError } = await supabase
         .from('astrology_deliveries')
         .select('video_segments')
@@ -107,22 +130,18 @@ export const AstrologyDeliveryManager = () => {
 
       if (fetchError) throw fetchError;
 
-      const { data: { publicUrl } } = supabase.storage
-        .from("user-media")
-        .getPublicUrl(segmentPath);
-
       const existingSegments = (delivery?.video_segments as any[]) || [];
       const updatedSegments = [
         ...existingSegments,
         {
           id: Date.now().toString(),
           url: publicUrl,
-          duration: 0, // Will be updated on final submit
+          duration: duration,
           order: segmentIndex + 1,
         }
       ];
 
-      // Update database with new segment
+      // Update database with new segment including actual duration
       const { error: updateError } = await supabase
         .from('astrology_deliveries')
         .update({ 
@@ -132,10 +151,8 @@ export const AstrologyDeliveryManager = () => {
         .eq('id', deliveryId);
 
       if (updateError) throw updateError;
-
-      console.log(`✅ Auto-saved segment ${segmentIndex} for delivery ${deliveryId}`);
     } catch (error) {
-      console.error('❌ Error auto-saving segment:', error);
+      console.error('Error auto-saving segment:', error);
       throw error;
     }
   };
