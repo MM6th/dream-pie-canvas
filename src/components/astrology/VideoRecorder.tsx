@@ -139,7 +139,7 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, onAutoS
             });
           }
           
-          // Load first segment into player (without auto-playing)
+          // Load first segment into player ready to play (but don't auto-play)
           setTimeout(() => {
             if (videoRef.current && loadedSegments[0]) {
               const firstSegment = loadedSegments[0];
@@ -151,6 +151,7 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, onAutoS
               }
               videoRef.current.muted = false;
               videoRef.current.load();
+              // Don't auto-play, let user click play when ready
               setPlayingSegmentId(firstSegment.id);
             }
           }, 100);
@@ -211,9 +212,11 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, onAutoS
       setHasCamera(true);
 
       if (videoRef.current) {
+        // Clear any existing src before setting srcObject
+        videoRef.current.src = '';
         videoRef.current.srcObject = stream;
         videoRef.current.muted = true;
-        videoRef.current.play().catch(e => console.log('Auto-play prevented:', e));
+        // Let autoPlay attribute handle playback
       }
     } catch (error: any) {
       console.error("=== CAMERA ACCESS FAILED ===");
@@ -464,9 +467,18 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, onAutoS
     startCamera();
   };
 
-  const handleAddSegment = () => {
+  const handleAddSegment = async () => {
     setIsPreviewing(false);
-    startCamera();
+    
+    // Clear the video element properly before starting camera
+    if (videoRef.current) {
+      videoRef.current.pause();
+      videoRef.current.src = '';
+      videoRef.current.srcObject = null;
+      videoRef.current.load();
+    }
+    
+    await startCamera();
   };
 
   const handleSubmit = async (isDraft: boolean) => {
@@ -598,7 +610,7 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, onAutoS
               ref={videoRef}
               playsInline
               autoPlay={hasCamera && !isPreviewing}
-              muted={hasCamera && !isPreviewing}
+              muted={!isPreviewing}
               controls={isPreviewing}
               onEnded={handleVideoEnded}
               className="w-full h-full object-contain"
