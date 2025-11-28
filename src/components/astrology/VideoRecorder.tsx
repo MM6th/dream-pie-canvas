@@ -9,7 +9,7 @@ interface VideoRecorderProps {
   onVideoRecorded: (data: VideoSegment[] | Blob, isDraft: boolean, attachment?: File) => void;
   onCancel: () => void;
   onClearDraft?: () => Promise<void>;
-  onAutoSaveSegment?: (segment: Blob, index: number) => Promise<void>;
+  onAutoSaveSegment?: (segment: Blob, index: number, duration: number) => Promise<void>;
   onUpdateSegmentDurations?: (segments: Array<{ id: string; url: string; duration: number; order: number }>) => Promise<void>;
   isUploading?: boolean;
   existingSegments?: Array<{ id: string; url: string; duration: number; order: number }>;
@@ -282,6 +282,8 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, onAutoS
       mediaRecorder.onstop = async () => {
         const blob = new Blob(chunksRef.current, { type: "video/webm" });
         const segmentDuration = recordingTimeRef.current - segmentStartTimeRef.current;
+        console.log(`✓ Segment ${segments.length + 1} duration tracked: ${segmentDuration.toFixed(2)}s`);
+        
         const newSegment: VideoSegment = {
           id: Date.now().toString(),
           blob: blob,
@@ -290,12 +292,12 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, onAutoS
         
         setEstimatedSize(0);
         
-        // Auto-save segment immediately
+        // Auto-save segment immediately with duration
         if (onAutoSaveSegment) {
           setIsSavingSegment(true);
           try {
             const segmentIndex = segments.length;
-            await onAutoSaveSegment(blob, segmentIndex);
+            await onAutoSaveSegment(blob, segmentIndex, segmentDuration);
             const updatedSegments = [...segments, newSegment];
             setSegments(updatedSegments);
             setIsPreviewing(true);
