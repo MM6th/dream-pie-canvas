@@ -161,6 +161,48 @@ export const AstrologyDeliveryManager = () => {
     }
   };
 
+  const handleDeleteSegment = async (deliveryId: string, segmentId: string, segmentUrl: string) => {
+    try {
+      // Delete from storage
+      const url = new URL(segmentUrl);
+      const filePath = url.pathname.split('/storage/v1/object/public/user-media/')[1];
+      if (filePath) {
+        const { error: storageError } = await supabase.storage
+          .from('user-media')
+          .remove([filePath]);
+        if (storageError) console.error('Storage deletion error:', storageError);
+      }
+      
+      // Get current segments from database
+      const { data: delivery } = await supabase
+        .from('astrology_deliveries')
+        .select('video_segments')
+        .eq('id', deliveryId)
+        .single();
+      
+      // Filter out the deleted segment
+      const existingSegments = (delivery?.video_segments as any[]) || [];
+      const updatedSegments = existingSegments.filter(s => s.id !== segmentId);
+      
+      // Update database
+      const { error: updateError } = await supabase
+        .from('astrology_deliveries')
+        .update({ video_segments: updatedSegments })
+        .eq('id', deliveryId);
+      
+      if (updateError) throw updateError;
+      
+      console.log('✅ Segment deleted from database and storage');
+      toast.success('Segment deleted successfully');
+      
+      // Refresh deliveries to update UI
+      await fetchDeliveries();
+    } catch (error) {
+      console.error('Error deleting segment:', error);
+      throw error;
+    }
+  };
+
   const handleClearDraft = async (deliveryId: string) => {
     const delivery = deliveries.find(d => d.id === deliveryId);
     if (!delivery) return;
@@ -775,6 +817,7 @@ export const AstrologyDeliveryManager = () => {
                     onClearDraft={async () => await handleClearDraft(delivery.id)}
                     onAutoSaveSegment={(segment, index, duration) => handleAutoSaveSegment(delivery.id, segment, index, duration)}
                     onUpdateSegmentDurations={async (segments) => await handleUpdateSegmentDurations(delivery.id, segments)}
+                    onDeleteSegment={(segmentId, segmentUrl) => handleDeleteSegment(delivery.id, segmentId, segmentUrl)}
                     isUploading={uploading === delivery.id}
                     existingSegments={delivery.video_segments as any || []}
                   />
