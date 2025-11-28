@@ -55,20 +55,24 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, onAutoS
         
         for (const seg of existingSegments) {
           try {
-            console.log(`Loading segment from: ${seg.url}, duration: ${seg.duration}`);
             const response = await fetch(seg.url);
             if (!response.ok) {
               throw new Error(`HTTP ${response.status}`);
             }
             const blob = await response.blob();
+            
+            // Validate it's a video blob
+            if (!blob.type.includes('video')) {
+              throw new Error('Invalid video format');
+            }
+            
             loadedSegments.push({
               id: seg.id,
               blob,
               duration: seg.duration,
             });
-            console.log(`✅ Segment ${seg.id} loaded successfully with duration: ${seg.duration}`);
           } catch (error) {
-            console.error("❌ Failed to load segment:", seg.id, error);
+            console.error("Failed to load segment:", seg.id, error);
             failedCount++;
           }
         }
@@ -79,12 +83,11 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, onAutoS
         if (loadedSegments.length > 0) {
           // Set recording time to match total duration of loaded segments
           const totalDuration = loadedSegments.reduce((acc, seg) => acc + seg.duration, 0);
-          console.log(`📊 Total duration of ${loadedSegments.length} segments: ${totalDuration}s`);
           setRecordingTime(totalDuration);
           recordingTimeRef.current = totalDuration;
           
+          // Don't auto-play, just set to preview mode
           setIsPreviewing(true);
-          playSegmentByIndex(0, loadedSegments);
           toast.success(`${loadedSegments.length} segment${loadedSegments.length !== 1 ? 's' : ''} restored from cloud`, { id: 'load-segments' });
         } else {
           toast.error('Failed to load saved segments', { id: 'load-segments' });
@@ -302,11 +305,20 @@ export const VideoRecorder = ({ onVideoRecorded, onCancel, onClearDraft, onAutoS
     setPlayingSegmentId(segment.id);
     
     if (videoRef.current) {
-      videoRef.current.srcObject = null;
-      videoRef.current.src = URL.createObjectURL(segment.blob);
-      videoRef.current.muted = false;
-      videoRef.current.load();
-      videoRef.current.play();
+      try {
+        videoRef.current.srcObject = null;
+        const url = URL.createObjectURL(segment.blob);
+        videoRef.current.src = url;
+        videoRef.current.muted = false;
+        videoRef.current.load();
+        videoRef.current.play().catch((err) => {
+          console.error("Error playing segment:", err);
+          toast.error("Could not play this segment");
+        });
+      } catch (error) {
+        console.error("Error setting up video playback:", error);
+        toast.error("Error loading video segment");
+      }
     }
   };
 
