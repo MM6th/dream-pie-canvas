@@ -77,3 +77,6 @@ verify_jwt = true
 
 [functions.capture-astrology-payment]
 verify_jwt = false
+
+[functions.recover-video-segments]
+verify_jwt = true

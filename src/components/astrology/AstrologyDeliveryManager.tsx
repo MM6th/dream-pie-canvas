@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { CheckCircle, Clock, AlertTriangle, Video, FileText, Send, Upload, Trash2 } from "lucide-react";
+import { CheckCircle, Clock, AlertTriangle, Video, FileText, Send, Upload, Trash2, RefreshCw } from "lucide-react";
 import { VideoRecorder } from "./VideoRecorder";
 import { VideoFileUploader } from "./VideoFileUploader";
 import { Button } from "@/components/ui/button";
@@ -34,6 +34,7 @@ export const AstrologyDeliveryManager = () => {
   const [uploading, setUploading] = useState<string | null>(null);
   const [recordingDeliveryId, setRecordingDeliveryId] = useState<string | null>(null);
   const [uploadingDeliveryId, setUploadingDeliveryId] = useState<string | null>(null);
+  const [recovering, setRecovering] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
@@ -204,6 +205,27 @@ export const AstrologyDeliveryManager = () => {
     }
   };
 
+  const handleRecoverSegments = async (deliveryId: string) => {
+    try {
+      setRecovering(deliveryId);
+      toast.loading("Recovering segments from storage...", { id: "recover" });
+
+      const { data, error } = await supabase.functions.invoke('recover-video-segments', {
+        body: { deliveryId }
+      });
+
+      if (error) throw error;
+
+      toast.success(data.message, { id: "recover" });
+      await fetchDeliveries();
+    } catch (error: any) {
+      console.error('Error recovering segments:', error);
+      toast.error(error.message || "Failed to recover segments", { id: "recover" });
+    } finally {
+      setRecovering(null);
+    }
+  };
+
   const handleClearDraft = async (deliveryId: string) => {
     const delivery = deliveries.find(d => d.id === deliveryId);
     if (!delivery) return;
@@ -278,33 +300,48 @@ export const AstrologyDeliveryManager = () => {
 
       // Handle multiple segments
       if (Array.isArray(data)) {
-        const segments = data as Array<{ id: string; blob: Blob; duration: number }>;
+        const segments = data as Array<{ id: string; blob?: Blob; url?: string; duration: number }>;
         const uploadedSegments = [];
 
         // Upload each segment
         for (let i = 0; i < segments.length; i++) {
           const segment = segments[i];
-          const filePath = `${user.id}/${deliveryId}/segment-${i + 1}-${Date.now()}.webm`;
+          
+          // CRITICAL FIX: Only upload if segment has a blob (new recording)
+          // If segment has URL but no blob, it's already saved - keep the existing URL
+          if (segment.blob) {
+            const filePath = `${user.id}/${deliveryId}/segment-${i + 1}-${Date.now()}.webm`;
 
-          const { error: uploadError } = await supabase.storage
-            .from("user-media")
-            .upload(filePath, segment.blob, {
-              contentType: "video/webm",
-              upsert: true,
+            const { error: uploadError } = await supabase.storage
+              .from("user-media")
+              .upload(filePath, segment.blob, {
+                contentType: "video/webm",
+                upsert: true,
+              });
+
+            if (uploadError) throw uploadError;
+
+            const { data: { publicUrl } } = supabase.storage
+              .from("user-media")
+              .getPublicUrl(filePath);
+
+            uploadedSegments.push({
+              id: segment.id,
+              url: publicUrl,
+              duration: segment.duration,
+              order: i + 1,
             });
-
-          if (uploadError) throw uploadError;
-
-          const { data: { publicUrl } } = supabase.storage
-            .from("user-media")
-            .getPublicUrl(filePath);
-
-          uploadedSegments.push({
-            id: segment.id,
-            url: publicUrl,
-            duration: segment.duration,
-            order: i + 1,
-          });
+          } else if (segment.url) {
+            // Keep existing segment URL - don't re-upload
+            uploadedSegments.push({
+              id: segment.id,
+              url: segment.url,
+              duration: segment.duration,
+              order: i + 1,
+            });
+          } else {
+            console.warn(`Segment ${i + 1} has no blob or URL, skipping`);
+          }
         }
 
         // Handle attachment upload if provided
@@ -756,6 +793,15 @@ export const AstrologyDeliveryManager = () => {
                       >
                         <Upload className="w-4 h-4 mr-2" />
                         Re-upload
+                      </Button>
+                      <Button
+                        onClick={() => handleRecoverSegments(delivery.id)}
+                        variant="outline"
+                        disabled={recovering === delivery.id || uploading === delivery.id}
+                        className="w-full sm:w-auto"
+                      >
+                        <RefreshCw className={`w-4 h-4 mr-2 ${recovering === delivery.id ? 'animate-spin' : ''}`} />
+                        Recover Segments
                       </Button>
                       <Button
                         onClick={() => handleDeleteDraft(delivery.id)}
