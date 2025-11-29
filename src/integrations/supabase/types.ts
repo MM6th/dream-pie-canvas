@@ -2266,6 +2266,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      fix_delivery_video_segments: {
+        Args: { p_delivery_id: string }
+        Returns: boolean
+      }
       generate_receipt_number: { Args: never; Returns: string }
       get_user_storage_usage: { Args: { user_uuid: string }; Returns: number }
       has_role: {
