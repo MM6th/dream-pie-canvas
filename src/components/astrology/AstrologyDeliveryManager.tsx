@@ -478,12 +478,15 @@ export const AstrologyDeliveryManager = () => {
         let attachmentFilename = null;
         
         if (attachment) {
-          const attachmentPath = `${user.id}/${deliveryId}/attachment-${Date.now()}-${attachment.name}`;
+          const attachmentPath = `astrology-deliveries/attachment-${deliveryId}-${Date.now()}-${attachment.name}`;
           const { error: attachmentError } = await supabase.storage
             .from("user-media")
             .upload(attachmentPath, attachment);
 
-          if (attachmentError) throw attachmentError;
+          if (attachmentError) {
+            console.error("Attachment upload error:", attachmentError);
+            throw new Error(`Attachment upload failed: ${attachmentError.message}`);
+          }
 
           const { data: { publicUrl: attachmentPublicUrl } } = supabase.storage
             .from("user-media")
@@ -491,13 +494,23 @@ export const AstrologyDeliveryManager = () => {
 
           attachmentUrl = attachmentPublicUrl;
           attachmentFilename = attachment.name;
+          console.log("✅ Attachment uploaded:", attachmentFilename);
         }
+
+        console.log("📝 Updating database with segments:", {
+          admin_video_url: uploadedSegments[0].url,
+          buyer_video_url: uploadedSegments[0].url,
+          video_segments: uploadedSegments.length,
+          status: "delivered",
+          attachment_url: attachmentUrl
+        });
 
         // Submit final video
         const { error: updateError } = await supabase
           .from("astrology_deliveries")
           .update({
-            admin_video_url: uploadedSegments[0].url, // Use first segment as main URL
+            admin_video_url: uploadedSegments[0].url,
+            buyer_video_url: uploadedSegments[0].url,  // ✅ CRITICAL FIX: Also set buyer URL
             video_segments: uploadedSegments,
             status: "delivered",
             delivered_at: new Date().toISOString(),
@@ -506,7 +519,12 @@ export const AstrologyDeliveryManager = () => {
           })
           .eq("id", deliveryId);
 
-        if (updateError) throw updateError;
+        if (updateError) {
+          console.error("❌ Database update error:", updateError);
+          throw new Error(`Database update failed: ${updateError.message}`);
+        }
+
+        console.log("✅ Database updated successfully with", uploadedSegments.length, "segments");
       } else {
         // Handle single blob
         const blob = data as Blob;
@@ -535,16 +553,56 @@ export const AstrologyDeliveryManager = () => {
           .from("user-media")
           .getPublicUrl(filePath);
 
+        // Handle attachment upload if provided
+        let attachmentUrl = null;
+        let attachmentFilename = null;
+        
+        if (attachment) {
+          const attachmentPath = `astrology-deliveries/attachment-${deliveryId}-${Date.now()}-${attachment.name}`;
+          const { error: attachmentError } = await supabase.storage
+            .from("user-media")
+            .upload(attachmentPath, attachment);
+
+          if (attachmentError) {
+            console.error("Attachment upload error:", attachmentError);
+            throw new Error(`Attachment upload failed: ${attachmentError.message}`);
+          }
+
+          const { data: { publicUrl: attachmentPublicUrl } } = supabase.storage
+            .from("user-media")
+            .getPublicUrl(attachmentPath);
+
+          attachmentUrl = attachmentPublicUrl;
+          attachmentFilename = attachment.name;
+          console.log("✅ Attachment uploaded:", attachmentFilename);
+        }
+
+        console.log("📝 Updating database with:", {
+          admin_video_url: publicUrl,
+          buyer_video_url: publicUrl,
+          status: "delivered",
+          attachment_url: attachmentUrl,
+          attachment_filename: attachmentFilename
+        });
+
         const { error: updateError } = await supabase
           .from("astrology_deliveries")
           .update({
             admin_video_url: publicUrl,
+            buyer_video_url: publicUrl,  // ✅ CRITICAL FIX: Also set buyer URL
             status: "delivered",
             delivered_at: new Date().toISOString(),
+            attachment_url: attachmentUrl,
+            attachment_filename: attachmentFilename,
           })
           .eq("id", deliveryId);
 
-        if (updateError) throw updateError;
+        if (updateError) {
+          console.error("❌ Database update error:", updateError);
+          throw new Error(`Database update failed: ${updateError.message}`);
+        }
+
+        console.log("✅ Database updated successfully");
       }
 
       toast.success("Video uploaded successfully!", { id: "upload" });
