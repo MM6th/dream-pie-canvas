@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { CheckCircle, Clock, AlertTriangle, Video, FileText, Send, Upload, Trash2, RefreshCw } from "lucide-react";
+import { CheckCircle, Clock, AlertTriangle, Video, FileText, Send, Upload, Trash2, RefreshCw, Play } from "lucide-react";
 import { VideoRecorder } from "./VideoRecorder";
 import { VideoFileUploader } from "./VideoFileUploader";
 import { Button } from "@/components/ui/button";
@@ -36,6 +36,8 @@ export const AstrologyDeliveryManager = () => {
   const [uploadingDeliveryId, setUploadingDeliveryId] = useState<string | null>(null);
   const [recovering, setRecovering] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [playingDelivery, setPlayingDelivery] = useState<string | null>(null);
+  const [currentSegmentIndex, setCurrentSegmentIndex] = useState<number>(0);
 
   useEffect(() => {
     const checkAdminStatus = async () => {
@@ -681,6 +683,25 @@ export const AstrologyDeliveryManager = () => {
     return diffDays;
   };
 
+  const handleSegmentEnded = (delivery: Delivery) => {
+    const segments = delivery.video_segments || [];
+    if (currentSegmentIndex < segments.length - 1) {
+      console.log(`Moving to segment ${currentSegmentIndex + 1} of ${segments.length}`);
+      setCurrentSegmentIndex(currentSegmentIndex + 1);
+    } else {
+      console.log('All segments completed');
+      toast.success('Completed all segments');
+    }
+  };
+
+  const getCurrentVideoUrl = (delivery: Delivery): string => {
+    if (delivery.video_segments && delivery.video_segments.length > 0) {
+      const sortedSegments = [...delivery.video_segments].sort((a, b) => a.order - b.order);
+      return sortedSegments[currentSegmentIndex]?.url || delivery.admin_video_url || '';
+    }
+    return delivery.admin_video_url || '';
+  };
+
   if (loading) {
     return <div className="text-center py-8">Loading deliveries...</div>;
   }
@@ -904,13 +925,62 @@ export const AstrologyDeliveryManager = () => {
                 )}
 
                 {delivery.admin_video_url && delivery.status === "delivered" && (
-                  <div>
-                    <p className="text-sm font-medium mb-2">Delivered Video:</p>
-                    <video
-                      src={delivery.admin_video_url}
-                      controls
-                      className="w-full max-w-2xl rounded-lg"
-                    />
+                  <div className="space-y-3">
+                    <p className="text-sm font-medium">Delivered Video:</p>
+                    {playingDelivery === delivery.id ? (
+                      <div className="space-y-2">
+                        {delivery.video_segments && delivery.video_segments.length > 0 && (
+                          <div className="text-sm font-medium mb-2">
+                            Segment {currentSegmentIndex + 1} of {delivery.video_segments.length}
+                          </div>
+                        )}
+                        <video
+                          key={currentSegmentIndex}
+                          src={getCurrentVideoUrl(delivery)}
+                          controls
+                          autoPlay
+                          className="w-full max-w-2xl rounded-lg"
+                          onEnded={() => handleSegmentEnded(delivery)}
+                          preload="metadata"
+                        >
+                          Your browser does not support the video tag.
+                        </video>
+                        <div className="text-xs text-muted-foreground">
+                          {delivery.video_segments && delivery.video_segments.length > 1 
+                            ? 'Video will auto-advance to next segment when current one finishes'
+                            : 'Complete reading'}
+                        </div>
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setPlayingDelivery(null);
+                            setCurrentSegmentIndex(0);
+                          }}
+                          size="sm"
+                        >
+                          Close Video
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {delivery.video_segments && delivery.video_segments.length > 1 && (
+                          <div className="text-sm text-muted-foreground mb-2">
+                            This reading contains {delivery.video_segments.length} video segments
+                          </div>
+                        )}
+                        <Button 
+                          onClick={() => {
+                            setPlayingDelivery(delivery.id);
+                            setCurrentSegmentIndex(0);
+                          }}
+                          variant="outline"
+                          size="sm"
+                        >
+                          <Play className="w-4 h-4 mr-2" />
+                          Watch Complete Reading
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 )}
               </CardContent>
