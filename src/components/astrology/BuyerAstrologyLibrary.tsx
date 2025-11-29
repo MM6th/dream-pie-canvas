@@ -6,6 +6,13 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Download, Play, Clock, CheckCircle, AlertTriangle } from "lucide-react";
 
+interface VideoSegment {
+  id: string;
+  url: string;
+  duration: number;
+  order: number;
+}
+
 interface AstrologyReading {
   id: string;
   astrology_product_id: string;
@@ -13,6 +20,7 @@ interface AstrologyReading {
   delivered_at: string | null;
   is_overdue: boolean;
   admin_video_url: string | null;
+  video_segments: VideoSegment[] | null;
   status: string;
   astrology_products: {
     title: string;
@@ -24,6 +32,7 @@ export const BuyerAstrologyLibrary = () => {
   const [readings, setReadings] = useState<AstrologyReading[]>([]);
   const [loading, setLoading] = useState(true);
   const [playingVideo, setPlayingVideo] = useState<string | null>(null);
+  const [currentSegmentIndex, setCurrentSegmentIndex] = useState<number>(0);
 
   useEffect(() => {
     fetchReadings();
@@ -74,7 +83,14 @@ export const BuyerAstrologyLibrary = () => {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setReadings(data || []);
+      
+      // Type cast video_segments from Json to VideoSegment[]
+      const typedReadings = (data || []).map(reading => ({
+        ...reading,
+        video_segments: reading.video_segments as unknown as VideoSegment[] | null
+      }));
+      
+      setReadings(typedReadings);
     } catch (error) {
       console.error("Error fetching readings:", error);
       toast.error("Failed to load astrology readings");
@@ -131,6 +147,25 @@ export const BuyerAstrologyLibrary = () => {
       videoHeight: video.videoHeight,
       readyState: video.readyState,
     });
+  };
+
+  const handleSegmentEnded = (reading: AstrologyReading) => {
+    const segments = reading.video_segments || [];
+    if (currentSegmentIndex < segments.length - 1) {
+      console.log(`Moving to segment ${currentSegmentIndex + 1} of ${segments.length}`);
+      setCurrentSegmentIndex(currentSegmentIndex + 1);
+    } else {
+      console.log('All segments completed');
+      toast.success('Completed all segments of your reading');
+    }
+  };
+
+  const getCurrentVideoUrl = (reading: AstrologyReading): string => {
+    if (reading.video_segments && reading.video_segments.length > 0) {
+      const sortedSegments = [...reading.video_segments].sort((a, b) => a.order - b.order);
+      return sortedSegments[currentSegmentIndex]?.url || reading.admin_video_url || '';
+    }
+    return reading.admin_video_url || '';
   };
 
   const getStatusInfo = (reading: AstrologyReading) => {
@@ -194,23 +229,35 @@ export const BuyerAstrologyLibrary = () => {
                   <div className="space-y-4">
                     {playingVideo === reading.id ? (
                       <div className="space-y-2">
+                        {reading.video_segments && reading.video_segments.length > 0 && (
+                          <div className="text-sm font-medium mb-2">
+                            Segment {currentSegmentIndex + 1} of {reading.video_segments.length}
+                          </div>
+                        )}
                         <video
-                          src={reading.admin_video_url}
+                          key={currentSegmentIndex}
+                          src={getCurrentVideoUrl(reading)}
                           controls
                           autoPlay
                           className="w-full max-w-2xl rounded-lg"
                           onError={(e) => handleVideoError(e, reading)}
                           onLoadedMetadata={handleVideoLoaded}
+                          onEnded={() => handleSegmentEnded(reading)}
                           preload="metadata"
                         >
                           Your browser does not support the video tag.
                         </video>
                         <div className="text-xs text-muted-foreground text-center">
-                          If video doesn't play, try opening it in a new tab or downloading it
+                          {reading.video_segments && reading.video_segments.length > 1 
+                            ? 'Video will auto-advance to next segment when current one finishes'
+                            : 'If video doesn\'t play, try opening it in a new tab or downloading it'}
                         </div>
                         <Button
                           variant="outline"
-                          onClick={() => setPlayingVideo(null)}
+                          onClick={() => {
+                            setPlayingVideo(null);
+                            setCurrentSegmentIndex(0);
+                          }}
                           className="mt-2"
                         >
                           Close Video
@@ -218,8 +265,16 @@ export const BuyerAstrologyLibrary = () => {
                       </div>
                      ) : (
                       <div className="space-y-2">
+                        {reading.video_segments && reading.video_segments.length > 1 && (
+                          <div className="text-sm text-muted-foreground mb-2">
+                            This reading contains {reading.video_segments.length} video segments
+                          </div>
+                        )}
                         <div className="flex flex-col sm:flex-row gap-2">
-                          <Button onClick={() => setPlayingVideo(reading.id)} className="w-full sm:w-auto">
+                          <Button onClick={() => {
+                            setPlayingVideo(reading.id);
+                            setCurrentSegmentIndex(0);
+                          }} className="w-full sm:w-auto">
                             <Play className="w-4 h-4 mr-2" />
                             Watch Reading
                           </Button>
