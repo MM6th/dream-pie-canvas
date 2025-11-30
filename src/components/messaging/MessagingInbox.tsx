@@ -240,8 +240,15 @@ export const MessagingInbox = () => {
             </div>
           </TabsContent>
         </Tabs>
+      </div>
 
-        {selectedMessage && (
+      {selectedMessage && (
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 px-1">
+            <div className="h-px bg-border flex-1" />
+            <span className="text-xs text-muted-foreground">Selected Message</span>
+            <div className="h-px bg-border flex-1" />
+          </div>
           <Card className="border-primary">
             <CardContent className="py-4">
               <div className="flex items-start justify-between mb-3">
@@ -280,8 +287,8 @@ export const MessagingInbox = () => {
               </div>
             </CardContent>
           </Card>
-        )}
-      </div>
+        </div>
+      )}
 
       {selectedMessage && (
         <MessageComposer
