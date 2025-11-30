@@ -74,16 +74,31 @@ Deno.serve(async (req) => {
       throw new Error('Cannot send messages to other supporters');
     }
 
-    // Determine if message is free (only merchant-to-merchant)
+    // Determine if message is free
     const isMerchantToMerchant = senderProfile.user_type === 'merchant' && recipientProfile.user_type === 'merchant';
     
     let creditsRequired = 0;
     let isFree = false;
     let senderCredits: any = null;
     
-    // Only merchant-to-merchant messaging is free
+    // Merchant-to-merchant messaging is always free
     if (isMerchantToMerchant) {
       isFree = true;
+    }
+    
+    // Check if supporter is replying to a merchant-initiated thread (free reply)
+    if (!isFree && parentMessageId && senderProfile.user_type === 'supporter' && recipientProfile.user_type === 'merchant') {
+      // Get the parent message to check who initiated the thread
+      const { data: parentMessage } = await supabaseAdmin
+        .from('messages')
+        .select('sender_id')
+        .eq('id', parentMessageId)
+        .single();
+      
+      // If the parent message was from the merchant, the supporter's reply is free
+      if (parentMessage && parentMessage.sender_id === recipientId) {
+        isFree = true;
+      }
     }
     
     // Only check credits and settings for paid messages
