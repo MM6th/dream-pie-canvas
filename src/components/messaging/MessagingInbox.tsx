@@ -146,26 +146,20 @@ export const MessagingInbox = () => {
           <CardHeader>
             <CardTitle>Messages</CardTitle>
             <CardDescription>
-              {userType === 'merchant' ? 'Messages from supporters' : 'Your sent messages'}
+              Manage your sent and received messages
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue={userType === 'merchant' ? 'received' : 'sent'}>
-              {userType === 'supporter' && (
-                <TabsList className="w-full">
-                  <TabsTrigger value="sent" className="flex-1">Sent</TabsTrigger>
-                </TabsList>
-              )}
-              {userType === 'merchant' && (
-                <TabsList className="w-full">
-                  <TabsTrigger value="received" className="flex-1">
-                    Received
-                    {unreadCount > 0 && (
-                      <Badge variant="destructive" className="ml-2">{unreadCount}</Badge>
-                    )}
-                  </TabsTrigger>
-                </TabsList>
-              )}
+            <Tabs defaultValue="received">
+              <TabsList className="w-full">
+                <TabsTrigger value="received" className="flex-1">
+                  Received
+                  {unreadCount > 0 && (
+                    <Badge variant="destructive" className="ml-2">{unreadCount}</Badge>
+                  )}
+                </TabsTrigger>
+                <TabsTrigger value="sent" className="flex-1">Sent</TabsTrigger>
+              </TabsList>
 
               <TabsContent value="sent">
                 <ScrollArea className="h-[400px]">
