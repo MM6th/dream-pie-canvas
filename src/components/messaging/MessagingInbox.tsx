@@ -142,13 +142,13 @@ export const MessagingInbox = () => {
   return (
     <>
       <Card>
-      <CardHeader>
+      <CardHeader className="pb-3">
         <CardTitle>Messages</CardTitle>
         <CardDescription>
           Manage your sent and received messages
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-2">
         <Tabs defaultValue="received" className="w-full">
           <TabsList className="w-full">
             <TabsTrigger value="received" className="flex-1">
@@ -160,9 +160,9 @@ export const MessagingInbox = () => {
             <TabsTrigger value="sent" className="flex-1">Sent</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="sent" className="mt-4">
-            <ScrollArea className="h-[300px]">
-              <div className="space-y-2">
+          <TabsContent value="sent" className="mt-2">
+            <ScrollArea className="h-[250px]">
+              <div className="space-y-1.5">
                 {sentMessages.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-8">
                     No sent messages
@@ -172,7 +172,7 @@ export const MessagingInbox = () => {
                     <div
                       key={message.id}
                       onClick={() => handleMessageClick(message)}
-                      className={`p-3 border rounded-lg cursor-pointer hover:bg-accent transition-colors ${
+                      className={`p-2.5 border rounded-lg cursor-pointer hover:bg-accent transition-colors ${
                         selectedMessage?.id === message.id ? 'bg-accent border-primary' : ''
                       }`}
                     >
@@ -195,9 +195,9 @@ export const MessagingInbox = () => {
             </ScrollArea>
           </TabsContent>
 
-          <TabsContent value="received" className="mt-4">
-            <ScrollArea className="h-[300px]">
-              <div className="space-y-2">
+          <TabsContent value="received" className="mt-2">
+            <ScrollArea className="h-[250px]">
+              <div className="space-y-1.5">
                 {receivedMessages.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-8">
                     No received messages
@@ -207,7 +207,7 @@ export const MessagingInbox = () => {
                     <div
                       key={message.id}
                       onClick={() => handleMessageClick(message)}
-                      className={`p-3 border rounded-lg cursor-pointer hover:bg-accent transition-colors ${
+                      className={`p-2.5 border rounded-lg cursor-pointer hover:bg-accent transition-colors ${
                         !message.read_at ? 'bg-primary/5 border-primary/20' : ''
                       } ${
                         selectedMessage?.id === message.id ? 'bg-accent border-primary' : ''
@@ -238,11 +238,11 @@ export const MessagingInbox = () => {
         </Tabs>
 
         {selectedMessage && (
-          <div className="mt-4 p-4 border rounded-lg bg-card/50">
-            <div className="flex items-start justify-between mb-3">
+          <div className="mt-2 p-3 border rounded-lg bg-card/50">
+            <div className="flex items-start justify-between mb-2">
               <div>
                 <h3 className="font-semibold text-base">{selectedMessage.subject}</h3>
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-xs text-muted-foreground mt-0.5">
                   {selectedMessage.sender_id === userId
                     ? `To: ${selectedMessage.recipient?.display_name || 'Unknown'}`
                     : `From: ${selectedMessage.sender?.display_name || 'Unknown'}`
@@ -253,7 +253,7 @@ export const MessagingInbox = () => {
               </div>
             </div>
             
-            <div className="space-y-3">
+            <div className="space-y-2">
               <p className="whitespace-pre-wrap text-foreground text-sm leading-relaxed">
                 {selectedMessage.body}
               </p>
@@ -266,7 +266,7 @@ export const MessagingInbox = () => {
                   />
                 </div>
               )}
-              <div className="flex justify-end pt-2">
+              <div className="flex justify-end pt-1.5">
                 <Button onClick={handleReply} size="sm">
                   <Reply className="w-4 h-4 mr-2" />
                   Reply {isReplyFree && '(Free)'}
