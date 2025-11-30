@@ -83,3 +83,9 @@ verify_jwt = true
 
 [functions.check-storage-files]
 verify_jwt = false
+
+[functions.create-credit-payment]
+verify_jwt = true
+
+[functions.capture-credit-payment]
+verify_jwt = false
