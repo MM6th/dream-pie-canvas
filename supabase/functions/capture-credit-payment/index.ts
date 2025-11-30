@@ -23,8 +23,9 @@ serve(async (req) => {
     const token = url.searchParams.get('token');
     const credits = url.searchParams.get('credits');
     const userId = url.searchParams.get('userId');
+    const origin = url.searchParams.get('origin') || 'https://lovable.app';
     
-    console.log('Capturing credit payment for token:', token, 'credits:', credits, 'userId:', userId);
+    console.log('Capturing credit payment for token:', token, 'credits:', credits, 'userId:', userId, 'origin:', origin);
 
     if (!token || !credits || !userId) {
       throw new Error('Missing required parameters');
@@ -182,29 +183,17 @@ serve(async (req) => {
 
     console.log('Credit purchase recorded successfully');
 
-    // Get the base URL from the referer header
-    const referer = req.headers.get('referer');
-    let baseUrl = 'https://lovable.app';
-    if (referer) {
-      const refererUrl = new URL(referer);
-      baseUrl = `${refererUrl.protocol}//${refererUrl.host}`;
-    }
-
-    // Redirect to success page
-    return Response.redirect(`${baseUrl}/payment-success?orderId=${captureData.id}&paymentType=credit&credits=${packageInfo.credits}`, 302);
+    // Redirect to success page using the origin passed from create-credit-payment
+    return Response.redirect(`${origin}/payment-success?orderId=${captureData.id}&paymentType=credit&credits=${packageInfo.credits}`, 302);
 
   } catch (error) {
     console.error('Error in capture-credit-payment:', error);
     
-    // Get the base URL from the referer header
-    const referer = req.headers.get('referer');
-    let baseUrl = 'https://lovable.app';
-    if (referer) {
-      const refererUrl = new URL(referer);
-      baseUrl = `${refererUrl.protocol}//${refererUrl.host}`;
-    }
+    // Try to get origin from URL, fall back to default
+    const url = new URL(req.url);
+    const origin = url.searchParams.get('origin') || 'https://lovable.app';
     
     // Redirect to error page
-    return Response.redirect(`${baseUrl}/payment-cancelled`, 302);
+    return Response.redirect(`${origin}/payment-cancelled`, 302);
   }
 });

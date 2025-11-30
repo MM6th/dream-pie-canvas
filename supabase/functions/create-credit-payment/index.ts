@@ -89,7 +89,7 @@ Deno.serve(async (req) => {
           }),
         }],
       application_context: {
-        return_url: `https://veaupehwfsbagzfuvach.supabase.co/functions/v1/capture-credit-payment?credits=${credits}&userId=${user.id}`,
+        return_url: `https://veaupehwfsbagzfuvach.supabase.co/functions/v1/capture-credit-payment?credits=${credits}&userId=${user.id}&origin=${encodeURIComponent(req.headers.get('origin') || 'https://lovable.app')}`,
         cancel_url: `${req.headers.get('origin')}/payment-cancelled`,
         brand_name: 'Messaging Credits',
         user_action: 'PAY_NOW',
@@ -100,7 +100,7 @@ Deno.serve(async (req) => {
     const orderData = await orderResponse.json() as PayPalOrderResponse;
     const approvalUrl = orderData.links.find(link => link.rel === 'approve')?.href;
     
-    const actualReturnUrl = `https://veaupehwfsbagzfuvach.supabase.co/functions/v1/capture-credit-payment?credits=${credits}&userId=${user.id}`;
+    const actualReturnUrl = `https://veaupehwfsbagzfuvach.supabase.co/functions/v1/capture-credit-payment?credits=${credits}&userId=${user.id}&origin=${encodeURIComponent(req.headers.get('origin') || 'https://lovable.app')}`;
 
     console.log('PayPal order created:', orderData.id);
     console.log('Actual Return URL sent to PayPal:', actualReturnUrl);
