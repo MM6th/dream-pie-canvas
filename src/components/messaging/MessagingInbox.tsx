@@ -257,14 +257,16 @@ export const MessagingInbox = () => {
           <CardContent>
             {selectedMessage ? (
               <>
-                <div className="prose prose-sm max-w-none mb-4">
-                  <p className="whitespace-pre-wrap">{selectedMessage.body}</p>
+                <div className="mb-4">
+                  <p className="whitespace-pre-wrap text-foreground text-sm leading-relaxed">
+                    {selectedMessage.body}
+                  </p>
                   {selectedMessage.attachment_url && (
                     <div className="mt-4">
                       <img 
                         src={selectedMessage.attachment_url} 
                         alt="Message attachment" 
-                        className="max-w-full h-auto rounded-lg border"
+                        className="max-w-full h-auto rounded-lg border border-border"
                       />
                     </div>
                   )}
