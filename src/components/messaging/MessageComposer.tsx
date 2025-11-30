@@ -124,7 +124,7 @@ export const MessageComposer = ({
       toast({
         title: 'Message Sent!',
         description: data.isFree 
-          ? 'Your message has been sent for free (merchant-to-merchant).' 
+          ? 'Your message has been sent for free.' 
           : `Your message has been sent. ${data.remainingBalance} credits remaining.`,
       });
 
@@ -155,7 +155,7 @@ export const MessageComposer = ({
           <DialogTitle>{isReply ? 'Reply to' : 'Send Message to'} {recipientName || 'User'}</DialogTitle>
           <DialogDescription>
             {isFree 
-              ? 'Merchant-to-merchant messaging is free'
+              ? 'This message is free'
               : `This message will cost ${creditsRequired} credits`
             }
           </DialogDescription>
