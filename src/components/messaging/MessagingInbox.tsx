@@ -136,8 +136,12 @@ export const MessagingInbox = () => {
     refetchCredits();
   };
 
-  // Determine if reply is free (merchant replying to merchant)
-  const isReplyFree = userType === 'merchant' && selectedMessage?.sender?.user_type === 'merchant';
+  // Determine if reply is free:
+  // 1. Merchant replying to merchant (always free)
+  // 2. Supporter replying to merchant-initiated message (free)
+  const isReplyFree = 
+    (userType === 'merchant' && selectedMessage?.sender?.user_type === 'merchant') ||
+    (userType === 'supporter' && selectedMessage?.sender?.user_type === 'merchant' && selectedMessage?.sender_id !== userId);
 
   const unreadCount = receivedMessages.filter((msg) => !msg.read_at).length;
 
