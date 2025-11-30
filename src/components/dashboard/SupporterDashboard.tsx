@@ -30,6 +30,7 @@ import { CreditPurchaseModal } from "@/components/messaging/CreditPurchaseModal"
 import { MessagingInbox } from "@/components/messaging/MessagingInbox";
 import { CreditTransactionHistory } from "@/components/messaging/CreditTransactionHistory";
 import { NotificationsList } from "@/components/NotificationsList";
+import { MessagingInfoCard } from "@/components/messaging/MessagingInfoCard";
 import { BuyerAstrologyLibrary } from "@/components/astrology/BuyerAstrologyLibrary";
 
 interface AudioTrack {
@@ -67,6 +68,7 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
   const { currentQuarterIncome } = useQuarterlyIncome(user?.id);
   const [showCreditPurchaseModal, setShowCreditPurchaseModal] = useState(false);
   const [creditBalance, setCreditBalance] = useState(0);
+  const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
   
   const tutorial = useDashboardTutorial('supporter', supporterTutorialSteps);
 
@@ -163,11 +165,26 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
     }
   };
 
+  const fetchUnreadMessagesCount = async () => {
+    if (!user) return;
+    try {
+      const { count } = await supabase
+        .from('messages')
+        .select('*', { count: 'exact', head: true })
+        .eq('recipient_id', user.id)
+        .is('read_at', null);
+      setUnreadMessagesCount(count || 0);
+    } catch (error) {
+      console.error('Error fetching unread messages count:', error);
+    }
+  };
+
   useEffect(() => {
     if (user) {
       fetchUserProfile();
       fetchPurchasedPortfolios();
       fetchCreditBalance();
+      fetchUnreadMessagesCount();
     }
   }, [user]);
 
@@ -304,6 +321,11 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
                   <TabsTrigger value="messaging" className="flex items-center gap-2">
                     <Mail className="w-4 h-4" />
                     Messages
+                    {unreadMessagesCount > 0 && (
+                      <span className="ml-1 px-1.5 py-0.5 text-xs bg-destructive text-destructive-foreground rounded-full">
+                        {unreadMessagesCount}
+                      </span>
+                    )}
                   </TabsTrigger>
                   <TabsTrigger value="content" className="flex items-center gap-2" data-tutorial="gallery-tab">
                     <FolderOpen className="w-4 h-4" />
@@ -361,6 +383,7 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
                 </TabsContent>
                 
                 <TabsContent value="messaging" className="space-y-6">
+                  <MessagingInfoCard userType="supporter" />
                   <MessagingInbox />
                   <CreditTransactionHistory />
                 </TabsContent>
