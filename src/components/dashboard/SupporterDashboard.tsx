@@ -31,6 +31,7 @@ import { MessagingInbox } from "@/components/messaging/MessagingInbox";
 import { CreditTransactionHistory } from "@/components/messaging/CreditTransactionHistory";
 import { NotificationsList } from "@/components/NotificationsList";
 import { MessagingInfoCard } from "@/components/messaging/MessagingInfoCard";
+import { MessageSettingsCard } from "@/components/messaging/MessageSettingsCard";
 import { BuyerAstrologyLibrary } from "@/components/astrology/BuyerAstrologyLibrary";
 
 interface AudioTrack {
@@ -384,6 +385,7 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
                 
                 <TabsContent value="messaging" className="space-y-6">
                   <MessagingInfoCard userType="supporter" />
+                  <MessageSettingsCard />
                   <MessagingInbox />
                   <CreditTransactionHistory />
                 </TabsContent>
@@ -430,6 +432,7 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
                     </CardHeader>
                     <CardContent>
                       <MessagingInfoCard userType="supporter" />
+                      <MessageSettingsCard />
                       <MessagingInbox />
                       <CreditTransactionHistory />
                     </CardContent>
