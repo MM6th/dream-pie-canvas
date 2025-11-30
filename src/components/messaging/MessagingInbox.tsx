@@ -20,7 +20,7 @@ interface Message {
   read_at: string | null;
   created_at: string;
   attachment_url: string | null;
-  sender?: { display_name: string; avatar_url: string | null };
+  sender?: { display_name: string; avatar_url: string | null; user_type?: string };
   recipient?: { display_name: string; avatar_url: string | null };
 }
 
@@ -73,7 +73,7 @@ export const MessagingInbox = () => {
         .from('messages')
         .select(`
           *,
-          sender:profiles!messages_sender_id_fkey(display_name, avatar_url)
+          sender:profiles!messages_sender_id_fkey(display_name, avatar_url, user_type)
         `)
         .eq('recipient_id', user.id)
         .order('created_at', { ascending: false });
@@ -130,8 +130,8 @@ export const MessagingInbox = () => {
     refetchCredits();
   };
 
-  // Determine if reply is free (merchant replying to supporter)
-  const isReplyFree = userType === 'merchant' && selectedMessage?.sender_id !== userId;
+  // Determine if reply is free (merchant replying to merchant)
+  const isReplyFree = userType === 'merchant' && selectedMessage?.sender?.user_type === 'merchant';
 
   const unreadCount = receivedMessages.filter((msg) => !msg.read_at).length;
 
