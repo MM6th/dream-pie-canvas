@@ -49,13 +49,13 @@ export const MessageComposer = ({
   const [attachmentUrl, setAttachmentUrl] = useState<string>('');
   const { toast } = useToast();
 
-  const creditsRequired = isFree ? 0 : 1; // Free for merchant-to-merchant and merchant replies
+  const creditsRequired = isFree ? 0 : 10; // Free only for merchant-to-merchant messaging
 
   const handleCreditSectionClick = () => {
     if (currentBalance < creditsRequired) {
       toast({
         title: 'Purchase Messaging Credits',
-        description: 'You need at least 1 credit to send a message. Select a package to continue.',
+        description: `You need at least ${creditsRequired} credits to send a message. Select a package to continue.`,
       });
       setShowCreditPurchase(true);
     }
@@ -155,8 +155,8 @@ export const MessageComposer = ({
           <DialogTitle>{isReply ? 'Reply to' : 'Send Message to'} {recipientName || 'User'}</DialogTitle>
           <DialogDescription>
             {isFree 
-              ? isReply ? 'Replies are free for merchants' : 'Merchant-to-merchant messaging is free'
-              : `This message will cost ${creditsRequired} credit${creditsRequired !== 1 ? 's' : ''}`
+              ? 'Merchant-to-merchant messaging is free'
+              : `This message will cost ${creditsRequired} credits`
             }
           </DialogDescription>
         </DialogHeader>
@@ -276,7 +276,7 @@ export const MessageComposer = ({
                 Sending...
               </>
             ) : (
-              `Send (${creditsRequired} credit${creditsRequired !== 1 ? 's' : ''})`
+              `Send (${creditsRequired} credits)`
             )}
           </Button>
         </div>

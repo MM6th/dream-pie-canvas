@@ -24,9 +24,8 @@ export const MessagingInfoCard = ({ userType }: MessagingInfoCardProps) => {
           <AlertDescription>
             <strong>Message Costs:</strong>
             <ul className="mt-2 space-y-1 text-sm">
-              <li>• <strong>10 credits per message</strong> when supporters message merchants</li>
-              <li>• <strong>Free messaging</strong> between merchants</li>
-              <li>• <strong>Free replies</strong> when merchants reply to supporters</li>
+              <li>• <strong>10 credits per message</strong> for all messaging</li>
+              <li>• <strong>Free messaging</strong> between merchants only</li>
             </ul>
           </AlertDescription>
         </Alert>
@@ -37,7 +36,7 @@ export const MessagingInfoCard = ({ userType }: MessagingInfoCardProps) => {
             <strong>About Credits:</strong>
             <ul className="mt-2 space-y-1 text-sm">
               <li>• Purchase credits in packages: 50, 100, or 200 credits</li>
-              <li>• Credits are used for messaging merchants</li>
+              <li>• Credits are used for messaging</li>
               <li>• Check your balance in the message composer</li>
               <li>• View transaction history in the Messages tab</li>
             </ul>
@@ -51,7 +50,7 @@ export const MessagingInfoCard = ({ userType }: MessagingInfoCardProps) => {
               <strong>Messaging Rules:</strong>
               <ul className="mt-2 space-y-1 text-sm">
                 <li>• Supporters cannot message other supporters</li>
-                <li>• You can only message merchants</li>
+                <li>• You can message merchants (10 credits per message)</li>
                 <li>• Messages support photos and replies</li>
               </ul>
             </AlertDescription>
@@ -62,10 +61,10 @@ export const MessagingInfoCard = ({ userType }: MessagingInfoCardProps) => {
           <Alert>
             <MessageSquare className="h-4 w-4" />
             <AlertDescription>
-              <strong>Merchant Benefits:</strong>
+              <strong>Merchant Messaging:</strong>
               <ul className="mt-2 space-y-1 text-sm">
-                <li>• Free messaging with other merchants</li>
-                <li>• Free replies to supporters</li>
+                <li>• Free messaging with other merchants only</li>
+                <li>• Messaging supporters costs 10 credits</li>
                 <li>• Receive messages from supporters in your inbox</li>
               </ul>
             </AlertDescription>

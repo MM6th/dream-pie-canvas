@@ -74,48 +74,28 @@ Deno.serve(async (req) => {
       throw new Error('Cannot send messages to other supporters');
     }
 
-    // Determine if message is free
+    // Determine if message is free (only merchant-to-merchant)
     const isMerchantToMerchant = senderProfile.user_type === 'merchant' && recipientProfile.user_type === 'merchant';
-    
-    // Check if this is a merchant replying to a supporter's message
-    let isMerchantReplyToSupporter = false;
-    if (parentMessageId && senderProfile.user_type === 'merchant') {
-      const { data: parentMessage } = await supabaseAdmin
-        .from('messages')
-        .select('sender_id')
-        .eq('id', parentMessageId)
-        .single();
-      
-      if (parentMessage) {
-        const { data: parentSenderProfile } = await supabaseAdmin
-          .from('profiles')
-          .select('user_type')
-          .eq('id', parentMessage.sender_id)
-          .single();
-        
-        isMerchantReplyToSupporter = parentSenderProfile?.user_type === 'supporter';
-      }
-    }
     
     let creditsRequired = 0;
     let isFree = false;
     let senderCredits: any = null;
     
-    // Determine if message should be free
-    if (isMerchantToMerchant || isMerchantReplyToSupporter) {
+    // Only merchant-to-merchant messaging is free
+    if (isMerchantToMerchant) {
       isFree = true;
     }
     
     // Only check credits and settings for paid messages
     if (!isFree) {
-      // Get merchant's message settings (default to 1 credit if not set)
+      // Get merchant's message settings (default to 10 credits if not set)
       const { data: messageSettings } = await supabaseAdmin
         .from('message_settings')
         .select('credits_per_message, enabled')
         .eq('merchant_id', recipientId)
         .single();
 
-      creditsRequired = messageSettings?.credits_per_message || 1;
+      creditsRequired = messageSettings?.credits_per_message || 10;
       const messagingEnabled = messageSettings?.enabled !== false;
 
       if (!messagingEnabled) {
