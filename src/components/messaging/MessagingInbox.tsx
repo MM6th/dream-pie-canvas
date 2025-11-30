@@ -245,9 +245,9 @@ export const MessagingInbox = () => {
             </CardTitle>
             {selectedMessage && (
               <CardDescription>
-                {userType === 'merchant' 
-                  ? `From: ${selectedMessage.sender?.display_name || 'Unknown'}`
-                  : `To: ${selectedMessage.recipient?.display_name || 'Unknown'}`
+                {selectedMessage.sender_id === userId
+                  ? `To: ${selectedMessage.recipient?.display_name || 'Unknown'}`
+                  : `From: ${selectedMessage.sender?.display_name || 'Unknown'}`
                 }
                 {' • '}
                 {formatDistanceToNow(new Date(selectedMessage.created_at), { addSuffix: true })}
@@ -289,8 +289,8 @@ export const MessagingInbox = () => {
         <MessageComposer
           open={showReplyComposer}
           onOpenChange={setShowReplyComposer}
-          recipientId={selectedMessage.sender_id}
-          recipientName={selectedMessage.sender?.display_name}
+          recipientId={selectedMessage.sender_id === userId ? selectedMessage.recipient_id : selectedMessage.sender_id}
+          recipientName={selectedMessage.sender_id === userId ? selectedMessage.recipient?.display_name : selectedMessage.sender?.display_name}
           currentBalance={balance}
           isFree={isReplyFree}
           onMessageSent={handleMessageSent}
