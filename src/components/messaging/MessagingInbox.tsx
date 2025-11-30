@@ -32,6 +32,7 @@ export const MessagingInbox = () => {
   const [userType, setUserType] = useState<string>('');
   const [userId, setUserId] = useState<string>('');
   const [showReplyComposer, setShowReplyComposer] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>('received');
   const { balance, refetch: refetchCredits } = useMessagingCredits(userId);
   const { toast } = useToast();
 
@@ -118,6 +119,11 @@ export const MessagingInbox = () => {
     }
   };
 
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    setSelectedMessage(null);
+  };
+
   const handleReply = () => {
     if (selectedMessage) {
       setShowReplyComposer(true);
@@ -149,7 +155,7 @@ export const MessagingInbox = () => {
           </div>
         </div>
 
-        <Tabs defaultValue="received" className="w-full">
+        <Tabs defaultValue="received" value={activeTab} onValueChange={handleTabChange} className="w-full">
           <TabsList className="w-full">
             <TabsTrigger value="received" className="flex-1">
               Received
