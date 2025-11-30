@@ -141,14 +141,14 @@ export const MessagingInbox = () => {
 
   return (
     <>
-      <Card>
-      <CardHeader className="pb-3">
-        <CardTitle>Messages</CardTitle>
-        <CardDescription>
-          Manage your sent and received messages
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-2">
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-semibold">Messages</h3>
+            <p className="text-sm text-muted-foreground">Manage your sent and received messages</p>
+          </div>
+        </div>
+
         <Tabs defaultValue="received" className="w-full">
           <TabsList className="w-full">
             <TabsTrigger value="received" className="flex-1">
@@ -160,66 +160,70 @@ export const MessagingInbox = () => {
             <TabsTrigger value="sent" className="flex-1">Sent</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="sent" className="mt-2">
-            <ScrollArea className="h-[250px]">
-              <div className="space-y-1.5">
-                {sentMessages.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-8">
+          <TabsContent value="sent" className="mt-4">
+            <div className="space-y-2">
+              {sentMessages.length === 0 ? (
+                <Card>
+                  <CardContent className="py-8 text-center text-muted-foreground">
                     No sent messages
-                  </p>
-                ) : (
-                  sentMessages.map((message) => (
-                    <div
-                      key={message.id}
-                      onClick={() => handleMessageClick(message)}
-                      className={`p-2.5 border rounded-lg cursor-pointer hover:bg-accent transition-colors ${
-                        selectedMessage?.id === message.id ? 'bg-accent border-primary' : ''
-                      }`}
-                    >
+                  </CardContent>
+                </Card>
+              ) : (
+                sentMessages.map((message) => (
+                  <Card
+                    key={message.id}
+                    onClick={() => handleMessageClick(message)}
+                    className={`cursor-pointer hover:bg-accent transition-colors ${
+                      selectedMessage?.id === message.id ? 'border-primary' : ''
+                    }`}
+                  >
+                    <CardContent className="py-3">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
                           <div className="font-medium text-sm truncate">
                             To: {message.recipient?.display_name || 'Unknown'}
                           </div>
                           <div className="text-sm truncate">{message.subject}</div>
-                          <div className="text-xs text-muted-foreground">
+                          <div className="text-xs text-muted-foreground mt-1">
                             {formatDistanceToNow(new Date(message.created_at), { addSuffix: true })}
                           </div>
                         </div>
                         <MailOpen className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                       </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </ScrollArea>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </div>
           </TabsContent>
 
-          <TabsContent value="received" className="mt-2">
-            <ScrollArea className="h-[250px]">
-              <div className="space-y-1.5">
-                {receivedMessages.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-8">
+          <TabsContent value="received" className="mt-4">
+            <div className="space-y-2">
+              {receivedMessages.length === 0 ? (
+                <Card>
+                  <CardContent className="py-8 text-center text-muted-foreground">
                     No received messages
-                  </p>
-                ) : (
-                  receivedMessages.map((message) => (
-                    <div
-                      key={message.id}
-                      onClick={() => handleMessageClick(message)}
-                      className={`p-2.5 border rounded-lg cursor-pointer hover:bg-accent transition-colors ${
-                        !message.read_at ? 'bg-primary/5 border-primary/20' : ''
-                      } ${
-                        selectedMessage?.id === message.id ? 'bg-accent border-primary' : ''
-                      }`}
-                    >
+                  </CardContent>
+                </Card>
+              ) : (
+                receivedMessages.map((message) => (
+                  <Card
+                    key={message.id}
+                    onClick={() => handleMessageClick(message)}
+                    className={`cursor-pointer hover:bg-accent transition-colors ${
+                      !message.read_at ? 'border-primary' : ''
+                    } ${
+                      selectedMessage?.id === message.id ? 'border-primary' : ''
+                    }`}
+                  >
+                    <CardContent className="py-3">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
                           <div className="font-medium text-sm truncate">
                             From: {message.sender?.display_name || 'Unknown'}
                           </div>
                           <div className="text-sm truncate">{message.subject}</div>
-                          <div className="text-xs text-muted-foreground">
+                          <div className="text-xs text-muted-foreground mt-1">
                             {formatDistanceToNow(new Date(message.created_at), { addSuffix: true })}
                           </div>
                         </div>
@@ -229,56 +233,57 @@ export const MessagingInbox = () => {
                           <MailOpen className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                         )}
                       </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </ScrollArea>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </div>
           </TabsContent>
         </Tabs>
 
         {selectedMessage && (
-          <div className="mt-2 p-3 border rounded-lg bg-card/50">
-            <div className="flex items-start justify-between mb-2">
-              <div>
-                <h3 className="font-semibold text-base">{selectedMessage.subject}</h3>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {selectedMessage.sender_id === userId
-                    ? `To: ${selectedMessage.recipient?.display_name || 'Unknown'}`
-                    : `From: ${selectedMessage.sender?.display_name || 'Unknown'}`
-                  }
-                  {' • '}
-                  {formatDistanceToNow(new Date(selectedMessage.created_at), { addSuffix: true })}
-                </p>
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <p className="whitespace-pre-wrap text-foreground text-sm leading-relaxed">
-                {selectedMessage.body}
-              </p>
-              {selectedMessage.attachment_url && (
+          <Card className="border-primary">
+            <CardContent className="py-4">
+              <div className="flex items-start justify-between mb-3">
                 <div>
-                  <img 
-                    src={selectedMessage.attachment_url} 
-                    alt="Message attachment" 
-                    className="max-w-full h-auto rounded-lg border border-border"
-                  />
+                  <h3 className="font-semibold text-base">{selectedMessage.subject}</h3>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {selectedMessage.sender_id === userId
+                      ? `To: ${selectedMessage.recipient?.display_name || 'Unknown'}`
+                      : `From: ${selectedMessage.sender?.display_name || 'Unknown'}`
+                    }
+                    {' • '}
+                    {formatDistanceToNow(new Date(selectedMessage.created_at), { addSuffix: true })}
+                  </p>
                 </div>
-              )}
-              <div className="flex justify-end pt-1.5">
-                <Button onClick={handleReply} size="sm">
-                  <Reply className="w-4 h-4 mr-2" />
-                  Reply {isReplyFree && '(Free)'}
-                </Button>
               </div>
-            </div>
-          </div>
+              
+              <div className="space-y-3">
+                <p className="whitespace-pre-wrap text-foreground text-sm leading-relaxed">
+                  {selectedMessage.body}
+                </p>
+                {selectedMessage.attachment_url && (
+                  <div>
+                    <img 
+                      src={selectedMessage.attachment_url} 
+                      alt="Message attachment" 
+                      className="max-w-full h-auto rounded-lg border border-border"
+                    />
+                  </div>
+                )}
+                <div className="flex justify-end pt-2 border-t">
+                  <Button onClick={handleReply} size="sm">
+                    <Reply className="w-4 h-4 mr-2" />
+                    Reply {isReplyFree && '(Free)'}
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         )}
-      </CardContent>
-    </Card>
+      </div>
 
-    {selectedMessage && (
+      {selectedMessage && (
         <MessageComposer
           open={showReplyComposer}
           onOpenChange={setShowReplyComposer}
