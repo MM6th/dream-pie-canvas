@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calculator, RotateCcw, DollarSign, Info } from "lucide-react";
+import { Calculator, RotateCcw, DollarSign, Info, AlertTriangle } from "lucide-react";
 import RevenueBreakdownModal from "./RevenueBreakdownModal";
 
 const formatCurrency = (amount: number) => {
@@ -126,30 +126,83 @@ const TaxCalculationForm = ({ initialData, onCalculate, onReset, platformIncome 
 
           {/* Platform Income Info */}
           {platformIncome > 0 && (
-            <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
-              <div className="flex items-start gap-3">
-                <div className="bg-blue-500 rounded-full p-2">
-                  <DollarSign className="w-5 h-5 text-white" />
-                </div>
-                <div className="flex-1">
-                  <h4 className="text-blue-400 font-semibold mb-2">
-                    Merchant Revenue (90% Share)
-                  </h4>
-                  <p className="text-sm text-gray-400 mb-3">
-                    This income represents your <strong>90% merchant share</strong> after PayPal processing fees and PIE's 10% platform fee.
-                    PIE handles distribution of this amount to your PayPal account when payment thresholds are met.
-                  </p>
-                  <RevenueBreakdownModal 
-                    trigger={
-                      <Button variant="outline" size="sm" className="text-xs">
-                        <Info className="w-3 h-3 mr-1" />
-                        View Revenue Split Details
-                      </Button>
-                    }
-                  />
+            <>
+              <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <div className="bg-blue-500 rounded-full p-2">
+                    <DollarSign className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="text-blue-400 font-semibold mb-2">
+                      Merchant Revenue (90% Share)
+                    </h4>
+                    <p className="text-sm text-gray-400 mb-3">
+                      This income represents your <strong>90% merchant share</strong> after PayPal processing fees and PIE's 10% platform fee.
+                      PIE handles distribution of this amount to your PayPal account when payment thresholds are met.
+                    </p>
+                    <RevenueBreakdownModal 
+                      trigger={
+                        <Button variant="outline" size="sm" className="text-xs">
+                          <Info className="w-3 h-3 mr-1" />
+                          View Revenue Split Details
+                        </Button>
+                      }
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
+
+              {/* Payment Threshold Alert */}
+              {platformIncome < 100 && (
+                <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="bg-yellow-500 rounded-full p-2">
+                      <AlertTriangle className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="text-yellow-400 font-semibold mb-2">
+                        Payment Threshold Not Met
+                      </h4>
+                      <p className="text-sm text-gray-300 mb-2">
+                        Revenue is being tracked but <strong>will not be paid out</strong> until you reach the <strong>$100 minimum threshold</strong>.
+                      </p>
+                      <div className="bg-yellow-500/10 rounded p-2 text-xs text-yellow-200">
+                        <div className="flex justify-between mb-1">
+                          <span>Current Quarter Revenue:</span>
+                          <span className="font-semibold">{formatCurrency(platformIncome)}</span>
+                        </div>
+                        <div className="flex justify-between mb-1">
+                          <span>Minimum Threshold:</span>
+                          <span className="font-semibold">$100.00</span>
+                        </div>
+                        <div className="flex justify-between pt-1 border-t border-yellow-500/20">
+                          <span>Still Needed:</span>
+                          <span className="font-semibold">{formatCurrency(Math.max(0, 100 - platformIncome))}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {platformIncome >= 100 && (
+                <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="bg-green-500 rounded-full p-2">
+                      <DollarSign className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="text-green-400 font-semibold mb-2">
+                        Payment Threshold Met! 🎉
+                      </h4>
+                      <p className="text-sm text-gray-300">
+                        You've reached the $100 minimum threshold. Your revenue will be distributed to your PayPal account according to the quarterly payout schedule.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
           )}
 
           <div>
