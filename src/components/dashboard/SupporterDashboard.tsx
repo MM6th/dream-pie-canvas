@@ -418,6 +418,25 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
                 <div className="grid grid-cols-1 gap-4">
                   <Card className="bg-gray-700/50 border-gray-600">
                     <CardHeader>
+                      <CardTitle className="text-white text-sm flex items-center gap-2">
+                        <Mail className="w-4 h-4" />
+                        Messages
+                        {unreadMessagesCount > 0 && (
+                          <span className="px-1.5 py-0.5 text-xs bg-destructive text-destructive-foreground rounded-full">
+                            {unreadMessagesCount}
+                          </span>
+                        )}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <MessagingInfoCard userType="supporter" />
+                      <MessagingInbox />
+                      <CreditTransactionHistory />
+                    </CardContent>
+                  </Card>
+                  
+                  <Card className="bg-gray-700/50 border-gray-600">
+                    <CardHeader>
                       <CardTitle className="text-white text-sm">Community Posts</CardTitle>
                     </CardHeader>
                     <CardContent>
