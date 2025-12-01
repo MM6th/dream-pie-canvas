@@ -36,7 +36,7 @@ const StoreView = ({ onBackToDashboard, onBulletinView, onSignOut }: StoreViewPr
               className={`border bg-primary border-primary text-white hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8 w-full' : ''}`}
             >
               <ShoppingBag className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
-              {isMobile ? 'Store' : 'Browse Store'}
+              Store
             </Button>
             <Button
               onClick={onBulletinView}
@@ -76,7 +76,7 @@ const StoreView = ({ onBackToDashboard, onBulletinView, onSignOut }: StoreViewPr
       </div>
 
       {/* Store content with proper container */}
-      <div className="max-w-6xl mx-auto px-6">
+      <div className="max-w-6xl mx-auto px-3 sm:px-6">
         <StorePage />
       </div>
     </div>
