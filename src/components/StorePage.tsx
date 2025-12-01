@@ -852,12 +852,12 @@ const StorePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800 p-3 sm:p-6">
       <div className="max-w-6xl mx-auto">
-        <div className="mb-8">
+        <div className="mb-6 sm:mb-8">
             <div className="mb-4">
-              <h1 className="text-4xl font-bold text-white mb-2">Content Store</h1>
-              <p className="text-gray-300">Your boutique shop for film, music, and content creators</p>
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-2">Content Store</h1>
+              <p className="text-sm sm:text-base text-gray-300">Your boutique shop for film, music, and content creators</p>
             </div>
           {userProfile?.adult_content_restricted && (
             <div className="mt-2 p-2 bg-blue-900/20 border border-blue-500/30 rounded-lg">
@@ -870,27 +870,27 @@ const StorePage = () => {
         </div>
 
         {/* Astrology Products Section */}
-        <div className="mb-12">
-          <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
-            <Star className="w-6 h-6" />
+        <div className="mb-8 sm:mb-12">
+          <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6 flex items-center gap-2">
+            <Star className="w-5 h-5 sm:w-6 sm:h-6" />
             Astrology Readings & Consultations
           </h2>
           <AstrologyStoreSection />
         </div>
 
         {/* Fashion Products Section */}
-        <div className="mb-12">
-          <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
-            <Shirt className="w-6 h-6" />
+        <div className="mb-8 sm:mb-12">
+          <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6 flex items-center gap-2">
+            <Shirt className="w-5 h-5 sm:w-6 sm:h-6" />
             Fashion
           </h2>
           <FashionStoreSection />
         </div>
 
         {/* Audio Products Section */}
-        <div className="mb-12">
-          <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
-            <AudioLines className="w-6 h-6" />
+        <div className="mb-8 sm:mb-12">
+          <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6 flex items-center gap-2">
+            <AudioLines className="w-5 h-5 sm:w-6 sm:h-6" />
             Audio Content
           </h2>
           
@@ -1105,9 +1105,9 @@ const StorePage = () => {
         </div>
 
         {/* Video Ad Opportunities Section */}
-        <div className="mb-12">
-          <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
-            <Video className="w-6 h-6" />
+        <div className="mb-8 sm:mb-12">
+          <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6 flex items-center gap-2">
+            <Video className="w-5 h-5 sm:w-6 sm:h-6" />
             Video Ad Opportunities
           </h2>
           
