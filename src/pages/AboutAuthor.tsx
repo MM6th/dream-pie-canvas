@@ -48,19 +48,19 @@ const AboutAuthor = () => {
         </div>
       </div>
 
-      <div className="pt-20 max-w-4xl mx-auto p-6">
+      <div className={`pt-20 max-w-4xl mx-auto ${isMobile ? 'p-4' : 'p-6'}`}>
         <Card className="bg-gray-800 border-gray-700">
-          <CardContent className="p-8">
+          <CardContent className={isMobile ? 'p-4' : 'p-8'}>
             <div className="text-center mb-8">
-              <h1 className="text-4xl font-bold text-white mb-4">About the Author</h1>
+              <h1 className={`${isMobile ? 'text-2xl' : 'text-4xl'} font-bold text-white mb-4`}>About the Author</h1>
             </div>
 
             <div className="space-y-6 text-gray-300 leading-relaxed">
-              <div className="flex items-start gap-6 mb-6">
+              <div className={`flex ${isMobile ? 'flex-col' : 'items-start'} gap-6 mb-6`}>
                 <img
                   src="/lovable-uploads/89cec5e6-7542-413d-b5b2-e64de60f0567.png"
                   alt="Author Portrait"
-                  className="w-64 h-64 rounded-lg object-cover flex-shrink-0"
+                  className={`${isMobile ? 'w-full h-auto' : 'w-64 h-64'} rounded-lg object-cover flex-shrink-0`}
                 />
                 <p className="flex-1">
                   I wouldn't call myself a super-human; just someone who after researching and reflecting realized that he's actualized and is still manifesting their natal chart. Yes, astrology and entertainment is a peculiar mix, and I can't it was intended that way, but when man makes plans God laughs.
@@ -92,7 +92,7 @@ const AboutAuthor = () => {
               </p>
 
 
-              <h2 className="text-2xl font-bold text-white mt-8 mb-4">Entertainment Industry Background</h2>
+              <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-white mt-8 mb-4`}>Entertainment Industry Background</h2>
 
               <p>
                 I started out signed to Tony Rahsan's 40 Acres management company in 1992 in a group called Hijinx. We performed on the same stages as Wutang Clan, and other stages such as the Apollo, and made an appearance on the Richard Bey Show. We also did the Rugrats intro song that so many kids grew up listening to everyday.
