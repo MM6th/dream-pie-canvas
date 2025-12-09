@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Music, Video, User, FolderOpen, DollarSign, MessageSquare } from "lucide-react";
+import { Music, Video, User, FolderOpen, MessageSquare } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import AudioPlayer from "@/components/AudioPlayer";
 import VideoPlayer from "@/components/VideoPlayer";
@@ -16,8 +16,6 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuarterlyIncome } from "@/hooks/useQuarterlyIncome";
-import SECalculatorModal from "@/components/SECalculatorModal";
 import { useDashboardTutorial } from "@/hooks/useDashboardTutorial";
 import { supporterTutorialSteps } from "@/constants/tutorialContent";
 import { TutorialTooltip } from "@/components/TutorialTooltip";
@@ -61,7 +59,6 @@ const LiveStreamArtistDashboard = ({
   const [userProfile, setUserProfile] = useState<any>(null);
   const [playlistPublic, setPlaylistPublic] = useState(false);
   const [purchasedPortfolios, setPurchasedPortfolios] = useState<any[]>([]);
-  const { currentQuarterIncome } = useQuarterlyIncome(user?.id);
   
   const tutorial = useDashboardTutorial('supporter', supporterTutorialSteps);
 
@@ -209,27 +206,6 @@ const LiveStreamArtistDashboard = ({
         <SupporterCurrentAffirmationsModal />
       </div>
 
-      {/* SE Tax Calculator - Always visible for Live Stream Artists (merchant-style) */}
-      <Card className="p-6 mb-6 border-primary/20 bg-primary/5 bg-gray-800/50 border-gray-700 backdrop-blur-sm" data-tutorial="tax-calculator">
-        <div className="flex items-start gap-4">
-          <div className="p-3 rounded-lg bg-primary/10">
-            <DollarSign className="h-6 w-6 text-primary" />
-          </div>
-          <div className="flex-1">
-            <h3 className="font-semibold mb-2 text-white">Self-Employment Tax Calculator</h3>
-            <p className="text-sm text-gray-400 mb-4">
-              {currentQuarterIncome > 0 
-                ? `You've earned $${currentQuarterIncome.toFixed(2)} this quarter. Calculate your estimated self-employment taxes.`
-                : 'Track your earnings and calculate estimated self-employment taxes for your live streaming income.'
-              }
-            </p>
-            <SECalculatorModal 
-              userId={user?.id}
-              autoPopulateIncome={currentQuarterIncome}
-            />
-          </div>
-        </div>
-      </Card>
 
       <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm mb-6">
         <CardHeader>
