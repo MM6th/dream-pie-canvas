@@ -1722,9 +1722,11 @@ export type Database = {
           paypal_email: string | null
           pinterest_url: string | null
           playlist_public: boolean | null
+          portfolios_public: boolean | null
           profile_complete: boolean | null
           skills: string[] | null
           snapchat_url: string | null
+          social_links_public: boolean | null
           updated_at: string | null
           user_type: string
           website: string | null
@@ -1753,9 +1755,11 @@ export type Database = {
           paypal_email?: string | null
           pinterest_url?: string | null
           playlist_public?: boolean | null
+          portfolios_public?: boolean | null
           profile_complete?: boolean | null
           skills?: string[] | null
           snapchat_url?: string | null
+          social_links_public?: boolean | null
           updated_at?: string | null
           user_type: string
           website?: string | null
@@ -1784,9 +1788,11 @@ export type Database = {
           paypal_email?: string | null
           pinterest_url?: string | null
           playlist_public?: boolean | null
+          portfolios_public?: boolean | null
           profile_complete?: boolean | null
           skills?: string[] | null
           snapchat_url?: string | null
+          social_links_public?: boolean | null
           updated_at?: string | null
           user_type?: string
           website?: string | null
@@ -2296,6 +2302,10 @@ export type Database = {
       }
       can_view_private_profile: {
         Args: { profile_id: string; viewer_id: string }
+        Returns: boolean
+      }
+      can_view_profile_content: {
+        Args: { content_type: string; profile_id: string; viewer_id: string }
         Returns: boolean
       }
       check_merchant_payout_threshold: {

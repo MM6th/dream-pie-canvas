@@ -9,9 +9,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import AvatarUpload from "./AvatarUpload";
-import { Trash2, Lock, Shield } from "lucide-react";
+import { Trash2, Shield } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { SkillsInput } from "@/components/profile/SkillsInput";
+import { VisibilityToggleWithHelp } from "./VisibilityToggleWithHelp";
 
 interface FullMerchantProfileModalProps {
   isOpen?: boolean;
@@ -47,9 +48,11 @@ const FullMerchantProfileModal = ({
   const [pinterestUrl, setPinterestUrl] = useState('');
   const [onlyfansUrl, setOnlyfansUrl] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
-  const [isPrivate, setIsPrivate] = useState(false);
   const [isAdultCreator, setIsAdultCreator] = useState(false);
   const [skills, setSkills] = useState<string[]>([]);
+  const [playlistPublic, setPlaylistPublic] = useState(false);
+  const [portfoliosPublic, setPortfoliosPublic] = useState(false);
+  const [socialLinksPublic, setSocialLinksPublic] = useState(false);
   const [internalOpen, setInternalOpen] = useState(false);
   const [currentProfile, setCurrentProfile] = useState(profile);
 
@@ -78,9 +81,11 @@ const FullMerchantProfileModal = ({
       setPinterestUrl(profileToUse.pinterest_url || '');
       setOnlyfansUrl(profileToUse.onlyfans_url || '');
       setAvatarUrl(profileToUse.avatar_url || '');
-      setIsPrivate(profileToUse.is_private || false);
       setIsAdultCreator(profileToUse.is_adult_creator || false);
       setSkills(profileToUse.skills || []);
+      setPlaylistPublic(profileToUse.playlist_public || false);
+      setPortfoliosPublic(profileToUse.portfolios_public || false);
+      setSocialLinksPublic(profileToUse.social_links_public || false);
     }
   }, [profile, currentProfile]);
 
@@ -135,9 +140,11 @@ const FullMerchantProfileModal = ({
           pinterest_url: pinterestUrl,
           onlyfans_url: onlyfansUrl,
           avatar_url: avatarUrl,
-          is_private: isPrivate,
           is_adult_creator: isAdultCreator,
           skills: skills,
+          playlist_public: playlistPublic,
+          portfolios_public: portfoliosPublic,
+          social_links_public: socialLinksPublic,
           updated_at: new Date().toISOString()
         })
         .eq('id', user.id);
@@ -409,23 +416,25 @@ const FullMerchantProfileModal = ({
                 />
               </div>
 
-              {/* Private Profile Toggle */}
-              <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg border border-gray-600">
-                <div className="flex items-center gap-3">
-                  <Lock className="w-5 h-5 text-blue-400" />
-                  <div>
-                    <Label htmlFor="isPrivate" className="text-white font-medium">
-                      Make Profile Private
-                    </Label>
-                    <p className="text-sm text-gray-400">
-                      Only approved followers can view your posts, social links, and playlist
-                    </p>
-                  </div>
-                </div>
-                <Switch
-                  id="isPrivate"
-                  checked={isPrivate}
-                  onCheckedChange={setIsPrivate}
+              {/* Visibility Toggles with Help Icons */}
+              <div className="space-y-3">
+                <p className="text-sm text-gray-400 mb-2">
+                  All profiles are private by default. Choose what non-followers can see:
+                </p>
+                <VisibilityToggleWithHelp
+                  type="playlist"
+                  checked={playlistPublic}
+                  onCheckedChange={setPlaylistPublic}
+                />
+                <VisibilityToggleWithHelp
+                  type="portfolios"
+                  checked={portfoliosPublic}
+                  onCheckedChange={setPortfoliosPublic}
+                />
+                <VisibilityToggleWithHelp
+                  type="social_links"
+                  checked={socialLinksPublic}
+                  onCheckedChange={setSocialLinksPublic}
                 />
               </div>
               
@@ -669,23 +678,25 @@ const FullMerchantProfileModal = ({
               />
             </div>
 
-            {/* Private Profile Toggle */}
-            <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg border border-gray-600">
-              <div className="flex items-center gap-3">
-                <Lock className="w-5 h-5 text-blue-400" />
-                <div>
-                  <Label htmlFor="isPrivate2" className="text-white font-medium">
-                    Make Profile Private
-                  </Label>
-                  <p className="text-sm text-gray-400">
-                    Only approved followers can view your posts, social links, and playlist
-                  </p>
-                </div>
-              </div>
-              <Switch
-                id="isPrivate2"
-                checked={isPrivate}
-                onCheckedChange={setIsPrivate}
+            {/* Visibility Toggles with Help Icons */}
+            <div className="space-y-3">
+              <p className="text-sm text-gray-400 mb-2">
+                All profiles are private by default. Choose what non-followers can see:
+              </p>
+              <VisibilityToggleWithHelp
+                type="playlist"
+                checked={playlistPublic}
+                onCheckedChange={setPlaylistPublic}
+              />
+              <VisibilityToggleWithHelp
+                type="portfolios"
+                checked={portfoliosPublic}
+                onCheckedChange={setPortfoliosPublic}
+              />
+              <VisibilityToggleWithHelp
+                type="social_links"
+                checked={socialLinksPublic}
+                onCheckedChange={setSocialLinksPublic}
               />
             </div>
             
