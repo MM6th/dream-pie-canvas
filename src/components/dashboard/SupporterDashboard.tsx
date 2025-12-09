@@ -202,11 +202,6 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
         </Button>
       </PieWelcomeModal>
 
-      {/* Astrology Library Section */}
-      <div className="mb-6">
-        <BuyerAstrologyLibrary />
-      </div>
-
       {/* Current Affirmations Section */}
       <div className="mb-6">
         <SupporterCurrentAffirmationsModal />
@@ -428,6 +423,10 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
         </CardContent>
       </Card>
 
+      {/* Astrology Library Section - At Bottom */}
+      <div className="mb-6">
+        <BuyerAstrologyLibrary />
+      </div>
     </div>
   );
 };
