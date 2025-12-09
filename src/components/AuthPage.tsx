@@ -9,7 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import { User, Upload } from "lucide-react";
 import UserStatsDisplay from "./UserStatsDisplay";
 
 const INDUSTRY_OPTIONS = [
@@ -30,8 +29,6 @@ const AuthPage = () => {
   const [emailSent, setEmailSent] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [userType, setUserType] = useState<"supporter" | "merchant">("supporter");
-  const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [selectedIndustry, setSelectedIndustry] = useState<string>("");
 
   const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -43,21 +40,11 @@ const AuthPage = () => {
     const password = formData.get("password") as string;
     const displayName = formData.get("displayName") as string;
 
-    // Validate requirements for both user types
+    // Validate display name
     if (!displayName || displayName.trim() === "") {
       toast({
         title: "Error",
-        description: `Display name is required for ${userType} accounts`,
-        variant: "destructive"
-      });
-      setIsLoading(false);
-      return;
-    }
-    
-    if (!avatarFile) {
-      toast({
-        title: "Error",
-        description: `Profile picture is required for ${userType} accounts`,
+        description: "Display name is required",
         variant: "destructive"
       });
       setIsLoading(false);
@@ -76,36 +63,18 @@ const AuthPage = () => {
     }
 
     try {
-      // Upload avatar first to get URL
-      let avatarUrl = '';
-      if (avatarFile) {
-        // Generate temporary user ID for upload
-        const tempUserId = crypto.randomUUID();
-        const fileExt = avatarFile.name.split('.').pop();
-        const fileName = `${tempUserId}/avatar.${fileExt}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from('avatars')
-          .upload(fileName, avatarFile, { upsert: true });
-
-        if (!uploadError) {
-          const { data: { publicUrl } } = supabase.storage
-            .from('avatars')
-            .getPublicUrl(fileName);
-          avatarUrl = publicUrl;
-        }
-      }
-
-      // Sign up user with avatar URL in metadata
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      const redirectUrl = `${window.location.origin}/`;
+      
+      // Sign up user - avatar will be uploaded after email confirmation via ProfileCompletionModal
+      const { error: authError } = await supabase.auth.signUp({
         email,
         password,
         options: {
+          emailRedirectTo: redirectUrl,
           data: {
             user_type: userType,
             is_adult_creator: false,
-            display_name: displayName || null,
-            avatar_url: avatarUrl,
+            display_name: displayName.trim(),
             skills: userType === "merchant" && selectedIndustry ? [selectedIndustry] : []
           }
         }
@@ -121,31 +90,6 @@ const AuthPage = () => {
         return;
       }
 
-      // Rename avatar file with actual user ID if needed
-      if (avatarUrl && authData.user) {
-        const fileExt = avatarFile!.name.split('.').pop();
-        const oldFileName = avatarUrl.split('/').slice(-2).join('/'); // Get last two segments
-        const newFileName = `${authData.user.id}/avatar.${fileExt}`;
-
-        // Move the file to the correct location with user's actual ID
-        const { error: moveError } = await supabase.storage
-          .from('avatars')
-          .move(oldFileName, newFileName);
-
-        if (!moveError) {
-          // Update the avatar URL with the new location
-          const { data: { publicUrl } } = supabase.storage
-            .from('avatars')
-            .getPublicUrl(newFileName);
-
-          // Update profile with final avatar URL
-          await supabase
-            .from('profiles')
-            .update({ avatar_url: publicUrl, profile_complete: true })
-            .eq('id', authData.user.id);
-        }
-      }
-
       setEmailSent(true);
       toast({
         title: "Success",
@@ -159,18 +103,6 @@ const AuthPage = () => {
       });
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setAvatarFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setAvatarPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
     }
   };
 
@@ -384,63 +316,19 @@ const AuthPage = () => {
                     
                     {/* Supporter-specific required fields */}
                     {userType === "supporter" && (
-                      <>
-                        <div>
-                          <Label htmlFor="displayName" className="text-white">
-                            Display Name <span className="text-red-400">*</span>
-                          </Label>
-                          <Input
-                            id="displayName"
-                            name="displayName"
-                            type="text"
-                            required
-                            className="bg-gray-700 border-gray-600 text-white focus:border-blue-500"
-                            placeholder="Enter your display name"
-                          />
-                        </div>
-                        
-                        <div className={`p-4 rounded-lg border-2 ${!avatarFile ? 'border-red-500/50 bg-red-500/5' : 'border-gray-600 bg-gray-800/30'} transition-colors`}>
-                          <Label className="text-white">
-                            Profile Picture <span className="text-red-400">* REQUIRED</span>
-                          </Label>
-                          <p className="text-xs text-gray-400 mt-1 mb-3">
-                            All users must upload a profile picture to create an account
-                          </p>
-                          <div className="flex flex-col items-center space-y-3">
-                            {avatarPreview ? (
-                              <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-blue-500 shadow-lg shadow-blue-500/30">
-                                <img 
-                                  src={avatarPreview} 
-                                  alt="Avatar preview" 
-                                  className="w-full h-full object-cover"
-                                />
-                              </div>
-                            ) : (
-                              <div className="w-24 h-24 rounded-full bg-gray-700 border-2 border-dashed border-red-400 flex items-center justify-center animate-pulse">
-                                <User className="w-12 h-12 text-gray-400" />
-                              </div>
-                            )}
-                            <div className="relative">
-                              <input
-                                type="file"
-                                accept="image/*"
-                                onChange={handleAvatarChange}
-                                required
-                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                id="avatar-upload-supporter"
-                              />
-                              <Button
-                                type="button"
-                                variant="outline"
-                                className={`${!avatarFile ? 'border-red-400 text-red-400 bg-red-500/10 hover:bg-red-500/20' : 'border-blue-500 text-blue-400 bg-blue-500/10 hover:bg-blue-500/20'}`}
-                              >
-                                <Upload className="w-4 h-4 mr-2" />
-                                {avatarPreview ? "Change Picture" : "Upload Picture"}
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      </>
+                      <div>
+                        <Label htmlFor="displayName" className="text-white">
+                          Display Name <span className="text-red-400">*</span>
+                        </Label>
+                        <Input
+                          id="displayName"
+                          name="displayName"
+                          type="text"
+                          required
+                          className="bg-gray-700 border-gray-600 text-white focus:border-blue-500"
+                          placeholder="Enter your display name"
+                        />
+                      </div>
                     )}
                     <div className="space-y-2">
                       <Label className="text-white">Account Type</Label>
@@ -514,50 +402,14 @@ const AuthPage = () => {
                             </SelectContent>
                           </Select>
                         </div>
-                        
-                        <div className={`p-4 rounded-lg border-2 ${!avatarFile ? 'border-red-500/50 bg-red-500/5' : 'border-gray-600 bg-gray-800/30'} transition-colors`}>
-                          <Label className="text-white">
-                            Profile Picture <span className="text-red-400">* REQUIRED</span>
-                          </Label>
-                          <p className="text-xs text-gray-400 mt-1 mb-3">
-                            All users must upload a profile picture to create an account
-                          </p>
-                          <div className="flex flex-col items-center space-y-3">
-                            {avatarPreview ? (
-                              <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-blue-500 shadow-lg shadow-blue-500/30">
-                                <img 
-                                  src={avatarPreview} 
-                                  alt="Avatar preview" 
-                                  className="w-full h-full object-cover"
-                                />
-                              </div>
-                            ) : (
-                              <div className="w-24 h-24 rounded-full bg-gray-700 border-2 border-dashed border-red-400 flex items-center justify-center animate-pulse">
-                                <User className="w-12 h-12 text-gray-400" />
-                              </div>
-                            )}
-                            <div className="relative">
-                              <input
-                                type="file"
-                                accept="image/*"
-                                onChange={handleAvatarChange}
-                                required
-                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                id="avatar-upload-signup"
-                              />
-                              <Button
-                                type="button"
-                                variant="outline"
-                                className={`${!avatarFile ? 'border-red-400 text-red-400 bg-red-500/10 hover:bg-red-500/20' : 'border-blue-500 text-blue-400 bg-blue-500/10 hover:bg-blue-500/20'}`}
-                              >
-                                <Upload className="w-4 h-4 mr-2" />
-                                {avatarPreview ? "Change Picture" : "Upload Picture"}
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
                       </>
                     )}
+                    
+                    <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/30">
+                      <p className="text-xs text-blue-300 text-center">
+                        After confirming your email, you'll be prompted to upload your profile picture.
+                      </p>
+                    </div>
                     
                     <p className="text-xs text-gray-400 text-center">
                       The content on this website is not made for children.
