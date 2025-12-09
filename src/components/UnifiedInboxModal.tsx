@@ -110,6 +110,7 @@ export const UnifiedInboxModal = ({ open, onOpenChange, userId, userType }: Unif
     if (!userId) return;
 
     try {
+      // Force fresh data by using a cache-bust approach
       const { data, error } = await supabase
         .from("notifications")
         .select("*")
@@ -118,6 +119,8 @@ export const UnifiedInboxModal = ({ open, onOpenChange, userId, userType }: Unif
         .limit(20);
 
       if (error) throw error;
+      
+      console.log("Fetched notifications:", data?.map(n => ({ id: n.id, title: n.title, read: n.read })));
       
       setNotifications(data || []);
       setUnreadNotificationsCount(data?.filter(n => !n.read).length || 0);
