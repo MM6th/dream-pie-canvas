@@ -11,21 +11,14 @@ interface SkillsInputProps {
 }
 
 const DEFAULT_SUGGESTIONS = [
-  'Editor',
-  'Webcam Model',
-  'Influencer',
-  'Cook',
-  'Podcaster',
   'Film Maker',
-  'Musician',
-  'Model',
-  'Photographer',
-  'Designer',
-  'Writer',
+  'Film Editor',
+  'Music Artist',
+  'Live Stream Artist',
+  'Audio Podcaster',
   'Voice Actor',
-  'Content Creator',
-  'Artist',
-  'Developer',
+  'Cook/Baker',
+  'Book Editor',
 ];
 
 export const SkillsInput = ({ 
