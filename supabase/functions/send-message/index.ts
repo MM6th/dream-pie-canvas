@@ -200,6 +200,18 @@ Deno.serve(async (req) => {
         p_amount: merchantRevenue,
       });
 
+      // Check if merchant has reached payout threshold ($100)
+      try {
+        const { data: thresholdReached } = await supabaseAdmin.rpc('check_merchant_payout_threshold', {
+          p_merchant_id: recipientId,
+        });
+        if (thresholdReached) {
+          console.log('Payout threshold reached for merchant:', recipientId);
+        }
+      } catch (thresholdError) {
+        console.error('Error checking payout threshold:', thresholdError);
+      }
+
       // Create notification for recipient merchant about paid message
       await supabaseAdmin
         .from('notifications')

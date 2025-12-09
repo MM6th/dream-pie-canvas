@@ -1034,6 +1034,53 @@ export type Database = {
           },
         ]
       }
+      merchant_payouts: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          merchant_id: string
+          paid_at: string | null
+          payment_due_date: string
+          payment_notes: string | null
+          status: string
+          threshold_reached_at: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          merchant_id: string
+          paid_at?: string | null
+          payment_due_date?: string
+          payment_notes?: string | null
+          status?: string
+          threshold_reached_at?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          merchant_id?: string
+          paid_at?: string | null
+          payment_due_date?: string
+          payment_notes?: string | null
+          status?: string
+          threshold_reached_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_payouts_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       message_settings: {
         Row: {
           created_at: string
@@ -2249,6 +2296,10 @@ export type Database = {
       }
       can_view_private_profile: {
         Args: { profile_id: string; viewer_id: string }
+        Returns: boolean
+      }
+      check_merchant_payout_threshold: {
+        Args: { p_merchant_id: string }
         Returns: boolean
       }
       check_overdue_deliveries: { Args: never; Returns: undefined }
