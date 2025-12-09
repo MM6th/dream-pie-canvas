@@ -24,7 +24,8 @@ interface UseDashboardTutorialReturn {
 
 export const useDashboardTutorial = (
   userType: 'merchant' | 'supporter' | 'admin',
-  steps: TutorialStep[]
+  steps: TutorialStep[],
+  userCreatedAt?: string | null
 ): UseDashboardTutorialReturn => {
   const { user } = useAuth();
   // Include user ID in storage key to track tutorial state per user
@@ -34,12 +35,22 @@ export const useDashboardTutorial = (
   const [targetElement, setTargetElement] = useState<HTMLElement | null>(null);
   const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
 
+  // Check if user was created within the last hour (truly new signup)
+  const isNewlyCreatedUser = () => {
+    if (!userCreatedAt) return false;
+    const createdDate = new Date(userCreatedAt);
+    const now = new Date();
+    const hourInMs = 60 * 60 * 1000;
+    return (now.getTime() - createdDate.getTime()) < hourInMs;
+  };
+
   // Check if this is a first-time user on mount
   useEffect(() => {
     if (!user?.id) return;
     const isCompleted = localStorage.getItem(storageKey);
-    setIsFirstTimeUser(!isCompleted);
-  }, [storageKey, user?.id]);
+    // Only consider as first-time user if they're newly created AND haven't completed tutorial
+    setIsFirstTimeUser(!isCompleted && isNewlyCreatedUser());
+  }, [storageKey, user?.id, userCreatedAt]);
 
   const scrollToTarget = useCallback((element: HTMLElement) => {
     element.scrollIntoView({
@@ -72,14 +83,14 @@ export const useDashboardTutorial = (
   useEffect(() => {
     if (!user?.id) return;
     const isCompleted = localStorage.getItem(storageKey);
-    // Only auto-show tutorial for first-time users
-    if (!isCompleted && steps.length > 0) {
+    // Only auto-show tutorial for newly created users who haven't completed it
+    if (!isCompleted && isNewlyCreatedUser() && steps.length > 0) {
       // Delay to let the dashboard render first
       setTimeout(() => {
         setIsActive(true);
       }, 1500);
     }
-  }, [storageKey, steps.length, user?.id]);
+  }, [storageKey, steps.length, user?.id, userCreatedAt]);
 
   useEffect(() => {
     if (isActive) {

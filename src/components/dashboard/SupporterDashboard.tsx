@@ -54,7 +54,7 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
   const { currentQuarterIncome } = useQuarterlyIncome(user?.id);
   const [creditBalance, setCreditBalance] = useState(0);
   
-  const tutorial = useDashboardTutorial('supporter', supporterTutorialSteps);
+  const tutorial = useDashboardTutorial('supporter', supporterTutorialSteps, userProfile?.created_at);
 
   const fetchPurchasedPortfolios = async () => {
     if (!user) return;
