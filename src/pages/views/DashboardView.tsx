@@ -78,7 +78,7 @@ const DashboardView = ({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800" style={backgroundStyle}>
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800 overflow-x-hidden" style={backgroundStyle}>
       <DashboardHeader 
         onStoreView={onStoreView} 
         onBulletinView={onBulletinView}

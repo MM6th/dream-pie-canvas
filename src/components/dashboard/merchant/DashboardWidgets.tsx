@@ -21,7 +21,7 @@ const DashboardWidgets = ({ onSuccess, onViewStore, onBackgroundUpload, isAdmin 
   const [isAstrologyModalOpen, setIsAstrologyModalOpen] = useState(false);
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="max-w-6xl mx-auto w-full overflow-x-hidden">
       {/* Astrology Products - Admin Only */}
       {isAdmin && (
         <div className="grid grid-cols-1 lg:grid-cols-1 gap-6 mb-8" data-tutorial="astrology-products">

@@ -169,7 +169,7 @@ const MerchantDashboard = ({
   }
 
   return (
-    <div className={`max-w-6xl mx-auto ${isMobile ? 'p-4' : 'p-6'} pt-20`}>
+    <div className={`max-w-6xl mx-auto ${isMobile ? 'p-4' : 'p-6'} pt-20 overflow-x-hidden w-full`}>
       {/* Floating tutorial for first-time users only */}
       {tutorial.isActive && tutorial.currentStepData && tutorial.isFirstTimeUser && (
         <>
