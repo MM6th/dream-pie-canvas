@@ -10,7 +10,7 @@ import { Settings, DollarSign } from 'lucide-react';
 
 export const MessageSettingsCard = () => {
   const [enabled, setEnabled] = useState(true);
-  const [creditsPerMessage, setCreditsPerMessage] = useState(10);
+  const [creditsPerMessage, setCreditsPerMessage] = useState<string>('10');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [hasSettings, setHasSettings] = useState(false);
@@ -37,7 +37,7 @@ export const MessageSettingsCard = () => {
 
       if (data) {
         setEnabled(data.enabled);
-        setCreditsPerMessage(data.credits_per_message);
+        setCreditsPerMessage(String(data.credits_per_message));
         setHasSettings(true);
       }
     } catch (error) {
@@ -53,7 +53,8 @@ export const MessageSettingsCard = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      if (creditsPerMessage < 1 || creditsPerMessage > 100) {
+      const creditsNum = parseInt(creditsPerMessage) || 0;
+      if (creditsNum < 1 || creditsNum > 100) {
         toast({
           title: 'Invalid amount',
           description: 'Credits per message must be between 1 and 100',
@@ -67,7 +68,7 @@ export const MessageSettingsCard = () => {
           .from('message_settings')
           .update({
             enabled,
-            credits_per_message: creditsPerMessage,
+            credits_per_message: parseInt(creditsPerMessage) || 10,
           })
           .eq('merchant_id', user.id);
 
@@ -78,7 +79,7 @@ export const MessageSettingsCard = () => {
           .insert({
             merchant_id: user.id,
             enabled,
-            credits_per_message: creditsPerMessage,
+            credits_per_message: parseInt(creditsPerMessage) || 10,
           });
 
         if (error) throw error;
@@ -111,7 +112,7 @@ export const MessageSettingsCard = () => {
     );
   }
 
-  const revenuePerMessage = (creditsPerMessage * 0.10).toFixed(2);
+  const revenuePerMessage = ((parseInt(creditsPerMessage) || 0) * 0.10).toFixed(2);
 
   return (
     <Card>
@@ -146,11 +147,17 @@ export const MessageSettingsCard = () => {
               <div className="flex items-center gap-2">
                 <Input
                   id="credits"
-                  type="number"
-                  min={1}
-                  max={100}
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   value={creditsPerMessage}
-                  onChange={(e) => setCreditsPerMessage(Number(e.target.value))}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === '' || /^\d+$/.test(val)) {
+                      setCreditsPerMessage(val);
+                    }
+                  }}
+                  placeholder="10"
                   className="max-w-[120px]"
                 />
                 <span className="text-sm text-muted-foreground">
