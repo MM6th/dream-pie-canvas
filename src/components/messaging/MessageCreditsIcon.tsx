@@ -6,9 +6,10 @@ import { CreditPurchaseModal } from "./CreditPurchaseModal";
 
 interface MessageCreditsIconProps {
   userId: string;
+  userType?: 'merchant' | 'supporter';
 }
 
-export const MessageCreditsIcon = ({ userId }: MessageCreditsIconProps) => {
+export const MessageCreditsIcon = ({ userId, userType = 'supporter' }: MessageCreditsIconProps) => {
   const { balance, loading, refetch } = useMessagingCredits(userId);
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
 
@@ -34,6 +35,7 @@ export const MessageCreditsIcon = ({ userId }: MessageCreditsIconProps) => {
         open={showPurchaseModal}
         onOpenChange={setShowPurchaseModal}
         onPurchaseComplete={handlePurchaseComplete}
+        userType={userType}
       />
     </>
   );
