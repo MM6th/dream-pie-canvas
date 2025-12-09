@@ -1,13 +1,15 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { LogOut, ShoppingBag, MessageSquare, User, Users, BookOpen, DollarSign } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useNavigate } from "react-router-dom";
 import FullMerchantProfileModal from "@/components/profile/FullMerchantProfileModal";
+import SupporterProfileModal from "@/components/profile/SupporterProfileModal";
 import SECalculatorModal from "@/components/SECalculatorModal";
 import { useQuarterlyIncome } from "@/hooks/useQuarterlyIncome";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 interface DashboardHeaderProps {
   onStoreView: () => void;
@@ -36,6 +38,23 @@ const DashboardHeader = ({
   const navigate = useNavigate();
   const { user } = useAuth();
   const { currentQuarterIncome, companyIncome, contractorIncome } = useQuarterlyIncome(user?.id);
+  const [supporterProfile, setSupporterProfile] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchSupporterProfile = async () => {
+      if (!user || userType !== "supporter") return;
+      
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+      
+      if (data) setSupporterProfile(data);
+    };
+    
+    fetchSupporterProfile();
+  }, [user, userType]);
 
   return (
     <div className="max-w-6xl mx-auto px-4 pt-4 pb-4">
@@ -114,6 +133,17 @@ const DashboardHeader = ({
                 {isMobile ? 'Profile' : 'Edit Profile'}
               </Button>
             </FullMerchantProfileModal>
+          )}
+          {userType === "supporter" && (
+            <SupporterProfileModal profile={supporterProfile} onProfileUpdate={onProfileUpdate}>
+              <Button
+                variant="outline"
+                className={`border-gray-600 text-white bg-transparent hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
+              >
+                <User className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
+                {isMobile ? 'Profile' : 'Edit Profile'}
+              </Button>
+            </SupporterProfileModal>
           )}
         </div>
         
