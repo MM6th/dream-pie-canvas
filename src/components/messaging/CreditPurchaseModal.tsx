@@ -16,7 +16,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, MessageCircle, CreditCard, Info, Settings, DollarSign } from 'lucide-react';
+import { Loader2, MessageCircle, CreditCard, Info, Settings, DollarSign, Video, Clock } from 'lucide-react';
 
 interface CreditPurchaseModalProps {
   open: boolean;
@@ -48,6 +48,14 @@ export const CreditPurchaseModal = ({
   const [settingsSaving, setSettingsSaving] = useState(false);
   const [hasSettings, setHasSettings] = useState(false);
 
+  // Livestream settings state
+  const [isLiveStreamArtist, setIsLiveStreamArtist] = useState(false);
+  const [livestreamEnabled, setLivestreamEnabled] = useState(true);
+  const [creditsPerMinute, setCreditsPerMinute] = useState(5);
+  const [sessionDuration] = useState(20);
+  const [hasLivestreamSettings, setHasLivestreamSettings] = useState(false);
+  const [livestreamSaving, setLivestreamSaving] = useState(false);
+
   useEffect(() => {
     if (open) {
       fetchSettings();
@@ -59,6 +67,7 @@ export const CreditPurchaseModal = ({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      // Fetch message settings
       const { data, error } = await supabase
         .from('message_settings')
         .select('*')
@@ -73,6 +82,30 @@ export const CreditPurchaseModal = ({
         setSettingsEnabled(data.enabled);
         setCreditsPerMessage(data.credits_per_message);
         setHasSettings(true);
+      }
+
+      // Check if user is a live stream artist
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('is_live_stream_artist')
+        .eq('id', user.id)
+        .single();
+
+      if (profile?.is_live_stream_artist) {
+        setIsLiveStreamArtist(true);
+        
+        // Fetch livestream settings
+        const { data: livestreamData } = await supabase
+          .from('livestream_settings')
+          .select('*')
+          .eq('merchant_id', user.id)
+          .single();
+
+        if (livestreamData) {
+          setLivestreamEnabled(livestreamData.enabled);
+          setCreditsPerMinute(livestreamData.credits_per_minute);
+          setHasLivestreamSettings(true);
+        }
       }
     } catch (error) {
       console.error('Error:', error);
@@ -135,6 +168,62 @@ export const CreditPurchaseModal = ({
     }
   };
 
+  const handleSaveLivestreamSettings = async () => {
+    setLivestreamSaving(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      if (creditsPerMinute < 1 || creditsPerMinute > 50) {
+        toast({
+          title: 'Invalid amount',
+          description: 'Credits per minute must be between 1 and 50',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      if (hasLivestreamSettings) {
+        const { error } = await supabase
+          .from('livestream_settings')
+          .update({
+            enabled: livestreamEnabled,
+            credits_per_minute: creditsPerMinute,
+            session_duration_minutes: sessionDuration,
+          })
+          .eq('merchant_id', user.id);
+
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('livestream_settings')
+          .insert({
+            merchant_id: user.id,
+            enabled: livestreamEnabled,
+            credits_per_minute: creditsPerMinute,
+            session_duration_minutes: sessionDuration,
+          });
+
+        if (error) throw error;
+        setHasLivestreamSettings(true);
+      }
+
+      toast({
+        title: 'Settings saved',
+        description: 'Your livestream settings have been updated',
+      });
+    } catch (error) {
+      console.error('Error saving livestream settings:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to save livestream settings',
+        variant: 'destructive',
+      });
+    } finally {
+      setLivestreamSaving(false);
+    }
+  };
+
   const handlePurchase = async () => {
     try {
       setLoading(true);
@@ -175,6 +264,8 @@ export const CreditPurchaseModal = ({
   };
 
   const revenuePerMessage = (creditsPerMessage * 0.10).toFixed(2);
+  const totalLivestreamCredits = creditsPerMinute * sessionDuration;
+  const revenuePerEntry = (totalLivestreamCredits * 0.10).toFixed(2);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -390,6 +481,95 @@ export const CreditPurchaseModal = ({
                 </>
               )}
             </div>
+
+            {/* Livestream Pricing Settings - Only for Live Stream Artists */}
+            {isLiveStreamArtist && (
+              <>
+                <Separator className="my-4" />
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Video className="w-4 h-4 text-primary" />
+                    <h4 className="text-sm font-medium">Livestream Pricing Settings</h4>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Configure credit costs for users entering your paid livestream sessions
+                  </p>
+
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="livestream-enabled" className="text-sm">Enable Paid Livestreams</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Allow users to pay credits to enter your livestreams
+                      </p>
+                    </div>
+                    <Switch
+                      id="livestream-enabled"
+                      checked={livestreamEnabled}
+                      onCheckedChange={setLivestreamEnabled}
+                    />
+                  </div>
+
+                  {livestreamEnabled && (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="credits-per-minute" className="text-sm">Credits Per Minute</Label>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            id="credits-per-minute"
+                            type="number"
+                            min={1}
+                            max={50}
+                            value={creditsPerMinute}
+                            onChange={(e) => setCreditsPerMinute(Number(e.target.value))}
+                            className="max-w-[120px]"
+                          />
+                          <span className="text-xs text-muted-foreground">
+                            credits/min (1-50)
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="text-sm">Session Duration</Label>
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-sm font-medium">{sessionDuration} minutes</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Standard session length is 20 minutes
+                        </p>
+                      </div>
+
+                      <div className="rounded-lg bg-primary/10 p-3 space-y-2">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-muted-foreground">Entry Cost for Users:</span>
+                          <span className="font-semibold">{totalLivestreamCredits} credits</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs font-medium">
+                          <DollarSign className="w-3 h-3" />
+                          Your Revenue Per Entry
+                        </div>
+                        <div className="text-xl font-bold text-primary">
+                          ${revenuePerEntry}
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          You earn $0.10 per credit.
+                        </p>
+                      </div>
+                    </>
+                  )}
+
+                  <Button 
+                    onClick={handleSaveLivestreamSettings} 
+                    disabled={livestreamSaving}
+                    variant="secondary"
+                    className="w-full"
+                  >
+                    {livestreamSaving ? 'Saving...' : 'Save Livestream Settings'}
+                  </Button>
+                </div>
+              </>
+            )}
           </div>
         </ScrollArea>
       </DialogContent>
