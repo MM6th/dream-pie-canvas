@@ -208,7 +208,6 @@ export const NotificationsList = () => {
             >
               <CardContent className="py-4">
                 <div className="flex items-start gap-4">
-                  <div className={`w-2 h-2 rounded-full mt-2 ${getNotificationColor(notification.type)}`} />
                   <div className="flex-1">
                     <div className="flex items-start justify-between gap-4">
                       <div>
