@@ -156,7 +156,7 @@ const DashboardHeader = ({
               <NotificationBellButton userId={user.id} userType={userType || ''} />
             )}
             {userType === "supporter" && user && (
-              <MessageCreditsIcon userId={user.id} />
+              <MessageCreditsIcon userId={user.id} userType="supporter" />
             )}
             {tutorialHelpButton}
           </div>
