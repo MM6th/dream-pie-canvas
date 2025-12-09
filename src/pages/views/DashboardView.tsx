@@ -15,15 +15,6 @@ interface AudioTrack {
   thumbnail_url: string | null;
 }
 
-interface VideoTrack {
-  id: string;
-  title: string;
-  description: string | null;
-  video_file_url: string;
-  thumbnail_url: string | null;
-  background_music_url: string | null;
-}
-
 interface DashboardViewProps {
   userProfile: any;
   profileLoading: boolean;
@@ -38,7 +29,6 @@ interface DashboardViewProps {
   onBackgroundUpload: (url: string) => void;
   purchasedTracks: AudioTrack[];
   purchasedPodcasts: AudioTrack[];
-  purchasedVideos: VideoTrack[];
 }
 
 const DashboardView = ({
@@ -55,7 +45,6 @@ const DashboardView = ({
   onBackgroundUpload,
   purchasedTracks,
   purchasedPodcasts,
-  purchasedVideos,
 }: DashboardViewProps) => {
   const backgroundStyle = userProfile?.background_image_url 
     ? {
@@ -103,7 +92,6 @@ const DashboardView = ({
               onBackgroundUpload={onBackgroundUpload}
               purchasedTracks={purchasedTracks}
               purchasedPodcasts={purchasedPodcasts}
-              purchasedVideos={purchasedVideos}
             />
           ) : userProfile?.user_type === "merchant" ? (
             <MerchantDashboard 
@@ -112,7 +100,6 @@ const DashboardView = ({
               onBackgroundUpload={onBackgroundUpload}
               purchasedTracks={purchasedTracks}
               purchasedPodcasts={purchasedPodcasts}
-              purchasedVideos={purchasedVideos}
               userProfile={userProfile}
             />
           ) : (
@@ -120,7 +107,6 @@ const DashboardView = ({
               onBackgroundUpload={onBackgroundUpload}
               purchasedTracks={purchasedTracks}
               purchasedPodcasts={purchasedPodcasts}
-              purchasedVideos={purchasedVideos}
             />
           )}
         </>

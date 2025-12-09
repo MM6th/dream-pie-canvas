@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Music, Video, User, FolderOpen, DollarSign, MessageSquare } from "lucide-react";
+import { Music, User, FolderOpen, DollarSign, MessageSquare } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import AudioPlayer from "@/components/AudioPlayer";
-import VideoPlayer from "@/components/VideoPlayer";
+
 import PodcastAudioPlayer from "@/components/PodcastAudioPlayer";
 import PurchasedPortfoliosViewer from "@/components/dashboard/PurchasedPortfoliosViewer";
 import BackgroundUpload from "@/components/BackgroundUpload";
@@ -38,23 +38,13 @@ interface AudioTrack {
   audio_type?: string;
 }
 
-interface VideoTrack {
-  id: string;
-  title: string;
-  description: string | null;
-  video_file_url: string;
-  thumbnail_url: string | null;
-  background_music_url: string | null;
-}
-
 interface SupporterDashboardProps {
   onBackgroundUpload: (url: string) => void;
   purchasedTracks: AudioTrack[];
   purchasedPodcasts: AudioTrack[];
-  purchasedVideos: VideoTrack[];
 }
 
-const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodcasts, purchasedVideos }: SupporterDashboardProps) => {
+const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodcasts }: SupporterDashboardProps) => {
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const [userProfile, setUserProfile] = useState<any>(null);
@@ -214,14 +204,10 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="music" className="w-full">
-            <TabsList className={`grid w-full ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-7'}`}>
+            <TabsList className={`grid w-full ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-6'}`}>
               <TabsTrigger value="music" className={`flex items-center gap-2 ${isMobile ? 'text-xs px-2 py-1 h-8' : ''}`} data-tutorial="music-tab">
                 <Music className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'}`} />
                 {isMobile ? 'Media' : 'Music & Podcasts'}
-              </TabsTrigger>
-              <TabsTrigger value="videos" className={`flex items-center gap-2 ${isMobile ? 'text-xs px-2 py-1 h-8' : ''}`} data-tutorial="videos-tab">
-                <Video className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'}`} />
-                Videos
               </TabsTrigger>
               {!isMobile && (
                 <>
@@ -274,9 +260,6 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
               <PurchasedPortfoliosViewer portfolios={purchasedPortfolios} />
             </TabsContent>
             
-            <TabsContent value="videos" className="space-y-6">
-              <VideoPlayer videos={purchasedVideos} />
-            </TabsContent>
             
             {!isMobile && (
               <>

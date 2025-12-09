@@ -326,7 +326,6 @@ const Index = () => {
       onBackgroundUpload={handleBackgroundUpload}
       purchasedTracks={purchasedTracks}
       purchasedPodcasts={purchasedPodcasts}
-      purchasedVideos={purchasedVideos}
     />
   );
 };
