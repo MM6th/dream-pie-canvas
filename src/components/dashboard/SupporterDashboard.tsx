@@ -207,67 +207,6 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
         <SupporterCurrentAffirmationsModal />
       </div>
 
-      {/* Tax Calculator Section - Only show if user has referral income >= $600 */}
-      {currentQuarterIncome >= 600 && (
-        <Card className="p-6 mb-6 border-primary/20 bg-primary/5 bg-gray-800/50 border-gray-700 backdrop-blur-sm" data-tutorial="tax-calculator">
-          <div className="flex items-start gap-4">
-            <div className="p-3 rounded-lg bg-primary/10">
-              <DollarSign className="h-6 w-6 text-primary" />
-            </div>
-            <div className="flex-1">
-              <h3 className="font-semibold mb-2 text-white">Self-Employment Tax Calculator</h3>
-              <p className="text-sm text-gray-400 mb-4">
-                You've earned ${currentQuarterIncome.toFixed(2)} in referral commissions this quarter. 
-                Use our calculator to estimate your self-employment taxes.
-              </p>
-              <SECalculatorModal 
-                userId={user?.id}
-                autoPopulateIncome={currentQuarterIncome}
-              />
-            </div>
-          </div>
-        </Card>
-      )}
-
-      {/* Show income tracker even if below $600 */}
-      {currentQuarterIncome > 0 && currentQuarterIncome < 600 && (
-        <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm mb-6" data-tutorial="tax-calculator">
-          <CardHeader>
-            <CardTitle className="text-white">Self-Employment Tax Calculator</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg">
-              <div>
-                <h4 className="text-white font-medium">Quarterly Referral Income Tracker</h4>
-                <p className="text-gray-400 text-sm">
-                  You've earned ${currentQuarterIncome.toFixed(2)} in referral commissions this quarter
-                </p>
-              </div>
-              <SECalculatorModal userId={user?.id} autoPopulateIncome={currentQuarterIncome} />
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Always show SE calculator for supporters, even with $0 income */}
-      {currentQuarterIncome === 0 && (
-        <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm mb-6" data-tutorial="tax-calculator">
-          <CardHeader>
-            <CardTitle className="text-white">Self-Employment Tax Calculator</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg">
-              <div>
-                <h4 className="text-white font-medium">Track Your Referral Income</h4>
-                <p className="text-gray-400 text-sm">
-                  Earn referral commissions by sharing your public playlist. Income will be tracked here for tax reporting.
-                </p>
-              </div>
-              <SECalculatorModal userId={user?.id} autoPopulateIncome={0} />
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm mb-6">
         <CardHeader>
