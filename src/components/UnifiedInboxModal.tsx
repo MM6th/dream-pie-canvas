@@ -317,7 +317,6 @@ export const UnifiedInboxModal = ({ open, onOpenChange, userId, userType }: Unif
                       >
                         <CardContent className="py-3 px-4">
                           <div className="flex items-start gap-3">
-                            <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${getNotificationColor(notification.type)}`} />
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center justify-between gap-2">
                                 <h4 className="font-medium text-sm truncate">{notification.title}</h4>
