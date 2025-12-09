@@ -18,6 +18,7 @@ interface DashboardHeaderProps {
   onProfileUpdate: () => void;
   isApproved: boolean;
   isAdmin: boolean;
+  tutorialHelpButton?: React.ReactNode;
 }
 
 const DashboardHeader = ({ 
@@ -28,7 +29,8 @@ const DashboardHeader = ({
   userType, 
   onProfileUpdate,
   isApproved,
-  isAdmin
+  isAdmin,
+  tutorialHelpButton
 }: DashboardHeaderProps) => {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
@@ -115,14 +117,17 @@ const DashboardHeader = ({
           )}
         </div>
         
-        {/* Sign Out Button */}
-        <Button
-          onClick={onSignOut}
-          className={`bg-white text-black hover:bg-gray-100 ${isMobile ? 'text-xs px-3 py-2 h-8 w-full sm:w-auto' : ''}`}
-        >
-          <LogOut className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
-          Sign Out
-        </Button>
+        {/* Help & Sign Out */}
+        <div className="flex flex-col items-end gap-2">
+          {tutorialHelpButton}
+          <Button
+            onClick={onSignOut}
+            className={`bg-white text-black hover:bg-gray-100 ${isMobile ? 'text-xs px-3 py-2 h-8 w-full sm:w-auto' : ''}`}
+          >
+            <LogOut className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
+            Sign Out
+          </Button>
+        </div>
       </div>
     </div>
   );
