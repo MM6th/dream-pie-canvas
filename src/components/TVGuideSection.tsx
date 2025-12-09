@@ -95,11 +95,7 @@ const TVGuideSection = ({ posts, useCarousel = true }: TVGuideSectionProps) => {
         TV Guide
       </h2>
       
-      {hasNoPosts ? (
-        <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-8 text-center">
-          <p className="text-gray-400">No TV Guide entries yet. Check back soon!</p>
-        </div>
-      ) : useCarousel ? (
+      {useCarousel ? (
         <Carousel
           opts={{
             align: "start",
@@ -108,11 +104,21 @@ const TVGuideSection = ({ posts, useCarousel = true }: TVGuideSectionProps) => {
           className="w-full"
         >
           <CarouselContent className="-ml-1">
-            {posts.map((post) => (
-              <CarouselItem key={post.id} className="pl-1 md:basis-1/3 lg:basis-1/4 xl:basis-1/4">
-                {renderCard(post)}
+            {hasNoPosts ? (
+              <CarouselItem className="pl-1">
+                <Card className="bg-gray-800/50 border-gray-700">
+                  <CardContent className="p-8 text-center">
+                    <p className="text-gray-400">No TV Guide entries yet. Check back soon!</p>
+                  </CardContent>
+                </Card>
               </CarouselItem>
-            ))}
+            ) : (
+              posts.map((post) => (
+                <CarouselItem key={post.id} className="pl-1 md:basis-1/3 lg:basis-1/4 xl:basis-1/4">
+                  {renderCard(post)}
+                </CarouselItem>
+              ))
+            )}
           </CarouselContent>
           <CarouselPrevious className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
           <CarouselNext className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
@@ -128,11 +134,21 @@ const TVGuideSection = ({ posts, useCarousel = true }: TVGuideSectionProps) => {
             orientation="vertical"
           >
             <CarouselContent className="h-[500px]">
-              {posts.map((post) => (
-                <CarouselItem key={post.id} className="basis-auto py-1">
-                  {renderCard(post)}
+              {hasNoPosts ? (
+                <CarouselItem className="basis-auto py-1">
+                  <Card className="bg-gray-800/50 border-gray-700">
+                    <CardContent className="p-8 text-center">
+                      <p className="text-gray-400">No TV Guide entries yet. Check back soon!</p>
+                    </CardContent>
+                  </Card>
                 </CarouselItem>
-              ))}
+              ) : (
+                posts.map((post) => (
+                  <CarouselItem key={post.id} className="basis-auto py-1">
+                    {renderCard(post)}
+                  </CarouselItem>
+                ))
+              )}
             </CarouselContent>
             <CarouselPrevious className="text-white bg-gray-800/90 hover:bg-gray-700 border-gray-600 -top-12 left-1/2 -translate-x-1/2 z-20 w-10 h-10" />
             <CarouselNext className="text-white bg-gray-800/90 hover:bg-gray-700 border-gray-600 -bottom-12 left-1/2 -translate-x-1/2 z-20 w-10 h-10" />
