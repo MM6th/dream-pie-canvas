@@ -196,11 +196,6 @@ const LiveStreamArtistDashboard = ({
         </CardContent>
       </Card>
 
-      {/* Astrology Library Section */}
-      <div className="mb-6">
-        <BuyerAstrologyLibrary />
-      </div>
-
       {/* Current Affirmations Section */}
       <div className="mb-6">
         <SupporterCurrentAffirmationsModal />
@@ -359,6 +354,11 @@ const LiveStreamArtistDashboard = ({
           </Tabs>
         </CardContent>
       </Card>
+
+      {/* Astrology Library Section - At Bottom */}
+      <div className="mb-6">
+        <BuyerAstrologyLibrary />
+      </div>
     </div>
   );
 };
