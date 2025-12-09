@@ -107,7 +107,7 @@ const CurrentThoughtsSection = ({ posts, useCarousel = true }: CurrentThoughtsSe
           <CarouselNext className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
         </Carousel>
       ) : (
-        <div className="relative pb-16">
+        <div className="relative pt-14 pb-14">
           <Carousel
             opts={{
               align: "start",
@@ -116,15 +116,15 @@ const CurrentThoughtsSection = ({ posts, useCarousel = true }: CurrentThoughtsSe
             className="w-full"
             orientation="vertical"
           >
-            <CarouselContent className="-mt-1 h-[700px]">
+            <CarouselContent className="h-[500px]">
               {posts.map((post) => (
-                <CarouselItem key={post.id} className="pt-1 basis-auto min-h-[350px]">
+                <CarouselItem key={post.id} className="basis-auto py-1">
                   {renderCard(post)}
                 </CarouselItem>
               ))}
             </CarouselContent>
-            <CarouselPrevious className="text-white bg-gray-800/90 hover:bg-gray-700 border-gray-600 -top-12 left-1/2 -translate-x-1/2 z-20 w-12 h-12 md:w-8 md:h-8" />
-            <CarouselNext className="text-white bg-gray-800/90 hover:bg-gray-700 border-gray-600 -bottom-12 left-1/2 -translate-x-1/2 z-20 w-12 h-12 md:w-8 md:h-8" />
+            <CarouselPrevious className="text-white bg-gray-800/90 hover:bg-gray-700 border-gray-600 -top-12 left-1/2 -translate-x-1/2 z-20 w-10 h-10" />
+            <CarouselNext className="text-white bg-gray-800/90 hover:bg-gray-700 border-gray-600 -bottom-12 left-1/2 -translate-x-1/2 z-20 w-10 h-10" />
           </Carousel>
         </div>
       )}
