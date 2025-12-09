@@ -258,9 +258,18 @@ export const CreditPurchaseModal = ({
                     <div>
                       <h5 className="text-sm font-medium">Message Costs</h5>
                       <ul className="text-xs text-muted-foreground mt-1 space-y-0.5">
-                        <li>• 10 credits per message sent</li>
-                        <li>• Replies to merchants who message you are free</li>
-                        <li>• Merchant-to-merchant messaging is free</li>
+                        {userType === 'merchant' ? (
+                          <>
+                            <li>• Sending messages is free for merchants</li>
+                            <li>• Earn revenue when users message you</li>
+                          </>
+                        ) : (
+                          <>
+                            <li>• Credits required to message merchants</li>
+                            <li>• Replying to merchant-initiated threads is free</li>
+                            <li>• Supporter-to-supporter messaging is not available</li>
+                          </>
+                        )}
                       </ul>
                     </div>
                   </div>
@@ -277,6 +286,7 @@ export const CreditPurchaseModal = ({
                         <li>• Buy in packages: 50, 100, or 200 credits</li>
                         <li>• Check balance via the credits icon in header</li>
                         <li>• Credits never expire</li>
+                        <li>• 1 credit = $0.10 value</li>
                       </ul>
                     </div>
                   </div>
@@ -289,20 +299,20 @@ export const CreditPurchaseModal = ({
                     <Info className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
                     <div>
                       <h5 className="text-sm font-medium">
-                        {userType === 'merchant' ? 'Merchant Messaging' : 'Supporter Messaging'}
+                        {userType === 'merchant' ? 'Merchant Benefits' : 'Supporter Info'}
                       </h5>
                       <ul className="text-xs text-muted-foreground mt-1 space-y-0.5">
                         {userType === 'merchant' ? (
                           <>
-                            <li>• Message other merchants for free</li>
-                            <li>• Message supporters for free</li>
-                            <li>• Receive messages from supporters</li>
+                            <li>• Message any user for free</li>
+                            <li>• Set your incoming message price below</li>
+                            <li>• Earn $0.10 per credit spent by users</li>
                           </>
                         ) : (
                           <>
                             <li>• Use credits to message merchants</li>
-                            <li>• Reply to merchant messages for free</li>
-                            <li>• View transaction history in your dashboard</li>
+                            <li>• Reply free when a merchant messages you first</li>
+                            <li>• View transaction history in credits icon</li>
                           </>
                         )}
                       </ul>
