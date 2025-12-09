@@ -24,6 +24,7 @@ import { useDashboardTutorial } from "@/hooks/useDashboardTutorial";
 import { merchantTutorialSteps } from "@/constants/tutorialContent";
 import { TutorialTooltip } from "@/components/TutorialTooltip";
 import { TutorialSpotlight } from "@/components/TutorialSpotlight";
+import { TutorialHelpButton } from "@/components/TutorialHelpButton";
 import { FollowRequestsManager } from "@/components/profile/FollowRequestsManager";
 import { Users } from "lucide-react";
 import { NotificationsList } from "@/components/NotificationsList";
@@ -192,7 +193,8 @@ const MerchantDashboard = ({
 
   return (
     <div className={`max-w-6xl mx-auto ${isMobile ? 'p-4' : 'p-6'} pt-20`}>
-      {tutorial.isActive && tutorial.currentStepData && (
+      {/* Floating tutorial for first-time users only */}
+      {tutorial.isActive && tutorial.currentStepData && tutorial.isFirstTimeUser && (
         <>
           <TutorialSpotlight 
             targetElement={tutorial.targetElement}
@@ -209,6 +211,13 @@ const MerchantDashboard = ({
             preferredPlacement={tutorial.currentStepData.placement}
           />
         </>
+      )}
+      
+      {/* Help button for returning users (non-admin merchants only) */}
+      {!tutorial.isFirstTimeUser && !isAdmin && (
+        <div className="flex justify-end mb-4">
+          <TutorialHelpButton steps={merchantTutorialSteps} userType="merchant" />
+        </div>
       )}
       
       <div data-tutorial="approval-status">

@@ -24,6 +24,7 @@ import { useDashboardTutorial } from "@/hooks/useDashboardTutorial";
 import { supporterTutorialSteps } from "@/constants/tutorialContent";
 import { TutorialTooltip } from "@/components/TutorialTooltip";
 import { TutorialSpotlight } from "@/components/TutorialSpotlight";
+import { TutorialHelpButton } from "@/components/TutorialHelpButton";
 import SupporterCurrentAffirmationsModal from "@/components/SupporterCurrentAffirmationsModal";
 import { MessageCreditsDisplay } from "@/components/messaging/MessageCreditsDisplay";
 import { CreditPurchaseModal } from "@/components/messaging/CreditPurchaseModal";
@@ -192,7 +193,8 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
 
   return (
     <div className={`max-w-6xl mx-auto ${isMobile ? 'p-4' : 'p-6'} pt-20`}>
-      {tutorial.isActive && tutorial.currentStepData && (
+      {/* Floating tutorial for first-time users only */}
+      {tutorial.isActive && tutorial.currentStepData && tutorial.isFirstTimeUser && (
         <>
           <TutorialSpotlight 
             targetElement={tutorial.targetElement}
@@ -209,6 +211,13 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
             preferredPlacement={tutorial.currentStepData.placement}
           />
         </>
+      )}
+      
+      {/* Help button for returning users */}
+      {!tutorial.isFirstTimeUser && (
+        <div className="flex justify-end mb-4">
+          <TutorialHelpButton steps={supporterTutorialSteps} userType="supporter" />
+        </div>
       )}
       
       <PieWelcomeModal>

@@ -27,6 +27,7 @@ import { useDashboardTutorial } from "@/hooks/useDashboardTutorial";
 import { adminTutorialSteps } from "@/constants/tutorialContent";
 import { TutorialTooltip } from "@/components/TutorialTooltip";
 import { TutorialSpotlight } from "@/components/TutorialSpotlight";
+import { TutorialHelpButton } from "@/components/TutorialHelpButton";
 
 const AdminDashboard = () => {
   const { counts } = useSubmissionCounts();
@@ -38,7 +39,8 @@ const AdminDashboard = () => {
 
   return (
     <div className="space-y-6">
-      {tutorial.isActive && tutorial.currentStepData && (
+      {/* Floating tutorial for first-time users only */}
+      {tutorial.isActive && tutorial.currentStepData && tutorial.isFirstTimeUser && (
         <>
           <TutorialSpotlight 
             targetElement={tutorial.targetElement}
@@ -58,6 +60,12 @@ const AdminDashboard = () => {
       )}
       
       <div className="text-center mb-8">
+        <div className="flex justify-end mb-2">
+          {/* Help button for returning users */}
+          {!tutorial.isFirstTimeUser && (
+            <TutorialHelpButton steps={adminTutorialSteps} userType="admin" />
+          )}
+        </div>
         <h1 className="text-4xl font-bold text-white mb-4">Admin Dashboard</h1>
         <p className="text-gray-400 text-lg">Manage merchants, submissions, and platform content</p>
       </div>

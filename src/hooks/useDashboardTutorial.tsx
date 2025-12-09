@@ -18,6 +18,7 @@ interface UseDashboardTutorialReturn {
   nextStep: () => void;
   skipTutorial: () => void;
   restartTutorial: () => void;
+  isFirstTimeUser: boolean;
 }
 
 export const useDashboardTutorial = (
@@ -28,6 +29,13 @@ export const useDashboardTutorial = (
   const [isActive, setIsActive] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [targetElement, setTargetElement] = useState<HTMLElement | null>(null);
+  const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
+
+  // Check if this is a first-time user on mount
+  useEffect(() => {
+    const isCompleted = localStorage.getItem(storageKey);
+    setIsFirstTimeUser(!isCompleted);
+  }, [storageKey]);
 
   const scrollToTarget = useCallback((element: HTMLElement) => {
     element.scrollIntoView({
@@ -59,6 +67,7 @@ export const useDashboardTutorial = (
 
   useEffect(() => {
     const isCompleted = localStorage.getItem(storageKey);
+    // Only auto-show tutorial for first-time users
     if (!isCompleted && steps.length > 0) {
       // Delay to let the dashboard render first
       setTimeout(() => {
@@ -107,5 +116,6 @@ export const useDashboardTutorial = (
     nextStep,
     skipTutorial,
     restartTutorial,
+    isFirstTimeUser,
   };
 };
