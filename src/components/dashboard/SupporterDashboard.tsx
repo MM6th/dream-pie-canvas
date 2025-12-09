@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Music, Video, User, FolderOpen, DollarSign, MessageSquare, Mail } from "lucide-react";
+import { Music, Video, User, FolderOpen, DollarSign, MessageSquare } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import AudioPlayer from "@/components/AudioPlayer";
 import VideoPlayer from "@/components/VideoPlayer";
@@ -26,11 +26,7 @@ import { TutorialTooltip } from "@/components/TutorialTooltip";
 import { TutorialSpotlight } from "@/components/TutorialSpotlight";
 import { TutorialHelpButton } from "@/components/TutorialHelpButton";
 import SupporterCurrentAffirmationsModal from "@/components/SupporterCurrentAffirmationsModal";
-import { MessageCreditsDisplay } from "@/components/messaging/MessageCreditsDisplay";
-import { CreditPurchaseModal } from "@/components/messaging/CreditPurchaseModal";
-import { MessagingInbox } from "@/components/messaging/MessagingInbox";
-import { CreditTransactionHistory } from "@/components/messaging/CreditTransactionHistory";
-// MessagingInfoCard and MessageSettingsCard are now in CreditPurchaseModal
+// Messaging components now accessed via MessageCreditsIcon in header
 import { BuyerAstrologyLibrary } from "@/components/astrology/BuyerAstrologyLibrary";
 
 interface AudioTrack {
@@ -66,9 +62,7 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
   const [playlistPublic, setPlaylistPublic] = useState(false);
   const [purchasedPortfolios, setPurchasedPortfolios] = useState<any[]>([]);
   const { currentQuarterIncome } = useQuarterlyIncome(user?.id);
-  const [showCreditPurchaseModal, setShowCreditPurchaseModal] = useState(false);
   const [creditBalance, setCreditBalance] = useState(0);
-  const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
   
   const tutorial = useDashboardTutorial('supporter', supporterTutorialSteps);
 
@@ -165,26 +159,12 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
     }
   };
 
-  const fetchUnreadMessagesCount = async () => {
-    if (!user) return;
-    try {
-      const { count } = await supabase
-        .from('messages')
-        .select('*', { count: 'exact', head: true })
-        .eq('recipient_id', user.id)
-        .is('read_at', null);
-      setUnreadMessagesCount(count || 0);
-    } catch (error) {
-      console.error('Error fetching unread messages count:', error);
-    }
-  };
 
   useEffect(() => {
     if (user) {
       fetchUserProfile();
       fetchPurchasedPortfolios();
       fetchCreditBalance();
-      fetchUnreadMessagesCount();
     }
   }, [user]);
 
@@ -315,15 +295,6 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
                     <MessageSquare className="w-4 h-4" />
                     Community Posts
                   </TabsTrigger>
-                  <TabsTrigger value="messaging" className="flex items-center gap-2">
-                    <Mail className="w-4 h-4" />
-                    Messages
-                    {unreadMessagesCount > 0 && (
-                      <span className="ml-1 px-1.5 py-0.5 text-xs bg-destructive text-destructive-foreground rounded-full">
-                        {unreadMessagesCount}
-                      </span>
-                    )}
-                  </TabsTrigger>
                   <TabsTrigger value="content" className="flex items-center gap-2" data-tutorial="gallery-tab">
                     <FolderOpen className="w-4 h-4" />
                     Content Gallery
@@ -379,11 +350,6 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
                   <BulletinPostManager />
                 </TabsContent>
                 
-                <TabsContent value="messaging" className="space-y-6">
-                  <MessagingInbox />
-                  <CreditTransactionHistory />
-                </TabsContent>
-                
                 <TabsContent value="content" className="space-y-6">
                   <ContentGallery />
                 </TabsContent>
@@ -412,24 +378,6 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
             {isMobile && (
               <TabsContent value="more" className="space-y-6">
                 <div className="grid grid-cols-1 gap-4">
-                  <Card className="bg-gray-700/50 border-gray-600">
-                    <CardHeader>
-                      <CardTitle className="text-white text-sm flex items-center gap-2">
-                        <Mail className="w-4 h-4" />
-                        Messages
-                        {unreadMessagesCount > 0 && (
-                          <span className="px-1.5 py-0.5 text-xs bg-destructive text-destructive-foreground rounded-full">
-                            {unreadMessagesCount}
-                          </span>
-                        )}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <MessagingInbox />
-                      <CreditTransactionHistory />
-                    </CardContent>
-                  </Card>
-                  
                   <Card className="bg-gray-700/50 border-gray-600">
                     <CardHeader>
                       <CardTitle className="text-white text-sm">Community Posts</CardTitle>
@@ -480,11 +428,6 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
         </CardContent>
       </Card>
 
-      <CreditPurchaseModal 
-        open={showCreditPurchaseModal}
-        onOpenChange={setShowCreditPurchaseModal}
-        onPurchaseComplete={fetchCreditBalance}
-      />
     </div>
   );
 };
