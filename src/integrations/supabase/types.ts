@@ -610,7 +610,9 @@ export type Database = {
           id: string
           image_url: string | null
           is_adult_content: boolean | null
+          is_paid_livestream: boolean | null
           link_url: string | null
+          livestream_credits_per_minute: number | null
           media_type: string | null
           merchant_id: string
           number_of_opportunities: number | null
@@ -631,7 +633,9 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_adult_content?: boolean | null
+          is_paid_livestream?: boolean | null
           link_url?: string | null
+          livestream_credits_per_minute?: number | null
           media_type?: string | null
           merchant_id: string
           number_of_opportunities?: number | null
@@ -652,7 +656,9 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_adult_content?: boolean | null
+          is_paid_livestream?: boolean | null
           link_url?: string | null
+          livestream_credits_per_minute?: number | null
           media_type?: string | null
           merchant_id?: string
           number_of_opportunities?: number | null
@@ -1030,6 +1036,83 @@ export type Database = {
             columns: ["variant_id"]
             isOneToOne: false
             referencedRelation: "fashion_product_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      livestream_entries: {
+        Row: {
+          bulletin_post_id: string
+          credits_spent: number
+          entered_at: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          bulletin_post_id: string
+          credits_spent: number
+          entered_at?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          bulletin_post_id?: string
+          credits_spent?: number
+          entered_at?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "livestream_entries_bulletin_post_id_fkey"
+            columns: ["bulletin_post_id"]
+            isOneToOne: false
+            referencedRelation: "bulletin_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "livestream_entries_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      livestream_settings: {
+        Row: {
+          created_at: string | null
+          credits_per_minute: number | null
+          enabled: boolean | null
+          id: string
+          merchant_id: string
+          session_duration_minutes: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          credits_per_minute?: number | null
+          enabled?: boolean | null
+          id?: string
+          merchant_id: string
+          session_duration_minutes?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          credits_per_minute?: number | null
+          enabled?: boolean | null
+          id?: string
+          merchant_id?: string
+          session_duration_minutes?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "livestream_settings_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -1716,6 +1799,7 @@ export type Database = {
           instagram_url: string | null
           is_admin: boolean | null
           is_adult_creator: boolean | null
+          is_live_stream_artist: boolean | null
           is_private: boolean | null
           last_name: string | null
           onlyfans_url: string | null
@@ -1749,6 +1833,7 @@ export type Database = {
           instagram_url?: string | null
           is_admin?: boolean | null
           is_adult_creator?: boolean | null
+          is_live_stream_artist?: boolean | null
           is_private?: boolean | null
           last_name?: string | null
           onlyfans_url?: string | null
@@ -1782,6 +1867,7 @@ export type Database = {
           instagram_url?: string | null
           is_admin?: boolean | null
           is_adult_creator?: boolean | null
+          is_live_stream_artist?: boolean | null
           is_private?: boolean | null
           last_name?: string | null
           onlyfans_url?: string | null
