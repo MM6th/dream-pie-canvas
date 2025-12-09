@@ -438,7 +438,7 @@ const ProfilePage = () => {
               <CardContent>
                 <div className="flex items-center gap-2 text-gray-300">
                   <MessageSquare className="w-4 h-4" />
-                  <span>{userPosts.length} Posts</span>
+                  <span>Recent Post</span>
                 </div>
               </CardContent>
             </Card>
