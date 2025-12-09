@@ -30,8 +30,7 @@ import { MessageCreditsDisplay } from "@/components/messaging/MessageCreditsDisp
 import { CreditPurchaseModal } from "@/components/messaging/CreditPurchaseModal";
 import { MessagingInbox } from "@/components/messaging/MessagingInbox";
 import { CreditTransactionHistory } from "@/components/messaging/CreditTransactionHistory";
-import { MessagingInfoCard } from "@/components/messaging/MessagingInfoCard";
-import { MessageSettingsCard } from "@/components/messaging/MessageSettingsCard";
+// MessagingInfoCard and MessageSettingsCard are now in CreditPurchaseModal
 import { BuyerAstrologyLibrary } from "@/components/astrology/BuyerAstrologyLibrary";
 
 interface AudioTrack {
@@ -381,8 +380,6 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
                 </TabsContent>
                 
                 <TabsContent value="messaging" className="space-y-6">
-                  <MessagingInfoCard userType="supporter" />
-                  <MessageSettingsCard />
                   <MessagingInbox />
                   <CreditTransactionHistory />
                 </TabsContent>
@@ -428,8 +425,6 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <MessagingInfoCard userType="supporter" />
-                      <MessageSettingsCard />
                       <MessagingInbox />
                       <CreditTransactionHistory />
                     </CardContent>
