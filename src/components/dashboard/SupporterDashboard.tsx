@@ -30,7 +30,6 @@ import { MessageCreditsDisplay } from "@/components/messaging/MessageCreditsDisp
 import { CreditPurchaseModal } from "@/components/messaging/CreditPurchaseModal";
 import { MessagingInbox } from "@/components/messaging/MessagingInbox";
 import { CreditTransactionHistory } from "@/components/messaging/CreditTransactionHistory";
-import { NotificationsList } from "@/components/NotificationsList";
 import { MessagingInfoCard } from "@/components/messaging/MessagingInfoCard";
 import { MessageSettingsCard } from "@/components/messaging/MessageSettingsCard";
 import { BuyerAstrologyLibrary } from "@/components/astrology/BuyerAstrologyLibrary";
@@ -223,11 +222,6 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
           What is PIE?
         </Button>
       </PieWelcomeModal>
-
-      {/* Notifications Section */}
-      <div className="mb-6">
-        <NotificationsList />
-      </div>
 
       {/* Astrology Library Section */}
       <div className="mb-6">

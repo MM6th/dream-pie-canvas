@@ -10,6 +10,8 @@ import SECalculatorModal from "@/components/SECalculatorModal";
 import { useQuarterlyIncome } from "@/hooks/useQuarterlyIncome";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { NotificationBellButton } from "@/components/NotificationBellButton";
+import { MessageCreditsIcon } from "@/components/messaging/MessageCreditsIcon";
 
 interface DashboardHeaderProps {
   onStoreView: () => void;
@@ -147,9 +149,17 @@ const DashboardHeader = ({
           )}
         </div>
         
-        {/* Help & Sign Out */}
+        {/* Inbox, Credits, Help & Sign Out */}
         <div className="flex flex-col items-end gap-2">
-          {tutorialHelpButton}
+          <div className="flex items-center gap-1">
+            {user && (
+              <NotificationBellButton userId={user.id} userType={userType || ''} />
+            )}
+            {userType === "supporter" && user && (
+              <MessageCreditsIcon userId={user.id} />
+            )}
+            {tutorialHelpButton}
+          </div>
           <Button
             onClick={onSignOut}
             className={`bg-white text-black hover:bg-gray-100 ${isMobile ? 'text-xs px-3 py-2 h-8 w-full sm:w-auto' : ''}`}

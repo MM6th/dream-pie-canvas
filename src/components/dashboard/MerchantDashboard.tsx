@@ -27,11 +27,7 @@ import { TutorialSpotlight } from "@/components/TutorialSpotlight";
 import { TutorialHelpButton } from "@/components/TutorialHelpButton";
 import { FollowRequestsManager } from "@/components/profile/FollowRequestsManager";
 import { Users } from "lucide-react";
-import { NotificationsList } from "@/components/NotificationsList";
 import { AstrologyDeliveryManager } from "@/components/astrology/AstrologyDeliveryManager";
-import { MessagingInbox } from "@/components/messaging/MessagingInbox";
-import { MessagingInfoCard } from "@/components/messaging/MessagingInfoCard";
-import { Mail } from "lucide-react";
 
 interface MerchantDashboardProps {
   onSuccess: () => void;
@@ -60,7 +56,6 @@ const MerchantDashboard = ({
   const [isPrivate, setIsPrivate] = useState<boolean>(false);
   const [pendingRequestsCount, setPendingRequestsCount] = useState<number>(0);
   const [showFollowRequests, setShowFollowRequests] = useState(false);
-  const [unreadMessagesCount, setUnreadMessagesCount] = useState<number>(0);
   
   // Only show merchant tutorial if user is NOT an admin (admin tutorial takes priority)
   const tutorial = useDashboardTutorial('merchant', isAdmin ? [] : merchantTutorialSteps);
@@ -138,23 +133,6 @@ const MerchantDashboard = ({
     }
   };
 
-  const fetchUnreadMessagesCount = async () => {
-    if (!user) return;
-    
-    try {
-      const { count, error } = await supabase
-        .from('messages')
-        .select('*', { count: 'exact', head: true })
-        .eq('recipient_id', user.id)
-        .is('read_at', null);
-
-      if (!error && count !== null) {
-        setUnreadMessagesCount(count);
-      }
-    } catch (error) {
-      console.error('Error fetching unread messages count:', error);
-    }
-  };
 
   const togglePlaylistVisibility = async (checked: boolean) => {
     if (!user) return;
@@ -178,7 +156,6 @@ const MerchantDashboard = ({
       fetchUserProfile();
       fetchPurchasedPortfolios();
       fetchPendingRequestsCount();
-      fetchUnreadMessagesCount();
     }
   }, [user]);
 
@@ -226,38 +203,12 @@ const MerchantDashboard = ({
 
       {(isApproved || isAdmin) && (
         <>
-          {/* Notifications Section */}
-          <div className="mb-6">
-            <NotificationsList />
-          </div>
-
           {/* Astrology Delivery Manager (Admin Only) */}
           {isAdmin && (
             <div className="mb-6">
               <AstrologyDeliveryManager />
             </div>
           )}
-
-          {/* Messaging Section */}
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="text-white flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Mail className="w-5 h-5" />
-                  Messages
-                </div>
-                {unreadMessagesCount > 0 && (
-                  <Badge variant="secondary" className="bg-blue-600 text-white">
-                    {unreadMessagesCount} unread
-                  </Badge>
-                )}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <MessagingInfoCard userType="merchant" />
-              <MessagingInbox />
-            </CardContent>
-          </Card>
 
           {isApproved && !isAdmin && (
             <div data-tutorial="account-setup">
