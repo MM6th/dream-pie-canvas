@@ -170,6 +170,11 @@ const LiveStreamArtistDashboard = ({
         </>
       )}
 
+      {/* Share Affirmations Button - Above Live Stream */}
+      <div className="mb-6">
+        <SupporterCurrentAffirmationsModal />
+      </div>
+
       {/* Live Stream Video Frame */}
       <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm mb-6">
         <CardHeader>
@@ -195,11 +200,6 @@ const LiveStreamArtistDashboard = ({
           </div>
         </CardContent>
       </Card>
-
-      {/* Current Affirmations Section */}
-      <div className="mb-6">
-        <SupporterCurrentAffirmationsModal />
-      </div>
 
 
       <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm mb-6">
