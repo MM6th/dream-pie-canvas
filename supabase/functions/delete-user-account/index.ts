@@ -120,15 +120,20 @@ serve(async (req) => {
       }
     }
 
-    // Step 4: Delete contracts (admin can still see them via digital_receipts if needed)
-    console.log('Deleting contracts...');
+    // Step 4: Preserve contracts for admin records - mark as deleted but keep the record
+    // We set deleted_by_merchant = true and merchant_deletion_date instead of deleting
+    console.log('Marking contracts as deleted (preserving for admin records)...');
     const { error: contractsError } = await supabaseAdmin
       .from('contracts')
-      .delete()
+      .update({ 
+        deleted_by_merchant: true, 
+        merchant_deletion_date: new Date().toISOString(),
+        merchant_signature: '[Account Deleted]'
+      })
       .eq('merchant_id', user.id);
     
     if (contractsError) {
-      console.log(`Note: Could not delete contracts: ${contractsError.message}`);
+      console.log(`Note: Could not update contracts: ${contractsError.message}`);
     }
 
     // Step 5: Delete portfolio images first (before portfolios)
