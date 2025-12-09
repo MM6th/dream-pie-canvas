@@ -13,6 +13,7 @@ interface SkillsInputProps {
 const DEFAULT_SUGGESTIONS = [
   'Film Maker',
   'Film Editor',
+  'Videographer',
   'Music Artist',
   'Live Stream Artist',
   'Audio Podcaster',
