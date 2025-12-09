@@ -60,7 +60,107 @@ serve(async (req) => {
 
     console.log(`Attempting to delete user account: ${user.id} (${user.email})`);
 
-    // Delete related data first (in order of dependencies)
+    // Step 1: Null out contract references in submissions (preserves contract records for admin)
+    console.log('Nulling out contract references in submissions...');
+    
+    const submissionTablesToNullContract = [
+      'song_cover_submissions',
+      'asmr_submissions',
+      'modeling_applications',
+    ];
+
+    for (const table of submissionTablesToNullContract) {
+      console.log(`Nulling contract_id in ${table} for merchant ${user.id}`);
+      const { error } = await supabaseAdmin
+        .from(table)
+        .update({ contract_id: null })
+        .eq('merchant_id', user.id);
+      
+      if (error) {
+        console.log(`Note: Could not null contract_id in ${table}: ${error.message}`);
+      }
+    }
+
+    // Step 2: Null out contract references in downloads
+    const downloadTablesToNullContract = [
+      'podcast_downloads',
+      'asmr_downloads',
+    ];
+
+    for (const table of downloadTablesToNullContract) {
+      console.log(`Nulling contract_id in ${table} for merchant ${user.id}`);
+      const { error } = await supabaseAdmin
+        .from(table)
+        .update({ contract_id: null })
+        .eq('merchant_id', user.id);
+      
+      if (error) {
+        console.log(`Note: Could not null contract_id in ${table}: ${error.message}`);
+      }
+    }
+
+    // Step 3: Delete submissions (after contract references are nulled)
+    const submissionsToDelete = [
+      { table: 'song_cover_submissions', column: 'merchant_id' },
+      { table: 'asmr_submissions', column: 'merchant_id' },
+      { table: 'modeling_applications', column: 'merchant_id' },
+      { table: 'asmr_downloads', column: 'merchant_id' },
+      { table: 'podcast_downloads', column: 'merchant_id' },
+    ];
+
+    for (const { table, column } of submissionsToDelete) {
+      console.log(`Deleting from ${table} where ${column} = ${user.id}`);
+      const { error } = await supabaseAdmin
+        .from(table)
+        .delete()
+        .eq(column, user.id);
+      
+      if (error) {
+        console.log(`Note: Could not delete from ${table}: ${error.message}`);
+      }
+    }
+
+    // Step 4: Delete contracts (admin can still see them via digital_receipts if needed)
+    console.log('Deleting contracts...');
+    const { error: contractsError } = await supabaseAdmin
+      .from('contracts')
+      .delete()
+      .eq('merchant_id', user.id);
+    
+    if (contractsError) {
+      console.log(`Note: Could not delete contracts: ${contractsError.message}`);
+    }
+
+    // Step 5: Delete portfolio images first (before portfolios)
+    console.log('Deleting portfolio images...');
+    const { data: portfolios } = await supabaseAdmin
+      .from('portfolios')
+      .select('id')
+      .eq('user_id', user.id);
+    
+    if (portfolios && portfolios.length > 0) {
+      const portfolioIds = portfolios.map(p => p.id);
+      const { error: portfolioImagesError } = await supabaseAdmin
+        .from('portfolio_images')
+        .delete()
+        .in('portfolio_id', portfolioIds);
+      
+      if (portfolioImagesError) {
+        console.log(`Note: Could not delete portfolio_images: ${portfolioImagesError.message}`);
+      }
+
+      // Delete portfolio purchases
+      const { error: portfolioPurchasesError } = await supabaseAdmin
+        .from('portfolio_purchases')
+        .delete()
+        .in('portfolio_id', portfolioIds);
+      
+      if (portfolioPurchasesError) {
+        console.log(`Note: Could not delete portfolio_purchases: ${portfolioPurchasesError.message}`);
+      }
+    }
+
+    // Step 6: Delete other related data
     const tablesToClean = [
       { table: 'user_playlists', column: 'user_id' },
       { table: 'notifications', column: 'user_id' },
@@ -77,6 +177,16 @@ serve(async (req) => {
       { table: 'profile_follow_requests', column: 'target_merchant_id' },
       { table: 'post_likes', column: 'user_id' },
       { table: 'post_comments', column: 'user_id' },
+      { table: 'bulletin_posts', column: 'merchant_id' },
+      { table: 'audio_products', column: 'merchant_id' },
+      { table: 'user_purchases', column: 'user_id' },
+      { table: 'astrology_purchases', column: 'user_id' },
+      { table: 'astrology_readings', column: 'user_id' },
+      { table: 'fashion_purchases', column: 'user_id' },
+      { table: 'digital_receipts', column: 'merchant_id' },
+      { table: 'merchant_payouts', column: 'merchant_id' },
+      { table: 'message_settings', column: 'merchant_id' },
+      { table: 'product_reviews', column: 'user_id' },
     ];
 
     for (const { table, column } of tablesToClean) {
@@ -92,7 +202,7 @@ serve(async (req) => {
       }
     }
 
-    // Delete the profile
+    // Step 7: Delete the profile
     console.log('Deleting profile...');
     const { error: profileError } = await supabaseAdmin
       .from('profiles')
@@ -101,10 +211,10 @@ serve(async (req) => {
 
     if (profileError) {
       console.error('Error deleting profile:', profileError);
-      // Continue to try deleting the auth user anyway
+      throw new Error(`Failed to delete profile: ${profileError.message}`);
     }
 
-    // Delete the auth user
+    // Step 8: Delete the auth user
     console.log('Deleting auth user...');
     const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(user.id);
 
