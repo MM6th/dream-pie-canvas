@@ -52,7 +52,7 @@ const LiveStreamArtistDashboard = ({
   const [playlistPublic, setPlaylistPublic] = useState(false);
   const [purchasedPortfolios, setPurchasedPortfolios] = useState<any[]>([]);
   
-  const tutorial = useDashboardTutorial('supporter', supporterTutorialSteps);
+  const tutorial = useDashboardTutorial('supporter', supporterTutorialSteps, userProfile?.created_at);
 
   const fetchPurchasedPortfolios = async () => {
     if (!user) return;

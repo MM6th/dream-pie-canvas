@@ -35,7 +35,8 @@ const AdminDashboard = () => {
   const isMobile = useIsMobile();
   const totalSubmissions = counts.coverSubmissions + counts.modelingApplications;
   
-  const tutorial = useDashboardTutorial('admin', adminTutorialSteps);
+  // Admin dashboard doesn't auto-show tutorial (admin accounts are typically not new)
+  const tutorial = useDashboardTutorial('admin', adminTutorialSteps, null);
 
   return (
     <div className="space-y-6">

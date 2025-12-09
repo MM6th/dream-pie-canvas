@@ -56,7 +56,7 @@ const MerchantDashboard = ({
   const [showFollowRequests, setShowFollowRequests] = useState(false);
   
   // Only show merchant tutorial if user is NOT an admin (admin tutorial takes priority)
-  const tutorial = useDashboardTutorial('merchant', isAdmin ? [] : merchantTutorialSteps);
+  const tutorial = useDashboardTutorial('merchant', isAdmin ? [] : merchantTutorialSteps, userProfile?.created_at);
 
   const fetchPurchasedPortfolios = async () => {
     if (!user) return;
