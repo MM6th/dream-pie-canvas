@@ -3,6 +3,7 @@ import React from 'react';
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import MerchantDashboard from "@/components/dashboard/MerchantDashboard";
 import SupporterDashboard from "@/components/dashboard/SupporterDashboard";
+import LiveStreamArtistDashboard from "@/components/dashboard/LiveStreamArtistDashboard";
 import { TutorialHelpButton } from "@/components/TutorialHelpButton";
 import { supporterTutorialSteps, merchantTutorialSteps, adminTutorialSteps } from "@/constants/tutorialContent";
 
@@ -101,18 +102,25 @@ const DashboardView = ({
             <MerchantDashboard 
               onSuccess={onSuccess}
               onViewStore={onStoreView}
-            onBackgroundUpload={onBackgroundUpload}
-            purchasedTracks={purchasedTracks}
-            purchasedPodcasts={purchasedPodcasts}
-            purchasedVideos={purchasedVideos}
+              onBackgroundUpload={onBackgroundUpload}
+              purchasedTracks={purchasedTracks}
+              purchasedPodcasts={purchasedPodcasts}
+              purchasedVideos={purchasedVideos}
               userProfile={userProfile}
+            />
+          ) : userProfile?.skills?.includes('Live Stream Artist') ? (
+            <LiveStreamArtistDashboard 
+              onBackgroundUpload={onBackgroundUpload}
+              purchasedTracks={purchasedTracks}
+              purchasedPodcasts={purchasedPodcasts}
+              purchasedVideos={purchasedVideos}
             />
           ) : (
             <SupporterDashboard 
-            onBackgroundUpload={onBackgroundUpload}
-            purchasedTracks={purchasedTracks}
-            purchasedPodcasts={purchasedPodcasts}
-            purchasedVideos={purchasedVideos}
+              onBackgroundUpload={onBackgroundUpload}
+              purchasedTracks={purchasedTracks}
+              purchasedPodcasts={purchasedPodcasts}
+              purchasedVideos={purchasedVideos}
             />
           )}
         </>
