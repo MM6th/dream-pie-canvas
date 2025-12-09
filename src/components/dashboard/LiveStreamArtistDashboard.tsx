@@ -280,7 +280,7 @@ const LiveStreamArtistDashboard = ({
                         <SupporterCurrentAffirmationsModal />
                         <TVGuideModal />
                       </div>
-                      <BulletinPostManager />
+                      <BulletinPostManager hideHeader />
                     </CardContent>
                   </Card>
                   

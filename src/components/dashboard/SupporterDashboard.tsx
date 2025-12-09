@@ -280,8 +280,11 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
                     <CardHeader>
                       <CardTitle className="text-white text-sm">Community Posts</CardTitle>
                     </CardHeader>
-                    <CardContent>
-                      <BulletinPostManager />
+                    <CardContent className="space-y-4">
+                      <div className="flex flex-col gap-3">
+                        <SupporterCurrentAffirmationsModal />
+                      </div>
+                      <BulletinPostManager hideHeader />
                     </CardContent>
                   </Card>
                   
