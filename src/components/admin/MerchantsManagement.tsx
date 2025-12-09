@@ -1,10 +1,10 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import PendingMerchantCard from "./PendingMerchantCard";
 import ApprovedMerchantCard from "./ApprovedMerchantCard";
+import SupporterCard from "./SupporterCard";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Merchant {
@@ -19,8 +19,18 @@ interface Merchant {
   is_live_stream_artist?: boolean | null;
 }
 
+interface Supporter {
+  id: string;
+  email: string;
+  display_name: string | null;
+  avatar_url: string | null;
+  created_at: string;
+  is_live_stream_artist?: boolean | null;
+}
+
 const MerchantsManagement = () => {
   const [merchants, setMerchants] = useState<Merchant[]>([]);
+  const [supporters, setSupporters] = useState<Supporter[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchMerchants = async () => {
@@ -35,9 +45,28 @@ const MerchantsManagement = () => {
       setMerchants(data || []);
     } catch (error) {
       console.error('Error fetching merchants:', error);
-    } finally {
-      setLoading(false);
     }
+  };
+
+  const fetchSupporters = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, email, display_name, avatar_url, created_at, is_live_stream_artist')
+        .eq('user_type', 'supporter')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setSupporters(data || []);
+    } catch (error) {
+      console.error('Error fetching supporters:', error);
+    }
+  };
+
+  const fetchAll = async () => {
+    setLoading(true);
+    await Promise.all([fetchMerchants(), fetchSupporters()]);
+    setLoading(false);
   };
 
   const handleApprovalChange = async (merchantId: string, newStatus: string) => {
@@ -54,22 +83,22 @@ const MerchantsManagement = () => {
     }
   };
 
-  const handleToggleLiveStreamArtist = async (merchantId: string, value: boolean) => {
+  const handleToggleLiveStreamArtist = async (userId: string, value: boolean) => {
     try {
       const { error } = await supabase
         .from('profiles')
         .update({ is_live_stream_artist: value })
-        .eq('id', merchantId);
+        .eq('id', userId);
 
       if (error) throw error;
-      fetchMerchants();
+      fetchAll();
     } catch (error) {
       console.error('Error toggling live stream artist:', error);
     }
   };
 
   useEffect(() => {
-    fetchMerchants();
+    fetchAll();
   }, []);
 
   const pendingMerchants = merchants.filter(m => m.approval_status === 'pending');
@@ -78,17 +107,17 @@ const MerchantsManagement = () => {
   if (loading) {
     return (
       <div className="text-center text-white py-8">
-        Loading merchants...
+        Loading users...
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-white">Merchant Management</h2>
+      <h2 className="text-2xl font-bold text-white">User Management</h2>
       
       <Tabs defaultValue="pending" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 bg-gray-800 border-gray-700">
+        <TabsList className="grid w-full grid-cols-3 bg-gray-800 border-gray-700">
           <TabsTrigger 
             value="pending" 
             className="text-white data-[state=active]:bg-gray-700"
@@ -99,7 +128,13 @@ const MerchantsManagement = () => {
             value="approved" 
             className="text-white data-[state=active]:bg-gray-700"
           >
-            Approved ({approvedMerchants.length})
+            Merchants ({approvedMerchants.length})
+          </TabsTrigger>
+          <TabsTrigger 
+            value="supporters" 
+            className="text-white data-[state=active]:bg-gray-700"
+          >
+            Supporters ({supporters.length})
           </TabsTrigger>
         </TabsList>
 
@@ -141,6 +176,34 @@ const MerchantsManagement = () => {
                       <CarouselItem key={merchant.id} className="pl-2 md:pl-4 md:basis-1/2 lg:basis-1/3">
                         <ApprovedMerchantCard 
                           merchant={merchant} 
+                          onToggleLiveStreamArtist={handleToggleLiveStreamArtist}
+                        />
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                  <CarouselPrevious />
+                  <CarouselNext />
+                </Carousel>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="supporters">
+          <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle className="text-white">Supporters</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {supporters.length === 0 ? (
+                <p className="text-gray-400 text-center py-4">No supporters yet.</p>
+              ) : (
+                <Carousel className="w-full max-w-full">
+                  <CarouselContent className="-ml-2 md:-ml-4">
+                    {supporters.map((supporter) => (
+                      <CarouselItem key={supporter.id} className="pl-2 md:pl-4 md:basis-1/2 lg:basis-1/3">
+                        <SupporterCard 
+                          supporter={supporter} 
                           onToggleLiveStreamArtist={handleToggleLiveStreamArtist}
                         />
                       </CarouselItem>
