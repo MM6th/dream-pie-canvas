@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 
 interface TutorialStep {
   id: string;
@@ -25,7 +26,9 @@ export const useDashboardTutorial = (
   userType: 'merchant' | 'supporter' | 'admin',
   steps: TutorialStep[]
 ): UseDashboardTutorialReturn => {
-  const storageKey = `tutorial_completed_${userType}`;
+  const { user } = useAuth();
+  // Include user ID in storage key to track tutorial state per user
+  const storageKey = user?.id ? `tutorial_completed_${userType}_${user.id}` : `tutorial_completed_${userType}`;
   const [isActive, setIsActive] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [targetElement, setTargetElement] = useState<HTMLElement | null>(null);
@@ -33,9 +36,10 @@ export const useDashboardTutorial = (
 
   // Check if this is a first-time user on mount
   useEffect(() => {
+    if (!user?.id) return;
     const isCompleted = localStorage.getItem(storageKey);
     setIsFirstTimeUser(!isCompleted);
-  }, [storageKey]);
+  }, [storageKey, user?.id]);
 
   const scrollToTarget = useCallback((element: HTMLElement) => {
     element.scrollIntoView({
@@ -66,6 +70,7 @@ export const useDashboardTutorial = (
   }, [currentStep, steps, scrollToTarget]);
 
   useEffect(() => {
+    if (!user?.id) return;
     const isCompleted = localStorage.getItem(storageKey);
     // Only auto-show tutorial for first-time users
     if (!isCompleted && steps.length > 0) {
@@ -74,7 +79,7 @@ export const useDashboardTutorial = (
         setIsActive(true);
       }, 1500);
     }
-  }, [storageKey, steps.length]);
+  }, [storageKey, steps.length, user?.id]);
 
   useEffect(() => {
     if (isActive) {
