@@ -14,6 +14,30 @@ export const NotificationBellButton = ({ userId, userType }: NotificationBellBut
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
 
+  const fetchUnreadCounts = async () => {
+    if (!userId) return;
+
+    try {
+      // Fetch unread notifications count
+      const { count: notificationCount } = await supabase
+        .from("notifications")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", userId)
+        .eq("read", false);
+
+      // Fetch unread messages count
+      const { count: messageCount } = await supabase
+        .from("messages")
+        .select("*", { count: "exact", head: true })
+        .eq("recipient_id", userId)
+        .is("read_at", null);
+
+      setUnreadCount((notificationCount || 0) + (messageCount || 0));
+    } catch (error) {
+      console.error("Error fetching unread counts:", error);
+    }
+  };
+
   useEffect(() => {
     if (userId) {
       fetchUnreadCounts();
@@ -47,27 +71,12 @@ export const NotificationBellButton = ({ userId, userType }: NotificationBellBut
     };
   }, [userId]);
 
-  const fetchUnreadCounts = async () => {
-    if (!userId) return;
-
-    try {
-      // Fetch unread notifications count
-      const { count: notificationCount } = await supabase
-        .from("notifications")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", userId)
-        .eq("read", false);
-
-      // Fetch unread messages count
-      const { count: messageCount } = await supabase
-        .from("messages")
-        .select("*", { count: "exact", head: true })
-        .eq("recipient_id", userId)
-        .is("read_at", null);
-
-      setUnreadCount((notificationCount || 0) + (messageCount || 0));
-    } catch (error) {
-      console.error("Error fetching unread counts:", error);
+  // Refetch when modal closes to ensure count is updated
+  const handleModalChange = (open: boolean) => {
+    setIsOpen(open);
+    if (!open) {
+      // Refetch counts when modal closes
+      fetchUnreadCounts();
     }
   };
 
@@ -92,7 +101,7 @@ export const NotificationBellButton = ({ userId, userType }: NotificationBellBut
 
       <UnifiedInboxModal
         open={isOpen}
-        onOpenChange={setIsOpen}
+        onOpenChange={handleModalChange}
         userId={userId}
         userType={userType}
       />
