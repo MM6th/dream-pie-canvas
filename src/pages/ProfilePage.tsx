@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, User, Calendar, MapPin, Globe, Shield, Building, MessageSquare, ExternalLink, FolderOpen } from "lucide-react";
+import { ArrowLeft, User, Calendar, MapPin, Globe, Shield, Building, MessageSquare, ExternalLink, FolderOpen, Lock } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
@@ -11,11 +11,12 @@ import PostInteractions from "@/components/PostInteractions";
 import PublicPlaylist from "@/components/profile/PublicPlaylist";
 import PortfolioCard from "@/components/profile/PortfolioCard";
 import { PrivateProfileOverlay } from "@/components/profile/PrivateProfileOverlay";
-import { usePrivacyCheck } from "@/hooks/usePrivacyCheck";
+import { useVisibilityCheck } from "@/hooks/useVisibilityCheck";
 import { useFollowRequest } from "@/hooks/useFollowRequest";
 import { useAuth } from "@/hooks/useAuth";
 import type { FollowStatus } from "@/hooks/useFollowRequest";
 import { MessageButton } from "@/components/profile/MessageButton";
+import { FollowButton } from "@/components/profile/FollowButton";
 
 interface Profile {
   id: string;
@@ -80,7 +81,15 @@ const ProfilePage = () => {
   const [followStatus, setFollowStatus] = useState<FollowStatus>('none');
   const [followStatusLoading, setFollowStatusLoading] = useState(true);
   
-  const { isPrivate, canView, loading: privacyLoading, refetch: refetchPrivacy } = usePrivacyCheck(userId || '');
+  const { 
+    socialLinksVisible, 
+    portfoliosVisible, 
+    playlistVisible, 
+    postsVisible,
+    isFollower,
+    loading: visibilityLoading,
+    refetch: refetchVisibility 
+  } = useVisibilityCheck(userId || '');
   const { checkFollowStatus } = useFollowRequest();
 
   useEffect(() => {
@@ -90,7 +99,7 @@ const ProfilePage = () => {
       fetchPortfolios();
       updateFollowStatus();
     }
-  }, [userId, user?.id, authLoading]); // Re-check when user changes or auth completes
+  }, [userId, user?.id, authLoading]);
 
   const updateFollowStatus = async () => {
     if (!userId || authLoading) return;
@@ -102,7 +111,7 @@ const ProfilePage = () => {
 
   const handleRequestSent = () => {
     setFollowStatus('pending');
-    refetchPrivacy();
+    refetchVisibility();
   };
 
   const fetchProfileData = async () => {
@@ -204,7 +213,9 @@ const ProfilePage = () => {
     }
   };
 
-  if (loading || privacyLoading || followStatusLoading || authLoading) {
+  const isOwnProfile = user?.id === userId;
+
+  if (loading || visibilityLoading || followStatusLoading || authLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
         <div className="text-white text-xl">Loading profile...</div>
@@ -294,6 +305,11 @@ const ProfilePage = () => {
                         Adult Creator
                       </Badge>
                     )}
+                    {isFollower && (
+                      <Badge variant="secondary" className="bg-green-600 text-white">
+                        Following
+                      </Badge>
+                    )}
                   </div>
 
                   {/* Skills */}
@@ -311,95 +327,127 @@ const ProfilePage = () => {
                     <Calendar className="w-4 h-4" />
                     Joined {new Date(profile.created_at).toLocaleDateString()}
                   </div>
+
+                  {/* Follow Button - show for non-own profiles */}
+                  {!isOwnProfile && user && (
+                    <FollowButton
+                      targetUserId={userId || ''}
+                      targetUserName={profile.display_name || 'this user'}
+                      followStatus={followStatus}
+                      onRequestSent={handleRequestSent}
+                      className="w-full mb-4"
+                    />
+                  )}
                 </div>
               </CardContent>
             </Card>
 
-            {/* Show private overlay or full content */}
-            {isPrivate && !canView && user?.id !== userId ? (
-              null /* Private content hidden */
-            ) : (
-              <>
-                {/* Business Info (for merchants) */}
-                {profile.user_type === 'merchant' && (profile.business_name || profile.business_description) && (
-                  <Card className="bg-gray-800 border-gray-700">
-                    <CardHeader>
-                      <CardTitle className="text-white flex items-center gap-2">
-                        <Building className="w-5 h-5" />
-                        Business Information
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      {profile.business_name && (
-                        <div>
-                          <h3 className="text-lg font-semibold text-white">{profile.business_name}</h3>
-                        </div>
-                      )}
-                      {profile.business_description && (
-                        <p className="text-gray-300 text-sm">{profile.business_description}</p>
-                      )}
-                      {profile.website && (
+            {/* Business Info (for merchants) - visible based on social_links setting */}
+            {profile.user_type === 'merchant' && (profile.business_name || profile.business_description) && (
+              <Card className="bg-gray-800 border-gray-700">
+                <CardHeader>
+                  <CardTitle className="text-white flex items-center gap-2">
+                    <Building className="w-5 h-5" />
+                    Business Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {profile.business_name && (
+                    <div>
+                      <h3 className="text-lg font-semibold text-white">{profile.business_name}</h3>
+                    </div>
+                  )}
+                  {profile.business_description && (
+                    <p className="text-gray-300 text-sm">{profile.business_description}</p>
+                  )}
+                  {socialLinksVisible && profile.website && (
+                    <Button
+                      onClick={() => handleSocialClick(profile.website!)}
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                    >
+                      <Globe className="w-4 h-4 mr-2" />
+                      Visit Website
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Social Media Links - conditional visibility */}
+            {socialLinks.length > 0 && (
+              <Card className="bg-gray-800 border-gray-700">
+                <CardHeader>
+                  <CardTitle className="text-white flex items-center gap-2">
+                    Social Media
+                    {!socialLinksVisible && !isOwnProfile && (
+                      <Lock className="w-4 h-4 text-gray-500" />
+                    )}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {socialLinksVisible || isOwnProfile ? (
+                    <div className="grid grid-cols-2 gap-3">
+                      {socialLinks.map((link, index) => (
                         <Button
-                          onClick={() => handleSocialClick(profile.website!)}
+                          key={index}
+                          onClick={() => handleSocialClick(link.url!)}
                           variant="outline"
                           size="sm"
-                          className="w-full"
+                          className="w-full text-xs"
                         >
-                          <Globe className="w-4 h-4 mr-2" />
-                          Visit Website
+                          {link.icon}
                         </Button>
-                      )}
-                    </CardContent>
-                  </Card>
-                )}
-
-                {/* Social Media Links */}
-                {socialLinks.length > 0 && (
-                  <Card className="bg-gray-800 border-gray-700">
-                    <CardHeader>
-                      <CardTitle className="text-white">Social Media</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-2 gap-3">
-                        {socialLinks.map((link, index) => (
-                          <Button
-                            key={index}
-                            onClick={() => handleSocialClick(link.url!)}
-                            variant="outline"
-                            size="sm"
-                            className="w-full text-xs"
-                          >
-                            {link.icon}
-                          </Button>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-
-                {/* Public Playlist */}
-                {userId && <PublicPlaylist userId={userId} />}
-
-                {/* Stats */}
-                <Card className="bg-gray-800 border-gray-700">
-                  <CardHeader>
-                    <CardTitle className="text-white">Statistics</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center gap-2 text-gray-300">
-                      <MessageSquare className="w-4 h-4" />
-                      <span>{userPosts.length} Posts</span>
+                      ))}
                     </div>
-                  </CardContent>
-                </Card>
-              </>
+                  ) : (
+                    <p className="text-sm text-gray-400 text-center py-4">
+                      Social links are only visible to followers
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
             )}
+
+            {/* Public Playlist - conditional visibility */}
+            {userId && (playlistVisible || isOwnProfile) && (
+              <PublicPlaylist userId={userId} />
+            )}
+            {userId && !playlistVisible && !isOwnProfile && (
+              <Card className="bg-gray-800 border-gray-700">
+                <CardHeader>
+                  <CardTitle className="text-white flex items-center gap-2">
+                    Playlist
+                    <Lock className="w-4 h-4 text-gray-500" />
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-gray-400 text-center py-4">
+                    Playlist is only visible to followers
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Stats */}
+            <Card className="bg-gray-800 border-gray-700">
+              <CardHeader>
+                <CardTitle className="text-white">Statistics</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-2 text-gray-300">
+                  <MessageSquare className="w-4 h-4" />
+                  <span>{userPosts.length} Posts</span>
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
           {/* Posts & Portfolio Column */}
           <div className={`${isMobile ? 'w-full' : 'lg:col-span-2'} space-y-6`}>
-            {/* Show private overlay or content */}
-            {isPrivate && !canView && user?.id !== userId ? (
+            {/* Posts - always follower-only */}
+            {!postsVisible && !isOwnProfile ? (
               <PrivateProfileOverlay
                 merchantId={userId || ''}
                 merchantName={profile?.display_name || 'this user'}
@@ -418,102 +466,120 @@ const ProfilePage = () => {
 
                     <div className="space-y-6">
                       {userPosts.map((post) => (
-                  <Card key={post.id} className="bg-gray-800 border-gray-700">
-                    {((post.image_url || post.uploaded_image_url) && post.media_type !== 'video') && (
-                      <CardHeader className="p-0">
-                        <img
-                          src={post.uploaded_image_url || post.image_url}
-                          alt={post.title}
-                          className="w-full h-64 object-cover rounded-t-lg"
-                        />
-                      </CardHeader>
-                    )}
-                    {post.video_url && post.media_type === 'video' && (
-                      <CardHeader className="p-0">
-                        <video
-                          src={post.video_url}
-                          controls
-                          className="w-full h-64 object-cover rounded-t-lg"
-                          preload="metadata"
-                        />
-                      </CardHeader>
-                    )}
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between mb-2">
-                        <CardTitle className="text-white text-xl">{post.title}</CardTitle>
-                        {post.post_type && (
-                          <Badge variant="secondary" className="text-xs">
-                            {post.post_type.replace('_', ' ').toUpperCase()}
-                          </Badge>
-                        )}
-                      </div>
-                      
-                      <p className="text-gray-300 text-sm mb-4 leading-relaxed">{post.content}</p>
-                      
-                      <div className="flex items-center gap-4 text-xs text-gray-400 mb-4">
-                        <div className="flex items-center gap-1">
-                          <Calendar className="w-3 h-3" />
-                          {new Date(post.created_at).toLocaleDateString()}
-                        </div>
-                      </div>
-                      
-                      {post.link_url && (
-                        <Button
-                          onClick={() => handleLinkClick(post.link_url!)}
-                          variant="outline"
-                          size="sm"
-                        >
-                          <ExternalLink className="w-4 h-4 mr-2" />
-                          View Link
-                        </Button>
-                      )}
+                        <Card key={post.id} className="bg-gray-800 border-gray-700">
+                          {((post.image_url || post.uploaded_image_url) && post.media_type !== 'video') && (
+                            <CardHeader className="p-0">
+                              <img
+                                src={post.uploaded_image_url || post.image_url}
+                                alt={post.title}
+                                className="w-full h-64 object-cover rounded-t-lg"
+                              />
+                            </CardHeader>
+                          )}
+                          {post.video_url && post.media_type === 'video' && (
+                            <CardHeader className="p-0">
+                              <video
+                                src={post.video_url}
+                                controls
+                                className="w-full h-64 object-cover rounded-t-lg"
+                                preload="metadata"
+                              />
+                            </CardHeader>
+                          )}
+                          <CardContent className="p-6">
+                            <div className="flex items-center justify-between mb-2">
+                              <CardTitle className="text-white text-xl">{post.title}</CardTitle>
+                              {post.post_type && (
+                                <Badge variant="secondary" className="text-xs">
+                                  {post.post_type.replace('_', ' ').toUpperCase()}
+                                </Badge>
+                              )}
+                            </div>
+                            
+                            <p className="text-gray-300 text-sm mb-4 leading-relaxed">{post.content}</p>
+                            
+                            <div className="flex items-center gap-4 text-xs text-gray-400 mb-4">
+                              <div className="flex items-center gap-1">
+                                <Calendar className="w-3 h-3" />
+                                {new Date(post.created_at).toLocaleDateString()}
+                              </div>
+                            </div>
+                            
+                            {post.link_url && (
+                              <Button
+                                onClick={() => handleLinkClick(post.link_url!)}
+                                variant="outline"
+                                size="sm"
+                              >
+                                <ExternalLink className="w-4 h-4 mr-2" />
+                                View Link
+                              </Button>
+                            )}
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </>
+                )}
+
+                {/* Portfolio Section - conditional visibility */}
+                {portfolios.length > 0 && (portfoliosVisible || isOwnProfile) && (
+                  <div className="mt-8">
+                    <div className="flex items-center gap-2 mb-6">
+                      <FolderOpen className="w-6 h-6 text-white" />
+                      <h2 className="text-2xl font-bold text-white">Portfolio</h2>
+                    </div>
+                    {portfolios.map((portfolio) => (
+                      <PortfolioCard key={portfolio.id} portfolio={portfolio} />
+                    ))}
+                  </div>
+                )}
+
+                {/* Portfolio locked message */}
+                {portfolios.length > 0 && !portfoliosVisible && !isOwnProfile && (
+                  <Card className="bg-gray-800 border-gray-700 mt-8">
+                    <CardHeader>
+                      <CardTitle className="text-white flex items-center gap-2">
+                        <FolderOpen className="w-5 h-5" />
+                        Portfolio
+                        <Lock className="w-4 h-4 text-gray-500" />
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-gray-400 text-center py-4">
+                        Portfolio is only visible to followers
+                      </p>
                     </CardContent>
                   </Card>
-                ))}
-                </div>
+                )}
+
+                {/* Message Button */}
+                {profile && user && user.id !== userId && (
+                  <div className="mt-6">
+                    <MessageButton
+                      recipientId={profile.id}
+                      recipientName={profile.display_name}
+                      recipientType={profile.user_type}
+                    />
+                  </div>
+                )}
+
+                {/* Empty State */}
+                {userPosts.length === 0 && portfolios.length === 0 && (
+                  <Card className="bg-gray-800 border-gray-700">
+                    <CardContent className="p-8 text-center">
+                      <MessageSquare className="w-12 h-12 text-gray-500 mx-auto mb-4" />
+                      <p className="text-gray-400">No posts or portfolios yet</p>
+                    </CardContent>
+                  </Card>
+                )}
               </>
             )}
-
-            {/* Portfolio Section */}
-            {portfolios.length > 0 && (
-              <div className="mt-8">
-                <div className="flex items-center gap-2 mb-6">
-                  <FolderOpen className="w-6 h-6 text-white" />
-                  <h2 className="text-2xl font-bold text-white">Portfolio</h2>
-                </div>
-                {portfolios.map((portfolio) => (
-                  <PortfolioCard key={portfolio.id} portfolio={portfolio} />
-                ))}
-              </div>
-            )}
-
-            {/* Message Button */}
-            {profile && user && user.id !== userId && (
-              <div className="mt-6">
-                <MessageButton
-                  recipientId={profile.id}
-                  recipientName={profile.display_name}
-                  recipientType={profile.user_type}
-                />
-              </div>
-            )}
-
-            {/* Empty State */}
-            {userPosts.length === 0 && portfolios.length === 0 && (
-              <Card className="bg-gray-800 border-gray-700">
-                <CardContent className="p-8 text-center">
-                  <MessageSquare className="w-12 h-12 text-gray-500 mx-auto mb-4" />
-                  <p className="text-gray-400">No posts or portfolios yet</p>
-                </CardContent>
-              </Card>
-            )}
-          </>
-        )}
+          </div>
+        </div>
       </div>
     </div>
-  </div>
-</div>
-);
+  );
 };
 
 export default ProfilePage;

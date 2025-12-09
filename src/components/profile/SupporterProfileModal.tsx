@@ -10,7 +10,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Settings, Trash2, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -19,6 +18,8 @@ import ContentPicker from "@/components/ContentPicker";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User } from "lucide-react";
 import { SkillsInput } from "@/components/profile/SkillsInput";
+import { VisibilityToggleWithHelp } from "./VisibilityToggleWithHelp";
+import { Switch } from "@/components/ui/switch";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -46,6 +47,9 @@ const SupporterProfileModal = ({ children, profile: initialProfile, onProfileUpd
     adult_content_restricted: false,
     avatar_url: "",
     skills: [] as string[],
+    playlist_public: false,
+    portfolios_public: false,
+    social_links_public: false,
   });
 
   useEffect(() => {
@@ -55,6 +59,9 @@ const SupporterProfileModal = ({ children, profile: initialProfile, onProfileUpd
         adult_content_restricted: initialProfile.adult_content_restricted || false,
         avatar_url: initialProfile.avatar_url || "",
         skills: initialProfile.skills || [],
+        playlist_public: initialProfile.playlist_public || false,
+        portfolios_public: initialProfile.portfolios_public || false,
+        social_links_public: initialProfile.social_links_public || false,
       });
     } else if (user && isOpen) {
       fetchProfile();
@@ -82,6 +89,9 @@ const SupporterProfileModal = ({ children, profile: initialProfile, onProfileUpd
           adult_content_restricted: data.adult_content_restricted || false,
           avatar_url: data.avatar_url || "",
           skills: data.skills || [],
+          playlist_public: data.playlist_public || false,
+          portfolios_public: data.portfolios_public || false,
+          social_links_public: data.social_links_public || false,
         });
       }
     } catch (error) {
@@ -120,6 +130,9 @@ const SupporterProfileModal = ({ children, profile: initialProfile, onProfileUpd
           adult_content_restricted: profile.adult_content_restricted,
           avatar_url: profile.avatar_url,
           skills: profile.skills,
+          playlist_public: profile.playlist_public,
+          portfolios_public: profile.portfolios_public,
+          social_links_public: profile.social_links_public,
           updated_at: new Date().toISOString(),
         })
         .eq('id', user.id);
@@ -272,6 +285,28 @@ const SupporterProfileModal = ({ children, profile: initialProfile, onProfileUpd
               id="adult_restriction"
               checked={profile.adult_content_restricted}
               onCheckedChange={(checked) => setProfile({...profile, adult_content_restricted: checked})}
+            />
+          </div>
+
+          {/* Visibility Toggles with Help Icons */}
+          <div className="space-y-3">
+            <p className="text-sm text-gray-400 mb-2">
+              All profiles are private by default. Choose what non-followers can see:
+            </p>
+            <VisibilityToggleWithHelp
+              type="playlist"
+              checked={profile.playlist_public}
+              onCheckedChange={(checked) => setProfile({...profile, playlist_public: checked})}
+            />
+            <VisibilityToggleWithHelp
+              type="portfolios"
+              checked={profile.portfolios_public}
+              onCheckedChange={(checked) => setProfile({...profile, portfolios_public: checked})}
+            />
+            <VisibilityToggleWithHelp
+              type="social_links"
+              checked={profile.social_links_public}
+              onCheckedChange={(checked) => setProfile({...profile, social_links_public: checked})}
             />
           </div>
 
