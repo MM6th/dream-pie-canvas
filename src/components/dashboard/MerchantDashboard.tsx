@@ -35,7 +35,6 @@ interface MerchantDashboardProps {
   onBackgroundUpload: (url:string) => void;
   purchasedTracks: any[];
   purchasedPodcasts: any[];
-  purchasedVideos: any[];
   userProfile: any;
 }
 
@@ -45,7 +44,6 @@ const MerchantDashboard = ({
   onBackgroundUpload, 
   purchasedTracks,
   purchasedPodcasts,
-  purchasedVideos,
   userProfile
 }: MerchantDashboardProps) => {
   const { isAdmin, isApproved, approvalStatus, loading } = useApprovalStatus();
@@ -287,7 +285,7 @@ const MerchantDashboard = ({
           />
 
           <div data-tutorial="media-players">
-            <MediaPlayers purchasedTracks={purchasedTracks} purchasedPodcasts={purchasedPodcasts} purchasedVideos={purchasedVideos} purchasedPortfolios={purchasedPortfolios} />
+            <MediaPlayers purchasedTracks={purchasedTracks} purchasedPodcasts={purchasedPodcasts} purchasedPortfolios={purchasedPortfolios} />
           </div>
         </>
       )}
