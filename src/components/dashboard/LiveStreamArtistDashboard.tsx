@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Music, User, FolderOpen, MessageSquare, Video } from "lucide-react";
+import { Music, FolderOpen, MessageSquare, Video } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import AudioPlayer from "@/components/AudioPlayer";
 
@@ -11,7 +11,7 @@ import ContentGallery from "@/components/ContentGallery";
 import BulletinPostManager from "@/components/BulletinPostManager";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
-import SupporterProfileModal from "@/components/profile/SupporterProfileModal";
+
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -197,7 +197,7 @@ const LiveStreamArtistDashboard = ({
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="music" className="w-full">
-            <TabsList className={`grid w-full ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-6'}`}>
+            <TabsList className={`grid w-full ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-4'}`}>
               <TabsTrigger value="music" className={`flex items-center gap-2 ${isMobile ? 'text-xs px-2 py-1 h-8' : ''}`} data-tutorial="music-tab">
                 <Music className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'}`} />
                 {isMobile ? 'Media' : 'Music & Podcasts'}
@@ -212,16 +212,11 @@ const LiveStreamArtistDashboard = ({
                     <FolderOpen className="w-4 h-4" />
                     Content Gallery
                   </TabsTrigger>
-                  <TabsTrigger value="profile" className="flex items-center gap-2" data-tutorial="profile-tab">
-                    <User className="w-4 h-4" />
-                    Profile
-                  </TabsTrigger>
                   <TabsTrigger value="background" data-tutorial="background-tab">Background</TabsTrigger>
                 </>
               )}
               {isMobile && (
                 <TabsTrigger value="more" className="flex items-center gap-2 text-xs px-2 py-1 h-8">
-                  <User className="w-3 h-3" />
                   More
                 </TabsTrigger>
               )}
@@ -264,19 +259,6 @@ const LiveStreamArtistDashboard = ({
                   <ContentGallery />
                 </TabsContent>
                 
-                <TabsContent value="profile" className="space-y-6">
-                  <div className="flex justify-center mb-6">
-                    <SupporterProfileModal
-                      profile={userProfile}
-                      onProfileUpdate={handleProfileUpdate}
-                    >
-                      <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-                        <User className="w-4 h-4 mr-2" />
-                        Edit Profile
-                      </Button>
-                    </SupporterProfileModal>
-                  </div>
-                </TabsContent>
                 
                 <TabsContent value="background" className="space-y-6">
                   <BackgroundUpload onUploadSuccess={onBackgroundUpload} />
@@ -305,22 +287,6 @@ const LiveStreamArtistDashboard = ({
                     </CardContent>
                   </Card>
                   
-                  <Card className="bg-gray-700/50 border-gray-600">
-                    <CardHeader>
-                      <CardTitle className="text-white text-sm">Profile Settings</CardTitle>
-                    </CardHeader>
-                    <CardContent className="flex justify-center">
-                      <SupporterProfileModal
-                        profile={userProfile}
-                        onProfileUpdate={handleProfileUpdate}
-                      >
-                        <Button className="bg-blue-600 hover:bg-blue-700 text-white text-sm">
-                          <User className="w-3 h-3 mr-2" />
-                          Edit Profile
-                        </Button>
-                      </SupporterProfileModal>
-                    </CardContent>
-                  </Card>
                   
                   <Card className="bg-gray-700/50 border-gray-600">
                     <CardHeader>
