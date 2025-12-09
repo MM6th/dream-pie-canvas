@@ -16,6 +16,7 @@ interface Merchant {
   approval_status: string | null;
   created_at: string | null;
   paypal_email: string | null;
+  is_live_stream_artist?: boolean | null;
 }
 
 const MerchantsManagement = () => {
@@ -50,6 +51,20 @@ const MerchantsManagement = () => {
       fetchMerchants();
     } catch (error) {
       console.error('Error updating merchant approval:', error);
+    }
+  };
+
+  const handleToggleLiveStreamArtist = async (merchantId: string, value: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ is_live_stream_artist: value })
+        .eq('id', merchantId);
+
+      if (error) throw error;
+      fetchMerchants();
+    } catch (error) {
+      console.error('Error toggling live stream artist:', error);
     }
   };
 
@@ -124,7 +139,10 @@ const MerchantsManagement = () => {
                   <CarouselContent className="-ml-2 md:-ml-4">
                     {approvedMerchants.map((merchant) => (
                       <CarouselItem key={merchant.id} className="pl-2 md:pl-4 md:basis-1/2 lg:basis-1/3">
-                        <ApprovedMerchantCard merchant={merchant} />
+                        <ApprovedMerchantCard 
+                          merchant={merchant} 
+                          onToggleLiveStreamArtist={handleToggleLiveStreamArtist}
+                        />
                       </CarouselItem>
                     ))}
                   </CarouselContent>
