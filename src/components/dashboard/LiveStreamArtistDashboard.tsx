@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Music, FolderOpen, MessageSquare, Video } from "lucide-react";
+import { Music, FolderOpen, MessageSquare, Video, Calendar } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import AudioPlayer from "@/components/AudioPlayer";
 
@@ -22,6 +22,7 @@ import { TutorialTooltip } from "@/components/TutorialTooltip";
 import { TutorialSpotlight } from "@/components/TutorialSpotlight";
 import SupporterCurrentAffirmationsModal from "@/components/SupporterCurrentAffirmationsModal";
 import { BuyerAstrologyLibrary } from "@/components/astrology/BuyerAstrologyLibrary";
+import TVGuideModal from "@/components/TVGuideModal";
 
 interface AudioTrack {
   id: string;
@@ -159,9 +160,10 @@ const LiveStreamArtistDashboard = ({
         </>
       )}
 
-      {/* Share Affirmations Button - Above Live Stream */}
-      <div className="mb-6">
+      {/* Share Affirmations & TV Guide Buttons - Stacked for Mobile */}
+      <div className="flex flex-col gap-3 mb-6">
         <SupporterCurrentAffirmationsModal />
+        <TVGuideModal />
       </div>
 
       {/* Live Stream Video Frame */}
