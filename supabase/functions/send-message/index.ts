@@ -94,11 +94,6 @@ Deno.serve(async (req) => {
       }
     }
     
-    // Merchant messaging another user is always free (merchants don't pay)
-    if (senderProfile.user_type === 'merchant') {
-      isFree = true;
-    }
-    
     // Only check credits and settings for paid messages
     if (!isFree) {
       // Get merchant's message settings (default to 10 credits if not set)

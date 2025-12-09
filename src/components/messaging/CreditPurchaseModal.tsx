@@ -258,18 +258,9 @@ export const CreditPurchaseModal = ({
                     <div>
                       <h5 className="text-sm font-medium">Message Costs</h5>
                       <ul className="text-xs text-muted-foreground mt-1 space-y-0.5">
-                        {userType === 'merchant' ? (
-                          <>
-                            <li>• Sending messages is free for merchants</li>
-                            <li>• Earn revenue when users message you</li>
-                          </>
-                        ) : (
-                          <>
-                            <li>• Credits required to message merchants</li>
-                            <li>• Replying to merchant-initiated threads is free</li>
-                            <li>• Supporter-to-supporter messaging is not available</li>
-                          </>
-                        )}
+                        <li>• Credits required to send messages</li>
+                        <li>• Supporters reply free to merchant-initiated threads</li>
+                        <li>• Supporter-to-supporter messaging is not available</li>
                       </ul>
                     </div>
                   </div>
@@ -304,9 +295,9 @@ export const CreditPurchaseModal = ({
                       <ul className="text-xs text-muted-foreground mt-1 space-y-0.5">
                         {userType === 'merchant' ? (
                           <>
-                            <li>• Message any user for free</li>
                             <li>• Set your incoming message price below</li>
                             <li>• Earn $0.10 per credit spent by users</li>
+                            <li>• Purchase credits to message others</li>
                           </>
                         ) : (
                           <>
