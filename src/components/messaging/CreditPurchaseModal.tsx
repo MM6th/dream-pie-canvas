@@ -89,7 +89,7 @@ export const CreditPurchaseModal = ({
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 pr-4" thumbClassName="bg-primary/50">
+        <ScrollArea className="h-[400px] pr-4">
           <div className="space-y-4 py-4">
             {CREDIT_PACKAGES.map((pkg) => (
               <div
