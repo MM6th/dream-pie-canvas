@@ -41,7 +41,7 @@ export const CreditPurchaseModal = ({
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  // Message settings state (for merchants)
+  // Message settings state (for all users)
   const [settingsEnabled, setSettingsEnabled] = useState(true);
   const [creditsPerMessage, setCreditsPerMessage] = useState(10);
   const [settingsLoading, setSettingsLoading] = useState(true);
@@ -49,10 +49,10 @@ export const CreditPurchaseModal = ({
   const [hasSettings, setHasSettings] = useState(false);
 
   useEffect(() => {
-    if (open && userType === 'merchant') {
+    if (open) {
       fetchSettings();
     }
-  }, [open, userType]);
+  }, [open]);
 
   const fetchSettings = async () => {
     try {
@@ -313,87 +313,83 @@ export const CreditPurchaseModal = ({
               </Card>
             </div>
 
-            {/* Message Pricing Settings - Merchants Only */}
-            {userType === 'merchant' && (
-              <>
-                <Separator className="my-4" />
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2">
-                    <Settings className="w-4 h-4 text-primary" />
-                    <h4 className="text-sm font-medium">Message Pricing Settings</h4>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Configure how much credits users need to send you a paid message
-                  </p>
+            {/* Message Pricing Settings - All Users */}
+            <Separator className="my-4" />
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Settings className="w-4 h-4 text-primary" />
+                <h4 className="text-sm font-medium">Message Pricing Settings</h4>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Configure how much credits others need to send you a message
+              </p>
 
-                  {settingsLoading ? (
-                    <div className="text-center text-sm text-muted-foreground py-4">
-                      Loading settings...
+              {settingsLoading ? (
+                <div className="text-center text-sm text-muted-foreground py-4">
+                  Loading settings...
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="enabled" className="text-sm">Enable Paid Messaging</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Allow others to send you paid messages
+                      </p>
                     </div>
-                  ) : (
+                    <Switch
+                      id="enabled"
+                      checked={settingsEnabled}
+                      onCheckedChange={setSettingsEnabled}
+                    />
+                  </div>
+
+                  {settingsEnabled && (
                     <>
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-0.5">
-                          <Label htmlFor="enabled" className="text-sm">Enable Paid Messaging</Label>
-                          <p className="text-xs text-muted-foreground">
-                            Allow users to send you paid messages
-                          </p>
+                      <div className="space-y-2">
+                        <Label htmlFor="credits" className="text-sm">Credits Per Message</Label>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            id="credits"
+                            type="number"
+                            min={1}
+                            max={100}
+                            value={creditsPerMessage}
+                            onChange={(e) => setCreditsPerMessage(Number(e.target.value))}
+                            className="max-w-[120px]"
+                          />
+                          <span className="text-xs text-muted-foreground">
+                            credits (1-100)
+                          </span>
                         </div>
-                        <Switch
-                          id="enabled"
-                          checked={settingsEnabled}
-                          onCheckedChange={setSettingsEnabled}
-                        />
                       </div>
 
-                      {settingsEnabled && (
-                        <>
-                          <div className="space-y-2">
-                            <Label htmlFor="credits" className="text-sm">Credits Per Message</Label>
-                            <div className="flex items-center gap-2">
-                              <Input
-                                id="credits"
-                                type="number"
-                                min={1}
-                                max={100}
-                                value={creditsPerMessage}
-                                onChange={(e) => setCreditsPerMessage(Number(e.target.value))}
-                                className="max-w-[120px]"
-                              />
-                              <span className="text-xs text-muted-foreground">
-                                credits (1-100)
-                              </span>
-                            </div>
-                          </div>
-
-                          <div className="rounded-lg bg-primary/10 p-3 space-y-1">
-                            <div className="flex items-center gap-2 text-xs font-medium">
-                              <DollarSign className="w-3 h-3" />
-                              Your Revenue Per Message
-                            </div>
-                            <div className="text-xl font-bold text-primary">
-                              ${revenuePerMessage}
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                              You earn $0.10 per credit.
-                            </p>
-                          </div>
-                        </>
-                      )}
-
-                      <Button 
-                        onClick={handleSaveSettings} 
-                        disabled={settingsSaving}
-                        variant="secondary"
-                        className="w-full"
-                      >
-                        {settingsSaving ? 'Saving...' : 'Save Settings'}
-                      </Button>
+                      <div className="rounded-lg bg-primary/10 p-3 space-y-1">
+                        <div className="flex items-center gap-2 text-xs font-medium">
+                          <DollarSign className="w-3 h-3" />
+                          Your Revenue Per Message
+                        </div>
+                        <div className="text-xl font-bold text-primary">
+                          ${revenuePerMessage}
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          You earn $0.10 per credit.
+                        </p>
+                      </div>
                     </>
                   )}
-                </div>
-              </>
-            )}
+
+                  <Button 
+                    onClick={handleSaveSettings} 
+                    disabled={settingsSaving}
+                    variant="secondary"
+                    className="w-full"
+                  >
+                    {settingsSaving ? 'Saving...' : 'Save Settings'}
+                  </Button>
+                </>
+              )}
+            </div>
           </div>
         </ScrollArea>
       </DialogContent>
