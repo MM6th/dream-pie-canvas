@@ -35,7 +35,11 @@ interface BulletinPost {
   updated_at: string;
 }
 
-const BulletinPostManager = () => {
+interface BulletinPostManagerProps {
+  hideHeader?: boolean;
+}
+
+const BulletinPostManager = ({ hideHeader = false }: BulletinPostManagerProps) => {
   const { user } = useAuth();
   const [posts, setPosts] = useState<BulletinPost[]>([]);
   const [userProfile, setUserProfile] = useState<any>(null);
@@ -132,13 +136,15 @@ const BulletinPostManager = () => {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-xl font-bold text-white">Manage Your Posts</h3>
-        <div className="flex gap-2">
-          <CurrentThoughtsModal onSuccess={fetchPosts} />
-          <TVGuideModal onSuccess={fetchPosts} />
+      {!hideHeader && (
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-xl font-bold text-white">Manage Your Posts</h3>
+          <div className="flex gap-2">
+            <CurrentThoughtsModal onSuccess={fetchPosts} />
+            <TVGuideModal onSuccess={fetchPosts} />
+          </div>
         </div>
-      </div>
+      )}
 
       {posts.length === 0 ? (
         <Card className="bg-gray-700/50 border-gray-600">
