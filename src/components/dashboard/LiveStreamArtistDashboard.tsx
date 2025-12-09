@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Music, FolderOpen, MessageSquare, Video, Calendar } from "lucide-react";
+import { Music, FolderOpen, MessageSquare, Video, Calendar, Settings } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import AudioPlayer from "@/components/AudioPlayer";
 
@@ -23,6 +23,8 @@ import { TutorialSpotlight } from "@/components/TutorialSpotlight";
 import SupporterCurrentAffirmationsModal from "@/components/SupporterCurrentAffirmationsModal";
 import { BuyerAstrologyLibrary } from "@/components/astrology/BuyerAstrologyLibrary";
 import TVGuideModal from "@/components/TVGuideModal";
+import { LivestreamSettingsCard } from "@/components/messaging/LivestreamSettingsCard";
+import { MessageSettingsCard } from "@/components/messaging/MessageSettingsCard";
 
 interface AudioTrack {
   id: string;
@@ -299,6 +301,19 @@ const LiveStreamArtistDashboard = ({
                     </CardHeader>
                     <CardContent>
                       <BackgroundUpload onUploadSuccess={onBackgroundUpload} />
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-gray-700/50 border-gray-600">
+                    <CardHeader>
+                      <CardTitle className="text-white text-sm flex items-center gap-2">
+                        <Settings className="w-4 h-4" />
+                        Pricing Settings
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <LivestreamSettingsCard />
+                      <MessageSettingsCard />
                     </CardContent>
                   </Card>
                 </div>

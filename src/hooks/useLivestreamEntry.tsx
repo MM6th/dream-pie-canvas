@@ -1,0 +1,68 @@
+import { useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+
+export const useLivestreamEntry = () => {
+  const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
+
+  const checkEntry = async (postId: string, userId: string) => {
+    const { data, error } = await supabase
+      .from('livestream_entries')
+      .select('id')
+      .eq('bulletin_post_id', postId)
+      .eq('user_id', userId)
+      .single();
+
+    if (error && error.code !== 'PGRST116') {
+      console.error('Error checking entry:', error);
+      return false;
+    }
+
+    return !!data;
+  };
+
+  const enterLivestream = async (postId: string, linkUrl: string) => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('enter-livestream', {
+        body: { postId },
+      });
+
+      if (error) throw error;
+
+      if (data?.error) {
+        toast({
+          title: 'Cannot Enter',
+          description: data.error,
+          variant: 'destructive',
+        });
+        return { success: false, needsCredits: data.needsCredits };
+      }
+
+      toast({
+        title: 'Welcome!',
+        description: `Entry successful! ${data.creditsSpent} credits spent.`,
+      });
+
+      // Open the stream link
+      if (linkUrl) {
+        window.open(linkUrl, '_blank', 'noopener,noreferrer');
+      }
+
+      return { success: true, creditsSpent: data.creditsSpent };
+    } catch (error: any) {
+      console.error('Error entering livestream:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to enter livestream',
+        variant: 'destructive',
+      });
+      return { success: false };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { enterLivestream, checkEntry, loading };
+};

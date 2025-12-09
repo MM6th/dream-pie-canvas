@@ -11,6 +11,8 @@ export interface BulletinPost {
   uploaded_image_url?: string;
   video_url?: string;
   media_type?: string;
+  is_paid_livestream?: boolean;
+  livestream_credits_per_minute?: number;
   profiles: {
     display_name: string;
     avatar_url: string;
