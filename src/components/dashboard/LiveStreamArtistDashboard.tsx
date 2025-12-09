@@ -271,6 +271,17 @@ const LiveStreamArtistDashboard = ({
             {isMobile && (
               <TabsContent value="more" className="space-y-6">
                 <div className="grid grid-cols-1 gap-4">
+                  {/* Quick Actions */}
+                  <Card className="bg-gray-700/50 border-gray-600">
+                    <CardHeader>
+                      <CardTitle className="text-white text-sm">Quick Actions</CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex flex-col gap-3">
+                      <SupporterCurrentAffirmationsModal />
+                      <TVGuideModal />
+                    </CardContent>
+                  </Card>
+
                   <Card className="bg-gray-700/50 border-gray-600">
                     <CardHeader>
                       <CardTitle className="text-white text-sm">Community Posts</CardTitle>
@@ -288,7 +299,6 @@ const LiveStreamArtistDashboard = ({
                       <ContentGallery />
                     </CardContent>
                   </Card>
-                  
                   
                   <Card className="bg-gray-700/50 border-gray-600">
                     <CardHeader>
