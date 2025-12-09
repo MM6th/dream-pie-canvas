@@ -98,7 +98,14 @@ const DashboardView = ({
         </div>
       ) : (
         <>
-          {userProfile?.user_type === "merchant" ? (
+          {userProfile?.skills?.includes('Live Stream Artist') ? (
+            <LiveStreamArtistDashboard 
+              onBackgroundUpload={onBackgroundUpload}
+              purchasedTracks={purchasedTracks}
+              purchasedPodcasts={purchasedPodcasts}
+              purchasedVideos={purchasedVideos}
+            />
+          ) : userProfile?.user_type === "merchant" ? (
             <MerchantDashboard 
               onSuccess={onSuccess}
               onViewStore={onStoreView}
@@ -107,13 +114,6 @@ const DashboardView = ({
               purchasedPodcasts={purchasedPodcasts}
               purchasedVideos={purchasedVideos}
               userProfile={userProfile}
-            />
-          ) : userProfile?.skills?.includes('Live Stream Artist') ? (
-            <LiveStreamArtistDashboard 
-              onBackgroundUpload={onBackgroundUpload}
-              purchasedTracks={purchasedTracks}
-              purchasedPodcasts={purchasedPodcasts}
-              purchasedVideos={purchasedVideos}
             />
           ) : (
             <SupporterDashboard 
