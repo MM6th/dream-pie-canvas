@@ -213,12 +213,6 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
         </>
       )}
       
-      {/* Help button for returning users */}
-      {!tutorial.isFirstTimeUser && (
-        <div className="flex justify-end mb-4">
-          <TutorialHelpButton steps={supporterTutorialSteps} userType="supporter" />
-        </div>
-      )}
       
       <PieWelcomeModal>
         <Button 

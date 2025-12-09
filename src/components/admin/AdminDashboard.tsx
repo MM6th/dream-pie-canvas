@@ -60,12 +60,6 @@ const AdminDashboard = () => {
       )}
       
       <div className="text-center mb-8">
-        <div className="flex justify-end mb-2">
-          {/* Help button for returning users */}
-          {!tutorial.isFirstTimeUser && (
-            <TutorialHelpButton steps={adminTutorialSteps} userType="admin" />
-          )}
-        </div>
         <h1 className="text-4xl font-bold text-white mb-4">Admin Dashboard</h1>
         <p className="text-gray-400 text-lg">Manage merchants, submissions, and platform content</p>
       </div>

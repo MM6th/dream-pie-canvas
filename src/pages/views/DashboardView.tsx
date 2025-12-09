@@ -3,6 +3,8 @@ import React from 'react';
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import MerchantDashboard from "@/components/dashboard/MerchantDashboard";
 import SupporterDashboard from "@/components/dashboard/SupporterDashboard";
+import { TutorialHelpButton } from "@/components/TutorialHelpButton";
+import { supporterTutorialSteps, merchantTutorialSteps, adminTutorialSteps } from "@/constants/tutorialContent";
 
 interface AudioTrack {
   id: string;
@@ -64,6 +66,17 @@ const DashboardView = ({
       }
     : {};
 
+  // Determine which tutorial to show based on user type
+  const getTutorialHelpButton = () => {
+    if (isAdmin) {
+      return <TutorialHelpButton steps={adminTutorialSteps} userType="admin" />;
+    } else if (userProfile?.user_type === "merchant") {
+      return <TutorialHelpButton steps={merchantTutorialSteps} userType="merchant" />;
+    } else {
+      return <TutorialHelpButton steps={supporterTutorialSteps} userType="supporter" />;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800" style={backgroundStyle}>
       <DashboardHeader 
@@ -75,6 +88,7 @@ const DashboardView = ({
         onProfileUpdate={onProfileUpdate}
         isApproved={isApproved}
         isAdmin={isAdmin}
+        tutorialHelpButton={getTutorialHelpButton()}
       />
       
       {profileLoading ? (

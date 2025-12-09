@@ -213,12 +213,6 @@ const MerchantDashboard = ({
         </>
       )}
       
-      {/* Help button for returning users (non-admin merchants only) */}
-      {!tutorial.isFirstTimeUser && !isAdmin && (
-        <div className="flex justify-end mb-4">
-          <TutorialHelpButton steps={merchantTutorialSteps} userType="merchant" />
-        </div>
-      )}
       
       <div data-tutorial="approval-status">
         <ApprovalStatusBanner approvalStatus={approvalStatus} isAdmin={isAdmin} />
