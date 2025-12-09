@@ -5,11 +5,24 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { User, Upload } from "lucide-react";
 import UserStatsDisplay from "./UserStatsDisplay";
+
+const INDUSTRY_OPTIONS = [
+  'Film Maker',
+  'Film Editor',
+  'Videographer',
+  'Music Artist',
+  'Live Stream Artist',
+  'Audio Podcaster',
+  'Voice Actor',
+  'Cook/Baker',
+  'Book Editor',
+];
 
 const AuthPage = () => {
   const navigate = useNavigate();
@@ -19,6 +32,7 @@ const AuthPage = () => {
   const [userType, setUserType] = useState<"supporter" | "merchant">("supporter");
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [selectedIndustry, setSelectedIndustry] = useState<string>("");
 
   const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -44,6 +58,17 @@ const AuthPage = () => {
       toast({
         title: "Error",
         description: `Profile picture is required for ${userType} accounts`,
+        variant: "destructive"
+      });
+      setIsLoading(false);
+      return;
+    }
+
+    // Validate industry for merchants
+    if (userType === "merchant" && !selectedIndustry) {
+      toast({
+        title: "Error",
+        description: "Please select your industry/skill to create a merchant account",
         variant: "destructive"
       });
       setIsLoading(false);
@@ -80,7 +105,8 @@ const AuthPage = () => {
             user_type: userType,
             is_adult_creator: false,
             display_name: displayName || null,
-            avatar_url: avatarUrl
+            avatar_url: avatarUrl,
+            skills: userType === "merchant" && selectedIndustry ? [selectedIndustry] : []
           }
         }
       });
@@ -465,6 +491,28 @@ const AuthPage = () => {
                             className="bg-gray-700 border-gray-600 text-white focus:border-blue-500"
                             placeholder="Enter your display name"
                           />
+                        </div>
+
+                        <div>
+                          <Label className="text-white">
+                            Industry / Skill <span className="text-red-400">*</span>
+                          </Label>
+                          <Select value={selectedIndustry} onValueChange={setSelectedIndustry}>
+                            <SelectTrigger className="bg-gray-700 border-gray-600 text-white focus:border-blue-500">
+                              <SelectValue placeholder="Select your industry" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-gray-800 border-gray-600">
+                              {INDUSTRY_OPTIONS.map((industry) => (
+                                <SelectItem 
+                                  key={industry} 
+                                  value={industry}
+                                  className="text-white hover:bg-gray-700 focus:bg-gray-700"
+                                >
+                                  {industry}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </div>
                         
                         <div className={`p-4 rounded-lg border-2 ${!avatarFile ? 'border-red-500/50 bg-red-500/5' : 'border-gray-600 bg-gray-800/30'} transition-colors`}>
