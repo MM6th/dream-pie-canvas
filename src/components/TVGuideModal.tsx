@@ -179,7 +179,7 @@ const TVGuideModal = ({ onSuccess }: TVGuideModalProps) => {
     }
   };
 
-  const roomLink = `${window.location.origin}/livestream/room/${generatedRoomId}`;
+  const roomLink = `${window.location.origin}/livestream/${generatedRoomId}`;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

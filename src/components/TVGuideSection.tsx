@@ -116,20 +116,20 @@ const TVGuideSection = ({ posts, useCarousel = true, onNeedsCredits }: TVGuideSe
       return;
     }
 
-    const result = await enterLivestream(post.id, post.room_id ? `/livestream/room/${post.room_id}` : '');
+    const result = await enterLivestream(post.id, post.room_id ? `/livestream/${post.room_id}` : '');
     if (result.success) {
       setEnteredPosts(prev => new Set(prev).add(post.id));
       refetchBalance();
       // Navigate to the room
       if (post.room_id) {
-        navigate(`/livestream/room/${post.room_id}`);
+        navigate(`/livestream/${post.room_id}`);
       }
     }
   };
 
   const handleJoinRoom = (post: BulletinPost) => {
     if (post.room_id) {
-      navigate(`/livestream/room/${post.room_id}`);
+      navigate(`/livestream/${post.room_id}`);
     }
   };
 
