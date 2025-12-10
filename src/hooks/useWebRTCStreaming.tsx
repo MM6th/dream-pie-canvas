@@ -240,20 +240,21 @@ export const useWebRTCStreaming = (
           setConnectionState('connected');
           retryCount = 0; // Reset retry count on success
           
-          // If viewer, request current host status with retries
+          // If viewer, request current host status with multiple retries
           if (!isHost) {
-            console.log('[WebRTC] Viewer subscribed, requesting host status');
-            setTimeout(() => {
-              sendSignal({ type: 'request-status', from: userId });
-              sendSignal({ type: 'viewer-joined', from: userId });
-            }, 500);
-            setTimeout(() => {
-              if (!peerConnections.current.size) {
-                console.log('[WebRTC] No connection yet, retrying status request...');
-                sendSignal({ type: 'request-status', from: userId });
-                sendSignal({ type: 'viewer-joined', from: userId });
-              }
-            }, 2500);
+            console.log('[WebRTC] Viewer subscribed to channel:', channelName);
+            
+            // Retry several times to catch host signals
+            const retryIntervals = [500, 1500, 3000, 5000, 8000];
+            retryIntervals.forEach((delay, index) => {
+              setTimeout(() => {
+                if (!peerConnections.current.size) {
+                  console.log(`[WebRTC] Viewer retry ${index + 1}: requesting host connection`);
+                  sendSignal({ type: 'request-status', from: userId });
+                  sendSignal({ type: 'viewer-joined', from: userId });
+                }
+              }, delay);
+            });
           }
         } else if (status === 'TIMED_OUT' || status === 'CHANNEL_ERROR') {
           console.error('[WebRTC] Channel connection failed');
