@@ -334,10 +334,12 @@ const LivestreamRoom = () => {
                 <WifiOff className="w-4 h-4 text-gray-500" />
               )}
             </div>
-            <div className="flex items-center gap-2 text-gray-300">
-              <Users className="w-4 h-4" />
-              <span>{viewerCount} watching</span>
-            </div>
+            {(isStreaming || hostIsLive) && (
+              <div className="flex items-center gap-2 text-gray-300">
+                <Users className="w-4 h-4" />
+                <span>{viewerCount} watching</span>
+              </div>
+            )}
             {(isStreaming || hostIsLive) && (
               <span className="bg-red-600 text-white text-xs font-bold px-2 py-1 rounded animate-pulse">
                 LIVE
