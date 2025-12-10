@@ -258,6 +258,24 @@ export const useWebRTCStreaming = (
     };
   }, [roomId, userId, isHost, handleSignalingMessage, sendSignal]);
 
+  // Periodic host status broadcast while streaming
+  useEffect(() => {
+    if (!isHost || !isStreaming || !channelRef.current) return;
+    
+    // Send host-ready immediately and every 3 seconds while streaming
+    const broadcastHostStatus = () => {
+      if (isStreamingRef.current) {
+        console.log('[WebRTC] Broadcasting host status (periodic)');
+        sendSignal({ type: 'host-ready', from: userId });
+      }
+    };
+    
+    broadcastHostStatus();
+    const interval = setInterval(broadcastHostStatus, 3000);
+    
+    return () => clearInterval(interval);
+  }, [isHost, isStreaming, userId, sendSignal]);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -276,7 +294,7 @@ export const useWebRTCStreaming = (
       });
 
       localStreamRef.current = stream;
-      isStreamingRef.current = true; // Update ref
+      isStreamingRef.current = true;
       setLocalStream(stream);
       setIsStreaming(true);
 
