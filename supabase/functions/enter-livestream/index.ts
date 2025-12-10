@@ -95,8 +95,8 @@ Deno.serve(async (req) => {
       .eq('merchant_id', post.merchant_id)
       .single();
 
-    const creditsPerMinute = post.livestream_credits_per_minute || settings?.credits_per_minute || 5;
-    const sessionDuration = settings?.session_duration_minutes || 20;
+    const creditsPerMinute = post.livestream_credits_per_minute || settings?.credits_per_minute || 1;
+    const sessionDuration = settings?.session_duration_minutes || 3;
     const totalCreditsRequired = creditsPerMinute * sessionDuration;
 
     // Check user's credit balance

@@ -78,7 +78,7 @@ const TVGuideModal = ({ onSuccess }: TVGuideModalProps) => {
       if (settings) {
         setLivestreamSettings(settings);
       } else {
-        setLivestreamSettings({ credits_per_minute: 5, session_duration_minutes: 20 });
+        setLivestreamSettings({ credits_per_minute: 1, session_duration_minutes: 3 });
       }
     }
   };
