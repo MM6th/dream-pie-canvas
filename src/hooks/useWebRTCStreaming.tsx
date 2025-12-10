@@ -204,58 +204,82 @@ export const useWebRTCStreaming = (
   useEffect(() => {
     if (!roomId || !userId) return;
 
-    console.log(`[WebRTC] Initializing signaling for room ${roomId}, user ${userId}, isHost: ${isHost}`);
+    let retryCount = 0;
+    const maxRetries = 3;
+    let retryTimeout: NodeJS.Timeout | null = null;
 
-    // Clean up any existing channel first
-    if (channelRef.current) {
-      console.log('[WebRTC] Removing existing channel before creating new one');
-      supabase.removeChannel(channelRef.current);
-      channelRef.current = null;
-    }
+    const setupChannel = () => {
+      console.log(`[WebRTC] Initializing signaling for room ${roomId}, user ${userId}, isHost: ${isHost}, attempt: ${retryCount + 1}`);
 
-    const channelName = `webrtc-${roomId}`;
-    
-    const channel = supabase.channel(channelName, {
-      config: {
-        broadcast: { self: false },
-      },
-    })
-      .on('broadcast', { event: 'signal' }, ({ payload }) => {
-        console.log('[WebRTC] Raw signal received:', (payload as SignalingMessage).type);
-        handleSignalingMessage(payload as SignalingMessage);
-      });
-    
-    // Store reference before subscribing
-    channelRef.current = channel;
-    
-    channel.subscribe((status, err) => {
-      console.log(`[WebRTC] Channel status: ${status}`, err ? `Error: ${err.message}` : '');
+      // Clean up any existing channel first
+      if (channelRef.current) {
+        console.log('[WebRTC] Removing existing channel before creating new one');
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
+
+      const channelName = `webrtc-${roomId}`;
       
-      if (status === 'SUBSCRIBED') {
-        setConnectionState('connected');
-        // If viewer, request current host status with retries
-        if (!isHost) {
-          console.log('[WebRTC] Viewer subscribed, requesting host status');
-          setTimeout(() => {
-            sendSignal({ type: 'request-status', from: userId });
-            sendSignal({ type: 'viewer-joined', from: userId });
-          }, 500);
-          setTimeout(() => {
-            if (!peerConnections.current.size) {
-              console.log('[WebRTC] No connection yet, retrying...');
+      const channel = supabase.channel(channelName, {
+        config: {
+          broadcast: { self: false },
+        },
+      })
+        .on('broadcast', { event: 'signal' }, ({ payload }) => {
+          console.log('[WebRTC] Raw signal received:', (payload as SignalingMessage).type);
+          handleSignalingMessage(payload as SignalingMessage);
+        });
+      
+      // Store reference before subscribing
+      channelRef.current = channel;
+      
+      channel.subscribe((status, err) => {
+        console.log(`[WebRTC] Channel status: ${status}`, err ? `Error: ${err.message}` : '');
+        
+        if (status === 'SUBSCRIBED') {
+          setConnectionState('connected');
+          retryCount = 0; // Reset retry count on success
+          
+          // If viewer, request current host status with retries
+          if (!isHost) {
+            console.log('[WebRTC] Viewer subscribed, requesting host status');
+            setTimeout(() => {
               sendSignal({ type: 'request-status', from: userId });
               sendSignal({ type: 'viewer-joined', from: userId });
-            }
-          }, 2500);
+            }, 500);
+            setTimeout(() => {
+              if (!peerConnections.current.size) {
+                console.log('[WebRTC] No connection yet, retrying status request...');
+                sendSignal({ type: 'request-status', from: userId });
+                sendSignal({ type: 'viewer-joined', from: userId });
+              }
+            }, 2500);
+          }
+        } else if (status === 'TIMED_OUT' || status === 'CHANNEL_ERROR') {
+          console.error('[WebRTC] Channel connection failed');
+          setConnectionState('disconnected');
+          
+          // Retry with a new channel instance
+          if (retryCount < maxRetries) {
+            retryCount++;
+            console.log(`[WebRTC] Retrying channel connection (${retryCount}/${maxRetries})...`);
+            retryTimeout = setTimeout(() => {
+              setupChannel();
+            }, 2000 * retryCount); // Exponential backoff
+          } else {
+            console.error('[WebRTC] Max retries reached, giving up');
+          }
         }
-      } else if (status === 'TIMED_OUT' || status === 'CHANNEL_ERROR') {
-        console.error('[WebRTC] Channel connection failed');
-        setConnectionState('disconnected');
-      }
-    });
+      });
+    };
+
+    setupChannel();
 
     return () => {
       console.log('[WebRTC] Cleaning up...');
+      if (retryTimeout) {
+        clearTimeout(retryTimeout);
+      }
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;
