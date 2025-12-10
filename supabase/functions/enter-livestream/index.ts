@@ -70,7 +70,7 @@ Deno.serve(async (req) => {
 
     // Determine the room URL
     const roomUrl = post.room_id 
-      ? `/livestream/room/${post.room_id}` 
+      ? `/livestream/${post.room_id}` 
       : post.link_url;
 
     if (existingEntry) {
