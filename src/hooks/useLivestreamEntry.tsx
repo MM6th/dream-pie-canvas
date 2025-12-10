@@ -42,15 +42,18 @@ export const useLivestreamEntry = () => {
 
       toast({
         title: 'Welcome!',
-        description: `Entry successful! ${data.creditsSpent} credits spent.`,
+        description: data.alreadyEntered 
+          ? 'You already have access to this stream!' 
+          : `Entry successful! ${data.creditsSpent} credits spent.`,
       });
 
-      // Open the stream link
-      if (linkUrl) {
-        window.open(linkUrl, '_blank', 'noopener,noreferrer');
-      }
-
-      return { success: true, creditsSpent: data.creditsSpent };
+      return { 
+        success: true, 
+        creditsSpent: data.creditsSpent,
+        roomId: data.roomId,
+        linkUrl: data.linkUrl,
+        alreadyEntered: data.alreadyEntered,
+      };
     } catch (error: any) {
       console.error('Error entering livestream:', error);
       toast({
