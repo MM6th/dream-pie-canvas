@@ -1,14 +1,13 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useWebRTCStreaming } from "@/hooks/useWebRTCStreaming";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Video, Clock, Users, ArrowLeft, Loader2, Lock, VideoOff, Mic, MicOff } from "lucide-react";
+import { Video, Clock, Users, ArrowLeft, Loader2, Lock, VideoOff, Mic, MicOff, Wifi, WifiOff } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
-import { format, differenceInSeconds, isPast, isFuture } from "date-fns";
-import { toZonedTime } from "date-fns-tz";
+import { format, differenceInSeconds } from "date-fns";
 
 interface LivestreamData {
   id: string;
@@ -38,12 +37,35 @@ const LivestreamRoom = () => {
   const [countdown, setCountdown] = useState<string>("");
   const [isLive, setIsLive] = useState(false);
   const [viewerCount, setViewerCount] = useState(1);
-  
-  // Camera state
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [isCameraOn, setIsCameraOn] = useState(false);
   const [isMicOn, setIsMicOn] = useState(true);
-  const [stream, setStream] = useState<MediaStream | null>(null);
+
+  const localVideoRef = useRef<HTMLVideoElement>(null);
+  const remoteVideoRef = useRef<HTMLVideoElement>(null);
+
+  // WebRTC streaming hook
+  const {
+    localStream,
+    remoteStream,
+    isStreaming,
+    hostIsLive,
+    connectionState,
+    startStreaming,
+    stopStreaming,
+    toggleMic,
+  } = useWebRTCStreaming(roomId || '', user?.id || '', isArtist);
+
+  // Attach streams to video elements
+  useEffect(() => {
+    if (localVideoRef.current && localStream) {
+      localVideoRef.current.srcObject = localStream;
+    }
+  }, [localStream]);
+
+  useEffect(() => {
+    if (remoteVideoRef.current && remoteStream) {
+      remoteVideoRef.current.srcObject = remoteStream;
+    }
+  }, [remoteStream]);
 
   useEffect(() => {
     if (roomId) {
@@ -149,27 +171,15 @@ const LivestreamRoom = () => {
     }
   };
 
-  // Camera controls
-  const startCamera = async () => {
+  const handleStartCamera = async () => {
     try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "user", width: 1280, height: 720 },
-        audio: true
-      });
-      
-      setStream(mediaStream);
-      setIsCameraOn(true);
-      
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
-      }
-      
+      await startStreaming();
       toast({
         title: "Camera Started",
-        description: "Your camera is now live!",
+        description: "You are now live! Viewers can see your stream.",
       });
     } catch (error) {
-      console.error("Error accessing camera:", error);
+      console.error("Error starting camera:", error);
       toast({
         title: "Camera Error",
         description: "Could not access camera. Please check permissions.",
@@ -178,39 +188,24 @@ const LivestreamRoom = () => {
     }
   };
 
-  const stopCamera = () => {
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
-      setStream(null);
-      setIsCameraOn(false);
-      
-      if (videoRef.current) {
-        videoRef.current.srcObject = null;
-      }
-    }
+  const handleStopCamera = () => {
+    stopStreaming();
+    toast({
+      title: "Camera Stopped",
+      description: "Your stream has been paused.",
+    });
   };
 
-  const toggleMic = () => {
-    if (stream) {
-      const audioTrack = stream.getAudioTracks()[0];
-      if (audioTrack) {
-        audioTrack.enabled = !audioTrack.enabled;
-        setIsMicOn(audioTrack.enabled);
-      }
-    }
+  const handleToggleMic = () => {
+    const newState = !isMicOn;
+    setIsMicOn(newState);
+    toggleMic(newState);
   };
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-      }
-    };
-  }, [stream]);
 
   const handleEndSession = async () => {
     if (!livestream || !isArtist) return;
+
+    stopStreaming();
 
     const { error } = await supabase
       .from("bulletin_posts")
@@ -307,11 +302,19 @@ const LivestreamRoom = () => {
             Back to TV Guide
           </Button>
           <div className="flex items-center gap-4">
+            {/* Connection status indicator */}
+            <div className="flex items-center gap-2 text-gray-300">
+              {connectionState === 'connected' ? (
+                <Wifi className="w-4 h-4 text-green-500" />
+              ) : (
+                <WifiOff className="w-4 h-4 text-gray-500" />
+              )}
+            </div>
             <div className="flex items-center gap-2 text-gray-300">
               <Users className="w-4 h-4" />
               <span>{viewerCount} watching</span>
             </div>
-            {isLive && (
+            {(isStreaming || hostIsLive) && (
               <span className="bg-red-600 text-white text-xs font-bold px-2 py-1 rounded animate-pulse">
                 LIVE
               </span>
@@ -326,33 +329,67 @@ const LivestreamRoom = () => {
           <div className="lg:col-span-2">
             <Card className="bg-gray-800 border-gray-700 overflow-hidden">
               <div className="aspect-video bg-black flex items-center justify-center relative">
-                {isCameraOn && isArtist ? (
+                {/* Host view: show local camera */}
+                {isArtist && isStreaming && (
                   <video
-                    ref={videoRef}
+                    ref={localVideoRef}
                     autoPlay
                     muted
                     playsInline
                     className="w-full h-full object-cover"
                   />
-                ) : isLive ? (
+                )}
+
+                {/* Viewer view: show remote stream from host */}
+                {!isArtist && hostIsLive && remoteStream && (
+                  <video
+                    ref={remoteVideoRef}
+                    autoPlay
+                    playsInline
+                    className="w-full h-full object-cover"
+                  />
+                )}
+
+                {/* Host not streaming yet */}
+                {isArtist && !isStreaming && isLive && (
                   <div className="text-center">
                     <Video className="w-16 h-16 text-purple-500 mx-auto mb-4" />
                     <p className="text-gray-400">
-                      {isArtist 
-                        ? "Click 'Start Camera' below to begin streaming" 
-                        : "Waiting for the host to start streaming..."}
+                      Click 'Start Camera' below to begin streaming
                     </p>
                   </div>
-                ) : (
+                )}
+
+                {/* Viewer waiting for host */}
+                {!isArtist && !hostIsLive && isLive && (
+                  <div className="text-center">
+                    <Loader2 className="w-12 h-12 text-purple-500 mx-auto mb-4 animate-spin" />
+                    <p className="text-gray-400 mb-2">Connecting to stream...</p>
+                    <p className="text-gray-500 text-sm">
+                      Waiting for the host to start their camera
+                    </p>
+                  </div>
+                )}
+
+                {/* Viewer receiving stream but video not yet playing */}
+                {!isArtist && hostIsLive && !remoteStream && (
+                  <div className="text-center">
+                    <Loader2 className="w-12 h-12 text-green-500 mx-auto mb-4 animate-spin" />
+                    <p className="text-gray-400">Host is live! Connecting video...</p>
+                  </div>
+                )}
+
+                {/* Countdown before live */}
+                {!isLive && (
                   <div className="text-center">
                     <Clock className="w-16 h-16 text-purple-500 mx-auto mb-4" />
                     <p className="text-2xl font-mono text-white mb-2">{countdown}</p>
                     <p className="text-gray-400">Stream starts soon</p>
                   </div>
                 )}
-                
+
                 {/* Live indicator overlay */}
-                {isCameraOn && (
+                {(isStreaming || (hostIsLive && remoteStream)) && (
                   <div className="absolute top-4 left-4 flex items-center gap-2">
                     <span className="bg-red-600 text-white text-xs font-bold px-2 py-1 rounded animate-pulse">
                       LIVE
@@ -382,9 +419,9 @@ const LivestreamRoom = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex gap-2">
-                    {!isCameraOn ? (
+                    {!isStreaming ? (
                       <Button
-                        onClick={startCamera}
+                        onClick={handleStartCamera}
                         className="flex-1 bg-green-600 hover:bg-green-700"
                       >
                         <Video className="w-4 h-4 mr-2" />
@@ -392,7 +429,7 @@ const LivestreamRoom = () => {
                       </Button>
                     ) : (
                       <Button
-                        onClick={stopCamera}
+                        onClick={handleStopCamera}
                         variant="outline"
                         className="flex-1 border-red-500 text-red-500 hover:bg-red-500/10"
                       >
@@ -400,17 +437,17 @@ const LivestreamRoom = () => {
                         Stop Camera
                       </Button>
                     )}
-                    
+
                     <Button
-                      onClick={toggleMic}
+                      onClick={handleToggleMic}
                       variant="outline"
                       className={`${isMicOn ? 'border-gray-600' : 'border-red-500 text-red-500'}`}
-                      disabled={!isCameraOn}
+                      disabled={!isStreaming}
                     >
                       {isMicOn ? <Mic className="w-4 h-4" /> : <MicOff className="w-4 h-4" />}
                     </Button>
                   </div>
-                  
+
                   <Button
                     onClick={handleEndSession}
                     variant="destructive"
