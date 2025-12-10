@@ -619,6 +619,10 @@ export type Database = {
           pie_contractor_share: number | null
           pie_episode_cost: number | null
           post_type: string | null
+          room_id: string | null
+          scheduled_at: string | null
+          session_ended_at: string | null
+          timezone: string | null
           title: string
           updated_at: string
           uploaded_image_url: string | null
@@ -642,6 +646,10 @@ export type Database = {
           pie_contractor_share?: number | null
           pie_episode_cost?: number | null
           post_type?: string | null
+          room_id?: string | null
+          scheduled_at?: string | null
+          session_ended_at?: string | null
+          timezone?: string | null
           title: string
           updated_at?: string
           uploaded_image_url?: string | null
@@ -665,6 +673,10 @@ export type Database = {
           pie_contractor_share?: number | null
           pie_episode_cost?: number | null
           post_type?: string | null
+          room_id?: string | null
+          scheduled_at?: string | null
+          session_ended_at?: string | null
+          timezone?: string | null
           title?: string
           updated_at?: string
           uploaded_image_url?: string | null

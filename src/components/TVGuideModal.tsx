@@ -6,15 +6,29 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { Calendar, Video, Coins } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar, Video, Coins, Clock, Globe, Link as LinkIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/components/ui/use-toast";
-import ImagePicker from "./ImagePicker";
+import { format } from "date-fns";
 
 interface TVGuideModalProps {
   onSuccess?: () => void;
 }
+
+const TIMEZONES = [
+  { value: "America/New_York", label: "Eastern Time (ET)" },
+  { value: "America/Chicago", label: "Central Time (CT)" },
+  { value: "America/Denver", label: "Mountain Time (MT)" },
+  { value: "America/Los_Angeles", label: "Pacific Time (PT)" },
+  { value: "America/Anchorage", label: "Alaska Time (AKT)" },
+  { value: "Pacific/Honolulu", label: "Hawaii Time (HT)" },
+  { value: "Europe/London", label: "London (GMT/BST)" },
+  { value: "Europe/Paris", label: "Paris (CET/CEST)" },
+  { value: "Asia/Tokyo", label: "Tokyo (JST)" },
+  { value: "Australia/Sydney", label: "Sydney (AEST/AEDT)" },
+];
 
 const TVGuideModal = ({ onSuccess }: TVGuideModalProps) => {
   const { user } = useAuth();
@@ -28,21 +42,24 @@ const TVGuideModal = ({ onSuccess }: TVGuideModalProps) => {
   const [formData, setFormData] = useState({
     title: "",
     content: "",
-    imageUrl: "",
-    linkUrl: "",
+    scheduledDate: "",
+    scheduledTime: "",
+    timezone: "America/New_York",
     isPaidLivestream: false,
   });
+  const [generatedRoomId, setGeneratedRoomId] = useState<string>("");
 
   useEffect(() => {
     if (user && open) {
       checkLiveStreamArtistStatus();
+      // Generate a new room ID when modal opens
+      setGeneratedRoomId(crypto.randomUUID());
     }
   }, [user, open]);
 
   const checkLiveStreamArtistStatus = async () => {
     if (!user) return;
 
-    // Check if user is a live stream artist
     const { data: profile } = await supabase
       .from('profiles')
       .select('is_live_stream_artist')
@@ -52,7 +69,6 @@ const TVGuideModal = ({ onSuccess }: TVGuideModalProps) => {
     if (profile?.is_live_stream_artist) {
       setIsLiveStreamArtist(true);
 
-      // Fetch livestream settings
       const { data: settings } = await supabase
         .from('livestream_settings')
         .select('credits_per_minute, session_duration_minutes')
@@ -62,7 +78,6 @@ const TVGuideModal = ({ onSuccess }: TVGuideModalProps) => {
       if (settings) {
         setLivestreamSettings(settings);
       } else {
-        // Default settings
         setLivestreamSettings({ credits_per_minute: 5, session_duration_minutes: 20 });
       }
     }
@@ -79,50 +94,59 @@ const TVGuideModal = ({ onSuccess }: TVGuideModalProps) => {
       return;
     }
 
+    if (!formData.scheduledDate || !formData.scheduledTime) {
+      toast({
+        title: "Error",
+        description: "Please select a date and time for your stream",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setLoading(true);
     try {
-      const insertData: any = {
-        title: formData.title.trim(),
-        content: formData.content.trim(),
-        image_url: formData.imageUrl.trim() || null,
-        link_url: formData.linkUrl.trim() || null,
-        post_type: 'tv_guide',
-        merchant_id: user.id,
-        is_paid_livestream: formData.isPaidLivestream,
-      };
-
-      // Add livestream credits if this is a paid livestream
-      if (formData.isPaidLivestream && livestreamSettings) {
-        insertData.livestream_credits_per_minute = livestreamSettings.credits_per_minute;
-      }
+      // Combine date and time into ISO string
+      const scheduledAt = new Date(`${formData.scheduledDate}T${formData.scheduledTime}`).toISOString();
 
       const { error } = await supabase
         .from('bulletin_posts')
-        .insert(insertData);
+        .insert({
+          title: formData.title.trim(),
+          content: formData.content.trim(),
+          post_type: 'tv_guide',
+          merchant_id: user.id,
+          is_paid_livestream: formData.isPaidLivestream,
+          scheduled_at: scheduledAt,
+          timezone: formData.timezone,
+          room_id: generatedRoomId,
+          livestream_credits_per_minute: formData.isPaidLivestream && livestreamSettings 
+            ? livestreamSettings.credits_per_minute 
+            : null,
+        });
+
 
       if (error) throw error;
 
       toast({
         title: "Success",
-        description: formData.isPaidLivestream 
-          ? "Paid livestream entry created successfully!" 
-          : "TV Guide entry created successfully!"
+        description: "Livestream scheduled successfully!"
       });
 
       setFormData({
         title: "",
         content: "",
-        imageUrl: "",
-        linkUrl: "",
+        scheduledDate: "",
+        scheduledTime: "",
+        timezone: "America/New_York",
         isPaidLivestream: false,
       });
       setOpen(false);
       onSuccess?.();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating TV guide entry:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to create TV guide entry",
+        description: (error as Error).message || "Failed to create TV guide entry",
         variant: "destructive"
       });
     } finally {
@@ -130,19 +154,21 @@ const TVGuideModal = ({ onSuccess }: TVGuideModalProps) => {
     }
   };
 
+  const roomLink = `${window.location.origin}/livestream/room/${generatedRoomId}`;
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button className="w-full bg-blue-600 hover:bg-blue-700">
           <Calendar className="w-4 h-4 mr-2" />
-          Create TV Guide Entry
+          Schedule Livestream
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md bg-gray-800 border-gray-700 text-white max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Calendar className="w-5 h-5" />
-            Create TV Guide Entry
+            <Video className="w-5 h-5" />
+            Schedule Livestream
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -159,36 +185,86 @@ const TVGuideModal = ({ onSuccess }: TVGuideModalProps) => {
           </div>
 
           <div>
-            <Label htmlFor="content">Description & Schedule *</Label>
+            <Label htmlFor="content">Description *</Label>
             <Textarea
               id="content"
               value={formData.content}
               onChange={(e) => setFormData({ ...formData, content: e.target.value })}
               className="bg-gray-700 border-gray-600 text-white"
-              placeholder="Describe the show and include schedule details..."
-              rows={4}
+              placeholder="Describe your livestream..."
+              rows={3}
               required
             />
           </div>
 
+          {/* Date & Time */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label htmlFor="scheduledDate" className="flex items-center gap-1">
+                <Calendar className="w-3 h-3" />
+                Date *
+              </Label>
+              <Input
+                id="scheduledDate"
+                type="date"
+                value={formData.scheduledDate}
+                onChange={(e) => setFormData({ ...formData, scheduledDate: e.target.value })}
+                className="bg-gray-700 border-gray-600 text-white"
+                min={format(new Date(), "yyyy-MM-dd")}
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="scheduledTime" className="flex items-center gap-1">
+                <Clock className="w-3 h-3" />
+                Time *
+              </Label>
+              <Input
+                id="scheduledTime"
+                type="time"
+                value={formData.scheduledTime}
+                onChange={(e) => setFormData({ ...formData, scheduledTime: e.target.value })}
+                className="bg-gray-700 border-gray-600 text-white"
+                required
+              />
+            </div>
+          </div>
 
+          {/* Timezone */}
           <div>
-            <Label htmlFor="linkUrl">
-              {formData.isPaidLivestream ? "Livestream Link URL *" : "Link URL (Optional)"}
+            <Label htmlFor="timezone" className="flex items-center gap-1">
+              <Globe className="w-3 h-3" />
+              Timezone *
             </Label>
-            <Input
-              id="linkUrl"
-              value={formData.linkUrl}
-              onChange={(e) => setFormData({ ...formData, linkUrl: e.target.value })}
-              className="bg-gray-700 border-gray-600 text-white"
-              placeholder="https://example.com"
-              required={formData.isPaidLivestream}
-            />
-            {formData.isPaidLivestream && (
-              <p className="text-xs text-gray-400 mt-1">
-                Users will be directed to this link after paying to enter
-              </p>
-            )}
+            <Select
+              value={formData.timezone}
+              onValueChange={(value) => setFormData({ ...formData, timezone: value })}
+            >
+              <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-gray-800 border-gray-700">
+                {TIMEZONES.map((tz) => (
+                  <SelectItem key={tz.value} value={tz.value} className="text-white hover:bg-gray-700">
+                    {tz.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Generated Room Link Preview */}
+          <div className="rounded-lg bg-gray-700/50 border border-gray-600 p-3">
+            <Label className="flex items-center gap-1 text-sm text-gray-300 mb-2">
+              <LinkIcon className="w-3 h-3" />
+              Your Stream Link
+            </Label>
+            <p className="text-xs text-purple-400 break-all font-mono">
+              {roomLink}
+            </p>
+            <p className="text-xs text-gray-500 mt-1">
+              Share this link with your audience. It will become active at the scheduled time.
+            </p>
           </div>
 
           {isLiveStreamArtist && (
@@ -238,7 +314,7 @@ const TVGuideModal = ({ onSuccess }: TVGuideModalProps) => {
               Cancel
             </Button>
             <Button type="submit" disabled={loading} className="flex-1 bg-blue-600 hover:bg-blue-700">
-              {loading ? "Creating..." : "Create Entry"}
+              {loading ? "Scheduling..." : "Schedule Stream"}
             </Button>
           </div>
         </form>

@@ -13,6 +13,10 @@ export interface BulletinPost {
   media_type?: string;
   is_paid_livestream?: boolean;
   livestream_credits_per_minute?: number;
+  scheduled_at?: string;
+  timezone?: string;
+  room_id?: string;
+  session_ended_at?: string;
   profiles: {
     display_name: string;
     avatar_url: string;
