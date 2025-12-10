@@ -104,7 +104,7 @@ const TVGuideSection = ({ posts, useCarousel = true, onNeedsCredits }: TVGuideSe
       return;
     }
 
-    const totalCredits = (post.livestream_credits_per_minute || 5) * 20;
+    const totalCredits = (post.livestream_credits_per_minute || 1) * 3;
     
     if (balance < totalCredits && !enteredPosts.has(post.id)) {
       toast({
@@ -146,7 +146,7 @@ const TVGuideSection = ({ posts, useCarousel = true, onNeedsCredits }: TVGuideSe
   const renderCard = (post: BulletinPost) => {
     const isPaid = post.is_paid_livestream;
     const hasEntered = enteredPosts.has(post.id);
-    const totalCredits = (post.livestream_credits_per_minute || 5) * 20;
+    const totalCredits = (post.livestream_credits_per_minute || 1) * 3;
     const status = getStreamStatus(post);
     const countdown = countdowns[post.id];
     const isLive = status === "live";
