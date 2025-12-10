@@ -149,6 +149,7 @@ const TVGuideModal = ({ onSuccess }: TVGuideModalProps) => {
           type: 'livestream_scheduled',
           title: 'Livestream Scheduled',
           message: `Your livestream "${formData.title.trim()}" is scheduled for ${formattedDate} at ${formattedTime} (${timezoneLabel}).`,
+          read: false,
         });
 
       toast({
