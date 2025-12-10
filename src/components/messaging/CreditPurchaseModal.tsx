@@ -518,7 +518,6 @@ export const CreditPurchaseModal = ({
                               setCreditsPerMessage(val);
                             }}
                             className="max-w-[120px]"
-                            placeholder="10"
                           />
                           <span className="text-xs text-muted-foreground">
                             credits (1-100)
@@ -605,7 +604,6 @@ export const CreditPurchaseModal = ({
                               setCreditsPerMinute(val);
                             }}
                             className="max-w-[120px]"
-                            placeholder="5"
                           />
                           <span className="text-xs text-muted-foreground">
                             credits/min (1-50)
