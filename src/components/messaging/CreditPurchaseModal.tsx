@@ -180,6 +180,7 @@ export const CreditPurchaseModal = ({
           description: 'Credits per minute must be between 1 and 50',
           variant: 'destructive',
         });
+        setLivestreamSaving(false);
         return;
       }
 
@@ -221,6 +222,70 @@ export const CreditPurchaseModal = ({
       });
     } finally {
       setLivestreamSaving(false);
+    }
+  };
+
+  const handleResetMessageSettings = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      if (hasSettings) {
+        const { error } = await supabase
+          .from('message_settings')
+          .delete()
+          .eq('merchant_id', user.id);
+
+        if (error) throw error;
+      }
+
+      setCreditsPerMessage(10);
+      setSettingsEnabled(true);
+      setHasSettings(false);
+
+      toast({
+        title: 'Settings reset',
+        description: 'Your message settings have been cleared',
+      });
+    } catch (error) {
+      console.error('Error resetting settings:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to reset settings',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleResetLivestreamSettings = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      if (hasLivestreamSettings) {
+        const { error } = await supabase
+          .from('livestream_settings')
+          .delete()
+          .eq('merchant_id', user.id);
+
+        if (error) throw error;
+      }
+
+      setCreditsPerMinute(5);
+      setLivestreamEnabled(true);
+      setHasLivestreamSettings(false);
+
+      toast({
+        title: 'Settings reset',
+        description: 'Your livestream settings have been cleared',
+      });
+    } catch (error) {
+      console.error('Error resetting settings:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to reset settings',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -470,14 +535,24 @@ export const CreditPurchaseModal = ({
                     </>
                   )}
 
-                  <Button 
-                    onClick={handleSaveSettings} 
-                    disabled={settingsSaving}
-                    variant="secondary"
-                    className="w-full"
-                  >
-                    {settingsSaving ? 'Saving...' : 'Save Settings'}
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button 
+                      onClick={handleSaveSettings} 
+                      disabled={settingsSaving}
+                      variant="secondary"
+                      className="flex-1"
+                    >
+                      {settingsSaving ? 'Saving...' : 'Save Settings'}
+                    </Button>
+                    {hasSettings && (
+                      <Button 
+                        onClick={handleResetMessageSettings} 
+                        variant="outline"
+                      >
+                        Reset
+                      </Button>
+                    )}
+                  </div>
                 </>
               )}
             </div>
@@ -559,14 +634,24 @@ export const CreditPurchaseModal = ({
                     </>
                   )}
 
-                  <Button 
-                    onClick={handleSaveLivestreamSettings} 
-                    disabled={livestreamSaving}
-                    variant="secondary"
-                    className="w-full"
-                  >
-                    {livestreamSaving ? 'Saving...' : 'Save Livestream Settings'}
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button 
+                      onClick={handleSaveLivestreamSettings} 
+                      disabled={livestreamSaving}
+                      variant="secondary"
+                      className="flex-1"
+                    >
+                      {livestreamSaving ? 'Saving...' : 'Save Livestream Settings'}
+                    </Button>
+                    {hasLivestreamSettings && (
+                      <Button 
+                        onClick={handleResetLivestreamSettings} 
+                        variant="outline"
+                      >
+                        Reset
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </>
             )}
