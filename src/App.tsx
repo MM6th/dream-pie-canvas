@@ -32,7 +32,7 @@ const App = () => (
           <Route path="/payment-cancelled" element={<PaymentCancelled />} />
           <Route path="/profiles" element={<ProfilesDirectory />} />
           <Route path="/profile/:userId" element={<ProfilePage />} />
-          <Route path="/livestream/room/:roomId" element={<LivestreamRoom />} />
+          <Route path="/livestream/:roomId" element={<LivestreamRoom />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
