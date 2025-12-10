@@ -12,6 +12,7 @@ import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentCancelled from "./pages/PaymentCancelled";
 import ProfilePage from "./pages/ProfilePage";
 import ProfilesDirectory from "./pages/ProfilesDirectory";
+import LivestreamRoom from "./pages/LivestreamRoom";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,6 +32,7 @@ const App = () => (
           <Route path="/payment-cancelled" element={<PaymentCancelled />} />
           <Route path="/profiles" element={<ProfilesDirectory />} />
           <Route path="/profile/:userId" element={<ProfilePage />} />
+          <Route path="/livestream/room/:roomId" element={<LivestreamRoom />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

@@ -34,10 +34,10 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Get the bulletin post
+    // Get the bulletin post with new fields
     const { data: post, error: postError } = await supabaseAdmin
       .from('bulletin_posts')
-      .select('id, title, merchant_id, is_paid_livestream, livestream_credits_per_minute, link_url')
+      .select('id, title, merchant_id, is_paid_livestream, livestream_credits_per_minute, link_url, room_id, scheduled_at, session_ended_at')
       .eq('id', postId)
       .single();
 
@@ -49,6 +49,17 @@ Deno.serve(async (req) => {
       throw new Error('This is not a paid livestream');
     }
 
+    // Check if session has ended
+    if (post.session_ended_at) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'This livestream session has ended.',
+          sessionEnded: true,
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Check if user already has an entry
     const { data: existingEntry } = await supabaseAdmin
       .from('livestream_entries')
@@ -56,6 +67,11 @@ Deno.serve(async (req) => {
       .eq('bulletin_post_id', postId)
       .eq('user_id', user.id)
       .single();
+
+    // Determine the room URL
+    const roomUrl = post.room_id 
+      ? `/livestream/room/${post.room_id}` 
+      : post.link_url;
 
     if (existingEntry) {
       // Already entered, allow re-entry without charging
@@ -65,7 +81,8 @@ Deno.serve(async (req) => {
           success: true, 
           alreadyEntered: true,
           creditsSpent: 0,
-          linkUrl: post.link_url,
+          linkUrl: roomUrl,
+          roomId: post.room_id,
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -183,13 +200,15 @@ Deno.serve(async (req) => {
       postId,
       creditsSpent: totalCreditsRequired,
       merchantRevenue,
+      roomId: post.room_id,
     });
 
     return new Response(
       JSON.stringify({ 
         success: true,
         creditsSpent: totalCreditsRequired,
-        linkUrl: post.link_url,
+        linkUrl: roomUrl,
+        roomId: post.room_id,
         remainingBalance: credits.balance - totalCreditsRequired,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
