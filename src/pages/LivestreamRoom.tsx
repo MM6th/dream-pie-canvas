@@ -29,7 +29,7 @@ interface LivestreamData {
 const LivestreamRoom = () => {
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [livestream, setLivestream] = useState<LivestreamData | null>(null);
   const [loading, setLoading] = useState(true);
   const [hasAccess, setHasAccess] = useState(false);
@@ -68,10 +68,10 @@ const LivestreamRoom = () => {
   }, [remoteStream]);
 
   useEffect(() => {
-    if (roomId) {
+    if (roomId && !authLoading) {
       fetchLivestreamData();
     }
-  }, [roomId, user]);
+  }, [roomId, user, authLoading]);
 
   useEffect(() => {
     if (!livestream?.scheduled_at) return;
@@ -251,7 +251,7 @@ const LivestreamRoom = () => {
     }
   };
 
-  if (loading) {
+  if (loading || authLoading) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
