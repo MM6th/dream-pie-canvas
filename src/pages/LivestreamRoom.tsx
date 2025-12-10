@@ -127,6 +127,8 @@ const LivestreamRoom = () => {
 
   const fetchLivestreamData = async () => {
     try {
+      console.log('[Livestream] Fetching data for room:', roomId);
+      
       const { data, error } = await supabase
         .from("bulletin_posts")
         .select(`
@@ -138,7 +140,22 @@ const LivestreamRoom = () => {
         .eq("post_type", "tv_guide")
         .single();
 
-      if (error || !data) {
+      console.log('[Livestream] Query result:', { data, error });
+
+      if (error) {
+        console.error('[Livestream] Query error:', error);
+        // Don't redirect immediately - show error state instead
+        toast({
+          title: "Error Loading Stream",
+          description: error.message || "Could not load livestream data.",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+      
+      if (!data) {
+        console.log('[Livestream] No data found for room');
         toast({
           title: "Stream Not Found",
           description: "This livestream doesn't exist or has ended.",
@@ -149,7 +166,9 @@ const LivestreamRoom = () => {
       }
 
       setLivestream(data as unknown as LivestreamData);
-      setIsArtist(user?.id === data.merchant_id);
+      const isUserArtist = user?.id === data.merchant_id;
+      console.log('[Livestream] User is artist:', isUserArtist, 'userId:', user?.id, 'merchantId:', data.merchant_id);
+      setIsArtist(isUserArtist);
 
       // Check access for paid streams
       if (data.is_paid_livestream && user) {
@@ -165,7 +184,12 @@ const LivestreamRoom = () => {
         setHasAccess(!data.is_paid_livestream || user?.id === data.merchant_id);
       }
     } catch (err) {
-      console.error("Error fetching livestream:", err);
+      console.error("[Livestream] Error fetching livestream:", err);
+      toast({
+        title: "Connection Error",
+        description: "Failed to connect to livestream. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
