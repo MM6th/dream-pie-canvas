@@ -18,12 +18,12 @@ export const NotificationBellButton = ({ userId, userType }: NotificationBellBut
     if (!userId) return;
 
     try {
-      // Fetch unread notifications count
+      // Fetch unread notifications count (check for false OR null)
       const { count: notificationCount } = await supabase
         .from("notifications")
         .select("*", { count: "exact", head: true })
         .eq("user_id", userId)
-        .eq("read", false);
+        .or("read.eq.false,read.is.null");
 
       // Fetch unread messages count
       const { count: messageCount } = await supabase
