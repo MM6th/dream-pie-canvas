@@ -65,6 +65,7 @@ export const LiveStreamControlCenter = () => {
   const upcomingStreams = scheduledStreams.filter(s => getStreamStatus(s) === 'upcoming');
   const liveStreams = scheduledStreams.filter(s => getStreamStatus(s) === 'live');
   const pastStreams = scheduledStreams.filter(s => getStreamStatus(s) === 'ended').slice(0, 3);
+  const nextStream = liveStreams[0] || upcomingStreams[0];
 
   return (
     <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm mb-6">
@@ -75,6 +76,16 @@ export const LiveStreamControlCenter = () => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Main Enter Studio Button */}
+        {nextStream && (
+          <Button 
+            onClick={() => enterStream(nextStream.room_id)}
+            className="w-full bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white py-6 text-lg font-semibold"
+          >
+            <Video className="w-5 h-5 mr-2" />
+            Enter Studio: {nextStream.title}
+          </Button>
+        )}
         {/* Live Now Section */}
         {liveStreams.length > 0 && (
           <div className="p-4 bg-red-500/20 border border-red-500/50 rounded-lg">
