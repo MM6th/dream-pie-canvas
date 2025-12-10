@@ -62,6 +62,7 @@ export const LivestreamSettingsCard = () => {
           description: 'Credits per minute must be between 1 and 50',
           variant: 'destructive',
         });
+        setSaving(false);
         return;
       }
 
@@ -70,7 +71,7 @@ export const LivestreamSettingsCard = () => {
           .from('livestream_settings')
           .update({
             enabled,
-            credits_per_minute: parseInt(creditsPerMinute) || 5,
+            credits_per_minute: creditsNum,
             session_duration_minutes: sessionDuration,
           })
           .eq('merchant_id', user.id);
@@ -82,7 +83,7 @@ export const LivestreamSettingsCard = () => {
           .insert({
             merchant_id: user.id,
             enabled,
-            credits_per_minute: parseInt(creditsPerMinute) || 5,
+            credits_per_minute: creditsNum,
             session_duration_minutes: sessionDuration,
           });
 
@@ -103,6 +104,39 @@ export const LivestreamSettingsCard = () => {
       });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleReset = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      if (hasSettings) {
+        const { error } = await supabase
+          .from('livestream_settings')
+          .delete()
+          .eq('merchant_id', user.id);
+
+        if (error) throw error;
+      }
+
+      setCreditsPerMinute('');
+      setSessionDuration(20);
+      setEnabled(true);
+      setHasSettings(false);
+
+      toast({
+        title: 'Settings reset',
+        description: 'Your livestream settings have been cleared',
+      });
+    } catch (error) {
+      console.error('Error resetting settings:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to reset settings',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -199,13 +233,23 @@ export const LivestreamSettingsCard = () => {
           </>
         )}
 
-        <Button 
-          onClick={handleSave} 
-          disabled={saving}
-          className="w-full"
-        >
-          {saving ? 'Saving...' : 'Save Livestream Settings'}
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            onClick={handleSave} 
+            disabled={saving}
+            className="flex-1"
+          >
+            {saving ? 'Saving...' : 'Save Livestream Settings'}
+          </Button>
+          {hasSettings && (
+            <Button 
+              onClick={handleReset} 
+              variant="outline"
+            >
+              Reset
+            </Button>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
