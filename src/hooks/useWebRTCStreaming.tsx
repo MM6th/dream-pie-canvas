@@ -1,13 +1,8 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
-interface PeerConnection {
-  pc: RTCPeerConnection;
-  peerId: string;
-}
-
 interface SignalingMessage {
-  type: 'offer' | 'answer' | 'ice-candidate' | 'host-ready' | 'viewer-joined' | 'host-stopped';
+  type: 'offer' | 'answer' | 'ice-candidate' | 'host-ready' | 'viewer-joined' | 'host-stopped' | 'request-status';
   from: string;
   to?: string;
   data?: any;
@@ -32,35 +27,7 @@ export const useWebRTCStreaming = (
   const peerConnections = useRef<Map<string, RTCPeerConnection>>(new Map());
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
-
-  // Initialize signaling channel
-  useEffect(() => {
-    if (!roomId || !userId) return;
-
-    console.log(`[WebRTC] Initializing signaling for room ${roomId}, user ${userId}, isHost: ${isHost}`);
-
-    const channel = supabase.channel(`webrtc:${roomId}`)
-      .on('broadcast', { event: 'signal' }, ({ payload }) => {
-        handleSignalingMessage(payload as SignalingMessage);
-      })
-      .subscribe((status) => {
-        console.log(`[WebRTC] Channel status: ${status}`);
-        if (status === 'SUBSCRIBED') {
-          // If viewer, announce presence
-          if (!isHost) {
-            sendSignal({ type: 'viewer-joined', from: userId });
-          }
-        }
-      });
-
-    channelRef.current = channel;
-
-    return () => {
-      console.log('[WebRTC] Cleaning up...');
-      stopStreaming();
-      supabase.removeChannel(channel);
-    };
-  }, [roomId, userId, isHost]);
+  const isStreamingRef = useRef(false); // Use ref to avoid stale closure
 
   const sendSignal = useCallback((message: SignalingMessage) => {
     console.log('[WebRTC] Sending signal:', message.type, message.to || 'broadcast');
@@ -73,6 +40,13 @@ export const useWebRTCStreaming = (
 
   const createPeerConnection = useCallback((peerId: string): RTCPeerConnection => {
     console.log(`[WebRTC] Creating peer connection for ${peerId}`);
+    
+    // Close existing connection if any
+    const existing = peerConnections.current.get(peerId);
+    if (existing) {
+      existing.close();
+      peerConnections.current.delete(peerId);
+    }
     
     const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
 
@@ -100,6 +74,7 @@ export const useWebRTCStreaming = (
 
     // If host, add local stream tracks
     if (isHost && localStreamRef.current) {
+      console.log('[WebRTC] Adding local tracks to peer connection');
       localStreamRef.current.getTracks().forEach(track => {
         pc.addTrack(track, localStreamRef.current!);
       });
@@ -121,6 +96,7 @@ export const useWebRTCStreaming = (
     switch (message.type) {
       case 'host-ready':
         if (!isHost) {
+          console.log('[WebRTC] Host is ready, announcing as viewer');
           setHostIsLive(true);
           // Viewer: request connection from host
           sendSignal({ type: 'viewer-joined', from: userId });
@@ -129,6 +105,7 @@ export const useWebRTCStreaming = (
 
       case 'host-stopped':
         if (!isHost) {
+          console.log('[WebRTC] Host stopped streaming');
           setHostIsLive(false);
           setRemoteStream(null);
           // Close peer connections
@@ -137,9 +114,18 @@ export const useWebRTCStreaming = (
         }
         break;
 
+      case 'request-status':
+        // Host responds to status request if streaming
+        if (isHost && isStreamingRef.current) {
+          console.log('[WebRTC] Responding to status request from', message.from);
+          sendSignal({ type: 'host-ready', from: userId });
+        }
+        break;
+
       case 'viewer-joined':
-        if (isHost && isStreaming) {
-          // Host: create offer for new viewer
+        // Use ref to check streaming state (avoids stale closure)
+        if (isHost && isStreamingRef.current && localStreamRef.current) {
+          console.log('[WebRTC] Creating offer for viewer:', message.from);
           const pc = createPeerConnection(message.from);
           try {
             const offer = await pc.createOffer();
@@ -153,12 +139,14 @@ export const useWebRTCStreaming = (
           } catch (err) {
             console.error('[WebRTC] Error creating offer:', err);
           }
+        } else {
+          console.log('[WebRTC] Ignoring viewer-joined:', { isHost, isStreaming: isStreamingRef.current, hasStream: !!localStreamRef.current });
         }
         break;
 
       case 'offer':
         if (!isHost) {
-          // Viewer: handle offer from host
+          console.log('[WebRTC] Handling offer from host');
           let pc = peerConnections.current.get(message.from);
           if (!pc) {
             pc = createPeerConnection(message.from);
@@ -181,7 +169,7 @@ export const useWebRTCStreaming = (
 
       case 'answer':
         if (isHost) {
-          // Host: handle answer from viewer
+          console.log('[WebRTC] Handling answer from viewer');
           const pc = peerConnections.current.get(message.from);
           if (pc) {
             try {
@@ -204,7 +192,47 @@ export const useWebRTCStreaming = (
         }
         break;
     }
-  }, [userId, isHost, isStreaming, createPeerConnection, sendSignal]);
+  }, [userId, isHost, createPeerConnection, sendSignal]);
+
+  // Initialize signaling channel
+  useEffect(() => {
+    if (!roomId || !userId) return;
+
+    console.log(`[WebRTC] Initializing signaling for room ${roomId}, user ${userId}, isHost: ${isHost}`);
+
+    const channel = supabase.channel(`webrtc:${roomId}`)
+      .on('broadcast', { event: 'signal' }, ({ payload }) => {
+        handleSignalingMessage(payload as SignalingMessage);
+      })
+      .subscribe((status) => {
+        console.log(`[WebRTC] Channel status: ${status}`);
+        if (status === 'SUBSCRIBED') {
+          // If viewer, request current host status
+          if (!isHost) {
+            console.log('[WebRTC] Viewer subscribed, requesting host status');
+            // Small delay to ensure channel is fully ready
+            setTimeout(() => {
+              sendSignal({ type: 'request-status', from: userId });
+              sendSignal({ type: 'viewer-joined', from: userId });
+            }, 500);
+          }
+        }
+      });
+
+    channelRef.current = channel;
+
+    return () => {
+      console.log('[WebRTC] Cleaning up...');
+      supabase.removeChannel(channel);
+    };
+  }, [roomId, userId, isHost, handleSignalingMessage, sendSignal]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      stopStreaming();
+    };
+  }, []);
 
   const startStreaming = useCallback(async () => {
     if (!isHost) return;
@@ -217,6 +245,7 @@ export const useWebRTCStreaming = (
       });
 
       localStreamRef.current = stream;
+      isStreamingRef.current = true; // Update ref
       setLocalStream(stream);
       setIsStreaming(true);
 
@@ -238,6 +267,7 @@ export const useWebRTCStreaming = (
       localStreamRef.current.getTracks().forEach(track => track.stop());
       localStreamRef.current = null;
     }
+    isStreamingRef.current = false; // Update ref
     setLocalStream(null);
     setIsStreaming(false);
 
@@ -246,7 +276,7 @@ export const useWebRTCStreaming = (
     peerConnections.current.clear();
 
     // Notify viewers
-    if (isHost) {
+    if (isHost && channelRef.current) {
       sendSignal({ type: 'host-stopped', from: userId });
     }
 
