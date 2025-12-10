@@ -38,7 +38,7 @@ export const LivestreamSettingsCard = () => {
 
       if (data) {
         setEnabled(data.enabled);
-        setCreditsPerMinute(String(data.credits_per_minute));
+        setCreditsPerMinute(data.credits_per_minute > 0 ? String(data.credits_per_minute) : '');
         setSessionDuration(data.session_duration_minutes);
         setHasSettings(true);
       }

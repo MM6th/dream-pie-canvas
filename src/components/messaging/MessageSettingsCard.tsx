@@ -37,7 +37,7 @@ export const MessageSettingsCard = () => {
 
       if (data) {
         setEnabled(data.enabled);
-        setCreditsPerMessage(String(data.credits_per_message));
+        setCreditsPerMessage(data.credits_per_message > 0 ? String(data.credits_per_message) : '');
         setHasSettings(true);
       }
     } catch (error) {
