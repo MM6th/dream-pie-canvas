@@ -2389,6 +2389,36 @@ export type Database = {
         }
         Relationships: []
       }
+      webrtc_signals: {
+        Row: {
+          created_at: string
+          from_user_id: string
+          id: string
+          room_id: string
+          signal_data: Json | null
+          signal_type: string
+          to_user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          from_user_id: string
+          id?: string
+          room_id: string
+          signal_data?: Json | null
+          signal_type: string
+          to_user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          from_user_id?: string
+          id?: string
+          room_id?: string
+          signal_data?: Json | null
+          signal_type?: string
+          to_user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

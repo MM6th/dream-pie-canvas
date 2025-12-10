@@ -25,13 +25,14 @@ export const useWebRTCStreaming = (
   const [connectionState, setConnectionState] = useState<string>('disconnected');
   
   const peerConnections = useRef<Map<string, RTCPeerConnection>>(new Map());
-  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
   const isStreamingRef = useRef(false);
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   
   // Store stable refs for values used in signaling handler
   const isHostRef = useRef(isHost);
   const userIdRef = useRef(userId);
+  const roomIdRef = useRef(roomId);
   
   useEffect(() => {
     isHostRef.current = isHost;
@@ -41,13 +42,33 @@ export const useWebRTCStreaming = (
     userIdRef.current = userId;
   }, [userId]);
 
-  const sendSignal = useCallback((message: SignalingMessage) => {
-    console.log('[WebRTC] Sending signal:', message.type, message.to || 'broadcast');
-    channelRef.current?.send({
-      type: 'broadcast',
-      event: 'signal',
-      payload: message,
-    });
+  useEffect(() => {
+    roomIdRef.current = roomId;
+  }, [roomId]);
+
+  // Send signal by inserting into database
+  const sendSignal = useCallback(async (message: SignalingMessage) => {
+    if (!roomIdRef.current || !userIdRef.current) return;
+    
+    console.log('[WebRTC] Sending signal via DB:', message.type, message.to || 'broadcast');
+    
+    try {
+      const { error } = await supabase
+        .from('webrtc_signals')
+        .insert({
+          room_id: roomIdRef.current,
+          from_user_id: userIdRef.current,
+          to_user_id: message.to || null,
+          signal_type: message.type,
+          signal_data: message.data || null,
+        });
+      
+      if (error) {
+        console.error('[WebRTC] Error sending signal:', error);
+      }
+    } catch (err) {
+      console.error('[WebRTC] Exception sending signal:', err);
+    }
   }, []);
 
   const createPeerConnection = useCallback((peerId: string): RTCPeerConnection => {
@@ -96,28 +117,31 @@ export const useWebRTCStreaming = (
     return pc;
   }, [sendSignal]);
 
-  // Store the handler in a ref to prevent channel recreation on re-renders
-  const handleSignalingMessageRef = useRef<(message: SignalingMessage) => Promise<void>>();
-  
-  handleSignalingMessageRef.current = async (message: SignalingMessage) => {
+  // Handle incoming signaling message
+  const handleSignalingMessage = useCallback(async (
+    signalType: string,
+    fromUserId: string,
+    toUserId: string | null,
+    signalData: any
+  ) => {
     const currentUserId = userIdRef.current;
     const currentIsHost = isHostRef.current;
     
     // Ignore own messages
-    if (message.from === currentUserId) return;
+    if (fromUserId === currentUserId) return;
     
     // If message is targeted, ignore if not for us
-    if (message.to && message.to !== currentUserId) return;
+    if (toUserId && toUserId !== currentUserId) return;
 
-    console.log('[WebRTC] Received signal:', message.type, 'from:', message.from, '| isHost:', currentIsHost);
+    console.log('[WebRTC] Received signal:', signalType, 'from:', fromUserId, '| isHost:', currentIsHost);
 
-    switch (message.type) {
+    switch (signalType) {
       case 'host-ready':
         if (!currentIsHost) {
           console.log('[WebRTC] ✓ Host is ready signal received! Setting hostIsLive=true');
           setHostIsLive(true);
           // Viewer: request connection from host
-          sendSignal({ type: 'viewer-joined', from: currentUserId });
+          await sendSignal({ type: 'viewer-joined', from: currentUserId });
         }
         break;
 
@@ -135,23 +159,23 @@ export const useWebRTCStreaming = (
       case 'request-status':
         // Host responds to status request if streaming
         if (currentIsHost && isStreamingRef.current) {
-          console.log('[WebRTC] Responding to status request from', message.from);
-          sendSignal({ type: 'host-ready', from: currentUserId });
+          console.log('[WebRTC] Responding to status request from', fromUserId);
+          await sendSignal({ type: 'host-ready', from: currentUserId });
         }
         break;
 
       case 'viewer-joined':
         // Use ref to check streaming state (avoids stale closure)
         if (currentIsHost && isStreamingRef.current && localStreamRef.current) {
-          console.log('[WebRTC] Creating offer for viewer:', message.from);
-          const pc = createPeerConnection(message.from);
+          console.log('[WebRTC] Creating offer for viewer:', fromUserId);
+          const pc = createPeerConnection(fromUserId);
           try {
             const offer = await pc.createOffer();
             await pc.setLocalDescription(offer);
-            sendSignal({
+            await sendSignal({
               type: 'offer',
               from: currentUserId,
-              to: message.from,
+              to: fromUserId,
               data: offer,
             });
           } catch (err) {
@@ -165,18 +189,18 @@ export const useWebRTCStreaming = (
       case 'offer':
         if (!currentIsHost) {
           console.log('[WebRTC] Handling offer from host');
-          let pc = peerConnections.current.get(message.from);
+          let pc = peerConnections.current.get(fromUserId);
           if (!pc) {
-            pc = createPeerConnection(message.from);
+            pc = createPeerConnection(fromUserId);
           }
           try {
-            await pc.setRemoteDescription(new RTCSessionDescription(message.data));
+            await pc.setRemoteDescription(new RTCSessionDescription(signalData));
             const answer = await pc.createAnswer();
             await pc.setLocalDescription(answer);
-            sendSignal({
+            await sendSignal({
               type: 'answer',
               from: currentUserId,
-              to: message.from,
+              to: fromUserId,
               data: answer,
             });
           } catch (err) {
@@ -188,10 +212,10 @@ export const useWebRTCStreaming = (
       case 'answer':
         if (currentIsHost) {
           console.log('[WebRTC] Handling answer from viewer');
-          const pc = peerConnections.current.get(message.from);
+          const pc = peerConnections.current.get(fromUserId);
           if (pc) {
             try {
-              await pc.setRemoteDescription(new RTCSessionDescription(message.data));
+              await pc.setRemoteDescription(new RTCSessionDescription(signalData));
             } catch (err) {
               console.error('[WebRTC] Error setting remote description:', err);
             }
@@ -200,120 +224,89 @@ export const useWebRTCStreaming = (
         break;
 
       case 'ice-candidate':
-        const pc = peerConnections.current.get(message.from);
+        const pc = peerConnections.current.get(fromUserId);
         if (pc) {
           try {
-            await pc.addIceCandidate(new RTCIceCandidate(message.data));
+            await pc.addIceCandidate(new RTCIceCandidate(signalData));
           } catch (err) {
             console.error('[WebRTC] Error adding ICE candidate:', err);
           }
         }
         break;
     }
-  };
+  }, [sendSignal, createPeerConnection]);
 
-  // Initialize signaling channel - STABLE dependencies only (roomId, userId)
+  // Store handler ref for use in subscription
+  const handleSignalingMessageRef = useRef(handleSignalingMessage);
+  useEffect(() => {
+    handleSignalingMessageRef.current = handleSignalingMessage;
+  }, [handleSignalingMessage]);
+
+  // Initialize signaling via database realtime subscription
   useEffect(() => {
     if (!roomId || !userId) return;
 
-    let retryCount = 0;
-    const maxRetries = 3;
-    let retryTimeout: NodeJS.Timeout | null = null;
-    let retryIntervalTimers: NodeJS.Timeout[] = [];
+    console.log(`[WebRTC] Initializing DB-based signaling for room ${roomId}, user ${userId}, isHost: ${isHost}`);
+    setConnectionState('connecting');
 
-    const setupChannel = () => {
-      console.log(`[WebRTC] Initializing signaling for room ${roomId}, user ${userId}, isHost: ${isHostRef.current}, attempt: ${retryCount + 1}`);
-
-      // Clean up any existing channel first
-      if (channelRef.current) {
-        console.log('[WebRTC] Removing existing channel before creating new one');
-        supabase.removeChannel(channelRef.current);
-        channelRef.current = null;
-      }
-
-      const channelName = `webrtc-${roomId}`;
-      
-      const channel = supabase.channel(channelName, {
-        config: {
-          broadcast: { self: false },
+    // Subscribe to realtime changes on webrtc_signals table
+    const channel = supabase
+      .channel(`webrtc-signals-${roomId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'webrtc_signals',
+          filter: `room_id=eq.${roomId}`,
         },
-      })
-        .on('broadcast', { event: 'signal' }, ({ payload }) => {
-          const msg = payload as SignalingMessage;
-          console.log('[WebRTC] Raw signal received:', msg.type, 'from:', msg.from);
-          // Use ref to call handler - this way we always use the latest version
-          handleSignalingMessageRef.current?.(msg);
-        });
-      
-      // Store reference before subscribing
-      channelRef.current = channel;
-      
-      channel.subscribe((status, err) => {
-        console.log(`[WebRTC] Channel status: ${status}`, err ? `Error: ${err.message}` : '');
-        
+        (payload) => {
+          const { from_user_id, to_user_id, signal_type, signal_data } = payload.new as any;
+          console.log('[WebRTC] DB signal received:', signal_type, 'from:', from_user_id);
+          handleSignalingMessageRef.current(signal_type, from_user_id, to_user_id, signal_data);
+        }
+      )
+      .subscribe((status) => {
+        console.log('[WebRTC] Realtime subscription status:', status);
         if (status === 'SUBSCRIBED') {
           setConnectionState('connected');
-          retryCount = 0; // Reset retry count on success
           
-          // If viewer, request current host status with multiple retries
+          // If viewer, request current host status
           if (!isHostRef.current) {
-            console.log('[WebRTC] Viewer subscribed to channel:', channelName, '- requesting host status');
-            
-            // Retry several times to catch host signals
-            const retryIntervals = [500, 1500, 3000, 5000, 8000];
-            retryIntervals.forEach((delay, index) => {
-              const timer = setTimeout(() => {
+            console.log('[WebRTC] Viewer subscribed, requesting host status');
+            // Send multiple requests with delays to catch host
+            const delays = [500, 2000, 4000];
+            delays.forEach((delay, index) => {
+              setTimeout(async () => {
                 if (!peerConnections.current.size) {
                   console.log(`[WebRTC] Viewer retry ${index + 1}: requesting host connection`);
-                  sendSignal({ type: 'request-status', from: userIdRef.current });
-                  sendSignal({ type: 'viewer-joined', from: userIdRef.current });
+                  await sendSignal({ type: 'request-status', from: userIdRef.current });
+                  await sendSignal({ type: 'viewer-joined', from: userIdRef.current });
                 }
               }, delay);
-              retryIntervalTimers.push(timer);
             });
-          }
-        } else if (status === 'TIMED_OUT' || status === 'CHANNEL_ERROR') {
-          console.error('[WebRTC] Channel connection failed');
-          setConnectionState('disconnected');
-          
-          // Retry with a new channel instance
-          if (retryCount < maxRetries) {
-            retryCount++;
-            console.log(`[WebRTC] Retrying channel connection (${retryCount}/${maxRetries})...`);
-            retryTimeout = setTimeout(() => {
-              setupChannel();
-            }, 2000 * retryCount); // Exponential backoff
-          } else {
-            console.error('[WebRTC] Max retries reached, giving up');
           }
         }
       });
-    };
 
-    setupChannel();
+    channelRef.current = channel;
 
     return () => {
-      console.log('[WebRTC] Cleaning up...');
-      if (retryTimeout) {
-        clearTimeout(retryTimeout);
-      }
-      retryIntervalTimers.forEach(timer => clearTimeout(timer));
-      if (channelRef.current) {
-        supabase.removeChannel(channelRef.current);
-        channelRef.current = null;
-      }
+      console.log('[WebRTC] Cleaning up realtime subscription');
+      supabase.removeChannel(channel);
+      channelRef.current = null;
     };
-  }, [roomId, userId, sendSignal]); // Removed handleSignalingMessage - using ref instead
+  }, [roomId, userId, isHost, sendSignal]);
 
   // Periodic host status broadcast while streaming
   useEffect(() => {
-    if (!isHost || !isStreaming || !channelRef.current) return;
+    if (!isHost || !isStreaming) return;
     
     // Send host-ready immediately and every 3 seconds while streaming
-    const broadcastHostStatus = () => {
+    const broadcastHostStatus = async () => {
       if (isStreamingRef.current) {
         console.log('[WebRTC] Broadcasting host status (periodic)');
-        sendSignal({ type: 'host-ready', from: userId });
+        await sendSignal({ type: 'host-ready', from: userId });
       }
     };
     
@@ -322,6 +315,26 @@ export const useWebRTCStreaming = (
     
     return () => clearInterval(interval);
   }, [isHost, isStreaming, userId, sendSignal]);
+
+  // Cleanup old signals periodically (host only)
+  useEffect(() => {
+    if (!isHost || !roomId) return;
+
+    const cleanupOldSignals = async () => {
+      const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+      await supabase
+        .from('webrtc_signals')
+        .delete()
+        .eq('room_id', roomId)
+        .lt('created_at', fiveMinutesAgo);
+    };
+
+    // Clean up on mount and every 2 minutes
+    cleanupOldSignals();
+    const interval = setInterval(cleanupOldSignals, 2 * 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, [isHost, roomId]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -346,7 +359,7 @@ export const useWebRTCStreaming = (
       setIsStreaming(true);
 
       // Announce to all viewers
-      sendSignal({ type: 'host-ready', from: userId });
+      await sendSignal({ type: 'host-ready', from: userId });
 
       console.log('[WebRTC] Camera started, host-ready signal sent');
     } catch (error) {
@@ -355,7 +368,7 @@ export const useWebRTCStreaming = (
     }
   }, [isHost, userId, sendSignal]);
 
-  const stopStreaming = useCallback(() => {
+  const stopStreaming = useCallback(async () => {
     console.log('[WebRTC] Stopping streaming...');
     
     // Stop local stream
@@ -363,7 +376,7 @@ export const useWebRTCStreaming = (
       localStreamRef.current.getTracks().forEach(track => track.stop());
       localStreamRef.current = null;
     }
-    isStreamingRef.current = false; // Update ref
+    isStreamingRef.current = false;
     setLocalStream(null);
     setIsStreaming(false);
 
@@ -372,8 +385,8 @@ export const useWebRTCStreaming = (
     peerConnections.current.clear();
 
     // Notify viewers
-    if (isHost && channelRef.current) {
-      sendSignal({ type: 'host-stopped', from: userId });
+    if (isHost) {
+      await sendSignal({ type: 'host-stopped', from: userId });
     }
 
     setHostIsLive(false);
