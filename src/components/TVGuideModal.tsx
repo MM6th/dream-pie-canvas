@@ -124,12 +124,36 @@ const TVGuideModal = ({ onSuccess }: TVGuideModalProps) => {
             : null,
         });
 
-
       if (error) throw error;
+
+      // Get timezone label for notification
+      const timezoneLabel = TIMEZONES.find(tz => tz.value === formData.timezone)?.label || formData.timezone;
+      const scheduledDate = new Date(`${formData.scheduledDate}T${formData.scheduledTime}`);
+      const formattedDate = scheduledDate.toLocaleDateString('en-US', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+      const formattedTime = scheduledDate.toLocaleTimeString('en-US', { 
+        hour: 'numeric', 
+        minute: '2-digit',
+        hour12: true 
+      });
+
+      // Create notification for the artist
+      await supabase
+        .from('notifications')
+        .insert({
+          user_id: user.id,
+          type: 'livestream_scheduled',
+          title: 'Livestream Scheduled',
+          message: `Your livestream "${formData.title.trim()}" is scheduled for ${formattedDate} at ${formattedTime} (${timezoneLabel}).`,
+        });
 
       toast({
         title: "Success",
-        description: "Livestream scheduled successfully!"
+        description: "Livestream scheduled successfully! Check your notifications for details."
       });
 
       setFormData({
