@@ -24,6 +24,7 @@ export const LiveStreamControlCenter = () => {
   const navigate = useNavigate();
   const [scheduledStreams, setScheduledStreams] = useState<ScheduledStream[]>([]);
   const [loading, setLoading] = useState(true);
+  const [countdown, setCountdown] = useState<string>('');
 
   const fetchScheduledStreams = async () => {
     if (!user) return;
@@ -51,6 +52,46 @@ export const LiveStreamControlCenter = () => {
     fetchScheduledStreams();
   }, [user]);
 
+  // Countdown timer effect
+  useEffect(() => {
+    const updateCountdown = () => {
+      const liveStreams = scheduledStreams.filter(s => getStreamStatus(s) === 'live');
+      const upcomingStreams = scheduledStreams.filter(s => getStreamStatus(s) === 'upcoming');
+      const nextStream = liveStreams[0] || upcomingStreams[0];
+      
+      if (!nextStream) {
+        setCountdown('');
+        return;
+      }
+
+      const scheduledDate = parseISO(nextStream.scheduled_at);
+      const now = new Date();
+      const diff = scheduledDate.getTime() - now.getTime();
+
+      if (diff <= 0) {
+        setCountdown('LIVE NOW');
+        return;
+      }
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+      if (days > 0) {
+        setCountdown(`${days}d ${hours}h ${minutes}m ${seconds}s`);
+      } else if (hours > 0) {
+        setCountdown(`${hours}h ${minutes}m ${seconds}s`);
+      } else {
+        setCountdown(`${minutes}m ${seconds}s`);
+      }
+    };
+
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
+    return () => clearInterval(interval);
+  }, [scheduledStreams]);
+
   const getStreamStatus = (stream: ScheduledStream) => {
     if (stream.session_ended_at) return 'ended';
     const scheduledDate = parseISO(stream.scheduled_at);
@@ -76,15 +117,27 @@ export const LiveStreamControlCenter = () => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Main Enter Studio Button */}
+        {/* Main Enter Studio Button with Countdown */}
         {nextStream && (
-          <Button 
-            onClick={() => enterStream(nextStream.room_id)}
-            className="w-full bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white py-6 text-lg font-semibold"
-          >
-            <Video className="w-5 h-5 mr-2" />
-            Enter Studio: {nextStream.title}
-          </Button>
+          <div className="space-y-2">
+            {countdown && (
+              <div className="text-center p-4 bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/50 rounded-lg">
+                <p className="text-gray-400 text-sm mb-1">
+                  {countdown === 'LIVE NOW' ? 'Status' : 'Going live in'}
+                </p>
+                <p className={`text-3xl font-bold ${countdown === 'LIVE NOW' ? 'text-red-500 animate-pulse' : 'text-white'}`}>
+                  {countdown}
+                </p>
+              </div>
+            )}
+            <Button 
+              onClick={() => enterStream(nextStream.room_id)}
+              className="w-full bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white py-6 text-lg font-semibold"
+            >
+              <Video className="w-5 h-5 mr-2" />
+              Enter Studio: {nextStream.title}
+            </Button>
+          </div>
         )}
         {/* Live Now Section */}
         {liveStreams.length > 0 && (
