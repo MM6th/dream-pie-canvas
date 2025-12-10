@@ -36,7 +36,7 @@ const LivestreamRoom = () => {
   const [isArtist, setIsArtist] = useState(false);
   const [countdown, setCountdown] = useState<string>("");
   const [isLive, setIsLive] = useState(false);
-  const [viewerCount, setViewerCount] = useState(1);
+  const [viewerCount, setViewerCount] = useState(0);
   const [isMicOn, setIsMicOn] = useState(true);
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
