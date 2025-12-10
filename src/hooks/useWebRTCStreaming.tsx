@@ -206,55 +206,60 @@ export const useWebRTCStreaming = (
 
     console.log(`[WebRTC] Initializing signaling for room ${roomId}, user ${userId}, isHost: ${isHost}`);
 
-    // Use a unique channel name that includes a timestamp to avoid conflicts
+    // Clean up any existing channel first
+    if (channelRef.current) {
+      console.log('[WebRTC] Removing existing channel before creating new one');
+      supabase.removeChannel(channelRef.current);
+      channelRef.current = null;
+    }
+
     const channelName = `webrtc-${roomId}`;
     
     const channel = supabase.channel(channelName, {
       config: {
-        broadcast: { self: false }, // Don't receive own broadcasts
+        broadcast: { self: false },
       },
     })
       .on('broadcast', { event: 'signal' }, ({ payload }) => {
         console.log('[WebRTC] Raw signal received:', (payload as SignalingMessage).type);
         handleSignalingMessage(payload as SignalingMessage);
-      })
-      .subscribe((status, err) => {
-        console.log(`[WebRTC] Channel status: ${status}`, err ? `Error: ${err.message}` : '');
-        
-        if (status === 'SUBSCRIBED') {
-          setConnectionState('connected');
-          // If viewer, request current host status with retries
-          if (!isHost) {
-            console.log('[WebRTC] Viewer subscribed, requesting host status');
-            // Initial request after small delay
-            setTimeout(() => {
+      });
+    
+    // Store reference before subscribing
+    channelRef.current = channel;
+    
+    channel.subscribe((status, err) => {
+      console.log(`[WebRTC] Channel status: ${status}`, err ? `Error: ${err.message}` : '');
+      
+      if (status === 'SUBSCRIBED') {
+        setConnectionState('connected');
+        // If viewer, request current host status with retries
+        if (!isHost) {
+          console.log('[WebRTC] Viewer subscribed, requesting host status');
+          setTimeout(() => {
+            sendSignal({ type: 'request-status', from: userId });
+            sendSignal({ type: 'viewer-joined', from: userId });
+          }, 500);
+          setTimeout(() => {
+            if (!peerConnections.current.size) {
+              console.log('[WebRTC] No connection yet, retrying...');
               sendSignal({ type: 'request-status', from: userId });
               sendSignal({ type: 'viewer-joined', from: userId });
-            }, 500);
-            // Retry after 2 seconds if no response
-            setTimeout(() => {
-              if (!peerConnections.current.size) {
-                console.log('[WebRTC] No connection yet, retrying...');
-                sendSignal({ type: 'request-status', from: userId });
-                sendSignal({ type: 'viewer-joined', from: userId });
-              }
-            }, 2500);
-          }
-        } else if (status === 'TIMED_OUT' || status === 'CHANNEL_ERROR') {
-          console.error('[WebRTC] Channel connection failed, retrying...');
-          setConnectionState('disconnected');
-          // Retry connection after a delay
-          setTimeout(() => {
-            channel.subscribe();
-          }, 2000);
+            }
+          }, 2500);
         }
-      });
-
-    channelRef.current = channel;
+      } else if (status === 'TIMED_OUT' || status === 'CHANNEL_ERROR') {
+        console.error('[WebRTC] Channel connection failed');
+        setConnectionState('disconnected');
+      }
+    });
 
     return () => {
       console.log('[WebRTC] Cleaning up...');
-      supabase.removeChannel(channel);
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
     };
   }, [roomId, userId, isHost, handleSignalingMessage, sendSignal]);
 

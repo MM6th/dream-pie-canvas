@@ -177,7 +177,7 @@ const LivestreamRoom = () => {
           .select("id")
           .eq("bulletin_post_id", data.id)
           .eq("user_id", user.id)
-          .single();
+          .maybeSingle(); // Use maybeSingle to handle 0 rows gracefully
 
         setHasAccess(!!entry || user.id === data.merchant_id);
       } else {
