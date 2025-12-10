@@ -194,6 +194,12 @@ export const useWebRTCStreaming = (
     }
   }, [userId, isHost, createPeerConnection, sendSignal]);
 
+  // Store isHost in a ref to avoid stale closures
+  const isHostRef = useRef(isHost);
+  useEffect(() => {
+    isHostRef.current = isHost;
+  }, [isHost]);
+
   // Initialize signaling channel
   useEffect(() => {
     if (!roomId || !userId) return;
@@ -202,19 +208,28 @@ export const useWebRTCStreaming = (
 
     const channel = supabase.channel(`webrtc:${roomId}`)
       .on('broadcast', { event: 'signal' }, ({ payload }) => {
+        console.log('[WebRTC] Raw signal received:', (payload as SignalingMessage).type);
         handleSignalingMessage(payload as SignalingMessage);
       })
       .subscribe((status) => {
         console.log(`[WebRTC] Channel status: ${status}`);
         if (status === 'SUBSCRIBED') {
-          // If viewer, request current host status
+          // If viewer, request current host status with retries
           if (!isHost) {
             console.log('[WebRTC] Viewer subscribed, requesting host status');
-            // Small delay to ensure channel is fully ready
+            // Initial request after small delay
             setTimeout(() => {
               sendSignal({ type: 'request-status', from: userId });
               sendSignal({ type: 'viewer-joined', from: userId });
             }, 500);
+            // Retry after 2 seconds if no response
+            setTimeout(() => {
+              if (!peerConnections.current.size) {
+                console.log('[WebRTC] No connection yet, retrying...');
+                sendSignal({ type: 'request-status', from: userId });
+                sendSignal({ type: 'viewer-joined', from: userId });
+              }
+            }, 2500);
           }
         }
       });
