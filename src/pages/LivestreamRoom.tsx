@@ -1,11 +1,11 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Video, Clock, Users, ArrowLeft, Loader2, Lock } from "lucide-react";
+import { Video, Clock, Users, ArrowLeft, Loader2, Lock, VideoOff, Mic, MicOff } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { format, differenceInSeconds, isPast, isFuture } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
@@ -38,6 +38,12 @@ const LivestreamRoom = () => {
   const [countdown, setCountdown] = useState<string>("");
   const [isLive, setIsLive] = useState(false);
   const [viewerCount, setViewerCount] = useState(1);
+  
+  // Camera state
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isCameraOn, setIsCameraOn] = useState(false);
+  const [isMicOn, setIsMicOn] = useState(true);
+  const [stream, setStream] = useState<MediaStream | null>(null);
 
   useEffect(() => {
     if (roomId) {
@@ -142,6 +148,66 @@ const LivestreamRoom = () => {
       setLoading(false);
     }
   };
+
+  // Camera controls
+  const startCamera = async () => {
+    try {
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "user", width: 1280, height: 720 },
+        audio: true
+      });
+      
+      setStream(mediaStream);
+      setIsCameraOn(true);
+      
+      if (videoRef.current) {
+        videoRef.current.srcObject = mediaStream;
+      }
+      
+      toast({
+        title: "Camera Started",
+        description: "Your camera is now live!",
+      });
+    } catch (error) {
+      console.error("Error accessing camera:", error);
+      toast({
+        title: "Camera Error",
+        description: "Could not access camera. Please check permissions.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const stopCamera = () => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null);
+      setIsCameraOn(false);
+      
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
+    }
+  };
+
+  const toggleMic = () => {
+    if (stream) {
+      const audioTrack = stream.getAudioTracks()[0];
+      if (audioTrack) {
+        audioTrack.enabled = !audioTrack.enabled;
+        setIsMicOn(audioTrack.enabled);
+      }
+    }
+  };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, [stream]);
 
   const handleEndSession = async () => {
     if (!livestream || !isArtist) return;
@@ -260,13 +326,21 @@ const LivestreamRoom = () => {
           <div className="lg:col-span-2">
             <Card className="bg-gray-800 border-gray-700 overflow-hidden">
               <div className="aspect-video bg-black flex items-center justify-center relative">
-                {isLive ? (
+                {isCameraOn && isArtist ? (
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    muted
+                    playsInline
+                    className="w-full h-full object-cover"
+                  />
+                ) : isLive ? (
                   <div className="text-center">
                     <Video className="w-16 h-16 text-purple-500 mx-auto mb-4" />
                     <p className="text-gray-400">
                       {isArtist 
-                        ? "Your stream is live! Camera integration coming soon." 
-                        : "Stream is live! Video integration coming soon."}
+                        ? "Click 'Start Camera' below to begin streaming" 
+                        : "Waiting for the host to start streaming..."}
                     </p>
                   </div>
                 ) : (
@@ -274,6 +348,18 @@ const LivestreamRoom = () => {
                     <Clock className="w-16 h-16 text-purple-500 mx-auto mb-4" />
                     <p className="text-2xl font-mono text-white mb-2">{countdown}</p>
                     <p className="text-gray-400">Stream starts soon</p>
+                  </div>
+                )}
+                
+                {/* Live indicator overlay */}
+                {isCameraOn && (
+                  <div className="absolute top-4 left-4 flex items-center gap-2">
+                    <span className="bg-red-600 text-white text-xs font-bold px-2 py-1 rounded animate-pulse">
+                      LIVE
+                    </span>
+                    <span className="bg-black/50 text-white text-xs px-2 py-1 rounded flex items-center gap-1">
+                      <Users className="w-3 h-3" /> {viewerCount}
+                    </span>
                   </div>
                 )}
               </div>
@@ -295,9 +381,36 @@ const LivestreamRoom = () => {
                   <CardTitle className="text-white text-lg">Stream Controls</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <p className="text-gray-400 text-sm">
-                    Camera and streaming controls will be available here.
-                  </p>
+                  <div className="flex gap-2">
+                    {!isCameraOn ? (
+                      <Button
+                        onClick={startCamera}
+                        className="flex-1 bg-green-600 hover:bg-green-700"
+                      >
+                        <Video className="w-4 h-4 mr-2" />
+                        Start Camera
+                      </Button>
+                    ) : (
+                      <Button
+                        onClick={stopCamera}
+                        variant="outline"
+                        className="flex-1 border-red-500 text-red-500 hover:bg-red-500/10"
+                      >
+                        <VideoOff className="w-4 h-4 mr-2" />
+                        Stop Camera
+                      </Button>
+                    )}
+                    
+                    <Button
+                      onClick={toggleMic}
+                      variant="outline"
+                      className={`${isMicOn ? 'border-gray-600' : 'border-red-500 text-red-500'}`}
+                      disabled={!isCameraOn}
+                    >
+                      {isMicOn ? <Mic className="w-4 h-4" /> : <MicOff className="w-4 h-4" />}
+                    </Button>
+                  </div>
+                  
                   <Button
                     onClick={handleEndSession}
                     variant="destructive"
