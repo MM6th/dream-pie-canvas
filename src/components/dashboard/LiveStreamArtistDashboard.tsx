@@ -25,6 +25,7 @@ import { BuyerAstrologyLibrary } from "@/components/astrology/BuyerAstrologyLibr
 import TVGuideModal from "@/components/TVGuideModal";
 import { LivestreamSettingsCard } from "@/components/messaging/LivestreamSettingsCard";
 import { MessageSettingsCard } from "@/components/messaging/MessageSettingsCard";
+import { LiveStreamControlCenter } from "@/components/LiveStreamControlCenter";
 
 interface AudioTrack {
   id: string;
@@ -168,31 +169,8 @@ const LiveStreamArtistDashboard = ({
         <TVGuideModal />
       </div>
 
-      {/* Live Stream Video Frame */}
-      <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm mb-6">
-        <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
-            <Video className="w-5 h-5 text-red-500" />
-            Live Stream Studio
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="aspect-video bg-gray-900 rounded-lg border-2 border-dashed border-gray-600 flex items-center justify-center">
-            <div className="text-center">
-              <Video className="w-16 h-16 text-gray-500 mx-auto mb-4" />
-              <p className="text-gray-400 text-lg font-medium">Live Stream Preview</p>
-              <p className="text-gray-500 text-sm mt-2">Your live stream will appear here</p>
-              <Button 
-                variant="outline" 
-                className="mt-4 border-red-500 text-red-400 hover:bg-red-500/10"
-                disabled
-              >
-                Start Live Stream (Coming Soon)
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Live Stream Control Center */}
+      <LiveStreamControlCenter />
 
 
       <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm mb-6">
