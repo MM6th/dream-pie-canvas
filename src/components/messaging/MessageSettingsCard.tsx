@@ -60,6 +60,7 @@ export const MessageSettingsCard = () => {
           description: 'Credits per message must be between 1 and 100',
           variant: 'destructive',
         });
+        setSaving(false);
         return;
       }
 
@@ -68,7 +69,7 @@ export const MessageSettingsCard = () => {
           .from('message_settings')
           .update({
             enabled,
-            credits_per_message: parseInt(creditsPerMessage) || 10,
+            credits_per_message: creditsNum,
           })
           .eq('merchant_id', user.id);
 
@@ -79,7 +80,7 @@ export const MessageSettingsCard = () => {
           .insert({
             merchant_id: user.id,
             enabled,
-            credits_per_message: parseInt(creditsPerMessage) || 10,
+            credits_per_message: creditsNum,
           });
 
         if (error) throw error;
@@ -99,6 +100,38 @@ export const MessageSettingsCard = () => {
       });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleReset = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      if (hasSettings) {
+        const { error } = await supabase
+          .from('message_settings')
+          .delete()
+          .eq('merchant_id', user.id);
+
+        if (error) throw error;
+      }
+
+      setCreditsPerMessage('');
+      setEnabled(true);
+      setHasSettings(false);
+
+      toast({
+        title: 'Settings reset',
+        description: 'Your message settings have been cleared',
+      });
+    } catch (error) {
+      console.error('Error resetting settings:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to reset settings',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -181,13 +214,23 @@ export const MessageSettingsCard = () => {
           </>
         )}
 
-        <Button 
-          onClick={handleSave} 
-          disabled={saving}
-          className="w-full"
-        >
-          {saving ? 'Saving...' : 'Save Settings'}
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            onClick={handleSave} 
+            disabled={saving}
+            className="flex-1"
+          >
+            {saving ? 'Saving...' : 'Save Settings'}
+          </Button>
+          {hasSettings && (
+            <Button 
+              onClick={handleReset} 
+              variant="outline"
+            >
+              Reset
+            </Button>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
