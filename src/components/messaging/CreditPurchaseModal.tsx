@@ -43,7 +43,7 @@ export const CreditPurchaseModal = ({
 
   // Message settings state (for all users)
   const [settingsEnabled, setSettingsEnabled] = useState(true);
-  const [creditsPerMessage, setCreditsPerMessage] = useState(10);
+  const [creditsPerMessage, setCreditsPerMessage] = useState<string>('');
   const [settingsLoading, setSettingsLoading] = useState(true);
   const [settingsSaving, setSettingsSaving] = useState(false);
   const [hasSettings, setHasSettings] = useState(false);
@@ -51,7 +51,7 @@ export const CreditPurchaseModal = ({
   // Livestream settings state
   const [isLiveStreamArtist, setIsLiveStreamArtist] = useState(false);
   const [livestreamEnabled, setLivestreamEnabled] = useState(true);
-  const [creditsPerMinute, setCreditsPerMinute] = useState(5);
+  const [creditsPerMinute, setCreditsPerMinute] = useState<string>('');
   const [sessionDuration] = useState(20);
   const [hasLivestreamSettings, setHasLivestreamSettings] = useState(false);
   const [livestreamSaving, setLivestreamSaving] = useState(false);
@@ -80,7 +80,7 @@ export const CreditPurchaseModal = ({
 
       if (data) {
         setSettingsEnabled(data.enabled);
-        setCreditsPerMessage(data.credits_per_message);
+        setCreditsPerMessage(data.credits_per_message > 0 ? String(data.credits_per_message) : '');
         setHasSettings(true);
       }
 
@@ -103,7 +103,7 @@ export const CreditPurchaseModal = ({
 
         if (livestreamData) {
           setLivestreamEnabled(livestreamData.enabled);
-          setCreditsPerMinute(livestreamData.credits_per_minute);
+          setCreditsPerMinute(livestreamData.credits_per_minute > 0 ? String(livestreamData.credits_per_minute) : '');
           setHasLivestreamSettings(true);
         }
       }
@@ -120,12 +120,14 @@ export const CreditPurchaseModal = ({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      if (creditsPerMessage < 1 || creditsPerMessage > 100) {
+      const creditsNum = parseInt(creditsPerMessage) || 0;
+      if (creditsNum < 1 || creditsNum > 100) {
         toast({
           title: 'Invalid amount',
           description: 'Credits per message must be between 1 and 100',
           variant: 'destructive',
         });
+        setSettingsSaving(false);
         return;
       }
 
@@ -134,7 +136,7 @@ export const CreditPurchaseModal = ({
           .from('message_settings')
           .update({
             enabled: settingsEnabled,
-            credits_per_message: creditsPerMessage,
+            credits_per_message: creditsNum,
           })
           .eq('merchant_id', user.id);
 
@@ -145,7 +147,7 @@ export const CreditPurchaseModal = ({
           .insert({
             merchant_id: user.id,
             enabled: settingsEnabled,
-            credits_per_message: creditsPerMessage,
+            credits_per_message: creditsNum,
           });
 
         if (error) throw error;
@@ -174,7 +176,8 @@ export const CreditPurchaseModal = ({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      if (creditsPerMinute < 1 || creditsPerMinute > 50) {
+      const creditsMinNum = parseInt(creditsPerMinute) || 0;
+      if (creditsMinNum < 1 || creditsMinNum > 50) {
         toast({
           title: 'Invalid amount',
           description: 'Credits per minute must be between 1 and 50',
@@ -189,7 +192,7 @@ export const CreditPurchaseModal = ({
           .from('livestream_settings')
           .update({
             enabled: livestreamEnabled,
-            credits_per_minute: creditsPerMinute,
+            credits_per_minute: creditsMinNum,
             session_duration_minutes: sessionDuration,
           })
           .eq('merchant_id', user.id);
@@ -201,7 +204,7 @@ export const CreditPurchaseModal = ({
           .insert({
             merchant_id: user.id,
             enabled: livestreamEnabled,
-            credits_per_minute: creditsPerMinute,
+            credits_per_minute: creditsMinNum,
             session_duration_minutes: sessionDuration,
           });
 
@@ -239,7 +242,7 @@ export const CreditPurchaseModal = ({
         if (error) throw error;
       }
 
-      setCreditsPerMessage(10);
+      setCreditsPerMessage('');
       setSettingsEnabled(true);
       setHasSettings(false);
 
@@ -271,7 +274,7 @@ export const CreditPurchaseModal = ({
         if (error) throw error;
       }
 
-      setCreditsPerMinute(5);
+      setCreditsPerMinute('');
       setLivestreamEnabled(true);
       setHasLivestreamSettings(false);
 
@@ -328,8 +331,8 @@ export const CreditPurchaseModal = ({
     }
   };
 
-  const revenuePerMessage = (creditsPerMessage * 0.10).toFixed(2);
-  const totalLivestreamCredits = creditsPerMinute * sessionDuration;
+  const revenuePerMessage = ((parseInt(creditsPerMessage) || 0) * 0.10).toFixed(2);
+  const totalLivestreamCredits = (parseInt(creditsPerMinute) || 0) * sessionDuration;
   const revenuePerEntry = (totalLivestreamCredits * 0.10).toFixed(2);
 
   return (
@@ -507,12 +510,15 @@ export const CreditPurchaseModal = ({
                         <div className="flex items-center gap-2">
                           <Input
                             id="credits"
-                            type="number"
-                            min={1}
-                            max={100}
+                            type="text"
+                            inputMode="numeric"
                             value={creditsPerMessage}
-                            onChange={(e) => setCreditsPerMessage(Number(e.target.value))}
+                            onChange={(e) => {
+                              const val = e.target.value.replace(/[^0-9]/g, '');
+                              setCreditsPerMessage(val);
+                            }}
                             className="max-w-[120px]"
+                            placeholder="10"
                           />
                           <span className="text-xs text-muted-foreground">
                             credits (1-100)
@@ -591,12 +597,15 @@ export const CreditPurchaseModal = ({
                         <div className="flex items-center gap-2">
                           <Input
                             id="credits-per-minute"
-                            type="number"
-                            min={1}
-                            max={50}
+                            type="text"
+                            inputMode="numeric"
                             value={creditsPerMinute}
-                            onChange={(e) => setCreditsPerMinute(Number(e.target.value))}
+                            onChange={(e) => {
+                              const val = e.target.value.replace(/[^0-9]/g, '');
+                              setCreditsPerMinute(val);
+                            }}
                             className="max-w-[120px]"
+                            placeholder="5"
                           />
                           <span className="text-xs text-muted-foreground">
                             credits/min (1-50)
