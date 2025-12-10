@@ -10,7 +10,7 @@ import { Video, DollarSign, Clock } from 'lucide-react';
 
 export const LivestreamSettingsCard = () => {
   const [enabled, setEnabled] = useState(true);
-  const [creditsPerMinute, setCreditsPerMinute] = useState<number>(5);
+  const [creditsPerMinute, setCreditsPerMinute] = useState<string>('');
   const [sessionDuration, setSessionDuration] = useState(20);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -38,7 +38,7 @@ export const LivestreamSettingsCard = () => {
 
       if (data) {
         setEnabled(data.enabled);
-        setCreditsPerMinute(data.credits_per_minute);
+        setCreditsPerMinute(String(data.credits_per_minute));
         setSessionDuration(data.session_duration_minutes);
         setHasSettings(true);
       }
@@ -55,7 +55,8 @@ export const LivestreamSettingsCard = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      if (creditsPerMinute < 1 || creditsPerMinute > 50) {
+      const creditsNum = parseInt(creditsPerMinute) || 0;
+      if (creditsNum < 1 || creditsNum > 50) {
         toast({
           title: 'Invalid amount',
           description: 'Credits per minute must be between 1 and 50',
@@ -69,7 +70,7 @@ export const LivestreamSettingsCard = () => {
           .from('livestream_settings')
           .update({
             enabled,
-            credits_per_minute: creditsPerMinute,
+            credits_per_minute: parseInt(creditsPerMinute) || 5,
             session_duration_minutes: sessionDuration,
           })
           .eq('merchant_id', user.id);
@@ -81,7 +82,7 @@ export const LivestreamSettingsCard = () => {
           .insert({
             merchant_id: user.id,
             enabled,
-            credits_per_minute: creditsPerMinute,
+            credits_per_minute: parseInt(creditsPerMinute) || 5,
             session_duration_minutes: sessionDuration,
           });
 
@@ -115,7 +116,8 @@ export const LivestreamSettingsCard = () => {
     );
   }
 
-  const totalCredits = creditsPerMinute * sessionDuration;
+  const creditsNum = parseInt(creditsPerMinute) || 0;
+  const totalCredits = creditsNum * sessionDuration;
   const revenuePerEntry = (totalCredits * 0.10).toFixed(2);
 
   return (
@@ -151,11 +153,13 @@ export const LivestreamSettingsCard = () => {
               <div className="flex items-center gap-2">
                 <Input
                   id="credits-per-minute"
-                  type="number"
-                  min={1}
-                  max={50}
-                  value={creditsPerMinute || ''}
-                  onChange={(e) => setCreditsPerMinute(parseFloat(e.target.value) || 0)}
+                  type="text"
+                  inputMode="numeric"
+                  value={creditsPerMinute}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/[^0-9]/g, '');
+                    setCreditsPerMinute(val);
+                  }}
                   className="max-w-[120px]"
                   placeholder="5"
                 />
