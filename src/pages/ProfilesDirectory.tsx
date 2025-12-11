@@ -282,12 +282,6 @@ const ProfilesDirectory = () => {
             ))}
           </div>
 
-          {/* Results Count */}
-          <div className="text-center">
-            <p className="text-gray-400">
-              Showing {filteredProfiles.length} of {profiles.length} profiles
-            </p>
-          </div>
         </div>
 
         {/* Desktop: Outer Arrows + Ad + Carousel + Ad + Outer Arrows / Mobile: Simple Grid */}
@@ -382,8 +376,24 @@ const ProfilesDirectory = () => {
             )}
           </div>
         ) : (
-          // Desktop: 6 Ad Spaces Layout
-          <div className="max-w-[1400px] mx-auto">
+          // Desktop: Outer Arrows + 6 Ad Spaces Layout
+          <div className="relative max-w-[1600px] mx-auto px-16">
+            {/* Outer Left Arrow */}
+            <button
+              className="absolute left-0 top-1/2 -translate-y-1/2 z-20 h-10 w-10 rounded-full border border-gray-600 bg-gray-800 text-white hover:bg-gray-700 flex items-center justify-center transition-colors"
+              onClick={() => toast.info("Navigation coming soon!")}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+
+            {/* Outer Right Arrow */}
+            <button
+              className="absolute right-0 top-1/2 -translate-y-1/2 z-20 h-10 w-10 rounded-full border border-gray-600 bg-gray-800 text-white hover:bg-gray-700 flex items-center justify-center transition-colors"
+              onClick={() => toast.info("Navigation coming soon!")}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+
             <div className="flex gap-6 justify-center items-start">
               {/* Left Ad Space */}
               <div className="w-48 flex-shrink-0">
