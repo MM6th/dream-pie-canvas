@@ -2041,6 +2041,47 @@ export type Database = {
         }
         Relationships: []
       }
+      user_free_resources: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          id: string
+          rejected_at: string | null
+          resource_key: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          id?: string
+          rejected_at?: string | null
+          resource_key: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          id?: string
+          rejected_at?: string | null
+          resource_key?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_free_resources_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_playlists: {
         Row: {
           audio_product_id: string

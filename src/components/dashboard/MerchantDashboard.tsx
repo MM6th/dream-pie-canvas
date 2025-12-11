@@ -28,6 +28,9 @@ import { TutorialHelpButton } from "@/components/TutorialHelpButton";
 import { FollowRequestsManager } from "@/components/profile/FollowRequestsManager";
 import { Users } from "lucide-react";
 import { AstrologyDeliveryManager } from "@/components/astrology/AstrologyDeliveryManager";
+import { BuyerAstrologyLibrary } from "@/components/astrology/BuyerAstrologyLibrary";
+import { FreeAstrologyResourceModal } from "@/components/FreeAstrologyResourceModal";
+import { useFreeAstrologyResource } from "@/hooks/useFreeAstrologyResource";
 
 interface MerchantDashboardProps {
   onSuccess: () => void;
@@ -54,6 +57,8 @@ const MerchantDashboard = ({
   const [isPrivate, setIsPrivate] = useState<boolean>(false);
   const [pendingRequestsCount, setPendingRequestsCount] = useState<number>(0);
   const [showFollowRequests, setShowFollowRequests] = useState(false);
+  
+  const freeResource = useFreeAstrologyResource(user?.id);
   
   // Only show merchant tutorial if user is NOT an admin (admin tutorial takes priority)
   const tutorial = useDashboardTutorial('merchant', isAdmin ? [] : merchantTutorialSteps, userProfile?.created_at);
@@ -287,11 +292,26 @@ const MerchantDashboard = ({
           <div data-tutorial="media-players">
             <MediaPlayers purchasedTracks={purchasedTracks} purchasedPodcasts={purchasedPodcasts} purchasedPortfolios={purchasedPortfolios} />
           </div>
+
+          {/* Astrology Library Section */}
+          <div className="mt-6">
+            <BuyerAstrologyLibrary />
+          </div>
         </>
       )}
 
       {!isApproved && !isAdmin && (
         <RestrictedAccess onProfileUpdate={onSuccess} />
+      )}
+
+      {/* Free Astrology Resource Modal */}
+      {user && (
+        <FreeAstrologyResourceModal
+          open={freeResource.showModal}
+          onOpenChange={freeResource.setShowModal}
+          userId={user.id}
+          onAccepted={freeResource.refresh}
+        />
       )}
     </div>
   );

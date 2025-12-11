@@ -4,7 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Download, Play, Clock, CheckCircle, AlertTriangle } from "lucide-react";
+import { Download, Play, Clock, CheckCircle, AlertTriangle, FileText, Gift } from "lucide-react";
+import { FreeResourceDownloadModal } from "@/components/FreeResourceDownloadModal";
+import { useAuth } from "@/hooks/useAuth";
 
 interface VideoSegment {
   id: string;
@@ -29,10 +31,31 @@ interface AstrologyReading {
 }
 
 export const BuyerAstrologyLibrary = () => {
+  const { user } = useAuth();
   const [readings, setReadings] = useState<AstrologyReading[]>([]);
   const [loading, setLoading] = useState(true);
   const [playingVideo, setPlayingVideo] = useState<string | null>(null);
   const [currentSegmentIndex, setCurrentSegmentIndex] = useState<number>(0);
+  const [hasAcceptedFreeResource, setHasAcceptedFreeResource] = useState(false);
+  const [showDownloadModal, setShowDownloadModal] = useState(false);
+
+  // Check if user has accepted the free resource
+  useEffect(() => {
+    const checkFreeResource = async () => {
+      if (!user) return;
+      
+      const { data } = await supabase
+        .from("user_free_resources")
+        .select("status")
+        .eq("user_id", user.id)
+        .eq("resource_key", "salt_mineral_chart")
+        .maybeSingle();
+      
+      setHasAcceptedFreeResource(data?.status === "accepted");
+    };
+    
+    checkFreeResource();
+  }, [user]);
 
   useEffect(() => {
     fetchReadings();
@@ -198,7 +221,42 @@ export const BuyerAstrologyLibrary = () => {
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">My Astrology Readings</h2>
       
-      {readings.length === 0 ? (
+      {/* Free Astrology Resources Section */}
+      {hasAcceptedFreeResource && (
+        <div className="mb-4">
+          <h3 className="text-lg font-semibold text-muted-foreground mb-2 flex items-center gap-2">
+            <Gift className="w-4 h-4" />
+            Free Astrology Resources
+          </h3>
+          <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
+            <CardContent className="py-4">
+              <button
+                onClick={() => setShowDownloadModal(true)}
+                className="flex items-center gap-3 w-full text-left hover:bg-primary/10 rounded-lg p-2 transition-colors"
+              >
+                <FileText className="w-8 h-8 text-primary" />
+                <div>
+                  <p className="font-medium text-foreground">Salt & Mineral Deficiency Chart</p>
+                  <p className="text-sm text-muted-foreground">Click to download your free PDF resource</p>
+                </div>
+              </button>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      <FreeResourceDownloadModal 
+        open={showDownloadModal} 
+        onOpenChange={setShowDownloadModal} 
+      />
+      
+      {readings.length === 0 && !hasAcceptedFreeResource ? (
+        <Card>
+          <CardContent className="py-8 text-center text-muted-foreground">
+            You haven't purchased any astrology readings yet
+          </CardContent>
+        </Card>
+      ) : readings.length === 0 ? (
         <Card>
           <CardContent className="py-8 text-center text-muted-foreground">
             You haven't purchased any astrology readings yet

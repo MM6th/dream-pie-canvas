@@ -28,6 +28,8 @@ import { TutorialHelpButton } from "@/components/TutorialHelpButton";
 import SupporterCurrentAffirmationsModal from "@/components/SupporterCurrentAffirmationsModal";
 // Messaging components now accessed via MessageCreditsIcon in header
 import { BuyerAstrologyLibrary } from "@/components/astrology/BuyerAstrologyLibrary";
+import { FreeAstrologyResourceModal } from "@/components/FreeAstrologyResourceModal";
+import { useFreeAstrologyResource } from "@/hooks/useFreeAstrologyResource";
 
 interface AudioTrack {
   id: string;
@@ -53,6 +55,8 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
   const [purchasedPortfolios, setPurchasedPortfolios] = useState<any[]>([]);
   const { currentQuarterIncome } = useQuarterlyIncome(user?.id);
   const [creditBalance, setCreditBalance] = useState(0);
+  
+  const freeResource = useFreeAstrologyResource(user?.id);
   
   const tutorial = useDashboardTutorial('supporter', supporterTutorialSteps, userProfile?.created_at);
 
@@ -317,6 +321,16 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
       <div className="mb-6">
         <BuyerAstrologyLibrary />
       </div>
+
+      {/* Free Astrology Resource Modal */}
+      {user && (
+        <FreeAstrologyResourceModal
+          open={freeResource.showModal}
+          onOpenChange={freeResource.setShowModal}
+          userId={user.id}
+          onAccepted={freeResource.refresh}
+        />
+      )}
     </div>
   );
 };
