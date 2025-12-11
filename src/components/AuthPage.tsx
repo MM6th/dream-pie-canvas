@@ -423,6 +423,9 @@ const AuthPage = () => {
             )}
           </CardContent>
         </Card>
+        
+        {/* The Well Being Society text */}
+        <h2 className="text-xl font-bold text-white tracking-widest text-center">THE WELL BEING SOCIETY</h2>
       </div>
     </div>
   );
