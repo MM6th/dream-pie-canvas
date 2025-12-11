@@ -44,7 +44,7 @@ const productTypes = [
   { value: 'solar_return_reading', label: 'Solar Return Reading' },
   { value: 'north_node_reading', label: 'North Node Reading' },
   { value: 'career_path_reading', label: 'Career Path Reading' },
-  { value: 'horoscope_reading', label: 'Horoscope Reading' }
+  { value: 'horoscope_reading', label: 'Horoscope Forecast' }
 ];
 
 const deliveryTypes = [
