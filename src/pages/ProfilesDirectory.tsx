@@ -382,36 +382,8 @@ const ProfilesDirectory = () => {
             )}
           </div>
         ) : (
-          // Desktop: Outer Arrows + Left Ad + Carousel + Right Ad + Outer Arrows
-          <div className="relative max-w-[1600px] mx-auto px-16">
-            {/* Outer Left Arrow - Positioned at the far left edge */}
-            <button
-              onClick={() => {
-                const carousel = document.querySelector('[data-profiles-carousel]');
-                if (carousel) {
-                  const prevBtn = carousel.querySelector('[data-carousel-previous]') as HTMLButtonElement;
-                  prevBtn?.click();
-                }
-              }}
-              className="absolute left-0 top-1/2 -translate-y-1/2 z-20 h-10 w-10 rounded-full border border-gray-600 bg-gray-800 text-white hover:bg-gray-700 flex items-center justify-center transition-colors"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-            </button>
-
-            {/* Outer Right Arrow - Positioned at the far right edge */}
-            <button
-              onClick={() => {
-                const carousel = document.querySelector('[data-profiles-carousel]');
-                if (carousel) {
-                  const nextBtn = carousel.querySelector('[data-carousel-next]') as HTMLButtonElement;
-                  nextBtn?.click();
-                }
-              }}
-              className="absolute right-0 top-1/2 -translate-y-1/2 z-20 h-10 w-10 rounded-full border border-gray-600 bg-gray-800 text-white hover:bg-gray-700 flex items-center justify-center transition-colors"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-            </button>
-
+          // Desktop: 6 Ad Spaces Layout
+          <div className="max-w-[1400px] mx-auto">
             <div className="flex gap-6 justify-center items-start">
               {/* Left Ad Space */}
               <div className="w-48 flex-shrink-0">
@@ -437,100 +409,28 @@ const ProfilesDirectory = () => {
                 </div>
               </div>
 
-              {/* Main Content - Carousel */}
-              <div className="max-w-2xl w-full">
-                {filteredProfiles.length === 0 ? (
-                  <Card className="bg-gray-800 border-gray-700">
-                    <CardContent className="p-8 text-center">
-                      <Users className="w-12 h-12 text-gray-500 mx-auto mb-4" />
-                      <p className="text-gray-400">No profiles found matching your criteria</p>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <Carousel className="w-full" data-profiles-carousel>
-                    <CarouselContent className="-ml-4">
-                      {filteredProfiles.map((profile) => (
-                        <CarouselItem key={profile.id} className="pl-4 basis-1/2">
-                          <Card
-                            className="bg-gray-800 border-gray-700 hover:border-gray-600 transition-colors cursor-pointer group"
-                            onClick={() => handleProfileClick(profile.id)}
-                          >
-                            <CardContent className="p-4 text-center h-[280px] flex flex-col justify-between">
-                              {/* Avatar */}
-                              <div className="mb-4">
-                                {profile.avatar_url ? (
-                                  <img
-                                    src={profile.avatar_url}
-                                    alt={profile.display_name}
-                                    className="w-16 h-16 rounded-full object-cover mx-auto border-2 border-gray-600 group-hover:border-gray-500 transition-colors"
-                                  />
-                                ) : (
-                                  <div className="w-16 h-16 bg-gray-600 rounded-full flex items-center justify-center mx-auto border-2 border-gray-600 group-hover:border-gray-500 transition-colors">
-                                    <User className="w-8 h-8 text-gray-400" />
-                                  </div>
-                                )}
-                              </div>
+              {/* Center Ad Space 1 */}
+              <div className="w-48 flex-shrink-0">
+                <div className="sticky top-4">
+                  <div 
+                    className="bg-gradient-to-br from-rose-900/20 to-red-900/20 border border-rose-700 rounded-lg p-4 h-96 flex items-center justify-center cursor-pointer hover:border-rose-600 transition-colors pointer-events-auto"
+                    onClick={() => toast.info("Ad placements will be available soon!")}
+                  >
+                    <p className="text-gray-400 text-center text-sm">Ad Space<br/>300x600</p>
+                  </div>
+                </div>
+              </div>
 
-                              {/* Name */}
-                              <h3 className="text-white font-semibold mb-1 group-hover:text-blue-300 transition-colors line-clamp-1">
-                                {profile.display_name || 'Anonymous User'}
-                              </h3>
-
-                              {/* Business Name */}
-                              {profile.business_name && (
-                                <p className="text-gray-400 text-xs mb-2 line-clamp-1">{profile.business_name}</p>
-                              )}
-
-                              {/* Badges */}
-                              <div className="flex flex-wrap justify-center gap-1 mb-2">
-                                <Badge variant="secondary" className="bg-blue-600 text-white text-xs">
-                                  {profile.user_type === 'merchant' ? 'Merchant' : 'Supporter'}
-                                </Badge>
-                                {profile.is_admin && (
-                                  <Badge variant="secondary" className="bg-orange-600 text-white text-xs flex items-center gap-1">
-                                    <Shield className="w-2 h-2" />
-                                    Admin
-                                  </Badge>
-                                )}
-                                {profile.is_adult_creator && (
-                                  <Badge variant="secondary" className="bg-purple-600 text-white text-xs">
-                                    Creator
-                                  </Badge>
-                                )}
-                              </div>
-                              
-                              {/* Skills - Separate row */}
-                              {profile.skills && profile.skills.length > 0 && 
-                               selectedFilter === "industries" && (
-                                <div className="flex flex-wrap justify-center gap-1 mb-2 min-h-[20px]">
-                                  {profile.skills.slice(0, 2).map((skill, index) => (
-                                    <Badge key={index} variant="outline" className="bg-teal-500/10 text-teal-400 border-teal-500/30 text-[10px] px-2 py-0">
-                                      {skill}
-                                    </Badge>
-                                  ))}
-                                  {profile.skills.length > 2 && (
-                                    <Badge variant="outline" className="bg-teal-500/10 text-teal-400 border-teal-500/30 text-[10px] px-2 py-0">
-                                      +{profile.skills.length - 2}
-                                    </Badge>
-                                  )}
-                                </div>
-                              )}
-
-                              {/* Join Date */}
-                              <div className="flex items-center justify-center gap-1 text-xs text-gray-500">
-                                <Calendar className="w-3 h-3" />
-                                <span>Joined {new Date(profile.created_at).toLocaleDateString()}</span>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        </CarouselItem>
-                      ))}
-                    </CarouselContent>
-                    {/* Hidden carousel controls that outer arrows will trigger */}
-                    <CarouselPrevious className="hidden" data-carousel-previous />
-                    <CarouselNext className="hidden" data-carousel-next />
-                  </Carousel>
-                )}
+              {/* Center Ad Space 2 */}
+              <div className="w-48 flex-shrink-0">
+                <div className="sticky top-4">
+                  <div 
+                    className="bg-gradient-to-br from-indigo-900/20 to-violet-900/20 border border-indigo-700 rounded-lg p-4 h-96 flex items-center justify-center cursor-pointer hover:border-indigo-600 transition-colors pointer-events-auto"
+                    onClick={() => toast.info("Ad placements will be available soon!")}
+                  >
+                    <p className="text-gray-400 text-center text-sm">Ad Space<br/>300x600</p>
+                  </div>
+                </div>
               </div>
 
               {/* Second Right Ad Space */}
