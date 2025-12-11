@@ -34,7 +34,7 @@ const ProfilesDirectory = () => {
   const [filteredProfiles, setFilteredProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedFilter, setSelectedFilter] = useState<string>("merchants");
+  const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
 
   useEffect(() => {
     fetchProfiles();
@@ -116,23 +116,25 @@ const ProfilesDirectory = () => {
       );
     }
 
-    // Filter by type
-    filtered = filtered.filter(profile => {
-      switch (selectedFilter) {
-        case "merchants":
-          return profile.user_type === "merchant";
-        case "supporters":
-          return profile.user_type === "supporter";
-        case "admins":
-          return profile.is_admin === true;
-        case "creators":
-          return profile.is_adult_creator === true;
-        case "industries":
-          return profile.skills && profile.skills.length > 0;
-        default:
-          return true;
-      }
-    });
+    // Filter by type (only if a filter is selected)
+    if (selectedFilter) {
+      filtered = filtered.filter(profile => {
+        switch (selectedFilter) {
+          case "merchants":
+            return profile.user_type === "merchant";
+          case "supporters":
+            return profile.user_type === "supporter";
+          case "admins":
+            return profile.is_admin === true;
+          case "creators":
+            return profile.is_adult_creator === true;
+          case "industries":
+            return profile.skills && profile.skills.length > 0;
+          default:
+            return true;
+        }
+      });
+    }
 
     setFilteredProfiles(filtered);
   };
@@ -267,7 +269,7 @@ const ProfilesDirectory = () => {
             ].map(({ key, label, icon: Icon }) => (
               <Button
                 key={key}
-                onClick={() => setSelectedFilter(key)}
+                onClick={() => setSelectedFilter(selectedFilter === key ? null : key)}
                 variant={selectedFilter === key ? "default" : "outline"}
                 size="sm"
                 className={`${
@@ -376,7 +378,7 @@ const ProfilesDirectory = () => {
             )}
           </div>
         ) : (
-          // Desktop: Outer Arrows + 4 Ad Spaces Layout
+          // Desktop: Show ads when no filter, show profiles when filter selected
           <div className="relative max-w-[1200px] mx-auto px-20">
             {/* Outer Left Arrow */}
             <button
@@ -394,55 +396,138 @@ const ProfilesDirectory = () => {
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
             </button>
 
-            <div className="flex gap-8 justify-center items-start">
-              {/* Left Ad Space */}
-              <div className="w-48 flex-shrink-0">
-                <div className="sticky top-4">
-                  <div 
-                    className="bg-gradient-to-br from-purple-900/20 to-pink-900/20 border border-purple-700 rounded-lg p-4 h-96 flex items-center justify-center cursor-pointer hover:border-purple-600 transition-colors pointer-events-auto"
-                    onClick={() => toast.info("Ad placements will be available soon!")}
-                  >
-                    <p className="text-gray-400 text-center text-sm">Ad Space<br/>300x600</p>
+            {selectedFilter === null ? (
+              // Show Ad Spaces when no filter is selected
+              <div className="flex gap-8 justify-center items-start">
+                <div className="w-48 flex-shrink-0">
+                  <div className="sticky top-4">
+                    <div 
+                      className="bg-gradient-to-br from-purple-900/20 to-pink-900/20 border border-purple-700 rounded-lg p-4 h-96 flex items-center justify-center cursor-pointer hover:border-purple-600 transition-colors pointer-events-auto"
+                      onClick={() => toast.info("Ad placements will be available soon!")}
+                    >
+                      <p className="text-gray-400 text-center text-sm">Ad Space<br/>300x600</p>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Center Left Ad Space */}
-              <div className="w-48 flex-shrink-0">
-                <div className="sticky top-4">
-                  <div 
-                    className="bg-gradient-to-br from-green-900/20 to-emerald-900/20 border border-green-700 rounded-lg p-4 h-96 flex items-center justify-center cursor-pointer hover:border-green-600 transition-colors pointer-events-auto"
-                    onClick={() => toast.info("Ad placements will be available soon!")}
-                  >
-                    <p className="text-gray-400 text-center text-sm">Ad Space<br/>300x600</p>
+                <div className="w-48 flex-shrink-0">
+                  <div className="sticky top-4">
+                    <div 
+                      className="bg-gradient-to-br from-green-900/20 to-emerald-900/20 border border-green-700 rounded-lg p-4 h-96 flex items-center justify-center cursor-pointer hover:border-green-600 transition-colors pointer-events-auto"
+                      onClick={() => toast.info("Ad placements will be available soon!")}
+                    >
+                      <p className="text-gray-400 text-center text-sm">Ad Space<br/>300x600</p>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Center Right Ad Space */}
-              <div className="w-48 flex-shrink-0">
-                <div className="sticky top-4">
-                  <div 
-                    className="bg-gradient-to-br from-orange-900/20 to-amber-900/20 border border-orange-700 rounded-lg p-4 h-96 flex items-center justify-center cursor-pointer hover:border-orange-600 transition-colors pointer-events-auto"
-                    onClick={() => toast.info("Ad placements will be available soon!")}
-                  >
-                    <p className="text-gray-400 text-center text-sm">Ad Space<br/>300x600</p>
+                <div className="w-48 flex-shrink-0">
+                  <div className="sticky top-4">
+                    <div 
+                      className="bg-gradient-to-br from-orange-900/20 to-amber-900/20 border border-orange-700 rounded-lg p-4 h-96 flex items-center justify-center cursor-pointer hover:border-orange-600 transition-colors pointer-events-auto"
+                      onClick={() => toast.info("Ad placements will be available soon!")}
+                    >
+                      <p className="text-gray-400 text-center text-sm">Ad Space<br/>300x600</p>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Right Ad Space */}
-              <div className="w-48 flex-shrink-0">
-                <div className="sticky top-4">
-                  <div 
-                    className="bg-gradient-to-br from-blue-900/20 to-cyan-900/20 border border-blue-700 rounded-lg p-4 h-96 flex items-center justify-center cursor-pointer hover:border-blue-600 transition-colors pointer-events-auto"
-                    onClick={() => toast.info("Ad placements will be available soon!")}
-                  >
-                    <p className="text-gray-400 text-center text-sm">Ad Space<br/>300x600</p>
+                <div className="w-48 flex-shrink-0">
+                  <div className="sticky top-4">
+                    <div 
+                      className="bg-gradient-to-br from-blue-900/20 to-cyan-900/20 border border-blue-700 rounded-lg p-4 h-96 flex items-center justify-center cursor-pointer hover:border-blue-600 transition-colors pointer-events-auto"
+                      onClick={() => toast.info("Ad placements will be available soon!")}
+                    >
+                      <p className="text-gray-400 text-center text-sm">Ad Space<br/>300x600</p>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              // Show Profile Cards when a filter is selected
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {filteredProfiles.length === 0 ? (
+                  <div className="col-span-full">
+                    <Card className="bg-gray-800 border-gray-700">
+                      <CardContent className="p-8 text-center">
+                        <Users className="w-12 h-12 text-gray-500 mx-auto mb-4" />
+                        <p className="text-gray-400">No profiles found matching your criteria</p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                ) : (
+                  filteredProfiles.map((profile) => (
+                    <Card
+                      key={profile.id}
+                      className="bg-gray-800 border-gray-700 hover:border-gray-600 transition-colors cursor-pointer group"
+                      onClick={() => handleProfileClick(profile.id)}
+                    >
+                      <CardContent className="p-4 text-center h-[280px] flex flex-col justify-between">
+                        <div className="mb-4">
+                          {profile.avatar_url ? (
+                            <img
+                              src={profile.avatar_url}
+                              alt={profile.display_name}
+                              className="w-16 h-16 rounded-full object-cover mx-auto border-2 border-gray-600 group-hover:border-gray-500 transition-colors"
+                            />
+                          ) : (
+                            <div className="w-16 h-16 bg-gray-600 rounded-full flex items-center justify-center mx-auto border-2 border-gray-600 group-hover:border-gray-500 transition-colors">
+                              <User className="w-8 h-8 text-gray-400" />
+                            </div>
+                          )}
+                        </div>
+
+                        <h3 className="text-white font-semibold mb-1 group-hover:text-blue-300 transition-colors line-clamp-1">
+                          {profile.display_name || 'Anonymous User'}
+                        </h3>
+
+                        {profile.business_name && (
+                          <p className="text-gray-400 text-xs mb-2 line-clamp-1">{profile.business_name}</p>
+                        )}
+
+                        <div className="flex flex-wrap justify-center gap-1 mb-2">
+                          <Badge variant="secondary" className="bg-blue-600 text-white text-xs">
+                            {profile.user_type === 'merchant' ? 'Merchant' : 'Supporter'}
+                          </Badge>
+                          {profile.is_admin && (
+                            <Badge variant="secondary" className="bg-orange-600 text-white text-xs flex items-center gap-1">
+                              <Shield className="w-2 h-2" />
+                              Admin
+                            </Badge>
+                          )}
+                          {profile.is_adult_creator && (
+                            <Badge variant="secondary" className="bg-purple-600 text-white text-xs">
+                              Creator
+                            </Badge>
+                          )}
+                        </div>
+                        
+                        {profile.skills && profile.skills.length > 0 && 
+                         selectedFilter === "industries" && (
+                          <div className="flex flex-wrap justify-center gap-1 mb-2 min-h-[20px]">
+                            {profile.skills.slice(0, 2).map((skill, index) => (
+                              <Badge key={index} variant="outline" className="bg-teal-500/10 text-teal-400 border-teal-500/30 text-[10px] px-2 py-0">
+                                {skill}
+                              </Badge>
+                            ))}
+                            {profile.skills.length > 2 && (
+                              <Badge variant="outline" className="bg-teal-500/10 text-teal-400 border-teal-500/30 text-[10px] px-2 py-0">
+                                +{profile.skills.length - 2}
+                              </Badge>
+                            )}
+                          </div>
+                        )}
+
+                        <div className="flex items-center justify-center gap-1 text-xs text-gray-500">
+                          <Calendar className="w-3 h-3" />
+                          <span>Joined {new Date(profile.created_at).toLocaleDateString()}</span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>
