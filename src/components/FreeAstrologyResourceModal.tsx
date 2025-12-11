@@ -98,7 +98,7 @@ export const FreeAstrologyResourceModal = ({
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 max-h-[50vh] border rounded-lg p-4 bg-muted/30" thumbClassName="bg-primary/50">
+        <ScrollArea className="flex-1 max-h-[50vh] border rounded-lg p-4 bg-muted/30 [&>[data-radix-scroll-area-viewport]]:pr-4" thumbClassName="bg-primary w-2.5 hover:bg-primary/80">
           <div className="space-y-4 text-sm">
             <h3 className="font-semibold text-lg">Salt & Mineral Deficiency Chart</h3>
             
