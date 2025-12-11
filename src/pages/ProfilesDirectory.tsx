@@ -108,12 +108,22 @@ const ProfilesDirectory = () => {
   const filterProfiles = () => {
     let filtered = profiles;
 
-    // Filter by search term
+    // Filter by search term (searches skills/industries)
     if (searchTerm) {
-      filtered = filtered.filter(profile =>
-        (profile.display_name?.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (profile.business_name?.toLowerCase().includes(searchTerm.toLowerCase()))
-      );
+      const searchLower = searchTerm.toLowerCase();
+      filtered = filtered.filter(profile => {
+        // Check if any skill matches the search term
+        const skillMatch = profile.skills?.some(skill => 
+          skill.toLowerCase().includes(searchLower)
+        );
+        // Also check display name and business name as fallback
+        const nameMatch = profile.display_name?.toLowerCase().includes(searchLower) ||
+          profile.business_name?.toLowerCase().includes(searchLower);
+        // Check user type as industry
+        const typeMatch = profile.user_type?.toLowerCase().includes(searchLower);
+        
+        return skillMatch || nameMatch || typeMatch;
+      });
     }
 
     // Filter by type (only if a filter is selected)
@@ -252,18 +262,27 @@ const ProfilesDirectory = () => {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
             <Input
               type="text"
-              placeholder="Search profiles..."
+              placeholder="Search industries"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && searchTerm.trim()) {
+                  // Clear filter to show search results
+                  setSelectedFilter(null);
+                }
+              }}
               className="pl-10 bg-gray-800 border-gray-600 text-white placeholder-gray-400"
             />
           </div>
 
           {/* Filter Buttons */}
           <div className="flex flex-wrap justify-center gap-2 items-center">
-            {selectedFilter && (
+            {(selectedFilter || searchTerm.trim()) && (
               <Button
-                onClick={() => setSelectedFilter(null)}
+                onClick={() => {
+                  setSelectedFilter(null);
+                  setSearchTerm("");
+                }}
                 variant="outline"
                 size="sm"
                 className={`border-gray-600 text-white bg-transparent hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
@@ -407,8 +426,8 @@ const ProfilesDirectory = () => {
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
             </button>
 
-            {selectedFilter === null ? (
-              // Show Ad Spaces when no filter is selected
+            {selectedFilter === null && !searchTerm.trim() ? (
+              // Show Ad Spaces when no filter is selected and no search term
               <div className="flex gap-8 justify-center items-start">
                 <div className="w-48 flex-shrink-0">
                   <div className="sticky top-4">
