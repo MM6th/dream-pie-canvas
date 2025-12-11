@@ -260,7 +260,18 @@ const ProfilesDirectory = () => {
           </div>
 
           {/* Filter Buttons */}
-          <div className="flex flex-wrap justify-center gap-2">
+          <div className="flex flex-wrap justify-center gap-2 items-center">
+            {selectedFilter && (
+              <Button
+                onClick={() => setSelectedFilter(null)}
+                variant="outline"
+                size="sm"
+                className={`border-gray-600 text-white bg-transparent hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
+              >
+                <ArrowLeft className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
+                Trending
+              </Button>
+            )}
             {[
               { key: "merchants", label: "Merchants", icon: Building },
               { key: "supporters", label: "Supporters", icon: User },
