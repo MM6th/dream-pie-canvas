@@ -16,15 +16,22 @@ export const useFreeAstrologyResource = (userId: string | undefined) => {
     loading: true,
   });
   const [showModal, setShowModal] = useState(false);
+  const [hasChecked, setHasChecked] = useState(false);
 
   useEffect(() => {
     const checkResourceStatus = async () => {
+      // Don't check if no userId or already checked for this user
       if (!userId) {
         setStatus({ hasAccepted: false, hasResponded: false, loading: false });
         return;
       }
 
+      // Prevent duplicate checks
+      if (hasChecked) return;
+
       try {
+        console.log("Checking free resource status for user:", userId);
+        
         const { data, error } = await supabase
           .from("user_free_resources")
           .select("status")
@@ -38,7 +45,10 @@ export const useFreeAstrologyResource = (userId: string | undefined) => {
           return;
         }
 
+        setHasChecked(true);
+
         if (data) {
+          console.log("User already responded to free resource:", data.status);
           setStatus({
             hasAccepted: data.status === "accepted",
             hasResponded: true,
@@ -46,6 +56,7 @@ export const useFreeAstrologyResource = (userId: string | undefined) => {
           });
         } else {
           // No record exists - show modal
+          console.log("No record found, showing modal for user:", userId);
           setStatus({ hasAccepted: false, hasResponded: false, loading: false });
           setShowModal(true);
         }
@@ -56,7 +67,7 @@ export const useFreeAstrologyResource = (userId: string | undefined) => {
     };
 
     checkResourceStatus();
-  }, [userId]);
+  }, [userId, hasChecked]);
 
   const refresh = async () => {
     if (!userId) return;

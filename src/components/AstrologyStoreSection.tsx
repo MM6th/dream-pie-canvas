@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import { Clock, Shield, Lock, Play } from "lucide-react";
+import { Clock, Shield, Lock, Play, Gift, Download, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
@@ -12,6 +12,9 @@ import AstrologyProductDetailModal from "./AstrologyProductDetailModal";
 import AstrologyVideoPlayerModal from "./AstrologyVideoPlayerModal";
 import ProductReviewsSection from "./reviews/ProductReviewsSection";
 import ProductInstructionalText from "./ui/ProductInstructionalText";
+
+const FREE_RESOURCE_PDF_URL = "/free-resources/Salt_Mineral_Deficiency_Chart.pdf";
+const FREE_RESOURCE_KEY = "salt_mineral_chart";
 
 interface AstrologyProduct {
   id: string;
@@ -44,9 +47,11 @@ const AstrologyStoreSection = () => {
   const [videoModalProduct, setVideoModalProduct] = useState<AstrologyProduct | null>(null);
   const [showReviews, setShowReviews] = useState<string | null>(null);
   const [reviewCounts, setReviewCounts] = useState<ProductReviewCount>({});
+  const [freeResourceStatus, setFreeResourceStatus] = useState<'loading' | 'available' | 'accepted' | 'rejected'>('loading');
 
   useEffect(() => {
     fetchProducts();
+    fetchFreeResourceStatus();
   }, [user]);
 
   const fetchUserProfile = async () => {
@@ -140,6 +145,97 @@ const AstrologyStoreSection = () => {
     }
   };
 
+  const fetchFreeResourceStatus = async () => {
+    if (!user) {
+      setFreeResourceStatus('available');
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from("user_free_resources")
+        .select("status")
+        .eq("user_id", user.id)
+        .eq("resource_key", FREE_RESOURCE_KEY)
+        .maybeSingle();
+
+      if (error) {
+        console.error("Error fetching free resource status:", error);
+        setFreeResourceStatus('available');
+        return;
+      }
+
+      if (data) {
+        setFreeResourceStatus(data.status === 'accepted' ? 'accepted' : 'rejected');
+      } else {
+        setFreeResourceStatus('available');
+      }
+    } catch (error) {
+      console.error("Error fetching free resource status:", error);
+      setFreeResourceStatus('available');
+    }
+  };
+
+  const handleAcceptFreeResource = async () => {
+    if (!user) {
+      toast({
+        title: "Sign In Required",
+        description: "Please sign in to claim this free resource",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("user_free_resources")
+        .upsert({
+          user_id: user.id,
+          resource_key: FREE_RESOURCE_KEY,
+          status: "accepted",
+          accepted_at: new Date().toISOString(),
+        }, {
+          onConflict: "user_id,resource_key"
+        });
+
+      if (error) throw error;
+
+      // Download the PDF
+      const link = document.createElement("a");
+      link.href = FREE_RESOURCE_PDF_URL;
+      link.download = "Salt_Mineral_Deficiency_Chart.pdf";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      setFreeResourceStatus('accepted');
+      toast({
+        title: "Success!",
+        description: "Resource added to your Astrology Library!"
+      });
+    } catch (error) {
+      console.error("Error accepting free resource:", error);
+      toast({
+        title: "Error",
+        description: "Failed to claim resource. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDownloadFreeResource = () => {
+    const link = document.createElement("a");
+    link.href = FREE_RESOURCE_PDF_URL;
+    link.download = "Salt_Mineral_Deficiency_Chart.pdf";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast({
+      title: "Download Started",
+      description: "Your PDF is downloading!"
+    });
+  };
+
   const handlePurchase = async (productId: string, price: number) => {
     if (!user) {
       toast({
@@ -207,7 +303,58 @@ const AstrologyStoreSection = () => {
   }
 
   return (
-    <>
+    <div className="space-y-6">
+      {/* Free Resource Card */}
+      {freeResourceStatus !== 'loading' && (
+        <Card className="bg-gradient-to-r from-purple-900/50 to-indigo-900/50 border-purple-500/30 backdrop-blur-sm">
+          <CardContent className="p-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-purple-500/20 rounded-full">
+                  <Gift className="w-6 h-6 text-purple-400" />
+                </div>
+                <div>
+                  <h3 className="text-white font-semibold flex items-center gap-2">
+                    Free: Salt & Mineral Deficiency Chart
+                    <Badge className="bg-green-600 hover:bg-green-700 text-xs">FREE</Badge>
+                  </h3>
+                  <p className="text-gray-300 text-sm">
+                    Learn which minerals correspond to your zodiac sign for better health and balance.
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                {freeResourceStatus === 'accepted' ? (
+                  <>
+                    <Badge className="bg-green-600/20 text-green-400 border border-green-500/30 flex items-center gap-1">
+                      <Check className="w-3 h-3" />
+                      In Your Library
+                    </Badge>
+                    <Button
+                      onClick={handleDownloadFreeResource}
+                      variant="outline"
+                      size="sm"
+                      className="border-purple-500 text-purple-300 hover:bg-purple-500/20"
+                    >
+                      <Download className="w-4 h-4 mr-1" />
+                      Download Again
+                    </Button>
+                  </>
+                ) : (
+                  <Button
+                    onClick={handleAcceptFreeResource}
+                    className="bg-purple-600 hover:bg-purple-700 text-white"
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Claim Free Resource
+                  </Button>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <Carousel
         className="w-full"
         opts={{
@@ -365,7 +512,7 @@ const AstrologyStoreSection = () => {
           productTitle={videoModalProduct.title}
         />
       )}
-    </>
+    </div>
   );
 };
 
