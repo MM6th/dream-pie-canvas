@@ -376,8 +376,8 @@ const ProfilesDirectory = () => {
             )}
           </div>
         ) : (
-          // Desktop: Outer Arrows + 6 Ad Spaces Layout
-          <div className="relative max-w-[1600px] mx-auto px-16">
+          // Desktop: Outer Arrows + 4 Ad Spaces Layout
+          <div className="relative max-w-[1200px] mx-auto px-20">
             {/* Outer Left Arrow */}
             <button
               className="absolute left-0 top-1/2 -translate-y-1/2 z-20 h-10 w-10 rounded-full border border-gray-600 bg-gray-800 text-white hover:bg-gray-700 flex items-center justify-center transition-colors"
@@ -394,7 +394,7 @@ const ProfilesDirectory = () => {
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
             </button>
 
-            <div className="flex gap-6 justify-center items-start">
+            <div className="flex gap-8 justify-center items-start">
               {/* Left Ad Space */}
               <div className="w-48 flex-shrink-0">
                 <div className="sticky top-4">
@@ -407,7 +407,7 @@ const ProfilesDirectory = () => {
                 </div>
               </div>
 
-              {/* Second Left Ad Space */}
+              {/* Center Left Ad Space */}
               <div className="w-48 flex-shrink-0">
                 <div className="sticky top-4">
                   <div 
@@ -419,31 +419,7 @@ const ProfilesDirectory = () => {
                 </div>
               </div>
 
-              {/* Center Ad Space 1 */}
-              <div className="w-48 flex-shrink-0">
-                <div className="sticky top-4">
-                  <div 
-                    className="bg-gradient-to-br from-rose-900/20 to-red-900/20 border border-rose-700 rounded-lg p-4 h-96 flex items-center justify-center cursor-pointer hover:border-rose-600 transition-colors pointer-events-auto"
-                    onClick={() => toast.info("Ad placements will be available soon!")}
-                  >
-                    <p className="text-gray-400 text-center text-sm">Ad Space<br/>300x600</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Center Ad Space 2 */}
-              <div className="w-48 flex-shrink-0">
-                <div className="sticky top-4">
-                  <div 
-                    className="bg-gradient-to-br from-indigo-900/20 to-violet-900/20 border border-indigo-700 rounded-lg p-4 h-96 flex items-center justify-center cursor-pointer hover:border-indigo-600 transition-colors pointer-events-auto"
-                    onClick={() => toast.info("Ad placements will be available soon!")}
-                  >
-                    <p className="text-gray-400 text-center text-sm">Ad Space<br/>300x600</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Second Right Ad Space */}
+              {/* Center Right Ad Space */}
               <div className="w-48 flex-shrink-0">
                 <div className="sticky top-4">
                   <div 
