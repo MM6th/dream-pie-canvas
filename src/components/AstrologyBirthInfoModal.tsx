@@ -125,7 +125,7 @@ export const AstrologyBirthInfoModal = ({
           <DialogTitle>Submit Birth Information</DialogTitle>
           <DialogDescription>
             {productType === 'horoscope' 
-              ? 'Please provide your birth date for your horoscope reading.'
+              ? 'Please provide your birth date for your horoscope forecast.'
               : 'Please provide your birth information for your astrology reading. All fields marked with * are required.'
             }
           </DialogDescription>
