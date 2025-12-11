@@ -17,12 +17,52 @@ export const useFreeAstrologyResource = (userId: string | undefined) => {
   });
   const [showModal, setShowModal] = useState(false);
 
-  const checkResourceStatus = async () => {
-    if (!userId) {
-      setStatus({ hasAccepted: false, hasResponded: false, loading: false });
-      return;
-    }
+  useEffect(() => {
+    const checkResourceStatus = async () => {
+      if (!userId) {
+        setStatus({ hasAccepted: false, hasResponded: false, loading: false });
+        return;
+      }
 
+      try {
+        const { data, error } = await supabase
+          .from("user_free_resources")
+          .select("status")
+          .eq("user_id", userId)
+          .eq("resource_key", RESOURCE_KEY)
+          .maybeSingle();
+
+        if (error) {
+          console.error("Error checking free resource status:", error);
+          setStatus({ hasAccepted: false, hasResponded: false, loading: false });
+          return;
+        }
+
+        if (data) {
+          setStatus({
+            hasAccepted: data.status === "accepted",
+            hasResponded: true,
+            loading: false,
+          });
+        } else {
+          // No record exists - show modal
+          setStatus({ hasAccepted: false, hasResponded: false, loading: false });
+          setShowModal(true);
+        }
+      } catch (error) {
+        console.error("Error checking free resource status:", error);
+        setStatus({ hasAccepted: false, hasResponded: false, loading: false });
+      }
+    };
+
+    checkResourceStatus();
+  }, [userId]);
+
+  const refresh = async () => {
+    if (!userId) return;
+    
+    setStatus(prev => ({ ...prev, loading: true }));
+    
     try {
       const { data, error } = await supabase
         .from("user_free_resources")
@@ -32,7 +72,7 @@ export const useFreeAstrologyResource = (userId: string | undefined) => {
         .maybeSingle();
 
       if (error) {
-        console.error("Error checking free resource status:", error);
+        console.error("Error refreshing free resource status:", error);
         setStatus({ hasAccepted: false, hasResponded: false, loading: false });
         return;
       }
@@ -44,22 +84,12 @@ export const useFreeAstrologyResource = (userId: string | undefined) => {
           loading: false,
         });
       } else {
-        // No record exists - show modal
         setStatus({ hasAccepted: false, hasResponded: false, loading: false });
-        setShowModal(true);
       }
     } catch (error) {
-      console.error("Error checking free resource status:", error);
+      console.error("Error refreshing free resource status:", error);
       setStatus({ hasAccepted: false, hasResponded: false, loading: false });
     }
-  };
-
-  useEffect(() => {
-    checkResourceStatus();
-  }, [userId]);
-
-  const refresh = () => {
-    checkResourceStatus();
   };
 
   return {
