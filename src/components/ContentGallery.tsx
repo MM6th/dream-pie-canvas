@@ -3,7 +3,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import { Trash2, Download, Eye, Calendar, Play, Image, Video, FolderOpen, Upload, ExternalLink } from "lucide-react";
+import { Trash2, Download, Eye, Calendar, Play, Image, Video, FolderOpen, Upload, ExternalLink, ChevronDown, Plus, Pencil } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -309,14 +317,52 @@ const ContentGallery = () => {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <p className="text-gray-400">Manage your uploaded images and videos</p>
         <div className="flex gap-2">
-          <Button
-            onClick={() => setPortfolioModalOpen(true)}
-            className="bg-blue-600 hover:bg-blue-700"
-            disabled={imageUploads.length === 0}
-          >
-            <FolderOpen className="w-4 h-4 mr-2" />
-            Portfolio
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                className="bg-blue-600 hover:bg-blue-700"
+                disabled={uploads.filter(u => u.file_type.startsWith('image/') || u.file_type.startsWith('video/')).length === 0 && portfolios.length === 0}
+              >
+                <FolderOpen className="w-4 h-4 mr-2" />
+                Portfolio
+                <ChevronDown className="w-4 h-4 ml-2" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56 bg-gray-800 border-gray-600">
+              {portfolios.length > 0 && (
+                <>
+                  <DropdownMenuLabel className="text-gray-400">Your Portfolios</DropdownMenuLabel>
+                  {portfolios.map((portfolio) => (
+                    <DropdownMenuItem
+                      key={portfolio.id}
+                      onClick={() => {
+                        setSelectedPortfolioId(portfolio.id);
+                        setPortfolioEditModalOpen(true);
+                      }}
+                      className="flex items-center justify-between cursor-pointer text-white hover:bg-gray-700"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Pencil className="w-3 h-3 text-gray-400" />
+                        <span className="truncate max-w-[150px]">{portfolio.title}</span>
+                      </div>
+                      <Badge variant="secondary" className="text-xs bg-gray-700">
+                        {portfolio.portfolio_images?.[0]?.count || 0}
+                      </Badge>
+                    </DropdownMenuItem>
+                  ))}
+                  <DropdownMenuSeparator className="bg-gray-600" />
+                </>
+              )}
+              <DropdownMenuItem
+                onClick={() => setPortfolioModalOpen(true)}
+                disabled={uploads.filter(u => u.file_type.startsWith('image/') || u.file_type.startsWith('video/')).length === 0}
+                className="flex items-center gap-2 cursor-pointer text-white hover:bg-gray-700"
+              >
+                <Plus className="w-4 h-4 text-blue-400" />
+                <span>Create New Portfolio</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <PhotoUpload onSuccess={() => { fetchUploads(); fetchStorageUsage(); }} />
           <VideoUpload onVideoSelect={() => { fetchUploads(); fetchStorageUsage(); }} />
         </div>
