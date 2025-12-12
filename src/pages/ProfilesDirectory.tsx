@@ -8,6 +8,7 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import { ArrowLeft, Users, User, Shield, Building, Search, MessageSquare, Calendar, LogOut, ShoppingBag, BookOpen } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
+import UserStatsDisplay from "@/components/UserStatsDisplay";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
@@ -255,6 +256,9 @@ const ProfilesDirectory = () => {
           </h1>
           <p className="text-gray-300">Search for skill sets, and see what's trending on profile playlists</p>
         </div>
+
+        {/* User Stats */}
+        <UserStatsDisplay />
 
         {/* Search and Filters */}
         <div className="mb-8 space-y-4 max-w-3xl mx-auto">
