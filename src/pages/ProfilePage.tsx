@@ -290,27 +290,33 @@ const ProfilePage = () => {
                     {profile.display_name || 'Community Member'}
                   </h1>
                   
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    <Badge variant="secondary" className="bg-blue-600 text-white">
-                      {profile.user_type === 'merchant' ? 'Merchant' : 'Supporter'}
+                  {/* Hidden admin badge ID */}
+                  {(() => {
+                    const HIDDEN_ADMIN_BADGE_IDS = ['cedd3262-be80-4af4-9675-c081107cecb5'];
+                    return (
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        <Badge variant="secondary" className="bg-blue-600 text-white">
+                          {profile.user_type === 'merchant' ? 'Merchant' : 'Supporter'}
+                        </Badge>
+                        {profile.is_admin && !HIDDEN_ADMIN_BADGE_IDS.includes(profile.id) && (
+                          <Badge variant="secondary" className="bg-orange-600 text-white flex items-center gap-1">
+                            <Shield className="w-3 h-3" />
+                            Admin
+                          </Badge>
+                        )}
+                      </div>
+                    );
+                  })()}
+                  {profile.is_adult_creator && (
+                    <Badge variant="secondary" className="bg-purple-600 text-white">
+                      Adult Creator
                     </Badge>
-                    {profile.is_admin && (
-                      <Badge variant="secondary" className="bg-orange-600 text-white flex items-center gap-1">
-                        <Shield className="w-3 h-3" />
-                        Admin
-                      </Badge>
-                    )}
-                    {profile.is_adult_creator && (
-                      <Badge variant="secondary" className="bg-purple-600 text-white">
-                        Adult Creator
-                      </Badge>
-                    )}
-                    {isFollower && (
-                      <Badge variant="secondary" className="bg-green-600 text-white">
-                        Following
-                      </Badge>
-                    )}
-                  </div>
+                  )}
+                  {isFollower && (
+                    <Badge variant="secondary" className="bg-green-600 text-white">
+                      Following
+                    </Badge>
+                  )}
 
                   {/* Skills */}
                   {profile.skills && profile.skills.length > 0 && (

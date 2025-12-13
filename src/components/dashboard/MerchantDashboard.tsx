@@ -31,6 +31,7 @@ import { AstrologyDeliveryManager } from "@/components/astrology/AstrologyDelive
 import { BuyerAstrologyLibrary } from "@/components/astrology/BuyerAstrologyLibrary";
 import { FreeAstrologyResourceModal } from "@/components/FreeAstrologyResourceModal";
 import { useFreeAstrologyResource } from "@/hooks/useFreeAstrologyResource";
+import SupportCenterCard from "@/components/support/SupportCenterCard";
 
 interface MerchantDashboardProps {
   onSuccess: () => void;
@@ -296,6 +297,11 @@ const MerchantDashboard = ({
           {/* Astrology Library Section */}
           <div className="mt-6">
             <BuyerAstrologyLibrary />
+          </div>
+
+          {/* Support Center Card */}
+          <div className="mt-6">
+            <SupportCenterCard />
           </div>
         </>
       )}

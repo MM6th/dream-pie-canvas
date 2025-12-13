@@ -9,7 +9,8 @@ import {
   Image,
   MessageSquare,
   ChevronDown,
-  FlaskConical
+  FlaskConical,
+  Ticket
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import MerchantsManagement from "./MerchantsManagement";
@@ -19,6 +20,7 @@ import AdminContentGallery from "./AdminContentGallery";
 import AdminBulletinPostManager from "./AdminBulletinPostManager";
 import VideoAdOpportunityManager from "./VideoAdOpportunityManager";
 import TestPurchaseSimulator from "@/components/TestPurchaseSimulator";
+import AdminTicketsManager from "./AdminTicketsManager";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useSubmissionCounts } from "@/hooks/useSubmissionCounts";
 import { useAuth } from "@/hooks/useAuth";
@@ -66,7 +68,7 @@ const AdminDashboard = () => {
       </div>
 
       <Tabs defaultValue="merchants" className="w-full">
-        <TabsList className={`grid w-full ${isMobile ? 'grid-cols-2 gap-2 h-auto' : 'grid-cols-5'} bg-gray-800 border-gray-700`}>
+        <TabsList className={`grid w-full ${isMobile ? 'grid-cols-2 gap-2 h-auto' : 'grid-cols-6'} bg-gray-800 border-gray-700`}>
           <TabsTrigger 
             value="merchants" 
             className={`text-white data-[state=active]:bg-gray-700 ${isMobile ? 'text-xs px-2 py-2 h-auto flex-col gap-1' : ''}`}
@@ -89,6 +91,13 @@ const AdminDashboard = () => {
                 </Badge>
               )}
             </div>
+          </TabsTrigger>
+          <TabsTrigger 
+            value="tickets" 
+            className={`text-white data-[state=active]:bg-gray-700 ${isMobile ? 'text-xs px-2 py-2 h-auto flex-col gap-1' : ''}`}
+          >
+            <Ticket className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4 mr-2'}`} />
+            Tickets
           </TabsTrigger>
           {!isMobile && (
             <>
@@ -135,6 +144,10 @@ const AdminDashboard = () => {
 
         <TabsContent value="submissions" className="mt-6">
           <CoverSubmissionsManagement />
+        </TabsContent>
+
+        <TabsContent value="tickets" className="mt-6">
+          <AdminTicketsManager />
         </TabsContent>
 
         {!isMobile && (
