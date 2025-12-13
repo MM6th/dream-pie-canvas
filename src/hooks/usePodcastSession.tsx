@@ -293,9 +293,21 @@ export const usePodcastSession = (
   }, [sessionId, userId]);
 
   // Join session
-  const joinSession = useCallback(async () => {
+  const joinSession = useCallback(async (overrideSessionId?: string) => {
+    const effectiveSessionId = overrideSessionId || sessionIdRef.current;
+    
+    if (!effectiveSessionId) {
+      console.error('[PodcastSession] Cannot join - no session ID');
+      throw new Error('No session ID provided');
+    }
+    
     try {
-      console.log('[PodcastSession] Joining session...');
+      console.log('[PodcastSession] Joining session...', effectiveSessionId);
+      
+      // Update the ref if we have an override
+      if (overrideSessionId) {
+        sessionIdRef.current = overrideSessionId;
+      }
       
       // Get microphone access
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -311,23 +323,27 @@ export const usePodcastSession = (
       setLocalStream(stream);
       
       // Initialize mixer if host
-      if (isHost) {
+      if (isHostRef.current) {
         initAudioMixer();
-        addStreamToMixer(stream, userId);
+        addStreamToMixer(stream, userIdRef.current);
       }
 
       // Add self as participant in database
-      await supabase
+      const { error: participantError } = await supabase
         .from('podcast_session_participants')
         .upsert({
-          session_id: sessionId,
-          user_id: userId,
-          role: isHost ? 'host' : 'guest',
+          session_id: effectiveSessionId,
+          user_id: userIdRef.current,
+          role: isHostRef.current ? 'host' : 'guest',
           joined_at: new Date().toISOString(),
         });
+      
+      if (participantError) {
+        console.error('[PodcastSession] Error adding participant:', participantError);
+      }
 
       // Notify others
-      await sendSignal({ type: 'participant-joined', from: userId });
+      await sendSignal({ type: 'participant-joined', from: userIdRef.current });
       
       // Fetch existing participants
       const { data: existingParticipants } = await supabase
@@ -338,7 +354,7 @@ export const usePodcastSession = (
           is_muted,
           profiles:user_id (display_name)
         `)
-        .eq('session_id', sessionId)
+        .eq('session_id', effectiveSessionId)
         .is('left_at', null);
 
       if (existingParticipants) {
@@ -347,7 +363,7 @@ export const usePodcastSession = (
           displayName: p.profiles?.display_name || 'Unknown',
           role: p.role,
           isMuted: p.is_muted || false,
-          isConnected: p.user_id === userId,
+          isConnected: p.user_id === userIdRef.current,
         }));
         setParticipants(participantList);
       }
@@ -357,7 +373,7 @@ export const usePodcastSession = (
       console.error('[PodcastSession] Error joining session:', error);
       throw error;
     }
-  }, [sessionId, userId, isHost, sendSignal, initAudioMixer, addStreamToMixer]);
+  }, [sendSignal, initAudioMixer, addStreamToMixer]);
 
   // Leave session
   const leaveSession = useCallback(async () => {
