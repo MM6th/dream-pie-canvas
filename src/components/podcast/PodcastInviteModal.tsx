@@ -136,14 +136,14 @@ export const PodcastInviteModal = ({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-4 overflow-hidden">
           {/* Copy Link Section */}
           <div className="space-y-2">
             <Label>Invite Link</Label>
-            <div className="flex items-center gap-2 p-2 bg-muted rounded-lg">
+            <div className="flex items-center gap-2 p-2 bg-muted rounded-lg min-w-0">
               <Link className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-              <code className="text-xs flex-1 truncate">
-                {window.location.origin}/podcast-session/{inviteToken}
+              <code className="text-xs flex-1 truncate min-w-0 overflow-hidden">
+                .../{inviteToken.slice(0, 8)}...
               </code>
               <Button 
                 variant="ghost" 
