@@ -11,11 +11,16 @@ import { toast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import UserStatsDisplay from "./UserStatsDisplay";
 
+// Industries available for signup
 const INDUSTRY_OPTIONS = [
+  'Music Artist',
+];
+
+// Industries under construction (hidden but preserved for future use)
+const UNDER_CONSTRUCTION_INDUSTRIES = [
   'Film Maker',
   'Film Editor',
   'Videographer',
-  'Music Artist',
   'Live Stream Artist',
   'Audio Podcaster',
   'Voice Actor',
@@ -62,11 +67,11 @@ const AuthPage = () => {
       return;
     }
 
-    // Block Live Stream Artist signups - WebRTC not ready
-    if (userType === "merchant" && selectedIndustry === "Live Stream Artist") {
+    // Block under construction industries
+    if (userType === "merchant" && UNDER_CONSTRUCTION_INDUSTRIES.includes(selectedIndustry)) {
       toast({
         title: "Under Construction",
-        description: "The Live Stream Artist industry is currently under construction. Please check back later or select a different industry.",
+        description: `The ${selectedIndustry} industry is currently under construction. Please check back later or select a different industry.`,
         variant: "destructive"
       });
       setIsLoading(false);
