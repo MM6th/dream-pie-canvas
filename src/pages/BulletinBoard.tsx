@@ -130,7 +130,7 @@ const BulletinBoard = () => {
               className={`border ${isActivePage('/bulletin') ? 'bg-primary border-primary' : 'bg-transparent border-gray-600'} text-white hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
             >
               <MessageSquare className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
-              {isMobile ? 'Community' : 'Browse Community'}
+              Community
             </Button>
             <Button
               onClick={handleProfilesView}
