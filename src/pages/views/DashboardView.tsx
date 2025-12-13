@@ -87,12 +87,11 @@ const DashboardView = ({
       );
     }
 
-    // For merchants, check skills to determine specialized dashboard
-    const skills = userProfile?.skills || [];
-    const isAudioPodcaster = skills.includes('Audio Podcaster');
+    // For merchants, check industry to determine specialized dashboard
+    const industry = userProfile?.industry;
 
     // Route Audio Podcasters to their specialized dashboard
-    if (isAudioPodcaster) {
+    if (industry === 'Audio Podcaster') {
       return (
         <AudioPodcasterDashboard 
           onBackgroundUpload={onBackgroundUpload}

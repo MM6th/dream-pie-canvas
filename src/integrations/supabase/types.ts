@@ -1855,6 +1855,7 @@ export type Database = {
           facebook_url: string | null
           first_name: string | null
           id: string
+          industry: string | null
           instagram_url: string | null
           is_admin: boolean | null
           is_adult_creator: boolean | null
@@ -1889,6 +1890,7 @@ export type Database = {
           facebook_url?: string | null
           first_name?: string | null
           id: string
+          industry?: string | null
           instagram_url?: string | null
           is_admin?: boolean | null
           is_adult_creator?: boolean | null
@@ -1923,6 +1925,7 @@ export type Database = {
           facebook_url?: string | null
           first_name?: string | null
           id?: string
+          industry?: string | null
           instagram_url?: string | null
           is_admin?: boolean | null
           is_adult_creator?: boolean | null
