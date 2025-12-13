@@ -1535,6 +1535,139 @@ export type Database = {
           },
         ]
       }
+      podcast_session_participants: {
+        Row: {
+          created_at: string
+          id: string
+          is_muted: boolean | null
+          joined_at: string | null
+          left_at: string | null
+          role: string
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_muted?: boolean | null
+          joined_at?: string | null
+          left_at?: string | null
+          role?: string
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_muted?: boolean | null
+          joined_at?: string | null
+          left_at?: string | null
+          role?: string
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "podcast_session_participants_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "podcast_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "podcast_session_participants_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      podcast_session_signals: {
+        Row: {
+          created_at: string
+          from_user_id: string
+          id: string
+          session_id: string
+          signal_data: Json | null
+          signal_type: string
+          to_user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          from_user_id: string
+          id?: string
+          session_id: string
+          signal_data?: Json | null
+          signal_type: string
+          to_user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          from_user_id?: string
+          id?: string
+          session_id?: string
+          signal_data?: Json | null
+          signal_type?: string
+          to_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "podcast_session_signals_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "podcast_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      podcast_sessions: {
+        Row: {
+          created_at: string
+          description: string | null
+          ended_at: string | null
+          host_id: string
+          id: string
+          invite_token: string
+          started_at: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          ended_at?: string | null
+          host_id: string
+          id?: string
+          invite_token?: string
+          started_at?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          ended_at?: string | null
+          host_id?: string
+          id?: string
+          invite_token?: string
+          started_at?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "podcast_sessions_host_id_fkey"
+            columns: ["host_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       portfolio_images: {
         Row: {
           created_at: string

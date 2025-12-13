@@ -24,6 +24,7 @@ import { MessageSettingsCard } from "@/components/messaging/MessageSettingsCard"
 import UserTicketsTab from "@/components/support/UserTicketsTab";
 import { PodcastRecordingStudio } from "@/components/podcast/PodcastRecordingStudio";
 import { PodcastRecordingsLibrary } from "@/components/podcast/PodcastRecordingsLibrary";
+import { CollaborativePodcastStudio } from "@/components/podcast/CollaborativePodcastStudio";
 import { useApprovalStatus } from "@/hooks/useApprovalStatus";
 import ApprovalStatusBanner from "@/components/ApprovalStatusBanner";
 import RestrictedAccess from "@/components/dashboard/merchant/RestrictedAccess";
@@ -186,8 +187,9 @@ const AudioPodcasterDashboard = ({
         <TVGuideModal />
       </div>
 
-      {/* Podcast Recording Studio - Replaces Live Stream Control Center */}
+      {/* Podcast Recording Studios */}
       <div className="space-y-6 mb-6">
+        <CollaborativePodcastStudio onRecordingSaved={handleRecordingSaved} />
         <PodcastRecordingStudio onRecordingSaved={handleRecordingSaved} />
         <PodcastRecordingsLibrary refreshTrigger={recordingRefreshTrigger} />
       </div>
