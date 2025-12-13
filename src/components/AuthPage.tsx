@@ -62,6 +62,17 @@ const AuthPage = () => {
       return;
     }
 
+    // Block Live Stream Artist signups - WebRTC not ready
+    if (userType === "merchant" && selectedIndustry === "Live Stream Artist") {
+      toast({
+        title: "Under Construction",
+        description: "The Live Stream Artist industry is currently under construction. Please check back later or select a different industry.",
+        variant: "destructive"
+      });
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const redirectUrl = `${window.location.origin}/`;
       
