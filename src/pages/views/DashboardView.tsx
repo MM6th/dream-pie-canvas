@@ -1,9 +1,7 @@
-
 import React from 'react';
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import MerchantDashboard from "@/components/dashboard/MerchantDashboard";
 import SupporterDashboard from "@/components/dashboard/SupporterDashboard";
-import LiveStreamArtistDashboard from "@/components/dashboard/LiveStreamArtistDashboard";
 import AudioPodcasterDashboard from "@/components/dashboard/AudioPodcasterDashboard";
 import { TutorialHelpButton } from "@/components/TutorialHelpButton";
 import { supporterTutorialSteps, merchantTutorialSteps, adminTutorialSteps } from "@/constants/tutorialContent";
@@ -68,6 +66,56 @@ const DashboardView = ({
     }
   };
 
+  // Determine which dashboard to render based on user type and skills
+  const renderDashboard = () => {
+    if (profileLoading) {
+      return (
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-white text-xl">Loading profile...</div>
+        </div>
+      );
+    }
+
+    // Check if user is a supporter (not a merchant)
+    if (userProfile?.user_type !== "merchant") {
+      return (
+        <SupporterDashboard 
+          onBackgroundUpload={onBackgroundUpload}
+          purchasedTracks={purchasedTracks}
+          purchasedPodcasts={purchasedPodcasts}
+        />
+      );
+    }
+
+    // For merchants, check skills to determine specialized dashboard
+    const skills = userProfile?.skills || [];
+    const isAudioPodcaster = skills.includes('Audio Podcaster');
+
+    // Route Audio Podcasters to their specialized dashboard
+    if (isAudioPodcaster) {
+      return (
+        <AudioPodcasterDashboard 
+          onBackgroundUpload={onBackgroundUpload}
+          purchasedTracks={purchasedTracks}
+          purchasedPodcasts={purchasedPodcasts}
+          onSuccess={onSuccess}
+        />
+      );
+    }
+
+    // Default merchant dashboard for all other merchant types
+    return (
+      <MerchantDashboard 
+        onSuccess={onSuccess}
+        onViewStore={onStoreView}
+        onBackgroundUpload={onBackgroundUpload}
+        purchasedTracks={purchasedTracks}
+        purchasedPodcasts={purchasedPodcasts}
+        userProfile={userProfile}
+      />
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800 overflow-x-hidden" style={backgroundStyle}>
       <DashboardHeader 
@@ -82,44 +130,7 @@ const DashboardView = ({
         tutorialHelpButton={getTutorialHelpButton()}
       />
       
-      {profileLoading ? (
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-white text-xl">Loading profile...</div>
-        </div>
-      ) : (
-        <>
-          {userProfile?.skills?.includes('Audio Podcaster') ? (
-            <AudioPodcasterDashboard 
-              onBackgroundUpload={onBackgroundUpload}
-              purchasedTracks={purchasedTracks}
-              purchasedPodcasts={purchasedPodcasts}
-              onSuccess={onSuccess}
-            />
-          ) : userProfile?.skills?.includes('Live Stream Artist') ? (
-            <LiveStreamArtistDashboard 
-              onBackgroundUpload={onBackgroundUpload}
-              purchasedTracks={purchasedTracks}
-              purchasedPodcasts={purchasedPodcasts}
-              onSuccess={onSuccess}
-            />
-          ) : userProfile?.user_type === "merchant" ? (
-            <MerchantDashboard 
-              onSuccess={onSuccess}
-              onViewStore={onStoreView}
-              onBackgroundUpload={onBackgroundUpload}
-              purchasedTracks={purchasedTracks}
-              purchasedPodcasts={purchasedPodcasts}
-              userProfile={userProfile}
-            />
-          ) : (
-            <SupporterDashboard 
-              onBackgroundUpload={onBackgroundUpload}
-              purchasedTracks={purchasedTracks}
-              purchasedPodcasts={purchasedPodcasts}
-            />
-          )}
-        </>
-      )}
+      {renderDashboard()}
     </div>
   );
 };
