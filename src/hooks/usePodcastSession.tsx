@@ -256,21 +256,28 @@ export const usePodcastSession = (
     handleSignalingMessageRef.current = handleSignalingMessage;
   }, [handleSignalingMessage]);
 
-  // Set up realtime subscription
-  useEffect(() => {
-    if (!sessionId || !userId) return;
+  // Setup channel function - can be called to reconnect with a new session ID
+  const setupChannel = useCallback((targetSessionId: string) => {
+    if (!targetSessionId || !userIdRef.current) return;
 
-    console.log(`[PodcastSession] Setting up realtime for session ${sessionId}`);
+    // Clean up existing channel
+    if (channelRef.current) {
+      console.log('[PodcastSession] Cleaning up existing channel');
+      supabase.removeChannel(channelRef.current);
+      channelRef.current = null;
+    }
+
+    console.log(`[PodcastSession] Setting up realtime for session ${targetSessionId}`);
 
     const channel = supabase
-      .channel(`podcast-session-${sessionId}`)
+      .channel(`podcast-session-${targetSessionId}-${Date.now()}`)
       .on(
         'postgres_changes',
         {
           event: 'INSERT',
           schema: 'public',
           table: 'podcast_session_signals',
-          filter: `session_id=eq.${sessionId}`,
+          filter: `session_id=eq.${targetSessionId}`,
         },
         (payload) => {
           const { from_user_id, to_user_id, signal_type, signal_data } = payload.new as any;
@@ -285,12 +292,21 @@ export const usePodcastSession = (
       });
 
     channelRef.current = channel;
+  }, []);
+
+  // Set up realtime subscription on mount (for host who has session ID)
+  useEffect(() => {
+    if (!sessionId || !userId) return;
+
+    setupChannel(sessionId);
 
     return () => {
-      supabase.removeChannel(channel);
-      channelRef.current = null;
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
     };
-  }, [sessionId, userId]);
+  }, [sessionId, userId, setupChannel]);
 
   // Join session
   const joinSession = useCallback(async (overrideSessionId?: string) => {
@@ -304,9 +320,11 @@ export const usePodcastSession = (
     try {
       console.log('[PodcastSession] Joining session...', effectiveSessionId);
       
-      // Update the ref if we have an override
+      // Update the ref and set up channel if we have an override
       if (overrideSessionId) {
         sessionIdRef.current = overrideSessionId;
+        // Re-establish channel with correct session ID for guests
+        setupChannel(overrideSessionId);
       }
       
       // Get microphone access
@@ -373,7 +391,7 @@ export const usePodcastSession = (
       console.error('[PodcastSession] Error joining session:', error);
       throw error;
     }
-  }, [sendSignal, initAudioMixer, addStreamToMixer]);
+  }, [sendSignal, initAudioMixer, addStreamToMixer, setupChannel]);
 
   // Leave session
   const leaveSession = useCallback(async () => {
