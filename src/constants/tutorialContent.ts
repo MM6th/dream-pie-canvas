@@ -145,6 +145,55 @@ export const supporterTutorialSteps: TutorialStep[] = [
   },
 ];
 
+export const musicArtistTutorialSteps: TutorialStep[] = [
+  {
+    id: 'welcome',
+    title: 'Welcome to Your Music Artist Dashboard! 🎵',
+    description: 'This quick tour will show you how to upload music, manage your tracks, and grow your audience on PIE.',
+    duration: 12000,
+  },
+  {
+    id: 'music-upload',
+    title: 'Upload Your Music',
+    description: 'Upload and manage your music tracks here. Set pricing, add album art, and publish to the store.',
+    duration: 10000,
+    target: '[data-tutorial="music-upload"]',
+    placement: 'bottom',
+  },
+  {
+    id: 'music-tab',
+    title: 'Your Music Library',
+    description: 'Listen to music and podcasts you\'ve purchased from other artists. Your personal media collection.',
+    duration: 10000,
+    target: '[data-tutorial="music-tab"]',
+    placement: 'bottom',
+  },
+  {
+    id: 'gallery-tab',
+    title: 'Content Gallery',
+    description: 'Upload photos and videos to showcase your creative journey. Share behind-the-scenes content.',
+    duration: 10000,
+    target: '[data-tutorial="gallery-tab"]',
+    placement: 'bottom',
+  },
+  {
+    id: 'background-tab',
+    title: 'Customize Your Dashboard',
+    description: 'Upload a custom background to personalize your dashboard experience.',
+    duration: 10000,
+    target: '[data-tutorial="background-tab"]',
+    placement: 'bottom',
+  },
+  {
+    id: 'playlist-public',
+    title: 'Playlist Visibility',
+    description: 'Control whether your playlist is publicly visible on your profile page.',
+    duration: 10000,
+    target: '[data-tutorial="playlist-public"]',
+    placement: 'top',
+  },
+];
+
 export const adminTutorialSteps: TutorialStep[] = [
   {
     id: 'welcome',
