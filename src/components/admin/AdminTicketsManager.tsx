@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Loader2, MessageSquare, ChevronDown, ChevronUp, Send, User } from "lucide-react";
+import { Loader2, MessageSquare, ChevronDown, ChevronUp, Send, User, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 
@@ -39,6 +39,7 @@ const AdminTicketsManager = () => {
   const [expandedTickets, setExpandedTickets] = useState<Set<string>>(new Set());
   const [replyTexts, setReplyTexts] = useState<Record<string, string>>({});
   const [submittingReply, setSubmittingReply] = useState<string | null>(null);
+  const [deletingTicket, setDeletingTicket] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
   const fetchTickets = async () => {
@@ -145,6 +146,37 @@ const AdminTicketsManager = () => {
     } catch (error) {
       console.error('Error updating status:', error);
       toast.error("Failed to update status");
+    }
+  };
+
+  const handleDeleteTicket = async (ticketId: string) => {
+    if (!confirm("Are you sure you want to delete this ticket? This action cannot be undone.")) {
+      return;
+    }
+
+    setDeletingTicket(ticketId);
+    try {
+      // First delete the replies
+      await supabase
+        .from('ticket_replies')
+        .delete()
+        .eq('ticket_id', ticketId);
+
+      // Then delete the ticket
+      const { error } = await supabase
+        .from('support_tickets')
+        .delete()
+        .eq('id', ticketId);
+
+      if (error) throw error;
+
+      toast.success("Ticket deleted successfully");
+      fetchTickets();
+    } catch (error) {
+      console.error('Error deleting ticket:', error);
+      toast.error("Failed to delete ticket");
+    } finally {
+      setDeletingTicket(null);
     }
   };
 
@@ -257,21 +289,35 @@ const AdminTicketsManager = () => {
                     )}
 
                     <div className="space-y-3 pt-2 border-t border-gray-600">
-                      <div className="flex items-center gap-4">
-                        <span className="text-sm text-gray-400">Update Status:</span>
-                        <Select 
-                          value={ticket.status} 
-                          onValueChange={(value) => handleStatusChange(ticket.id, value)}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <span className="text-sm text-gray-400">Update Status:</span>
+                          <Select 
+                            value={ticket.status} 
+                            onValueChange={(value) => handleStatusChange(ticket.id, value)}
+                          >
+                            <SelectTrigger className="w-[130px] bg-gray-700 border-gray-600 text-white">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="bg-gray-800 border-gray-700">
+                              <SelectItem value="pending" className="text-white">Pending</SelectItem>
+                              <SelectItem value="replied" className="text-white">Replied</SelectItem>
+                              <SelectItem value="closed" className="text-white">Closed</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleDeleteTicket(ticket.id)}
+                          disabled={deletingTicket === ticket.id}
                         >
-                          <SelectTrigger className="w-[130px] bg-gray-700 border-gray-600 text-white">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent className="bg-gray-800 border-gray-700">
-                            <SelectItem value="pending" className="text-white">Pending</SelectItem>
-                            <SelectItem value="replied" className="text-white">Replied</SelectItem>
-                            <SelectItem value="closed" className="text-white">Closed</SelectItem>
-                          </SelectContent>
-                        </Select>
+                          {deletingTicket === ticket.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="w-4 h-4" />
+                          )}
+                        </Button>
                       </div>
 
                       <Textarea

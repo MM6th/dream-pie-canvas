@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Loader2, Plus, MessageSquare, ChevronDown, ChevronUp } from "lucide-react";
+import { Loader2, Plus, MessageSquare, ChevronDown, ChevronUp, CheckCircle, XCircle } from "lucide-react";
 import { format } from "date-fns";
+import { toast } from "sonner";
 import SupportTicketModal from "./SupportTicketModal";
 
 interface TicketReply {
@@ -31,6 +32,7 @@ const UserTicketsTab = () => {
   const [loading, setLoading] = useState(true);
   const [expandedTickets, setExpandedTickets] = useState<Set<string>>(new Set());
   const [showModal, setShowModal] = useState(false);
+  const [deletingTicket, setDeletingTicket] = useState<string | null>(null);
 
   const fetchTickets = async () => {
     if (!user) return;
@@ -95,6 +97,33 @@ const UserTicketsTab = () => {
     setExpandedTickets(newExpanded);
   };
 
+  const handleResolveTicket = async (ticketId: string) => {
+    setDeletingTicket(ticketId);
+    try {
+      // First delete the replies
+      await supabase
+        .from('ticket_replies')
+        .delete()
+        .eq('ticket_id', ticketId);
+
+      // Then delete the ticket
+      const { error } = await supabase
+        .from('support_tickets')
+        .delete()
+        .eq('id', ticketId);
+
+      if (error) throw error;
+
+      toast.success("Ticket resolved and removed!");
+      fetchTickets();
+    } catch (error) {
+      console.error('Error deleting ticket:', error);
+      toast.error("Failed to resolve ticket");
+    } finally {
+      setDeletingTicket(null);
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'pending':
@@ -144,6 +173,7 @@ const UserTicketsTab = () => {
             const isExpanded = expandedTickets.has(ticket.id);
             const replies = ticketReplies[ticket.id] || [];
             const unreadCount = getUnreadCount(ticket.id);
+            const hasReplies = replies.length > 0;
 
             return (
               <Card key={ticket.id} className="bg-gray-700/50 border-gray-600">
@@ -191,6 +221,38 @@ const UserTicketsTab = () => {
                             </p>
                           </div>
                         ))}
+                      </div>
+                    )}
+
+                    {/* Resolution prompt when ticket has replies */}
+                    {hasReplies && ticket.status === 'replied' && (
+                      <div className="bg-green-900/20 border border-green-600/30 rounded-lg p-4">
+                        <p className="text-white font-medium mb-3">Has your issue been resolved?</p>
+                        <div className="flex gap-3">
+                          <Button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleResolveTicket(ticket.id);
+                            }}
+                            disabled={deletingTicket === ticket.id}
+                            className="bg-green-600 hover:bg-green-700 text-white"
+                          >
+                            {deletingTicket === ticket.id ? (
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            ) : (
+                              <CheckCircle className="w-4 h-4 mr-2" />
+                            )}
+                            Yes, Resolved
+                          </Button>
+                          <Button
+                            variant="outline"
+                            onClick={(e) => e.stopPropagation()}
+                            className="border-gray-600 text-gray-300 hover:bg-gray-700"
+                          >
+                            <XCircle className="w-4 h-4 mr-2" />
+                            Not Yet
+                          </Button>
+                        </div>
                       </div>
                     )}
                   </CardContent>
