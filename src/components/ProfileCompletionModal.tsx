@@ -66,18 +66,22 @@ const ProfileCompletionModal = ({ isOpen, onComplete }: ProfileCompletionModalPr
 
   return (
     <Dialog open={isOpen} onOpenChange={() => {}}>
-      <DialogContent className="sm:max-w-sm p-4" onPointerDownOutside={(e) => e.preventDefault()}>
-        <DialogHeader className="pb-2">
+      <DialogContent 
+        className="sm:max-w-xs max-h-[90vh] overflow-y-auto p-4" 
+        onPointerDownOutside={(e) => e.preventDefault()}
+      >
+        <DialogHeader className="pb-1">
           <DialogTitle className="text-base">Complete Your Profile</DialogTitle>
           <DialogDescription className="text-xs">
             Upload a profile picture to continue.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex flex-col items-center space-y-3 py-2">
+        <div className="flex flex-col items-center space-y-2 py-2">
           <AvatarUpload
             avatarUrl={avatarUrl}
             onAvatarChange={handleAvatarChange}
+            compact
           />
           
           <div className="w-full">
@@ -94,7 +98,7 @@ const ProfileCompletionModal = ({ isOpen, onComplete }: ProfileCompletionModalPr
         <Button 
           onClick={handleComplete} 
           disabled={!avatarUrl || isSubmitting}
-          className="w-full h-9 text-sm"
+          className="w-full h-8 text-sm"
         >
           {isSubmitting ? "Saving..." : "Complete Profile"}
         </Button>
