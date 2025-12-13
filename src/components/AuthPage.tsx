@@ -86,6 +86,7 @@ const AuthPage = () => {
             user_type: userType,
             is_adult_creator: false,
             display_name: displayName.trim(),
+            industry: userType === "merchant" ? selectedIndustry : null,
             skills: userType === "merchant" && selectedIndustry ? [selectedIndustry] : []
           }
         }
