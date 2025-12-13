@@ -377,10 +377,16 @@ export const usePodcastSession = (
       throw new Error('No session ID provided');
     }
     
-    if (!userIdRef.current) {
-      console.error('[PodcastSession] Cannot join - no user ID');
-      throw new Error('No user ID provided');
+    // CRITICAL: Get the current user ID directly from Supabase auth
+    const { data: { user: currentUser } } = await supabase.auth.getUser();
+    if (!currentUser?.id) {
+      console.error('[PodcastSession] Cannot join - user not authenticated');
+      throw new Error('You must be logged in to join');
     }
+    
+    // Update the ref with the verified user ID
+    userIdRef.current = currentUser.id;
+    console.log('[PodcastSession] Verified user ID from auth:', currentUser.id);
 
     console.log('[PodcastSession] ====== JOIN SESSION START ======');
     console.log('[PodcastSession] Session ID:', effectiveSessionId);

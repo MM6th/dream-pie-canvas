@@ -36,6 +36,9 @@ const PodcastSessionJoin = () => {
   const [hasJoined, setHasJoined] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
 
+  // Get user ID - this is critical for RLS policies
+  const userId = user?.id || '';
+  
   const {
     localStream,
     participants,
@@ -45,7 +48,7 @@ const PodcastSessionJoin = () => {
     joinSession,
     leaveSession,
     toggleMute,
-  } = usePodcastSession(sessionInfo?.id || '', user?.id || '', false);
+  } = usePodcastSession(sessionInfo?.id || '', userId, false);
 
   // Fetch session info
   useEffect(() => {
