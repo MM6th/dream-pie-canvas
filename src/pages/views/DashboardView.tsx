@@ -3,8 +3,9 @@ import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import MerchantDashboard from "@/components/dashboard/MerchantDashboard";
 import SupporterDashboard from "@/components/dashboard/SupporterDashboard";
 import AudioPodcasterDashboard from "@/components/dashboard/AudioPodcasterDashboard";
+import MusicArtistDashboard from "@/components/dashboard/MusicArtistDashboard";
 import { TutorialHelpButton } from "@/components/TutorialHelpButton";
-import { supporterTutorialSteps, merchantTutorialSteps, adminTutorialSteps } from "@/constants/tutorialContent";
+import { supporterTutorialSteps, merchantTutorialSteps, adminTutorialSteps, musicArtistTutorialSteps } from "@/constants/tutorialContent";
 
 interface AudioTrack {
   id: string;
@@ -60,6 +61,10 @@ const DashboardView = ({
     if (isAdmin) {
       return <TutorialHelpButton steps={adminTutorialSteps} userType="admin" />;
     } else if (userProfile?.user_type === "merchant") {
+      // Use industry-specific tutorial for Music Artists
+      if (userProfile?.industry === 'Music Artist') {
+        return <TutorialHelpButton steps={musicArtistTutorialSteps} userType="merchant" />;
+      }
       return <TutorialHelpButton steps={merchantTutorialSteps} userType="merchant" />;
     } else {
       return <TutorialHelpButton steps={supporterTutorialSteps} userType="supporter" />;
@@ -89,6 +94,18 @@ const DashboardView = ({
 
     // For merchants, check industry to determine specialized dashboard
     const industry = userProfile?.industry;
+
+    // Route Music Artists to their specialized dashboard
+    if (industry === 'Music Artist') {
+      return (
+        <MusicArtistDashboard 
+          onBackgroundUpload={onBackgroundUpload}
+          purchasedTracks={purchasedTracks}
+          purchasedPodcasts={purchasedPodcasts}
+          onSuccess={onSuccess}
+        />
+      );
+    }
 
     // Route Audio Podcasters to their specialized dashboard
     if (industry === 'Audio Podcaster') {
