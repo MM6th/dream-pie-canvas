@@ -443,7 +443,25 @@ export const UnifiedInboxModal = ({ open, onOpenChange, userId, userType }: Unif
                                 
                                 {expandedMessageId === message.id && (
                                   <div className="mt-3 space-y-3">
-                                    <p className="text-sm whitespace-pre-wrap">{message.body}</p>
+                                    <div className="text-sm whitespace-pre-wrap">
+                                      {message.body.split(/(https?:\/\/[^\s]+)/g).map((part, index) => {
+                                        if (part.match(/^https?:\/\/[^\s]+$/)) {
+                                          return (
+                                            <a
+                                              key={index}
+                                              href={part}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className="!text-blue-500 underline hover:!text-blue-400 break-all"
+                                              onClick={(e) => e.stopPropagation()}
+                                            >
+                                              {part}
+                                            </a>
+                                          );
+                                        }
+                                        return <span key={index}>{part}</span>;
+                                      })}
+                                    </div>
                                     {message.attachment_url && (
                                       <img 
                                         src={message.attachment_url} 
@@ -498,7 +516,25 @@ export const UnifiedInboxModal = ({ open, onOpenChange, userId, userType }: Unif
                                 
                                 {expandedMessageId === message.id && (
                                   <div className="mt-3 space-y-3">
-                                    <p className="text-sm whitespace-pre-wrap">{message.body}</p>
+                                    <div className="text-sm whitespace-pre-wrap">
+                                      {message.body.split(/(https?:\/\/[^\s]+)/g).map((part, index) => {
+                                        if (part.match(/^https?:\/\/[^\s]+$/)) {
+                                          return (
+                                            <a
+                                              key={index}
+                                              href={part}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className="!text-blue-500 underline hover:!text-blue-400 break-all"
+                                              onClick={(e) => e.stopPropagation()}
+                                            >
+                                              {part}
+                                            </a>
+                                          );
+                                        }
+                                        return <span key={index}>{part}</span>;
+                                      })}
+                                    </div>
                                     {message.attachment_url && (
                                       <img 
                                         src={message.attachment_url} 
