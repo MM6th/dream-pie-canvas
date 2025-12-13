@@ -37,6 +37,16 @@ export const FreeAstrologyResourceModal = ({
   const handleAccept = async () => {
     setLoading(true);
     try {
+      // Get admin ID for notification
+      const ADMIN_ID = 'cedd3262-be80-4af4-9675-c081107cecb5';
+      
+      // Get user profile for notification message
+      const { data: userProfile } = await supabase
+        .from("profiles")
+        .select("display_name, email")
+        .eq("id", userId)
+        .single();
+
       const { error } = await supabase
         .from("user_free_resources")
         .upsert({
@@ -49,6 +59,17 @@ export const FreeAstrologyResourceModal = ({
         });
 
       if (error) throw error;
+
+      // Notify admin about the download
+      const userName = userProfile?.display_name || userProfile?.email || 'A user';
+      await supabase
+        .from('notifications')
+        .insert({
+          user_id: ADMIN_ID,
+          type: 'resource_download',
+          title: 'Salt Mineral PDF Downloaded',
+          message: `${userName} accepted and downloaded the Salt & Mineral Deficiency Chart.`
+        });
 
       handleDownload();
       onAccepted();
