@@ -1488,6 +1488,53 @@ export type Database = {
           },
         ]
       }
+      podcast_recordings: {
+        Row: {
+          audio_url: string
+          created_at: string
+          description: string | null
+          duration_seconds: number | null
+          file_size_bytes: number | null
+          id: string
+          merchant_id: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          audio_url: string
+          created_at?: string
+          description?: string | null
+          duration_seconds?: number | null
+          file_size_bytes?: number | null
+          id?: string
+          merchant_id: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          audio_url?: string
+          created_at?: string
+          description?: string | null
+          duration_seconds?: number | null
+          file_size_bytes?: number | null
+          id?: string
+          merchant_id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "podcast_recordings_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       portfolio_images: {
         Row: {
           created_at: string
