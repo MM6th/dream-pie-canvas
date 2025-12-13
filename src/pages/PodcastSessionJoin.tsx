@@ -111,7 +111,7 @@ const PodcastSessionJoin = () => {
     }
 
     try {
-      await joinSession();
+      await joinSession(sessionInfo?.id);
       setHasJoined(true);
       toast({
         title: "Joined Session",

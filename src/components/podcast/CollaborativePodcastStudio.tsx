@@ -89,8 +89,8 @@ export const CollaborativePodcastStudio = ({ onRecordingSaved }: CollaborativePo
       setSessionId(data.id);
       setInviteToken(data.invite_token);
       
-      // Join the session
-      await joinSession();
+      // Join the session with the new session ID
+      await joinSession(data.id);
 
       toast({
         title: "Session Created",
