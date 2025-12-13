@@ -42,6 +42,9 @@ const SupportTicketModal = ({ open, onOpenChange, onSuccess }: SupportTicketModa
 
     setSubmitting(true);
     try {
+      // Get admin ID for notification
+      const ADMIN_ID = 'cedd3262-be80-4af4-9675-c081107cecb5';
+      
       const { error } = await supabase
         .from('support_tickets')
         .insert({
@@ -52,6 +55,16 @@ const SupportTicketModal = ({ open, onOpenChange, onSuccess }: SupportTicketModa
         });
 
       if (error) throw error;
+
+      // Create notification for admin
+      await supabase
+        .from('notifications')
+        .insert({
+          user_id: ADMIN_ID,
+          type: 'support_ticket',
+          title: 'New Support Ticket',
+          message: `New support ticket submitted: "${title.trim()}"`
+        });
 
       toast.success("Ticket submitted! Admin will reply at their earliest convenience.");
       setTitle("");
