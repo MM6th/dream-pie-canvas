@@ -79,8 +79,12 @@ Deno.serve(async (req) => {
     let isFree = false;
     let senderCredits: any = null;
     
+    // Merchants sending messages are always free (including podcast invites)
+    if (senderProfile.user_type === 'merchant') {
+      isFree = true;
+    }
     // Check if supporter is replying to a merchant-initiated thread (free reply)
-    if (parentMessageId && senderProfile.user_type === 'supporter' && recipientProfile.user_type === 'merchant') {
+    else if (parentMessageId && senderProfile.user_type === 'supporter' && recipientProfile.user_type === 'merchant') {
       // Get the parent message to check who initiated the thread
       const { data: parentMessage } = await supabaseAdmin
         .from('messages')
