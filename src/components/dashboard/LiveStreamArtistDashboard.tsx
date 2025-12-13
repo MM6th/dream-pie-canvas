@@ -26,6 +26,7 @@ import TVGuideModal from "@/components/TVGuideModal";
 import { LivestreamSettingsCard } from "@/components/messaging/LivestreamSettingsCard";
 import { MessageSettingsCard } from "@/components/messaging/MessageSettingsCard";
 import { LiveStreamControlCenter } from "@/components/LiveStreamControlCenter";
+import SupportCenterCard from "@/components/support/SupportCenterCard";
 
 interface AudioTrack {
   id: string;
@@ -167,6 +168,11 @@ const LiveStreamArtistDashboard = ({
       <div className="flex flex-col gap-3 mb-6">
         <SupporterCurrentAffirmationsModal />
         <TVGuideModal />
+      </div>
+
+      {/* Support Center Card */}
+      <div className="mb-6">
+        <SupportCenterCard />
       </div>
 
       {/* Live Stream Control Center */}
