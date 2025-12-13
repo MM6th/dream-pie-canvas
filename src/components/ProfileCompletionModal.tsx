@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
 import AvatarUpload from "@/components/profile/AvatarUpload";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -68,22 +66,15 @@ const ProfileCompletionModal = ({ isOpen, onComplete }: ProfileCompletionModalPr
 
   return (
     <Dialog open={isOpen} onOpenChange={() => {}}>
-      <DialogContent className="sm:max-w-md" onPointerDownOutside={(e) => e.preventDefault()}>
-        <DialogHeader>
-          <DialogTitle>Complete Your Profile</DialogTitle>
-          <DialogDescription>
-            Please upload a profile picture to continue using the platform.
+      <DialogContent className="sm:max-w-sm p-4" onPointerDownOutside={(e) => e.preventDefault()}>
+        <DialogHeader className="pb-2">
+          <DialogTitle className="text-base">Complete Your Profile</DialogTitle>
+          <DialogDescription className="text-xs">
+            Upload a profile picture to continue.
           </DialogDescription>
         </DialogHeader>
 
-        <Alert variant="default" className="bg-blue-500/10 border-blue-500/20">
-          <AlertCircle className="h-4 w-4 text-blue-500" />
-          <AlertDescription className="text-sm">
-            A profile picture is required for all users. This helps build trust and community on the platform.
-          </AlertDescription>
-        </Alert>
-
-        <div className="flex flex-col items-center space-y-6 py-4">
+        <div className="flex flex-col items-center space-y-3 py-2">
           <AvatarUpload
             avatarUrl={avatarUrl}
             onAvatarChange={handleAvatarChange}
@@ -94,8 +85,8 @@ const ProfileCompletionModal = ({ isOpen, onComplete }: ProfileCompletionModalPr
               skills={skills}
               onSkillsChange={setSkills}
             />
-            <p className="text-sm text-muted-foreground mt-2">
-              Optional: Add your skills to help others discover your expertise
+            <p className="text-xs text-muted-foreground mt-1">
+              Optional: Add skills to help others find you
             </p>
           </div>
         </div>
@@ -103,7 +94,7 @@ const ProfileCompletionModal = ({ isOpen, onComplete }: ProfileCompletionModalPr
         <Button 
           onClick={handleComplete} 
           disabled={!avatarUrl || isSubmitting}
-          className="w-full"
+          className="w-full h-9 text-sm"
         >
           {isSubmitting ? "Saving..." : "Complete Profile"}
         </Button>
