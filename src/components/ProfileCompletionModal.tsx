@@ -5,7 +5,6 @@ import AvatarUpload from "@/components/profile/AvatarUpload";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { SkillsInput } from "@/components/profile/SkillsInput";
 
 interface ProfileCompletionModalProps {
   isOpen: boolean;
@@ -15,7 +14,6 @@ interface ProfileCompletionModalProps {
 const ProfileCompletionModal = ({ isOpen, onComplete }: ProfileCompletionModalProps) => {
   const { user } = useAuth();
   const [avatarUrl, setAvatarUrl] = useState<string>("");
-  const [skills, setSkills] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleAvatarChange = (url: string) => {
@@ -39,7 +37,6 @@ const ProfileCompletionModal = ({ isOpen, onComplete }: ProfileCompletionModalPr
         .from('profiles')
         .update({ 
           avatar_url: avatarUrl,
-          skills: skills,
           profile_complete: true 
         })
         .eq('id', user?.id);
@@ -83,16 +80,6 @@ const ProfileCompletionModal = ({ isOpen, onComplete }: ProfileCompletionModalPr
             onAvatarChange={handleAvatarChange}
             compact
           />
-          
-          <div className="w-full">
-            <SkillsInput
-              skills={skills}
-              onSkillsChange={setSkills}
-            />
-            <p className="text-xs text-muted-foreground mt-1">
-              Optional: Add skills to help others find you
-            </p>
-          </div>
         </div>
 
         <Button 

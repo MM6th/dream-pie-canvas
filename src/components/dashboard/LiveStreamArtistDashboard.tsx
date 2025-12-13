@@ -27,6 +27,9 @@ import { LivestreamSettingsCard } from "@/components/messaging/LivestreamSetting
 import { MessageSettingsCard } from "@/components/messaging/MessageSettingsCard";
 import { LiveStreamControlCenter } from "@/components/LiveStreamControlCenter";
 import UserTicketsTab from "@/components/support/UserTicketsTab";
+import { useApprovalStatus } from "@/hooks/useApprovalStatus";
+import ApprovalStatusBanner from "@/components/ApprovalStatusBanner";
+import RestrictedAccess from "@/components/dashboard/merchant/RestrictedAccess";
 
 interface AudioTrack {
   id: string;
@@ -41,12 +44,14 @@ interface LiveStreamArtistDashboardProps {
   onBackgroundUpload: (url: string) => void;
   purchasedTracks: AudioTrack[];
   purchasedPodcasts: AudioTrack[];
+  onSuccess?: () => void;
 }
 
 const LiveStreamArtistDashboard = ({ 
   onBackgroundUpload, 
   purchasedTracks, 
-  purchasedPodcasts
+  purchasedPodcasts,
+  onSuccess
 }: LiveStreamArtistDashboardProps) => {
   const { user } = useAuth();
   const isMobile = useIsMobile();
@@ -54,6 +59,7 @@ const LiveStreamArtistDashboard = ({
   const [playlistPublic, setPlaylistPublic] = useState(false);
   const [purchasedPortfolios, setPurchasedPortfolios] = useState<any[]>([]);
   
+  const { isApproved, isAdmin, approvalStatus, loading: approvalLoading } = useApprovalStatus();
   const tutorial = useDashboardTutorial('supporter', supporterTutorialSteps, userProfile?.created_at);
 
   const fetchPurchasedPortfolios = async () => {
@@ -142,8 +148,20 @@ const LiveStreamArtistDashboard = ({
     }
   }, [user]);
 
+  // Show restricted access if not approved and not admin
+  if (!approvalLoading && !isApproved && !isAdmin) {
+    return (
+      <div className={`max-w-6xl mx-auto ${isMobile ? 'p-4' : 'p-6'} pt-20`}>
+        <RestrictedAccess onProfileUpdate={onSuccess} />
+      </div>
+    );
+  }
+
   return (
     <div className={`max-w-6xl mx-auto ${isMobile ? 'p-4' : 'p-6'} pt-20`}>
+      {/* Approval Status Banner */}
+      <ApprovalStatusBanner approvalStatus={approvalStatus} isAdmin={isAdmin} />
+      
       {/* Floating tutorial for first-time users only */}
       {tutorial.isActive && tutorial.currentStepData && tutorial.isFirstTimeUser && (
         <>

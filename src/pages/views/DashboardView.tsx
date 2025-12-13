@@ -93,12 +93,14 @@ const DashboardView = ({
               onBackgroundUpload={onBackgroundUpload}
               purchasedTracks={purchasedTracks}
               purchasedPodcasts={purchasedPodcasts}
+              onSuccess={onSuccess}
             />
           ) : userProfile?.skills?.includes('Live Stream Artist') ? (
             <LiveStreamArtistDashboard 
               onBackgroundUpload={onBackgroundUpload}
               purchasedTracks={purchasedTracks}
               purchasedPodcasts={purchasedPodcasts}
+              onSuccess={onSuccess}
             />
           ) : userProfile?.user_type === "merchant" ? (
             <MerchantDashboard 

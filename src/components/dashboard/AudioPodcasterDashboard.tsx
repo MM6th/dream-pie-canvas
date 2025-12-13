@@ -24,6 +24,9 @@ import { MessageSettingsCard } from "@/components/messaging/MessageSettingsCard"
 import UserTicketsTab from "@/components/support/UserTicketsTab";
 import { PodcastRecordingStudio } from "@/components/podcast/PodcastRecordingStudio";
 import { PodcastRecordingsLibrary } from "@/components/podcast/PodcastRecordingsLibrary";
+import { useApprovalStatus } from "@/hooks/useApprovalStatus";
+import ApprovalStatusBanner from "@/components/ApprovalStatusBanner";
+import RestrictedAccess from "@/components/dashboard/merchant/RestrictedAccess";
 
 interface AudioTrack {
   id: string;
@@ -38,12 +41,14 @@ interface AudioPodcasterDashboardProps {
   onBackgroundUpload: (url: string) => void;
   purchasedTracks: AudioTrack[];
   purchasedPodcasts: AudioTrack[];
+  onSuccess?: () => void;
 }
 
 const AudioPodcasterDashboard = ({ 
   onBackgroundUpload, 
   purchasedTracks, 
-  purchasedPodcasts
+  purchasedPodcasts,
+  onSuccess
 }: AudioPodcasterDashboardProps) => {
   const { user } = useAuth();
   const isMobile = useIsMobile();
@@ -52,6 +57,7 @@ const AudioPodcasterDashboard = ({
   const [purchasedPortfolios, setPurchasedPortfolios] = useState<any[]>([]);
   const [recordingRefreshTrigger, setRecordingRefreshTrigger] = useState(0);
   
+  const { isApproved, isAdmin, approvalStatus, loading: approvalLoading } = useApprovalStatus();
   const tutorial = useDashboardTutorial('supporter', supporterTutorialSteps, userProfile?.created_at);
 
   const fetchPurchasedPortfolios = async () => {
@@ -140,8 +146,20 @@ const AudioPodcasterDashboard = ({
     }
   }, [user]);
 
+  // Show restricted access if not approved and not admin
+  if (!approvalLoading && !isApproved && !isAdmin) {
+    return (
+      <div className={`max-w-6xl mx-auto ${isMobile ? 'p-4' : 'p-6'} pt-20`}>
+        <RestrictedAccess onProfileUpdate={onSuccess} />
+      </div>
+    );
+  }
+
   return (
     <div className={`max-w-6xl mx-auto ${isMobile ? 'p-4' : 'p-6'} pt-20`}>
+      {/* Approval Status Banner */}
+      <ApprovalStatusBanner approvalStatus={approvalStatus} isAdmin={isAdmin} />
+      
       {/* Floating tutorial for first-time users only */}
       {tutorial.isActive && tutorial.currentStepData && tutorial.isFirstTimeUser && (
         <>
