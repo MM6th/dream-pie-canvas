@@ -31,6 +31,7 @@ export const usePodcastSession = (
   const [isConnected, setIsConnected] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [mixedAudioStream, setMixedAudioStream] = useState<MediaStream | null>(null);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
   
   const peerConnections = useRef<Map<string, RTCPeerConnection>>(new Map());
   const remoteStreams = useRef<Map<string, MediaStream>>(new Map());
@@ -49,10 +50,13 @@ export const usePodcastSession = (
     isHostRef.current = isHost;
   }, [userId, sessionId, isHost]);
 
-  // Initialize audio context for mixing
-  const initAudioMixer = useCallback(() => {
+  // Initialize audio context for mixing - use stream's sample rate to avoid mismatch
+  const initAudioMixer = useCallback((stream?: MediaStream) => {
     if (!audioContextRef.current) {
-      audioContextRef.current = new AudioContext({ sampleRate: 48000 });
+      // Get the actual sample rate from the stream if available
+      const sampleRate = stream?.getAudioTracks()[0]?.getSettings()?.sampleRate || 48000;
+      console.log('[PodcastSession] Creating AudioContext with sample rate:', sampleRate);
+      audioContextRef.current = new AudioContext({ sampleRate });
       mixedDestinationRef.current = audioContextRef.current.createMediaStreamDestination();
       setMixedAudioStream(mixedDestinationRef.current.stream);
     }
@@ -60,7 +64,10 @@ export const usePodcastSession = (
 
   // Add stream to mixer
   const addStreamToMixer = useCallback((stream: MediaStream, peerId: string) => {
-    if (!audioContextRef.current || !mixedDestinationRef.current) return;
+    if (!audioContextRef.current || !mixedDestinationRef.current) {
+      console.warn('[PodcastSession] AudioContext not initialized, cannot add stream to mixer');
+      return;
+    }
     
     try {
       const source = audioContextRef.current.createMediaStreamSource(stream);
@@ -73,9 +80,12 @@ export const usePodcastSession = (
 
   // Send signal to database
   const sendSignal = useCallback(async (message: SignalingMessage) => {
-    if (!sessionIdRef.current || !userIdRef.current) return;
+    if (!sessionIdRef.current || !userIdRef.current) {
+      console.error('[PodcastSession] Cannot send signal - missing session or user ID');
+      return;
+    }
     
-    console.log('[PodcastSession] Sending signal:', message.type);
+    console.log('[PodcastSession] Sending signal:', message.type, 'to session:', sessionIdRef.current);
     
     try {
       const { error } = await supabase
@@ -88,9 +98,14 @@ export const usePodcastSession = (
           signal_data: message.data || null,
         });
       
-      if (error) console.error('[PodcastSession] Signal error:', error);
+      if (error) {
+        console.error('[PodcastSession] Signal insert error:', error);
+        throw error;
+      }
+      console.log('[PodcastSession] Signal sent successfully:', message.type);
     } catch (err) {
       console.error('[PodcastSession] Exception sending signal:', err);
+      throw err;
     }
   }, []);
 
@@ -166,6 +181,28 @@ export const usePodcastSession = (
 
     switch (signalType) {
       case 'participant-joined':
+        // Fetch participant info and add to list
+        console.log('[PodcastSession] New participant joined:', fromUserId);
+        
+        // Fetch their profile
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('display_name')
+          .eq('id', fromUserId)
+          .single();
+        
+        setParticipants(prev => {
+          // Check if already exists
+          if (prev.find(p => p.id === fromUserId)) return prev;
+          return [...prev, {
+            id: fromUserId,
+            displayName: profile?.display_name || 'Guest',
+            role: 'guest',
+            isMuted: false,
+            isConnected: false,
+          }];
+        });
+        
         // Create offer for new participant
         if (localStreamRef.current) {
           const pc = createPeerConnection(fromUserId);
@@ -256,42 +293,65 @@ export const usePodcastSession = (
     handleSignalingMessageRef.current = handleSignalingMessage;
   }, [handleSignalingMessage]);
 
-  // Setup channel function - can be called to reconnect with a new session ID
-  const setupChannel = useCallback((targetSessionId: string) => {
-    if (!targetSessionId || !userIdRef.current) return;
+  // Setup channel function - returns a promise that resolves when subscribed
+  const setupChannel = useCallback(async (targetSessionId: string): Promise<boolean> => {
+    if (!targetSessionId || !userIdRef.current) {
+      console.error('[PodcastSession] Cannot setup channel - missing session or user ID');
+      return false;
+    }
 
     // Clean up existing channel
     if (channelRef.current) {
       console.log('[PodcastSession] Cleaning up existing channel');
-      supabase.removeChannel(channelRef.current);
+      await supabase.removeChannel(channelRef.current);
       channelRef.current = null;
     }
 
     console.log(`[PodcastSession] Setting up realtime for session ${targetSessionId}`);
 
-    const channel = supabase
-      .channel(`podcast-session-${targetSessionId}-${Date.now()}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'podcast_session_signals',
-          filter: `session_id=eq.${targetSessionId}`,
-        },
-        (payload) => {
-          const { from_user_id, to_user_id, signal_type, signal_data } = payload.new as any;
-          handleSignalingMessageRef.current(signal_type, from_user_id, to_user_id, signal_data);
-        }
-      )
-      .subscribe((status) => {
-        console.log('[PodcastSession] Subscription status:', status);
-        if (status === 'SUBSCRIBED') {
-          setIsConnected(true);
-        }
-      });
+    return new Promise((resolve) => {
+      const channelName = `podcast-session-${targetSessionId}-${Date.now()}`;
+      console.log('[PodcastSession] Creating channel:', channelName);
+      
+      const channel = supabase
+        .channel(channelName)
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'podcast_session_signals',
+            filter: `session_id=eq.${targetSessionId}`,
+          },
+          (payload) => {
+            console.log('[PodcastSession] Received realtime payload:', payload);
+            const { from_user_id, to_user_id, signal_type, signal_data } = payload.new as any;
+            handleSignalingMessageRef.current(signal_type, from_user_id, to_user_id, signal_data);
+          }
+        )
+        .subscribe((status, err) => {
+          console.log('[PodcastSession] Subscription status:', status, err ? `Error: ${err.message}` : '');
+          if (status === 'SUBSCRIBED') {
+            setIsConnected(true);
+            setConnectionError(null);
+            resolve(true);
+          } else if (status === 'CLOSED' || status === 'TIMED_OUT') {
+            console.error('[PodcastSession] Subscription failed:', status);
+            setConnectionError(`Connection failed: ${status}`);
+            resolve(false);
+          }
+        });
 
-    channelRef.current = channel;
+      channelRef.current = channel;
+      
+      // Timeout after 10 seconds
+      setTimeout(() => {
+        if (!channelRef.current) {
+          console.error('[PodcastSession] Channel setup timeout');
+          resolve(false);
+        }
+      }, 10000);
+    });
   }, []);
 
   // Set up realtime subscription on mount (for host who has session ID)
@@ -308,7 +368,7 @@ export const usePodcastSession = (
     };
   }, [sessionId, userId, setupChannel]);
 
-  // Join session
+  // Join session - FIXED ORDER OF OPERATIONS
   const joinSession = useCallback(async (overrideSessionId?: string) => {
     const effectiveSessionId = overrideSessionId || sessionIdRef.current;
     
@@ -317,54 +377,85 @@ export const usePodcastSession = (
       throw new Error('No session ID provided');
     }
     
+    if (!userIdRef.current) {
+      console.error('[PodcastSession] Cannot join - no user ID');
+      throw new Error('No user ID provided');
+    }
+
+    console.log('[PodcastSession] ====== JOIN SESSION START ======');
+    console.log('[PodcastSession] Session ID:', effectiveSessionId);
+    console.log('[PodcastSession] User ID:', userIdRef.current);
+    console.log('[PodcastSession] Is Host:', isHostRef.current);
+    
     try {
-      console.log('[PodcastSession] Joining session...', effectiveSessionId);
+      // Update the session ref
+      sessionIdRef.current = effectiveSessionId;
       
-      // Update the ref and set up channel if we have an override
-      if (overrideSessionId) {
-        sessionIdRef.current = overrideSessionId;
-        // Re-establish channel with correct session ID for guests
-        setupChannel(overrideSessionId);
-      }
-      
-      // Get microphone access
+      // STEP 1: Get microphone access FIRST (fail fast if denied)
+      console.log('[PodcastSession] Step 1: Getting microphone access...');
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
-          sampleRate: 48000,
         }
       });
+      
+      console.log('[PodcastSession] Microphone access granted');
+      console.log('[PodcastSession] Audio track settings:', stream.getAudioTracks()[0]?.getSettings());
       
       localStreamRef.current = stream;
       setLocalStream(stream);
       
-      // Initialize mixer if host
+      // Initialize mixer with correct sample rate if host
       if (isHostRef.current) {
-        initAudioMixer();
+        initAudioMixer(stream);
         addStreamToMixer(stream, userIdRef.current);
       }
 
-      // Add self as participant in database
-      const { error: participantError } = await supabase
+      // STEP 2: Insert participant to database BEFORE setting up channel
+      // This ensures RLS policies will allow us to receive signals
+      console.log('[PodcastSession] Step 2: Adding participant to database...');
+      const { data: participantData, error: participantError } = await supabase
         .from('podcast_session_participants')
         .upsert({
           session_id: effectiveSessionId,
           user_id: userIdRef.current,
           role: isHostRef.current ? 'host' : 'guest',
           joined_at: new Date().toISOString(),
-        });
+          left_at: null,
+        }, {
+          onConflict: 'session_id,user_id'
+        })
+        .select()
+        .single();
       
       if (participantError) {
-        console.error('[PodcastSession] Error adding participant:', participantError);
+        console.error('[PodcastSession] CRITICAL: Failed to add participant to database:', participantError);
+        throw new Error(`Failed to join session: ${participantError.message}`);
       }
-
-      // Notify others
-      await sendSignal({ type: 'participant-joined', from: userIdRef.current });
       
-      // Fetch existing participants
-      const { data: existingParticipants } = await supabase
+      console.log('[PodcastSession] Participant added to database:', participantData);
+
+      // STEP 3: Setup realtime channel (now RLS will allow us to see signals)
+      console.log('[PodcastSession] Step 3: Setting up realtime channel...');
+      const channelConnected = await setupChannel(effectiveSessionId);
+      
+      if (!channelConnected) {
+        console.error('[PodcastSession] Failed to connect to realtime channel');
+        throw new Error('Failed to connect to session - please try again');
+      }
+      
+      console.log('[PodcastSession] Realtime channel connected successfully');
+
+      // STEP 4: Send participant-joined signal
+      console.log('[PodcastSession] Step 4: Sending participant-joined signal...');
+      await sendSignal({ type: 'participant-joined', from: userIdRef.current });
+      console.log('[PodcastSession] Signal sent successfully');
+      
+      // STEP 5: Fetch existing participants
+      console.log('[PodcastSession] Step 5: Fetching existing participants...');
+      const { data: existingParticipants, error: fetchError } = await supabase
         .from('podcast_session_participants')
         .select(`
           user_id,
@@ -375,7 +466,10 @@ export const usePodcastSession = (
         .eq('session_id', effectiveSessionId)
         .is('left_at', null);
 
-      if (existingParticipants) {
+      if (fetchError) {
+        console.error('[PodcastSession] Error fetching participants:', fetchError);
+      } else if (existingParticipants) {
+        console.log('[PodcastSession] Found participants:', existingParticipants.length);
         const participantList: Participant[] = existingParticipants.map((p: any) => ({
           id: p.user_id,
           displayName: p.profiles?.display_name || 'Unknown',
@@ -386,9 +480,18 @@ export const usePodcastSession = (
         setParticipants(participantList);
       }
 
-      console.log('[PodcastSession] Joined session successfully');
+      console.log('[PodcastSession] ====== JOIN SESSION COMPLETE ======');
     } catch (error) {
-      console.error('[PodcastSession] Error joining session:', error);
+      console.error('[PodcastSession] ====== JOIN SESSION FAILED ======');
+      console.error('[PodcastSession] Error:', error);
+      
+      // Clean up on failure
+      if (localStreamRef.current) {
+        localStreamRef.current.getTracks().forEach(track => track.stop());
+        localStreamRef.current = null;
+      }
+      setLocalStream(null);
+      
       throw error;
     }
   }, [sendSignal, initAudioMixer, addStreamToMixer, setupChannel]);
@@ -397,8 +500,10 @@ export const usePodcastSession = (
   const leaveSession = useCallback(async () => {
     console.log('[PodcastSession] Leaving session...');
     
+    const effectiveSessionId = sessionIdRef.current;
+    
     // Notify others
-    await sendSignal({ type: 'participant-left', from: userId });
+    await sendSignal({ type: 'participant-left', from: userIdRef.current });
 
     // Stop local stream
     if (localStreamRef.current) {
@@ -419,15 +524,17 @@ export const usePodcastSession = (
     }
 
     // Update database
-    await supabase
-      .from('podcast_session_participants')
-      .update({ left_at: new Date().toISOString() })
-      .eq('session_id', sessionId)
-      .eq('user_id', userId);
+    if (effectiveSessionId && userIdRef.current) {
+      await supabase
+        .from('podcast_session_participants')
+        .update({ left_at: new Date().toISOString() })
+        .eq('session_id', effectiveSessionId)
+        .eq('user_id', userIdRef.current);
+    }
 
     setParticipants([]);
     setIsConnected(false);
-  }, [sessionId, userId, sendSignal]);
+  }, [sendSignal]);
 
   // Toggle mute
   const toggleMute = useCallback(async () => {
@@ -438,21 +545,25 @@ export const usePodcastSession = (
       });
       setIsMuted(newMutedState);
       
+      const effectiveSessionId = sessionIdRef.current;
+      
       // Update database
-      await supabase
-        .from('podcast_session_participants')
-        .update({ is_muted: newMutedState })
-        .eq('session_id', sessionId)
-        .eq('user_id', userId);
+      if (effectiveSessionId && userIdRef.current) {
+        await supabase
+          .from('podcast_session_participants')
+          .update({ is_muted: newMutedState })
+          .eq('session_id', effectiveSessionId)
+          .eq('user_id', userIdRef.current);
+      }
 
       // Notify others
       await sendSignal({ 
         type: 'mute-status', 
-        from: userId, 
+        from: userIdRef.current, 
         data: { isMuted: newMutedState } 
       });
     }
-  }, [isMuted, sessionId, userId, sendSignal]);
+  }, [isMuted, sendSignal]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -473,6 +584,7 @@ export const usePodcastSession = (
     participants,
     isConnected,
     isMuted,
+    connectionError,
     joinSession,
     leaveSession,
     toggleMute,

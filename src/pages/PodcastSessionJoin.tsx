@@ -34,12 +34,14 @@ const PodcastSessionJoin = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hasJoined, setHasJoined] = useState(false);
+  const [isJoining, setIsJoining] = useState(false);
 
   const {
     localStream,
     participants,
     isConnected,
     isMuted,
+    connectionError,
     joinSession,
     leaveSession,
     toggleMute,
@@ -55,6 +57,7 @@ const PodcastSessionJoin = () => {
       }
 
       try {
+        console.log('[PodcastSessionJoin] Fetching session with token:', inviteToken);
         const { data, error: fetchError } = await supabase
           .from('podcast_sessions')
           .select(`
@@ -71,9 +74,12 @@ const PodcastSessionJoin = () => {
           .single();
 
         if (fetchError || !data) {
+          console.error('[PodcastSessionJoin] Session fetch error:', fetchError);
           setError('Session not found or has expired');
           return;
         }
+
+        console.log('[PodcastSessionJoin] Session found:', data);
 
         if (data.status === 'completed' || data.status === 'cancelled') {
           setError('This session has already ended');
@@ -88,7 +94,7 @@ const PodcastSessionJoin = () => {
           host: data.host as { display_name: string; avatar_url: string | null },
         });
       } catch (err) {
-        console.error('Error fetching session:', err);
+        console.error('[PodcastSessionJoin] Error fetching session:', err);
         setError('Failed to load session');
       } finally {
         setLoading(false);
@@ -110,20 +116,44 @@ const PodcastSessionJoin = () => {
       return;
     }
 
+    if (!sessionInfo?.id) {
+      toast({
+        title: "Session Error",
+        description: "Session information not available. Please refresh.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsJoining(true);
+    console.log('[PodcastSessionJoin] Joining session:', sessionInfo.id);
+
     try {
-      await joinSession(sessionInfo?.id);
+      await joinSession(sessionInfo.id);
       setHasJoined(true);
       toast({
         title: "Joined Session",
-        description: `You've joined "${sessionInfo?.title}"`,
+        description: `You've joined "${sessionInfo.title}"`,
       });
-    } catch (err) {
-      console.error('Error joining session:', err);
+    } catch (err: any) {
+      console.error('[PodcastSessionJoin] Error joining session:', err);
+      
+      let errorMessage = "Could not join the session.";
+      if (err.message?.includes('microphone') || err.message?.includes('getUserMedia')) {
+        errorMessage = "Please allow microphone access to join.";
+      } else if (err.message?.includes('Failed to join')) {
+        errorMessage = err.message;
+      } else if (err.message?.includes('connect')) {
+        errorMessage = "Connection failed. Please check your internet and try again.";
+      }
+      
       toast({
         title: "Join Failed",
-        description: "Could not join the session. Please check microphone permissions.",
+        description: errorMessage,
         variant: "destructive"
       });
+    } finally {
+      setIsJoining(false);
     }
   }, [user, joinSession, sessionInfo, inviteToken, navigate, toast]);
 
@@ -198,9 +228,22 @@ const PodcastSessionJoin = () => {
             </div>
 
             {user ? (
-              <Button onClick={handleJoin} className="w-full gap-2">
-                <Mic className="w-4 h-4" />
-                Join Session
+              <Button 
+                onClick={handleJoin} 
+                className="w-full gap-2"
+                disabled={isJoining}
+              >
+                {isJoining ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Connecting...
+                  </>
+                ) : (
+                  <>
+                    <Mic className="w-4 h-4" />
+                    Join Session
+                  </>
+                )}
               </Button>
             ) : (
               <div className="space-y-2">
@@ -240,6 +283,9 @@ const PodcastSessionJoin = () => {
                 )}
               </Badge>
             </div>
+            {connectionError && (
+              <p className="text-sm text-destructive mt-2">{connectionError}</p>
+            )}
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Participants */}
@@ -249,17 +295,22 @@ const PodcastSessionJoin = () => {
                 Participants ({participants.length})
               </div>
               <div className="flex flex-wrap gap-2">
-                {participants.map((participant) => (
-                  <Badge 
-                    key={participant.id} 
-                    variant={participant.isConnected ? "default" : "secondary"}
-                    className="flex items-center gap-1"
-                  >
-                    {participant.isMuted ? <MicOff className="w-3 h-3" /> : <Mic className="w-3 h-3" />}
-                    {participant.displayName}
-                    {participant.role === 'host' && ' (Host)'}
-                  </Badge>
-                ))}
+                {participants.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Waiting for others to join...</p>
+                ) : (
+                  participants.map((participant) => (
+                    <Badge 
+                      key={participant.id} 
+                      variant={participant.isConnected ? "default" : "secondary"}
+                      className="flex items-center gap-1"
+                    >
+                      {participant.isMuted ? <MicOff className="w-3 h-3" /> : <Mic className="w-3 h-3" />}
+                      {participant.displayName}
+                      {participant.role === 'host' && ' (Host)'}
+                      {participant.id === user?.id && ' (You)'}
+                    </Badge>
+                  ))
+                )}
               </div>
             </div>
 
