@@ -10,9 +10,10 @@ import { toast } from "@/hooks/use-toast";
 interface AvatarUploadProps {
   avatarUrl?: string;
   onAvatarChange: (url: string) => void;
+  compact?: boolean;
 }
 
-const AvatarUpload = ({ avatarUrl, onAvatarChange }: AvatarUploadProps) => {
+const AvatarUpload = ({ avatarUrl, onAvatarChange, compact = false }: AvatarUploadProps) => {
   const { user } = useAuth();
   const [uploading, setUploading] = useState(false);
 
@@ -64,12 +65,15 @@ const AvatarUpload = ({ avatarUrl, onAvatarChange }: AvatarUploadProps) => {
     }
   };
 
+  const avatarSize = compact ? "w-16 h-16" : "w-24 h-24";
+  const iconSize = compact ? "w-8 h-8" : "w-12 h-12";
+
   return (
-    <div className="flex flex-col items-center space-y-4">
-      <Avatar className="w-24 h-24">
+    <div className={`flex flex-col items-center ${compact ? 'space-y-2' : 'space-y-4'}`}>
+      <Avatar className={avatarSize}>
         <AvatarImage src={avatarUrl} alt="Avatar" />
         <AvatarFallback className="bg-gray-600">
-          <User className="w-12 h-12 text-gray-400" />
+          <User className={`${iconSize} text-gray-400`} />
         </AvatarFallback>
       </Avatar>
       
@@ -84,6 +88,7 @@ const AvatarUpload = ({ avatarUrl, onAvatarChange }: AvatarUploadProps) => {
         />
         <Button
           variant="outline"
+          size={compact ? "sm" : "default"}
           disabled={uploading}
           className="border-gray-600 text-black bg-white hover:bg-gray-100"
         >
