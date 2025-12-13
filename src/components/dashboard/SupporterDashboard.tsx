@@ -31,7 +31,6 @@ import { BuyerAstrologyLibrary } from "@/components/astrology/BuyerAstrologyLibr
 import { FreeAstrologyResourceModal } from "@/components/FreeAstrologyResourceModal";
 import { useFreeAstrologyResource } from "@/hooks/useFreeAstrologyResource";
 import UserTicketsTab from "@/components/support/UserTicketsTab";
-import SupportCenterCard from "@/components/support/SupportCenterCard";
 
 interface AudioTrack {
   id: string;
@@ -201,11 +200,6 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
       {/* Current Affirmations Section */}
       <div className="mb-6">
         <SupporterCurrentAffirmationsModal />
-      </div>
-
-      {/* Support Center Card */}
-      <div className="mb-6">
-        <SupportCenterCard />
       </div>
 
       <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm mb-6">

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Music, FolderOpen, MessageSquare, Video, Calendar, Settings } from "lucide-react";
+import { Music, FolderOpen, MessageSquare, Video, Calendar, Settings, Ticket } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import AudioPlayer from "@/components/AudioPlayer";
 
@@ -26,7 +26,7 @@ import TVGuideModal from "@/components/TVGuideModal";
 import { LivestreamSettingsCard } from "@/components/messaging/LivestreamSettingsCard";
 import { MessageSettingsCard } from "@/components/messaging/MessageSettingsCard";
 import { LiveStreamControlCenter } from "@/components/LiveStreamControlCenter";
-import SupportCenterCard from "@/components/support/SupportCenterCard";
+import UserTicketsTab from "@/components/support/UserTicketsTab";
 
 interface AudioTrack {
   id: string;
@@ -170,11 +170,6 @@ const LiveStreamArtistDashboard = ({
         <TVGuideModal />
       </div>
 
-      {/* Support Center Card */}
-      <div className="mb-6">
-        <SupportCenterCard />
-      </div>
-
       {/* Live Stream Control Center */}
       <LiveStreamControlCenter />
 
@@ -185,7 +180,7 @@ const LiveStreamArtistDashboard = ({
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="music" className="w-full">
-            <TabsList className={`grid w-full ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-4'}`}>
+            <TabsList className={`grid w-full ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-5'}`}>
               <TabsTrigger value="music" className={`flex items-center gap-2 ${isMobile ? 'text-xs px-2 py-1 h-8' : ''}`} data-tutorial="music-tab">
                 <Music className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'}`} />
                 {isMobile ? 'Media' : 'Music & Podcasts'}
@@ -199,6 +194,10 @@ const LiveStreamArtistDashboard = ({
                   <TabsTrigger value="content" className="flex items-center gap-2" data-tutorial="gallery-tab">
                     <FolderOpen className="w-4 h-4" />
                     Content Gallery
+                  </TabsTrigger>
+                  <TabsTrigger value="ticket" className="flex items-center gap-2">
+                    <Ticket className="w-4 h-4" />
+                    Ticket
                   </TabsTrigger>
                   <TabsTrigger value="background" data-tutorial="background-tab">Background</TabsTrigger>
                 </>
@@ -247,6 +246,9 @@ const LiveStreamArtistDashboard = ({
                   <ContentGallery />
                 </TabsContent>
                 
+                <TabsContent value="ticket" className="space-y-6">
+                  <UserTicketsTab />
+                </TabsContent>
                 
                 <TabsContent value="background" className="space-y-6">
                   <BackgroundUpload onUploadSuccess={onBackgroundUpload} />
@@ -298,6 +300,15 @@ const LiveStreamArtistDashboard = ({
                     <CardContent className="space-y-4">
                       <LivestreamSettingsCard />
                       <MessageSettingsCard />
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-gray-700/50 border-gray-600">
+                    <CardHeader>
+                      <CardTitle className="text-white text-sm">Support Tickets</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <UserTicketsTab />
                     </CardContent>
                   </Card>
                 </div>
