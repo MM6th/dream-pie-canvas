@@ -4,6 +4,7 @@ import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import MerchantDashboard from "@/components/dashboard/MerchantDashboard";
 import SupporterDashboard from "@/components/dashboard/SupporterDashboard";
 import LiveStreamArtistDashboard from "@/components/dashboard/LiveStreamArtistDashboard";
+import AudioPodcasterDashboard from "@/components/dashboard/AudioPodcasterDashboard";
 import { TutorialHelpButton } from "@/components/TutorialHelpButton";
 import { supporterTutorialSteps, merchantTutorialSteps, adminTutorialSteps } from "@/constants/tutorialContent";
 
@@ -87,7 +88,13 @@ const DashboardView = ({
         </div>
       ) : (
         <>
-          {userProfile?.skills?.includes('Live Stream Artist') ? (
+          {userProfile?.skills?.includes('Audio Podcaster') ? (
+            <AudioPodcasterDashboard 
+              onBackgroundUpload={onBackgroundUpload}
+              purchasedTracks={purchasedTracks}
+              purchasedPodcasts={purchasedPodcasts}
+            />
+          ) : userProfile?.skills?.includes('Live Stream Artist') ? (
             <LiveStreamArtistDashboard 
               onBackgroundUpload={onBackgroundUpload}
               purchasedTracks={purchasedTracks}
