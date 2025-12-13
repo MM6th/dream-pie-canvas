@@ -276,7 +276,7 @@ export const MessagingInbox = () => {
               </div>
               
               <div className="space-y-3">
-                <p className="whitespace-pre-wrap text-foreground text-sm leading-relaxed">
+                <div className="whitespace-pre-wrap text-foreground text-sm leading-relaxed">
                   {selectedMessage.body.split(/(https?:\/\/[^\s]+)/g).map((part, index) => {
                     if (part.match(/^https?:\/\/[^\s]+$/)) {
                       return (
@@ -285,15 +285,16 @@ export const MessagingInbox = () => {
                           href={part}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-primary underline hover:text-primary/80 break-all"
+                          className="!text-blue-500 underline hover:!text-blue-400 break-all"
+                          onClick={(e) => e.stopPropagation()}
                         >
                           {part}
                         </a>
                       );
                     }
-                    return part;
+                    return <span key={index}>{part}</span>;
                   })}
-                </p>
+                </div>
                 {selectedMessage.attachment_url && (
                   <div>
                     <img 
