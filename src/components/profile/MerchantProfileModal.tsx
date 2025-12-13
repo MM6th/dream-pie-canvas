@@ -125,12 +125,12 @@ const MerchantProfileModal = ({
         <DialogTrigger asChild>
           {children}
         </DialogTrigger>
-        <DialogContent className="sm:max-w-[600px] bg-gray-800 border-gray-700">
+        <DialogContent className="sm:max-w-[500px] max-h-[85vh] overflow-y-auto bg-gray-800 border-gray-700">
           <DialogHeader>
             <DialogTitle className="text-white">Update Merchant Profile</DialogTitle>
           </DialogHeader>
           
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-3">
             <div>
               <Label htmlFor="displayName" className="text-white">Display Name</Label>
               <Input
@@ -320,12 +320,12 @@ const MerchantProfileModal = ({
   // Original controlled pattern
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-      <DialogContent className="sm:max-w-[600px] bg-gray-800 border-gray-700">
+      <DialogContent className="sm:max-w-[500px] max-h-[85vh] overflow-y-auto bg-gray-800 border-gray-700">
         <DialogHeader>
           <DialogTitle className="text-white">Update Merchant Profile</DialogTitle>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3">
           <div>
             <Label htmlFor="displayName" className="text-white">Display Name</Label>
             <Input
