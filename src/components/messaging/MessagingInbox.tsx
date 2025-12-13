@@ -277,7 +277,22 @@ export const MessagingInbox = () => {
               
               <div className="space-y-3">
                 <p className="whitespace-pre-wrap text-foreground text-sm leading-relaxed">
-                  {selectedMessage.body}
+                  {selectedMessage.body.split(/(https?:\/\/[^\s]+)/g).map((part, index) => {
+                    if (part.match(/^https?:\/\/[^\s]+$/)) {
+                      return (
+                        <a
+                          key={index}
+                          href={part}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary underline hover:text-primary/80 break-all"
+                        >
+                          {part}
+                        </a>
+                      );
+                    }
+                    return part;
+                  })}
                 </p>
                 {selectedMessage.attachment_url && (
                   <div>
