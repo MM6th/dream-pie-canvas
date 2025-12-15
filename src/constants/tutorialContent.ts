@@ -194,6 +194,55 @@ export const musicArtistTutorialSteps: TutorialStep[] = [
   },
 ];
 
+export const fashionRetailerTutorialSteps: TutorialStep[] = [
+  {
+    id: 'welcome',
+    title: 'Welcome to Your Fashion Retailer Dashboard! 👗',
+    description: 'This quick tour will show you how to upload fashion products, manage inventory, and grow your fashion business on PIE.',
+    duration: 12000,
+  },
+  {
+    id: 'fashion-upload',
+    title: 'Upload Fashion Products',
+    description: 'Upload and manage your fashion products here. Add photos, set pricing, manage variants (sizes & colors), and publish to the store.',
+    duration: 10000,
+    target: '[data-tutorial="fashion-upload"]',
+    placement: 'bottom',
+  },
+  {
+    id: 'media-tab',
+    title: 'Your Media Library',
+    description: 'Listen to music and podcasts you\'ve purchased from other artists. Your personal media collection.',
+    duration: 10000,
+    target: '[data-tutorial="media-tab"]',
+    placement: 'bottom',
+  },
+  {
+    id: 'gallery-tab',
+    title: 'Content Gallery',
+    description: 'Upload photos and videos to showcase your fashion products and brand story.',
+    duration: 10000,
+    target: '[data-tutorial="gallery-tab"]',
+    placement: 'bottom',
+  },
+  {
+    id: 'background-tab',
+    title: 'Customize Your Dashboard',
+    description: 'Upload a custom background to personalize your dashboard experience.',
+    duration: 10000,
+    target: '[data-tutorial="background-tab"]',
+    placement: 'bottom',
+  },
+  {
+    id: 'playlist-public',
+    title: 'Playlist Visibility',
+    description: 'Control whether your playlist is publicly visible on your profile page.',
+    duration: 10000,
+    target: '[data-tutorial="playlist-public"]',
+    placement: 'top',
+  },
+];
+
 export const adminTutorialSteps: TutorialStep[] = [
   {
     id: 'welcome',

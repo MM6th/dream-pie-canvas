@@ -14,6 +14,7 @@ import UserStatsDisplay from "./UserStatsDisplay";
 // Industries available for signup
 const INDUSTRY_OPTIONS = [
   'Music Artist',
+  'Fashion Retailer',
 ];
 
 // Industries under construction (hidden but preserved for future use)
