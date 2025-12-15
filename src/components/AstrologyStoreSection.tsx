@@ -368,7 +368,7 @@ const AstrologyStoreSection = () => {
             
             // Check if sale has expired
             const isSaleExpired = product.sale_end_date && new Date(product.sale_end_date) < new Date();
-            const hasDiscount = product.discount_percentage && product.discount_percentage > 0 && !isSaleExpired;
+            const hasDiscount = !!(product.discount_percentage && product.discount_percentage > 0 && !isSaleExpired);
             const displayPrice = isSaleExpired ? product.base_price : product.total_price;
             
             return (
