@@ -4,8 +4,9 @@ import MerchantDashboard from "@/components/dashboard/MerchantDashboard";
 import SupporterDashboard from "@/components/dashboard/SupporterDashboard";
 import AudioPodcasterDashboard from "@/components/dashboard/AudioPodcasterDashboard";
 import MusicArtistDashboard from "@/components/dashboard/MusicArtistDashboard";
+import FashionRetailerDashboard from "@/components/dashboard/FashionRetailerDashboard";
 import { TutorialHelpButton } from "@/components/TutorialHelpButton";
-import { supporterTutorialSteps, merchantTutorialSteps, adminTutorialSteps, musicArtistTutorialSteps } from "@/constants/tutorialContent";
+import { supporterTutorialSteps, merchantTutorialSteps, adminTutorialSteps, musicArtistTutorialSteps, fashionRetailerTutorialSteps } from "@/constants/tutorialContent";
 
 interface AudioTrack {
   id: string;
@@ -65,6 +66,10 @@ const DashboardView = ({
       if (userProfile?.industry === 'Music Artist') {
         return <TutorialHelpButton steps={musicArtistTutorialSteps} userType="merchant" />;
       }
+      // Use industry-specific tutorial for Fashion Retailers
+      if (userProfile?.industry === 'Fashion Retailer') {
+        return <TutorialHelpButton steps={fashionRetailerTutorialSteps} userType="merchant" />;
+      }
       return <TutorialHelpButton steps={merchantTutorialSteps} userType="merchant" />;
     } else {
       return <TutorialHelpButton steps={supporterTutorialSteps} userType="supporter" />;
@@ -99,6 +104,18 @@ const DashboardView = ({
     if (industry === 'Music Artist') {
       return (
         <MusicArtistDashboard 
+          onBackgroundUpload={onBackgroundUpload}
+          purchasedTracks={purchasedTracks}
+          purchasedPodcasts={purchasedPodcasts}
+          onSuccess={onSuccess}
+        />
+      );
+    }
+
+    // Route Fashion Retailers to their specialized dashboard
+    if (industry === 'Fashion Retailer') {
+      return (
+        <FashionRetailerDashboard 
           onBackgroundUpload={onBackgroundUpload}
           purchasedTracks={purchasedTracks}
           purchasedPodcasts={purchasedPodcasts}
