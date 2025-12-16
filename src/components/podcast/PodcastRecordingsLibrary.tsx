@@ -13,7 +13,8 @@ import {
   X, 
   Library,
   Clock,
-  Calendar
+  Calendar,
+  Upload
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -234,13 +235,115 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
     );
   }
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    // Validate file type
+    if (!file.type.startsWith('audio/')) {
+      toast({
+        title: "Invalid File",
+        description: "Please select an audio file (MP3, WAV, M4A, etc.)",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file size (100MB max)
+    if (file.size > 100 * 1024 * 1024) {
+      toast({
+        title: "File Too Large",
+        description: "Please select a file smaller than 100MB.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const timestamp = Date.now();
+      const fileExt = file.name.split('.').pop();
+      const fileName = `podcast-recordings/${user.id}/${timestamp}-uploaded.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('audio-files')
+        .upload(fileName, file, {
+          contentType: file.type,
+          upsert: false
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('audio-files')
+        .getPublicUrl(fileName);
+
+      // Create audio element to get duration
+      const audio = new Audio(URL.createObjectURL(file));
+      await new Promise<void>((resolve) => {
+        audio.onloadedmetadata = () => resolve();
+        audio.onerror = () => resolve();
+      });
+
+      const duration = Math.round(audio.duration) || null;
+
+      // Save to database
+      const { error: dbError } = await supabase
+        .from('podcast_recordings')
+        .insert({
+          merchant_id: user.id,
+          title: file.name.replace(/\.[^/.]+$/, "") || `Uploaded Recording - ${new Date().toLocaleDateString()}`,
+          description: 'Uploaded recording',
+          audio_url: publicUrl,
+          duration_seconds: duration,
+          file_size_bytes: file.size,
+          status: 'draft'
+        });
+
+      if (dbError) throw dbError;
+
+      toast({
+        title: "Upload Complete",
+        description: "Your recording has been uploaded successfully.",
+      });
+
+      fetchRecordings();
+    } catch (error) {
+      console.error('Error uploading recording:', error);
+      toast({
+        title: "Upload Failed",
+        description: "Could not upload your recording. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+      // Reset file input
+      e.target.value = '';
+    }
+  };
+
   return (
     <Card className="bg-card/50 border-border backdrop-blur-sm">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-foreground">
-          <Library className="w-5 h-5" />
-          My Recordings
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2 text-foreground">
+            <Library className="w-5 h-5" />
+            My Recordings
+          </CardTitle>
+          <div className="relative">
+            <input
+              type="file"
+              accept="audio/*"
+              onChange={handleFileUpload}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              disabled={loading}
+            />
+            <Button variant="outline" size="sm" disabled={loading}>
+              <Upload className="w-4 h-4 mr-1" />
+              Upload
+            </Button>
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
         {recordings.length === 0 ? (

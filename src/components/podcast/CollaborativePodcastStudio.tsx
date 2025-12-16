@@ -1,20 +1,20 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { 
-  Mic, MicOff, Square, Play, Save, Trash2, Download, 
-  Users, Copy, Link, UserPlus, Radio, Clock
+  Phone, Users, UserPlus, Settings, Upload, 
+  Info, ExternalLink, Check, AlertCircle
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { usePodcastSession } from "@/hooks/usePodcastSession";
-import { AudioLevelMeter } from "./AudioLevelMeter";
-import { PodcastInviteModal } from "./PodcastInviteModal";
+import { GoogleVoiceSetupModal } from "./GoogleVoiceSetupModal";
+import { GoogleVoicePodcastInviteModal } from "./GoogleVoicePodcastInviteModal";
 
 interface CollaborativePodcastStudioProps {
   onRecordingSaved?: () => void;
@@ -24,195 +24,94 @@ export const CollaborativePodcastStudio = ({ onRecordingSaved }: CollaborativePo
   const { user } = useAuth();
   const { toast } = useToast();
   
-  // Session state
-  const [sessionId, setSessionId] = useState<string | null>(null);
-  const [sessionTitle, setSessionTitle] = useState("");
-  const [sessionDescription, setSessionDescription] = useState("");
-  const [inviteToken, setInviteToken] = useState<string | null>(null);
-  const [isCreatingSession, setIsCreatingSession] = useState(false);
+  // State
+  const [googleVoiceNumber, setGoogleVoiceNumber] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showSetupModal, setShowSetupModal] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
-  
-  // Recording state
-  const [isRecording, setIsRecording] = useState(false);
-  const [recordingTime, setRecordingTime] = useState(0);
-  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
-  
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const [sessionTitle, setSessionTitle] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
 
-  // Use podcast session hook
-  const {
-    localStream,
-    mixedAudioStream,
-    participants,
-    isConnected,
-    isMuted,
-    joinSession,
-    leaveSession,
-    toggleMute,
-  } = usePodcastSession(sessionId || '', user?.id || '', true);
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  // Create new session
-  const createSession = async () => {
-    if (!user || !sessionTitle.trim()) {
-      toast({
-        title: "Missing Title",
-        description: "Please enter a session title.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsCreatingSession(true);
-    try {
-      const { data, error } = await supabase
-        .from('podcast_sessions')
-        .insert({
-          host_id: user.id,
-          title: sessionTitle.trim(),
-          description: sessionDescription.trim() || null,
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      setSessionId(data.id);
-      setInviteToken(data.invite_token);
+  // Fetch existing Google Voice number
+  useEffect(() => {
+    const fetchGoogleVoiceNumber = async () => {
+      if (!user) return;
       
-      // Join the session with the new session ID
-      await joinSession(data.id);
+      setIsLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('google_voice_number')
+          .eq('id', user.id)
+          .single();
 
-      toast({
-        title: "Session Created",
-        description: "Your podcast session is ready. Invite guests to join!",
-      });
-    } catch (error) {
-      console.error('Error creating session:', error);
-      toast({
-        title: "Error",
-        description: "Failed to create session. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsCreatingSession(false);
-    }
+        if (!error && data?.google_voice_number) {
+          setGoogleVoiceNumber(data.google_voice_number);
+        }
+      } catch (error) {
+        console.error('Error fetching Google Voice number:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchGoogleVoiceNumber();
+  }, [user]);
+
+  const handleSetupComplete = (phoneNumber: string) => {
+    setGoogleVoiceNumber(phoneNumber);
+    toast({
+      title: "Setup Complete",
+      description: "You can now invite guests to your podcast!",
+    });
   };
 
-  // Start recording (host only)
-  const startRecording = useCallback(() => {
-    if (!mixedAudioStream) {
+  const handleInviteClick = () => {
+    if (!sessionTitle.trim()) {
       toast({
-        title: "Not Ready",
-        description: "Please wait for the audio to initialize.",
-        variant: "destructive"
+        title: "Session Title Required",
+        description: "Please enter a topic for your podcast session.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setShowInviteModal(true);
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    // Validate file type
+    if (!file.type.startsWith('audio/')) {
+      toast({
+        title: "Invalid File",
+        description: "Please select an audio file (MP3, WAV, M4A, etc.)",
+        variant: "destructive",
       });
       return;
     }
 
-    try {
-      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-        ? 'audio/webm;codecs=opus'
-        : MediaRecorder.isTypeSupported('audio/webm')
-          ? 'audio/webm'
-          : 'audio/mp4';
-
-      const mediaRecorder = new MediaRecorder(mixedAudioStream, { mimeType });
-      mediaRecorderRef.current = mediaRecorder;
-      chunksRef.current = [];
-
-      mediaRecorder.ondataavailable = (e) => {
-        if (e.data.size > 0) {
-          chunksRef.current.push(e.data);
-        }
-      };
-
-      mediaRecorder.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: mimeType });
-        setAudioBlob(blob);
-        setAudioUrl(URL.createObjectURL(blob));
-      };
-
-      mediaRecorder.start(1000);
-      setIsRecording(true);
-      setRecordingTime(0);
-
-      // Update session status
-      supabase
-        .from('podcast_sessions')
-        .update({ status: 'recording', started_at: new Date().toISOString() })
-        .eq('id', sessionId);
-
-      timerRef.current = setInterval(() => {
-        setRecordingTime(prev => prev + 1);
-      }, 1000);
-
+    // Validate file size (100MB max)
+    if (file.size > 100 * 1024 * 1024) {
       toast({
-        title: "Recording Started",
-        description: "All participants are now being recorded.",
-      });
-    } catch (error) {
-      console.error('Error starting recording:', error);
-      toast({
-        title: "Recording Error",
-        description: "Could not start recording.",
-        variant: "destructive"
-      });
-    }
-  }, [mixedAudioStream, sessionId, toast]);
-
-  // Stop recording
-  const stopRecording = useCallback(() => {
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop();
-      setIsRecording(false);
-
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
-
-      // Update session status
-      supabase
-        .from('podcast_sessions')
-        .update({ status: 'completed', ended_at: new Date().toISOString() })
-        .eq('id', sessionId);
-
-      toast({
-        title: "Recording Stopped",
-        description: "Review your recording below.",
-      });
-    }
-  }, [isRecording, sessionId, toast]);
-
-  // Save recording
-  const saveRecording = async () => {
-    if (!audioBlob || !user || !sessionTitle.trim()) {
-      toast({
-        title: "Missing Information",
-        description: "Please ensure there is a recording to save.",
-        variant: "destructive"
+        title: "File Too Large",
+        description: "Please select a file smaller than 100MB.",
+        variant: "destructive",
       });
       return;
     }
 
-    setIsSaving(true);
+    setIsUploading(true);
     try {
       const timestamp = Date.now();
-      const fileName = `podcast-recordings/${user.id}/${timestamp}-collaborative.webm`;
+      const fileExt = file.name.split('.').pop();
+      const fileName = `podcast-recordings/${user.id}/${timestamp}-uploaded.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from('audio-files')
-        .upload(fileName, audioBlob, {
-          contentType: 'audio/webm',
+        .upload(fileName, file, {
+          contentType: file.type,
           upsert: false
         });
 
@@ -222,103 +121,63 @@ export const CollaborativePodcastStudio = ({ onRecordingSaved }: CollaborativePo
         .from('audio-files')
         .getPublicUrl(fileName);
 
-      const participantNames = participants.map(p => p.displayName).join(', ');
+      // Create audio element to get duration
+      const audio = new Audio(URL.createObjectURL(file));
+      await new Promise<void>((resolve) => {
+        audio.onloadedmetadata = () => resolve();
+        audio.onerror = () => resolve();
+      });
 
+      const duration = Math.round(audio.duration) || null;
+
+      // Save to database
       const { error: dbError } = await supabase
         .from('podcast_recordings')
         .insert({
           merchant_id: user.id,
-          title: sessionTitle.trim(),
-          description: `Collaborative recording with: ${participantNames}. ${sessionDescription}`.trim(),
+          title: sessionTitle.trim() || `Uploaded Recording - ${new Date().toLocaleDateString()}`,
+          description: 'Uploaded from Google Voice recording',
           audio_url: publicUrl,
-          duration_seconds: recordingTime,
-          file_size_bytes: audioBlob.size,
+          duration_seconds: duration,
+          file_size_bytes: file.size,
           status: 'draft'
         });
 
       if (dbError) throw dbError;
 
       toast({
-        title: "Recording Saved",
-        description: "Your collaborative podcast recording has been saved.",
+        title: "Upload Complete",
+        description: "Your recording has been uploaded successfully.",
       });
 
-      discardRecording();
+      setSessionTitle("");
       onRecordingSaved?.();
     } catch (error) {
-      console.error('Error saving recording:', error);
+      console.error('Error uploading recording:', error);
       toast({
-        title: "Save Failed",
-        description: "Could not save your recording. Please try again.",
-        variant: "destructive"
+        title: "Upload Failed",
+        description: "Could not upload your recording. Please try again.",
+        variant: "destructive",
       });
     } finally {
-      setIsSaving(false);
+      setIsUploading(false);
+      // Reset file input
+      e.target.value = '';
     }
   };
 
-  // Discard recording
-  const discardRecording = () => {
-    if (audioUrl) {
-      URL.revokeObjectURL(audioUrl);
-    }
-    setAudioBlob(null);
-    setAudioUrl(null);
-    setRecordingTime(0);
-    chunksRef.current = [];
-  };
-
-  // Download recording
-  const downloadRecording = () => {
-    if (audioBlob) {
-      const url = URL.createObjectURL(audioBlob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${sessionTitle || 'recording'}-${Date.now()}.webm`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }
-  };
-
-  // End session
-  const endSession = async () => {
-    if (isRecording) {
-      stopRecording();
-    }
-    await leaveSession();
-    setSessionId(null);
-    setInviteToken(null);
-  };
-
-  // Copy invite link
-  const copyInviteLink = () => {
-    if (inviteToken) {
-      const link = `${window.location.origin}/podcast-session/${inviteToken}`;
-      navigator.clipboard.writeText(link);
-      toast({
-        title: "Link Copied",
-        description: "Invite link copied to clipboard.",
-      });
-    }
-  };
-
-  // Cleanup
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
-      if (audioUrl) {
-        URL.revokeObjectURL(audioUrl);
-      }
-    };
-  }, []);
-
-  // Pre-session setup UI
-  if (!sessionId) {
+  if (isLoading) {
     return (
+      <Card className="bg-card/50 border-border backdrop-blur-sm">
+        <CardContent className="py-8 text-center">
+          <p className="text-muted-foreground">Loading...</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <>
       <Card className="bg-card/50 border-border backdrop-blur-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-foreground">
@@ -326,216 +185,144 @@ export const CollaborativePodcastStudio = ({ onRecordingSaved }: CollaborativePo
             Collaborative Podcast Studio
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="session-title">Session Title *</Label>
-            <Input
-              id="session-title"
-              value={sessionTitle}
-              onChange={(e) => setSessionTitle(e.target.value)}
-              placeholder="Enter your podcast session title"
-              className="bg-background"
-            />
+        <CardContent className="space-y-6">
+          {/* Google Voice Status */}
+          {googleVoiceNumber ? (
+            <div className="flex items-center justify-between p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+              <div className="flex items-center gap-2">
+                <Check className="w-5 h-5 text-green-500" />
+                <div>
+                  <p className="text-sm font-medium text-foreground">Google Voice Connected</p>
+                  <p className="text-xs text-muted-foreground">{googleVoiceNumber}</p>
+                </div>
+              </div>
+              <Button variant="outline" size="sm" onClick={() => setShowSetupModal(true)}>
+                <Settings className="w-4 h-4 mr-1" />
+                Edit
+              </Button>
+            </div>
+          ) : (
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Set Up Google Voice</AlertTitle>
+              <AlertDescription>
+                To invite guests to your podcast, you need to set up your Google Voice number first.
+                <Button 
+                  variant="link" 
+                  className="p-0 h-auto text-primary ml-1"
+                  onClick={() => setShowSetupModal(true)}
+                >
+                  Set up now →
+                </Button>
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* How It Works */}
+          <Alert variant="default" className="border-primary/20 bg-primary/5">
+            <Info className="h-4 w-4 text-primary" />
+            <AlertTitle className="text-primary">How It Works</AlertTitle>
+            <AlertDescription className="text-sm space-y-2">
+              <ol className="list-decimal list-inside space-y-1 mt-2">
+                <li>Set up your Google Voice number (free from Google)</li>
+                <li>Enter a topic and invite guests via this app</li>
+                <li>Guests call your Google Voice number</li>
+                <li>Press <strong>4</strong> during the call to record</li>
+                <li>Download from Google Voice and upload here</li>
+              </ol>
+              <a 
+                href="https://voice.google.com/voicemail" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-primary hover:underline mt-2"
+              >
+                Open Google Voice to download recordings <ExternalLink className="w-3 h-3" />
+              </a>
+            </AlertDescription>
+          </Alert>
+
+          {/* Session Setup */}
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="session-topic">Podcast Topic / Episode Title</Label>
+              <Input
+                id="session-topic"
+                value={sessionTitle}
+                onChange={(e) => setSessionTitle(e.target.value)}
+                placeholder="e.g., Interview with John about AI trends"
+                className="bg-background"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Invite Guest Button */}
+              <Button
+                onClick={handleInviteClick}
+                disabled={!googleVoiceNumber}
+                className="gap-2"
+              >
+                <UserPlus className="w-4 h-4" />
+                Invite Guest
+              </Button>
+
+              {/* Upload Recording Button */}
+              <div className="relative">
+                <input
+                  type="file"
+                  accept="audio/*"
+                  onChange={handleFileUpload}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  disabled={isUploading}
+                />
+                <Button
+                  variant="outline"
+                  className="w-full gap-2"
+                  disabled={isUploading}
+                >
+                  <Upload className="w-4 h-4" />
+                  {isUploading ? "Uploading..." : "Upload Recording"}
+                </Button>
+              </div>
+            </div>
+
+            {!googleVoiceNumber && (
+              <p className="text-xs text-muted-foreground text-center">
+                Set up your Google Voice number to invite guests
+              </p>
+            )}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="session-description">Description</Label>
-            <Textarea
-              id="session-description"
-              value={sessionDescription}
-              onChange={(e) => setSessionDescription(e.target.value)}
-              placeholder="Add a description (optional)"
-              className="bg-background"
-              rows={3}
-            />
+          {/* Setup Instructions */}
+          <div className="pt-4 border-t border-border">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowSetupModal(true)}
+              className="gap-2 text-muted-foreground hover:text-foreground"
+            >
+              <Phone className="w-4 h-4" />
+              {googleVoiceNumber ? 'Update Google Voice Settings' : 'Set Up Google Voice'}
+            </Button>
           </div>
-
-          <Button 
-            onClick={createSession}
-            disabled={isCreatingSession || !sessionTitle.trim()}
-            className="w-full gap-2"
-          >
-            <Radio className="w-4 h-4" />
-            {isCreatingSession ? 'Creating Session...' : 'Start Collaborative Session'}
-          </Button>
-
-          <p className="text-xs text-muted-foreground text-center">
-            Create a session to record with other users. You'll be able to invite guests via messaging.
-          </p>
         </CardContent>
       </Card>
-    );
-  }
 
-  // Active session UI
-  return (
-    <Card className="bg-card/50 border-border backdrop-blur-sm">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-foreground">
-            <Radio className="w-5 h-5 text-primary animate-pulse" />
-            {sessionTitle}
-          </CardTitle>
-          <Badge variant={isRecording ? "destructive" : isConnected ? "default" : "secondary"}>
-            {isRecording ? 'Recording' : isConnected ? 'Live' : 'Connecting...'}
-          </Badge>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Participants */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label className="flex items-center gap-2">
-              <Users className="w-4 h-4" />
-              Participants ({participants.length})
-            </Label>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => setShowInviteModal(true)}
-              className="gap-1"
-            >
-              <UserPlus className="w-3 h-3" />
-              Invite
-            </Button>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {participants.map((participant) => (
-              <Badge 
-                key={participant.id} 
-                variant={participant.isConnected ? "default" : "secondary"}
-                className="flex items-center gap-1"
-              >
-                {participant.isMuted ? <MicOff className="w-3 h-3" /> : <Mic className="w-3 h-3" />}
-                {participant.displayName}
-                {participant.role === 'host' && ' (Host)'}
-              </Badge>
-            ))}
-          </div>
-        </div>
-
-        {/* Invite Link */}
-        {inviteToken && (
-          <div className="flex items-center gap-2 p-2 bg-muted rounded-lg">
-            <Link className="w-4 h-4 text-muted-foreground" />
-            <code className="text-xs flex-1 truncate">
-              {window.location.origin}/podcast-session/{inviteToken}
-            </code>
-            <Button variant="ghost" size="sm" onClick={copyInviteLink}>
-              <Copy className="w-4 h-4" />
-            </Button>
-          </div>
-        )}
-
-        {/* Audio Level Meter */}
-        <AudioLevelMeter stream={localStream} isRecording={!isMuted && isConnected} />
-
-        {/* Recording Timer */}
-        <div className="text-center">
-          <div className="text-4xl font-mono font-bold text-foreground flex items-center justify-center gap-2">
-            <Clock className="w-6 h-6" />
-            {formatTime(recordingTime)}
-          </div>
-          <p className="text-sm text-muted-foreground mt-1">
-            {isRecording ? 'Recording all participants...' : 'Ready to record'}
-          </p>
-        </div>
-
-        {/* Controls */}
-        <div className="flex justify-center gap-4">
-          {/* Mute Toggle */}
-          <Button 
-            onClick={toggleMute}
-            variant={isMuted ? "destructive" : "outline"}
-            size="lg"
-            className="gap-2"
-          >
-            {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
-            {isMuted ? 'Unmute' : 'Mute'}
-          </Button>
-
-          {/* Recording Controls */}
-          {!isRecording && !audioBlob && (
-            <Button 
-              onClick={startRecording}
-              size="lg"
-              disabled={participants.length < 1}
-              className="gap-2"
-            >
-              <Play className="w-5 h-5" />
-              Start Recording
-            </Button>
-          )}
-
-          {isRecording && (
-            <Button 
-              onClick={stopRecording}
-              variant="destructive"
-              size="lg"
-              className="gap-2"
-            >
-              <Square className="w-5 h-5" />
-              Stop Recording
-            </Button>
-          )}
-
-          {/* End Session */}
-          <Button 
-            onClick={endSession}
-            variant="outline"
-            size="lg"
-          >
-            End Session
-          </Button>
-        </div>
-
-        {/* Preview and Save */}
-        {audioUrl && !isRecording && (
-          <div className="space-y-4 pt-4 border-t border-border">
-            <div className="space-y-2">
-              <Label>Preview Recording</Label>
-              <audio src={audioUrl} controls className="w-full" />
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              <Button 
-                onClick={saveRecording}
-                disabled={isSaving}
-                className="gap-2"
-              >
-                <Save className="w-4 h-4" />
-                {isSaving ? 'Saving...' : 'Save Recording'}
-              </Button>
-              <Button 
-                onClick={downloadRecording}
-                variant="outline"
-                className="gap-2"
-              >
-                <Download className="w-4 h-4" />
-                Download
-              </Button>
-              <Button 
-                onClick={discardRecording}
-                variant="destructive"
-                className="gap-2"
-              >
-                <Trash2 className="w-4 h-4" />
-                Discard
-              </Button>
-            </div>
-          </div>
-        )}
-      </CardContent>
-
-      {/* Invite Modal */}
-      <PodcastInviteModal
-        open={showInviteModal}
-        onOpenChange={setShowInviteModal}
-        sessionId={sessionId}
-        sessionTitle={sessionTitle}
-        inviteToken={inviteToken || ''}
+      {/* Modals */}
+      <GoogleVoiceSetupModal
+        open={showSetupModal}
+        onOpenChange={setShowSetupModal}
+        onSetupComplete={handleSetupComplete}
       />
-    </Card>
+
+      {googleVoiceNumber && (
+        <GoogleVoicePodcastInviteModal
+          open={showInviteModal}
+          onOpenChange={setShowInviteModal}
+          sessionTitle={sessionTitle}
+          googleVoiceNumber={googleVoiceNumber}
+        />
+      )}
+    </>
   );
 };
 

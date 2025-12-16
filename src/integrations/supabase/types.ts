@@ -1987,6 +1987,7 @@ export type Database = {
           email: string
           facebook_url: string | null
           first_name: string | null
+          google_voice_number: string | null
           id: string
           industry: string | null
           instagram_url: string | null
@@ -2022,6 +2023,7 @@ export type Database = {
           email: string
           facebook_url?: string | null
           first_name?: string | null
+          google_voice_number?: string | null
           id: string
           industry?: string | null
           instagram_url?: string | null
@@ -2057,6 +2059,7 @@ export type Database = {
           email?: string
           facebook_url?: string | null
           first_name?: string | null
+          google_voice_number?: string | null
           id?: string
           industry?: string | null
           instagram_url?: string | null
