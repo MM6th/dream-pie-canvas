@@ -887,19 +887,19 @@ const StorePage = () => {
           <FashionStoreSection />
         </div>
 
-        {/* Audio Products Section */}
+        {/* Podcasts Section */}
         <div className="mb-8 sm:mb-12">
           <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6 flex items-center gap-2">
             <AudioLines className="w-5 h-5 sm:w-6 sm:h-6" />
-            Audio Content
+            Podcasts
           </h2>
           
-          {audioProducts.length === 0 ? (
+          {audioProducts.filter(p => p.audio_type === 'podcast').length === 0 ? (
             <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
               <CardContent className="p-8 text-center">
                 <AudioLines className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-white mb-2">No Audio Products Available</h3>
-                <p className="text-gray-400">Be the first to upload some audio content!</p>
+                <h3 className="text-lg font-semibold text-white mb-2">No Podcasts Available</h3>
+                <p className="text-gray-400">Podcasts will appear here when published.</p>
               </CardContent>
             </Card>
           ) : (
@@ -911,7 +911,135 @@ const StorePage = () => {
               }}
             >
               <CarouselContent className="-ml-2 md:-ml-4">
-                {audioProducts.map((product) => (
+                {audioProducts.filter(p => p.audio_type === 'podcast').map((product) => (
+                  <CarouselItem key={product.id} className="pl-2 md:pl-4 basis-full sm:basis-1/2 lg:basis-1/3 xl:basis-1/4">
+                    <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm hover:bg-gray-800/70 transition-colors h-full">
+                      <CardHeader className="p-4">
+                        {product.thumbnail_url ? (
+                          <img
+                            src={product.thumbnail_url}
+                            alt={product.title}
+                            className="w-full h-40 object-cover rounded-lg mb-3"
+                          />
+                        ) : (
+                          <div className="w-full h-40 bg-gray-700 rounded-lg mb-3 flex items-center justify-center">
+                            <AudioLines className="w-12 h-12 text-gray-400" />
+                          </div>
+                        )}
+                        <CardTitle className="text-white text-lg line-clamp-2">{product.title}</CardTitle>
+                        {product.artist_name && (
+                          <p className="text-gray-400 text-sm">by {product.artist_name}</p>
+                        )}
+                        {product.description && (
+                          <ExpandableDescription 
+                            description={product.description} 
+                            maxLength={80}
+                            className="mt-2"
+                          />
+                        )}
+                      </CardHeader>
+                      <CardContent className="p-4 pt-0">
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between flex-wrap gap-2">
+                            <Badge variant="secondary" className="capitalize text-xs px-2 py-1">
+                              Podcast
+                            </Badge>
+                          </div>
+                          
+                          <div className="flex items-center justify-between flex-wrap gap-2">
+                            {getAccessLevelBadgeForAudio(product)}
+                          </div>
+                          
+                          <div className="flex items-center justify-end gap-2 flex-wrap">
+                            {product.access_level === 'merchant_only' ? (
+                              <DownloadOpportunityChecker
+                                audioProductId={product.id}
+                                maxDownloads={product.max_downloads}
+                                downloadTable="podcast_downloads"
+                              >
+                                {(remainingDownloads, isExhausted) => (
+                                  <div className="flex flex-col items-end gap-2">
+                                    <div className="text-xs text-right">
+                                      {product.max_downloads && !isExhausted && (
+                                        <Badge className="bg-purple-600 hover:bg-purple-700 text-xs">
+                                          {remainingDownloads !== null ? remainingDownloads : product.max_downloads} opportunity{(remainingDownloads !== null ? remainingDownloads : product.max_downloads) !== 1 ? 's' : ''} left
+                                        </Badge>
+                                      )}
+                                    </div>
+                                    {!isExhausted && (
+                                      <PodcastDownloadManager 
+                                        audioProduct={{
+                                          id: product.id,
+                                          title: product.title,
+                                          audio_file_url: product.audio_file_url,
+                                          access_level: product.access_level || (product.is_free ? "public" : "paid"),
+                                          audio_type: product.audio_type,
+                                          max_downloads: product.max_downloads
+                                        }}
+                                      />
+                                    )}
+                                  </div>
+                                )}
+                              </DownloadOpportunityChecker>
+                            ) : product.access_level === 'paid' && product.price ? (
+                              <Button
+                                onClick={() => handleAudioPurchase(product)}
+                                disabled={purchasingId === product.id}
+                                className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1"
+                                size="sm"
+                              >
+                                <DollarSign className="w-3 h-3 mr-1" />
+                                {purchasingId === product.id ? 'Processing...' : `Buy $${product.price.toFixed(2)}`}
+                              </Button>
+                            ) : (
+                              <Button
+                                onClick={() => handleFreeAudioDownload(product)}
+                                disabled={!canDownloadAudio(product)}
+                                className="bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1"
+                                size="sm"
+                              >
+                                <Download className="w-3 h-3 mr-1" />
+                                {getDownloadButtonText(product)}
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="hidden sm:flex -left-4 bg-gray-800 border-gray-600 text-white hover:bg-gray-700" />
+              <CarouselNext className="hidden sm:flex -right-4 bg-gray-800 border-gray-600 text-white hover:bg-gray-700" />
+            </Carousel>
+          )}
+        </div>
+
+        {/* Music Section */}
+        <div className="mb-8 sm:mb-12">
+          <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6 flex items-center gap-2">
+            <AudioLines className="w-5 h-5 sm:w-6 sm:h-6" />
+            Music
+          </h2>
+          
+          {audioProducts.filter(p => p.audio_type === 'music').length === 0 ? (
+            <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+              <CardContent className="p-8 text-center">
+                <AudioLines className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-white mb-2">No Music Available</h3>
+                <p className="text-gray-400">Music will appear here when published.</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <Carousel
+              className="w-full"
+              opts={{
+                align: "start",
+                loop: true,
+              }}
+            >
+              <CarouselContent className="-ml-2 md:-ml-4">
+                {audioProducts.filter(p => p.audio_type === 'music').map((product) => (
                   <CarouselItem key={product.id} className="pl-2 md:pl-4 basis-full sm:basis-1/2 lg:basis-1/3 xl:basis-1/4">
                     <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm hover:bg-gray-800/70 transition-colors h-full">
                       <CardHeader className="p-4">
@@ -931,13 +1059,7 @@ const StorePage = () => {
                           <p className="text-gray-400 text-sm">by {product.artist_name}</p>
                         )}
                         <ProductInstructionalText 
-                          productType={
-                            product.audio_type === 'asmr' || product.audio_type === 'podcast' 
-                              ? product.audio_type 
-                              : product.access_level === 'merchant_only' 
-                                ? 'cover_submission'
-                                : 'cover_submission'
-                          } 
+                          productType={product.access_level === 'merchant_only' ? 'cover_submission' : 'cover_submission'} 
                           isForSale={product.access_level === 'paid'}
                           isFree={product.is_free}
                           isMerchantOnly={product.access_level === 'merchant_only'}
@@ -953,7 +1075,7 @@ const StorePage = () => {
                       <CardContent className="p-4 pt-0">
                         <div className="space-y-4">
                           {/* Music Preview Player */}
-                          {product.audio_type === 'music' && product.preview_start_time !== null && (
+                          {product.preview_start_time !== null && (
                             <AudioPreviewPlayer
                               audioUrl={product.audio_file_url}
                               previewStartTime={product.preview_start_time || 0}
@@ -968,7 +1090,7 @@ const StorePage = () => {
 
                           <div className="flex items-center justify-between flex-wrap gap-2">
                             <Badge variant="secondary" className="capitalize text-xs px-2 py-1">
-                              {product.audio_type}
+                              Music
                             </Badge>
                             {(product as any).isAlbum && (product as any).albumId && (
                               <AlbumTracklistHover 
@@ -978,128 +1100,35 @@ const StorePage = () => {
                             )}
                           </div>
                           
-                          {/* Badges section with better spacing */}
                           <div className="flex items-center justify-between flex-wrap gap-2">
                             {getAccessLevelBadgeForAudio(product)}
                           </div>
                           
-                          {/* Action buttons section with improved spacing */}
                           <div className="flex items-center justify-end gap-2 flex-wrap">
-                            {product.audio_type === 'podcast' && product.access_level === 'merchant_only' ? (
-                              <DownloadOpportunityChecker
-                                audioProductId={product.id}
-                                maxDownloads={product.max_downloads}
-                                downloadTable="podcast_downloads"
-                              >
-                                {(remainingDownloads, isExhausted) => (
-                                  <div className="flex flex-col items-end gap-2">
-                                    <div className="text-xs text-right">
-                                      {product.max_downloads && !isExhausted && (
-                                        <Badge className="bg-purple-600 hover:bg-purple-700 text-xs">
-                                          {remainingDownloads !== null ? remainingDownloads : product.max_downloads} opportunity{(remainingDownloads !== null ? remainingDownloads : product.max_downloads) !== 1 ? 's' : ''} left
-                                        </Badge>
-                                      )}
-                                      {isExhausted && (
-                                        <div className="text-xs text-gray-500 italic">
-                                          Download opportunities exhausted
-                                        </div>
-                                      )}
-                                    </div>
-                                    {!isExhausted && (
-                                      <PodcastDownloadManager 
-                                        audioProduct={{
-                                          id: product.id,
-                                          title: product.title,
-                                          audio_file_url: product.audio_file_url,
-                                          access_level: product.access_level || (product.is_free ? "public" : "paid"),
-                                          audio_type: product.audio_type,
-                                          max_downloads: product.max_downloads
-                                        }}
-                                      />
-                                    )}
-                                  </div>
-                                )}
-                              </DownloadOpportunityChecker>
-                            ) : product.audio_type === 'asmr' && product.access_level === 'merchant_only' ? (
-                              <DownloadOpportunityChecker
-                                audioProductId={product.id}
-                                maxDownloads={product.max_downloads}
-                                downloadTable="asmr_downloads"
-                              >
-                                {(remainingDownloads, isExhausted) => (
-                                  <div className="flex flex-col items-end gap-2">
-                                     <div className="text-xs text-right">
-                                       {product.max_downloads && !isExhausted && (
-                                         <Badge className="bg-purple-600 hover:bg-purple-700 text-xs">
-                                           {remainingDownloads !== null ? remainingDownloads : product.max_downloads} opportunity{(remainingDownloads !== null ? remainingDownloads : product.max_downloads) !== 1 ? 's' : ''} left
-                                         </Badge>
-                                       )}
-                                       {isExhausted && (
-                                         <div className="text-xs text-gray-500 italic">
-                                           Download opportunities exhausted
-                                         </div>
-                                       )}
-                                     </div>
-                                    <Button
-                                      size="sm"
-                                      onClick={() => handleAudioPurchase(product)}
-                                      disabled={purchasingId === product.id || isExhausted || (!canDownloadAudio(product) && (product.access_level === "merchant_only"))}
-                                      className="bg-primary hover:bg-primary/90 text-xs h-7 px-3"
-                                    >
-                                     {purchasingId === product.id ? (
-                                       "Processing..."
-                                     ) : (
-                                       <>
-                                         <Download className="w-3 h-3 mr-1" />
-                                         {getDownloadButtonText(product)}
-                                       </>
-                                     )}
-                                    </Button>
-                                  </div>
-                                )}
-                              </DownloadOpportunityChecker>
-                            ) : (
-                              <Button
-                                size="sm"
-                                onClick={() => handleAudioPurchase(product)}
-                                disabled={purchasingId === product.id || (!canDownloadAudio(product) && (product.access_level === "merchant_only"))}
-                                className="bg-primary hover:bg-primary/90 text-xs h-7 px-3"
-                             >
-                               {purchasingId === product.id ? (
-                                 "Processing..."
-                               ) : (
-                                 <>
-                                   {(product.access_level === "paid") ? <DollarSign className="w-3 h-3 mr-1" /> : <Download className="w-3 h-3 mr-1" />}
-                                   {getDownloadButtonText(product)}
-                                 </>
-                               )}
-                             </Button>
-                            )}
-                             
-                             {/* Apply button for ASMR opportunities after download */}
-                             {product.audio_type === 'asmr' && 
-                              product.access_level === 'merchant_only' && 
-                              asmrDownloads.includes(product.id) && (
-                               <Button
-                                 size="sm"
-                                 onClick={() => handleAsmrApply(product)}
-                                 className="bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 font-semibold text-xs h-8 px-4 border-0 rounded-lg"
-                               >
-                                 <span className="flex items-center gap-2">
-                                   <span className="text-lg">🎯</span>
-                                   <span>Apply Now</span>
-                                 </span>
-                               </Button>
-                             )}
-                         </div>
+                            <Button
+                              size="sm"
+                              onClick={() => handleAudioPurchase(product)}
+                              disabled={purchasingId === product.id || (!canDownloadAudio(product) && (product.access_level === "merchant_only"))}
+                              className="bg-primary hover:bg-primary/90 text-xs h-7 px-3"
+                            >
+                              {purchasingId === product.id ? (
+                                "Processing..."
+                              ) : (
+                                <>
+                                  {(product.access_level === "paid") ? <DollarSign className="w-3 h-3 mr-1" /> : <Download className="w-3 h-3 mr-1" />}
+                                  {getDownloadButtonText(product)}
+                                </>
+                              )}
+                            </Button>
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
                   </CarouselItem>
                 ))}
               </CarouselContent>
-              <CarouselPrevious className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
-              <CarouselNext className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
+              <CarouselPrevious className="hidden sm:flex -left-4 bg-gray-800 border-gray-600 text-white hover:bg-gray-700" />
+              <CarouselNext className="hidden sm:flex -right-4 bg-gray-800 border-gray-600 text-white hover:bg-gray-700" />
             </Carousel>
           )}
         </div>
