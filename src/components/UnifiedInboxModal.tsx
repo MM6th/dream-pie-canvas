@@ -444,7 +444,7 @@ export const UnifiedInboxModal = ({ open, onOpenChange, userId, userType }: Unif
                                 {expandedMessageId === message.id && (
                                   <div className="mt-3 space-y-3">
                                     <div className="text-sm whitespace-pre-wrap">
-                                      {message.body.split(/(https?:\/\/[^\s]+)/g).map((part, index) => {
+                                      {message.body.split(/(https?:\/\/[^\s]+|tel:[^\s]+)/g).map((part, index) => {
                                         if (part.match(/^https?:\/\/[^\s]+$/)) {
                                           return (
                                             <a
@@ -456,6 +456,18 @@ export const UnifiedInboxModal = ({ open, onOpenChange, userId, userType }: Unif
                                               onClick={(e) => e.stopPropagation()}
                                             >
                                               {part}
+                                            </a>
+                                          );
+                                        }
+                                        if (part.match(/^tel:[^\s]+$/)) {
+                                          return (
+                                            <a
+                                              key={index}
+                                              href={part}
+                                              className="!text-blue-500 underline hover:!text-blue-400"
+                                              onClick={(e) => e.stopPropagation()}
+                                            >
+                                              Click to Call
                                             </a>
                                           );
                                         }
@@ -517,7 +529,7 @@ export const UnifiedInboxModal = ({ open, onOpenChange, userId, userType }: Unif
                                 {expandedMessageId === message.id && (
                                   <div className="mt-3 space-y-3">
                                     <div className="text-sm whitespace-pre-wrap">
-                                      {message.body.split(/(https?:\/\/[^\s]+)/g).map((part, index) => {
+                                      {message.body.split(/(https?:\/\/[^\s]+|tel:[^\s]+)/g).map((part, index) => {
                                         if (part.match(/^https?:\/\/[^\s]+$/)) {
                                           return (
                                             <a
@@ -529,6 +541,18 @@ export const UnifiedInboxModal = ({ open, onOpenChange, userId, userType }: Unif
                                               onClick={(e) => e.stopPropagation()}
                                             >
                                               {part}
+                                            </a>
+                                          );
+                                        }
+                                        if (part.match(/^tel:[^\s]+$/)) {
+                                          return (
+                                            <a
+                                              key={index}
+                                              href={part}
+                                              className="!text-blue-500 underline hover:!text-blue-400"
+                                              onClick={(e) => e.stopPropagation()}
+                                            >
+                                              Click to Call
                                             </a>
                                           );
                                         }
