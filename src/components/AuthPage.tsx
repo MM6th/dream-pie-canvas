@@ -15,6 +15,7 @@ import UserStatsDisplay from "./UserStatsDisplay";
 const INDUSTRY_OPTIONS = [
   'Music Artist',
   'Fashion Retailer',
+  'Audio Podcaster',
 ];
 
 // Industries under construction (hidden but preserved for future use)
@@ -23,7 +24,6 @@ const UNDER_CONSTRUCTION_INDUSTRIES = [
   'Film Editor',
   'Videographer',
   'Live Stream Artist',
-  'Audio Podcaster',
   'Voice Actor',
   'Cook/Baker',
   'Book Editor',
