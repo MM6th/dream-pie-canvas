@@ -131,13 +131,25 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
 
   const deleteRecording = async (recordingId: string, audioUrl: string) => {
     try {
-      // Extract file path from URL
+      // First, delete any published audio_product that uses this audio URL
+      const { error: productDeleteError } = await supabase
+        .from('audio_products')
+        .delete()
+        .eq('audio_file_url', audioUrl)
+        .eq('merchant_id', user?.id);
+      
+      if (productDeleteError) {
+        console.error('Error deleting audio product:', productDeleteError);
+      }
+
+      // Extract file path from URL and delete from storage
       const urlParts = audioUrl.split('/audio-files/');
       if (urlParts.length > 1) {
         const filePath = urlParts[1];
         await supabase.storage.from('audio-files').remove([filePath]);
       }
       
+      // Delete from podcast_recordings table
       const { error } = await supabase
         .from('podcast_recordings')
         .delete()
