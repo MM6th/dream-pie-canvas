@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Upload, X, Loader2 } from "lucide-react";
+import { Upload, X, Loader2, Image, Video } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
@@ -32,6 +32,13 @@ interface EditFoodProductModalProps {
   onSuccess: () => void;
 }
 
+interface GalleryUpload {
+  id: string;
+  file_name: string;
+  file_path: string;
+  file_type: string;
+}
+
 const EditFoodProductModal = ({ product, open, onOpenChange, onSuccess }: EditFoodProductModalProps) => {
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -43,6 +50,12 @@ const EditFoodProductModal = ({ product, open, onOpenChange, onSuccess }: EditFo
   const [newFiles, setNewFiles] = useState<File[]>([]);
   const [newPreviews, setNewPreviews] = useState<string[]>([]);
   const [imagesToDelete, setImagesToDelete] = useState<string[]>([]);
+  
+  // Gallery state
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const [galleryLoading, setGalleryLoading] = useState(false);
+  const [galleryUploads, setGalleryUploads] = useState<GalleryUpload[]>([]);
+  const [galleryPreviews, setGalleryPreviews] = useState<{ url: string; type: string }[]>([]);
 
   useEffect(() => {
     setTitle(product.title);
@@ -52,7 +65,50 @@ const EditFoodProductModal = ({ product, open, onOpenChange, onSuccess }: EditFo
     setNewFiles([]);
     setNewPreviews([]);
     setImagesToDelete([]);
+    setGalleryPreviews([]);
   }, [product]);
+
+  useEffect(() => {
+    if (galleryOpen && user) {
+      fetchGalleryUploads();
+    }
+  }, [galleryOpen, user]);
+
+  const fetchGalleryUploads = async () => {
+    if (!user) return;
+    setGalleryLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("user_uploads")
+        .select("id, file_name, file_path, file_type")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setGalleryUploads(data || []);
+    } catch (err) {
+      console.error("Error fetching gallery uploads:", err);
+    } finally {
+      setGalleryLoading(false);
+    }
+  };
+
+  const getUserMediaUrl = (filePath: string) => {
+    const { data } = supabase.storage.from("user-media").getPublicUrl(filePath);
+    return data.publicUrl;
+  };
+
+  const handleGallerySelect = (upload: GalleryUpload) => {
+    const url = getUserMediaUrl(upload.file_path);
+    const type = upload.file_type.startsWith("video/") ? "video" : "image";
+    setGalleryPreviews((prev) => [...prev, { url, type }]);
+    setGalleryOpen(false);
+    toast({ title: "Media added from gallery" });
+  };
+
+  const removeGalleryPreview = (index: number) => {
+    setGalleryPreviews((prev) => prev.filter((_, i) => i !== index));
+  };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -113,7 +169,7 @@ const EditFoodProductModal = ({ product, open, onOpenChange, onSuccess }: EditFo
       return;
     }
 
-    if (existingImages.length + newFiles.length === 0) {
+    if (existingImages.length + newFiles.length + galleryPreviews.length === 0) {
       toast({
         title: "Error",
         description: "Please have at least one photo or video",
@@ -150,32 +206,42 @@ const EditFoodProductModal = ({ product, open, onOpenChange, onSuccess }: EditFo
         await supabase.from('food_product_images').delete().eq('id', imageId);
       }
 
-      // Upload new files
-      if (newFiles.length > 0) {
-        const maxOrder = Math.max(...existingImages.map(img => img.display_order), -1);
+      const maxOrder = Math.max(...existingImages.map(img => img.display_order), -1);
+      let orderCounter = maxOrder + 1;
+
+      // Upload new files from device
+      for (let i = 0; i < newFiles.length; i++) {
+        const file = newFiles[i];
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${user.id}/${product.id}/${Date.now()}-${i}.${fileExt}`;
         
-        for (let i = 0; i < newFiles.length; i++) {
-          const file = newFiles[i];
-          const fileExt = file.name.split('.').pop();
-          const fileName = `${user.id}/${product.id}/${Date.now()}-${i}.${fileExt}`;
-          
-          const { error: uploadError } = await supabase.storage
-            .from('food-images')
-            .upload(fileName, file);
+        const { error: uploadError } = await supabase.storage
+          .from('food-images')
+          .upload(fileName, file);
 
-          if (uploadError) throw uploadError;
+        if (uploadError) throw uploadError;
 
-          const { data: { publicUrl } } = supabase.storage
-            .from('food-images')
-            .getPublicUrl(fileName);
+        const { data: { publicUrl } } = supabase.storage
+          .from('food-images')
+          .getPublicUrl(fileName);
 
-          await supabase.from('food_product_images').insert({
-            food_product_id: product.id,
-            image_url: publicUrl,
-            media_type: file.type.startsWith('video/') ? 'video' : 'image',
-            display_order: maxOrder + 1 + i
-          });
-        }
+        await supabase.from('food_product_images').insert({
+          food_product_id: product.id,
+          image_url: publicUrl,
+          media_type: file.type.startsWith('video/') ? 'video' : 'image',
+          display_order: orderCounter++
+        });
+      }
+
+      // Add gallery selections
+      for (let i = 0; i < galleryPreviews.length; i++) {
+        const { url, type } = galleryPreviews[i];
+        await supabase.from('food_product_images').insert({
+          food_product_id: product.id,
+          image_url: url,
+          media_type: type,
+          display_order: orderCounter++
+        });
       }
 
       toast({
@@ -281,7 +347,7 @@ const EditFoodProductModal = ({ product, open, onOpenChange, onSuccess }: EditFo
           {/* Add New Media */}
           <div className="space-y-2">
             <Label>Add New Photos / Videos</Label>
-            <div className="border-2 border-dashed border-gray-600 rounded-lg p-4 text-center">
+            <div className="border-2 border-dashed border-gray-600 rounded-lg p-4">
               <input
                 type="file"
                 accept="image/*,video/*"
@@ -290,11 +356,48 @@ const EditFoodProductModal = ({ product, open, onOpenChange, onSuccess }: EditFo
                 className="hidden"
                 id="edit-media-upload"
               />
-              <label htmlFor="edit-media-upload" className="cursor-pointer">
-                <Upload className="w-8 h-8 mx-auto text-gray-400 mb-1" />
-                <p className="text-gray-400 text-sm">Click to add more media</p>
-              </label>
+
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <button
+                  type="button"
+                  onClick={() => setGalleryOpen(true)}
+                  className="cursor-pointer flex items-center justify-center gap-2 px-4 py-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
+                >
+                  <Image className="w-5 h-5 text-orange-400" />
+                  <span className="text-gray-200">Choose from In‑App Gallery</span>
+                </button>
+
+                <label
+                  htmlFor="edit-media-upload"
+                  className="cursor-pointer flex items-center justify-center gap-2 px-4 py-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
+                >
+                  <Upload className="w-5 h-5 text-orange-400" />
+                  <span className="text-gray-200">Upload from Device</span>
+                </label>
+              </div>
             </div>
+
+            {/* Gallery Previews */}
+            {galleryPreviews.length > 0 && (
+              <div className="grid grid-cols-3 gap-3 mt-3">
+                {galleryPreviews.map((preview, index) => (
+                  <div key={`gallery-${index}`} className="relative group">
+                    {preview.type === 'video' ? (
+                      <video src={preview.url} className="w-full h-24 object-cover rounded-lg" />
+                    ) : (
+                      <img src={preview.url} alt={`Gallery ${index + 1}`} className="w-full h-24 object-cover rounded-lg" />
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => removeGalleryPreview(index)}
+                      className="absolute top-1 right-1 p-1 bg-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="w-4 h-4 text-white" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
 
             {newPreviews.length > 0 && (
               <div className="grid grid-cols-3 gap-3 mt-3">
@@ -317,6 +420,61 @@ const EditFoodProductModal = ({ product, open, onOpenChange, onSuccess }: EditFo
               </div>
             )}
           </div>
+
+          {/* Gallery Modal */}
+          <Dialog open={galleryOpen} onOpenChange={setGalleryOpen}>
+            <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-3xl max-h-[85vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Select from your in-app gallery</DialogTitle>
+              </DialogHeader>
+
+              {galleryLoading ? (
+                <div className="py-10 text-center text-gray-400">Loading your gallery...</div>
+              ) : galleryUploads.length === 0 ? (
+                <div className="py-10 text-center">
+                  <p className="text-gray-300">Your in-app gallery is empty.</p>
+                  <p className="text-gray-500 text-sm mt-2">
+                    Upload photos/videos in your Content Gallery first, then come back here to select them.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {galleryUploads.map((upload) => {
+                    const isImage = upload.file_type.startsWith("image/");
+                    const isVideo = upload.file_type.startsWith("video/");
+                    const url = getUserMediaUrl(upload.file_path);
+
+                    return (
+                      <button
+                        key={upload.id}
+                        type="button"
+                        onClick={() => handleGallerySelect(upload)}
+                        className="text-left bg-gray-700 hover:bg-gray-600 rounded-lg overflow-hidden border border-gray-600 transition-colors"
+                      >
+                        <div className="aspect-video">
+                          {isImage ? (
+                            <img
+                              src={url}
+                              alt={`Gallery media: ${upload.file_name}`}
+                              className="w-full h-full object-cover"
+                              loading="lazy"
+                            />
+                          ) : isVideo ? (
+                            <div className="w-full h-full flex items-center justify-center bg-gray-700">
+                              <Video className="w-10 h-10 text-gray-400" />
+                            </div>
+                          ) : null}
+                        </div>
+                        <div className="p-2">
+                          <p className="text-xs text-gray-300 truncate">{upload.file_name}</p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
 
           {/* Submit */}
           <Button
