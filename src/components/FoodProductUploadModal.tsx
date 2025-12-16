@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Upload, X, Loader2 } from "lucide-react";
+import { Plus, Upload, X, Loader2, Image, Camera } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
@@ -263,20 +263,44 @@ const FoodProductUploadModal = ({ onSuccess }: FoodProductUploadModalProps) => {
           {/* Media Upload */}
           <div className="space-y-2">
             <Label>Photos / Videos *</Label>
-            <div className="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center">
+            <div className="border-2 border-dashed border-gray-600 rounded-lg p-6">
+              {/* Hidden inputs */}
               <input
                 type="file"
                 accept="image/*,video/*"
                 multiple
                 onChange={handleFileSelect}
                 className="hidden"
-                id="media-upload"
+                id="gallery-upload"
               />
-              <label htmlFor="media-upload" className="cursor-pointer">
-                <Upload className="w-10 h-10 mx-auto text-gray-400 mb-2" />
-                <p className="text-gray-400">Tap to choose from gallery or take photo/video</p>
-                <p className="text-gray-500 text-sm">Select from your photo library or capture new media</p>
-              </label>
+              <input
+                type="file"
+                accept="image/*,video/*"
+                capture="environment"
+                onChange={handleFileSelect}
+                className="hidden"
+                id="camera-capture"
+              />
+              
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <label 
+                  htmlFor="gallery-upload" 
+                  className="cursor-pointer flex items-center justify-center gap-2 px-4 py-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
+                >
+                  <Image className="w-5 h-5 text-orange-400" />
+                  <span className="text-gray-200">Choose from Gallery</span>
+                </label>
+                
+                <label 
+                  htmlFor="camera-capture" 
+                  className="cursor-pointer flex items-center justify-center gap-2 px-4 py-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
+                >
+                  <Camera className="w-5 h-5 text-orange-400" />
+                  <span className="text-gray-200">Take Photo/Video</span>
+                </label>
+              </div>
+              
+              <p className="text-gray-500 text-sm text-center mt-3">Upload multiple photos or videos of your product</p>
             </div>
 
             {/* Media Previews */}
