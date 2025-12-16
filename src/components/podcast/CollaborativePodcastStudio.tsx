@@ -285,24 +285,11 @@ export const CollaborativePodcastStudio = ({ onRecordingSaved }: CollaborativePo
               </div>
             </div>
 
-            {!googleVoiceNumber && (
+          {!googleVoiceNumber && (
               <p className="text-xs text-muted-foreground text-center">
                 Set up your Google Voice number to invite guests
               </p>
             )}
-          </div>
-
-          {/* Setup Instructions */}
-          <div className="pt-4 border-t border-border">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowSetupModal(true)}
-              className="gap-2 text-muted-foreground hover:text-foreground"
-            >
-              <Phone className="w-4 h-4" />
-              {googleVoiceNumber ? 'Update Google Voice Settings' : 'Set Up Google Voice'}
-            </Button>
           </div>
         </CardContent>
       </Card>

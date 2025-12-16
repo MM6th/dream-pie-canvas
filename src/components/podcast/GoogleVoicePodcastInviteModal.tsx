@@ -14,17 +14,27 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { 
   Search, 
   Send, 
   Phone, 
   AlertTriangle, 
   User,
-  Loader2
+  Loader2,
+  CalendarIcon,
+  Clock
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface GoogleVoicePodcastInviteModalProps {
   open: boolean;
@@ -53,6 +63,8 @@ export const GoogleVoicePodcastInviteModal = ({
   const [isSearching, setIsSearching] = useState(false);
   const [sendingTo, setSendingTo] = useState<string | null>(null);
   const [customMessage, setCustomMessage] = useState("");
+  const [scheduledDate, setScheduledDate] = useState<Date | undefined>(undefined);
+  const [scheduledTime, setScheduledTime] = useState("");
 
   // Search for users
   useEffect(() => {
@@ -84,6 +96,16 @@ export const GoogleVoicePodcastInviteModal = ({
     return () => clearTimeout(debounce);
   }, [searchQuery, user?.id]);
 
+  const formatScheduledDateTime = () => {
+    if (!scheduledDate) return null;
+    
+    const dateStr = format(scheduledDate, "EEEE, MMMM d, yyyy");
+    if (scheduledTime) {
+      return `${dateStr} at ${scheduledTime}`;
+    }
+    return dateStr;
+  };
+
   const sendInvite = async (recipientId: string, recipientName: string) => {
     if (!user) return;
 
@@ -93,6 +115,11 @@ export const GoogleVoicePodcastInviteModal = ({
       const phoneDigits = googleVoiceNumber.replace(/\D/g, '');
       const telLink = `tel:+1${phoneDigits}`;
 
+      // Build scheduled date/time section
+      const scheduledSection = formatScheduledDateTime() 
+        ? `📅 **Scheduled:** ${formatScheduledDateTime()}\n\n` 
+        : '';
+
       // Create the invite message
       const messageBody = `
 🎙️ **Podcast Recording Invitation**
@@ -101,14 +128,12 @@ You're invited to join a podcast recording session!
 
 **Topic:** ${sessionTitle}
 
-${customMessage ? `**Note from host:** ${customMessage}\n\n` : ''}
-📞 **Click to Call:** ${telLink}
-Or dial: ${googleVoiceNumber}
+${scheduledSection}${customMessage ? `**Note from host:** ${customMessage}\n\n` : ''}📞 **Call to Join:** ${telLink}
 
 ⚠️ **IMPORTANT: This call will be recorded for podcast purposes.**
 
 **Instructions:**
-1. Click the phone number above or dial it manually
+1. Click the blue "Click to Call" link above to dial
 2. The host will record the call through Google Voice
 3. Speak clearly and have fun!
 
@@ -135,6 +160,8 @@ Looking forward to chatting with you!
       setSearchQuery("");
       setSearchResults([]);
       setCustomMessage("");
+      setScheduledDate(undefined);
+      setScheduledTime("");
       onOpenChange(false);
     } catch (error) {
       console.error('Error sending invite:', error);
@@ -150,14 +177,14 @@ Looking forward to chatting with you!
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Phone className="w-5 h-5 text-primary" />
             Invite Guest to Podcast
           </DialogTitle>
           <DialogDescription>
-            Search for a user to invite to your podcast recording. They'll receive a message with your Google Voice number.
+            Search for a user to invite to your podcast recording. They'll receive a message with instructions to call.
           </DialogDescription>
         </DialogHeader>
 
@@ -171,12 +198,54 @@ Looking forward to chatting with you!
           </Alert>
 
           {/* Session Info */}
-          <div className="p-3 bg-muted rounded-lg space-y-1">
+          <div className="p-3 bg-muted rounded-lg">
             <p className="text-sm font-medium">Session: {sessionTitle}</p>
-            <p className="text-xs text-muted-foreground flex items-center gap-1">
-              <Phone className="w-3 h-3" />
-              {googleVoiceNumber}
-            </p>
+          </div>
+
+          {/* Schedule Date & Time */}
+          <div className="space-y-3">
+            <Label>Schedule Date & Time (optional)</Label>
+            <div className="flex gap-2">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "flex-1 justify-start text-left font-normal",
+                      !scheduledDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {scheduledDate ? format(scheduledDate, "PPP") : "Pick a date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={scheduledDate}
+                    onSelect={setScheduledDate}
+                    disabled={(date) => date < new Date()}
+                    initialFocus
+                    className="pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+              <div className="relative">
+                <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  type="time"
+                  value={scheduledTime}
+                  onChange={(e) => setScheduledTime(e.target.value)}
+                  className="pl-10 w-[130px]"
+                  placeholder="Time"
+                />
+              </div>
+            </div>
+            {scheduledDate && (
+              <p className="text-xs text-muted-foreground">
+                Scheduled: {formatScheduledDateTime()}
+              </p>
+            )}
           </div>
 
           {/* Custom Message */}
