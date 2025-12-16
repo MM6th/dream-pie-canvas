@@ -277,7 +277,7 @@ export const MessagingInbox = () => {
               
               <div className="space-y-3">
                 <div className="whitespace-pre-wrap text-foreground text-sm leading-relaxed">
-                  {selectedMessage.body.split(/(https?:\/\/[^\s]+)/g).map((part, index) => {
+                  {selectedMessage.body.split(/(https?:\/\/[^\s]+|tel:[^\s]+)/g).map((part, index) => {
                     if (part.match(/^https?:\/\/[^\s]+$/)) {
                       return (
                         <a
@@ -289,6 +289,18 @@ export const MessagingInbox = () => {
                           onClick={(e) => e.stopPropagation()}
                         >
                           {part}
+                        </a>
+                      );
+                    }
+                    if (part.match(/^tel:[^\s]+$/)) {
+                      return (
+                        <a
+                          key={index}
+                          href={part}
+                          className="!text-blue-500 underline hover:!text-blue-400"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          Click to Call
                         </a>
                       );
                     }
