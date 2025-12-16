@@ -274,8 +274,8 @@ const FoodProductUploadModal = ({ onSuccess }: FoodProductUploadModalProps) => {
               />
               <label htmlFor="media-upload" className="cursor-pointer">
                 <Upload className="w-10 h-10 mx-auto text-gray-400 mb-2" />
-                <p className="text-gray-400">Click to upload photos or videos</p>
-                <p className="text-gray-500 text-sm">Supports images and videos</p>
+                <p className="text-gray-400">Tap to choose from gallery or take photo/video</p>
+                <p className="text-gray-500 text-sm">Select from your photo library or capture new media</p>
               </label>
             </div>
 
