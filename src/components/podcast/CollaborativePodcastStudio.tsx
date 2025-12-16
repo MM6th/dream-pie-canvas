@@ -2,12 +2,10 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { 
-  Phone, Users, UserPlus, Settings, Upload, 
+  Users, UserPlus, Settings, 
   Info, ExternalLink, Check, AlertCircle
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -30,7 +28,6 @@ export const CollaborativePodcastStudio = ({ onRecordingSaved }: CollaborativePo
   const [showSetupModal, setShowSetupModal] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [sessionTitle, setSessionTitle] = useState("");
-  const [isUploading, setIsUploading] = useState(false);
 
   // Fetch existing Google Voice number
   useEffect(() => {
@@ -76,94 +73,6 @@ export const CollaborativePodcastStudio = ({ onRecordingSaved }: CollaborativePo
       return;
     }
     setShowInviteModal(true);
-  };
-
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !user) return;
-
-    // Validate file type
-    if (!file.type.startsWith('audio/')) {
-      toast({
-        title: "Invalid File",
-        description: "Please select an audio file (MP3, WAV, M4A, etc.)",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Validate file size (100MB max)
-    if (file.size > 100 * 1024 * 1024) {
-      toast({
-        title: "File Too Large",
-        description: "Please select a file smaller than 100MB.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsUploading(true);
-    try {
-      const timestamp = Date.now();
-      const fileExt = file.name.split('.').pop();
-      const fileName = `podcast-recordings/${user.id}/${timestamp}-uploaded.${fileExt}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('audio-files')
-        .upload(fileName, file, {
-          contentType: file.type,
-          upsert: false
-        });
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('audio-files')
-        .getPublicUrl(fileName);
-
-      // Create audio element to get duration
-      const audio = new Audio(URL.createObjectURL(file));
-      await new Promise<void>((resolve) => {
-        audio.onloadedmetadata = () => resolve();
-        audio.onerror = () => resolve();
-      });
-
-      const duration = Math.round(audio.duration) || null;
-
-      // Save to database
-      const { error: dbError } = await supabase
-        .from('podcast_recordings')
-        .insert({
-          merchant_id: user.id,
-          title: sessionTitle.trim() || `Uploaded Recording - ${new Date().toLocaleDateString()}`,
-          description: 'Uploaded from Google Voice recording',
-          audio_url: publicUrl,
-          duration_seconds: duration,
-          file_size_bytes: file.size,
-          status: 'draft'
-        });
-
-      if (dbError) throw dbError;
-
-      toast({
-        title: "Upload Complete",
-        description: "Your recording has been uploaded successfully.",
-      });
-
-      setSessionTitle("");
-      onRecordingSaved?.();
-    } catch (error) {
-      console.error('Error uploading recording:', error);
-      toast({
-        title: "Upload Failed",
-        description: "Could not upload your recording. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsUploading(false);
-      // Reset file input
-      e.target.value = '';
-    }
   };
 
   if (isLoading) {
@@ -254,36 +163,15 @@ export const CollaborativePodcastStudio = ({ onRecordingSaved }: CollaborativePo
               />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {/* Invite Guest Button */}
-              <Button
-                onClick={handleInviteClick}
-                disabled={!googleVoiceNumber}
-                className="gap-2"
-              >
-                <UserPlus className="w-4 h-4" />
-                Invite Guest
-              </Button>
-
-              {/* Upload Recording Button */}
-              <div className="relative">
-                <input
-                  type="file"
-                  accept="audio/*"
-                  onChange={handleFileUpload}
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                  disabled={isUploading}
-                />
-                <Button
-                  variant="outline"
-                  className="w-full gap-2"
-                  disabled={isUploading}
-                >
-                  <Upload className="w-4 h-4" />
-                  {isUploading ? "Uploading..." : "Upload Recording"}
-                </Button>
-              </div>
-            </div>
+            {/* Invite Guest Button */}
+            <Button
+              onClick={handleInviteClick}
+              disabled={!googleVoiceNumber}
+              className="gap-2"
+            >
+              <UserPlus className="w-4 h-4" />
+              Invite Guest
+            </Button>
 
           {!googleVoiceNumber && (
               <p className="text-xs text-muted-foreground text-center">
