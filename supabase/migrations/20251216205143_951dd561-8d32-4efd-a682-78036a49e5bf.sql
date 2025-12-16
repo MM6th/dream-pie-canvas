@@ -1,0 +1,1 @@
+DELETE FROM audio_products WHERE id = '8ea5edd5-5400-4679-9298-a9b0c04ffbff';
