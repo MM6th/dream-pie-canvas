@@ -1052,6 +1052,88 @@ export type Database = {
           },
         ]
       }
+      food_product_images: {
+        Row: {
+          created_at: string
+          display_order: number
+          food_product_id: string
+          id: string
+          image_url: string
+          media_type: string | null
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          food_product_id: string
+          id?: string
+          image_url: string
+          media_type?: string | null
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          food_product_id?: string
+          id?: string
+          image_url?: string
+          media_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "food_product_images_food_product_id_fkey"
+            columns: ["food_product_id"]
+            isOneToOne: false
+            referencedRelation: "food_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      food_products: {
+        Row: {
+          access_level: Database["public"]["Enums"]["access_level"] | null
+          created_at: string
+          description: string | null
+          id: string
+          is_adult_content: boolean | null
+          merchant_id: string
+          price: number
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          access_level?: Database["public"]["Enums"]["access_level"] | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_adult_content?: boolean | null
+          merchant_id: string
+          price: number
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          access_level?: Database["public"]["Enums"]["access_level"] | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_adult_content?: boolean | null
+          merchant_id?: string
+          price?: number
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "food_products_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       livestream_entries: {
         Row: {
           bulletin_post_id: string

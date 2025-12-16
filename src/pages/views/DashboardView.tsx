@@ -5,6 +5,7 @@ import SupporterDashboard from "@/components/dashboard/SupporterDashboard";
 import AudioPodcasterDashboard from "@/components/dashboard/AudioPodcasterDashboard";
 import MusicArtistDashboard from "@/components/dashboard/MusicArtistDashboard";
 import FashionRetailerDashboard from "@/components/dashboard/FashionRetailerDashboard";
+import CookBakerDashboard from "@/components/dashboard/CookBakerDashboard";
 import { TutorialHelpButton } from "@/components/TutorialHelpButton";
 import { supporterTutorialSteps, merchantTutorialSteps, adminTutorialSteps, musicArtistTutorialSteps, fashionRetailerTutorialSteps } from "@/constants/tutorialContent";
 
@@ -128,6 +129,18 @@ const DashboardView = ({
     if (industry === 'Audio Podcaster') {
       return (
         <AudioPodcasterDashboard 
+          onBackgroundUpload={onBackgroundUpload}
+          purchasedTracks={purchasedTracks}
+          purchasedPodcasts={purchasedPodcasts}
+          onSuccess={onSuccess}
+        />
+      );
+    }
+
+    // Route Cook/Bakers to their specialized dashboard
+    if (industry === 'Cook/Baker') {
+      return (
+        <CookBakerDashboard 
           onBackgroundUpload={onBackgroundUpload}
           purchasedTracks={purchasedTracks}
           purchasedPodcasts={purchasedPodcasts}
