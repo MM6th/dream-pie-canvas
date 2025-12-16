@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Upload, X, Loader2, Image, Camera } from "lucide-react";
+import { Plus, Upload, X, Loader2, Image } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
@@ -267,7 +267,7 @@ const FoodProductUploadModal = ({ onSuccess }: FoodProductUploadModalProps) => {
               {/* Hidden inputs */}
               <input
                 type="file"
-                accept="image/*,video/*"
+                accept="image/*"
                 multiple
                 onChange={handleFileSelect}
                 className="hidden"
@@ -276,10 +276,10 @@ const FoodProductUploadModal = ({ onSuccess }: FoodProductUploadModalProps) => {
               <input
                 type="file"
                 accept="image/*,video/*"
-                capture="environment"
+                multiple
                 onChange={handleFileSelect}
                 className="hidden"
-                id="camera-capture"
+                id="device-upload"
               />
               
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -292,11 +292,11 @@ const FoodProductUploadModal = ({ onSuccess }: FoodProductUploadModalProps) => {
                 </label>
                 
                 <label 
-                  htmlFor="camera-capture" 
+                  htmlFor="device-upload" 
                   className="cursor-pointer flex items-center justify-center gap-2 px-4 py-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
                 >
-                  <Camera className="w-5 h-5 text-orange-400" />
-                  <span className="text-gray-200">Take Photo/Video</span>
+                  <Upload className="w-5 h-5 text-orange-400" />
+                  <span className="text-gray-200">Upload from Device</span>
                 </label>
               </div>
               
