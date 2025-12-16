@@ -1,21 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { 
   Play, 
   Pause, 
   Trash2, 
   Edit2, 
-  Check, 
-  X, 
   Library,
   Clock,
   Calendar,
-  Upload,
-  Send
+  Upload
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -56,9 +50,6 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
   const [recordings, setRecordings] = useState<Recording[]>([]);
   const [loading, setLoading] = useState(true);
   const [playingId, setPlayingId] = useState<string | null>(null);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editTitle, setEditTitle] = useState("");
-  const [editDescription, setEditDescription] = useState("");
   const [showPublishModal, setShowPublishModal] = useState(false);
   const [selectedRecording, setSelectedRecording] = useState<Recording | null>(null);
   
@@ -133,51 +124,9 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
     }
   };
 
-  const startEditing = (recording: Recording) => {
-    setEditingId(recording.id);
-    setEditTitle(recording.title);
-    setEditDescription(recording.description || "");
-  };
-
-  const cancelEditing = () => {
-    setEditingId(null);
-    setEditTitle("");
-    setEditDescription("");
-  };
-
-  const saveEdit = async (recordingId: string) => {
-    try {
-      const { error } = await supabase
-        .from('podcast_recordings')
-        .update({
-          title: editTitle.trim(),
-          description: editDescription.trim() || null,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', recordingId);
-      
-      if (error) throw error;
-      
-      setRecordings(prev => prev.map(r => 
-        r.id === recordingId 
-          ? { ...r, title: editTitle.trim(), description: editDescription.trim() || null }
-          : r
-      ));
-      
-      toast({
-        title: "Updated",
-        description: "Recording details updated successfully.",
-      });
-      
-      cancelEditing();
-    } catch (error) {
-      console.error('Error updating recording:', error);
-      toast({
-        title: "Error",
-        description: "Could not update recording.",
-        variant: "destructive"
-      });
-    }
+  const openPublishModal = (recording: Recording) => {
+    setSelectedRecording(recording);
+    setShowPublishModal(true);
   };
 
   const deleteRecording = async (recordingId: string, audioUrl: string) => {
@@ -364,136 +313,81 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
                 key={recording.id}
                 className="p-4 bg-background/50 rounded-lg border border-border"
               >
-                {editingId === recording.id ? (
-                  <div className="space-y-3">
-                    <div className="space-y-1">
-                      <Label>Title</Label>
-                      <Input
-                        value={editTitle}
-                        onChange={(e) => setEditTitle(e.target.value)}
-                        className="bg-background"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label>Description</Label>
-                      <Textarea
-                        value={editDescription}
-                        onChange={(e) => setEditDescription(e.target.value)}
-                        className="bg-background"
-                        rows={2}
-                      />
-                    </div>
-                    <div className="flex gap-2">
-                      <Button 
-                        size="sm" 
-                        onClick={() => saveEdit(recording.id)}
-                        disabled={!editTitle.trim()}
-                        className="gap-1"
-                      >
-                        <Check className="w-4 h-4" />
-                        Save
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
-                        onClick={cancelEditing}
-                        className="gap-1"
-                      >
-                        <X className="w-4 h-4" />
-                        Cancel
-                      </Button>
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-medium text-foreground truncate">
+                      {recording.title}
+                    </h4>
+                    {recording.description && (
+                      <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
+                        {recording.description}
+                      </p>
+                    )}
+                    <div className="flex flex-wrap gap-3 mt-2 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {formatDuration(recording.duration_seconds)}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Calendar className="w-3 h-3" />
+                        {format(new Date(recording.created_at), 'MMM d, yyyy')}
+                      </span>
+                      <span>{formatFileSize(recording.file_size_bytes)}</span>
                     </div>
                   </div>
-                ) : (
-                  <>
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-foreground truncate">
-                          {recording.title}
-                        </h4>
-                        {recording.description && (
-                          <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
-                            {recording.description}
-                          </p>
-                        )}
-                        <div className="flex flex-wrap gap-3 mt-2 text-xs text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <Clock className="w-3 h-3" />
-                            {formatDuration(recording.duration_seconds)}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Calendar className="w-3 h-3" />
-                            {format(new Date(recording.created_at), 'MMM d, yyyy')}
-                          </span>
-                          <span>{formatFileSize(recording.file_size_bytes)}</span>
-                        </div>
-                      </div>
-                      
-                      <div className="flex gap-2 flex-shrink-0">
+                  
+                  <div className="flex gap-2 flex-shrink-0">
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      onClick={() => togglePlay(recording.id, recording.audio_url)}
+                      className="h-8 w-8"
+                    >
+                      {playingId === recording.id ? (
+                        <Pause className="w-4 h-4" />
+                      ) : (
+                        <Play className="w-4 h-4" />
+                      )}
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      onClick={() => openPublishModal(recording)}
+                      className="h-8 w-8"
+                      title="Edit & Publish"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
                         <Button
                           size="icon"
-                          variant="outline"
-                          onClick={() => togglePlay(recording.id, recording.audio_url)}
+                          variant="destructive"
                           className="h-8 w-8"
                         >
-                          {playingId === recording.id ? (
-                            <Pause className="w-4 h-4" />
-                          ) : (
-                            <Play className="w-4 h-4" />
-                          )}
+                          <Trash2 className="w-4 h-4" />
                         </Button>
-                        <Button
-                          size="icon"
-                          variant="outline"
-                          onClick={() => startEditing(recording)}
-                          className="h-8 w-8"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="default"
-                          onClick={() => {
-                            setSelectedRecording(recording);
-                            setShowPublishModal(true);
-                          }}
-                          className="h-8 w-8"
-                          title="Publish to Store"
-                        >
-                          <Send className="w-4 h-4" />
-                        </Button>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button
-                              size="icon"
-                              variant="destructive"
-                              className="h-8 w-8"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Delete Recording?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                This will permanently delete "{recording.title}". This action cannot be undone.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction 
-                                onClick={() => deleteRecording(recording.id, recording.audio_url)}
-                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                              >
-                                Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    </div>
-                  </>
-                )}
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Recording?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This will permanently delete "{recording.title}". This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction 
+                            onClick={() => deleteRecording(recording.id, recording.audio_url)}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
