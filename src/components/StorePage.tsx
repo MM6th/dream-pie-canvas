@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import FashionStoreSection from "./FashionStoreSection";
+import FoodStoreSection from "./FoodStoreSection";
 import AstrologyStoreSection from "./AstrologyStoreSection";
 import PodcastDownloadManager from "./PodcastDownloadManager";
 import DownloadOpportunityChecker from "./DownloadOpportunityChecker";
@@ -886,6 +887,9 @@ const StorePage = () => {
           </h2>
           <FashionStoreSection />
         </div>
+
+        {/* Food Products Section */}
+        <FoodStoreSection />
 
         {/* Podcasts Section */}
         <div className="mb-8 sm:mb-12">
