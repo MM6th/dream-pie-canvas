@@ -1,16 +1,24 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Upload, X, Loader2, Image } from "lucide-react";
+import { Plus, Upload, X, Loader2, Image, Video } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 
 interface FoodProductUploadModalProps {
   onSuccess: () => void;
+}
+
+interface UserUpload {
+  id: string;
+  file_name: string;
+  file_path: string;
+  file_type: string;
+  created_at: string;
 }
 
 const FoodProductUploadModal = ({ onSuccess }: FoodProductUploadModalProps) => {
@@ -24,13 +32,16 @@ const FoodProductUploadModal = ({ onSuccess }: FoodProductUploadModalProps) => {
   const [mediaFiles, setMediaFiles] = useState<File[]>([]);
   const [mediaPreviews, setMediaPreviews] = useState<string[]>([]);
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const [galleryLoading, setGalleryLoading] = useState(false);
+  const [galleryUploads, setGalleryUploads] = useState<UserUpload[]>([]);
+
+  const addValidFiles = (files: File[]) => {
     if (files.length === 0) return;
 
-    const validFiles = files.filter(file => {
-      const isImage = file.type.startsWith('image/');
-      const isVideo = file.type.startsWith('video/');
+    const validFiles = files.filter((file) => {
+      const isImage = file.type.startsWith("image/");
+      const isVideo = file.type.startsWith("video/");
       return isImage || isVideo;
     });
 
@@ -38,15 +49,81 @@ const FoodProductUploadModal = ({ onSuccess }: FoodProductUploadModalProps) => {
       toast({
         title: "Invalid files",
         description: "Only images and videos are allowed",
-        variant: "destructive"
+        variant: "destructive",
       });
     }
 
-    // Create previews
-    const newPreviews = validFiles.map(file => URL.createObjectURL(file));
-    
-    setMediaFiles(prev => [...prev, ...validFiles]);
-    setMediaPreviews(prev => [...prev, ...newPreviews]);
+    const newPreviews = validFiles.map((file) => URL.createObjectURL(file));
+
+    setMediaFiles((prev) => [...prev, ...validFiles]);
+    setMediaPreviews((prev) => [...prev, ...newPreviews]);
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    addValidFiles(files);
+    // Reset so selecting the same file again re-triggers onChange
+    e.target.value = "";
+  };
+
+  const getUserMediaUrl = (filePath: string) => {
+    const { data } = supabase.storage.from("user-media").getPublicUrl(filePath);
+    return data.publicUrl;
+  };
+
+  const fetchGalleryUploads = async () => {
+    if (!user) return;
+
+    setGalleryLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("user_uploads")
+        .select("id, file_name, file_path, file_type, created_at")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      const onlyMedia = (data || []).filter((u) => u.file_type?.startsWith("image/") || u.file_type?.startsWith("video/"));
+      setGalleryUploads(onlyMedia);
+    } catch (error: any) {
+      console.error("Error fetching gallery uploads:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to load your gallery",
+        variant: "destructive",
+      });
+    } finally {
+      setGalleryLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (galleryOpen && user) {
+      fetchGalleryUploads();
+    }
+  }, [galleryOpen, user]);
+
+  const handleGallerySelect = async (upload: UserUpload) => {
+    try {
+      const url = getUserMediaUrl(upload.file_path);
+      const res = await fetch(url);
+      const blob = await res.blob();
+      const file = new File([blob], upload.file_name, { type: upload.file_type });
+      addValidFiles([file]);
+
+      toast({
+        title: "Added",
+        description: "Media added from your in-app gallery",
+      });
+    } catch (error: any) {
+      console.error("Error loading media from gallery:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add media from gallery",
+        variant: "destructive",
+      });
+    }
   };
 
   const removeMedia = (index: number) => {
@@ -264,15 +341,6 @@ const FoodProductUploadModal = ({ onSuccess }: FoodProductUploadModalProps) => {
           <div className="space-y-2">
             <Label>Photos / Videos *</Label>
             <div className="border-2 border-dashed border-gray-600 rounded-lg p-6">
-              {/* Hidden inputs */}
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={handleFileSelect}
-                className="hidden"
-                id="gallery-upload"
-              />
               <input
                 type="file"
                 accept="image/*,video/*"
@@ -281,27 +349,85 @@ const FoodProductUploadModal = ({ onSuccess }: FoodProductUploadModalProps) => {
                 className="hidden"
                 id="device-upload"
               />
-              
+
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <label 
-                  htmlFor="gallery-upload" 
-                  className="cursor-pointer flex items-center justify-center gap-2 px-4 py-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
+                <Button
+                  type="button"
+                  onClick={() => setGalleryOpen(true)}
+                  className="bg-gray-700 hover:bg-gray-600 text-gray-200"
                 >
-                  <Image className="w-5 h-5 text-orange-400" />
-                  <span className="text-gray-200">Choose from Gallery</span>
-                </label>
-                
-                <label 
-                  htmlFor="device-upload" 
+                  <Image className="w-5 h-5 mr-2 text-orange-400" />
+                  Choose from In‑App Gallery
+                </Button>
+
+                <label
+                  htmlFor="device-upload"
                   className="cursor-pointer flex items-center justify-center gap-2 px-4 py-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
                 >
                   <Upload className="w-5 h-5 text-orange-400" />
                   <span className="text-gray-200">Upload from Device</span>
                 </label>
               </div>
-              
-              <p className="text-gray-500 text-sm text-center mt-3">Upload multiple photos or videos of your product</p>
+
+              <p className="text-gray-500 text-sm text-center mt-3">
+                Upload multiple photos or videos of your product
+              </p>
             </div>
+
+            <Dialog open={galleryOpen} onOpenChange={setGalleryOpen}>
+              <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-3xl max-h-[85vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Select from your in-app gallery</DialogTitle>
+                </DialogHeader>
+
+                {galleryLoading ? (
+                  <div className="py-10 text-center text-gray-400">Loading your gallery...</div>
+                ) : galleryUploads.length === 0 ? (
+                  <div className="py-10 text-center">
+                    <p className="text-gray-300">Your in-app gallery is empty.</p>
+                    <p className="text-gray-500 text-sm mt-2">
+                      Upload photos/videos in your Content Gallery first, then come back here to select them.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {galleryUploads.map((upload) => {
+                      const isImage = upload.file_type.startsWith("image/");
+                      const isVideo = upload.file_type.startsWith("video/");
+                      const url = getUserMediaUrl(upload.file_path);
+
+                      return (
+                        <button
+                          key={upload.id}
+                          type="button"
+                          onClick={() => handleGallerySelect(upload)}
+                          className="text-left bg-gray-700 hover:bg-gray-600 rounded-lg overflow-hidden border border-gray-600 transition-colors"
+                        >
+                          <div className="aspect-video">
+                            {isImage ? (
+                              <img
+                                src={url}
+                                alt={`Gallery media: ${upload.file_name}`}
+                                className="w-full h-full object-cover"
+                                loading="lazy"
+                              />
+                            ) : isVideo ? (
+                              <div className="w-full h-full flex items-center justify-center bg-gray-700">
+                                <Video className="w-10 h-10 text-gray-400" />
+                              </div>
+                            ) : null}
+                          </div>
+                          <div className="p-2">
+                            <p className="text-sm text-gray-200 truncate">{upload.file_name}</p>
+                            <p className="text-xs text-gray-400">Tap to add</p>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </DialogContent>
+            </Dialog>
 
             {/* Media Previews */}
             {mediaPreviews.length > 0 && (
