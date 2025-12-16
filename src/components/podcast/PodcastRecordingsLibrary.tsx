@@ -14,7 +14,8 @@ import {
   Library,
   Clock,
   Calendar,
-  Upload
+  Upload,
+  Send
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -31,6 +32,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
+import { PodcastPublishModal } from "./PodcastPublishModal";
 
 interface Recording {
   id: string;
@@ -57,6 +59,8 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editDescription, setEditDescription] = useState("");
+  const [showPublishModal, setShowPublishModal] = useState(false);
+  const [selectedRecording, setSelectedRecording] = useState<Recording | null>(null);
   
   const audioRefs = React.useRef<Map<string, HTMLAudioElement>>(new Map());
 
@@ -323,6 +327,7 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
   };
 
   return (
+    <>
     <Card className="bg-card/50 border-border backdrop-blur-sm">
       <CardHeader>
         <div className="flex items-center justify-between">
@@ -445,6 +450,18 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
                         >
                           <Edit2 className="w-4 h-4" />
                         </Button>
+                        <Button
+                          size="icon"
+                          variant="default"
+                          onClick={() => {
+                            setSelectedRecording(recording);
+                            setShowPublishModal(true);
+                          }}
+                          className="h-8 w-8"
+                          title="Publish to Store"
+                        >
+                          <Send className="w-4 h-4" />
+                        </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button
@@ -483,6 +500,14 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
         )}
       </CardContent>
     </Card>
+
+    <PodcastPublishModal
+      open={showPublishModal}
+      onOpenChange={setShowPublishModal}
+      recording={selectedRecording}
+      onPublished={fetchRecordings}
+    />
+    </>
   );
 };
 

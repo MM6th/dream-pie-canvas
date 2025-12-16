@@ -190,8 +190,8 @@ const AudioPodcasterDashboard = ({
       {/* Podcast Recording Studios */}
       <div className="space-y-6 mb-6">
         <CollaborativePodcastStudio onRecordingSaved={handleRecordingSaved} />
-        <PodcastRecordingStudio onRecordingSaved={handleRecordingSaved} />
         <PodcastRecordingsLibrary refreshTrigger={recordingRefreshTrigger} />
+        <PodcastRecordingStudio onRecordingSaved={handleRecordingSaved} />
       </div>
 
       <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm mb-6">
