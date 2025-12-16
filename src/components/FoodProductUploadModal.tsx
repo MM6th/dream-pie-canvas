@@ -351,14 +351,14 @@ const FoodProductUploadModal = ({ onSuccess }: FoodProductUploadModalProps) => {
               />
 
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Button
+                <button
                   type="button"
                   onClick={() => setGalleryOpen(true)}
-                  className="bg-gray-700 hover:bg-gray-600 text-gray-200"
+                  className="cursor-pointer flex items-center justify-center gap-2 px-4 py-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
                 >
-                  <Image className="w-5 h-5 mr-2 text-orange-400" />
-                  Choose from In‑App Gallery
-                </Button>
+                  <Image className="w-5 h-5 text-orange-400" />
+                  <span className="text-gray-200">Choose from In‑App Gallery</span>
+                </button>
 
                 <label
                   htmlFor="device-upload"
