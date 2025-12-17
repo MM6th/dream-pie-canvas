@@ -61,7 +61,11 @@ const RegularPostsSection = ({ posts, useCarousel = true }: RegularPostsSectionP
         
         <div className="flex items-center gap-4 text-xs text-gray-400 mb-4">
            <div className="flex items-center gap-2">
-              {post.profiles?.avatar_url ? (
+              {post.profiles?.is_admin ? (
+                <div className="w-6 h-6 rounded-full bg-orange-600 flex items-center justify-center">
+                  <Shield className="w-4 h-4 text-white" />
+                </div>
+              ) : post.profiles?.avatar_url ? (
                 <img
                   src={post.profiles.avatar_url}
                   alt="Avatar"

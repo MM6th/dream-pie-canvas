@@ -2,7 +2,7 @@ import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Megaphone, User, Calendar, ExternalLink } from "lucide-react";
+import { Megaphone, User, Calendar, ExternalLink, Shield } from "lucide-react";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { BulletinPost } from "@/types/bulletin";
 
@@ -74,7 +74,11 @@ const AnnouncementPostsSection = ({ posts }: AnnouncementPostsSectionProps) => {
                   
                   <div className="flex items-center gap-4 text-xs text-gray-400 mb-4">
                      <div className="flex items-center gap-2">
-                        {post.profiles?.avatar_url ? (
+                        {post.profiles?.is_admin ? (
+                          <div className="w-6 h-6 rounded-full bg-orange-600 flex items-center justify-center">
+                            <Shield className="w-4 h-4 text-white" />
+                          </div>
+                        ) : post.profiles?.avatar_url ? (
                           <img
                             src={post.profiles.avatar_url}
                             alt="Avatar"
