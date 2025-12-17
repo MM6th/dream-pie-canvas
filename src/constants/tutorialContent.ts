@@ -243,6 +243,218 @@ export const fashionRetailerTutorialSteps: TutorialStep[] = [
   },
 ];
 
+export const poleDancerTutorialSteps: TutorialStep[] = [
+  {
+    id: 'welcome',
+    title: 'Welcome to Your Pole Dancer Dashboard! 💃',
+    description: 'This quick tour will show you how to upload dance content, manage your products, and connect with your audience on PIE.',
+    duration: 12000,
+  },
+  {
+    id: 'dance-products',
+    title: 'Dance Products',
+    description: 'Upload and manage your dance videos and photo sets. You can upload videos up to 5GB in size with background music support.',
+    duration: 10000,
+    target: '[data-tutorial="dance-products"]',
+    placement: 'bottom',
+  },
+  {
+    id: 'adult-content',
+    title: 'Content Settings',
+    description: 'Mark content as adult-only if needed. This helps ensure your content reaches the right audience.',
+    duration: 10000,
+    target: '[data-tutorial="adult-content"]',
+    placement: 'bottom',
+  },
+  {
+    id: 'gallery-tab',
+    title: 'Content Gallery',
+    description: 'Upload photos and videos with optional background music. Perfect for behind-the-scenes content and promotional material.',
+    duration: 10000,
+    target: '[data-tutorial="gallery-tab"]',
+    placement: 'bottom',
+  },
+  {
+    id: 'background-tab',
+    title: 'Customize Your Dashboard',
+    description: 'Upload a custom background image or video to personalize your dashboard experience.',
+    duration: 10000,
+    target: '[data-tutorial="background-tab"]',
+    placement: 'bottom',
+  },
+  {
+    id: 'playlist-public',
+    title: 'Playlist Visibility',
+    description: 'Control whether your playlist is publicly visible on your profile page.',
+    duration: 10000,
+    target: '[data-tutorial="playlist-public"]',
+    placement: 'top',
+  },
+];
+
+export const audioPodcasterTutorialSteps: TutorialStep[] = [
+  {
+    id: 'welcome',
+    title: 'Welcome to Your Podcaster Dashboard! 🎙️',
+    description: 'This quick tour will show you how to record podcasts, manage episodes, and grow your audience on PIE.',
+    duration: 12000,
+  },
+  {
+    id: 'podcast-studio',
+    title: 'Podcast Recording Studio',
+    description: 'Record high-quality podcasts directly in the browser. Invite guests for collaborative recordings.',
+    duration: 10000,
+    target: '[data-tutorial="podcast-studio"]',
+    placement: 'bottom',
+  },
+  {
+    id: 'podcast-library',
+    title: 'Your Podcast Library',
+    description: 'View and manage all your recorded podcast episodes. Publish them to the store when ready.',
+    duration: 10000,
+    target: '[data-tutorial="podcast-library"]',
+    placement: 'bottom',
+  },
+  {
+    id: 'audio-upload',
+    title: 'Upload Audio Content',
+    description: 'Upload pre-recorded podcasts and audio content. Set pricing and availability for each episode.',
+    duration: 10000,
+    target: '[data-tutorial="audio-upload"]',
+    placement: 'bottom',
+  },
+  {
+    id: 'gallery-tab',
+    title: 'Content Gallery',
+    description: 'Upload photos and videos to promote your podcast. Share behind-the-scenes moments with your audience.',
+    duration: 10000,
+    target: '[data-tutorial="gallery-tab"]',
+    placement: 'bottom',
+  },
+  {
+    id: 'background-tab',
+    title: 'Customize Your Dashboard',
+    description: 'Upload a custom background to personalize your dashboard experience.',
+    duration: 10000,
+    target: '[data-tutorial="background-tab"]',
+    placement: 'bottom',
+  },
+  {
+    id: 'playlist-public',
+    title: 'Playlist Visibility',
+    description: 'Control whether your playlist is publicly visible on your profile page.',
+    duration: 10000,
+    target: '[data-tutorial="playlist-public"]',
+    placement: 'top',
+  },
+];
+
+export const cookBakerTutorialSteps: TutorialStep[] = [
+  {
+    id: 'welcome',
+    title: 'Welcome to Your Cook/Baker Dashboard! 🍳',
+    description: 'This quick tour will show you how to showcase your recipes, manage food products, and connect with food lovers on PIE.',
+    duration: 12000,
+  },
+  {
+    id: 'food-products',
+    title: 'Food Products',
+    description: 'Upload and manage your recipe videos and food photos. Share your culinary creations with subscribers.',
+    duration: 10000,
+    target: '[data-tutorial="food-products"]',
+    placement: 'bottom',
+  },
+  {
+    id: 'gallery-tab',
+    title: 'Content Gallery',
+    description: 'Upload photos and videos of your dishes. Perfect for showcasing cooking techniques and final presentations.',
+    duration: 10000,
+    target: '[data-tutorial="gallery-tab"]',
+    placement: 'bottom',
+  },
+  {
+    id: 'media-tab',
+    title: 'Your Media Library',
+    description: 'Listen to music and podcasts while you create. Your personal media collection.',
+    duration: 10000,
+    target: '[data-tutorial="media-tab"]',
+    placement: 'bottom',
+  },
+  {
+    id: 'background-tab',
+    title: 'Customize Your Dashboard',
+    description: 'Upload a custom background to personalize your dashboard experience.',
+    duration: 10000,
+    target: '[data-tutorial="background-tab"]',
+    placement: 'bottom',
+  },
+  {
+    id: 'playlist-public',
+    title: 'Playlist Visibility',
+    description: 'Control whether your playlist is publicly visible on your profile page.',
+    duration: 10000,
+    target: '[data-tutorial="playlist-public"]',
+    placement: 'top',
+  },
+];
+
+export const liveStreamArtistTutorialSteps: TutorialStep[] = [
+  {
+    id: 'welcome',
+    title: 'Welcome to Your Live Stream Dashboard! 📺',
+    description: 'This quick tour will show you how to schedule livestreams, manage paid sessions, and grow your audience on PIE.',
+    duration: 12000,
+  },
+  {
+    id: 'livestream-setup',
+    title: 'Livestream Setup',
+    description: 'Configure your livestream settings including credits per minute for paid sessions.',
+    duration: 10000,
+    target: '[data-tutorial="livestream-setup"]',
+    placement: 'bottom',
+  },
+  {
+    id: 'schedule-stream',
+    title: 'Schedule Streams',
+    description: 'Create and schedule upcoming livestream sessions. Your audience will see them on the TV Guide.',
+    duration: 10000,
+    target: '[data-tutorial="schedule-stream"]',
+    placement: 'bottom',
+  },
+  {
+    id: 'gallery-tab',
+    title: 'Content Gallery',
+    description: 'Upload photos and video clips to promote your streams and share highlights.',
+    duration: 10000,
+    target: '[data-tutorial="gallery-tab"]',
+    placement: 'bottom',
+  },
+  {
+    id: 'media-tab',
+    title: 'Your Media Library',
+    description: 'Listen to music and podcasts you\'ve purchased. Your personal media collection.',
+    duration: 10000,
+    target: '[data-tutorial="media-tab"]',
+    placement: 'bottom',
+  },
+  {
+    id: 'background-tab',
+    title: 'Customize Your Dashboard',
+    description: 'Upload a custom background to personalize your dashboard experience.',
+    duration: 10000,
+    target: '[data-tutorial="background-tab"]',
+    placement: 'bottom',
+  },
+  {
+    id: 'playlist-public',
+    title: 'Playlist Visibility',
+    description: 'Control whether your playlist is publicly visible on your profile page.',
+    duration: 10000,
+    target: '[data-tutorial="playlist-public"]',
+    placement: 'top',
+  },
+];
+
 export const adminTutorialSteps: TutorialStep[] = [
   {
     id: 'welcome',
