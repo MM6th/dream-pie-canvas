@@ -5,9 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/components/ui/use-toast";
-import { Loader2, Trash2, Plus } from "lucide-react";
+import { Loader2, Trash2, Plus, Music } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,6 +21,12 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
+interface AudioTrack {
+  id: string;
+  title: string;
+  audio_file_url: string;
+}
+
 interface PortfolioImage {
   id: string;
   image_path: string;
@@ -26,6 +34,7 @@ interface PortfolioImage {
   media_type: string;
   display_order: number;
   is_blurred: boolean;
+  background_music_url: string | null;
 }
 
 interface Portfolio {
@@ -54,6 +63,7 @@ const PortfolioEditModal = ({
   userType,
   availableMedia 
 }: PortfolioEditModalProps) => {
+  const { user } = useAuth();
   const [portfolio, setPortfolio] = useState<Portfolio | null>(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -63,14 +73,66 @@ const PortfolioEditModal = ({
   const [loading, setLoading] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [addMediaMode, setAddMediaMode] = useState(false);
+  const [ownedTracks, setOwnedTracks] = useState<AudioTrack[]>([]);
 
   const isMerchant = userType === 'merchant';
 
   useEffect(() => {
     if (open && portfolioId) {
       loadPortfolio();
+      fetchOwnedTracks();
     }
   }, [open, portfolioId]);
+
+  const fetchOwnedTracks = async () => {
+    if (!user) return;
+    
+    try {
+      const { data: playlistData } = await supabase
+        .from('user_playlists')
+        .select(`
+          audio_product_id,
+          audio_products (
+            id,
+            title,
+            audio_file_url
+          )
+        `)
+        .eq('user_id', user.id);
+
+      const { data: ownedData } = await supabase
+        .from('audio_products')
+        .select('id, title, audio_file_url')
+        .eq('merchant_id', user.id)
+        .in('audio_type', ['music', 'other']);
+
+      const tracks: AudioTrack[] = [];
+      
+      if (playlistData) {
+        playlistData.forEach((item: any) => {
+          if (item.audio_products) {
+            tracks.push({
+              id: item.audio_products.id,
+              title: item.audio_products.title,
+              audio_file_url: item.audio_products.audio_file_url
+            });
+          }
+        });
+      }
+      
+      if (ownedData) {
+        ownedData.forEach((track) => {
+          if (!tracks.some(t => t.id === track.id)) {
+            tracks.push(track);
+          }
+        });
+      }
+      
+      setOwnedTracks(tracks);
+    } catch (error) {
+      console.error('Error fetching owned tracks:', error);
+    }
+  };
 
   const loadPortfolio = async () => {
     if (!portfolioId) return;
@@ -116,6 +178,12 @@ const PortfolioEditModal = ({
   const handleBlurToggle = (imageId: string) => {
     setPortfolioImages(portfolioImages.map(img => 
       img.id === imageId ? { ...img, is_blurred: !img.is_blurred } : img
+    ));
+  };
+
+  const handleBackgroundMusicChange = (imageId: string, audioUrl: string) => {
+    setPortfolioImages(portfolioImages.map(img => 
+      img.id === imageId ? { ...img, background_music_url: audioUrl || null } : img
     ));
   };
 
@@ -229,11 +297,14 @@ const PortfolioEditModal = ({
 
       if (portfolioError) throw portfolioError;
 
-      // Update blur states for each image
+      // Update blur states and background music for each image
       for (const image of portfolioImages) {
         const { error: imageError } = await supabase
           .from('portfolio_images')
-          .update({ is_blurred: image.is_blurred })
+          .update({ 
+            is_blurred: image.is_blurred,
+            background_music_url: image.background_music_url
+          })
           .eq('id', image.id);
 
         if (imageError) throw imageError;
@@ -488,6 +559,28 @@ const PortfolioEditModal = ({
                           <Label htmlFor={`edit-blur-${image.id}`} className="text-xs text-white cursor-pointer">
                             Blur
                           </Label>
+                        </div>
+                      )}
+                      {/* Background Music (Videos Only) */}
+                      {isVideo && ownedTracks.length > 0 && (
+                        <div className="mt-1">
+                          <Select
+                            value={image.background_music_url || ""}
+                            onValueChange={(value) => handleBackgroundMusicChange(image.id, value)}
+                          >
+                            <SelectTrigger className="h-7 text-xs bg-gray-700 border-gray-600">
+                              <Music className="w-3 h-3 mr-1" />
+                              <SelectValue placeholder="Add music" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-gray-700 border-gray-600">
+                              <SelectItem value="" className="text-white text-xs">No music</SelectItem>
+                              {ownedTracks.map((track) => (
+                                <SelectItem key={track.id} value={track.audio_file_url} className="text-white text-xs">
+                                  {track.title}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </div>
                       )}
                     </div>

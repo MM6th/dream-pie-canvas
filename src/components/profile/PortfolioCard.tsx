@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import { DollarSign, CheckCircle } from "lucide-react";
+import { DollarSign, CheckCircle, Music } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
@@ -15,6 +15,7 @@ interface PortfolioImage {
   media_type: string;
   display_order: number;
   is_blurred: boolean;
+  background_music_url?: string | null;
 }
 
 interface Portfolio {
@@ -36,6 +37,9 @@ const PortfolioCard = ({ portfolio }: PortfolioCardProps) => {
   const { user } = useAuth();
   const [isPurchased, setIsPurchased] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
+  const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
+  const audioRefs = useRef<Record<string, HTMLAudioElement | null>>({});
 
   useEffect(() => {
     const checkPurchaseStatus = async () => {
@@ -53,6 +57,26 @@ const PortfolioCard = ({ portfolio }: PortfolioCardProps) => {
 
     checkPurchaseStatus();
   }, [user, portfolio.id, portfolio.is_for_sale]);
+
+  // Handle video play/pause to sync with background music
+  const handleVideoPlay = (mediaId: string, backgroundMusicUrl: string | null | undefined) => {
+    if (backgroundMusicUrl && audioRefs.current[mediaId]) {
+      audioRefs.current[mediaId]?.play();
+    }
+  };
+
+  const handleVideoPause = (mediaId: string) => {
+    if (audioRefs.current[mediaId]) {
+      audioRefs.current[mediaId]?.pause();
+    }
+  };
+
+  const handleVideoEnded = (mediaId: string) => {
+    if (audioRefs.current[mediaId]) {
+      audioRefs.current[mediaId]?.pause();
+      audioRefs.current[mediaId]!.currentTime = 0;
+    }
+  };
 
   const getMediaUrl = (filePath: string) => {
     const { data } = supabase.storage.from('user-media').getPublicUrl(filePath);
@@ -149,12 +173,31 @@ const PortfolioCard = ({ portfolio }: PortfolioCardProps) => {
                   <CarouselItem key={media.id}>
                     <div className="aspect-video relative rounded-lg overflow-hidden bg-muted">
                       {media.media_type === 'video' && media.video_url ? (
-                        <video
-                          src={getMediaUrl(media.video_url)}
-                          controls={canView}
-                          className={`w-full h-full object-contain ${shouldBlur ? 'blur-xl' : ''}`}
-                          style={shouldBlur ? { filter: 'blur(20px)' } : {}}
-                        />
+                        <>
+                          <video
+                            ref={(el) => { videoRefs.current[media.id] = el; }}
+                            src={getMediaUrl(media.video_url)}
+                            controls={canView}
+                            className={`w-full h-full object-contain ${shouldBlur ? 'blur-xl' : ''}`}
+                            style={shouldBlur ? { filter: 'blur(20px)' } : {}}
+                            onPlay={() => handleVideoPlay(media.id, media.background_music_url)}
+                            onPause={() => handleVideoPause(media.id)}
+                            onEnded={() => handleVideoEnded(media.id)}
+                          />
+                          {media.background_music_url && (
+                            <>
+                              <audio
+                                ref={(el) => { audioRefs.current[media.id] = el; }}
+                                src={media.background_music_url}
+                                loop
+                              />
+                              <div className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 bg-black/70 rounded text-white text-xs">
+                                <Music className="w-3 h-3" />
+                                <span>Has music</span>
+                              </div>
+                            </>
+                          )}
+                        </>
                       ) : (
                         <img
                           src={getMediaUrl(media.image_path)}

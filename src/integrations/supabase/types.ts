@@ -1840,6 +1840,7 @@ export type Database = {
       }
       portfolio_images: {
         Row: {
+          background_music_url: string | null
           created_at: string
           display_order: number
           id: string
@@ -1850,6 +1851,7 @@ export type Database = {
           video_url: string | null
         }
         Insert: {
+          background_music_url?: string | null
           created_at?: string
           display_order?: number
           id?: string
@@ -1860,6 +1862,7 @@ export type Database = {
           video_url?: string | null
         }
         Update: {
+          background_music_url?: string | null
           created_at?: string
           display_order?: number
           id?: string

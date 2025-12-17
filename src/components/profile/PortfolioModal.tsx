@@ -1,14 +1,21 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/components/ui/use-toast";
-import { Loader2, Image as ImageIcon, X } from "lucide-react";
+import { Loader2, Music } from "lucide-react";
+
+interface AudioTrack {
+  id: string;
+  title: string;
+  audio_file_url: string;
+}
 
 interface PortfolioModalProps {
   open: boolean;
@@ -24,11 +31,70 @@ const PortfolioModal = ({ open, onOpenChange, onSuccess, userType, availableImag
   const [description, setDescription] = useState("");
   const [isForSale, setIsForSale] = useState(false);
   const [price, setPrice] = useState("");
-  const [selectedImages, setSelectedImages] = useState<Array<{path: string; type: string}>>([]);
+  const [selectedImages, setSelectedImages] = useState<Array<{path: string; type: string; backgroundMusicUrl?: string}>>([]);
   const [blurredImages, setBlurredImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [ownedTracks, setOwnedTracks] = useState<AudioTrack[]>([]);
 
   const isMerchant = userType === 'merchant';
+
+  useEffect(() => {
+    if (open && user) {
+      fetchOwnedTracks();
+    }
+  }, [open, user]);
+
+  const fetchOwnedTracks = async () => {
+    if (!user) return;
+    
+    try {
+      // Get audio from user's playlist
+      const { data: playlistData } = await supabase
+        .from('user_playlists')
+        .select(`
+          audio_product_id,
+          audio_products (
+            id,
+            title,
+            audio_file_url
+          )
+        `)
+        .eq('user_id', user.id);
+
+      // Get user's own audio products (if merchant)
+      const { data: ownedData } = await supabase
+        .from('audio_products')
+        .select('id, title, audio_file_url')
+        .eq('merchant_id', user.id)
+        .in('audio_type', ['music', 'other']);
+
+      const tracks: AudioTrack[] = [];
+      
+      if (playlistData) {
+        playlistData.forEach((item: any) => {
+          if (item.audio_products) {
+            tracks.push({
+              id: item.audio_products.id,
+              title: item.audio_products.title,
+              audio_file_url: item.audio_products.audio_file_url
+            });
+          }
+        });
+      }
+      
+      if (ownedData) {
+        ownedData.forEach((track) => {
+          if (!tracks.some(t => t.id === track.id)) {
+            tracks.push(track);
+          }
+        });
+      }
+      
+      setOwnedTracks(tracks);
+    } catch (error) {
+      console.error('Error fetching owned tracks:', error);
+    }
+  };
 
   const handleImageToggle = (imagePath: string, fileType: string) => {
     const existing = selectedImages.find(img => img.path === imagePath);
@@ -47,6 +113,12 @@ const PortfolioModal = ({ open, onOpenChange, onSuccess, userType, availableImag
       const mediaType = fileType.startsWith('video/') ? 'video' : 'image';
       setSelectedImages([...selectedImages, { path: imagePath, type: mediaType }]);
     }
+  };
+
+  const handleBackgroundMusicChange = (imagePath: string, audioUrl: string) => {
+    setSelectedImages(selectedImages.map(img => 
+      img.path === imagePath ? { ...img, backgroundMusicUrl: audioUrl || undefined } : img
+    ));
   };
 
   const handleBlurToggle = (imagePath: string) => {
@@ -120,7 +192,8 @@ const PortfolioModal = ({ open, onOpenChange, onSuccess, userType, availableImag
         video_url: media.type === 'video' ? media.path : null,
         media_type: media.type,
         display_order: index + 1,
-        is_blurred: blurredImages.includes(media.path)
+        is_blurred: blurredImages.includes(media.path),
+        background_music_url: media.type === 'video' ? (media.backgroundMusicUrl || null) : null
       }));
 
       const { error: imagesError } = await supabase
@@ -284,6 +357,28 @@ const PortfolioModal = ({ open, onOpenChange, onSuccess, userType, availableImag
                         <Label htmlFor={`blur-${media.id}`} className="text-xs text-white cursor-pointer">
                           Blur
                         </Label>
+                      </div>
+                    )}
+                    {/* Background Music (Videos Only) */}
+                    {isSelected && isVideo && ownedTracks.length > 0 && (
+                      <div className="mt-1">
+                        <Select
+                          value={selectedImages.find(img => img.path === media.file_path)?.backgroundMusicUrl || ""}
+                          onValueChange={(value) => handleBackgroundMusicChange(media.file_path, value)}
+                        >
+                          <SelectTrigger className="h-7 text-xs bg-gray-700 border-gray-600">
+                            <Music className="w-3 h-3 mr-1" />
+                            <SelectValue placeholder="Add music" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-gray-700 border-gray-600">
+                            <SelectItem value="" className="text-white text-xs">No music</SelectItem>
+                            {ownedTracks.map((track) => (
+                              <SelectItem key={track.id} value={track.audio_file_url} className="text-white text-xs">
+                                {track.title}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                     )}
                   </div>
