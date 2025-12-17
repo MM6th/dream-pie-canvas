@@ -298,7 +298,6 @@ const ProfilesDirectory = () => {
             {[
               { key: "merchants", label: "Merchants", icon: Building },
               { key: "supporters", label: "Supporters", icon: User },
-              { key: "admins", label: "Admins", icon: Shield },
               { key: "industries", label: "Skills", icon: Building },
             ].map(({ key, label, icon: Icon }) => (
               <Button
