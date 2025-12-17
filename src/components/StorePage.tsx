@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import FashionStoreSection from "./FashionStoreSection";
 import FoodStoreSection from "./FoodStoreSection";
+import DanceStoreSection from "./DanceStoreSection";
 import AstrologyStoreSection from "./AstrologyStoreSection";
 import PodcastDownloadManager from "./PodcastDownloadManager";
 import DownloadOpportunityChecker from "./DownloadOpportunityChecker";
@@ -890,6 +891,9 @@ const StorePage = () => {
 
         {/* Food Products Section */}
         <FoodStoreSection />
+
+        {/* Dance Products Section */}
+        <DanceStoreSection />
 
         {/* Podcasts Section */}
         <div className="mb-8 sm:mb-12">
