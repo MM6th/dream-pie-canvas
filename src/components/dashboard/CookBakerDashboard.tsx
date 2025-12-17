@@ -24,8 +24,6 @@ import ApprovalStatusBanner from "@/components/ApprovalStatusBanner";
 import RestrictedAccess from "@/components/dashboard/merchant/RestrictedAccess";
 import FoodProductManager from "@/components/FoodProductManager";
 import { FollowRequestsManager } from "@/components/profile/FollowRequestsManager";
-import { MessagingTutorialCard } from "@/components/messaging/MessagingTutorialCard";
-import { MessageSettingsCard } from "@/components/messaging/MessageSettingsCard";
 
 interface AudioTrack {
   id: string;
@@ -215,19 +213,6 @@ const CookBakerDashboard = ({
       <div className="flex flex-col gap-3 mb-6">
         <SupporterCurrentAffirmationsModal />
         <TVGuideModal />
-      </div>
-
-      {/* Messaging Tutorial & Settings */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-        <MessagingTutorialCard userType="merchant" />
-        <Card className="bg-gray-700/50 border-gray-600">
-          <CardHeader>
-            <CardTitle className="text-white text-sm">Messaging Settings</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <MessageSettingsCard />
-          </CardContent>
-        </Card>
       </div>
 
       {/* Food Product Manager */}

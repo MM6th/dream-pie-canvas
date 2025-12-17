@@ -78,6 +78,12 @@ export const merchantTutorialSteps: TutorialStep[] = [
     target: '[data-tutorial="media-players"]',
     placement: 'top',
   },
+  {
+    id: 'messaging-system',
+    title: 'Messaging System 💬',
+    description: 'Earn money when supporters message you! Go to your Profile tab → Messaging Settings to set your rate (1-100 credits per message). You earn 10% of each credit spent. Free messaging between merchants!',
+    duration: 12000,
+  },
 ];
 
 export const supporterTutorialSteps: TutorialStep[] = [
@@ -143,6 +149,12 @@ export const supporterTutorialSteps: TutorialStep[] = [
     target: '[data-tutorial="playlist-public"]',
     placement: 'top',
   },
+  {
+    id: 'messaging-system',
+    title: 'Messaging System 💬',
+    description: 'Connect with creators using our credit-based messaging! Purchase credits via the credits icon in the header. Each merchant sets their own rate (1-100 credits per message).',
+    duration: 12000,
+  },
 ];
 
 export const musicArtistTutorialSteps: TutorialStep[] = [
@@ -191,6 +203,12 @@ export const musicArtistTutorialSteps: TutorialStep[] = [
     duration: 10000,
     target: '[data-tutorial="playlist-public"]',
     placement: 'top',
+  },
+  {
+    id: 'messaging-system',
+    title: 'Messaging System 💬',
+    description: 'Earn money when supporters message you! Go to your Profile tab → Messaging Settings to set your rate (1-100 credits per message). You earn 10% of each credit spent. Free messaging between merchants!',
+    duration: 12000,
   },
 ];
 
@@ -241,6 +259,12 @@ export const fashionRetailerTutorialSteps: TutorialStep[] = [
     target: '[data-tutorial="playlist-public"]',
     placement: 'top',
   },
+  {
+    id: 'messaging-system',
+    title: 'Messaging System 💬',
+    description: 'Earn money when supporters message you! Go to your Profile tab → Messaging Settings to set your rate (1-100 credits per message). You earn 10% of each credit spent. Free messaging between merchants!',
+    duration: 12000,
+  },
 ];
 
 export const poleDancerTutorialSteps: TutorialStep[] = [
@@ -289,6 +313,12 @@ export const poleDancerTutorialSteps: TutorialStep[] = [
     duration: 10000,
     target: '[data-tutorial="playlist-public"]',
     placement: 'top',
+  },
+  {
+    id: 'messaging-system',
+    title: 'Messaging System 💬',
+    description: 'Earn money when supporters message you! Go to your Profile tab → Messaging Settings to set your rate (1-100 credits per message). You earn 10% of each credit spent. Free messaging between merchants!',
+    duration: 12000,
   },
 ];
 
@@ -347,6 +377,12 @@ export const audioPodcasterTutorialSteps: TutorialStep[] = [
     target: '[data-tutorial="playlist-public"]',
     placement: 'top',
   },
+  {
+    id: 'messaging-system',
+    title: 'Messaging System 💬',
+    description: 'Earn money when supporters message you! Go to your Profile tab → Messaging Settings to set your rate (1-100 credits per message). You earn 10% of each credit spent. Free messaging between merchants!',
+    duration: 12000,
+  },
 ];
 
 export const cookBakerTutorialSteps: TutorialStep[] = [
@@ -395,6 +431,12 @@ export const cookBakerTutorialSteps: TutorialStep[] = [
     duration: 10000,
     target: '[data-tutorial="playlist-public"]',
     placement: 'top',
+  },
+  {
+    id: 'messaging-system',
+    title: 'Messaging System 💬',
+    description: 'Earn money when supporters message you! Go to your Profile tab → Messaging Settings to set your rate (1-100 credits per message). You earn 10% of each credit spent. Free messaging between merchants!',
+    duration: 12000,
   },
 ];
 
@@ -452,6 +494,12 @@ export const liveStreamArtistTutorialSteps: TutorialStep[] = [
     duration: 10000,
     target: '[data-tutorial="playlist-public"]',
     placement: 'top',
+  },
+  {
+    id: 'messaging-system',
+    title: 'Messaging System 💬',
+    description: 'Earn money when supporters message you! Go to your Profile tab → Messaging Settings to set your rate (1-100 credits per message). You earn 10% of each credit spent. Free messaging between merchants!',
+    duration: 12000,
   },
 ];
 
