@@ -5,6 +5,11 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Revenue split constants
+const CREDIT_VALUE = 0.10; // Each credit is worth $0.10
+const PLATFORM_FEE_PERCENTAGE = 0.10; // PIE takes 10%
+const RECIPIENT_PERCENTAGE = 0.90; // Recipient gets 90%
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -74,44 +79,47 @@ Deno.serve(async (req) => {
       throw new Error('Cannot send messages to other supporters');
     }
 
-    // Determine if message is free
+    // Determine if message is free (only replies within a thread are free)
     let creditsRequired = 0;
     let isFree = false;
     let senderCredits: any = null;
     
-    // Merchants sending messages are always free (including podcast invites)
-    if (senderProfile.user_type === 'merchant') {
-      isFree = true;
-    }
-    // Check if supporter is replying to a merchant-initiated thread (free reply)
-    else if (parentMessageId && senderProfile.user_type === 'supporter' && recipientProfile.user_type === 'merchant') {
-      // Get the parent message to check who initiated the thread
+    // Check if this is a reply within an existing thread (replies are free for both parties)
+    if (parentMessageId) {
+      // Get the original thread starter to determine if this is a legitimate reply
       const { data: parentMessage } = await supabaseAdmin
         .from('messages')
-        .select('sender_id')
+        .select('sender_id, recipient_id')
         .eq('id', parentMessageId)
         .single();
       
-      // If the parent message was from the merchant, the supporter's reply is free
-      if (parentMessage && parentMessage.sender_id === recipientId) {
+      // If the user is part of this conversation thread, the reply is free
+      if (parentMessage && 
+          (parentMessage.sender_id === user.id || parentMessage.recipient_id === user.id)) {
         isFree = true;
       }
     }
     
-    // Only check credits and settings for paid messages
+    // For paid messages (new thread initiation)
     if (!isFree) {
-      // Get merchant's message settings (default to 10 credits if not set)
-      const { data: messageSettings } = await supabaseAdmin
-        .from('message_settings')
-        .select('credits_per_message, enabled')
-        .eq('merchant_id', recipientId)
-        .single();
+      // Determine credits required based on recipient type
+      if (recipientProfile.user_type === 'merchant') {
+        // Get merchant's message settings (default to 10 credits if not set)
+        const { data: messageSettings } = await supabaseAdmin
+          .from('message_settings')
+          .select('credits_per_message, enabled')
+          .eq('merchant_id', recipientId)
+          .single();
 
-      creditsRequired = messageSettings?.credits_per_message || 10;
-      const messagingEnabled = messageSettings?.enabled !== false;
+        creditsRequired = messageSettings?.credits_per_message || 10;
+        const messagingEnabled = messageSettings?.enabled !== false;
 
-      if (!messagingEnabled) {
-        throw new Error('This merchant has disabled messaging');
+        if (!messagingEnabled) {
+          throw new Error('This merchant has disabled messaging');
+        }
+      } else if (recipientProfile.user_type === 'supporter') {
+        // Supporters receive messages at default rate of 10 credits
+        creditsRequired = 10;
       }
 
       // Check sender's credit balance
@@ -181,14 +189,14 @@ Deno.serve(async (req) => {
 
       if (deductError) throw deductError;
 
-      // Record transaction
+      // Record transaction for sender
       const { error: transactionError } = await supabaseAdmin
         .from('credit_transactions')
         .insert({
           user_id: user.id,
           type: 'spent',
           amount: creditsRequired,
-          description: `Message to ${recipientProfile.display_name || 'merchant'}`,
+          description: `Message to ${recipientProfile.display_name || recipientProfile.user_type}`,
           related_message_id: newMessage.id,
         });
 
@@ -196,44 +204,71 @@ Deno.serve(async (req) => {
         console.error('Error recording transaction:', transactionError);
       }
 
-      // Track revenue for merchant (recipient) immediately
-      const merchantRevenue = creditsRequired * 0.10; // 1 credit = $0.10
+      // Calculate revenue split
+      const totalRevenue = creditsRequired * CREDIT_VALUE;
+      const recipientRevenue = totalRevenue * RECIPIENT_PERCENTAGE; // 90% to recipient
+      const platformRevenue = totalRevenue * PLATFORM_FEE_PERCENTAGE; // 10% to PIE
+
+      // Track revenue for recipient
       await supabaseAdmin.rpc('update_quarterly_income', {
         p_user_id: recipientId,
-        p_income_type: 'merchant_revenue',
-        p_amount: merchantRevenue,
+        p_income_type: recipientProfile.user_type === 'merchant' ? 'merchant_revenue' : 'supporter_revenue',
+        p_amount: recipientRevenue,
       });
 
-      // Check if merchant has reached payout threshold ($100)
-      try {
-        const { data: thresholdReached } = await supabaseAdmin.rpc('check_merchant_payout_threshold', {
-          p_merchant_id: recipientId,
+      // Track platform revenue
+      const { error: platformRevenueError } = await supabaseAdmin
+        .from('platform_revenue')
+        .insert({
+          revenue_type: 'messaging_fee',
+          amount: platformRevenue,
+          source_user_id: user.id,
+          source_transaction_id: newMessage.id,
+          metadata: {
+            recipient_id: recipientId,
+            credits_spent: creditsRequired,
+            total_revenue: totalRevenue,
+            recipient_share: recipientRevenue,
+            platform_share: platformRevenue,
+          },
         });
-        if (thresholdReached) {
-          console.log('Payout threshold reached for merchant:', recipientId);
-        }
-      } catch (thresholdError) {
-        console.error('Error checking payout threshold:', thresholdError);
+
+      if (platformRevenueError) {
+        console.error('Error recording platform revenue:', platformRevenueError);
       }
 
-      // Create notification for recipient merchant about paid message
+      // Check if recipient has reached payout threshold ($100) - only for merchants
+      if (recipientProfile.user_type === 'merchant') {
+        try {
+          const { data: thresholdReached } = await supabaseAdmin.rpc('check_merchant_payout_threshold', {
+            p_merchant_id: recipientId,
+          });
+          if (thresholdReached) {
+            console.log('Payout threshold reached for merchant:', recipientId);
+          }
+        } catch (thresholdError) {
+          console.error('Error checking payout threshold:', thresholdError);
+        }
+      }
+
+      // Create notification for recipient about paid message
       await supabaseAdmin
         .from('notifications')
         .insert({
           user_id: recipientId,
           type: 'paid_message',
           title: 'New Paid Message',
-          message: `${senderProfile.display_name || 'A supporter'} sent you a paid message ($${merchantRevenue.toFixed(2)} earned)`,
+          message: `${senderProfile.display_name || 'Someone'} sent you a paid message ($${recipientRevenue.toFixed(2)} earned)`,
         });
     } else {
-      // Create notification for free message
+      // Create notification for free message (reply)
       await supabaseAdmin
         .from('notifications')
         .insert({
           user_id: recipientId,
           type: 'message',
           title: 'New Message',
-          message: `${senderProfile.display_name || 'Someone'} sent you a message`,
+          message: `${senderProfile.display_name || 'Someone'} replied to your message`,
         });
     }
 
@@ -248,6 +283,8 @@ Deno.serve(async (req) => {
       message_id: newMessage.id, 
       from: user.id, 
       to: recipientId,
+      sender_type: senderProfile.user_type,
+      recipient_type: recipientProfile.user_type,
       credits_spent: creditsRequired,
       is_free: isFree,
       is_reply: !!parentMessageId,
