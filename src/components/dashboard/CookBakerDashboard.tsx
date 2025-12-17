@@ -71,7 +71,8 @@ const CookBakerDashboard = ({
               image_path,
               video_url,
               media_type,
-              display_order
+              display_order,
+              is_video_muted
             )
           )
         `)

@@ -188,7 +188,8 @@ const ProfilePage = () => {
             media_type,
             display_order,
             is_blurred,
-            background_music_url
+            background_music_url,
+            is_video_muted
           )
         `)
         .eq('user_id', userId)
