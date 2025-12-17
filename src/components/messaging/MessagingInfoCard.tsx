@@ -22,9 +22,10 @@ export const MessagingInfoCard = ({ userType }: MessagingInfoCardProps) => {
         <Alert>
           <MessageSquare className="h-4 w-4" />
           <AlertDescription>
-            <strong>Message Costs:</strong>
+            <strong>Message Costs & Earnings:</strong>
             <ul className="mt-2 space-y-1 text-sm">
               <li>• <strong>10 credits per message</strong> for all messaging</li>
+              <li>• <strong>1 credit = $0.10</strong> - Recipients earn $0.10 per credit spent</li>
             </ul>
           </AlertDescription>
         </Alert>
@@ -60,10 +61,11 @@ export const MessagingInfoCard = ({ userType }: MessagingInfoCardProps) => {
           <Alert>
             <MessageSquare className="h-4 w-4" />
             <AlertDescription>
-              <strong>Merchant Messaging:</strong>
+              <strong>Merchant Earnings:</strong>
               <ul className="mt-2 space-y-1 text-sm">
-                <li>• All messaging costs 10 credits</li>
-                <li>• Receive messages from supporters in your inbox</li>
+                <li>• Earn <strong>$0.10 per credit</strong> spent on messages to you</li>
+                <li>• Set your rate (1-100 credits) in Messaging Settings</li>
+                <li>• Revenue tracked quarterly for tax reporting</li>
               </ul>
             </AlertDescription>
           </Alert>
