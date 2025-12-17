@@ -13,6 +13,15 @@ export const useFollowRequest = () => {
     }
 
     try {
+      // Get requester's display name for the notification
+      const { data: requesterProfile } = await supabase
+        .from('profiles')
+        .select('display_name')
+        .eq('id', user.id)
+        .single();
+
+      const requesterName = requesterProfile?.display_name || 'Someone';
+
       const { error } = await supabase
         .from('profile_follow_requests')
         .insert({
@@ -29,6 +38,16 @@ export const useFollowRequest = () => {
         }
         return { error };
       }
+
+      // Create notification for the target merchant
+      await supabase
+        .from('notifications')
+        .insert({
+          user_id: targetId,
+          type: 'follow_request',
+          title: 'New Follow Request',
+          message: `${requesterName} wants to follow you. Check your dashboard to accept or decline.`,
+        });
 
       toast.success('Follow request sent successfully');
       return { error: null };
