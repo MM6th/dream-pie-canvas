@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/components/ui/use-toast";
-import { Loader2, Music } from "lucide-react";
+import { Loader2, Music, Play, Pause, X } from "lucide-react";
 
 interface AudioTrack {
   id: string;
@@ -35,6 +35,10 @@ const PortfolioModal = ({ open, onOpenChange, onSuccess, userType, availableImag
   const [blurredImages, setBlurredImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [ownedTracks, setOwnedTracks] = useState<AudioTrack[]>([]);
+  const [previewVideo, setPreviewVideo] = useState<string | null>(null);
+  const [previewAudio, setPreviewAudio] = useState<string | null>(null);
+  const videoPreviewRef = useRef<HTMLVideoElement>(null);
+  const audioPreviewRef = useRef<HTMLAudioElement>(null);
 
   const isMerchant = userType === 'merchant';
 
@@ -126,6 +130,35 @@ const PortfolioModal = ({ open, onOpenChange, onSuccess, userType, availableImag
       setBlurredImages(blurredImages.filter(p => p !== imagePath));
     } else {
       setBlurredImages([...blurredImages, imagePath]);
+    }
+  };
+
+  const handlePreviewVideo = (videoPath: string) => {
+    const selectedMedia = selectedImages.find(img => img.path === videoPath);
+    setPreviewVideo(getImageUrl(videoPath));
+    setPreviewAudio(selectedMedia?.backgroundMusicUrl || null);
+  };
+
+  const closePreview = () => {
+    if (videoPreviewRef.current) {
+      videoPreviewRef.current.pause();
+    }
+    if (audioPreviewRef.current) {
+      audioPreviewRef.current.pause();
+    }
+    setPreviewVideo(null);
+    setPreviewAudio(null);
+  };
+
+  const handlePreviewVideoPlay = () => {
+    if (previewAudio && audioPreviewRef.current) {
+      audioPreviewRef.current.play();
+    }
+  };
+
+  const handlePreviewVideoPause = () => {
+    if (audioPreviewRef.current) {
+      audioPreviewRef.current.pause();
     }
   };
 
@@ -344,6 +377,21 @@ const PortfolioModal = ({ open, onOpenChange, onSuccess, userType, availableImag
                           </div>
                         </div>
                       )}
+                      {/* Preview button for videos */}
+                      {isVideo && isSelected && (
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          className="absolute bottom-1 right-1 h-6 px-2 text-xs bg-black/70 hover:bg-black/90"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handlePreviewVideo(media.file_path);
+                          }}
+                        >
+                          <Play className="w-3 h-3 mr-1" />
+                          Preview
+                        </Button>
+                      )}
                     </div>
                     
                     {/* Blur Checkbox (Merchants Only) */}
@@ -414,6 +462,48 @@ const PortfolioModal = ({ open, onOpenChange, onSuccess, userType, availableImag
           </div>
         </div>
       </DialogContent>
+
+      {/* Video Preview Modal */}
+      {previewVideo && (
+        <div className="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center">
+          <div className="relative max-w-4xl w-full mx-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="absolute -top-10 right-0 text-white hover:bg-white/20"
+              onClick={closePreview}
+            >
+              <X className="w-5 h-5 mr-1" />
+              Close Preview
+            </Button>
+            <div className="bg-gray-900 rounded-lg overflow-hidden">
+              <video
+                ref={videoPreviewRef}
+                src={previewVideo}
+                controls
+                autoPlay
+                className="w-full max-h-[70vh]"
+                onPlay={handlePreviewVideoPlay}
+                onPause={handlePreviewVideoPause}
+                onEnded={handlePreviewVideoPause}
+              />
+              {previewAudio && (
+                <>
+                  <audio
+                    ref={audioPreviewRef}
+                    src={previewAudio}
+                    loop
+                  />
+                  <div className="p-3 bg-gray-800 flex items-center gap-2 text-white text-sm">
+                    <Music className="w-4 h-4 text-green-400" />
+                    <span>Background music attached</span>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </Dialog>
   );
 };

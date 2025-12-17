@@ -55,12 +55,16 @@ interface BulletinPost {
 interface PortfolioImage {
   id: string;
   image_path: string;
+  video_url: string | null;
+  media_type: string;
   display_order: number;
   is_blurred: boolean;
+  background_music_url?: string | null;
 }
 
 interface Portfolio {
   id: string;
+  user_id: string;
   title: string;
   description?: string;
   is_for_sale: boolean;
@@ -180,8 +184,11 @@ const ProfilePage = () => {
           portfolio_images (
             id,
             image_path,
+            video_url,
+            media_type,
             display_order,
-            is_blurred
+            is_blurred,
+            background_music_url
           )
         `)
         .eq('user_id', userId)
