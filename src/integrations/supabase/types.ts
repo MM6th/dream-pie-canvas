@@ -823,6 +823,7 @@ export type Database = {
           display_order: number
           id: string
           image_url: string
+          is_blurred: boolean | null
           media_type: string | null
         }
         Insert: {
@@ -831,6 +832,7 @@ export type Database = {
           display_order?: number
           id?: string
           image_url: string
+          is_blurred?: boolean | null
           media_type?: string | null
         }
         Update: {
@@ -839,6 +841,7 @@ export type Database = {
           display_order?: number
           id?: string
           image_url?: string
+          is_blurred?: boolean | null
           media_type?: string | null
         }
         Relationships: [

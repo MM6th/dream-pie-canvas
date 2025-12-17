@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Upload, X, Loader2, Image, Video } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -15,6 +16,7 @@ interface DanceProductImage {
   image_url: string;
   media_type: string;
   display_order: number;
+  is_blurred?: boolean;
 }
 
 interface DanceProduct {
@@ -52,6 +54,8 @@ const EditDanceProductModal = ({ product, open, onOpenChange, onSuccess }: EditD
   const [newFiles, setNewFiles] = useState<File[]>([]);
   const [newPreviews, setNewPreviews] = useState<string[]>([]);
   const [imagesToDelete, setImagesToDelete] = useState<string[]>([]);
+  const [blurredNewIndexes, setBlurredNewIndexes] = useState<number[]>([]);
+  const [blurredGalleryIndexes, setBlurredGalleryIndexes] = useState<number[]>([]);
   
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [galleryLoading, setGalleryLoading] = useState(false);
@@ -68,6 +72,8 @@ const EditDanceProductModal = ({ product, open, onOpenChange, onSuccess }: EditD
     setNewPreviews([]);
     setImagesToDelete([]);
     setGalleryPreviews([]);
+    setBlurredNewIndexes([]);
+    setBlurredGalleryIndexes([]);
   }, [product]);
 
   useEffect(() => {
@@ -138,6 +144,34 @@ const EditDanceProductModal = ({ product, open, onOpenChange, onSuccess }: EditD
     URL.revokeObjectURL(newPreviews[index]);
     setNewFiles(prev => prev.filter((_, i) => i !== index));
     setNewPreviews(prev => prev.filter((_, i) => i !== index));
+    setBlurredNewIndexes(prev => prev.filter(i => i !== index).map(i => i > index ? i - 1 : i));
+  };
+
+  const toggleExistingBlur = async (imageId: string, currentBlur: boolean) => {
+    try {
+      await supabase
+        .from('dance_product_images')
+        .update({ is_blurred: !currentBlur })
+        .eq('id', imageId);
+      
+      setExistingImages(prev => 
+        prev.map(img => img.id === imageId ? { ...img, is_blurred: !currentBlur } : img)
+      );
+    } catch (error) {
+      console.error('Error updating blur status:', error);
+    }
+  };
+
+  const toggleNewBlur = (index: number) => {
+    setBlurredNewIndexes(prev => 
+      prev.includes(index) ? prev.filter(i => i !== index) : [...prev, index]
+    );
+  };
+
+  const toggleGalleryBlur = (index: number) => {
+    setBlurredGalleryIndexes(prev => 
+      prev.includes(index) ? prev.filter(i => i !== index) : [...prev, index]
+    );
   };
 
   const handleSubmit = async () => {
@@ -227,7 +261,8 @@ const EditDanceProductModal = ({ product, open, onOpenChange, onSuccess }: EditD
           dance_product_id: product.id,
           image_url: publicUrl,
           media_type: file.type.startsWith('video/') ? 'video' : 'image',
-          display_order: orderCounter++
+          display_order: orderCounter++,
+          is_blurred: blurredNewIndexes.includes(i)
         });
       }
 
@@ -238,7 +273,8 @@ const EditDanceProductModal = ({ product, open, onOpenChange, onSuccess }: EditD
           dance_product_id: product.id,
           image_url: url,
           media_type: type,
-          display_order: orderCounter++
+          display_order: orderCounter++,
+          is_blurred: blurredGalleryIndexes.includes(i)
         });
       }
 
@@ -332,22 +368,45 @@ const EditDanceProductModal = ({ product, open, onOpenChange, onSuccess }: EditD
             <Label>Current Photos / Videos</Label>
             {existingImages.length > 0 ? (
               <div className="grid grid-cols-3 gap-3">
-                {existingImages.map((image) => (
-                  <div key={image.id} className="relative group">
-                    {image.media_type === 'video' ? (
-                      <video src={image.image_url} className="w-full h-24 object-cover rounded-lg" />
-                    ) : (
-                      <img src={image.image_url} alt="Content" className="w-full h-24 object-cover rounded-lg" />
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => removeExistingImage(image.id)}
-                      className="absolute top-1 right-1 p-1 bg-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <X className="w-4 h-4 text-white" />
-                    </button>
-                  </div>
-                ))}
+                {existingImages.map((image) => {
+                  const isVideo = image.media_type === 'video';
+                  const isBlurred = image.is_blurred || false;
+                  
+                  return (
+                    <div key={image.id} className="relative group">
+                      {isVideo ? (
+                        <video src={image.image_url} className="w-full h-24 object-cover rounded-lg" />
+                      ) : (
+                        <img 
+                          src={image.image_url} 
+                          alt="Content" 
+                          className={`w-full h-24 object-cover rounded-lg ${isBlurred ? 'blur-md' : ''}`} 
+                        />
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => removeExistingImage(image.id)}
+                        className="absolute top-1 right-1 p-1 bg-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="w-4 h-4 text-white" />
+                      </button>
+                      
+                      {/* Blur checkbox for images only */}
+                      {!isVideo && (
+                        <div className="mt-1 flex items-center space-x-2">
+                          <Checkbox
+                            id={`blur-existing-${image.id}`}
+                            checked={isBlurred}
+                            onCheckedChange={() => toggleExistingBlur(image.id, isBlurred)}
+                          />
+                          <Label htmlFor={`blur-existing-${image.id}`} className="text-xs text-gray-300 cursor-pointer">
+                            Blur
+                          </Label>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             ) : (
               <p className="text-gray-500 text-sm">No images remaining</p>
@@ -390,43 +449,87 @@ const EditDanceProductModal = ({ product, open, onOpenChange, onSuccess }: EditD
             {/* Gallery Previews */}
             {galleryPreviews.length > 0 && (
               <div className="grid grid-cols-3 gap-3 mt-3">
-                {galleryPreviews.map((preview, index) => (
-                  <div key={`gallery-${index}`} className="relative group">
-                    {preview.type === 'video' ? (
-                      <video src={preview.url} className="w-full h-24 object-cover rounded-lg" />
-                    ) : (
-                      <img src={preview.url} alt={`Gallery ${index + 1}`} className="w-full h-24 object-cover rounded-lg" />
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => removeGalleryPreview(index)}
-                      className="absolute top-1 right-1 p-1 bg-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <X className="w-4 h-4 text-white" />
-                    </button>
-                  </div>
-                ))}
+                {galleryPreviews.map((preview, index) => {
+                  const isVideo = preview.type === 'video';
+                  const isBlurred = blurredGalleryIndexes.includes(index);
+                  
+                  return (
+                    <div key={`gallery-${index}`} className="relative group">
+                      {isVideo ? (
+                        <video src={preview.url} className="w-full h-24 object-cover rounded-lg" />
+                      ) : (
+                        <img 
+                          src={preview.url} 
+                          alt={`Gallery ${index + 1}`} 
+                          className={`w-full h-24 object-cover rounded-lg ${isBlurred ? 'blur-md' : ''}`} 
+                        />
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => removeGalleryPreview(index)}
+                        className="absolute top-1 right-1 p-1 bg-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="w-4 h-4 text-white" />
+                      </button>
+                      
+                      {!isVideo && (
+                        <div className="mt-1 flex items-center space-x-2">
+                          <Checkbox
+                            id={`blur-gallery-${index}`}
+                            checked={isBlurred}
+                            onCheckedChange={() => toggleGalleryBlur(index)}
+                          />
+                          <Label htmlFor={`blur-gallery-${index}`} className="text-xs text-gray-300 cursor-pointer">
+                            Blur
+                          </Label>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
 
             {newPreviews.length > 0 && (
               <div className="grid grid-cols-3 gap-3 mt-3">
-                {newPreviews.map((preview, index) => (
-                  <div key={index} className="relative group">
-                    {newFiles[index]?.type.startsWith('video/') ? (
-                      <video src={preview} className="w-full h-24 object-cover rounded-lg" />
-                    ) : (
-                      <img src={preview} alt={`New ${index + 1}`} className="w-full h-24 object-cover rounded-lg" />
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => removeNewFile(index)}
-                      className="absolute top-1 right-1 p-1 bg-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <X className="w-4 h-4 text-white" />
-                    </button>
-                  </div>
-                ))}
+                {newPreviews.map((preview, index) => {
+                  const isVideo = newFiles[index]?.type.startsWith('video/');
+                  const isBlurred = blurredNewIndexes.includes(index);
+                  
+                  return (
+                    <div key={index} className="relative group">
+                      {isVideo ? (
+                        <video src={preview} className="w-full h-24 object-cover rounded-lg" />
+                      ) : (
+                        <img 
+                          src={preview} 
+                          alt={`New ${index + 1}`} 
+                          className={`w-full h-24 object-cover rounded-lg ${isBlurred ? 'blur-md' : ''}`} 
+                        />
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => removeNewFile(index)}
+                        className="absolute top-1 right-1 p-1 bg-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="w-4 h-4 text-white" />
+                      </button>
+                      
+                      {!isVideo && (
+                        <div className="mt-1 flex items-center space-x-2">
+                          <Checkbox
+                            id={`blur-new-${index}`}
+                            checked={isBlurred}
+                            onCheckedChange={() => toggleNewBlur(index)}
+                          />
+                          <Label htmlFor={`blur-new-${index}`} className="text-xs text-gray-300 cursor-pointer">
+                            Blur
+                          </Label>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>

@@ -14,6 +14,7 @@ interface DanceProductImage {
   image_url: string;
   media_type: string;
   display_order: number;
+  is_blurred: boolean;
 }
 
 interface DanceProduct {
@@ -53,7 +54,8 @@ const DanceStoreSection = () => {
             id,
             image_url,
             media_type,
-            display_order
+            display_order,
+            is_blurred
           ),
           profiles:merchant_id (
             display_name,
@@ -163,13 +165,29 @@ const DanceStoreSection = () => {
                             src={currentImage.image_url}
                             className="w-full h-full object-cover"
                             controls
+                            onTimeUpdate={(e) => {
+                              const video = e.currentTarget;
+                              if (video.currentTime >= 15) {
+                                video.pause();
+                                video.currentTime = 0;
+                              }
+                            }}
                           />
                         ) : (
-                          <img
-                            src={currentImage.image_url}
-                            alt={product.title}
-                            className="w-full h-full object-cover"
-                          />
+                          <div className="relative w-full h-full">
+                            <img
+                              src={currentImage.image_url}
+                              alt={product.title}
+                              className={`w-full h-full object-cover ${currentImage.is_blurred ? 'blur-lg' : ''}`}
+                            />
+                            {currentImage.is_blurred && (
+                              <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                                <span className="text-white text-sm font-medium px-3 py-1 bg-black/50 rounded">
+                                  Purchase to view
+                                </span>
+                              </div>
+                            )}
+                          </div>
                         )
                       ) : (
                         <div className="w-full h-full bg-gradient-to-br from-pink-600 to-purple-600 flex items-center justify-center">
