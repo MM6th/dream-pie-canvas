@@ -75,6 +75,19 @@ const PortfolioModal = ({ open, onOpenChange, onSuccess, userType, availableImag
         .eq('merchant_id', user.id)
         .in('audio_type', ['music', 'other']);
 
+      // Get purchased/downloaded tracks (includes free downloads)
+      const { data: purchasedData } = await supabase
+        .from('user_purchases')
+        .select(`
+          audio_product_id,
+          audio_products (
+            id,
+            title,
+            audio_file_url
+          )
+        `)
+        .eq('user_id', user.id);
+
       const tracks: AudioTrack[] = [];
       
       if (playlistData) {
@@ -93,6 +106,18 @@ const PortfolioModal = ({ open, onOpenChange, onSuccess, userType, availableImag
         ownedData.forEach((track) => {
           if (!tracks.some(t => t.id === track.id)) {
             tracks.push(track);
+          }
+        });
+      }
+
+      if (purchasedData) {
+        purchasedData.forEach((item: any) => {
+          if (item.audio_products && !tracks.some(t => t.id === item.audio_products.id)) {
+            tracks.push({
+              id: item.audio_products.id,
+              title: item.audio_products.title,
+              audio_file_url: item.audio_products.audio_file_url
+            });
           }
         });
       }
