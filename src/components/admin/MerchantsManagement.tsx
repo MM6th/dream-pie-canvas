@@ -11,11 +11,23 @@ interface Merchant {
   id: string;
   email: string;
   display_name: string | null;
+  avatar_url: string | null;
   business_name: string | null;
   business_description: string | null;
+  industry: string | null;
+  skills: string[] | null;
+  website: string | null;
+  contact_email: string | null;
+  facebook_url: string | null;
+  instagram_url: string | null;
+  youtube_url: string | null;
+  pinterest_url: string | null;
+  onlyfans_url: string | null;
+  snapchat_url: string | null;
+  paypal_email: string | null;
+  is_adult_creator: boolean | null;
   approval_status: string | null;
   created_at: string | null;
-  paypal_email: string | null;
   is_live_stream_artist?: boolean | null;
 }
 
