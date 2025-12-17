@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import AvatarUpload from "@/components/profile/AvatarUpload";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -15,9 +17,30 @@ const ProfileCompletionModal = ({ isOpen, onComplete }: ProfileCompletionModalPr
   const { user } = useAuth();
   const [avatarUrl, setAvatarUrl] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Social links state
+  const [website, setWebsite] = useState("");
+  const [youtubeUrl, setYoutubeUrl] = useState("");
+  const [instagramUrl, setInstagramUrl] = useState("");
+  const [facebookUrl, setFacebookUrl] = useState("");
+  const [snapchatUrl, setSnapchatUrl] = useState("");
+  const [pinterestUrl, setPinterestUrl] = useState("");
+  const [onlyfansUrl, setOnlyfansUrl] = useState("");
 
   const handleAvatarChange = (url: string) => {
     setAvatarUrl(url);
+  };
+
+  const hasAtLeastOneSocialLink = () => {
+    return !!(
+      website.trim() ||
+      youtubeUrl.trim() ||
+      instagramUrl.trim() ||
+      facebookUrl.trim() ||
+      snapchatUrl.trim() ||
+      pinterestUrl.trim() ||
+      onlyfansUrl.trim()
+    );
   };
 
   const handleComplete = async () => {
@@ -30,6 +53,15 @@ const ProfileCompletionModal = ({ isOpen, onComplete }: ProfileCompletionModalPr
       return;
     }
 
+    if (!hasAtLeastOneSocialLink()) {
+      toast({
+        title: "Social Link Required",
+        description: "Please provide at least one social link so we can verify your account.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -37,6 +69,13 @@ const ProfileCompletionModal = ({ isOpen, onComplete }: ProfileCompletionModalPr
         .from('profiles')
         .update({ 
           avatar_url: avatarUrl,
+          website: website.trim() || null,
+          youtube_url: youtubeUrl.trim() || null,
+          instagram_url: instagramUrl.trim() || null,
+          facebook_url: facebookUrl.trim() || null,
+          snapchat_url: snapchatUrl.trim() || null,
+          pinterest_url: pinterestUrl.trim() || null,
+          onlyfans_url: onlyfansUrl.trim() || null,
           profile_complete: true 
         })
         .eq('id', user?.id);
@@ -64,13 +103,13 @@ const ProfileCompletionModal = ({ isOpen, onComplete }: ProfileCompletionModalPr
   return (
     <Dialog open={isOpen} onOpenChange={() => {}}>
       <DialogContent 
-        className="sm:max-w-xs max-h-[90vh] overflow-y-auto p-4" 
+        className="sm:max-w-md max-h-[90vh] overflow-y-auto p-4" 
         onPointerDownOutside={(e) => e.preventDefault()}
       >
         <DialogHeader className="pb-1">
           <DialogTitle className="text-base">Complete Your Profile</DialogTitle>
           <DialogDescription className="text-xs">
-            Upload a profile picture to continue.
+            Upload a profile picture and provide at least one social link for account verification.
           </DialogDescription>
         </DialogHeader>
 
@@ -82,10 +121,96 @@ const ProfileCompletionModal = ({ isOpen, onComplete }: ProfileCompletionModalPr
           />
         </div>
 
+        <div className="space-y-3">
+          <div>
+            <Label htmlFor="website" className="text-xs">Website</Label>
+            <Input
+              id="website"
+              value={website}
+              onChange={(e) => setWebsite(e.target.value)}
+              placeholder="https://yourwebsite.com"
+              className="h-8 text-sm"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label htmlFor="youtube" className="text-xs">YouTube</Label>
+              <Input
+                id="youtube"
+                value={youtubeUrl}
+                onChange={(e) => setYoutubeUrl(e.target.value)}
+                placeholder="YouTube URL"
+                className="h-8 text-sm"
+              />
+            </div>
+            <div>
+              <Label htmlFor="instagram" className="text-xs">Instagram</Label>
+              <Input
+                id="instagram"
+                value={instagramUrl}
+                onChange={(e) => setInstagramUrl(e.target.value)}
+                placeholder="Instagram URL"
+                className="h-8 text-sm"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label htmlFor="facebook" className="text-xs">Facebook</Label>
+              <Input
+                id="facebook"
+                value={facebookUrl}
+                onChange={(e) => setFacebookUrl(e.target.value)}
+                placeholder="Facebook URL"
+                className="h-8 text-sm"
+              />
+            </div>
+            <div>
+              <Label htmlFor="snapchat" className="text-xs">Snapchat</Label>
+              <Input
+                id="snapchat"
+                value={snapchatUrl}
+                onChange={(e) => setSnapchatUrl(e.target.value)}
+                placeholder="Snapchat URL"
+                className="h-8 text-sm"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label htmlFor="pinterest" className="text-xs">Pinterest</Label>
+              <Input
+                id="pinterest"
+                value={pinterestUrl}
+                onChange={(e) => setPinterestUrl(e.target.value)}
+                placeholder="Pinterest URL"
+                className="h-8 text-sm"
+              />
+            </div>
+            <div>
+              <Label htmlFor="onlyfans" className="text-xs">OnlyFans</Label>
+              <Input
+                id="onlyfans"
+                value={onlyfansUrl}
+                onChange={(e) => setOnlyfansUrl(e.target.value)}
+                placeholder="OnlyFans URL"
+                className="h-8 text-sm"
+              />
+            </div>
+          </div>
+
+          <p className="text-xs text-muted-foreground">
+            * At least one social link is required for verification
+          </p>
+        </div>
+
         <Button 
           onClick={handleComplete} 
-          disabled={!avatarUrl || isSubmitting}
-          className="w-full h-8 text-sm"
+          disabled={!avatarUrl || !hasAtLeastOneSocialLink() || isSubmitting}
+          className="w-full h-8 text-sm mt-2"
         >
           {isSubmitting ? "Saving..." : "Complete Profile"}
         </Button>
