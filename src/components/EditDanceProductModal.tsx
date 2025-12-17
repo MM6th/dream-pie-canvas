@@ -154,10 +154,10 @@ const EditDanceProductModal = ({ product, open, onOpenChange, onSuccess }: EditD
 
     if (!isFree) {
       const numPrice = parseFloat(price);
-      if (!price || isNaN(numPrice) || numPrice <= 0) {
+      if (!price || isNaN(numPrice) || numPrice < 2) {
         toast({
           title: "Error",
-          description: "Please enter a valid price",
+          description: "Minimum price is $2.00",
           variant: "destructive"
         });
         return;
@@ -305,10 +305,11 @@ const EditDanceProductModal = ({ product, open, onOpenChange, onSuccess }: EditD
                 <Input
                   id="edit-price"
                   type="number"
-                  min="0.01"
+                  min="2.00"
                   step="0.01"
                   value={price}
                   onChange={(e) => setPrice(e.target.value)}
+                  placeholder="2.00"
                   className="bg-gray-700 border-gray-600 text-white pl-7"
                 />
               </div>
