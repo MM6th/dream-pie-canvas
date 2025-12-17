@@ -591,11 +591,13 @@ const PortfolioModal = ({ open, onOpenChange, onSuccess, userType, availableImag
                   </SelectTrigger>
                   <SelectContent className="bg-gray-700 border-gray-600 z-[150]">
                     <SelectItem value="none" className="text-white">No music</SelectItem>
-                    {ownedTracks.map((track) => (
-                      <SelectItem key={track.id} value={track.audio_file_url} className="text-white">
-                        {track.title}
-                      </SelectItem>
-                    ))}
+                    {ownedTracks
+                      .filter((track) => track.audio_file_url && track.audio_file_url.trim() !== '')
+                      .map((track) => (
+                        <SelectItem key={track.id} value={track.audio_file_url} className="text-white">
+                          {track.title}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
               ) : (
