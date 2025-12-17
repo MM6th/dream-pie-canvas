@@ -75,24 +75,31 @@ const AnnouncementPostsSection = ({ posts }: AnnouncementPostsSectionProps) => {
                   <div className="flex items-center gap-4 text-xs text-gray-400 mb-4">
                      <div className="flex items-center gap-2">
                         {post.profiles?.is_admin ? (
-                          <div className="w-6 h-6 rounded-full bg-orange-600 flex items-center justify-center">
-                            <Shield className="w-4 h-4 text-white" />
-                          </div>
-                        ) : post.profiles?.avatar_url ? (
-                          <img
-                            src={post.profiles.avatar_url}
-                            alt="Avatar"
-                            className="w-6 h-6 rounded-full object-cover"
-                          />
+                          <>
+                            <div className="w-6 h-6 rounded-full bg-orange-600 flex items-center justify-center">
+                              <Shield className="w-4 h-4 text-white" />
+                            </div>
+                            <span className="text-orange-400 font-medium">Admin</span>
+                          </>
                         ) : (
-                          <User className="w-4 h-4" />
+                          <>
+                            {post.profiles?.avatar_url ? (
+                              <img
+                                src={post.profiles.avatar_url}
+                                alt="Avatar"
+                                className="w-6 h-6 rounded-full object-cover"
+                              />
+                            ) : (
+                              <User className="w-4 h-4" />
+                            )}
+                            <Link 
+                              to={`/profile/${post.merchant_id}`}
+                              className="text-gray-300 hover:text-white transition-colors"
+                            >
+                              {post.profiles?.display_name || 'Community'}
+                            </Link>
+                          </>
                         )}
-                         <Link 
-                           to={`/profile/${post.merchant_id}`}
-                           className="text-gray-300 hover:text-white transition-colors"
-                         >
-                           {post.profiles?.display_name || 'Community'}
-                         </Link>
                       </div>
                       <div className="flex items-center gap-1">
                         <Calendar className="w-3 h-3" />
