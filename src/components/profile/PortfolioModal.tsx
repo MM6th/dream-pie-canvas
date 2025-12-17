@@ -55,7 +55,7 @@ const PortfolioModal = ({ open, onOpenChange, onSuccess, userType, availableImag
     if (!user) return;
     
     try {
-      // Get audio from user's playlist
+      // Get audio from user's playlist (purchased/added music)
       const { data: playlistData } = await supabase
         .from('user_playlists')
         .select(`
@@ -75,14 +75,6 @@ const PortfolioModal = ({ open, onOpenChange, onSuccess, userType, availableImag
         .eq('merchant_id', user.id)
         .in('audio_type', ['music', 'other']);
 
-      // Get free music available on the platform
-      const { data: freeMusic } = await supabase
-        .from('audio_products')
-        .select('id, title, audio_file_url')
-        .eq('is_free', true)
-        .in('audio_type', ['music', 'other'])
-        .limit(50);
-
       const tracks: AudioTrack[] = [];
       
       if (playlistData) {
@@ -99,14 +91,6 @@ const PortfolioModal = ({ open, onOpenChange, onSuccess, userType, availableImag
       
       if (ownedData) {
         ownedData.forEach((track) => {
-          if (!tracks.some(t => t.id === track.id)) {
-            tracks.push(track);
-          }
-        });
-      }
-
-      if (freeMusic) {
-        freeMusic.forEach((track) => {
           if (!tracks.some(t => t.id === track.id)) {
             tracks.push(track);
           }
@@ -230,7 +214,7 @@ const PortfolioModal = ({ open, onOpenChange, onSuccess, userType, availableImag
   };
 
   const handleSubmit = async () => {
-    if (!user) return;
+    if (!user || loading) return;
 
     if (!title.trim()) {
       toast({
