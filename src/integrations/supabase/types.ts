@@ -1846,6 +1846,7 @@ export type Database = {
           id: string
           image_path: string
           is_blurred: boolean
+          is_video_muted: boolean | null
           media_type: string | null
           portfolio_id: string
           video_url: string | null
@@ -1857,6 +1858,7 @@ export type Database = {
           id?: string
           image_path: string
           is_blurred?: boolean
+          is_video_muted?: boolean | null
           media_type?: string | null
           portfolio_id: string
           video_url?: string | null
@@ -1868,6 +1870,7 @@ export type Database = {
           id?: string
           image_path?: string
           is_blurred?: boolean
+          is_video_muted?: boolean | null
           media_type?: string | null
           portfolio_id?: string
           video_url?: string | null
