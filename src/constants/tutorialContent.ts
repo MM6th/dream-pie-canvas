@@ -81,7 +81,7 @@ export const merchantTutorialSteps: TutorialStep[] = [
   {
     id: 'messaging-system',
     title: 'Messaging System 💬',
-    description: 'Earn money when users message you! Go to your Profile tab → Messaging Settings to set your rate (1-100 credits per message). You earn $0.10 for every credit spent on messages to you!',
+    description: 'Earn money from messages! You receive 90% ($0.09/credit) when someone messages you. PIE keeps 10%. To message supporters, you need credits too. Set your rate in Profile → Messaging Settings. Replies within threads are FREE!',
     duration: 12000,
   },
 ];
@@ -152,7 +152,7 @@ export const supporterTutorialSteps: TutorialStep[] = [
   {
     id: 'messaging-system',
     title: 'Messaging System 💬',
-    description: 'Connect with creators using our credit-based messaging! Purchase credits via the credits icon in the header. Each merchant sets their own rate (1-100 credits per message). 1 credit = $0.10.',
+    description: 'You can EARN from messaging too! When merchants message you, you receive 90% ($0.09/credit). PIE keeps 10%. To message merchants, purchase credits via the header icon. Replies within threads are FREE!',
     duration: 12000,
   },
 ];
@@ -207,7 +207,7 @@ export const musicArtistTutorialSteps: TutorialStep[] = [
   {
     id: 'messaging-system',
     title: 'Messaging System 💬',
-    description: 'Earn money when users message you! Go to your Profile tab → Messaging Settings to set your rate (1-100 credits per message). You earn $0.10 for every credit spent on messages to you!',
+    description: 'Earn money from messages! You receive 90% ($0.09/credit) when someone messages you. PIE keeps 10%. To message supporters, you need credits too. Set your rate in Profile → Messaging Settings. Replies within threads are FREE!',
     duration: 12000,
   },
 ];
@@ -262,7 +262,7 @@ export const fashionRetailerTutorialSteps: TutorialStep[] = [
   {
     id: 'messaging-system',
     title: 'Messaging System 💬',
-    description: 'Earn money when users message you! Go to your Profile tab → Messaging Settings to set your rate (1-100 credits per message). You earn $0.10 for every credit spent on messages to you!',
+    description: 'Earn money from messages! You receive 90% ($0.09/credit) when someone messages you. PIE keeps 10%. To message supporters, you need credits too. Set your rate in Profile → Messaging Settings. Replies within threads are FREE!',
     duration: 12000,
   },
 ];
@@ -317,7 +317,7 @@ export const poleDancerTutorialSteps: TutorialStep[] = [
   {
     id: 'messaging-system',
     title: 'Messaging System 💬',
-    description: 'Earn money when users message you! Go to your Profile tab → Messaging Settings to set your rate (1-100 credits per message). You earn $0.10 for every credit spent on messages to you!',
+    description: 'Earn money from messages! You receive 90% ($0.09/credit) when someone messages you. PIE keeps 10%. To message supporters, you need credits too. Set your rate in Profile → Messaging Settings. Replies within threads are FREE!',
     duration: 12000,
   },
 ];
@@ -380,7 +380,7 @@ export const audioPodcasterTutorialSteps: TutorialStep[] = [
   {
     id: 'messaging-system',
     title: 'Messaging System 💬',
-    description: 'Earn money when users message you! Go to your Profile tab → Messaging Settings to set your rate (1-100 credits per message). You earn $0.10 for every credit spent on messages to you!',
+    description: 'Earn money from messages! You receive 90% ($0.09/credit) when someone messages you. PIE keeps 10%. To message supporters, you need credits too. Set your rate in Profile → Messaging Settings. Replies within threads are FREE!',
     duration: 12000,
   },
 ];
@@ -435,7 +435,7 @@ export const cookBakerTutorialSteps: TutorialStep[] = [
   {
     id: 'messaging-system',
     title: 'Messaging System 💬',
-    description: 'Earn money when users message you! Go to your Profile tab → Messaging Settings to set your rate (1-100 credits per message). You earn $0.10 for every credit spent on messages to you!',
+    description: 'Earn money from messages! You receive 90% ($0.09/credit) when someone messages you. PIE keeps 10%. To message supporters, you need credits too. Set your rate in Profile → Messaging Settings. Replies within threads are FREE!',
     duration: 12000,
   },
 ];
@@ -498,7 +498,7 @@ export const liveStreamArtistTutorialSteps: TutorialStep[] = [
   {
     id: 'messaging-system',
     title: 'Messaging System 💬',
-    description: 'Earn money when users message you! Go to your Profile tab → Messaging Settings to set your rate (1-100 credits per message). You earn $0.10 for every credit spent on messages to you!',
+    description: 'Earn money from messages! You receive 90% ($0.09/credit) when someone messages you. PIE keeps 10%. To message supporters, you need credits too. Set your rate in Profile → Messaging Settings. Replies within threads are FREE!',
     duration: 12000,
   },
 ];
