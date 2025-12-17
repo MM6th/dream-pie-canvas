@@ -136,12 +136,6 @@ export const MessagingInbox = () => {
     refetchCredits();
   };
 
-  // Determine if reply is free:
-  // 1. Merchant replying to merchant (always free)
-  // 2. Supporter replying to merchant-initiated message (free)
-  const isReplyFree = 
-    (userType === 'merchant' && selectedMessage?.sender?.user_type === 'merchant') ||
-    (userType === 'supporter' && selectedMessage?.sender?.user_type === 'merchant' && selectedMessage?.sender_id !== userId);
 
   const unreadCount = receivedMessages.filter((msg) => !msg.read_at).length;
 
@@ -319,7 +313,7 @@ export const MessagingInbox = () => {
                 <div className="flex justify-end pt-2 border-t">
                   <Button onClick={handleReply} size="sm">
                     <Reply className="w-4 h-4 mr-2" />
-                    Reply {isReplyFree && '(Free)'}
+                    Reply
                   </Button>
                 </div>
               </div>
@@ -335,7 +329,6 @@ export const MessagingInbox = () => {
           recipientId={selectedMessage.sender_id === userId ? selectedMessage.recipient_id : selectedMessage.sender_id}
           recipientName={selectedMessage.sender_id === userId ? selectedMessage.recipient?.display_name : selectedMessage.sender?.display_name}
           currentBalance={balance}
-          isFree={isReplyFree}
           onMessageSent={handleMessageSent}
           replyToMessageId={selectedMessage.id}
           originalSubject={selectedMessage.subject}

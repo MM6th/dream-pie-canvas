@@ -268,10 +268,6 @@ export const UnifiedInboxModal = ({ open, onOpenChange, userId, userType }: Unif
     }
   };
 
-  const isReplyFree = selectedMessage && (
-    (userType === 'merchant' && selectedMessage.sender?.user_type === 'merchant') ||
-    (userType === 'supporter' && selectedMessage.sender?.user_type === 'merchant' && selectedMessage.sender_id !== userId)
-  );
 
   return (
     <>
@@ -603,7 +599,6 @@ export const UnifiedInboxModal = ({ open, onOpenChange, userId, userType }: Unif
           recipientId={selectedMessage.sender_id}
           recipientName={selectedMessage.sender?.display_name}
           currentBalance={balance}
-          isFree={isReplyFree || false}
           onMessageSent={handleMessageSent}
           replyToMessageId={selectedMessage.id}
           originalSubject={selectedMessage.subject}

@@ -81,7 +81,7 @@ export const merchantTutorialSteps: TutorialStep[] = [
   {
     id: 'messaging-system',
     title: 'Messaging System 💬',
-    description: 'Earn money when supporters message you! Go to your Profile tab → Messaging Settings to set your rate (1-100 credits per message). You earn 10% of each credit spent. Free messaging between merchants!',
+    description: 'Earn money when supporters message you! Go to your Profile tab → Messaging Settings to set your rate (1-100 credits per message). You receive credit earnings when users send you messages!',
     duration: 12000,
   },
 ];
@@ -207,7 +207,7 @@ export const musicArtistTutorialSteps: TutorialStep[] = [
   {
     id: 'messaging-system',
     title: 'Messaging System 💬',
-    description: 'Earn money when supporters message you! Go to your Profile tab → Messaging Settings to set your rate (1-100 credits per message). You earn 10% of each credit spent. Free messaging between merchants!',
+    description: 'Connect with merchants through our messaging system! Messages cost credits to send. Purchase credits from your Profile tab to start messaging.',
     duration: 12000,
   },
 ];
@@ -262,7 +262,7 @@ export const fashionRetailerTutorialSteps: TutorialStep[] = [
   {
     id: 'messaging-system',
     title: 'Messaging System 💬',
-    description: 'Earn money when supporters message you! Go to your Profile tab → Messaging Settings to set your rate (1-100 credits per message). You earn 10% of each credit spent. Free messaging between merchants!',
+    description: 'Earn money when supporters message you! Go to your Profile tab → Messaging Settings to set your rate (1-100 credits per message). You receive credit earnings when users send you messages!',
     duration: 12000,
   },
 ];
@@ -317,7 +317,7 @@ export const poleDancerTutorialSteps: TutorialStep[] = [
   {
     id: 'messaging-system',
     title: 'Messaging System 💬',
-    description: 'Earn money when supporters message you! Go to your Profile tab → Messaging Settings to set your rate (1-100 credits per message). You earn 10% of each credit spent. Free messaging between merchants!',
+    description: 'Earn money when supporters message you! Go to your Profile tab → Messaging Settings to set your rate (1-100 credits per message). You receive credit earnings when users send you messages!',
     duration: 12000,
   },
 ];
@@ -380,7 +380,7 @@ export const audioPodcasterTutorialSteps: TutorialStep[] = [
   {
     id: 'messaging-system',
     title: 'Messaging System 💬',
-    description: 'Earn money when supporters message you! Go to your Profile tab → Messaging Settings to set your rate (1-100 credits per message). You earn 10% of each credit spent. Free messaging between merchants!',
+    description: 'Earn money when supporters message you! Go to your Profile tab → Messaging Settings to set your rate (1-100 credits per message). You receive credit earnings when users send you messages!',
     duration: 12000,
   },
 ];
@@ -435,7 +435,7 @@ export const cookBakerTutorialSteps: TutorialStep[] = [
   {
     id: 'messaging-system',
     title: 'Messaging System 💬',
-    description: 'Earn money when supporters message you! Go to your Profile tab → Messaging Settings to set your rate (1-100 credits per message). You earn 10% of each credit spent. Free messaging between merchants!',
+    description: 'Earn money when supporters message you! Go to your Profile tab → Messaging Settings to set your rate (1-100 credits per message). You receive credit earnings when users send you messages!',
     duration: 12000,
   },
 ];
@@ -498,7 +498,7 @@ export const liveStreamArtistTutorialSteps: TutorialStep[] = [
   {
     id: 'messaging-system',
     title: 'Messaging System 💬',
-    description: 'Earn money when supporters message you! Go to your Profile tab → Messaging Settings to set your rate (1-100 credits per message). You earn 10% of each credit spent. Free messaging between merchants!',
+    description: 'Earn money when supporters message you! Go to your Profile tab → Messaging Settings to set your rate (1-100 credits per message). You receive credit earnings when users send you messages!',
     duration: 12000,
   },
 ];

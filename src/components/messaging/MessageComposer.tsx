@@ -22,7 +22,6 @@ interface MessageComposerProps {
   recipientId: string;
   recipientName?: string;
   currentBalance?: number;
-  isFree?: boolean;
   onMessageSent?: () => void;
   replyToMessageId?: string;
   originalSubject?: string;
@@ -35,7 +34,6 @@ export const MessageComposer = ({
   recipientId,
   recipientName,
   currentBalance = 0,
-  isFree = false,
   onMessageSent,
   replyToMessageId,
   originalSubject,
@@ -49,7 +47,7 @@ export const MessageComposer = ({
   const [attachmentUrl, setAttachmentUrl] = useState<string>('');
   const { toast } = useToast();
 
-  const creditsRequired = isFree ? 0 : 10; // Free only for merchant-to-merchant messaging
+  const creditsRequired = 10; // All messages cost 10 credits
 
   const handleCreditSectionClick = () => {
     if (currentBalance < creditsRequired) {
@@ -97,7 +95,7 @@ export const MessageComposer = ({
       return;
     }
 
-    if (!isFree && currentBalance < creditsRequired) {
+    if (currentBalance < creditsRequired) {
       toast({
         title: 'Insufficient Credits',
         description: `You need ${creditsRequired} credit(s) but have ${currentBalance}. Please purchase more credits.`,
@@ -123,9 +121,7 @@ export const MessageComposer = ({
 
       toast({
         title: 'Message Sent!',
-        description: data.isFree 
-          ? 'Your message has been sent for free.' 
-          : `Your message has been sent. ${data.remainingBalance} credits remaining.`,
+        description: `Your message has been sent. ${data.remainingBalance} credits remaining.`,
       });
 
       setSubject('');
@@ -154,10 +150,7 @@ export const MessageComposer = ({
         <DialogHeader>
           <DialogTitle>{isReply ? 'Reply to' : 'Send Message to'} {recipientName || 'User'}</DialogTitle>
           <DialogDescription>
-            {isFree 
-              ? 'This message is free'
-              : `This message will cost ${creditsRequired} credits`
-            }
+            This message will cost {creditsRequired} credits
           </DialogDescription>
         </DialogHeader>
 
@@ -168,28 +161,26 @@ export const MessageComposer = ({
               <p className="text-sm line-clamp-3 whitespace-pre-wrap">{originalBody}</p>
             </div>
           )}
-          {!isFree && (
-            <div 
-              onClick={handleCreditSectionClick}
-              className={`flex items-center justify-between p-3 rounded-lg transition-all cursor-pointer ${
-                currentBalance < creditsRequired 
-                  ? 'bg-amber-500/10 border-2 border-amber-500/50 hover:bg-amber-500/20 animate-pulse' 
-                  : 'bg-muted hover:bg-muted/80'
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <CreditCard className="w-4 h-4 text-primary" />
-                <span className="text-sm font-medium">
-                  Current Balance: {currentBalance} credits
-                </span>
-              </div>
-              {currentBalance < creditsRequired && (
-                <span className="text-xs text-amber-600 dark:text-amber-400 font-medium">
-                  Click to purchase
-                </span>
-              )}
+          <div 
+            onClick={handleCreditSectionClick}
+            className={`flex items-center justify-between p-3 rounded-lg transition-all cursor-pointer ${
+              currentBalance < creditsRequired 
+                ? 'bg-amber-500/10 border-2 border-amber-500/50 hover:bg-amber-500/20 animate-pulse' 
+                : 'bg-muted hover:bg-muted/80'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <CreditCard className="w-4 h-4 text-primary" />
+              <span className="text-sm font-medium">
+                Current Balance: {currentBalance} credits
+              </span>
             </div>
-          )}
+            {currentBalance < creditsRequired && (
+              <span className="text-xs text-amber-600 dark:text-amber-400 font-medium">
+                Click to purchase
+              </span>
+            )}
+          </div>
 
           <div className="space-y-2">
             <Label htmlFor="subject">Subject</Label>

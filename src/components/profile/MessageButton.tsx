@@ -41,9 +41,6 @@ export const MessageButton = ({ recipientId, recipientName, recipientType }: Mes
     return null;
   }
 
-  // Determine if messaging is free (merchant-to-merchant)
-  const isFree = senderType === 'merchant' && recipientType === 'merchant';
-
   return (
     <>
       <Button
@@ -51,7 +48,7 @@ export const MessageButton = ({ recipientId, recipientName, recipientType }: Mes
         className="w-full bg-blue-600 hover:bg-blue-700 text-white"
       >
         <MessageSquare className="w-4 h-4 mr-2" />
-        {isFree ? 'Send Message (Free)' : 'Send Message'}
+        Send Message
       </Button>
 
       <MessageComposer
@@ -60,7 +57,6 @@ export const MessageButton = ({ recipientId, recipientName, recipientType }: Mes
         recipientId={recipientId}
         recipientName={recipientName}
         currentBalance={balance}
-        isFree={isFree}
         onMessageSent={refetch}
       />
     </>

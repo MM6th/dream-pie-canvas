@@ -25,7 +25,6 @@ export const MessagingInfoCard = ({ userType }: MessagingInfoCardProps) => {
             <strong>Message Costs:</strong>
             <ul className="mt-2 space-y-1 text-sm">
               <li>• <strong>10 credits per message</strong> for all messaging</li>
-              <li>• <strong>Free messaging</strong> between merchants only</li>
             </ul>
           </AlertDescription>
         </Alert>
@@ -63,8 +62,7 @@ export const MessagingInfoCard = ({ userType }: MessagingInfoCardProps) => {
             <AlertDescription>
               <strong>Merchant Messaging:</strong>
               <ul className="mt-2 space-y-1 text-sm">
-                <li>• Free messaging with other merchants only</li>
-                <li>• Messaging supporters costs 10 credits</li>
+                <li>• All messaging costs 10 credits</li>
                 <li>• Receive messages from supporters in your inbox</li>
               </ul>
             </AlertDescription>
