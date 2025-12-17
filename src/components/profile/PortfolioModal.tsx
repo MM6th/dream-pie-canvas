@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/components/ui/use-toast";
-import { Loader2, Music, Play, Pause, X } from "lucide-react";
+import { Loader2, Music, Play, Pause, X, Volume2, VolumeX } from "lucide-react";
 
 interface AudioTrack {
   id: string;
@@ -36,7 +36,10 @@ const PortfolioModal = ({ open, onOpenChange, onSuccess, userType, availableImag
   const [loading, setLoading] = useState(false);
   const [ownedTracks, setOwnedTracks] = useState<AudioTrack[]>([]);
   const [previewVideo, setPreviewVideo] = useState<string | null>(null);
+  const [previewVideoPath, setPreviewVideoPath] = useState<string | null>(null);
   const [previewAudio, setPreviewAudio] = useState<string | null>(null);
+  const [isVideoMuted, setIsVideoMuted] = useState(false);
+  const [isMusicPlaying, setIsMusicPlaying] = useState(false);
   const videoPreviewRef = useRef<HTMLVideoElement>(null);
   const audioPreviewRef = useRef<HTMLAudioElement>(null);
 
@@ -135,8 +138,11 @@ const PortfolioModal = ({ open, onOpenChange, onSuccess, userType, availableImag
 
   const handlePreviewVideo = (videoPath: string) => {
     const selectedMedia = selectedImages.find(img => img.path === videoPath);
+    setPreviewVideoPath(videoPath);
     setPreviewVideo(getImageUrl(videoPath));
     setPreviewAudio(selectedMedia?.backgroundMusicUrl || null);
+    setIsVideoMuted(false);
+    setIsMusicPlaying(false);
   };
 
   const closePreview = () => {
@@ -147,18 +153,56 @@ const PortfolioModal = ({ open, onOpenChange, onSuccess, userType, availableImag
       audioPreviewRef.current.pause();
     }
     setPreviewVideo(null);
+    setPreviewVideoPath(null);
     setPreviewAudio(null);
+    setIsVideoMuted(false);
+    setIsMusicPlaying(false);
   };
 
   const handlePreviewVideoPlay = () => {
-    if (previewAudio && audioPreviewRef.current) {
+    if (previewAudio && audioPreviewRef.current && !isVideoMuted) {
       audioPreviewRef.current.play();
+      setIsMusicPlaying(true);
     }
   };
 
   const handlePreviewVideoPause = () => {
     if (audioPreviewRef.current) {
       audioPreviewRef.current.pause();
+      setIsMusicPlaying(false);
+    }
+  };
+
+  const toggleVideoMute = () => {
+    if (videoPreviewRef.current) {
+      videoPreviewRef.current.muted = !isVideoMuted;
+    }
+    setIsVideoMuted(!isVideoMuted);
+  };
+
+  const handlePreviewMusicChange = (audioUrl: string) => {
+    // Update the selected media's background music
+    if (previewVideoPath) {
+      setSelectedImages(selectedImages.map(img => 
+        img.path === previewVideoPath ? { ...img, backgroundMusicUrl: audioUrl || undefined } : img
+      ));
+    }
+    
+    // Update preview audio
+    if (audioPreviewRef.current) {
+      audioPreviewRef.current.pause();
+    }
+    setPreviewAudio(audioUrl || null);
+    setIsMusicPlaying(false);
+    
+    // If video is playing and new music is selected, start playing it
+    if (audioUrl && videoPreviewRef.current && !videoPreviewRef.current.paused) {
+      setTimeout(() => {
+        if (audioPreviewRef.current) {
+          audioPreviewRef.current.play();
+          setIsMusicPlaying(true);
+        }
+      }, 100);
     }
   };
 
@@ -465,8 +509,8 @@ const PortfolioModal = ({ open, onOpenChange, onSuccess, userType, availableImag
 
       {/* Video Preview Modal */}
       {previewVideo && (
-        <div className="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center">
-          <div className="relative max-w-4xl w-full mx-4">
+        <div className="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center p-4">
+          <div className="relative max-w-4xl w-full">
             <Button
               variant="ghost"
               size="sm"
@@ -477,29 +521,81 @@ const PortfolioModal = ({ open, onOpenChange, onSuccess, userType, availableImag
               Close Preview
             </Button>
             <div className="bg-gray-900 rounded-lg overflow-hidden">
-              <video
-                ref={videoPreviewRef}
-                src={previewVideo}
-                controls
-                autoPlay
-                className="w-full max-h-[70vh]"
-                onPlay={handlePreviewVideoPlay}
-                onPause={handlePreviewVideoPause}
-                onEnded={handlePreviewVideoPause}
-              />
-              {previewAudio && (
-                <>
+              {/* Video with controls */}
+              <div className="relative">
+                <video
+                  ref={videoPreviewRef}
+                  src={previewVideo}
+                  controls
+                  autoPlay
+                  muted={isVideoMuted}
+                  className="w-full max-h-[60vh]"
+                  onPlay={handlePreviewVideoPlay}
+                  onPause={handlePreviewVideoPause}
+                  onEnded={handlePreviewVideoPause}
+                />
+                {/* Mute button overlay */}
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="absolute top-2 right-2 bg-black/70 hover:bg-black/90 text-white"
+                  onClick={toggleVideoMute}
+                >
+                  {isVideoMuted ? (
+                    <><VolumeX className="w-4 h-4 mr-1" /> Unmute Video</>
+                  ) : (
+                    <><Volume2 className="w-4 h-4 mr-1" /> Mute Video</>
+                  )}
+                </Button>
+              </div>
+              
+              {/* Background music controls */}
+              <div className="p-4 bg-gray-800 space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-white text-sm font-medium flex items-center gap-2">
+                    <Music className="w-4 h-4 text-green-400" />
+                    Background Music
+                  </Label>
+                  {isMusicPlaying && previewAudio && (
+                    <span className="text-xs text-green-400 animate-pulse">♪ Playing</span>
+                  )}
+                </div>
+                
+                {ownedTracks.length > 0 ? (
+                  <Select
+                    value={previewAudio || ""}
+                    onValueChange={handlePreviewMusicChange}
+                  >
+                    <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
+                      <SelectValue placeholder="Select background music" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-gray-700 border-gray-600">
+                      <SelectItem value="" className="text-white">No music</SelectItem>
+                      {ownedTracks.map((track) => (
+                        <SelectItem key={track.id} value={track.audio_file_url} className="text-white">
+                          {track.title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <p className="text-gray-400 text-sm">
+                    Add music to your playlist to use as background music.
+                  </p>
+                )}
+                
+                {previewAudio && (
                   <audio
                     ref={audioPreviewRef}
                     src={previewAudio}
                     loop
                   />
-                  <div className="p-3 bg-gray-800 flex items-center gap-2 text-white text-sm">
-                    <Music className="w-4 h-4 text-green-400" />
-                    <span>Background music attached</span>
-                  </div>
-                </>
-              )}
+                )}
+                
+                <p className="text-gray-500 text-xs">
+                  Music will sync with video playback. Changes are saved automatically.
+                </p>
+              </div>
             </div>
           </div>
         </div>
