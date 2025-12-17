@@ -816,6 +816,91 @@ export type Database = {
           },
         ]
       }
+      dance_product_images: {
+        Row: {
+          created_at: string
+          dance_product_id: string
+          display_order: number
+          id: string
+          image_url: string
+          media_type: string | null
+        }
+        Insert: {
+          created_at?: string
+          dance_product_id: string
+          display_order?: number
+          id?: string
+          image_url: string
+          media_type?: string | null
+        }
+        Update: {
+          created_at?: string
+          dance_product_id?: string
+          display_order?: number
+          id?: string
+          image_url?: string
+          media_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dance_product_images_dance_product_id_fkey"
+            columns: ["dance_product_id"]
+            isOneToOne: false
+            referencedRelation: "dance_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dance_products: {
+        Row: {
+          access_level: Database["public"]["Enums"]["access_level"] | null
+          created_at: string
+          description: string | null
+          id: string
+          is_adult_content: boolean | null
+          is_free: boolean
+          merchant_id: string
+          price: number | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          access_level?: Database["public"]["Enums"]["access_level"] | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_adult_content?: boolean | null
+          is_free?: boolean
+          merchant_id: string
+          price?: number | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          access_level?: Database["public"]["Enums"]["access_level"] | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_adult_content?: boolean | null
+          is_free?: boolean
+          merchant_id?: string
+          price?: number | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dance_products_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       digital_receipts: {
         Row: {
           admin_id: string

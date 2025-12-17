@@ -6,6 +6,7 @@ import AudioPodcasterDashboard from "@/components/dashboard/AudioPodcasterDashbo
 import MusicArtistDashboard from "@/components/dashboard/MusicArtistDashboard";
 import FashionRetailerDashboard from "@/components/dashboard/FashionRetailerDashboard";
 import CookBakerDashboard from "@/components/dashboard/CookBakerDashboard";
+import PoleDancerDashboard from "@/components/dashboard/PoleDancerDashboard";
 import { TutorialHelpButton } from "@/components/TutorialHelpButton";
 import { supporterTutorialSteps, merchantTutorialSteps, adminTutorialSteps, musicArtistTutorialSteps, fashionRetailerTutorialSteps } from "@/constants/tutorialContent";
 
@@ -141,6 +142,18 @@ const DashboardView = ({
     if (industry === 'Cook/Baker') {
       return (
         <CookBakerDashboard 
+          onBackgroundUpload={onBackgroundUpload}
+          purchasedTracks={purchasedTracks}
+          purchasedPodcasts={purchasedPodcasts}
+          onSuccess={onSuccess}
+        />
+      );
+    }
+
+    // Route Pole Dancers to their specialized dashboard
+    if (industry === 'Pole Dancer') {
+      return (
+        <PoleDancerDashboard 
           onBackgroundUpload={onBackgroundUpload}
           purchasedTracks={purchasedTracks}
           purchasedPodcasts={purchasedPodcasts}
