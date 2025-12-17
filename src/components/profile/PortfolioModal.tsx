@@ -306,8 +306,9 @@ const PortfolioModal = ({ open, onOpenChange, onSuccess, userType, availableImag
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-gray-800 border-gray-700 max-w-4xl max-h-[90vh] overflow-y-auto">
+    <>
+      <Dialog open={open && !previewVideo} onOpenChange={onOpenChange}>
+        <DialogContent className="bg-gray-800 border-gray-700 max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-white">Create Portfolio</DialogTitle>
           <DialogDescription className="text-gray-400">
@@ -506,101 +507,102 @@ const PortfolioModal = ({ open, onOpenChange, onSuccess, userType, availableImag
           </div>
         </div>
       </DialogContent>
+    </Dialog>
 
-      {/* Video Preview Modal */}
-      {previewVideo && (
-        <div className="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center p-4">
-          <div className="relative max-w-4xl w-full">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="absolute -top-10 right-0 text-white hover:bg-white/20"
-              onClick={closePreview}
-            >
-              <X className="w-5 h-5 mr-1" />
-              Close Preview
-            </Button>
-            <div className="bg-gray-900 rounded-lg overflow-hidden">
-              {/* Video with controls */}
-              <div className="relative">
-                <video
-                  ref={videoPreviewRef}
-                  src={previewVideo}
-                  controls
-                  autoPlay
-                  muted={isVideoMuted}
-                  className="w-full max-h-[60vh]"
-                  onPlay={handlePreviewVideoPlay}
-                  onPause={handlePreviewVideoPause}
-                  onEnded={handlePreviewVideoPause}
-                />
-                {/* Mute button overlay */}
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  className="absolute top-2 right-2 bg-black/70 hover:bg-black/90 text-white"
-                  onClick={toggleVideoMute}
-                >
-                  {isVideoMuted ? (
-                    <><VolumeX className="w-4 h-4 mr-1" /> Unmute Video</>
-                  ) : (
-                    <><Volume2 className="w-4 h-4 mr-1" /> Mute Video</>
-                  )}
-                </Button>
+    {/* Video Preview Modal - Outside Dialog to prevent overlap */}
+    {previewVideo && (
+      <div className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4">
+        <div className="relative max-w-4xl w-full">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="absolute -top-10 right-0 text-white hover:bg-white/20"
+            onClick={closePreview}
+          >
+            <X className="w-5 h-5 mr-1" />
+            Close Preview
+          </Button>
+          <div className="bg-gray-900 rounded-lg overflow-hidden">
+            {/* Video with controls */}
+            <div className="relative">
+              <video
+                ref={videoPreviewRef}
+                src={previewVideo}
+                controls
+                autoPlay
+                muted={isVideoMuted}
+                className="w-full max-h-[60vh]"
+                onPlay={handlePreviewVideoPlay}
+                onPause={handlePreviewVideoPause}
+                onEnded={handlePreviewVideoPause}
+              />
+              {/* Mute button overlay */}
+              <Button
+                variant="secondary"
+                size="sm"
+                className="absolute top-2 right-2 bg-black/70 hover:bg-black/90 text-white"
+                onClick={toggleVideoMute}
+              >
+                {isVideoMuted ? (
+                  <><VolumeX className="w-4 h-4 mr-1" /> Unmute Video</>
+                ) : (
+                  <><Volume2 className="w-4 h-4 mr-1" /> Mute Video</>
+                )}
+              </Button>
+            </div>
+            
+            {/* Background music controls */}
+            <div className="p-4 bg-gray-800 space-y-3">
+              <div className="flex items-center justify-between">
+                <Label className="text-white text-sm font-medium flex items-center gap-2">
+                  <Music className="w-4 h-4 text-green-400" />
+                  Background Music
+                </Label>
+                {isMusicPlaying && previewAudio && (
+                  <span className="text-xs text-green-400 animate-pulse">♪ Playing</span>
+                )}
               </div>
               
-              {/* Background music controls */}
-              <div className="p-4 bg-gray-800 space-y-3">
-                <div className="flex items-center justify-between">
-                  <Label className="text-white text-sm font-medium flex items-center gap-2">
-                    <Music className="w-4 h-4 text-green-400" />
-                    Background Music
-                  </Label>
-                  {isMusicPlaying && previewAudio && (
-                    <span className="text-xs text-green-400 animate-pulse">♪ Playing</span>
-                  )}
-                </div>
-                
-                {ownedTracks.length > 0 ? (
-                  <Select
-                    value={previewAudio || ""}
-                    onValueChange={handlePreviewMusicChange}
-                  >
-                    <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
-                      <SelectValue placeholder="Select background music" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-gray-700 border-gray-600">
-                      <SelectItem value="" className="text-white">No music</SelectItem>
-                      {ownedTracks.map((track) => (
-                        <SelectItem key={track.id} value={track.audio_file_url} className="text-white">
-                          {track.title}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <p className="text-gray-400 text-sm">
-                    Add music to your playlist to use as background music.
-                  </p>
-                )}
-                
-                {previewAudio && (
-                  <audio
-                    ref={audioPreviewRef}
-                    src={previewAudio}
-                    loop
-                  />
-                )}
-                
-                <p className="text-gray-500 text-xs">
-                  Music will sync with video playback. Changes are saved automatically.
+              {ownedTracks.length > 0 ? (
+                <Select
+                  value={previewAudio || "none"}
+                  onValueChange={(val) => handlePreviewMusicChange(val === "none" ? "" : val)}
+                >
+                  <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
+                    <SelectValue placeholder="Select background music" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-gray-700 border-gray-600 z-[150]">
+                    <SelectItem value="none" className="text-white">No music</SelectItem>
+                    {ownedTracks.map((track) => (
+                      <SelectItem key={track.id} value={track.audio_file_url} className="text-white">
+                        {track.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <p className="text-gray-400 text-sm">
+                  Add music to your playlist to use as background music.
                 </p>
-              </div>
+              )}
+              
+              {previewAudio && (
+                <audio
+                  ref={audioPreviewRef}
+                  src={previewAudio}
+                  loop
+                />
+              )}
+              
+              <p className="text-gray-500 text-xs">
+                Music will sync with video playback. Changes are saved automatically.
+              </p>
             </div>
           </div>
         </div>
-      )}
-    </Dialog>
+      </div>
+    )}
+  </>
   );
 };
 
