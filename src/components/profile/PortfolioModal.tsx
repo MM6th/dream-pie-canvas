@@ -75,6 +75,14 @@ const PortfolioModal = ({ open, onOpenChange, onSuccess, userType, availableImag
         .eq('merchant_id', user.id)
         .in('audio_type', ['music', 'other']);
 
+      // Get free music available on the platform
+      const { data: freeMusic } = await supabase
+        .from('audio_products')
+        .select('id, title, audio_file_url')
+        .eq('is_free', true)
+        .in('audio_type', ['music', 'other'])
+        .limit(50);
+
       const tracks: AudioTrack[] = [];
       
       if (playlistData) {
@@ -91,6 +99,14 @@ const PortfolioModal = ({ open, onOpenChange, onSuccess, userType, availableImag
       
       if (ownedData) {
         ownedData.forEach((track) => {
+          if (!tracks.some(t => t.id === track.id)) {
+            tracks.push(track);
+          }
+        });
+      }
+
+      if (freeMusic) {
+        freeMusic.forEach((track) => {
           if (!tracks.some(t => t.id === track.id)) {
             tracks.push(track);
           }
@@ -582,7 +598,7 @@ const PortfolioModal = ({ open, onOpenChange, onSuccess, userType, availableImag
                 </Select>
               ) : (
                 <p className="text-gray-400 text-sm">
-                  Add music to your playlist to use as background music.
+                  No music available. Upload music tracks or add free music to your playlist.
                 </p>
               )}
               
