@@ -8,7 +8,7 @@ import FashionRetailerDashboard from "@/components/dashboard/FashionRetailerDash
 import CookBakerDashboard from "@/components/dashboard/CookBakerDashboard";
 import PoleDancerDashboard from "@/components/dashboard/PoleDancerDashboard";
 import { TutorialHelpButton } from "@/components/TutorialHelpButton";
-import { supporterTutorialSteps, merchantTutorialSteps, adminTutorialSteps, musicArtistTutorialSteps, fashionRetailerTutorialSteps } from "@/constants/tutorialContent";
+import { supporterTutorialSteps, merchantTutorialSteps, adminTutorialSteps, musicArtistTutorialSteps, fashionRetailerTutorialSteps, poleDancerTutorialSteps, audioPodcasterTutorialSteps, cookBakerTutorialSteps, liveStreamArtistTutorialSteps } from "@/constants/tutorialContent";
 
 interface AudioTrack {
   id: string;
@@ -59,19 +59,34 @@ const DashboardView = ({
       }
     : {};
 
-  // Determine which tutorial to show based on user type
+  // Determine which tutorial to show based on user type and industry
   const getTutorialHelpButton = () => {
     if (isAdmin) {
       return <TutorialHelpButton steps={adminTutorialSteps} userType="admin" />;
     } else if (userProfile?.user_type === "merchant") {
-      // Use industry-specific tutorial for Music Artists
-      if (userProfile?.industry === 'Music Artist') {
+      const industry = userProfile?.industry;
+      
+      // Industry-specific tutorials
+      if (industry === 'Music Artist') {
         return <TutorialHelpButton steps={musicArtistTutorialSteps} userType="merchant" />;
       }
-      // Use industry-specific tutorial for Fashion Retailers
-      if (userProfile?.industry === 'Fashion Retailer') {
+      if (industry === 'Fashion Retailer') {
         return <TutorialHelpButton steps={fashionRetailerTutorialSteps} userType="merchant" />;
       }
+      if (industry === 'Pole Dancer') {
+        return <TutorialHelpButton steps={poleDancerTutorialSteps} userType="merchant" />;
+      }
+      if (industry === 'Audio Podcaster') {
+        return <TutorialHelpButton steps={audioPodcasterTutorialSteps} userType="merchant" />;
+      }
+      if (industry === 'Cook/Baker') {
+        return <TutorialHelpButton steps={cookBakerTutorialSteps} userType="merchant" />;
+      }
+      if (industry === 'Live Stream Artist') {
+        return <TutorialHelpButton steps={liveStreamArtistTutorialSteps} userType="merchant" />;
+      }
+      
+      // Default merchant tutorial for other industries
       return <TutorialHelpButton steps={merchantTutorialSteps} userType="merchant" />;
     } else {
       return <TutorialHelpButton steps={supporterTutorialSteps} userType="supporter" />;
