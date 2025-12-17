@@ -113,7 +113,9 @@ const PortfolioModal = ({ open, onOpenChange, onSuccess, userType, availableImag
         });
       }
       
-      setOwnedTracks(tracks);
+      // Filter out tracks with empty/null audio URLs to prevent SelectItem errors
+      const validTracks = tracks.filter(t => t.audio_file_url && t.audio_file_url.trim() !== '');
+      setOwnedTracks(validTracks);
     } catch (error) {
       console.error('Error fetching owned tracks:', error);
     }
@@ -589,13 +591,11 @@ const PortfolioModal = ({ open, onOpenChange, onSuccess, userType, availableImag
                   </SelectTrigger>
                   <SelectContent className="bg-gray-700 border-gray-600 z-[150]">
                     <SelectItem value="none" className="text-white">No music</SelectItem>
-                    {ownedTracks
-                      .filter((track) => track.audio_file_url && track.audio_file_url.trim() !== '')
-                      .map((track) => (
-                        <SelectItem key={track.id} value={track.audio_file_url} className="text-white">
-                          {track.title}
-                        </SelectItem>
-                      ))}
+                    {ownedTracks.map((track) => (
+                      <SelectItem key={track.id} value={track.audio_file_url} className="text-white">
+                        {track.title}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               ) : (
