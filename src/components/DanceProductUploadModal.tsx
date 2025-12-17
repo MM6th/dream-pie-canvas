@@ -6,10 +6,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Progress } from "@/components/ui/progress";
 import { Plus, Upload, X, Loader2, Image, Video } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
+import * as tus from "tus-js-client";
 
 interface DanceProductUploadModalProps {
   onSuccess: () => void;
@@ -34,10 +36,15 @@ const DanceProductUploadModal = ({ onSuccess }: DanceProductUploadModalProps) =>
   const [mediaFiles, setMediaFiles] = useState<File[]>([]);
   const [mediaPreviews, setMediaPreviews] = useState<string[]>([]);
   const [blurredIndexes, setBlurredIndexes] = useState<number[]>([]);
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
+  const [currentUploadName, setCurrentUploadName] = useState<string>("");
 
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [galleryLoading, setGalleryLoading] = useState(false);
   const [galleryUploads, setGalleryUploads] = useState<UserUpload[]>([]);
+
+  const MAX_FILE_SIZE = 3 * 1024 * 1024 * 1024; // 3GB for Pole Dancers
+  const TUS_THRESHOLD = 50 * 1024 * 1024; // 50MB - use TUS for files larger than this
 
   const addValidFiles = (files: File[]) => {
     if (files.length === 0) return;
@@ -45,15 +52,31 @@ const DanceProductUploadModal = ({ onSuccess }: DanceProductUploadModalProps) =>
     const validFiles = files.filter((file) => {
       const isImage = file.type.startsWith("image/");
       const isVideo = file.type.startsWith("video/");
-      return isImage || isVideo;
+      
+      if (!isImage && !isVideo) {
+        return false;
+      }
+      
+      // Check file size limit (3GB)
+      if (file.size > MAX_FILE_SIZE) {
+        toast({
+          title: "File too large",
+          description: `${file.name} exceeds the 3GB limit`,
+          variant: "destructive",
+        });
+        return false;
+      }
+      
+      return true;
     });
 
-    if (validFiles.length !== files.length) {
+    if (validFiles.length === 0) {
       toast({
         title: "Invalid files",
-        description: "Only images and videos are allowed",
+        description: "Only images and videos up to 3GB are allowed",
         variant: "destructive",
       });
+      return;
     }
 
     const newPreviews = validFiles.map((file) => URL.createObjectURL(file));
@@ -184,6 +207,7 @@ const DanceProductUploadModal = ({ onSuccess }: DanceProductUploadModalProps) =>
     }
 
     setIsSubmitting(true);
+    setUploadProgress(0);
 
     try {
       const numPrice = isFree ? null : parseFloat(price);
@@ -204,19 +228,72 @@ const DanceProductUploadModal = ({ onSuccess }: DanceProductUploadModalProps) =>
 
       if (productError) throw productError;
 
+      // Get session for TUS uploads
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData?.session?.access_token;
+
       // Upload media files
       const uploadedUrls: { url: string; type: string }[] = [];
+      const totalFiles = mediaFiles.length;
       
       for (let i = 0; i < mediaFiles.length; i++) {
         const file = mediaFiles[i];
         const fileExt = file.name.split('.').pop();
         const fileName = `${user.id}/${productData.id}/${Date.now()}-${i}.${fileExt}`;
         
-        const { error: uploadError } = await supabase.storage
-          .from('dance-images')
-          .upload(fileName, file);
+        setCurrentUploadName(file.name);
+        
+        // Use TUS for large files, direct upload for small files
+        if (file.size > TUS_THRESHOLD) {
+          // TUS resumable upload for large files
+          await new Promise<void>((resolve, reject) => {
+            const upload = new tus.Upload(file, {
+              endpoint: `https://veaupehwfsbagzfuvach.supabase.co/storage/v1/upload/resumable`,
+              retryDelays: [0, 3000, 5000, 10000, 20000],
+              headers: {
+                authorization: `Bearer ${accessToken}`,
+                'x-upsert': 'true',
+              },
+              uploadDataDuringCreation: true,
+              removeFingerprintOnSuccess: true,
+              metadata: {
+                bucketName: 'dance-images',
+                objectName: fileName,
+                contentType: file.type,
+                cacheControl: '3600',
+              },
+              chunkSize: 6 * 1024 * 1024, // 6MB chunks
+              onError: (error) => {
+                console.error('TUS upload error:', error);
+                reject(error);
+              },
+              onProgress: (bytesUploaded, bytesTotal) => {
+                const fileProgress = (bytesUploaded / bytesTotal) * 100;
+                const overallProgress = ((i / totalFiles) * 100) + (fileProgress / totalFiles);
+                setUploadProgress(Math.round(overallProgress));
+              },
+              onSuccess: () => {
+                resolve();
+              },
+            });
 
-        if (uploadError) throw uploadError;
+            upload.findPreviousUploads().then((previousUploads) => {
+              if (previousUploads.length) {
+                upload.resumeFromPreviousUpload(previousUploads[0]);
+              }
+              upload.start();
+            });
+          });
+        } else {
+          // Direct upload for small files
+          const { error: uploadError } = await supabase.storage
+            .from('dance-images')
+            .upload(fileName, file);
+
+          if (uploadError) throw uploadError;
+          
+          setUploadProgress(Math.round(((i + 1) / totalFiles) * 100));
+        }
 
         const { data: { publicUrl } } = supabase.storage
           .from('dance-images')
@@ -257,6 +334,8 @@ const DanceProductUploadModal = ({ onSuccess }: DanceProductUploadModalProps) =>
       setMediaFiles([]);
       setMediaPreviews([]);
       setBlurredIndexes([]);
+      setUploadProgress(0);
+      setCurrentUploadName("");
       setOpen(false);
       onSuccess();
 
@@ -269,6 +348,8 @@ const DanceProductUploadModal = ({ onSuccess }: DanceProductUploadModalProps) =>
       });
     } finally {
       setIsSubmitting(false);
+      setUploadProgress(0);
+      setCurrentUploadName("");
     }
   };
 
@@ -378,9 +459,20 @@ const DanceProductUploadModal = ({ onSuccess }: DanceProductUploadModalProps) =>
               </div>
 
               <p className="text-gray-500 text-sm text-center mt-3">
-                Upload multiple photos or videos of your performance
+                Upload multiple photos or videos (up to 3GB per file)
               </p>
             </div>
+
+            {/* Upload Progress */}
+            {isSubmitting && uploadProgress > 0 && (
+              <div className="mt-4 space-y-2">
+                <div className="flex justify-between text-sm text-gray-400">
+                  <span className="truncate max-w-[200px]">Uploading: {currentUploadName}</span>
+                  <span>{uploadProgress}%</span>
+                </div>
+                <Progress value={uploadProgress} className="h-2" />
+              </div>
+            )}
 
             <Dialog open={galleryOpen} onOpenChange={setGalleryOpen}>
               <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-3xl max-h-[85vh] overflow-y-auto">
@@ -495,10 +587,10 @@ const DanceProductUploadModal = ({ onSuccess }: DanceProductUploadModalProps) =>
             {isSubmitting ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Publishing...
+                {uploadProgress > 0 ? `Uploading... ${uploadProgress}%` : 'Publishing...'}
               </>
             ) : (
-              "Publish Content"
+              'Publish Content'
             )}
           </Button>
         </div>
