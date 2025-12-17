@@ -17,6 +17,7 @@ const INDUSTRY_OPTIONS = [
   'Fashion Retailer',
   'Audio Podcaster',
   'Cook/Baker',
+  'Pole Dancer',
 ];
 
 // Industries under construction (hidden but preserved for future use)
