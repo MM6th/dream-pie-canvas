@@ -2,7 +2,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MessageSquare, User, Calendar } from "lucide-react";
+import { MessageSquare, User, Calendar, Shield } from "lucide-react";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { BulletinPost } from "@/types/bulletin";
 import PostInteractions from "./PostInteractions";
@@ -51,21 +51,32 @@ const CurrentThoughtsSection = ({ posts, useCarousel = true }: CurrentThoughtsSe
         
         <div className="flex items-center gap-4 text-sm text-gray-400 mb-2">
            <div className="flex items-center gap-2">
-              {post.profiles?.avatar_url ? (
-                <img
-                  src={post.profiles.avatar_url}
-                  alt="Avatar"
-                  className="w-8 h-8 rounded-full object-cover"
-                />
+              {post.post_type === 'announcement' ? (
+                <>
+                  <div className="w-8 h-8 rounded-full bg-orange-600 flex items-center justify-center" aria-label="Admin announcement">
+                    <Shield className="w-5 h-5 text-white" />
+                  </div>
+                  <span className="sr-only">Admin</span>
+                </>
               ) : (
-                <User className="w-6 h-6" />
+                <>
+                  {post.profiles?.avatar_url ? (
+                    <img
+                      src={post.profiles.avatar_url}
+                      alt="Avatar"
+                      className="w-8 h-8 rounded-full object-cover"
+                    />
+                  ) : (
+                    <User className="w-6 h-6" />
+                  )}
+                  <Link 
+                    to={`/profile/${post.merchant_id}`}
+                    className="text-gray-300 hover:text-white transition-colors"
+                  >
+                    {post.profiles?.display_name || 'Community'}
+                  </Link>
+                </>
               )}
-               <Link 
-                 to={`/profile/${post.merchant_id}`}
-                 className="text-gray-300 hover:text-white transition-colors"
-               >
-                 {post.profiles?.display_name || 'Community'}
-               </Link>
             </div>
             <div className="flex items-center gap-1">
               <Calendar className="w-3 h-3" />

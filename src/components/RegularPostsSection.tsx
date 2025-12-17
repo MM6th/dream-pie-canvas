@@ -61,12 +61,12 @@ const RegularPostsSection = ({ posts, useCarousel = true }: RegularPostsSectionP
         
         <div className="flex items-center gap-4 text-xs text-gray-400 mb-4">
            <div className="flex items-center gap-2">
-              {post.profiles?.is_admin ? (
+              {(post.post_type === 'announcement' || post.profiles?.is_admin) ? (
                 <>
-                  <div className="w-6 h-6 rounded-full bg-orange-600 flex items-center justify-center">
+                  <div className="w-6 h-6 rounded-full bg-orange-600 flex items-center justify-center" aria-label="Admin announcement">
                     <Shield className="w-4 h-4 text-white" />
                   </div>
-                  <span className="text-orange-400 font-medium">Admin</span>
+                  <span className="sr-only">Admin</span>
                 </>
               ) : (
                 <>
