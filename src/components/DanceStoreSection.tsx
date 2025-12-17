@@ -3,12 +3,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import { Sparkles, DollarSign, ShoppingCart, ChevronLeft, ChevronRight } from "lucide-react";
+import { Sparkles, DollarSign, ShoppingCart, ChevronLeft, ChevronRight, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import ExpandableDescription from "@/components/ui/ExpandableDescription";
-
 interface DanceProductImage {
   id: string;
   image_url: string;
@@ -37,6 +36,13 @@ const DanceStoreSection = () => {
   const [products, setProducts] = useState<DanceProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [imageIndexes, setImageIndexes] = useState<Record<string, number>>({});
+  const [videoDurations, setVideoDurations] = useState<Record<string, number>>({});
+
+  const formatDuration = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
 
   const fetchProducts = async () => {
     try {
@@ -165,6 +171,15 @@ const DanceStoreSection = () => {
                             src={currentImage.image_url}
                             className="w-full h-full object-cover"
                             controls
+                            onLoadedMetadata={(e) => {
+                              const video = e.currentTarget;
+                              if (video.duration && !videoDurations[currentImage.id]) {
+                                setVideoDurations(prev => ({
+                                  ...prev,
+                                  [currentImage.id]: video.duration
+                                }));
+                              }
+                            }}
                             onTimeUpdate={(e) => {
                               const video = e.currentTarget;
                               if (video.currentTime >= 15) {
@@ -224,6 +239,13 @@ const DanceStoreSection = () => {
                               />
                             ))}
                           </div>
+                          {/* Video duration badge */}
+                          {currentImage?.media_type === 'video' && videoDurations[currentImage.id] && (
+                            <div className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 bg-black/70 rounded text-white text-xs">
+                              <Clock className="w-3 h-3" />
+                              <span>Full: {formatDuration(videoDurations[currentImage.id])}</span>
+                            </div>
+                          )}
                         </>
                       )}
                     </div>

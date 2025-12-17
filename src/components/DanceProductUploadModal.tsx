@@ -358,7 +358,7 @@ const DanceProductUploadModal = ({ onSuccess }: DanceProductUploadModalProps) =>
       <DialogTrigger asChild>
         <Button className="bg-pink-600 hover:bg-pink-700 text-white">
           <Plus className="w-4 h-4 mr-2" />
-          Upload New Content
+          Publish New Content
         </Button>
       </DialogTrigger>
       <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-2xl max-h-[90vh] overflow-y-auto">
