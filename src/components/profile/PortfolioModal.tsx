@@ -31,7 +31,7 @@ const PortfolioModal = ({ open, onOpenChange, onSuccess, userType, availableImag
   const [description, setDescription] = useState("");
   const [isForSale, setIsForSale] = useState(false);
   const [price, setPrice] = useState("");
-  const [selectedImages, setSelectedImages] = useState<Array<{path: string; type: string; backgroundMusicUrl?: string}>>([]);
+  const [selectedImages, setSelectedImages] = useState<Array<{path: string; type: string; backgroundMusicUrl?: string; isVideoMuted?: boolean}>>([]);
   const [blurredImages, setBlurredImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [ownedTracks, setOwnedTracks] = useState<AudioTrack[]>([]);
@@ -168,7 +168,7 @@ const PortfolioModal = ({ open, onOpenChange, onSuccess, userType, availableImag
     setPreviewVideoPath(videoPath);
     setPreviewVideo(getImageUrl(videoPath));
     setPreviewAudio(selectedMedia?.backgroundMusicUrl || null);
-    setIsVideoMuted(false);
+    setIsVideoMuted(selectedMedia?.isVideoMuted || false);
     setIsMusicPlaying(false);
   };
 
@@ -178,6 +178,12 @@ const PortfolioModal = ({ open, onOpenChange, onSuccess, userType, availableImag
     }
     if (audioPreviewRef.current) {
       audioPreviewRef.current.pause();
+    }
+    // Save mute state back to selectedImages before closing
+    if (previewVideoPath) {
+      setSelectedImages(prev => prev.map(img => 
+        img.path === previewVideoPath ? { ...img, isVideoMuted } : img
+      ));
     }
     setPreviewVideo(null);
     setPreviewVideoPath(null);
@@ -297,7 +303,8 @@ const PortfolioModal = ({ open, onOpenChange, onSuccess, userType, availableImag
         media_type: media.type,
         display_order: index + 1,
         is_blurred: blurredImages.includes(media.path),
-        background_music_url: media.type === 'video' ? (media.backgroundMusicUrl || null) : null
+        background_music_url: media.type === 'video' ? (media.backgroundMusicUrl || null) : null,
+        is_video_muted: media.type === 'video' ? (media.isVideoMuted || false) : false
       }));
 
       const { error: imagesError } = await supabase

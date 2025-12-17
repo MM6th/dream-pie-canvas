@@ -31,6 +31,7 @@ interface PortfolioImage {
   display_order: number;
   is_blurred: boolean;
   background_music_url?: string | null;
+  is_video_muted?: boolean;
 }
 
 interface Portfolio {
@@ -269,6 +270,7 @@ const PortfolioCard = ({ portfolio }: PortfolioCardProps) => {
                               ref={(el) => { videoRefs.current[media.id] = el; }}
                               src={getMediaUrl(media.video_url)}
                               controls={canView}
+                              muted={media.is_video_muted || false}
                               className={`w-full h-full object-contain ${shouldBlur ? 'blur-xl' : ''}`}
                               style={shouldBlur ? { filter: 'blur(20px)' } : {}}
                               onPlay={() => handleVideoPlay(media.id, media.background_music_url)}
