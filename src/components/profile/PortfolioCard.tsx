@@ -3,11 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import { DollarSign, CheckCircle, Music, ShoppingCart } from "lucide-react";
+import { DollarSign, CheckCircle, Music, ShoppingCart, Play, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import SongDetailModal from "@/components/SongDetailModal";
+
+const VIDEO_PREVIEW_DURATION = 15; // seconds
 
 interface AudioProduct {
   id: string;
@@ -60,6 +62,7 @@ const PortfolioCard = ({ portfolio }: PortfolioCardProps) => {
   const [selectedAudioProduct, setSelectedAudioProduct] = useState<AudioProduct | null>(null);
   const [songModalOpen, setSongModalOpen] = useState(false);
   const [ownedMusic, setOwnedMusic] = useState<Set<string>>(new Set());
+  const [previewEndedVideos, setPreviewEndedVideos] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const checkPurchaseStatus = async () => {
@@ -151,6 +154,33 @@ const PortfolioCard = ({ portfolio }: PortfolioCardProps) => {
     if (audioRefs.current[mediaId]) {
       audioRefs.current[mediaId]?.pause();
       audioRefs.current[mediaId]!.currentTime = 0;
+    }
+  };
+
+  // Handle preview time limit for non-purchasers
+  const handleVideoTimeUpdate = (mediaId: string, isPreviewMode: boolean) => {
+    if (!isPreviewMode) return;
+    
+    const video = videoRefs.current[mediaId];
+    if (video && video.currentTime >= VIDEO_PREVIEW_DURATION) {
+      video.pause();
+      video.currentTime = VIDEO_PREVIEW_DURATION;
+      setPreviewEndedVideos(prev => new Set(prev).add(mediaId));
+      handleVideoPause(mediaId);
+    }
+  };
+
+  // Replay preview from beginning
+  const handleReplayPreview = (mediaId: string) => {
+    const video = videoRefs.current[mediaId];
+    if (video) {
+      video.currentTime = 0;
+      setPreviewEndedVideos(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(mediaId);
+        return newSet;
+      });
+      video.play();
     }
   };
 
@@ -260,6 +290,9 @@ const PortfolioCard = ({ portfolio }: PortfolioCardProps) => {
                   const shouldBlur = media.is_blurred && !canView;
                   const audioProduct = media.background_music_url ? audioProducts[media.background_music_url] : null;
                   const alreadyOwnsMusic = audioProduct ? ownedMusic.has(audioProduct.id) : false;
+                  // Preview mode: video is for sale, not purchased, not owner, and not blurred
+                  const isPreviewMode = portfolio.is_for_sale && !isPurchased && !isOwner && media.media_type === 'video' && !media.is_blurred;
+                  const previewEnded = previewEndedVideos.has(media.id);
                   
                   return (
                     <CarouselItem key={media.id}>
@@ -269,14 +302,44 @@ const PortfolioCard = ({ portfolio }: PortfolioCardProps) => {
                             <video
                               ref={(el) => { videoRefs.current[media.id] = el; }}
                               src={getMediaUrl(media.video_url)}
-                              controls={canView}
+                              controls={canView || isPreviewMode}
                               muted={media.is_video_muted || false}
                               className={`w-full h-full object-contain ${shouldBlur ? 'blur-xl' : ''}`}
                               style={shouldBlur ? { filter: 'blur(20px)' } : {}}
                               onPlay={() => handleVideoPlay(media.id, media.background_music_url)}
                               onPause={() => handleVideoPause(media.id)}
                               onEnded={() => handleVideoEnded(media.id)}
+                              onTimeUpdate={() => handleVideoTimeUpdate(media.id, isPreviewMode)}
                             />
+                            
+                            {/* Preview mode badge */}
+                            {isPreviewMode && !previewEnded && (
+                              <div className="absolute top-2 left-2 flex items-center gap-1 px-2 py-1 bg-orange-500/90 rounded text-white text-xs">
+                                <Play className="w-3 h-3" />
+                                <span>{VIDEO_PREVIEW_DURATION}s Preview</span>
+                              </div>
+                            )}
+                            
+                            {/* Preview ended overlay */}
+                            {isPreviewMode && previewEnded && (
+                              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 gap-3">
+                                <Lock className="w-8 h-8 text-white" />
+                                <p className="text-white text-sm font-medium">Preview ended</p>
+                                <div className="flex gap-2">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="text-white border-white hover:bg-white/20"
+                                    onClick={() => handleReplayPreview(media.id)}
+                                  >
+                                    <Play className="w-3 h-3 mr-1" />
+                                    Replay Preview
+                                  </Button>
+                                </div>
+                                <p className="text-white/70 text-xs mt-2">Purchase to watch full video</p>
+                              </div>
+                            )}
+                            
                             {media.background_music_url && (
                               <>
                                 <audio
@@ -285,12 +348,12 @@ const PortfolioCard = ({ portfolio }: PortfolioCardProps) => {
                                   loop
                                 />
                                 {/* Music info badge */}
-                                <div className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 bg-black/70 rounded text-white text-xs">
+                                <div className={`absolute ${isPreviewMode ? 'top-10' : 'top-2'} right-2 flex items-center gap-1 px-2 py-1 bg-black/70 rounded text-white text-xs`}>
                                   <Music className="w-3 h-3" />
                                   <span>{audioProduct?.title || 'Has music'}</span>
                                 </div>
                                 {/* Purchase music button */}
-                                {audioProduct && !isOwner && (
+                                {audioProduct && !isOwner && !previewEnded && (
                                   <div className="absolute bottom-2 right-2">
                                     {alreadyOwnsMusic ? (
                                       <Badge className="bg-green-600/90 text-white text-xs">
