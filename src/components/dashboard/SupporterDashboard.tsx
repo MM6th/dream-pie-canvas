@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Music, FolderOpen, MessageSquare, Ticket } from "lucide-react";
+import { Music, FolderOpen, MessageSquare, Ticket, Users } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import AudioPlayer from "@/components/AudioPlayer";
 
 import PodcastAudioPlayer from "@/components/PodcastAudioPlayer";
@@ -31,6 +32,7 @@ import { BuyerAstrologyLibrary } from "@/components/astrology/BuyerAstrologyLibr
 import { FreeAstrologyResourceModal } from "@/components/FreeAstrologyResourceModal";
 import { useFreeAstrologyResource } from "@/hooks/useFreeAstrologyResource";
 import UserTicketsTab from "@/components/support/UserTicketsTab";
+import { FollowRequestsManager } from "@/components/profile/FollowRequestsManager";
 
 interface AudioTrack {
   id: string;
@@ -54,6 +56,9 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [playlistPublic, setPlaylistPublic] = useState(false);
   const [purchasedPortfolios, setPurchasedPortfolios] = useState<any[]>([]);
+  const [isPrivate, setIsPrivate] = useState<boolean>(false);
+  const [pendingRequestsCount, setPendingRequestsCount] = useState<number>(0);
+  const [showFollowRequests, setShowFollowRequests] = useState(false);
   const { currentQuarterIncome } = useQuarterlyIncome(user?.id);
   const [creditBalance, setCreditBalance] = useState(0);
   
@@ -111,9 +116,28 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
       } else {
         setUserProfile(data);
         setPlaylistPublic(data?.playlist_public || false);
+        setIsPrivate(data?.is_private || false);
       }
     } catch (error) {
       console.error('Error fetching supporter profile:', error);
+    }
+  };
+
+  const fetchPendingRequestsCount = async () => {
+    if (!user) return;
+    
+    try {
+      const { count, error } = await supabase
+        .from('profile_follow_requests')
+        .select('*', { count: 'exact', head: true })
+        .eq('target_merchant_id', user.id)
+        .eq('status', 'pending');
+
+      if (!error && count !== null) {
+        setPendingRequestsCount(count);
+      }
+    } catch (error) {
+      console.error('Error fetching pending requests:', error);
     }
   };
 
@@ -161,12 +185,46 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
       fetchUserProfile();
       fetchPurchasedPortfolios();
       fetchCreditBalance();
+      fetchPendingRequestsCount();
     }
   }, [user]);
 
 
   return (
     <div className={`max-w-6xl mx-auto ${isMobile ? 'p-4' : 'p-6'} pt-20`}>
+      {/* Follow Requests Card - shows when profile is private and has pending requests */}
+      {isPrivate && pendingRequestsCount > 0 && (
+        <Card className="mb-6 bg-blue-600/10 border-blue-500">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Users className="w-5 h-5" />
+                Follow Requests
+              </div>
+              <Badge variant="secondary" className="bg-blue-600 text-white">
+                {pendingRequestsCount} pending
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-gray-300 text-sm mb-4">
+              You have {pendingRequestsCount} pending follow request{pendingRequestsCount !== 1 ? 's' : ''} for your private profile.
+            </p>
+            <Button onClick={() => setShowFollowRequests(true)} className="bg-blue-600 hover:bg-blue-700 text-white">
+              <Users className="w-4 h-4 mr-2" />
+              Manage Requests
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      <FollowRequestsManager 
+        isOpen={showFollowRequests} 
+        onClose={() => {
+          setShowFollowRequests(false);
+          fetchPendingRequestsCount();
+        }} 
+      />
       {/* Floating tutorial for first-time users only */}
       {tutorial.isActive && tutorial.currentStepData && tutorial.isFirstTimeUser && (
         <>
