@@ -455,7 +455,7 @@ const PortfolioModal = ({ open, onOpenChange, onSuccess, userType, availableImag
                       </div>
                     )}
                     {/* Background Music (Videos Only) */}
-                    {isSelected && isVideo && ownedTracks.length > 0 && (
+                    {isSelected && isVideo && (
                       <div className="mt-1">
                         <Select
                           value={selectedImages.find(img => img.path === media.file_path)?.backgroundMusicUrl || "none"}
@@ -467,6 +467,11 @@ const PortfolioModal = ({ open, onOpenChange, onSuccess, userType, availableImag
                           </SelectTrigger>
                           <SelectContent className="bg-gray-700 border-gray-600">
                             <SelectItem value="none" className="text-white text-xs">No music</SelectItem>
+                            {ownedTracks.length === 0 && (
+                              <div className="px-2 py-1 text-xs text-gray-400">
+                                No owned music available
+                              </div>
+                            )}
                             {ownedTracks
                               .filter((track) => track.audio_file_url && track.audio_file_url.trim() !== '')
                               .map((track) => (
