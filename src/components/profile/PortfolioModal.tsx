@@ -474,20 +474,22 @@ const PortfolioModal = ({ open, onOpenChange, onSuccess, userType, availableImag
                     {isSelected && isVideo && ownedTracks.length > 0 && (
                       <div className="mt-1">
                         <Select
-                          value={selectedImages.find(img => img.path === media.file_path)?.backgroundMusicUrl || ""}
-                          onValueChange={(value) => handleBackgroundMusicChange(media.file_path, value)}
+                          value={selectedImages.find(img => img.path === media.file_path)?.backgroundMusicUrl || "none"}
+                          onValueChange={(value) => handleBackgroundMusicChange(media.file_path, value === "none" ? "" : value)}
                         >
                           <SelectTrigger className="h-7 text-xs bg-gray-700 border-gray-600">
                             <Music className="w-3 h-3 mr-1" />
                             <SelectValue placeholder="Add music" />
                           </SelectTrigger>
                           <SelectContent className="bg-gray-700 border-gray-600">
-                            <SelectItem value="" className="text-white text-xs">No music</SelectItem>
-                            {ownedTracks.map((track) => (
-                              <SelectItem key={track.id} value={track.audio_file_url} className="text-white text-xs">
-                                {track.title}
-                              </SelectItem>
-                            ))}
+                            <SelectItem value="none" className="text-white text-xs">No music</SelectItem>
+                            {ownedTracks
+                              .filter((track) => track.audio_file_url && track.audio_file_url.trim() !== '')
+                              .map((track) => (
+                                <SelectItem key={track.id} value={track.audio_file_url} className="text-white text-xs">
+                                  {track.title}
+                                </SelectItem>
+                              ))}
                           </SelectContent>
                         </Select>
                       </div>
