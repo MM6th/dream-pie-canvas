@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Upload, X, Loader2, Image, Video } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -32,6 +33,7 @@ const DanceProductUploadModal = ({ onSuccess }: DanceProductUploadModalProps) =>
   const [isFree, setIsFree] = useState(false);
   const [mediaFiles, setMediaFiles] = useState<File[]>([]);
   const [mediaPreviews, setMediaPreviews] = useState<string[]>([]);
+  const [blurredIndexes, setBlurredIndexes] = useState<number[]>([]);
 
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [galleryLoading, setGalleryLoading] = useState(false);
@@ -130,6 +132,15 @@ const DanceProductUploadModal = ({ onSuccess }: DanceProductUploadModalProps) =>
     URL.revokeObjectURL(mediaPreviews[index]);
     setMediaFiles(prev => prev.filter((_, i) => i !== index));
     setMediaPreviews(prev => prev.filter((_, i) => i !== index));
+    setBlurredIndexes(prev => prev.filter(i => i !== index).map(i => i > index ? i - 1 : i));
+  };
+
+  const toggleBlur = (index: number) => {
+    setBlurredIndexes(prev => 
+      prev.includes(index) 
+        ? prev.filter(i => i !== index)
+        : [...prev, index]
+    );
   };
 
   const handleSubmit = async () => {
@@ -222,7 +233,8 @@ const DanceProductUploadModal = ({ onSuccess }: DanceProductUploadModalProps) =>
         dance_product_id: productData.id,
         image_url: media.url,
         media_type: media.type,
-        display_order: index
+        display_order: index,
+        is_blurred: blurredIndexes.includes(index)
       }));
 
       const { error: imagesError } = await supabase
@@ -244,6 +256,7 @@ const DanceProductUploadModal = ({ onSuccess }: DanceProductUploadModalProps) =>
       mediaPreviews.forEach(url => URL.revokeObjectURL(url));
       setMediaFiles([]);
       setMediaPreviews([]);
+      setBlurredIndexes([]);
       setOpen(false);
       onSuccess();
 
@@ -427,29 +440,48 @@ const DanceProductUploadModal = ({ onSuccess }: DanceProductUploadModalProps) =>
             {/* Media Previews */}
             {mediaPreviews.length > 0 && (
               <div className="grid grid-cols-3 gap-3 mt-4">
-                {mediaPreviews.map((preview, index) => (
-                  <div key={index} className="relative group">
-                    {mediaFiles[index]?.type.startsWith('video/') ? (
-                      <video 
-                        src={preview} 
-                        className="w-full h-24 object-cover rounded-lg"
-                      />
-                    ) : (
-                      <img 
-                        src={preview} 
-                        alt={`Preview ${index + 1}`} 
-                        className="w-full h-24 object-cover rounded-lg"
-                      />
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => removeMedia(index)}
-                      className="absolute top-1 right-1 p-1 bg-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <X className="w-4 h-4 text-white" />
-                    </button>
-                  </div>
-                ))}
+                {mediaPreviews.map((preview, index) => {
+                  const isVideo = mediaFiles[index]?.type.startsWith('video/');
+                  const isBlurred = blurredIndexes.includes(index);
+                  
+                  return (
+                    <div key={index} className="relative group">
+                      {isVideo ? (
+                        <video 
+                          src={preview} 
+                          className="w-full h-24 object-cover rounded-lg"
+                        />
+                      ) : (
+                        <img 
+                          src={preview} 
+                          alt={`Preview ${index + 1}`} 
+                          className={`w-full h-24 object-cover rounded-lg ${isBlurred ? 'blur-md' : ''}`}
+                        />
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => removeMedia(index)}
+                        className="absolute top-1 right-1 p-1 bg-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="w-4 h-4 text-white" />
+                      </button>
+                      
+                      {/* Blur checkbox for images only */}
+                      {!isVideo && (
+                        <div className="mt-1 flex items-center space-x-2">
+                          <Checkbox
+                            id={`blur-${index}`}
+                            checked={isBlurred}
+                            onCheckedChange={() => toggleBlur(index)}
+                          />
+                          <Label htmlFor={`blur-${index}`} className="text-xs text-gray-300 cursor-pointer">
+                            Blur
+                          </Label>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
