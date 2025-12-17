@@ -33,7 +33,6 @@ import { FreeAstrologyResourceModal } from "@/components/FreeAstrologyResourceMo
 import { useFreeAstrologyResource } from "@/hooks/useFreeAstrologyResource";
 import UserTicketsTab from "@/components/support/UserTicketsTab";
 import { FollowRequestsManager } from "@/components/profile/FollowRequestsManager";
-import { MessagingTutorialCard } from "@/components/messaging/MessagingTutorialCard";
 
 interface AudioTrack {
   id: string;
@@ -245,11 +244,6 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
           />
         </>
       )}
-      
-      {/* Messaging Tutorial Card */}
-      <div className="mb-6">
-        <MessagingTutorialCard userType="supporter" />
-      </div>
       
       <PieWelcomeModal>
         <Button 
