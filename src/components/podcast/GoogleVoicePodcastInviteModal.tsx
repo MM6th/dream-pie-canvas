@@ -28,11 +28,14 @@ import {
   User,
   Loader2,
   CalendarIcon,
-  Clock
+  Clock,
+  Coins,
+  AlertCircle
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useMessagingCredits } from "@/hooks/useMessagingCredits";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -50,6 +53,8 @@ interface UserProfile {
   user_type: string | null;
 }
 
+const INVITE_CREDIT_COST = 5; // Credits required to send a podcast invitation
+
 export const GoogleVoicePodcastInviteModal = ({
   open,
   onOpenChange,
@@ -58,6 +63,7 @@ export const GoogleVoicePodcastInviteModal = ({
 }: GoogleVoicePodcastInviteModalProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { balance: credits, refetch: refreshCredits } = useMessagingCredits(user?.id);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<UserProfile[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -109,8 +115,45 @@ export const GoogleVoicePodcastInviteModal = ({
   const sendInvite = async (recipientId: string, recipientName: string) => {
     if (!user) return;
 
+    // Check credits before sending
+    if (credits < INVITE_CREDIT_COST) {
+      toast({
+        title: "Insufficient Credits",
+        description: `You need ${INVITE_CREDIT_COST} credits to send an invitation. Purchase more credits to continue.`,
+        variant: "destructive"
+      });
+      return;
+    }
+
     setSendingTo(recipientId);
     try {
+      // Deduct credits first
+      const { data: currentCredits } = await supabase
+        .from('messaging_credits')
+        .select('total_spent')
+        .eq('user_id', user.id)
+        .single();
+
+      const { error: creditError } = await supabase
+        .from('messaging_credits')
+        .update({ 
+          balance: credits - INVITE_CREDIT_COST,
+          total_spent: (currentCredits?.total_spent || 0) + INVITE_CREDIT_COST
+        })
+        .eq('user_id', user.id);
+
+      if (creditError) throw creditError;
+
+      // Record the credit transaction
+      await supabase
+        .from('credit_transactions')
+        .insert({
+          user_id: user.id,
+          amount: -INVITE_CREDIT_COST,
+          type: 'podcast_invitation',
+          description: `Podcast invitation sent for "${sessionTitle}"`
+        });
+
       // Format phone number for tel: link
       const phoneDigits = googleVoiceNumber.replace(/\D/g, '');
       const telLink = `tel:+1${phoneDigits}`;
@@ -151,9 +194,10 @@ Looking forward to chatting with you!
 
       if (error) throw error;
 
+      refreshCredits();
       toast({
         title: "Invite Sent!",
-        description: `Your podcast invitation has been sent to ${recipientName}.`,
+        description: `Your podcast invitation has been sent to ${recipientName} (${INVITE_CREDIT_COST} credits used).`,
       });
 
       // Clear search and close modal
@@ -189,6 +233,34 @@ Looking forward to chatting with you!
         </DialogHeader>
 
         <div className="space-y-4 py-4">
+          {/* Credit Requirement Info */}
+          <div className="flex items-start gap-2 p-3 bg-primary/10 border border-primary/30 rounded-lg">
+            <Coins className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+            <p className="text-sm">
+              <strong>Credit Required:</strong> Sending a podcast invitation costs {INVITE_CREDIT_COST} credits per invite.
+            </p>
+          </div>
+
+          {/* Credits Display */}
+          <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+            <div className="flex items-center gap-2">
+              <Coins className="w-5 h-5 text-yellow-500" />
+              <span className="font-medium">Your Credits</span>
+            </div>
+            <Badge variant={credits >= INVITE_CREDIT_COST ? "default" : "destructive"}>
+              {credits} credits
+            </Badge>
+          </div>
+
+          {credits < INVITE_CREDIT_COST && (
+            <div className="flex items-start gap-2 p-3 bg-destructive/10 border border-destructive/30 rounded-lg">
+              <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+              <p className="text-destructive text-sm">
+                You need at least {INVITE_CREDIT_COST} credits to send invitations. Purchase more credits from your dashboard.
+              </p>
+            </div>
+          )}
+
           {/* Recording Notice */}
           <Alert variant="default" className="border-amber-500/20 bg-amber-500/5">
             <AlertTriangle className="h-4 w-4 text-amber-500" />
@@ -321,7 +393,7 @@ Looking forward to chatting with you!
                 <Button
                   size="sm"
                   onClick={() => sendInvite(profile.id, profile.display_name || 'Guest')}
-                  disabled={sendingTo === profile.id}
+                  disabled={sendingTo === profile.id || credits < INVITE_CREDIT_COST}
                   className="gap-1"
                 >
                   {sendingTo === profile.id ? (
