@@ -34,7 +34,7 @@ const INVITE_CREDIT_COST = 5; // Credits required to send an invitation
 
 const ScriptInviteModal = ({ isOpen, onClose, script }: ScriptInviteModalProps) => {
   const { user } = useAuth();
-  const { balance: credits, refetch: refreshCredits } = useMessagingCredits();
+  const { balance: credits, refetch: refreshCredits } = useMessagingCredits(user?.id);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<UserProfile[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -65,27 +65,35 @@ const ScriptInviteModal = ({ isOpen, onClose, script }: ScriptInviteModalProps) 
     }
   }, [isOpen, script.id]);
 
-  const handleSearch = async () => {
-    if (!searchQuery.trim() || !user) return;
+  // Auto-search with debouncing (like PodcastInviteModal)
+  useEffect(() => {
+    const searchUsers = async () => {
+      if (!searchQuery.trim() || searchQuery.length < 2 || !user) {
+        setSearchResults([]);
+        return;
+      }
 
-    setIsSearching(true);
+      setIsSearching(true);
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id, display_name, avatar_url, email')
+          .or(`display_name.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%`)
+          .neq('id', user.id)
+          .limit(10);
 
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, display_name, avatar_url, email')
-        .or(`display_name.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%`)
-        .neq('id', user.id)
-        .limit(10);
+        if (error) throw error;
+        setSearchResults(data || []);
+      } catch (error) {
+        console.error('Error searching users:', error);
+      } finally {
+        setIsSearching(false);
+      }
+    };
 
-      if (error) throw error;
-      setSearchResults(data || []);
-    } catch (error) {
-      console.error('Error searching users:', error);
-    } finally {
-      setIsSearching(false);
-    }
-  };
+    const debounce = setTimeout(searchUsers, 300);
+    return () => clearTimeout(debounce);
+  }, [searchQuery, user?.id]);
 
   const handleInvite = async (invitee: UserProfile) => {
     if (!user) return;
@@ -208,18 +216,18 @@ const ScriptInviteModal = ({ isOpen, onClose, script }: ScriptInviteModalProps) 
           {/* Search */}
           <div>
             <Label className="text-white">Search Users</Label>
-            <div className="flex gap-2 mt-1">
+            <div className="relative mt-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
               <Input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search by name or email..."
-                className="bg-gray-700 border-gray-600 text-white"
-                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                className="bg-gray-700 border-gray-600 text-white pl-10"
               />
-              <Button onClick={handleSearch} disabled={isSearching}>
-                <Search className="w-4 h-4" />
-              </Button>
             </div>
+            {searchQuery.length > 0 && searchQuery.length < 2 && (
+              <p className="text-xs text-gray-400 mt-1">Type at least 2 characters to search</p>
+            )}
           </div>
 
           {/* Search Results */}
@@ -260,8 +268,10 @@ const ScriptInviteModal = ({ isOpen, onClose, script }: ScriptInviteModalProps) 
                   </div>
                 ))}
               </div>
-            ) : searchQuery && !isSearching ? (
-              <p className="text-gray-400 text-center py-4">No users found</p>
+            ) : searchQuery.length >= 2 && !isSearching ? (
+              <p className="text-gray-400 text-center py-4">No users found matching "{searchQuery}"</p>
+            ) : isSearching ? (
+              <p className="text-gray-400 text-center py-4">Searching...</p>
             ) : null}
           </ScrollArea>
         </div>
