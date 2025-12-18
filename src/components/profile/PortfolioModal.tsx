@@ -6,10 +6,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/components/ui/use-toast";
-import { Loader2, Music, Play, Pause, X, Volume2, VolumeX } from "lucide-react";
+import { Loader2, Music, Play, Pause, X, Volume2, VolumeX, AlertTriangle } from "lucide-react";
 
 interface AudioTrack {
   id: string;
@@ -44,6 +45,27 @@ const PortfolioModal = ({ open, onOpenChange, onSuccess, userType, availableImag
   const audioPreviewRef = useRef<HTMLAudioElement>(null);
 
   const isMerchant = userType === 'merchant';
+  
+  // Check if this is a pole dancer - selling is disabled for pole dancers
+  const [userIndustry, setUserIndustry] = useState<string | null>(null);
+  const isPoleDancer = userIndustry === 'Pole Dancer';
+  const SELLING_DISABLED_FOR_POLE_DANCERS = true;
+  const sellingDisabled = isPoleDancer && SELLING_DISABLED_FOR_POLE_DANCERS;
+  const SELLING_DISABLED_MESSAGE = "Selling portfolios is temporarily paused while we partner with a payment processor that fits our distribution criteria. You can still create and save portfolios for free.";
+
+  useEffect(() => {
+    if (user) {
+      // Fetch user industry
+      supabase
+        .from('profiles')
+        .select('industry')
+        .eq('id', user.id)
+        .single()
+        .then(({ data }) => {
+          setUserIndustry(data?.industry || null);
+        });
+    }
+  }, [user]);
 
   useEffect(() => {
     if (open && user) {
@@ -381,18 +403,29 @@ const PortfolioModal = ({ open, onOpenChange, onSuccess, userType, availableImag
           {/* Sale Options (Merchants Only) */}
           {isMerchant && (
             <div className="space-y-3">
+              {/* Selling Disabled Notice for Pole Dancers */}
+              {sellingDisabled && (
+                <Alert className="bg-amber-500/10 border-amber-500/30">
+                  <AlertTriangle className="h-4 w-4 text-amber-500" />
+                  <AlertDescription className="text-amber-200 text-sm">
+                    {SELLING_DISABLED_MESSAGE}
+                  </AlertDescription>
+                </Alert>
+              )}
+              
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="isForSale"
                   checked={isForSale}
                   onCheckedChange={(checked) => setIsForSale(checked as boolean)}
+                  disabled={sellingDisabled}
                 />
-                <Label htmlFor="isForSale" className="text-white cursor-pointer">
-                  Sell this portfolio
+                <Label htmlFor="isForSale" className={`cursor-pointer ${sellingDisabled ? 'text-gray-500' : 'text-white'}`}>
+                  Sell this portfolio {sellingDisabled && '(temporarily unavailable)'}
                 </Label>
               </div>
 
-              {isForSale && (
+              {isForSale && !sellingDisabled && (
                 <div>
                   <Label htmlFor="price" className="text-white">Price (USD) *</Label>
                   <Input
