@@ -58,19 +58,19 @@ const VideoUpload = ({ onVideoSelect, currentVideoUrl }: VideoUploadProps) => {
         return;
       }
 
-      // Check user's remaining storage quota
+      // Check user's remaining storage quota using the database function
       try {
-        const { data: storageUsage } = await supabase.rpc('get_user_storage_usage', {
-          user_uuid: user.id
+        const { data: canUpload, error: checkError } = await supabase.rpc('can_user_upload', {
+          user_uuid: user.id,
+          new_file_size: file.size
         });
 
-        const currentUsage = storageUsage || 0;
-        const maxStorage = 2 * 1024 * 1024 * 1024; // 2GB
-        
-        if (currentUsage + file.size > maxStorage) {
+        if (checkError || !canUpload) {
+          const { data: maxStorage } = await supabase.rpc('get_user_max_storage', { user_uuid: user.id });
+          const maxStorageGB = Math.round((maxStorage || 2147483648) / (1024 * 1024 * 1024));
           toast({
             title: "Storage Limit Exceeded",
-            description: "This video would exceed your 2GB storage limit. Please delete some content first.",
+            description: `This video would exceed your ${maxStorageGB}GB storage limit. Please delete some content first.`,
             variant: "destructive"
           });
           return;

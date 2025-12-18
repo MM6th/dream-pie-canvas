@@ -20,23 +20,30 @@ const PhotoUpload = ({ onSuccess, trigger }: PhotoUploadProps) => {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [storageUsage, setStorageUsage] = useState<number>(0);
+  const [maxStorage, setMaxStorage] = useState<number>(2 * 1024 * 1024 * 1024); // Default 2GB
 
   const checkStorageUsage = async () => {
     if (!user) return;
 
     try {
-      const { data, error } = await supabase.rpc('get_user_storage_usage', {
-        user_uuid: user.id
-      });
+      const [usageResult, maxResult] = await Promise.all([
+        supabase.rpc('get_user_storage_usage', { user_uuid: user.id }),
+        supabase.rpc('get_user_max_storage', { user_uuid: user.id })
+      ]);
 
-      if (error) {
-        console.error('Error checking storage usage:', error);
-        return;
+      if (usageResult.error) {
+        console.error('Error checking storage usage:', usageResult.error);
+      } else {
+        setStorageUsage(usageResult.data || 0);
       }
 
-      setStorageUsage(data || 0);
+      if (maxResult.error) {
+        console.error('Error checking max storage:', maxResult.error);
+      } else {
+        setMaxStorage(maxResult.data || 2 * 1024 * 1024 * 1024);
+      }
     } catch (error) {
-      console.error('Error checking storage usage:', error);
+      console.error('Error checking storage:', error);
     }
   };
 
@@ -50,7 +57,6 @@ const PhotoUpload = ({ onSuccess, trigger }: PhotoUploadProps) => {
     if (!user || acceptedFiles.length === 0) return;
 
     const file = acceptedFiles[0];
-    const maxStorage = 2 * 1024 * 1024 * 1024; // 2GB
     const maxFileSize = 50 * 1024 * 1024; // 50MB
 
     // Check file size
@@ -70,9 +76,10 @@ const PhotoUpload = ({ onSuccess, trigger }: PhotoUploadProps) => {
     });
 
     if (checkError || !canUpload) {
+      const maxStorageGB = Math.round(maxStorage / (1024 * 1024 * 1024));
       toast({
         title: "Storage limit exceeded",
-        description: "You've reached your 2GB storage limit. Please delete some files first.",
+        description: `You've reached your ${maxStorageGB}GB storage limit. Please delete some files first.`,
         variant: "destructive"
       });
       return;
@@ -156,7 +163,10 @@ const PhotoUpload = ({ onSuccess, trigger }: PhotoUploadProps) => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  const storagePercentage = (storageUsage / (2 * 1024 * 1024 * 1024)) * 100;
+  const storagePercentage = (storageUsage / maxStorage) * 100;
+  const maxStorageDisplay = maxStorage >= 1024 * 1024 * 1024 
+    ? `${Math.round(maxStorage / (1024 * 1024 * 1024))}GB` 
+    : `${Math.round(maxStorage / (1024 * 1024))}MB`;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -179,7 +189,7 @@ const PhotoUpload = ({ onSuccess, trigger }: PhotoUploadProps) => {
             <div className="flex justify-between items-center mb-2">
               <span className="text-sm text-gray-300">Storage Used</span>
               <span className="text-sm text-gray-300">
-                {formatBytes(storageUsage)} / 2GB
+                {formatBytes(storageUsage)} / {maxStorageDisplay}
               </span>
             </div>
             <Progress value={storagePercentage} className="h-2" />

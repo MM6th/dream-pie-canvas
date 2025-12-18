@@ -3178,6 +3178,7 @@ export type Database = {
         Returns: boolean
       }
       generate_receipt_number: { Args: never; Returns: string }
+      get_user_max_storage: { Args: { user_uuid: string }; Returns: number }
       get_user_storage_usage: { Args: { user_uuid: string }; Returns: number }
       has_role: {
         Args: {
