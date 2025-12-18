@@ -7,7 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
-import { Plus, Upload, X, Loader2, Image, Video } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Plus, Upload, X, Loader2, Image, Video, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
@@ -42,6 +43,10 @@ const DanceProductUploadModal = ({ onSuccess }: DanceProductUploadModalProps) =>
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [galleryLoading, setGalleryLoading] = useState(false);
   const [galleryUploads, setGalleryUploads] = useState<UserUpload[]>([]);
+
+  // Publishing is temporarily disabled for pole dancers - content saves as draft
+  const PUBLISHING_DISABLED = true;
+  const PUBLISHING_DISABLED_MESSAGE = "Publishing is temporarily paused while we partner with a payment processor that fits our distribution criteria. Your content will be saved as a draft and can be published once this is resolved.";
 
   const MAX_FILE_SIZE = 3 * 1024 * 1024 * 1024; // 3GB for Pole Dancers
   const TUS_THRESHOLD = 50 * 1024 * 1024; // 50MB - use TUS for files larger than this
@@ -212,7 +217,9 @@ const DanceProductUploadModal = ({ onSuccess }: DanceProductUploadModalProps) =>
     try {
       const numPrice = isFree ? null : parseFloat(price);
       
-      // Create the dance product first
+      // Create the dance product first - save as draft if publishing is disabled
+      const productStatus = PUBLISHING_DISABLED ? 'draft' : 'published';
+      
       const { data: productData, error: productError } = await supabase
         .from('dance_products')
         .insert({
@@ -221,7 +228,7 @@ const DanceProductUploadModal = ({ onSuccess }: DanceProductUploadModalProps) =>
           description: description.trim() || null,
           price: numPrice,
           is_free: isFree,
-          status: 'published'
+          status: productStatus
         })
         .select()
         .single();
@@ -321,8 +328,10 @@ const DanceProductUploadModal = ({ onSuccess }: DanceProductUploadModalProps) =>
       if (imagesError) throw imagesError;
 
       toast({
-        title: "Success",
-        description: "Your dance content has been published!"
+        title: PUBLISHING_DISABLED ? "Saved as Draft" : "Success",
+        description: PUBLISHING_DISABLED 
+          ? "Your content has been saved as a draft. It will be available for publishing once our payment processor partnership is finalized."
+          : "Your dance content has been published!"
       });
 
       // Reset form
@@ -358,7 +367,7 @@ const DanceProductUploadModal = ({ onSuccess }: DanceProductUploadModalProps) =>
       <DialogTrigger asChild>
         <Button className="bg-pink-600 hover:bg-pink-700 text-white">
           <Plus className="w-4 h-4 mr-2" />
-          Publish New Content
+          {PUBLISHING_DISABLED ? "Save New Content" : "Publish New Content"}
         </Button>
       </DialogTrigger>
       <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -367,6 +376,15 @@ const DanceProductUploadModal = ({ onSuccess }: DanceProductUploadModalProps) =>
         </DialogHeader>
         
         <div className="space-y-6 py-4">
+          {/* Publishing Disabled Notice */}
+          {PUBLISHING_DISABLED && (
+            <Alert className="bg-amber-500/10 border-amber-500/30">
+              <AlertTriangle className="h-4 w-4 text-amber-500" />
+              <AlertDescription className="text-amber-200 text-sm">
+                {PUBLISHING_DISABLED_MESSAGE}
+              </AlertDescription>
+            </Alert>
+          )}
           {/* Title */}
           <div className="space-y-2">
             <Label htmlFor="title">Title *</Label>
