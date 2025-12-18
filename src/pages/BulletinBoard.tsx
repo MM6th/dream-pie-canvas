@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, LogOut, ShoppingBag, Users, MessageSquare, BookOpen } from "lucide-react";
+import { ArrowLeft, LogOut, ShoppingBag, Users, MessageSquare, BookOpen, Film } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -139,6 +139,14 @@ const BulletinBoard = () => {
             >
               <Users className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
               Trending
+            </Button>
+            <Button
+              onClick={() => navigate('/films')}
+              variant="outline"
+              className={`border ${isActivePage('/films') ? 'bg-primary border-primary' : 'bg-transparent border-gray-600'} text-white hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
+            >
+              <Film className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
+              Films
             </Button>
             <Button
               onClick={() => navigate('/about-author')}

@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, LogOut, MessageSquare, ShoppingBag, Users } from "lucide-react";
+import { ArrowLeft, LogOut, MessageSquare, ShoppingBag, Users, Film } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -131,6 +131,13 @@ const Films = () => {
             >
               <Users className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
               Trending
+            </Button>
+            <Button
+              variant="outline"
+              className={`bg-primary border-primary text-white hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
+            >
+              <Film className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
+              Films
             </Button>
           </div>
           

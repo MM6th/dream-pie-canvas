@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import { ArrowLeft, Users, User, Shield, Building, Search, MessageSquare, Calendar, LogOut, ShoppingBag, BookOpen } from "lucide-react";
+import { ArrowLeft, Users, User, Shield, Building, Search, MessageSquare, Calendar, LogOut, ShoppingBag, BookOpen, Film } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import UserStatsDisplay from "@/components/UserStatsDisplay";
@@ -225,6 +225,14 @@ const ProfilesDirectory = () => {
             >
               <Users className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
               Trending
+            </Button>
+            <Button
+              onClick={() => navigate('/films')}
+              variant="outline"
+              className={`${isActivePage('/films') ? 'bg-primary border-primary' : 'border-gray-600 bg-transparent'} text-white hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
+            >
+              <Film className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
+              Films
             </Button>
             <Button
               onClick={() => navigate('/about-author')}
