@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, LogOut, MessageSquare, Users, ShoppingBag, BookOpen } from "lucide-react";
+import { ArrowLeft, LogOut, MessageSquare, Users, ShoppingBag, BookOpen, Film } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useNavigate } from "react-router-dom";
 import StorePage from "@/components/StorePage";
@@ -52,6 +52,14 @@ const StoreView = ({ onBackToDashboard, onBulletinView, onSignOut }: StoreViewPr
             >
               <Users className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
               Trending
+            </Button>
+            <Button
+              onClick={() => navigate('/films')}
+              variant="outline"
+              className={`border-gray-600 text-white bg-transparent hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
+            >
+              <Film className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
+              Films
             </Button>
             <Button
               onClick={() => navigate('/about-author')}
