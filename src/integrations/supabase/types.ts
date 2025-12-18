@@ -1140,6 +1140,115 @@ export type Database = {
           },
         ]
       }
+      film_products: {
+        Row: {
+          access_level: Database["public"]["Enums"]["access_level"] | null
+          cover_photo_url: string | null
+          created_at: string
+          description: string | null
+          full_video_url: string | null
+          genres: string[] | null
+          id: string
+          is_adult_content: boolean | null
+          is_free: boolean
+          merchant_id: string
+          ownership_confirmed: boolean
+          price: number | null
+          stars: string[] | null
+          status: string
+          thumbnail_url: string | null
+          title: string
+          trailer_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          access_level?: Database["public"]["Enums"]["access_level"] | null
+          cover_photo_url?: string | null
+          created_at?: string
+          description?: string | null
+          full_video_url?: string | null
+          genres?: string[] | null
+          id?: string
+          is_adult_content?: boolean | null
+          is_free?: boolean
+          merchant_id: string
+          ownership_confirmed?: boolean
+          price?: number | null
+          stars?: string[] | null
+          status?: string
+          thumbnail_url?: string | null
+          title: string
+          trailer_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          access_level?: Database["public"]["Enums"]["access_level"] | null
+          cover_photo_url?: string | null
+          created_at?: string
+          description?: string | null
+          full_video_url?: string | null
+          genres?: string[] | null
+          id?: string
+          is_adult_content?: boolean | null
+          is_free?: boolean
+          merchant_id?: string
+          ownership_confirmed?: boolean
+          price?: number | null
+          stars?: string[] | null
+          status?: string
+          thumbnail_url?: string | null
+          title?: string
+          trailer_url?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "film_products_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      film_scripts: {
+        Row: {
+          created_at: string
+          id: string
+          merchant_id: string
+          script_content: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          merchant_id: string
+          script_content?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          merchant_id?: string
+          script_content?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "film_scripts_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       food_product_images: {
         Row: {
           created_at: string
@@ -2298,6 +2407,61 @@ export type Database = {
           year?: number
         }
         Relationships: []
+      }
+      script_invitations: {
+        Row: {
+          credits_spent: number
+          id: string
+          invited_at: string
+          invitee_id: string
+          inviter_id: string
+          responded_at: string | null
+          script_id: string
+          status: string
+        }
+        Insert: {
+          credits_spent?: number
+          id?: string
+          invited_at?: string
+          invitee_id: string
+          inviter_id: string
+          responded_at?: string | null
+          script_id: string
+          status?: string
+        }
+        Update: {
+          credits_spent?: number
+          id?: string
+          invited_at?: string
+          invitee_id?: string
+          inviter_id?: string
+          responded_at?: string | null
+          script_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "script_invitations_invitee_id_fkey"
+            columns: ["invitee_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "script_invitations_inviter_id_fkey"
+            columns: ["inviter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "script_invitations_script_id_fkey"
+            columns: ["script_id"]
+            isOneToOne: false
+            referencedRelation: "film_scripts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       song_cover_submissions: {
         Row: {
