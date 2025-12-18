@@ -103,6 +103,9 @@ const FilmProductManager = () => {
               Upload Film
             </Button>
           </CardTitle>
+          <p className="text-gray-400 text-sm mt-1">
+            PIE receives a 10% platform fee on all film sales. You receive 90%. Payouts available at $100 threshold.
+          </p>
         </CardHeader>
         <CardContent>
           {isLoading ? (

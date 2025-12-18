@@ -165,6 +165,9 @@ const DanceProductManager = () => {
           <DanceProductUploadModal onSuccess={fetchProducts} />
         </CardHeader>
         <CardContent>
+          <p className="text-gray-400 text-sm mb-4">
+            PIE receives a 10% platform fee on all content sales. You receive 90%. Payouts available at $100 threshold.
+          </p>
           {products.length === 0 ? (
             <div className="text-center py-8">
               <Sparkles className="w-12 h-12 mx-auto text-gray-500 mb-3" />
