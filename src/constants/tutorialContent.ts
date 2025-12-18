@@ -167,7 +167,7 @@ export const musicArtistTutorialSteps: TutorialStep[] = [
   {
     id: 'music-upload',
     title: 'Upload Your Music',
-    description: 'Upload and manage your music tracks here. Set pricing, add album art, and publish to the store.',
+    description: 'Upload and manage your music tracks here. Set pricing, add album art, and publish to the store. PIE receives a 10% platform fee on all sales. You receive 90%. Payouts available at $100 threshold.',
     duration: 10000,
     target: '[data-tutorial="music-upload"]',
     placement: 'bottom',
@@ -222,7 +222,7 @@ export const fashionRetailerTutorialSteps: TutorialStep[] = [
   {
     id: 'fashion-upload',
     title: 'Upload Fashion Products',
-    description: 'Upload and manage your fashion products here. Add photos, set pricing, manage variants (sizes & colors), and publish to the store.',
+    description: 'Upload and manage your fashion products here. Add photos, set pricing, manage variants (sizes & colors). PIE receives a 10% platform fee on all sales. You receive 90%. Payouts available at $100 threshold.',
     duration: 10000,
     target: '[data-tutorial="fashion-upload"]',
     placement: 'bottom',
@@ -277,7 +277,7 @@ export const poleDancerTutorialSteps: TutorialStep[] = [
   {
     id: 'dance-products',
     title: 'Dance Products',
-    description: 'Upload and manage your dance videos and photo sets. You can upload videos up to 5GB in size with background music support.',
+    description: 'Upload and manage your dance videos and photo sets. Videos up to 5GB with background music support. PIE receives a 10% platform fee on all sales. You receive 90%. Payouts available at $100 threshold.',
     duration: 10000,
     target: '[data-tutorial="dance-products"]',
     placement: 'bottom',
@@ -348,7 +348,7 @@ export const audioPodcasterTutorialSteps: TutorialStep[] = [
   {
     id: 'audio-upload',
     title: 'Upload Audio Content',
-    description: 'Upload pre-recorded podcasts and audio content. Set pricing and availability for each episode.',
+    description: 'Upload pre-recorded podcasts and audio content. Set pricing and availability. PIE receives a 10% platform fee on all sales. You receive 90%. Payouts available at $100 threshold.',
     duration: 10000,
     target: '[data-tutorial="audio-upload"]',
     placement: 'bottom',
@@ -395,7 +395,7 @@ export const cookBakerTutorialSteps: TutorialStep[] = [
   {
     id: 'food-products',
     title: 'Food Products',
-    description: 'Upload and manage your recipe videos and food photos. Share your culinary creations with subscribers.',
+    description: 'Upload and manage your recipe videos and food photos. Share your culinary creations. PIE receives a 10% platform fee on all sales. You receive 90%. Payouts available at $100 threshold.',
     duration: 10000,
     target: '[data-tutorial="food-products"]',
     placement: 'bottom',
@@ -450,7 +450,7 @@ export const filmMakerTutorialSteps: TutorialStep[] = [
   {
     id: 'film-upload',
     title: 'Upload Your Films',
-    description: 'Upload and manage your films here. Add trailers, cover photos, set pricing, and publish to the store when ready.',
+    description: 'Upload and manage your films here. Add trailers, cover photos, set pricing, and publish to the store. PIE receives a 10% platform fee on all sales. You receive 90%. Payouts available at $100 threshold.',
     duration: 10000,
     target: '[data-tutorial="film-upload"]',
     placement: 'bottom',
