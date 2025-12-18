@@ -163,7 +163,7 @@ export const GoogleVoicePodcastInviteModal = ({
         ? `📅 **Scheduled:** ${formatScheduledDateTime()}\n\n` 
         : '';
 
-      // Create the invite message
+      // Create the invite message with exclusive deal terms
       const messageBody = `
 🎙️ **Podcast Recording Invitation**
 
@@ -175,13 +175,42 @@ ${scheduledSection}${customMessage ? `**Note from host:** ${customMessage}\n\n` 
 
 ⚠️ **IMPORTANT: This call will be recorded for podcast purposes.**
 
+💰 **EXCLUSIVE DEAL - Revenue Split Agreement:**
+When you accept this invitation, you agree to a 50/50 revenue split for each podcast episode sold:
+• After PayPal processing fees (~3%)
+• After PIE's 10% platform fee
+• Remaining revenue split 50/50 between host and guest
+
+Example: For a $5 episode purchase:
+• PayPal fee: ~$0.15 (3%)
+• PIE Platform: $0.49 (10% of $4.85)
+• Host: $2.18 (50% of $4.36)
+• Guest (You): $2.18 (50% of $4.36)
+
 **Instructions:**
 1. Click the blue "Click to Call" link above to dial
 2. The host will record the call through Google Voice
-3. Speak clearly and have fun!
+3. After recording, you'll receive a contract to sign
+4. Speak clearly and have fun!
+
+**[ACCEPT_PODCAST_DEAL:${sessionTitle}]**
+
+By accepting this invitation, you agree to the revenue split terms above.
 
 Looking forward to chatting with you!
       `.trim();
+
+      // Create podcast invitation record
+      const { data: invitation, error: invitationError } = await supabase
+        .from('podcast_invitations')
+        .insert({
+          host_user_id: user.id,
+          guest_user_id: recipientId,
+          session_title: sessionTitle,
+          status: 'pending'
+        })
+        .select()
+        .single();
 
       // Send via edge function
       const { error } = await supabase.functions.invoke('send-message', {
@@ -268,6 +297,24 @@ Looking forward to chatting with you!
               Your guest will be informed that the call will be recorded for podcast purposes.
             </AlertDescription>
           </Alert>
+
+          {/* Exclusive Deal Info */}
+          <div className="p-3 bg-green-500/10 border border-green-500/30 rounded-lg space-y-2">
+            <h4 className="font-semibold text-green-700 dark:text-green-300 flex items-center gap-2">
+              💰 Revenue Split Agreement
+            </h4>
+            <p className="text-sm text-green-700 dark:text-green-300">
+              Your guest will be offered a <strong>50/50 revenue split</strong> after:
+            </p>
+            <ul className="text-xs text-green-600 dark:text-green-400 list-disc list-inside space-y-1">
+              <li>PayPal processing fees (~3%)</li>
+              <li>PIE's 10% platform fee</li>
+              <li>Remaining revenue split equally between you and your guest</li>
+            </ul>
+            <p className="text-xs text-muted-foreground">
+              A downloadable contract will be generated when your guest accepts.
+            </p>
+          </div>
 
           {/* Session Info */}
           <div className="p-3 bg-muted rounded-lg">

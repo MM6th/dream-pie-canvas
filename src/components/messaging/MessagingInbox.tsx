@@ -10,6 +10,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { Mail, MailOpen, Reply } from 'lucide-react';
 import { MessageComposer } from './MessageComposer';
 import { useMessagingCredits } from '@/hooks/useMessagingCredits';
+import { PodcastDealAcceptButton } from '@/components/podcast/PodcastDealAcceptButton';
 
 interface Message {
   id: string;
@@ -271,7 +272,26 @@ export const MessagingInbox = () => {
               
               <div className="space-y-3">
                 <div className="whitespace-pre-wrap text-foreground text-sm leading-relaxed">
-                  {selectedMessage.body.split(/(https?:\/\/[^\s]+|tel:[^\s]+)/g).map((part, index) => {
+                  {selectedMessage.body.split(/(\[ACCEPT_PODCAST_DEAL:[^\]]+\]|https?:\/\/[^\s]+|tel:[^\s]+)/g).map((part, index) => {
+                    // Handle podcast deal marker
+                    const podcastDealMatch = part.match(/^\[ACCEPT_PODCAST_DEAL:([^\]]+)\]$/);
+                    if (podcastDealMatch) {
+                      const sessionTitle = podcastDealMatch[1];
+                      // Only show accept button if this is a received message (user is the guest)
+                      if (selectedMessage.sender_id !== userId) {
+                        return (
+                          <PodcastDealAcceptButton
+                            key={index}
+                            sessionTitle={sessionTitle}
+                            senderId={selectedMessage.sender_id}
+                            senderName={selectedMessage.sender?.display_name || 'Host'}
+                            messageId={selectedMessage.id}
+                            onAccepted={fetchMessages}
+                          />
+                        );
+                      }
+                      return null;
+                    }
                     if (part.match(/^https?:\/\/[^\s]+$/)) {
                       return (
                         <a
