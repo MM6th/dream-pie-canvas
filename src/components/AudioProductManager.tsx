@@ -231,8 +231,11 @@ const AudioProductManager = () => {
     <>
       <div className="space-y-6">
         <div>
-          <h3 className="text-xl font-bold text-white mb-4">Your Audio Products</h3>
-          <p className="text-gray-400 mb-4">Manage your uploaded audio content</p>
+          <h3 className="text-xl font-bold text-white mb-2">Your Audio Products</h3>
+          <p className="text-gray-400 mb-2">Manage your uploaded audio content</p>
+          <p className="text-gray-500 text-sm mb-4">
+            PIE receives a 10% platform fee on all audio sales. You receive 90%. Payouts available at $100 threshold.
+          </p>
           
           <div className="flex gap-2 mb-6">
             <Button
