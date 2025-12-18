@@ -63,6 +63,7 @@ const ContentGallery = () => {
   const [uploads, setUploads] = useState<UserUpload[]>([]);
   const [loading, setLoading] = useState(true);
   const [storageUsage, setStorageUsage] = useState<number>(0);
+  const [maxStorage, setMaxStorage] = useState<number>(2 * 1024 * 1024 * 1024); // Default 2GB
   const [portfolioModalOpen, setPortfolioModalOpen] = useState(false);
   const [portfolioEditModalOpen, setPortfolioEditModalOpen] = useState(false);
   const [selectedPortfolioId, setSelectedPortfolioId] = useState<string | null>(null);
@@ -123,18 +124,24 @@ const ContentGallery = () => {
     if (!user) return;
 
     try {
-      const { data, error } = await supabase.rpc('get_user_storage_usage', {
-        user_uuid: user.id
-      });
+      const [usageResult, maxResult] = await Promise.all([
+        supabase.rpc('get_user_storage_usage', { user_uuid: user.id }),
+        supabase.rpc('get_user_max_storage', { user_uuid: user.id })
+      ]);
 
-      if (error) {
-        console.error('Error fetching storage usage:', error);
-        return;
+      if (usageResult.error) {
+        console.error('Error fetching storage usage:', usageResult.error);
+      } else {
+        setStorageUsage(usageResult.data || 0);
       }
 
-      setStorageUsage(data || 0);
+      if (maxResult.error) {
+        console.error('Error fetching max storage:', maxResult.error);
+      } else {
+        setMaxStorage(maxResult.data || 2 * 1024 * 1024 * 1024);
+      }
     } catch (error) {
-      console.error('Error fetching storage usage:', error);
+      console.error('Error fetching storage:', error);
     }
   };
 
@@ -294,7 +301,10 @@ const ContentGallery = () => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  const storagePercentage = (storageUsage / (2 * 1024 * 1024 * 1024)) * 100;
+  const storagePercentage = (storageUsage / maxStorage) * 100;
+  const maxStorageDisplay = maxStorage >= 1024 * 1024 * 1024 
+    ? `${Math.round(maxStorage / (1024 * 1024 * 1024))}GB` 
+    : `${Math.round(maxStorage / (1024 * 1024))}MB`;
 
   if (loading) {
     return (
@@ -405,7 +415,7 @@ const ContentGallery = () => {
           <div className="flex justify-between items-center mb-2">
             <span className="text-white font-medium">Storage Usage</span>
             <span className="text-gray-300">
-              {formatBytes(storageUsage)} / 2GB ({Math.round(storagePercentage)}%)
+              {formatBytes(storageUsage)} / {maxStorageDisplay} ({Math.round(storagePercentage)}%)
             </span>
           </div>
           <div className="w-full bg-gray-600 rounded-full h-2">
