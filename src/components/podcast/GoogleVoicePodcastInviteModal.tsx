@@ -442,11 +442,17 @@ Looking forward to chatting with you!
                   onClick={() => sendInvite(profile.id, profile.display_name || 'Guest')}
                   disabled={sendingTo === profile.id || credits < INVITE_CREDIT_COST}
                   className="gap-1"
+                  title={credits < INVITE_CREDIT_COST ? `Need ${INVITE_CREDIT_COST} credits (you have ${credits})` : 'Send invitation'}
                 >
                   {sendingTo === profile.id ? (
                     <>
                       <Loader2 className="w-3 h-3 animate-spin" />
                       Sending...
+                    </>
+                  ) : credits < INVITE_CREDIT_COST ? (
+                    <>
+                      <AlertCircle className="w-3 h-3" />
+                      Need Credits
                     </>
                   ) : (
                     <>
