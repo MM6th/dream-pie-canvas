@@ -180,6 +180,15 @@ export const PodcastInviteModal = ({
         </DialogHeader>
 
         <div className="space-y-4 overflow-hidden">
+          {/* Credit Requirement Info */}
+          <div className="flex items-start gap-2 p-3 bg-primary/10 border border-primary/30 rounded-lg">
+            <Coins className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-foreground">
+              <strong>Credit Required:</strong> Sending a podcast invitation costs {INVITE_CREDIT_COST} credits per invite. 
+              Copying the invite link is free.
+            </p>
+          </div>
+
           {/* Credits Display */}
           <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
             <div className="flex items-center gap-2">
