@@ -7,8 +7,9 @@ import MusicArtistDashboard from "@/components/dashboard/MusicArtistDashboard";
 import FashionRetailerDashboard from "@/components/dashboard/FashionRetailerDashboard";
 import CookBakerDashboard from "@/components/dashboard/CookBakerDashboard";
 import PoleDancerDashboard from "@/components/dashboard/PoleDancerDashboard";
+import FilmMakerDashboard from "@/components/dashboard/FilmMakerDashboard";
 import { TutorialHelpButton } from "@/components/TutorialHelpButton";
-import { supporterTutorialSteps, merchantTutorialSteps, adminTutorialSteps, musicArtistTutorialSteps, fashionRetailerTutorialSteps, poleDancerTutorialSteps, audioPodcasterTutorialSteps, cookBakerTutorialSteps, liveStreamArtistTutorialSteps } from "@/constants/tutorialContent";
+import { supporterTutorialSteps, merchantTutorialSteps, adminTutorialSteps, musicArtistTutorialSteps, fashionRetailerTutorialSteps, poleDancerTutorialSteps, audioPodcasterTutorialSteps, cookBakerTutorialSteps, liveStreamArtistTutorialSteps, filmMakerTutorialSteps } from "@/constants/tutorialContent";
 
 interface AudioTrack {
   id: string;
@@ -84,6 +85,9 @@ const DashboardView = ({
       }
       if (industry === 'Live Stream Artist') {
         return <TutorialHelpButton steps={liveStreamArtistTutorialSteps} userType="merchant" />;
+      }
+      if (industry === 'Film Maker') {
+        return <TutorialHelpButton steps={filmMakerTutorialSteps} userType="merchant" />;
       }
       
       // Default merchant tutorial for other industries
@@ -169,6 +173,18 @@ const DashboardView = ({
     if (industry === 'Pole Dancer') {
       return (
         <PoleDancerDashboard 
+          onBackgroundUpload={onBackgroundUpload}
+          purchasedTracks={purchasedTracks}
+          purchasedPodcasts={purchasedPodcasts}
+          onSuccess={onSuccess}
+        />
+      );
+    }
+
+    // Route Film Makers to their specialized dashboard
+    if (industry === 'Film Maker') {
+      return (
+        <FilmMakerDashboard 
           onBackgroundUpload={onBackgroundUpload}
           purchasedTracks={purchasedTracks}
           purchasedPodcasts={purchasedPodcasts}

@@ -440,6 +440,69 @@ export const cookBakerTutorialSteps: TutorialStep[] = [
   },
 ];
 
+export const filmMakerTutorialSteps: TutorialStep[] = [
+  {
+    id: 'welcome',
+    title: 'Welcome to Your Film Maker Dashboard! 🎬',
+    description: 'This quick tour will show you how to upload films, manage scripts, invite script writers, and grow your audience on PIE.',
+    duration: 12000,
+  },
+  {
+    id: 'film-upload',
+    title: 'Upload Your Films',
+    description: 'Upload and manage your films here. Add trailers, cover photos, set pricing, and publish to the store when ready.',
+    duration: 10000,
+    target: '[data-tutorial="film-upload"]',
+    placement: 'bottom',
+  },
+  {
+    id: 'script-writing',
+    title: 'Script Writing',
+    description: 'Write and manage your film scripts directly in the dashboard. Create drafts and finalize scripts for production.',
+    duration: 10000,
+    target: '[data-tutorial="script-writing"]',
+    placement: 'bottom',
+  },
+  {
+    id: 'script-invitations',
+    title: 'Script Writer Invitations',
+    description: 'Invite other script writers to collaborate. Send paid invitations using messaging credits.',
+    duration: 10000,
+    target: '[data-tutorial="script-invitations"]',
+    placement: 'bottom',
+  },
+  {
+    id: 'gallery-tab',
+    title: 'Content Gallery',
+    description: 'Upload photos and videos to promote your films. Share behind-the-scenes content and stills.',
+    duration: 10000,
+    target: '[data-tutorial="gallery-tab"]',
+    placement: 'bottom',
+  },
+  {
+    id: 'background-tab',
+    title: 'Customize Your Dashboard',
+    description: 'Upload a custom background to personalize your dashboard experience.',
+    duration: 10000,
+    target: '[data-tutorial="background-tab"]',
+    placement: 'bottom',
+  },
+  {
+    id: 'playlist-public',
+    title: 'Playlist Visibility',
+    description: 'Control whether your playlist is publicly visible on your profile page.',
+    duration: 10000,
+    target: '[data-tutorial="playlist-public"]',
+    placement: 'top',
+  },
+  {
+    id: 'messaging-system',
+    title: 'Messaging System 💬',
+    description: 'Earn money from messages! You receive 90% ($0.09/credit) when someone messages you. PIE keeps 10%. Once you reach the $100 threshold, you can cash out. To message supporters, you need credits too. Set your rate in Profile → Messaging Settings.',
+    duration: 12000,
+  },
+];
+
 export const liveStreamArtistTutorialSteps: TutorialStep[] = [
   {
     id: 'welcome',
