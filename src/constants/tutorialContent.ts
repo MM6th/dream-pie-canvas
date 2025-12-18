@@ -65,7 +65,7 @@ export const merchantTutorialSteps: TutorialStep[] = [
   {
     id: 'playlist-settings',
     title: 'Playlist Settings',
-    description: 'Control whether your playlist is publicly visible on your profile page.',
+    description: 'Control whether your playlist is publicly visible on your profile page. When enabled, you earn 10% of the purchase price (after processing fees) when someone buys content from your playlist!',
     duration: 10000,
     target: '[data-tutorial="playlist-settings"]',
     placement: 'top',
@@ -144,7 +144,7 @@ export const supporterTutorialSteps: TutorialStep[] = [
   {
     id: 'playlist-public',
     title: 'Playlist Visibility',
-    description: 'Toggle whether your playlist is publicly visible to other users. Control your privacy settings here.',
+    description: 'Toggle whether your playlist is publicly visible to other users. When enabled, you earn 10% of the purchase price (after processing fees) when someone buys content from your playlist!',
     duration: 10000,
     target: '[data-tutorial="playlist-public"]',
     placement: 'top',
@@ -199,7 +199,7 @@ export const musicArtistTutorialSteps: TutorialStep[] = [
   {
     id: 'playlist-public',
     title: 'Playlist Visibility',
-    description: 'Control whether your playlist is publicly visible on your profile page.',
+    description: 'Control whether your playlist is publicly visible on your profile page. When enabled, you earn 10% of the purchase price (after processing fees) when someone buys content from your playlist!',
     duration: 10000,
     target: '[data-tutorial="playlist-public"]',
     placement: 'top',
@@ -254,7 +254,7 @@ export const fashionRetailerTutorialSteps: TutorialStep[] = [
   {
     id: 'playlist-public',
     title: 'Playlist Visibility',
-    description: 'Control whether your playlist is publicly visible on your profile page.',
+    description: 'Control whether your playlist is publicly visible on your profile page. When enabled, you earn 10% of the purchase price (after processing fees) when someone buys content from your playlist!',
     duration: 10000,
     target: '[data-tutorial="playlist-public"]',
     placement: 'top',
@@ -309,7 +309,7 @@ export const poleDancerTutorialSteps: TutorialStep[] = [
   {
     id: 'playlist-public',
     title: 'Playlist Visibility',
-    description: 'Control whether your playlist is publicly visible on your profile page.',
+    description: 'Control whether your playlist is publicly visible on your profile page. When enabled, you earn 10% of the purchase price (after processing fees) when someone buys content from your playlist!',
     duration: 10000,
     target: '[data-tutorial="playlist-public"]',
     placement: 'top',
@@ -372,7 +372,7 @@ export const audioPodcasterTutorialSteps: TutorialStep[] = [
   {
     id: 'playlist-public',
     title: 'Playlist Visibility',
-    description: 'Control whether your playlist is publicly visible on your profile page.',
+    description: 'Control whether your playlist is publicly visible on your profile page. When enabled, you earn 10% of the purchase price (after processing fees) when someone buys content from your playlist!',
     duration: 10000,
     target: '[data-tutorial="playlist-public"]',
     placement: 'top',
@@ -427,7 +427,7 @@ export const cookBakerTutorialSteps: TutorialStep[] = [
   {
     id: 'playlist-public',
     title: 'Playlist Visibility',
-    description: 'Control whether your playlist is publicly visible on your profile page.',
+    description: 'Control whether your playlist is publicly visible on your profile page. When enabled, you earn 10% of the purchase price (after processing fees) when someone buys content from your playlist!',
     duration: 10000,
     target: '[data-tutorial="playlist-public"]',
     placement: 'top',
@@ -490,7 +490,7 @@ export const filmMakerTutorialSteps: TutorialStep[] = [
   {
     id: 'playlist-public',
     title: 'Playlist Visibility',
-    description: 'Control whether your playlist is publicly visible on your profile page.',
+    description: 'Control whether your playlist is publicly visible on your profile page. When enabled, you earn 10% of the purchase price (after processing fees) when someone buys content from your playlist!',
     duration: 10000,
     target: '[data-tutorial="playlist-public"]',
     placement: 'top',
@@ -553,7 +553,7 @@ export const liveStreamArtistTutorialSteps: TutorialStep[] = [
   {
     id: 'playlist-public',
     title: 'Playlist Visibility',
-    description: 'Control whether your playlist is publicly visible on your profile page.',
+    description: 'Control whether your playlist is publicly visible on your profile page. When enabled, you earn 10% of the purchase price (after processing fees) when someone buys content from your playlist!',
     duration: 10000,
     target: '[data-tutorial="playlist-public"]',
     placement: 'top',
