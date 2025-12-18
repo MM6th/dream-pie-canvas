@@ -1767,6 +1767,77 @@ export type Database = {
           },
         ]
       }
+      podcast_invitations: {
+        Row: {
+          accepted_at: string | null
+          contract_id: string | null
+          created_at: string
+          declined_at: string | null
+          guest_user_id: string
+          host_user_id: string
+          id: string
+          message_id: string | null
+          session_title: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          contract_id?: string | null
+          created_at?: string
+          declined_at?: string | null
+          guest_user_id: string
+          host_user_id: string
+          id?: string
+          message_id?: string | null
+          session_title: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          contract_id?: string | null
+          created_at?: string
+          declined_at?: string | null
+          guest_user_id?: string
+          host_user_id?: string
+          id?: string
+          message_id?: string | null
+          session_title?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "podcast_invitations_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "podcast_invitations_guest_user_id_fkey"
+            columns: ["guest_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "podcast_invitations_host_user_id_fkey"
+            columns: ["host_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "podcast_invitations_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       podcast_recordings: {
         Row: {
           audio_url: string
