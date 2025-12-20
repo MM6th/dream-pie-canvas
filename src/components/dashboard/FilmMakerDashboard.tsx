@@ -28,6 +28,8 @@ import { FollowRequestsManager } from "@/components/profile/FollowRequestsManage
 import AdminDashboard from "@/components/admin/AdminDashboard";
 import FashionProductManager from "@/components/FashionProductManager";
 import AudioProductManager from "@/components/AudioProductManager";
+import FashionProductUploadModal from "@/components/FashionProductUploadModal";
+import AudioUploadModal from "@/components/AudioUploadModal";
 
 interface AudioTrack {
   id: string;
@@ -59,6 +61,7 @@ const FilmMakerDashboard = ({
   const [isPrivate, setIsPrivate] = useState<boolean>(false);
   const [pendingRequestsCount, setPendingRequestsCount] = useState<number>(0);
   const [showFollowRequests, setShowFollowRequests] = useState(false);
+  const [isFashionModalOpen, setIsFashionModalOpen] = useState(false);
   const { isApproved, isAdmin, approvalStatus, loading: approvalLoading } = useApprovalStatus();
 
   const fetchPurchasedPortfolios = async () => {
@@ -225,11 +228,42 @@ const FilmMakerDashboard = ({
         </div>
       )}
 
+      {/* Fashion Products Creation Card - Admin Only */}
+      {isAdmin && (
+        <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm mb-6">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-white">Fashion Products</h3>
+              <Button
+                onClick={() => setIsFashionModalOpen(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                Upload Fashion Product
+              </Button>
+            </div>
+            <p className="text-gray-400">Upload and manage fashion products for the store</p>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Fashion Product Manager - Admin Only */}
       {isAdmin && (
         <div className="mb-6">
           <FashionProductManager />
         </div>
+      )}
+
+      {/* Audio Products Creation Card - Admin Only */}
+      {isAdmin && (
+        <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm mb-6">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-white">Audio Products</h3>
+              <AudioUploadModal onSuccess={onSuccess || (() => {})} />
+            </div>
+            <p className="text-gray-400">Upload and manage your audio content</p>
+          </CardContent>
+        </Card>
       )}
 
       {/* Audio Product Manager - Admin Only */}
@@ -238,6 +272,13 @@ const FilmMakerDashboard = ({
           <AudioProductManager />
         </div>
       )}
+
+      {/* Fashion Product Upload Modal */}
+      <FashionProductUploadModal 
+        isOpen={isFashionModalOpen}
+        onClose={() => setIsFashionModalOpen(false)}
+        onSuccess={onSuccess || (() => {})} 
+      />
 
       {/* Film Product Manager */}
       <div className="mb-6">
