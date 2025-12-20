@@ -25,6 +25,9 @@ import RestrictedAccess from "@/components/dashboard/merchant/RestrictedAccess";
 import FilmProductManager from "@/components/FilmProductManager";
 import ScriptWriterCard from "@/components/ScriptWriterCard";
 import { FollowRequestsManager } from "@/components/profile/FollowRequestsManager";
+import AdminDashboard from "@/components/admin/AdminDashboard";
+import FashionProductManager from "@/components/FashionProductManager";
+import AudioProductManager from "@/components/AudioProductManager";
 
 interface AudioTrack {
   id: string;
@@ -214,6 +217,27 @@ const FilmMakerDashboard = ({
           fetchPendingRequestsCount();
         }} 
       />
+
+      {/* Admin Dashboard - Admin Only */}
+      {isAdmin && (
+        <div className="mb-6">
+          <AdminDashboard />
+        </div>
+      )}
+
+      {/* Fashion Product Manager - Admin Only */}
+      {isAdmin && (
+        <div className="mb-6">
+          <FashionProductManager />
+        </div>
+      )}
+
+      {/* Audio Product Manager - Admin Only */}
+      {isAdmin && (
+        <div className="mb-6">
+          <AudioProductManager />
+        </div>
+      )}
 
       {/* Film Product Manager */}
       <div className="mb-6">
