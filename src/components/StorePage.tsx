@@ -225,7 +225,8 @@ const StorePage = () => {
             is_free,
             access_level,
             status,
-            thumbnail_url
+            thumbnail_url,
+            preview_track_id
           )
         `)
         .eq('status', 'published')
@@ -285,50 +286,52 @@ const StorePage = () => {
           tracksByAlbum.get(track.album_id)!.push(track);
         });
 
+        // First pass: collect all album products and their target preview tracks
+        const albumProductsMap = new Map<string, any[]>();
+        
         filteredAudioData.forEach(product => {
           if (product.album_id && product.albums) {
-            const albumTracks = tracksByAlbum.get(product.album_id) || [];
-            const track1 = albumTracks.find(t => t.track_number === 1);
-            
             // Only show albums that are published (check album status, not track status)
             if (product.albums.status !== 'published') {
               return; // Skip draft albums
             }
             
-            // Only use this product if it's track #1 or if track #1 isn't found (use first available)
-            if (!albumGroups.has(product.album_id)) {
-              if (!track1 || track1.audio_product_id === product.id) {
-                albumGroups.set(product.album_id, {
-                  ...product,
-                  title: product.albums.name, // Use album name as title
-                  description: product.albums.description || product.description,
-                  // Use album-level pricing (Option B)
-                  price: product.albums.price,
-                  is_free: product.albums.is_free,
-                  access_level: product.albums.access_level,
-                  thumbnail_url: product.albums.thumbnail_url || product.thumbnail_url,
-                  isAlbum: true,
-                  albumId: product.album_id
-                });
-              } else if (track1.audio_product_id !== product.id && albumTracks[0]?.audio_product_id === product.id) {
-                // Fallback: use first track if track #1 doesn't exist
-                albumGroups.set(product.album_id, {
-                  ...product,
-                  title: product.albums.name,
-                  description: product.albums.description || product.description,
-                  // Use album-level pricing (Option B)
-                  price: product.albums.price,
-                  is_free: product.albums.is_free,
-                  access_level: product.albums.access_level,
-                  thumbnail_url: product.albums.thumbnail_url || product.thumbnail_url,
-                  isAlbum: true,
-                  albumId: product.album_id
-                });
-              }
+            if (!albumProductsMap.has(product.album_id)) {
+              albumProductsMap.set(product.album_id, []);
             }
+            albumProductsMap.get(product.album_id)!.push(product);
           } else {
             nonAlbumProducts.push(product);
           }
+        });
+        
+        // Second pass: for each album, pick the correct preview track
+        albumProductsMap.forEach((products, albumId) => {
+          if (products.length === 0) return;
+          
+          const albumTracks = tracksByAlbum.get(albumId) || [];
+          const albumInfo = products[0].albums;
+          
+          // Use the selected preview_track_id, or fall back to track #1, or first track
+          const previewTrackId = albumInfo.preview_track_id;
+          const track1 = albumTracks.find(t => t.track_number === 1);
+          const targetTrackId = previewTrackId || track1?.audio_product_id || albumTracks[0]?.audio_product_id;
+          
+          // Find the product matching the target preview track, or use first available
+          const previewProduct = products.find(p => p.id === targetTrackId) || products[0];
+          
+          albumGroups.set(albumId, {
+            ...previewProduct,
+            title: albumInfo.name, // Use album name as title
+            description: albumInfo.description || previewProduct.description,
+            // Use album-level pricing
+            price: albumInfo.price,
+            is_free: albumInfo.is_free,
+            access_level: albumInfo.access_level,
+            thumbnail_url: albumInfo.thumbnail_url || previewProduct.thumbnail_url,
+            isAlbum: true,
+            albumId: albumId
+          });
         });
       } else {
         filteredAudioData.forEach(product => {

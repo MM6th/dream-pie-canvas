@@ -32,6 +32,7 @@ interface Album {
   access_level: "public" | "merchant_only" | "paid" | null;
   is_adult_content: boolean | null;
   tracks?: any[];
+  preview_track_id?: string | null;
 }
 
 interface EditAlbumModalProps {
@@ -55,6 +56,7 @@ const EditAlbumModal = ({ album, onSuccess, onClose }: EditAlbumModalProps) => {
   const [isAdultContent, setIsAdultContent] = useState(album.is_adult_content || false);
   const [tracksData, setTracksData] = useState<TrackData[]>([]);
   const [expandedTrack, setExpandedTrack] = useState<string | null>(null);
+  const [selectedPreviewTrackId, setSelectedPreviewTrackId] = useState<string | null>(album.preview_track_id || null);
 
   // Fetch full track data including audio URLs and preview settings
   useEffect(() => {
@@ -170,6 +172,7 @@ const EditAlbumModal = ({ album, onSuccess, onClose }: EditAlbumModalProps) => {
         is_free: formData.accessLevel !== 'paid',
         price: formData.accessLevel === 'paid' ? parseFloat(formData.price) : null,
         is_adult_content: isAdultContent,
+        preview_track_id: selectedPreviewTrackId || (tracksData.length > 0 ? tracksData[0].id : null),
       };
 
       if (shouldPublish) {
@@ -269,9 +272,40 @@ const EditAlbumModal = ({ album, onSuccess, onClose }: EditAlbumModalProps) => {
             />
           </div>
 
+          {/* Album Preview Track Selection */}
+          <div className="space-y-2">
+            <Label>Album Card Preview Track *</Label>
+            <p className="text-xs text-muted-foreground">
+              Select which track's preview will play on the album card in the store
+            </p>
+            {loadingTracks ? (
+              <p className="text-sm text-muted-foreground">Loading tracks...</p>
+            ) : (
+              <RadioGroup
+                value={selectedPreviewTrackId || (tracksData[0]?.id || '')}
+                onValueChange={setSelectedPreviewTrackId}
+                disabled={isPublished}
+                className="space-y-1"
+              >
+                {tracksData.map((track, index) => (
+                  <div key={track.id} className="flex items-center space-x-2 p-2 rounded hover:bg-secondary/50">
+                    <RadioGroupItem value={track.id} id={`preview-${track.id}`} disabled={isPublished} />
+                    <Label htmlFor={`preview-${track.id}`} className="flex items-center gap-2 cursor-pointer">
+                      <span className="text-muted-foreground">{index + 1}.</span>
+                      <span>{track.title}</span>
+                      {track.artist_name && (
+                        <span className="text-muted-foreground text-sm">- {track.artist_name}</span>
+                      )}
+                    </Label>
+                  </div>
+                ))}
+              </RadioGroup>
+            )}
+          </div>
+
           {/* Track Preview Settings */}
           <div className="space-y-2">
-            <Label>Album Tracks ({tracksData.length})</Label>
+            <Label>Track 30-Second Previews</Label>
             {loadingTracks ? (
               <p className="text-sm text-muted-foreground">Loading tracks...</p>
             ) : (
