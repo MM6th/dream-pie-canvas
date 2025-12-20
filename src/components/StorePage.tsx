@@ -191,7 +191,7 @@ const StorePage = () => {
       const profile = await fetchUserProfile();
       setUserProfile(profile);
 
-      // Fetch audio products (excluding video ad opportunities and exhausted ASMR opportunities)
+      // Fetch audio products (excluding video ad opportunities, exhausted ASMR opportunities, and drafts)
       const { data: audioData, error: audioError } = await supabase
         .from('audio_products')
         .select(`
@@ -223,6 +223,7 @@ const StorePage = () => {
             description
           )
         `)
+        .eq('status', 'published')
         .not('title', 'ilike', '%video ad%')
         .not('title', 'ilike', '%dance to dairy queen%')
         .or('opportunities_exhausted.is.null,opportunities_exhausted.eq.false')
