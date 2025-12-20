@@ -217,7 +217,7 @@ const StorePage = () => {
           preview_duration,
           preview_url,
           created_at,
-          albums (
+          albums!audio_products_album_id_fkey (
             id,
             name,
             description,
