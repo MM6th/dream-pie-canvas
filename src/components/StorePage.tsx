@@ -220,7 +220,12 @@ const StorePage = () => {
           albums (
             id,
             name,
-            description
+            description,
+            price,
+            is_free,
+            access_level,
+            status,
+            thumbnail_url
           )
         `)
         .eq('status', 'published')
@@ -285,6 +290,11 @@ const StorePage = () => {
             const albumTracks = tracksByAlbum.get(product.album_id) || [];
             const track1 = albumTracks.find(t => t.track_number === 1);
             
+            // Only show albums that are published (check album status, not track status)
+            if (product.albums.status !== 'published') {
+              return; // Skip draft albums
+            }
+            
             // Only use this product if it's track #1 or if track #1 isn't found (use first available)
             if (!albumGroups.has(product.album_id)) {
               if (!track1 || track1.audio_product_id === product.id) {
@@ -292,6 +302,11 @@ const StorePage = () => {
                   ...product,
                   title: product.albums.name, // Use album name as title
                   description: product.albums.description || product.description,
+                  // Use album-level pricing (Option B)
+                  price: product.albums.price,
+                  is_free: product.albums.is_free,
+                  access_level: product.albums.access_level,
+                  thumbnail_url: product.albums.thumbnail_url || product.thumbnail_url,
                   isAlbum: true,
                   albumId: product.album_id
                 });
@@ -301,6 +316,11 @@ const StorePage = () => {
                   ...product,
                   title: product.albums.name,
                   description: product.albums.description || product.description,
+                  // Use album-level pricing (Option B)
+                  price: product.albums.price,
+                  is_free: product.albums.is_free,
+                  access_level: product.albums.access_level,
+                  thumbnail_url: product.albums.thumbnail_url || product.thumbnail_url,
                   isAlbum: true,
                   albumId: product.album_id
                 });

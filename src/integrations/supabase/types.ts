@@ -77,27 +77,51 @@ export type Database = {
       }
       albums: {
         Row: {
+          access_level: Database["public"]["Enums"]["access_level"] | null
+          audio_type: string | null
           created_at: string
           description: string | null
           id: string
+          is_adult_content: boolean | null
+          is_free: boolean
           merchant_id: string
           name: string
+          price: number | null
+          published_at: string | null
+          status: string
+          thumbnail_url: string | null
           updated_at: string
         }
         Insert: {
+          access_level?: Database["public"]["Enums"]["access_level"] | null
+          audio_type?: string | null
           created_at?: string
           description?: string | null
           id?: string
+          is_adult_content?: boolean | null
+          is_free?: boolean
           merchant_id: string
           name: string
+          price?: number | null
+          published_at?: string | null
+          status?: string
+          thumbnail_url?: string | null
           updated_at?: string
         }
         Update: {
+          access_level?: Database["public"]["Enums"]["access_level"] | null
+          audio_type?: string | null
           created_at?: string
           description?: string | null
           id?: string
+          is_adult_content?: boolean | null
+          is_free?: boolean
           merchant_id?: string
           name?: string
+          price?: number | null
+          published_at?: string | null
+          status?: string
+          thumbnail_url?: string | null
           updated_at?: string
         }
         Relationships: []
