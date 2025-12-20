@@ -237,26 +237,35 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
           return;
         }
 
+        // Create album with pricing info (Option B: price on album, not tracks)
         const { data: newAlbum, error: albumError } = await supabase
           .from('albums')
           .insert({
             merchant_id: user.id,
             name: formData.albumName,
-            description: formData.description || null
+            description: formData.description || null,
+            price: formData.accessLevel === 'paid' ? parseFloat(formData.price) : null,
+            is_free: formData.accessLevel !== 'paid',
+            access_level: formData.accessLevel,
+            status: isDraft ? 'draft' : 'published',
+            published_at: isDraft ? null : new Date().toISOString(),
+            thumbnail_url: thumbnailUrl,
+            audio_type: formData.audioType,
+            is_adult_content: formData.is_adult_content
           })
           .select()
           .single();
         
         if (albumError) throw albumError;
 
-        // Upload each track
+        // Upload each track (no individual pricing - album holds the price)
         for (let i = 0; i < tracks.length; i++) {
           const track = tracks[i];
 
           // Upload audio file
           const audioUrl = await uploadFile(track.audioFile!, 'audio-files', `${user.id}/`);
 
-          // Create audio product
+          // Create audio product (tracks have no individual price)
           const { data: audioProduct, error: productError } = await supabase
             .from('audio_products')
             .insert({
@@ -267,9 +276,9 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
               thumbnail_url: thumbnailUrl,
               audio_file_url: audioUrl,
               album_id: newAlbum.id,
-              access_level: formData.accessLevel,
-              is_free: formData.accessLevel !== 'paid',
-              price: formData.accessLevel === 'paid' ? parseFloat(formData.price) : null,
+              access_level: 'public', // Tracks inherit album access
+              is_free: true, // Individual tracks are free (album has price)
+              price: null, // No individual track pricing
               is_adult_content: formData.is_adult_content,
               status: isDraft ? 'draft' : 'published',
               published_at: isDraft ? null : new Date().toISOString()
