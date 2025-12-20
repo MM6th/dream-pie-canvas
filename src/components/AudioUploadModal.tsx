@@ -270,7 +270,9 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
               access_level: formData.accessLevel,
               is_free: formData.accessLevel !== 'paid',
               price: formData.accessLevel === 'paid' ? parseFloat(formData.price) : null,
-              is_adult_content: formData.is_adult_content
+              is_adult_content: formData.is_adult_content,
+              status: isDraft ? 'draft' : 'published',
+              published_at: isDraft ? null : new Date().toISOString()
             })
             .select()
             .single();
