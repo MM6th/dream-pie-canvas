@@ -3184,6 +3184,10 @@ export type Database = {
       }
       check_overdue_deliveries: { Args: never; Returns: undefined }
       clean_expired_astrology_cache: { Args: never; Returns: undefined }
+      delete_album_cascade: {
+        Args: { p_album_id: string; p_merchant_id: string }
+        Returns: boolean
+      }
       delete_audio_product_cascade: {
         Args: { p_merchant_id: string; p_product_id: string }
         Returns: boolean
