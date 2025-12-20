@@ -86,6 +86,7 @@ export type Database = {
           is_free: boolean
           merchant_id: string
           name: string
+          preview_track_id: string | null
           price: number | null
           published_at: string | null
           status: string
@@ -102,6 +103,7 @@ export type Database = {
           is_free?: boolean
           merchant_id: string
           name: string
+          preview_track_id?: string | null
           price?: number | null
           published_at?: string | null
           status?: string
@@ -118,13 +120,22 @@ export type Database = {
           is_free?: boolean
           merchant_id?: string
           name?: string
+          preview_track_id?: string | null
           price?: number | null
           published_at?: string | null
           status?: string
           thumbnail_url?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "albums_preview_track_id_fkey"
+            columns: ["preview_track_id"]
+            isOneToOne: false
+            referencedRelation: "audio_products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       asmr_downloads: {
         Row: {
