@@ -6,11 +6,21 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import { Lock, Music } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
+import { Lock, Music, ChevronDown, ChevronUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
+import AudioPreviewPlayer from "./AudioPreviewPlayer";
+
+interface TrackData {
+  id: string;
+  title: string;
+  artist_name: string | null;
+  audio_file_url: string;
+  preview_start_time: number;
+  audioDuration: number;
+}
 
 interface Album {
   id: string;
@@ -33,6 +43,7 @@ interface EditAlbumModalProps {
 const EditAlbumModal = ({ album, onSuccess, onClose }: EditAlbumModalProps) => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [loadingTracks, setLoadingTracks] = useState(true);
   const isPublished = album.status === 'published';
 
   const [formData, setFormData] = useState({
@@ -42,6 +53,63 @@ const EditAlbumModal = ({ album, onSuccess, onClose }: EditAlbumModalProps) => {
     price: album.price?.toString() || "",
   });
   const [isAdultContent, setIsAdultContent] = useState(album.is_adult_content || false);
+  const [tracksData, setTracksData] = useState<TrackData[]>([]);
+  const [expandedTrack, setExpandedTrack] = useState<string | null>(null);
+
+  // Fetch full track data including audio URLs and preview settings
+  useEffect(() => {
+    const fetchTracksData = async () => {
+      if (!album.id) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('audio_products')
+          .select('id, title, artist_name, audio_file_url, preview_start_time')
+          .eq('album_id', album.id)
+          .order('created_at', { ascending: true });
+
+        if (error) throw error;
+
+        // Load audio durations for each track
+        const tracksWithDuration = await Promise.all(
+          (data || []).map(async (track) => {
+            return new Promise<TrackData>((resolve) => {
+              const audio = new Audio();
+              audio.src = track.audio_file_url;
+              audio.onloadedmetadata = () => {
+                resolve({
+                  ...track,
+                  preview_start_time: track.preview_start_time || 0,
+                  audioDuration: audio.duration
+                });
+              };
+              audio.onerror = () => {
+                resolve({
+                  ...track,
+                  preview_start_time: track.preview_start_time || 0,
+                  audioDuration: 0
+                });
+              };
+            });
+          })
+        );
+
+        setTracksData(tracksWithDuration);
+      } catch (error) {
+        console.error('Error fetching tracks:', error);
+      } finally {
+        setLoadingTracks(false);
+      }
+    };
+
+    fetchTracksData();
+  }, [album.id]);
+
+  const updateTrackPreview = (trackId: string, previewStartTime: number) => {
+    setTracksData(prev => 
+      prev.map(t => t.id === trackId ? { ...t, preview_start_time: previewStartTime } : t)
+    );
+  };
 
   const uploadFile = async (file: File, bucket: string, folder: string = '') => {
     const fileExt = file.name.split('.').pop();
@@ -116,18 +184,22 @@ const EditAlbumModal = ({ album, onSuccess, onClose }: EditAlbumModalProps) => {
       
       if (albumError) throw albumError;
 
-      // Update all tracks in the album to have consistent metadata
-      const { error: tracksError } = await supabase
-        .from('audio_products')
-        .update({
-          thumbnail_url: thumbnailUrl,
-          is_adult_content: isAdultContent,
-          status: shouldPublish ? 'published' : album.status,
-          published_at: shouldPublish ? new Date().toISOString() : null,
-        })
-        .eq('album_id', album.id);
+      // Update each track's preview settings individually
+      for (const track of tracksData) {
+        const { error: trackError } = await supabase
+          .from('audio_products')
+          .update({
+            thumbnail_url: thumbnailUrl,
+            is_adult_content: isAdultContent,
+            status: shouldPublish ? 'published' : album.status,
+            published_at: shouldPublish ? new Date().toISOString() : null,
+            preview_start_time: track.preview_start_time,
+            preview_duration: 30
+          })
+          .eq('id', track.id);
 
-      if (tracksError) throw tracksError;
+        if (trackError) throw trackError;
+      }
       
       toast({
         title: "Success",
@@ -197,26 +269,84 @@ const EditAlbumModal = ({ album, onSuccess, onClose }: EditAlbumModalProps) => {
             />
           </div>
 
-          {album.tracks && album.tracks.length > 0 && (
-            <div className="space-y-2">
-              <Label>Album Tracks ({album.tracks.length})</Label>
-              <div className="p-3 bg-secondary rounded-lg max-h-40 overflow-y-auto space-y-2">
-                {album.tracks.map((track: any, index: number) => (
-                  <div key={track.id} className="flex items-center gap-2 text-sm">
-                    <Music className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">{index + 1}.</span>
-                    <span>{track.title}</span>
-                    {track.artist_name && (
-                      <span className="text-muted-foreground">- {track.artist_name}</span>
+          {/* Track Preview Settings */}
+          <div className="space-y-2">
+            <Label>Album Tracks ({tracksData.length})</Label>
+            {loadingTracks ? (
+              <p className="text-sm text-muted-foreground">Loading tracks...</p>
+            ) : (
+              <div className="space-y-2">
+                {tracksData.map((track, index) => (
+                  <div key={track.id} className="border border-border rounded-lg overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={() => setExpandedTrack(expandedTrack === track.id ? null : track.id)}
+                      className="w-full flex items-center justify-between p-3 bg-secondary hover:bg-secondary/80 transition-colors"
+                      disabled={isPublished}
+                    >
+                      <div className="flex items-center gap-2 text-sm">
+                        <Music className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-muted-foreground">{index + 1}.</span>
+                        <span className="font-medium">{track.title}</span>
+                        {track.artist_name && (
+                          <span className="text-muted-foreground">- {track.artist_name}</span>
+                        )}
+                      </div>
+                      {!isPublished && (
+                        expandedTrack === track.id ? (
+                          <ChevronUp className="w-4 h-4" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4" />
+                        )
+                      )}
+                    </button>
+                    
+                    {expandedTrack === track.id && !isPublished && track.audioDuration > 0 && (
+                      <div className="p-4 bg-blue-900/10 border-t border-border space-y-3">
+                        <Label className="text-sm">30-Second Preview Selection</Label>
+                        <p className="text-xs text-muted-foreground">
+                          Choose which 30 seconds to use as a preview for this track
+                        </p>
+                        
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-sm">
+                            <span>Preview: {Math.floor(track.preview_start_time / 60)}:{Math.floor(track.preview_start_time % 60).toString().padStart(2, '0')}</span>
+                            <span>to {Math.floor((track.preview_start_time + 30) / 60)}:{Math.floor((track.preview_start_time + 30) % 60).toString().padStart(2, '0')}</span>
+                          </div>
+                          
+                          <Slider
+                            value={[track.preview_start_time]}
+                            onValueChange={(value) => updateTrackPreview(track.id, value[0])}
+                            max={Math.max(0, track.audioDuration - 30)}
+                            min={0}
+                            step={1}
+                            className="w-full"
+                          />
+                          
+                          <div className="flex justify-between text-xs text-muted-foreground">
+                            <span>0:00</span>
+                            <span>{Math.floor(track.audioDuration / 60)}:{Math.floor(track.audioDuration % 60).toString().padStart(2, '0')}</span>
+                          </div>
+
+                          <AudioPreviewPlayer
+                            audioUrl={track.audio_file_url}
+                            previewStartTime={track.preview_start_time}
+                            previewDuration={30}
+                            className="mt-2"
+                          />
+                        </div>
+                      </div>
                     )}
                   </div>
                 ))}
               </div>
+            )}
+            {!isPublished && (
               <p className="text-xs text-muted-foreground">
-                Individual tracks cannot be edited after album creation.
+                Click on a track to expand and set its 30-second preview.
               </p>
-            </div>
-          )}
+            )}
+          </div>
           
           <div className="space-y-2">
             <Label>Access Level *</Label>

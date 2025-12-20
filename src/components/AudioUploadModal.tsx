@@ -58,12 +58,16 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
     featuringArtistName: string;
     featuringArtistPaypal: string;
     featuringPercentage: number;
+    previewStartTime: number;
+    audioDuration: number;
   }>>([{
     audioFile: null,
     title: '',
     featuringArtistName: '',
     featuringArtistPaypal: '',
-    featuringPercentage: 30
+    featuringPercentage: 30,
+    previewStartTime: 0,
+    audioDuration: 0
   }]);
 
   const MAX_AUDIO_SIZE = 200 * 1024 * 1024; // 200MB for audio files
@@ -159,8 +163,32 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
       title: '',
       featuringArtistName: '',
       featuringArtistPaypal: '',
-      featuringPercentage: 30
+      featuringPercentage: 30,
+      previewStartTime: 0,
+      audioDuration: 0
     }]);
+  };
+
+  const handleTrackAudioChange = (index: number, file: File | null) => {
+    if (file) {
+      const audio = new Audio();
+      audio.src = URL.createObjectURL(file);
+      audio.onloadedmetadata = () => {
+        const newTracks = [...tracks];
+        newTracks[index] = { 
+          ...newTracks[index], 
+          audioFile: file,
+          audioDuration: audio.duration,
+          previewStartTime: 0
+        };
+        setTracks(newTracks);
+        URL.revokeObjectURL(audio.src);
+      };
+    } else {
+      updateTrack(index, 'audioFile', null);
+      updateTrack(index, 'audioDuration', 0);
+      updateTrack(index, 'previewStartTime', 0);
+    }
   };
 
   const removeTrack = (index: number) => {
@@ -281,7 +309,9 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
               price: null, // No individual track pricing
               is_adult_content: formData.is_adult_content,
               status: isDraft ? 'draft' : 'published',
-              published_at: isDraft ? null : new Date().toISOString()
+              published_at: isDraft ? null : new Date().toISOString(),
+              preview_start_time: track.previewStartTime,
+              preview_duration: 30
             })
             .select()
             .single();
@@ -346,7 +376,9 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
           title: '',
           featuringArtistName: '',
           featuringArtistPaypal: '',
-          featuringPercentage: 30
+          featuringPercentage: 30,
+          previewStartTime: 0,
+          audioDuration: 0
         }]);
         onSuccess();
 
@@ -733,11 +765,49 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
                         id={`track-file-${index}`}
                         type="file"
                         accept="audio/*"
-                        onChange={(e) => updateTrack(index, 'audioFile', e.target.files?.[0] || null)}
+                        onChange={(e) => handleTrackAudioChange(index, e.target.files?.[0] || null)}
                         className="bg-gray-700 border-gray-600 text-white"
                         required
                       />
                     </div>
+
+                    {/* 30-Second Preview Selection for Track */}
+                    {track.audioFile && track.audioDuration > 0 && (
+                      <div className="space-y-3 p-3 bg-blue-900/20 rounded-lg border border-blue-700">
+                        <Label className="text-sm">30-Second Preview Selection</Label>
+                        <p className="text-xs text-gray-400">
+                          Choose which 30 seconds to use as a preview for this track
+                        </p>
+                        
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-sm">
+                            <span>Preview: {Math.floor(track.previewStartTime / 60)}:{Math.floor(track.previewStartTime % 60).toString().padStart(2, '0')}</span>
+                            <span>to {Math.floor((track.previewStartTime + 30) / 60)}:{Math.floor((track.previewStartTime + 30) % 60).toString().padStart(2, '0')}</span>
+                          </div>
+                          
+                          <Slider
+                            value={[track.previewStartTime]}
+                            onValueChange={(value) => updateTrack(index, 'previewStartTime', value[0])}
+                            max={Math.max(0, track.audioDuration - 30)}
+                            min={0}
+                            step={1}
+                            className="w-full"
+                          />
+                          
+                          <div className="flex justify-between text-xs text-gray-400">
+                            <span>0:00</span>
+                            <span>{Math.floor(track.audioDuration / 60)}:{Math.floor(track.audioDuration % 60).toString().padStart(2, '0')}</span>
+                          </div>
+
+                          <AudioPreviewPlayer
+                            audioUrl={URL.createObjectURL(track.audioFile)}
+                            previewStartTime={track.previewStartTime}
+                            previewDuration={30}
+                            className="mt-2"
+                          />
+                        </div>
+                      </div>
+                    )}
 
                     <div>
                       <Label htmlFor={`track-title-${index}`}>Track Title *</Label>
