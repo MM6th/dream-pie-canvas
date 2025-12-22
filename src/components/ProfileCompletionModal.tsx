@@ -18,7 +18,11 @@ const ProfileCompletionModal = ({ isOpen, onComplete }: ProfileCompletionModalPr
   const [avatarUrl, setAvatarUrl] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // Social links state
+  // Get user type from auth metadata
+  const userType = user?.user_metadata?.user_type || "supporter";
+  const isMerchant = userType === "merchant";
+  
+  // Social links state (only used for merchants)
   const [website, setWebsite] = useState("");
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [instagramUrl, setInstagramUrl] = useState("");
@@ -53,7 +57,8 @@ const ProfileCompletionModal = ({ isOpen, onComplete }: ProfileCompletionModalPr
       return;
     }
 
-    if (!hasAtLeastOneSocialLink()) {
+    // Only require social links for merchants
+    if (isMerchant && !hasAtLeastOneSocialLink()) {
       toast({
         title: "Social Link Required",
         description: "Please provide at least one social link so we can verify your account.",
@@ -109,7 +114,9 @@ const ProfileCompletionModal = ({ isOpen, onComplete }: ProfileCompletionModalPr
         <DialogHeader className="pb-1">
           <DialogTitle className="text-base">Complete Your Profile</DialogTitle>
           <DialogDescription className="text-xs">
-            Upload a profile picture and provide at least one social link for account verification.
+            {isMerchant 
+              ? "Upload a profile picture and provide at least one social link for account verification."
+              : "Upload a profile picture to complete your account setup."}
           </DialogDescription>
         </DialogHeader>
 
@@ -121,95 +128,98 @@ const ProfileCompletionModal = ({ isOpen, onComplete }: ProfileCompletionModalPr
           />
         </div>
 
-        <div className="space-y-3">
-          <div>
-            <Label htmlFor="website" className="text-xs">Website</Label>
-            <Input
-              id="website"
-              value={website}
-              onChange={(e) => setWebsite(e.target.value)}
-              placeholder="https://yourwebsite.com"
-              className="h-8 text-sm"
-            />
-          </div>
+        {/* Social links section - only shown for merchants */}
+        {isMerchant && (
+          <div className="space-y-3">
+            <div>
+              <Label htmlFor="website" className="text-xs">Website</Label>
+              <Input
+                id="website"
+                value={website}
+                onChange={(e) => setWebsite(e.target.value)}
+                placeholder="https://yourwebsite.com"
+                className="h-8 text-sm"
+              />
+            </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label htmlFor="youtube" className="text-xs">YouTube</Label>
-              <Input
-                id="youtube"
-                value={youtubeUrl}
-                onChange={(e) => setYoutubeUrl(e.target.value)}
-                placeholder="YouTube URL"
-                className="h-8 text-sm"
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label htmlFor="youtube" className="text-xs">YouTube</Label>
+                <Input
+                  id="youtube"
+                  value={youtubeUrl}
+                  onChange={(e) => setYoutubeUrl(e.target.value)}
+                  placeholder="YouTube URL"
+                  className="h-8 text-sm"
+                />
+              </div>
+              <div>
+                <Label htmlFor="instagram" className="text-xs">Instagram</Label>
+                <Input
+                  id="instagram"
+                  value={instagramUrl}
+                  onChange={(e) => setInstagramUrl(e.target.value)}
+                  placeholder="Instagram URL"
+                  className="h-8 text-sm"
+                />
+              </div>
             </div>
-            <div>
-              <Label htmlFor="instagram" className="text-xs">Instagram</Label>
-              <Input
-                id="instagram"
-                value={instagramUrl}
-                onChange={(e) => setInstagramUrl(e.target.value)}
-                placeholder="Instagram URL"
-                className="h-8 text-sm"
-              />
-            </div>
-          </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label htmlFor="facebook" className="text-xs">Facebook</Label>
-              <Input
-                id="facebook"
-                value={facebookUrl}
-                onChange={(e) => setFacebookUrl(e.target.value)}
-                placeholder="Facebook URL"
-                className="h-8 text-sm"
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label htmlFor="facebook" className="text-xs">Facebook</Label>
+                <Input
+                  id="facebook"
+                  value={facebookUrl}
+                  onChange={(e) => setFacebookUrl(e.target.value)}
+                  placeholder="Facebook URL"
+                  className="h-8 text-sm"
+                />
+              </div>
+              <div>
+                <Label htmlFor="snapchat" className="text-xs">Snapchat</Label>
+                <Input
+                  id="snapchat"
+                  value={snapchatUrl}
+                  onChange={(e) => setSnapchatUrl(e.target.value)}
+                  placeholder="Snapchat URL"
+                  className="h-8 text-sm"
+                />
+              </div>
             </div>
-            <div>
-              <Label htmlFor="snapchat" className="text-xs">Snapchat</Label>
-              <Input
-                id="snapchat"
-                value={snapchatUrl}
-                onChange={(e) => setSnapchatUrl(e.target.value)}
-                placeholder="Snapchat URL"
-                className="h-8 text-sm"
-              />
-            </div>
-          </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label htmlFor="pinterest" className="text-xs">Pinterest</Label>
-              <Input
-                id="pinterest"
-                value={pinterestUrl}
-                onChange={(e) => setPinterestUrl(e.target.value)}
-                placeholder="Pinterest URL"
-                className="h-8 text-sm"
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label htmlFor="pinterest" className="text-xs">Pinterest</Label>
+                <Input
+                  id="pinterest"
+                  value={pinterestUrl}
+                  onChange={(e) => setPinterestUrl(e.target.value)}
+                  placeholder="Pinterest URL"
+                  className="h-8 text-sm"
+                />
+              </div>
+              <div>
+                <Label htmlFor="onlyfans" className="text-xs">OnlyFans</Label>
+                <Input
+                  id="onlyfans"
+                  value={onlyfansUrl}
+                  onChange={(e) => setOnlyfansUrl(e.target.value)}
+                  placeholder="OnlyFans URL"
+                  className="h-8 text-sm"
+                />
+              </div>
             </div>
-            <div>
-              <Label htmlFor="onlyfans" className="text-xs">OnlyFans</Label>
-              <Input
-                id="onlyfans"
-                value={onlyfansUrl}
-                onChange={(e) => setOnlyfansUrl(e.target.value)}
-                placeholder="OnlyFans URL"
-                className="h-8 text-sm"
-              />
-            </div>
-          </div>
 
-          <p className="text-xs text-muted-foreground">
-            * At least one social link is required for verification
-          </p>
-        </div>
+            <p className="text-xs text-muted-foreground">
+              * At least one social link is required for verification
+            </p>
+          </div>
+        )}
 
         <Button 
           onClick={handleComplete} 
-          disabled={!avatarUrl || !hasAtLeastOneSocialLink() || isSubmitting}
+          disabled={!avatarUrl || (isMerchant && !hasAtLeastOneSocialLink()) || isSubmitting}
           className="w-full h-8 text-sm mt-2"
         >
           {isSubmitting ? "Saving..." : "Complete Profile"}
