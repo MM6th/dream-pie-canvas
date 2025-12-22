@@ -34,9 +34,10 @@ interface TaxCalculationFormProps {
   onCalculate: (data: TaxData) => void;
   onReset: () => void;
   platformIncome?: number;
+  processingFees?: number;
 }
 
-const TaxCalculationForm = ({ initialData, onCalculate, onReset, platformIncome = 0 }: TaxCalculationFormProps) => {
+const TaxCalculationForm = ({ initialData, onCalculate, onReset, platformIncome = 0, processingFees = 0 }: TaxCalculationFormProps) => {
   const [formData, setFormData] = useState<TaxData>(initialData);
   const [errors, setErrors] = useState<Partial<TaxData>>({});
 
@@ -205,6 +206,41 @@ const TaxCalculationForm = ({ initialData, onCalculate, onReset, platformIncome 
             </>
           )}
 
+          {/* Processing Fees Section */}
+          {processingFees > 0 && (
+            <div className="bg-orange-500/10 border border-orange-500/30 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <div className="bg-orange-500 rounded-full p-2">
+                  <DollarSign className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h4 className="text-orange-400 font-semibold mb-2">
+                    PayPal Processing Fees Paid
+                  </h4>
+                  <div className="text-2xl font-bold text-orange-300 mb-2">
+                    {formatCurrency(processingFees)}
+                  </div>
+                  <p className="text-sm text-gray-300 mb-3">
+                    Processing fees are <strong>tax-deductible business expenses</strong>. These fees have been automatically tracked from your PayPal transactions.
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="text-xs border-orange-500/50 text-orange-300 hover:bg-orange-500/20"
+                    onClick={() => {
+                      const newExpenses = formData.businessExpenses + processingFees;
+                      handleInputChange('businessExpenses', newExpenses);
+                    }}
+                  >
+                    <Info className="w-3 h-3 mr-1" />
+                    Add to Business Expenses
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div>
             <Label htmlFor="business-expenses" className="text-gray-300">
               Business Expenses (Quarterly)
@@ -221,6 +257,11 @@ const TaxCalculationForm = ({ initialData, onCalculate, onReset, platformIncome 
             />
             {errors.businessExpenses !== undefined && (
               <p className="text-red-400 text-sm mt-1">Expenses cannot be negative</p>
+            )}
+            {processingFees > 0 && (
+              <p className="text-orange-300 text-xs mt-1">
+                Tip: Don't forget to include your {formatCurrency(processingFees)} in processing fees above!
+              </p>
             )}
           </div>
 
