@@ -112,17 +112,32 @@ const TaxCalculationForm = ({ initialData, onCalculate, onReset, platformIncome 
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Quarterly Income Display */}
-          <div className="bg-blue-900/30 border border-blue-600 rounded-lg p-3">
-            <Label className="text-blue-300 text-sm font-medium">
-              Quarterly Net Income (PIE Platform)
-            </Label>
-            <div className="text-2xl font-bold text-blue-400 mt-1">
-              {formatCurrency(platformIncome)}
+          {/* Income Breakdown Display */}
+          <div className="bg-blue-900/30 border border-blue-600 rounded-lg p-4 space-y-2">
+            <div className="flex justify-between items-center">
+              <Label className="text-blue-300 text-sm font-medium">
+                PIE Company Gross Income (Admin)
+              </Label>
+              <span className="text-lg font-bold text-blue-400">
+                {formatCurrency(platformIncome + processingFees)}
+              </span>
             </div>
-            <p className="text-blue-200 text-xs mt-1">
-              Net income after PayPal processing fees (fees shown separately below)
-            </p>
+            <div className="flex justify-between items-center">
+              <Label className="text-gray-400 text-sm">
+                Total Processing Fees
+              </Label>
+              <span className="text-lg font-semibold text-orange-400">
+                -{formatCurrency(processingFees)}
+              </span>
+            </div>
+            <div className="border-t border-blue-600/50 pt-2 flex justify-between items-center">
+              <Label className="text-blue-200 text-sm font-semibold">
+                PIE Company Net Revenue
+              </Label>
+              <span className="text-xl font-bold text-blue-300">
+                {formatCurrency(platformIncome)}
+              </span>
+            </div>
           </div>
 
           {/* Platform Income Info */}
