@@ -34,9 +34,11 @@ interface TaxCalculationFormProps {
   onReset: () => void;
   platformIncome?: number;
   processingFees?: number;
+  isAdmin?: boolean;
+  platformFee?: number;
 }
 
-const TaxCalculationForm = ({ initialData, onCalculate, onReset, platformIncome = 0, processingFees = 0 }: TaxCalculationFormProps) => {
+const TaxCalculationForm = ({ initialData, onCalculate, onReset, platformIncome = 0, processingFees = 0, isAdmin = false, platformFee = 0 }: TaxCalculationFormProps) => {
   const [formData, setFormData] = useState<TaxData>(initialData);
   const [errors, setErrors] = useState<Partial<TaxData>>({});
 
@@ -111,36 +113,104 @@ const TaxCalculationForm = ({ initialData, onCalculate, onReset, platformIncome 
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Income Breakdown Display */}
-          <div className="bg-blue-900/30 border border-blue-600 rounded-lg p-4 space-y-2">
-            <div className="flex justify-between items-center">
-              <Label className="text-blue-300 text-sm font-medium">
-                PIE Company Gross Income (Admin)
-              </Label>
-              <span className="text-lg font-bold text-blue-400">
-                {formatCurrency(platformIncome + processingFees)}
-              </span>
+          {/* Income Breakdown Display - Admin View */}
+          {isAdmin ? (
+            <div className="bg-blue-900/30 border border-blue-600 rounded-lg p-4 space-y-2">
+              <div className="flex justify-between items-center">
+                <Label className="text-blue-300 text-sm font-medium">
+                  PIE Company Gross Income (Admin)
+                </Label>
+                <span className="text-lg font-bold text-blue-400">
+                  {formatCurrency(platformIncome + processingFees)}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <Label className="text-gray-400 text-sm">
+                  Total Processing Fees
+                </Label>
+                <span className="text-lg font-semibold text-orange-400">
+                  -{formatCurrency(processingFees)}
+                </span>
+              </div>
+              <div className="border-t border-blue-600/50 pt-2 flex justify-between items-center">
+                <Label className="text-blue-200 text-sm font-semibold">
+                  PIE Company Net Revenue
+                </Label>
+                <span className="text-xl font-bold text-blue-300">
+                  {formatCurrency(platformIncome)}
+                </span>
+              </div>
+              <p className="text-gray-400 text-xs pt-1">
+                Processing fees can be claimed as business expenses below
+              </p>
             </div>
-            <div className="flex justify-between items-center">
-              <Label className="text-gray-400 text-sm">
-                Total Processing Fees
-              </Label>
-              <span className="text-lg font-semibold text-orange-400">
-                -{formatCurrency(processingFees)}
-              </span>
+          ) : (
+            /* Income Breakdown Display - Merchant View */
+            <div className="bg-green-900/30 border border-green-600 rounded-lg p-4 space-y-2">
+              <div className="flex justify-between items-center">
+                <Label className="text-green-300 text-sm font-medium">
+                  Gross Sales Revenue
+                </Label>
+                <span className="text-lg font-bold text-green-400">
+                  {formatCurrency(platformIncome / 0.9)}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <Label className="text-gray-400 text-sm">
+                  PIE Platform Fee (10%)
+                </Label>
+                <span className="text-lg font-semibold text-red-400">
+                  -{formatCurrency(platformFee)}
+                </span>
+              </div>
+              <div className="border-t border-green-600/50 pt-2 flex justify-between items-center">
+                <Label className="text-green-200 text-sm font-semibold">
+                  Your Merchant Revenue (90%)
+                </Label>
+                <span className="text-xl font-bold text-green-300">
+                  {formatCurrency(platformIncome)}
+                </span>
+              </div>
+              <p className="text-gray-400 text-xs pt-1">
+                The PIE Platform Fee can be claimed as a business expense below
+              </p>
             </div>
-            <div className="border-t border-blue-600/50 pt-2 flex justify-between items-center">
-              <Label className="text-blue-200 text-sm font-semibold">
-                PIE Company Net Revenue
-              </Label>
-              <span className="text-xl font-bold text-blue-300">
-                {formatCurrency(platformIncome)}
-              </span>
+          )}
+
+          {/* PIE Platform Fee Card - Merchant Only */}
+          {!isAdmin && platformFee > 0 && (
+            <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <div className="bg-purple-500 rounded-full p-2">
+                  <DollarSign className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h4 className="text-purple-400 font-semibold mb-2">
+                    PIE Platform Fee (10%)
+                  </h4>
+                  <div className="text-2xl font-bold text-purple-300 mb-2">
+                    {formatCurrency(platformFee)}
+                  </div>
+                  <p className="text-sm text-gray-300 mb-3">
+                    The PIE Platform Fee is a <strong>tax-deductible business expense</strong>. This fee has been automatically calculated from your sales revenue.
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="text-xs border-purple-500/50 text-purple-300 hover:bg-purple-500/20"
+                    onClick={() => {
+                      const newExpenses = formData.businessExpenses + platformFee;
+                      handleInputChange('businessExpenses', newExpenses);
+                    }}
+                  >
+                    <Info className="w-3 h-3 mr-1" />
+                    Add to Business Expenses
+                  </Button>
+                </div>
+              </div>
             </div>
-            <p className="text-gray-400 text-xs pt-1">
-              Processing fees can be claimed as business expenses below
-            </p>
-          </div>
+          )}
 
           {/* Processing Fees Section */}
           {processingFees > 0 && (

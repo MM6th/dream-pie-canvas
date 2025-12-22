@@ -24,9 +24,11 @@ interface TaxResultsDisplayProps {
   taxData: TaxData;
   processingFees?: number;
   grossRevenue?: number;
+  isAdmin?: boolean;
+  platformFee?: number;
 }
 
-const TaxResultsDisplay = ({ results, taxData, processingFees = 0, grossRevenue = 0 }: TaxResultsDisplayProps) => {
+const TaxResultsDisplay = ({ results, taxData, processingFees = 0, grossRevenue = 0, isAdmin = false, platformFee = 0 }: TaxResultsDisplayProps) => {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -87,7 +89,9 @@ const TaxResultsDisplay = ({ results, taxData, processingFees = 0, grossRevenue 
           <h4 className="text-gray-300 font-medium mb-2">Income Summary</h4>
           <div className="space-y-1 text-sm">
             <div className="flex justify-between">
-              <span className="text-gray-400">PIE Company Gross Revenue:</span>
+              <span className="text-gray-400">
+                {isAdmin ? 'PIE Company Gross Revenue:' : 'Gross Sales Revenue:'}
+              </span>
               <span className="text-white">{formatCurrency(grossRevenue)}</span>
             </div>
             <div className="flex justify-between">
