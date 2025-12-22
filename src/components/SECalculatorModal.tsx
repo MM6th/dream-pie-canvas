@@ -53,10 +53,15 @@ const SECalculatorModal = ({ userId, autoPopulateIncome = 0 }: SECalculatorModal
   const { isAdmin } = useApprovalStatus();
   const { currentQuarterIncome, companyIncome, contractorIncome, totalProcessingFees } = useQuarterlyIncome(user?.id);
   
-  // For merchants, calculate the 10% platform fee from gross revenue
-  // The autoPopulateIncome for merchants is their 90% share, so we need to calculate what the original gross was
-  const merchantGrossRevenue = isAdmin ? 0 : (autoPopulateIncome / 0.9);
-  const platformFee = isAdmin ? 0 : (merchantGrossRevenue * 0.10);
+  // Check if user is admin - both merchants AND supporters should see the platform fee
+  // Only admin users skip the platform fee calculation
+  const userType = user?.user_metadata?.user_type;
+  const showPlatformFee = !isAdmin; // Merchants and supporters both pay platform fee
+  
+  // For merchants and supporters, calculate the 10% platform fee from gross revenue
+  // The autoPopulateIncome is their 90% share, so we need to calculate what the original gross was
+  const userGrossRevenue = showPlatformFee ? (autoPopulateIncome / 0.9) : 0;
+  const platformFee = showPlatformFee ? (userGrossRevenue * 0.10) : 0;
   
   const [isOpen, setIsOpen] = useState(false);
   const [taxData, setTaxData] = useState<TaxData>({
@@ -188,7 +193,7 @@ const SECalculatorModal = ({ userId, autoPopulateIncome = 0 }: SECalculatorModal
                   results={results}
                   taxData={taxData}
                   processingFees={totalProcessingFees}
-                  grossRevenue={isAdmin ? (autoPopulateIncome + totalProcessingFees) : merchantGrossRevenue}
+                  grossRevenue={isAdmin ? (autoPopulateIncome + totalProcessingFees) : userGrossRevenue}
                   isAdmin={isAdmin}
                   platformFee={platformFee}
                 />
