@@ -151,13 +151,13 @@ const TaxCalculationForm = ({ initialData, onCalculate, onReset, platformIncome 
                 </div>
                 <div className="flex-1">
                   <h4 className="text-orange-400 font-semibold mb-2">
-                    PayPal Processing Fees Paid
+                    Processing Fees Paid
                   </h4>
                   <div className="text-2xl font-bold text-orange-300 mb-2">
                     {formatCurrency(processingFees)}
                   </div>
                   <p className="text-sm text-gray-300 mb-3">
-                    Processing fees are <strong>tax-deductible business expenses</strong>. These fees have been automatically tracked from your PayPal transactions.
+                    Processing fees are <strong>tax-deductible business expenses</strong>. These fees have been automatically tracked from your transactions.
                   </p>
                   <Button
                     type="button"
