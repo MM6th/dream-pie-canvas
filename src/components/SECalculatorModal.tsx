@@ -71,8 +71,9 @@ const SECalculatorModal = ({ userId, autoPopulateIncome = 0 }: SECalculatorModal
   }, [autoPopulateIncome]);
 
   const calculateTaxes = (data: TaxData): TaxResults => {
-    // Note: quarterlyIncome is already the merchant's 90% share after PayPal fees and PIE's 10% platform fee
-    const netEarnings = Math.max(0, data.quarterlyIncome - data.businessExpenses);
+    // Calculate from gross revenue (net revenue + processing fees) minus business expenses
+    const grossRevenue = data.quarterlyIncome + totalProcessingFees;
+    const netEarnings = Math.max(0, grossRevenue - data.businessExpenses);
     
     // Self-employment tax calculation (15.3% of net earnings × 0.9235)
     // Calculate for all income levels for security and accuracy purposes
