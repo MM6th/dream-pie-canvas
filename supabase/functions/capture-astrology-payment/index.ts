@@ -117,7 +117,21 @@ serve(async (req) => {
       p_is_test_data: false
     });
 
-    // NO PLATFORM FEE - PIE's own astrology products get 100% of net revenue
+    // Record PayPal processing fee in platform_revenue for SE Calculator tracking
+    await supabase.from('platform_revenue').insert({
+      revenue_type: 'astrology_processing_fee',
+      amount: 0, // We track the fee in metadata, not as revenue
+      source_user_id: userId,
+      source_transaction_id: transactionId,
+      metadata: {
+        paypal_fee: paypalFee,
+        gross_amount: amountPaid,
+        net_amount: netRevenue,
+        product_type: 'astrology_reading'
+      }
+    });
+
+    console.log('Recorded PayPal fee for astrology purchase:', paypalFee);
 
     // Notify admin about the purchase and create delivery record
     if (purchase && product.admin_id) {

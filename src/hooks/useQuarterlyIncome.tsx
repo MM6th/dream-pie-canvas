@@ -112,10 +112,9 @@ export const useQuarterlyIncome = (userId: string | undefined) => {
   return { 
     income, 
     loading, 
-    currentQuarterIncome,
-    companyIncome,
+    currentQuarterIncome, 
+    companyIncome, 
     contractorIncome,
-    totalProcessingFees,
-    grossRevenue
+    totalProcessingFees
   };
 };
