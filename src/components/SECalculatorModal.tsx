@@ -17,6 +17,7 @@ import QuarterlyDueDates from "./QuarterlyDueDates";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useQuarterlyIncome } from "@/hooks/useQuarterlyIncome";
+import { useApprovalStatus } from "@/hooks/useApprovalStatus";
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('en-US', {
@@ -49,7 +50,13 @@ interface SECalculatorModalProps {
 const SECalculatorModal = ({ userId, autoPopulateIncome = 0 }: SECalculatorModalProps) => {
   const { user } = useAuth();
   const isMobile = useIsMobile();
+  const { isAdmin } = useApprovalStatus();
   const { currentQuarterIncome, companyIncome, contractorIncome, totalProcessingFees } = useQuarterlyIncome(user?.id);
+  
+  // For merchants, calculate the 10% platform fee from gross revenue
+  // The autoPopulateIncome for merchants is their 90% share, so we need to calculate what the original gross was
+  const merchantGrossRevenue = isAdmin ? 0 : (autoPopulateIncome / 0.9);
+  const platformFee = isAdmin ? 0 : (merchantGrossRevenue * 0.10);
   
   const [isOpen, setIsOpen] = useState(false);
   const [taxData, setTaxData] = useState<TaxData>({
@@ -170,6 +177,8 @@ const SECalculatorModal = ({ userId, autoPopulateIncome = 0 }: SECalculatorModal
                 onReset={handleReset}
                 platformIncome={autoPopulateIncome}
                 processingFees={totalProcessingFees}
+                isAdmin={isAdmin}
+                platformFee={platformFee}
               />
             </div>
             
@@ -179,7 +188,9 @@ const SECalculatorModal = ({ userId, autoPopulateIncome = 0 }: SECalculatorModal
                   results={results}
                   taxData={taxData}
                   processingFees={totalProcessingFees}
-                  grossRevenue={autoPopulateIncome + totalProcessingFees}
+                  grossRevenue={isAdmin ? (autoPopulateIncome + totalProcessingFees) : merchantGrossRevenue}
+                  isAdmin={isAdmin}
+                  platformFee={platformFee}
                 />
               )}
               <QuarterlyDueDates />
