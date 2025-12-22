@@ -91,14 +91,6 @@ const TaxResultsDisplay = ({ results, taxData, processingFees = 0, grossRevenue 
               <span className="text-white">{formatCurrency(grossRevenue)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-400">Processing Fees:</span>
-              <span className="text-orange-400">-{formatCurrency(processingFees)}</span>
-            </div>
-            <div className="flex justify-between border-t border-gray-600/50 pt-1">
-              <span className="text-gray-400">PIE Company Net Revenue:</span>
-              <span className="text-white">{formatCurrency(taxData.quarterlyIncome)}</span>
-            </div>
-            <div className="flex justify-between">
               <span className="text-gray-400">Business Expenses:</span>
               <span className="text-white">-{formatCurrency(taxData.businessExpenses)}</span>
             </div>
