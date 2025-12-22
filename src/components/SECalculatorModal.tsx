@@ -144,43 +144,8 @@ const SECalculatorModal = ({ userId, autoPopulateIncome = 0 }: SECalculatorModal
             Q4 2025 Self-Employment Tax Calculator
             <Badge className="bg-green-600 text-white text-xs ml-2">Real Revenue</Badge>
           </DialogTitle>
-          <DialogDescription className="text-gray-400 space-y-2">
+          <DialogDescription className="text-gray-400">
             <p>Calculate your estimated self-employment and New York state taxes based on your quarterly income.</p>
-            {(companyIncome > 0 || contractorIncome > 0 || totalProcessingFees > 0) && (
-              <div className="bg-green-900/20 border border-green-600/30 rounded-lg p-4">
-                <p className="text-green-300 font-medium mb-2 flex items-center gap-2">
-                  <DollarSign className="w-4 h-4" />
-                  Real Revenue Breakdown (Q4 2025):
-                </p>
-                {companyIncome > 0 && (
-                  <p className="text-green-200 text-sm flex items-center justify-between">
-                    <span>• PIE Company Revenue (Admin):</span>
-                    <span className="font-bold">{formatCurrency(companyIncome)}</span>
-                  </p>
-                )}
-                {contractorIncome > 0 && (
-                  <p className="text-green-200 text-sm flex items-center justify-between">
-                    <span>• Contractor Income (1099):</span>
-                    <span className="font-bold">{formatCurrency(contractorIncome)}</span>
-                  </p>
-                )}
-                {totalProcessingFees > 0 && (
-                  <p className="text-orange-200 text-sm flex items-center justify-between">
-                    <span>• Total PayPal Processing Fees Paid:</span>
-                    <span className="font-bold text-orange-400">{formatCurrency(totalProcessingFees)}</span>
-                  </p>
-                )}
-                <div className="border-t border-green-600/30 mt-2 pt-2">
-                  <p className="text-green-100 font-bold text-sm flex items-center justify-between">
-                    <span>Net Quarterly Income:</span>
-                    <span>{formatCurrency(companyIncome + contractorIncome)}</span>
-                  </p>
-                  <p className="text-gray-400 text-xs mt-1">
-                    Processing fees can be claimed as business expenses below
-                  </p>
-                </div>
-              </div>
-            )}
           </DialogDescription>
         </DialogHeader>
         
