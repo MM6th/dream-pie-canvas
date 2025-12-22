@@ -2,8 +2,7 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { DollarSign, TrendingUp, AlertTriangle, Download, Info } from "lucide-react";
-import RevenueBreakdownModal from "./RevenueBreakdownModal";
+import { DollarSign, TrendingUp, Download } from "lucide-react";
 
 interface TaxResults {
   netEarnings: number;
@@ -82,28 +81,17 @@ const TaxResultsDisplay = ({ results, taxData, processingFees = 0 }: TaxResultsD
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Revenue Breakdown Info */}
-        <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
-          <div className="flex items-start gap-2 mb-3">
-            <Info className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
-            <div>
-              <h4 className="text-blue-400 font-semibold mb-1">Your Merchant Revenue (90%)</h4>
-              <p className="text-sm text-gray-400">
-                Income shown is your 90% merchant share after PayPal fees and PIE's 10% platform fee.
-                PIE handles distribution to your PayPal account.
-              </p>
-            </div>
-          </div>
-          <RevenueBreakdownModal />
-        </div>
-
         {/* Income Summary */}
         <div className="bg-gray-800/50 p-3 rounded-lg">
           <h4 className="text-gray-300 font-medium mb-2">Income Summary</h4>
           <div className="space-y-1 text-sm">
             <div className="flex justify-between">
-              <span className="text-gray-400">Merchant Revenue (90%):</span>
+              <span className="text-gray-400">PIE Company Net Revenue:</span>
               <span className="text-white">{formatCurrency(taxData.quarterlyIncome)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-400">Business Expenses:</span>
+              <span className="text-white">-{formatCurrency(taxData.businessExpenses)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-400">Business Expenses:</span>
