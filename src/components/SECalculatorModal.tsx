@@ -178,6 +178,7 @@ const SECalculatorModal = ({ userId, autoPopulateIncome = 0 }: SECalculatorModal
                   results={results}
                   taxData={taxData}
                   processingFees={totalProcessingFees}
+                  grossRevenue={autoPopulateIncome + totalProcessingFees}
                 />
               )}
               <QuarterlyDueDates />

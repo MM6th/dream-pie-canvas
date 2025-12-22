@@ -23,9 +23,10 @@ interface TaxResultsDisplayProps {
   results: TaxResults;
   taxData: TaxData;
   processingFees?: number;
+  grossRevenue?: number;
 }
 
-const TaxResultsDisplay = ({ results, taxData, processingFees = 0 }: TaxResultsDisplayProps) => {
+const TaxResultsDisplay = ({ results, taxData, processingFees = 0, grossRevenue = 0 }: TaxResultsDisplayProps) => {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -86,6 +87,14 @@ const TaxResultsDisplay = ({ results, taxData, processingFees = 0 }: TaxResultsD
           <h4 className="text-gray-300 font-medium mb-2">Income Summary</h4>
           <div className="space-y-1 text-sm">
             <div className="flex justify-between">
+              <span className="text-gray-400">PIE Company Gross Revenue:</span>
+              <span className="text-white">{formatCurrency(grossRevenue)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-400">Processing Fees:</span>
+              <span className="text-orange-400">-{formatCurrency(processingFees)}</span>
+            </div>
+            <div className="flex justify-between border-t border-gray-600/50 pt-1">
               <span className="text-gray-400">PIE Company Net Revenue:</span>
               <span className="text-white">{formatCurrency(taxData.quarterlyIncome)}</span>
             </div>
@@ -93,22 +102,6 @@ const TaxResultsDisplay = ({ results, taxData, processingFees = 0 }: TaxResultsD
               <span className="text-gray-400">Business Expenses:</span>
               <span className="text-white">-{formatCurrency(taxData.businessExpenses)}</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-gray-400">Business Expenses:</span>
-              <span className="text-white">-{formatCurrency(taxData.businessExpenses)}</span>
-            </div>
-            {processingFees > 0 && (
-              <div className="flex justify-between text-orange-300">
-                <span>Processing Fees (in expenses):</span>
-                <span>
-                  {taxData.businessExpenses >= processingFees ? (
-                    <span className="text-green-400">✓ Included</span>
-                  ) : (
-                    <span className="text-orange-400">Not yet added</span>
-                  )}
-                </span>
-              </div>
-            )}
             <div className="flex justify-between font-medium border-t border-gray-600 pt-1">
               <span className="text-gray-300">Net Earnings:</span>
               <span className="text-green-400">{formatCurrency(results.netEarnings)}</span>
