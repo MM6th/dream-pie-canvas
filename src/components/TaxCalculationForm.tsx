@@ -115,13 +115,13 @@ const TaxCalculationForm = ({ initialData, onCalculate, onReset, platformIncome 
           {/* Quarterly Income Display */}
           <div className="bg-blue-900/30 border border-blue-600 rounded-lg p-3">
             <Label className="text-blue-300 text-sm font-medium">
-              Quarterly Gross Income (PIE Platform)
+              Quarterly Net Income (PIE Platform)
             </Label>
             <div className="text-2xl font-bold text-blue-400 mt-1">
               {formatCurrency(platformIncome)}
             </div>
             <p className="text-blue-200 text-xs mt-1">
-              Automatically tracked from your platform activity this quarter
+              Net income after PayPal processing fees (fees shown separately below)
             </p>
           </div>
 
