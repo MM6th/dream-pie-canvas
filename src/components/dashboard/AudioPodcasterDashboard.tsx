@@ -259,7 +259,7 @@ const AudioPodcasterDashboard = ({
         <CardHeader>
           <CardTitle className={`text-white flex items-center gap-2 ${isMobile ? 'text-lg' : ''}`}>
             <Mic className="w-5 h-5" />
-            Audio Podcaster Dashboard
+            Podcaster Dashboard
           </CardTitle>
         </CardHeader>
         <CardContent>

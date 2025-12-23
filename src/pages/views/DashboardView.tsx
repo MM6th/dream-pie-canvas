@@ -77,7 +77,7 @@ const DashboardView = ({
       if (industry === 'Pole Dancer') {
         return <TutorialHelpButton steps={poleDancerTutorialSteps} userType="merchant" />;
       }
-      if (industry === 'Audio Podcaster') {
+      if (industry === 'Podcaster') {
         return <TutorialHelpButton steps={audioPodcasterTutorialSteps} userType="merchant" />;
       }
       if (industry === 'Cook/Baker') {
@@ -145,8 +145,8 @@ const DashboardView = ({
       );
     }
 
-    // Route Audio Podcasters to their specialized dashboard
-    if (industry === 'Audio Podcaster') {
+    // Route Podcasters to their specialized dashboard
+    if (industry === 'Podcaster') {
       return (
         <AudioPodcasterDashboard 
           onBackgroundUpload={onBackgroundUpload}

@@ -16,7 +16,7 @@ const DEFAULT_SUGGESTIONS = [
   'Videographer',
   'Music Artist',
   'Live Stream Artist',
-  'Audio Podcaster',
+  'Podcaster',
   'Voice Actor',
   'Cook/Baker',
   'Book Editor',
