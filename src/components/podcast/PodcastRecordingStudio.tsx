@@ -245,7 +245,7 @@ export const PodcastRecordingStudio = ({ onRecordingSaved }: PodcastRecordingStu
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-foreground">
           <Mic className="w-5 h-5" />
-          Podcast Recording Studio
+          Voice Drop Recording Studio
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
