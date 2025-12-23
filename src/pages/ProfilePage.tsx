@@ -349,7 +349,7 @@ const ProfilePage = () => {
                       targetUserName={profile.display_name || 'this user'}
                       followStatus={followStatus}
                       onRequestSent={handleRequestSent}
-                      className="w-full mb-4"
+                      className="w-full mt-2 mb-4"
                     />
                   )}
                 </div>
