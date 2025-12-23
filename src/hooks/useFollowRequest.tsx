@@ -49,6 +49,16 @@ export const useFollowRequest = () => {
           message: `${requesterName} wants to follow you. Check your dashboard to accept or decline.`,
         });
 
+      // Also send the intent message to the target's messages tab
+      await supabase
+        .from('messages')
+        .insert({
+          sender_id: user.id,
+          recipient_id: targetId,
+          subject: 'Follow Request Intent',
+          body: intentMessage,
+        });
+
       toast.success('Follow request sent successfully');
       return { error: null };
     } catch (error) {
