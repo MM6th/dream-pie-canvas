@@ -9,9 +9,10 @@ import { toast } from "@/components/ui/use-toast";
 interface VideoUploadProps {
   onVideoSelect: (url: string) => void;
   currentVideoUrl?: string;
+  contentCategory?: 'general' | 'podcast';
 }
 
-const VideoUpload = ({ onVideoSelect, currentVideoUrl }: VideoUploadProps) => {
+const VideoUpload = ({ onVideoSelect, currentVideoUrl, contentCategory = 'general' }: VideoUploadProps) => {
   const { user } = useAuth();
   const [uploading, setUploading] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -116,7 +117,8 @@ const VideoUpload = ({ onVideoSelect, currentVideoUrl }: VideoUploadProps) => {
           file_path: fileName,
           file_size: file.size,
           file_type: file.type,
-          storage_bucket: 'user-media'
+          storage_bucket: 'user-media',
+          content_category: contentCategory
         });
 
       if (dbError) throw dbError;
