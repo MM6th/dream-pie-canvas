@@ -14,15 +14,15 @@ import UserStatsDisplay from "./UserStatsDisplay";
 // Industries available for signup
 const INDUSTRY_OPTIONS = [
   'Music Artist',
-  'Fashion Retailer',
   'Audio Podcaster',
   'Cook/Baker',
-  'Pole Dancer',
-  'Film Maker',
 ];
 
 // Industries under construction (hidden but preserved for future use)
 const UNDER_CONSTRUCTION_INDUSTRIES = [
+  'Fashion Retailer',
+  'Pole Dancer',
+  'Film Maker',
   'Film Editor',
   'Videographer',
   'Live Stream Artist',
