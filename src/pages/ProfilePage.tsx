@@ -320,11 +320,6 @@ const ProfilePage = () => {
                       Adult Creator
                     </Badge>
                   )}
-                  {isFollower && (
-                    <Badge variant="secondary" className="bg-green-600 text-white">
-                      Following
-                    </Badge>
-                  )}
 
                   {/* Skills */}
                   {profile.skills && profile.skills.length > 0 && (
