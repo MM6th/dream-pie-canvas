@@ -165,7 +165,7 @@ const TaxCalculationForm = ({ initialData, onCalculate, onReset, platformIncome 
               </div>
               <div className="border-t border-green-600/50 pt-2 flex justify-between items-center">
                 <Label className="text-green-200 text-sm font-semibold">
-                  Your Merchant Revenue (90%)
+                  Your Net Revenue (90%)
                 </Label>
                 <span className="text-xl font-bold text-green-300">
                   {formatCurrency(platformIncome)}
