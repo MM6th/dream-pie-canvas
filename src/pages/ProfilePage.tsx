@@ -10,7 +10,6 @@ import { toast } from "@/components/ui/use-toast";
 import PostInteractions from "@/components/PostInteractions";
 import PublicPlaylist from "@/components/profile/PublicPlaylist";
 import PortfolioCard from "@/components/profile/PortfolioCard";
-import PodcastsSection from "@/components/profile/PodcastsSection";
 import { PrivateProfileOverlay } from "@/components/profile/PrivateProfileOverlay";
 import { useVisibilityCheck } from "@/hooks/useVisibilityCheck";
 import { useFollowRequest } from "@/hooks/useFollowRequest";
@@ -548,11 +547,6 @@ const ProfilePage = () => {
                       <PortfolioCard key={portfolio.id} portfolio={portfolio} />
                     ))}
                   </div>
-                )}
-
-                {/* Podcasts Section - conditional visibility */}
-                {userId && (portfoliosVisible || isOwnProfile) && (
-                  <PodcastsSection userId={userId} isOwnProfile={isOwnProfile} />
                 )}
 
                 {/* Portfolio locked message */}

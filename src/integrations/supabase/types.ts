@@ -2905,7 +2905,6 @@ export type Database = {
       }
       user_uploads: {
         Row: {
-          content_category: string | null
           created_at: string | null
           file_name: string
           file_path: string
@@ -2916,7 +2915,6 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          content_category?: string | null
           created_at?: string | null
           file_name: string
           file_path: string
@@ -2927,7 +2925,6 @@ export type Database = {
           user_id: string
         }
         Update: {
-          content_category?: string | null
           created_at?: string | null
           file_name?: string
           file_path?: string

@@ -15,7 +15,7 @@ import UserStatsDisplay from "./UserStatsDisplay";
 const INDUSTRY_OPTIONS = [
   'Music Artist',
   'Fashion Retailer',
-  'Podcaster',
+  'Audio Podcaster',
   'Cook/Baker',
   'Pole Dancer',
   'Film Maker',

@@ -19,7 +19,6 @@ import { toast } from "@/components/ui/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PhotoUpload from "./PhotoUpload";
 import VideoUpload from "./VideoUpload";
-import PodcastVideoUploadModal from "./PodcastVideoUploadModal";
 import PortfolioModal from "./profile/PortfolioModal";
 import PortfolioEditModal from "./profile/PortfolioEditModal";
 import {
@@ -69,9 +68,7 @@ const ContentGallery = () => {
   const [portfolioEditModalOpen, setPortfolioEditModalOpen] = useState(false);
   const [selectedPortfolioId, setSelectedPortfolioId] = useState<string | null>(null);
   const [userType, setUserType] = useState<string>('');
-  const [userIndustry, setUserIndustry] = useState<string>('');
   const [portfolios, setPortfolios] = useState<Portfolio[]>([]);
-  const [podcastVideoModalOpen, setPodcastVideoModalOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -88,13 +85,12 @@ const ContentGallery = () => {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('user_type, industry')
+        .select('user_type')
         .eq('id', user.id)
         .single();
       
       if (!error && data) {
         setUserType(data.user_type);
-        setUserIndustry(data.industry || '');
       }
     } catch (error) {
       console.error('Error fetching user type:', error);
@@ -378,30 +374,9 @@ const ContentGallery = () => {
             </DropdownMenuContent>
           </DropdownMenu>
           <PhotoUpload onSuccess={() => { fetchUploads(); fetchStorageUsage(); }} />
-          {/* Show podcast modal for Podcasters, regular upload for others */}
-          {(userIndustry === 'Podcaster' || userIndustry === 'Audio Podcaster') ? (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setPodcastVideoModalOpen(true)}
-              className="border-gray-600 text-white bg-gray-700 hover:bg-gray-600"
-            >
-              <Video className="w-4 h-4" />
-            </Button>
-          ) : (
-            <VideoUpload onVideoSelect={() => { fetchUploads(); fetchStorageUsage(); }} />
-          )}
+          <VideoUpload onVideoSelect={() => { fetchUploads(); fetchStorageUsage(); }} />
         </div>
       </div>
-
-      <PodcastVideoUploadModal
-        open={podcastVideoModalOpen}
-        onOpenChange={setPodcastVideoModalOpen}
-        onSuccess={() => { 
-          fetchUploads(); 
-          fetchStorageUsage(); 
-        }}
-      />
 
       <PortfolioModal
         open={portfolioModalOpen}
