@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { UserPlus, Clock, UserCheck, Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { FollowRequestModal } from "./FollowRequestModal";
 import type { FollowStatus } from "@/hooks/useFollowRequest";
 
@@ -27,8 +28,9 @@ export const FollowButton = ({
         return {
           icon: <UserCheck className="w-4 h-4 mr-2" />,
           text: "Following",
-          variant: "secondary" as const,
-          disabled: true
+          variant: "default" as const,
+          disabled: true,
+          className: "bg-green-600 hover:bg-green-600 text-white"
         };
       case 'pending':
         return {
@@ -70,7 +72,7 @@ export const FollowButton = ({
         onClick={handleClick}
         variant={buttonContent.variant}
         disabled={buttonContent.disabled}
-        className={className}
+        className={cn(buttonContent.className, className)}
       >
         {buttonContent.icon}
         {buttonContent.text}
