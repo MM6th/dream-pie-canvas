@@ -331,8 +331,8 @@ export const audioPodcasterTutorialSteps: TutorialStep[] = [
   },
   {
     id: 'podcast-studio',
-    title: 'Podcast Recording Studio',
-    description: 'Record high-quality podcasts directly in the browser. Invite guests for collaborative recordings.',
+    title: 'Voice Drop Recording Studio',
+    description: 'Record high-quality voice drops directly in the browser. Invite guests for collaborative recordings.',
     duration: 10000,
     target: '[data-tutorial="podcast-studio"]',
     placement: 'bottom',
