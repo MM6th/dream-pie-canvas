@@ -161,7 +161,7 @@ const PodcastVideoUploadModal = ({ open, onOpenChange, onSuccess }: PodcastVideo
       if (!isOpen) resetModal();
       onOpenChange(isOpen);
     }}>
-      <DialogContent className="bg-gray-800 border-gray-700 text-white sm:max-w-sm">
+      <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-sm">
         <DialogHeader>
           <DialogTitle className="text-xl">Upload Video</DialogTitle>
           <DialogDescription className="text-gray-400">

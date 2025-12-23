@@ -5,72 +5,44 @@ export type FollowStatus = 'none' | 'pending' | 'following';
 
 export const useFollowRequest = () => {
   const sendFollowRequest = async (targetId: string, intentMessage: string) => {
-    const { data: { user } } = await supabase.auth.getUser();
-    
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
     if (!user) {
       toast.error('You must be logged in to send a follow request');
       return { error: 'Not authenticated' };
     }
 
     try {
-      // Get requester's display name for the notification
-      const { data: requesterProfile } = await supabase
-        .from('profiles')
-        .select('display_name')
-        .eq('id', user.id)
-        .single();
-
-      const requesterName = requesterProfile?.display_name || 'Someone';
-
-      const { error } = await supabase
-        .from('profile_follow_requests')
-        .insert({
-          requester_id: user.id,
-          target_merchant_id: targetId,
-          intent_message: intentMessage,
-        });
+      const { data, error } = await supabase.functions.invoke('send-follow-request', {
+        body: {
+          targetId,
+          intentMessage,
+        },
+      });
 
       if (error) {
-        if (error.code === '23505') {
-          toast.error('You have already sent a follow request to this profile');
-        } else {
-          toast.error('Failed to send follow request');
-        }
+        const message = (data as any)?.error || error.message || 'Failed to send follow request';
+        toast.error(message);
         return { error };
       }
 
-      // Create notification for the target merchant
-      await supabase
-        .from('notifications')
-        .insert({
-          user_id: targetId,
-          type: 'follow_request',
-          title: 'New Follow Request',
-          message: `${requesterName} wants to follow you. Check your dashboard to accept or decline.`,
-        });
-
-      // Also send the intent message to the target's messages tab
-      await supabase
-        .from('messages')
-        .insert({
-          sender_id: user.id,
-          recipient_id: targetId,
-          subject: 'Follow Request Intent',
-          body: intentMessage,
-        });
-
-      toast.success('Follow request sent successfully');
+      const status = (data as any)?.status as 'created' | 'updated' | undefined;
+      toast.success(status === 'updated' ? 'Follow request updated and message sent' : 'Follow request sent and message delivered');
       return { error: null };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error sending follow request:', error);
-      toast.error('Failed to send follow request');
+      toast.error(error?.message || 'Failed to send follow request');
       return { error };
     }
   };
 
   const checkFollowStatus = async (targetId: string): Promise<FollowStatus> => {
-    const { data: { user } } = await supabase.auth.getUser();
-    
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
     if (!user) return 'none';
 
     try {
@@ -103,14 +75,17 @@ export const useFollowRequest = () => {
   };
 
   const getReceivedRequests = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
     if (!user) return [];
 
     try {
       const { data, error } = await supabase
         .from('profile_follow_requests')
-        .select(`
+        .select(
+          `
           *,
           requester:profiles!profile_follow_requests_requester_id_fkey(
             id,
@@ -118,7 +93,8 @@ export const useFollowRequest = () => {
             avatar_url,
             user_type
           )
-        `)
+        `
+        )
         .eq('target_merchant_id', user.id)
         .eq('status', 'pending')
         .order('created_at', { ascending: false });
