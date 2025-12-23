@@ -81,7 +81,7 @@ export const merchantTutorialSteps: TutorialStep[] = [
   {
     id: 'messaging-system',
     title: 'Messaging System 💬',
-    description: 'Earn money from messages! You receive 90% ($0.09/credit) when someone messages you. PIE keeps 10%. Once you reach the $100 threshold, you can cash out. To message supporters, you need credits too. Set your rate in Profile → Messaging Settings.',
+    description: 'Earn money from messages! You receive 90% ($0.09/credit) before processing fees when someone messages you. PIE keeps 10%. Once you reach the $100 threshold, you can cash out. To message supporters, you need credits too. Set your rate in Profile → Messaging Settings.',
     duration: 12000,
   },
 ];
@@ -152,7 +152,7 @@ export const supporterTutorialSteps: TutorialStep[] = [
   {
     id: 'messaging-system',
     title: 'Messaging System 💬',
-    description: 'You can EARN from messaging too! When merchants message you, you receive 90% ($0.09/credit). PIE keeps 10%. Once you reach the $100 threshold, you can cash out! To message merchants, purchase credits via the header icon.',
+    description: 'You can EARN from messaging too! When merchants message you, you receive 90% ($0.09/credit) before processing fees. PIE keeps 10%. Once you reach the $100 threshold, you can cash out! To message merchants, purchase credits via the header icon.',
     duration: 12000,
   },
 ];
@@ -167,7 +167,7 @@ export const musicArtistTutorialSteps: TutorialStep[] = [
   {
     id: 'music-upload',
     title: 'Upload Your Music',
-    description: 'Upload and manage your music tracks here. Set pricing, add album art, and publish to the store. PIE receives a 10% platform fee on all sales. You receive 90%. Payouts available at $100 threshold.',
+    description: 'Upload and manage your music tracks here. Set pricing, add album art, and publish to the store. PIE receives a 10% platform fee on all sales. You receive 90% before processing fees. Payouts available at $100 threshold.',
     duration: 10000,
     target: '[data-tutorial="music-upload"]',
     placement: 'bottom',
@@ -207,7 +207,7 @@ export const musicArtistTutorialSteps: TutorialStep[] = [
   {
     id: 'messaging-system',
     title: 'Messaging System 💬',
-    description: 'Earn money from messages! You receive 90% ($0.09/credit) when someone messages you. PIE keeps 10%. Once you reach the $100 threshold, you can cash out. To message supporters, you need credits too. Set your rate in Profile → Messaging Settings.',
+    description: 'Earn money from messages! You receive 90% ($0.09/credit) before processing fees when someone messages you. PIE keeps 10%. Once you reach the $100 threshold, you can cash out. To message supporters, you need credits too. Set your rate in Profile → Messaging Settings.',
     duration: 12000,
   },
 ];
@@ -222,7 +222,7 @@ export const fashionRetailerTutorialSteps: TutorialStep[] = [
   {
     id: 'fashion-upload',
     title: 'Upload Fashion Products',
-    description: 'Upload and manage your fashion products here. Add photos, set pricing, manage variants (sizes & colors). PIE receives a 10% platform fee on all sales. You receive 90%. Payouts available at $100 threshold.',
+    description: 'Upload and manage your fashion products here. Add photos, set pricing, manage variants (sizes & colors). PIE receives a 10% platform fee on all sales. You receive 90% before processing fees. Payouts available at $100 threshold.',
     duration: 10000,
     target: '[data-tutorial="fashion-upload"]',
     placement: 'bottom',
@@ -262,7 +262,7 @@ export const fashionRetailerTutorialSteps: TutorialStep[] = [
   {
     id: 'messaging-system',
     title: 'Messaging System 💬',
-    description: 'Earn money from messages! You receive 90% ($0.09/credit) when someone messages you. PIE keeps 10%. Once you reach the $100 threshold, you can cash out. To message supporters, you need credits too. Set your rate in Profile → Messaging Settings.',
+    description: 'Earn money from messages! You receive 90% ($0.09/credit) before processing fees when someone messages you. PIE keeps 10%. Once you reach the $100 threshold, you can cash out. To message supporters, you need credits too. Set your rate in Profile → Messaging Settings.',
     duration: 12000,
   },
 ];
@@ -277,7 +277,7 @@ export const poleDancerTutorialSteps: TutorialStep[] = [
   {
     id: 'dance-products',
     title: 'Dance Products',
-    description: 'Upload and manage your dance videos and photo sets. Videos up to 5GB with background music support. PIE receives a 10% platform fee on all sales. You receive 90%. Payouts available at $100 threshold.',
+    description: 'Upload and manage your dance videos and photo sets. Videos up to 5GB with background music support. PIE receives a 10% platform fee on all sales. You receive 90% before processing fees. Payouts available at $100 threshold.',
     duration: 10000,
     target: '[data-tutorial="dance-products"]',
     placement: 'bottom',
@@ -317,7 +317,7 @@ export const poleDancerTutorialSteps: TutorialStep[] = [
   {
     id: 'messaging-system',
     title: 'Messaging System 💬',
-    description: 'Earn money from messages! You receive 90% ($0.09/credit) when someone messages you. PIE keeps 10%. Once you reach the $100 threshold, you can cash out. To message supporters, you need credits too. Set your rate in Profile → Messaging Settings.',
+    description: 'Earn money from messages! You receive 90% ($0.09/credit) before processing fees when someone messages you. PIE keeps 10%. Once you reach the $100 threshold, you can cash out. To message supporters, you need credits too. Set your rate in Profile → Messaging Settings.',
     duration: 12000,
   },
 ];
@@ -348,7 +348,7 @@ export const audioPodcasterTutorialSteps: TutorialStep[] = [
   {
     id: 'audio-upload',
     title: 'Upload Audio Content',
-    description: 'Upload pre-recorded podcasts and audio content. Set pricing and availability. PIE receives a 10% platform fee on all sales. You receive 90%. Payouts available at $100 threshold.',
+    description: 'Upload pre-recorded podcasts and audio content. Set pricing and availability. PIE receives a 10% platform fee on all sales. You receive 90% before processing fees. Payouts available at $100 threshold.',
     duration: 10000,
     target: '[data-tutorial="audio-upload"]',
     placement: 'bottom',
@@ -380,7 +380,7 @@ export const audioPodcasterTutorialSteps: TutorialStep[] = [
   {
     id: 'messaging-system',
     title: 'Messaging System 💬',
-    description: 'Earn money from messages! You receive 90% ($0.09/credit) when someone messages you. PIE keeps 10%. Once you reach the $100 threshold, you can cash out. To message supporters, you need credits too. Set your rate in Profile → Messaging Settings.',
+    description: 'Earn money from messages! You receive 90% ($0.09/credit) before processing fees when someone messages you. PIE keeps 10%. Once you reach the $100 threshold, you can cash out. To message supporters, you need credits too. Set your rate in Profile → Messaging Settings.',
     duration: 12000,
   },
 ];
@@ -395,7 +395,7 @@ export const cookBakerTutorialSteps: TutorialStep[] = [
   {
     id: 'food-products',
     title: 'Food Products',
-    description: 'Upload and manage your recipe videos and food photos. Share your culinary creations. PIE receives a 10% platform fee on all sales. You receive 90%. Payouts available at $100 threshold.',
+    description: 'Upload and manage your recipe videos and food photos. Share your culinary creations. PIE receives a 10% platform fee on all sales. You receive 90% before processing fees. Payouts available at $100 threshold.',
     duration: 10000,
     target: '[data-tutorial="food-products"]',
     placement: 'bottom',
@@ -435,7 +435,7 @@ export const cookBakerTutorialSteps: TutorialStep[] = [
   {
     id: 'messaging-system',
     title: 'Messaging System 💬',
-    description: 'Earn money from messages! You receive 90% ($0.09/credit) when someone messages you. PIE keeps 10%. Once you reach the $100 threshold, you can cash out. To message supporters, you need credits too. Set your rate in Profile → Messaging Settings.',
+    description: 'Earn money from messages! You receive 90% ($0.09/credit) before processing fees when someone messages you. PIE keeps 10%. Once you reach the $100 threshold, you can cash out. To message supporters, you need credits too. Set your rate in Profile → Messaging Settings.',
     duration: 12000,
   },
 ];
@@ -450,7 +450,7 @@ export const filmMakerTutorialSteps: TutorialStep[] = [
   {
     id: 'film-upload',
     title: 'Upload Your Films',
-    description: 'Upload and manage your films here. Add trailers, cover photos, set pricing, and publish to the store. PIE receives a 10% platform fee on all sales. You receive 90%. Payouts available at $100 threshold.',
+    description: 'Upload and manage your films here. Add trailers, cover photos, set pricing, and publish to the store. PIE receives a 10% platform fee on all sales. You receive 90% before processing fees. Payouts available at $100 threshold.',
     duration: 10000,
     target: '[data-tutorial="film-upload"]',
     placement: 'bottom',
@@ -498,7 +498,7 @@ export const filmMakerTutorialSteps: TutorialStep[] = [
   {
     id: 'messaging-system',
     title: 'Messaging System 💬',
-    description: 'Earn money from messages! You receive 90% ($0.09/credit) when someone messages you. PIE keeps 10%. Once you reach the $100 threshold, you can cash out. To message supporters, you need credits too. Set your rate in Profile → Messaging Settings.',
+    description: 'Earn money from messages! You receive 90% ($0.09/credit) before processing fees when someone messages you. PIE keeps 10%. Once you reach the $100 threshold, you can cash out. To message supporters, you need credits too. Set your rate in Profile → Messaging Settings.',
     duration: 12000,
   },
 ];
@@ -561,7 +561,7 @@ export const liveStreamArtistTutorialSteps: TutorialStep[] = [
   {
     id: 'messaging-system',
     title: 'Messaging System 💬',
-    description: 'Earn money from messages! You receive 90% ($0.09/credit) when someone messages you. PIE keeps 10%. Once you reach the $100 threshold, you can cash out. To message supporters, you need credits too. Set your rate in Profile → Messaging Settings.',
+    description: 'Earn money from messages! You receive 90% ($0.09/credit) before processing fees when someone messages you. PIE keeps 10%. Once you reach the $100 threshold, you can cash out. To message supporters, you need credits too. Set your rate in Profile → Messaging Settings.',
     duration: 12000,
   },
 ];
