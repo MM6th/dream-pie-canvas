@@ -57,6 +57,7 @@ export const PodcastRecordingStudio = ({ onRecordingSaved }: PodcastRecordingStu
   const segmentIndexRef = useRef<number>(0);
   const savedSegmentsRef = useRef<string[]>([]);
   const mimeTypeRef = useRef<string>("audio/webm");
+  const recordingTimeRef = useRef<number>(0); // Ref to track current time for auto-save
 
   // Check for recovery data on mount
   useEffect(() => {
@@ -236,8 +237,8 @@ export const PodcastRecordingStudio = ({ onRecordingSaved }: PodcastRecordingStu
       // Clear chunks since they're now saved
       chunksRef.current = [];
       
-      // Save recovery data
-      saveRecoveryData(savedSegmentsRef.current.filter(Boolean), recordingTime);
+      // Save recovery data using ref (avoids stale closure)
+      saveRecoveryData(savedSegmentsRef.current.filter(Boolean), recordingTimeRef.current);
       
       setLastAutoSave(new Date());
       console.log(`Auto-saved segment ${segmentIndex}, total segments: ${savedSegmentsRef.current.length}`);
@@ -347,7 +348,7 @@ export const PodcastRecordingStudio = ({ onRecordingSaved }: PodcastRecordingStu
         }
         
         // Update recovery data with final state
-        saveRecoveryData(savedSegmentsRef.current.filter(Boolean), recordingTime);
+        saveRecoveryData(savedSegmentsRef.current.filter(Boolean), recordingTimeRef.current);
         
         // Stop all tracks
         mediaStream.getTracks().forEach(track => track.stop());
@@ -358,10 +359,12 @@ export const PodcastRecordingStudio = ({ onRecordingSaved }: PodcastRecordingStu
       setIsRecording(true);
       setIsPaused(false);
       setRecordingTime(0);
+      recordingTimeRef.current = 0;
       
       // Start timer
       timerRef.current = setInterval(() => {
-        setRecordingTime(prev => prev + 1);
+        recordingTimeRef.current += 1;
+        setRecordingTime(recordingTimeRef.current);
       }, 1000);
       
       // Start auto-save timer
