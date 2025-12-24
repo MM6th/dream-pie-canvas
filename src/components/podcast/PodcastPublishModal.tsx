@@ -94,6 +94,7 @@ export const PodcastPublishModal = ({
 
   // Format time helper
   const formatTime = (seconds: number) => {
+    if (!isFinite(seconds) || isNaN(seconds)) return "0:00";
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs.toString().padStart(2, "0")}`;
@@ -102,10 +103,10 @@ export const PodcastPublishModal = ({
   // Trailer preview controls
   const playTrailerPreview = () => {
     const audio = trailerAudioRef.current;
-    if (!audio) return;
+    if (!audio || !isFinite(trailerStartTime)) return;
     
     audio.currentTime = trailerStartTime;
-    audio.play();
+    audio.play().catch(console.error);
     setIsPlayingTrailer(true);
     setTrailerCurrentTime(0);
     
@@ -118,7 +119,9 @@ export const PodcastPublishModal = ({
     const audio = trailerAudioRef.current;
     if (audio) {
       audio.pause();
-      audio.currentTime = trailerStartTime;
+      if (isFinite(trailerStartTime)) {
+        audio.currentTime = trailerStartTime;
+      }
     }
     setIsPlayingTrailer(false);
     setTrailerCurrentTime(0);
@@ -392,68 +395,71 @@ export const PodcastPublishModal = ({
                   src={recording.audio_url}
                   preload="metadata"
                   onLoadedMetadata={(e) => {
-                    setAudioDuration((e.target as HTMLAudioElement).duration);
+                    const duration = (e.target as HTMLAudioElement).duration;
+                    if (isFinite(duration) && duration > 0) {
+                      setAudioDuration(duration);
+                    }
                   }}
                   onTimeUpdate={(e) => {
                     const audio = e.target as HTMLAudioElement;
                     const elapsed = audio.currentTime - trailerStartTime;
-                    setTrailerCurrentTime(elapsed);
+                    setTrailerCurrentTime(Math.max(0, elapsed));
                     if (elapsed >= 30) {
                       stopTrailerPreview();
                     }
                   }}
                 />
                 
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-sm">Start Time</Label>
-                    <span className="text-xs text-muted-foreground">
-                      {formatTime(trailerStartTime)} - {formatTime(Math.min(trailerStartTime + 30, audioDuration))}
-                    </span>
+                {audioDuration > 0 ? (
+                  <>
+                    <div className="space-y-2">
+                      <Label className="text-sm">Trailer starts at: {formatTime(trailerStartTime)}</Label>
+                      <input
+                        type="range"
+                        min={0}
+                        max={Math.max(0, Math.floor(audioDuration - 30))}
+                        value={trailerStartTime}
+                        onChange={(e) => {
+                          const value = parseInt(e.target.value, 10);
+                          setTrailerStartTime(value);
+                          if (isPlayingTrailer) {
+                            stopTrailerPreview();
+                          }
+                        }}
+                        className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
+                      />
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>0:00</span>
+                        <span>{formatTime(audioDuration)}</span>
+                      </div>
+                    </div>
+                    
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={toggleTrailerPreview}
+                      className="w-full"
+                    >
+                      {isPlayingTrailer ? (
+                        <>
+                          <Pause className="w-4 h-4 mr-2" />
+                          Stop ({formatTime(trailerCurrentTime)} / 0:30)
+                        </>
+                      ) : (
+                        <>
+                          <Play className="w-4 h-4 mr-2" />
+                          Preview 30s Trailer
+                        </>
+                      )}
+                    </Button>
+                  </>
+                ) : (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Loading audio...
                   </div>
-                  <Slider
-                    value={[trailerStartTime]}
-                    max={Math.max(0, audioDuration - 30)}
-                    step={1}
-                    onValueChange={([value]) => {
-                      setTrailerStartTime(value);
-                      if (isPlayingTrailer) {
-                        stopTrailerPreview();
-                      }
-                    }}
-                    className="w-full"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Select where your 30-second trailer begins
-                  </p>
-                </div>
-                
-                <div className="flex items-center gap-3">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={toggleTrailerPreview}
-                    className="h-9"
-                  >
-                    {isPlayingTrailer ? (
-                      <>
-                        <Pause className="w-4 h-4 mr-2" />
-                        Stop Preview
-                      </>
-                    ) : (
-                      <>
-                        <Play className="w-4 h-4 mr-2" />
-                        Preview Trailer
-                      </>
-                    )}
-                  </Button>
-                  {isPlayingTrailer && (
-                    <span className="text-sm text-muted-foreground">
-                      {formatTime(trailerCurrentTime)} / 0:30
-                    </span>
-                  )}
-                </div>
+                )}
               </div>
             )}
           </div>
