@@ -51,6 +51,7 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
   const [recordings, setRecordings] = useState<Recording[]>([]);
   const [loading, setLoading] = useState(true);
   const [playingId, setPlayingId] = useState<string | null>(null);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [showPublishModal, setShowPublishModal] = useState(false);
   const [selectedRecording, setSelectedRecording] = useState<Recording | null>(null);
   
@@ -182,60 +183,174 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
     }
   };
 
+  const sanitizeFilename = (name: string) =>
+    name.replace(/[^a-zA-Z0-9-_\s]/g, "").trim() || "recording";
+
+  const getAudioExtensionFromContentType = (contentType: string) => {
+    const ct = contentType.toLowerCase();
+    if (ct.includes("wav")) return "wav";
+    if (ct.includes("mpeg") || ct.includes("mp3")) return "mp3";
+    if (ct.includes("m4a") || ct.includes("mp4")) return "m4a";
+    if (ct.includes("ogg")) return "ogg";
+    if (ct.includes("webm")) return "webm";
+    return "audio";
+  };
+
+  const triggerDownload = (blob: Blob, filename: string) => {
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    link.style.display = "none";
+    document.body.appendChild(link);
+    link.click();
+
+    setTimeout(() => {
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    }, 150);
+  };
+
+  const audioBufferToWavBlob = (audioBuffer: AudioBuffer) => {
+    const numChannels = audioBuffer.numberOfChannels;
+    const sampleRate = audioBuffer.sampleRate;
+    const numFrames = audioBuffer.length;
+
+    const bytesPerSample = 2; // 16-bit PCM
+    const blockAlign = numChannels * bytesPerSample;
+    const byteRate = sampleRate * blockAlign;
+    const dataSize = numFrames * blockAlign;
+
+    const arrayBuffer = new ArrayBuffer(44 + dataSize);
+    const view = new DataView(arrayBuffer);
+
+    const writeString = (offset: number, str: string) => {
+      for (let i = 0; i < str.length; i++) {
+        view.setUint8(offset + i, str.charCodeAt(i));
+      }
+    };
+
+    // RIFF header
+    writeString(0, "RIFF");
+    view.setUint32(4, 36 + dataSize, true);
+    writeString(8, "WAVE");
+
+    // fmt chunk
+    writeString(12, "fmt ");
+    view.setUint32(16, 16, true); // PCM
+    view.setUint16(20, 1, true); // Audio format 1 = PCM
+    view.setUint16(22, numChannels, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, byteRate, true);
+    view.setUint16(32, blockAlign, true);
+    view.setUint16(34, 16, true); // bits per sample
+
+    // data chunk
+    writeString(36, "data");
+    view.setUint32(40, dataSize, true);
+
+    // Interleave channels
+    const channels = Array.from({ length: numChannels }, (_, ch) =>
+      audioBuffer.getChannelData(ch)
+    );
+
+    let offset = 44;
+    for (let i = 0; i < numFrames; i++) {
+      for (let ch = 0; ch < numChannels; ch++) {
+        const sample = Math.max(-1, Math.min(1, channels[ch][i]));
+        view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7fff, true);
+        offset += 2;
+      }
+    }
+
+    return new Blob([arrayBuffer], { type: "audio/wav" });
+  };
+
+  const convertWebmToWav = async (webmBlob: Blob) => {
+    const arrayBuffer = await webmBlob.arrayBuffer();
+    const AudioContextCtor = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioContextCtor) {
+      throw new Error("Audio conversion not supported in this browser");
+    }
+
+    const audioCtx = new AudioContextCtor();
+    try {
+      const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer.slice(0));
+      return audioBufferToWavBlob(audioBuffer);
+    } finally {
+      try {
+        await audioCtx.close();
+      } catch {
+        // ignore
+      }
+    }
+  };
+
   const downloadRecording = async (recording: Recording) => {
+    setDownloadingId(recording.id);
+
+    const sanitizedTitle = sanitizeFilename(recording.title);
+
     try {
       toast({
-        title: "Downloading...",
-        description: "Preparing your file for download.",
+        title: "Preparing download...",
+        description: "Fetching your audio file.",
       });
 
       const response = await fetch(recording.audio_url);
-      if (!response.ok) throw new Error('Failed to fetch audio file');
-      
-      // Get content type from response or default to audio/mpeg
-      const contentType = response.headers.get('content-type') || 'audio/mpeg';
+      if (!response.ok) throw new Error("Failed to fetch audio file");
+
+      const contentType = response.headers.get("content-type") || "";
       const originalBlob = await response.blob();
-      
-      // Create a new blob with the correct audio MIME type
-      const audioBlob = new Blob([originalBlob], { type: contentType });
-      const url = window.URL.createObjectURL(audioBlob);
-      
-      // Determine file extension based on content type
-      let extension = 'mp3';
-      if (contentType.includes('wav')) extension = 'wav';
-      else if (contentType.includes('m4a') || contentType.includes('mp4')) extension = 'm4a';
-      else if (contentType.includes('ogg')) extension = 'ogg';
-      else if (contentType.includes('webm')) extension = 'webm';
-      else if (contentType.includes('mpeg') || contentType.includes('mp3')) extension = 'mp3';
-      
-      // Use recording title for filename, sanitize
-      const sanitizedTitle = recording.title.replace(/[^a-zA-Z0-9-_\s]/g, '').trim() || 'recording';
-      
-      // Create a temporary link and trigger download
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `${sanitizedTitle}.${extension}`;
-      link.style.display = 'none';
-      document.body.appendChild(link);
-      link.click();
-      
-      // Small delay before cleanup to ensure download starts
-      setTimeout(() => {
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-      }, 100);
-      
+
+      const isWebm =
+        contentType.toLowerCase().includes("webm") ||
+        recording.audio_url.toLowerCase().includes(".webm");
+
+      if (isWebm) {
+        toast({
+          title: "Converting to WAV...",
+          description: "This may take a moment for longer recordings.",
+        });
+
+        try {
+          const wavBlob = await convertWebmToWav(originalBlob);
+          const filename = `${sanitizedTitle}.wav`;
+          triggerDownload(wavBlob, filename);
+
+          toast({
+            title: "Download Started",
+            description: `Downloading "${filename}"`,
+          });
+          return;
+        } catch (conversionError) {
+          console.error("Error converting webm to wav:", conversionError);
+          toast({
+            title: "WAV Conversion Failed",
+            description: "Downloading the original WEBM instead.",
+            variant: "destructive",
+          });
+        }
+      }
+
+      // Fallback: download original format
+      const extension = getAudioExtensionFromContentType(contentType) || "audio";
+      const filename = `${sanitizedTitle}.${extension}`;
+      triggerDownload(originalBlob, filename);
+
       toast({
         title: "Download Started",
-        description: `Downloading "${sanitizedTitle}.${extension}"`,
+        description: `Downloading "${filename}"`,
       });
     } catch (error) {
-      console.error('Error downloading recording:', error);
+      console.error("Error downloading recording:", error);
       toast({
         title: "Download Failed",
         description: "Could not download the recording. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setDownloadingId(null);
     }
   };
 
@@ -441,11 +556,14 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
                       )}
                     </Button>
                     <Button
+                      type="button"
                       size="icon"
                       variant="outline"
                       onClick={() => downloadRecording(recording)}
                       className="h-8 w-8"
-                      title="Download"
+                      title="Download WAV"
+                      aria-label="Download recording as WAV"
+                      disabled={downloadingId === recording.id}
                     >
                       <Download className="w-4 h-4" />
                     </Button>
