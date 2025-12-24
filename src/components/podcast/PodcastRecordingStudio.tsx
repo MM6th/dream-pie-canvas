@@ -147,6 +147,7 @@ export const PodcastRecordingStudio = ({ onRecordingSaved }: PodcastRecordingStu
       setAudioBlob(combinedBlob);
       setAudioUrl(URL.createObjectURL(combinedBlob));
       setRecordingTime(recoveryData.totalDuration);
+      recordingTimeRef.current = recoveryData.totalDuration; // Update ref for accurate save
       
       toast({
         title: "Recording Recovered",
@@ -500,7 +501,7 @@ export const PodcastRecordingStudio = ({ onRecordingSaved }: PodcastRecordingStu
         .from('audio-files')
         .getPublicUrl(fileName);
       
-      // Save metadata to database
+      // Save metadata to database - use ref to ensure accurate duration after recovery
       const { error: dbError } = await supabase
         .from('podcast_recordings')
         .insert({
@@ -508,7 +509,7 @@ export const PodcastRecordingStudio = ({ onRecordingSaved }: PodcastRecordingStu
           title: title.trim(),
           description: description.trim() || null,
           audio_url: publicUrl,
-          duration_seconds: recordingTime,
+          duration_seconds: recordingTimeRef.current || recordingTime,
           file_size_bytes: audioBlob.size,
           status: 'draft'
         });
