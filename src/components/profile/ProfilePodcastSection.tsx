@@ -24,6 +24,7 @@ interface PodcastProduct {
   subscription_enabled?: boolean;
   subscription_tier?: string;
   tier_description?: string;
+  podcast_recording_id?: string;
 }
 
 interface ProfilePodcastSectionProps {
@@ -40,9 +41,10 @@ const ProfilePodcastSection: React.FC<ProfilePodcastSectionProps> = ({
   const { user } = useAuth();
   const [podcasts, setPodcasts] = useState<PodcastProduct[]>([]);
   const [loading, setLoading] = useState(true);
+  const [subscribingId, setSubscribingId] = useState<string | null>(null);
   
   const merchantIds = podcasts.length > 0 ? [userId] : [];
-  const subscriptionMap = usePodcastSubscriptions(merchantIds);
+  const { subscriptionMap } = usePodcastSubscriptions(merchantIds);
 
   useEffect(() => {
     fetchPodcasts();
@@ -64,11 +66,11 @@ const ProfilePodcastSection: React.FC<ProfilePodcastSectionProps> = ({
       }
 
       if (audioData && audioData.length > 0) {
-        // Fetch podcast_recordings to get subscription tier info
+        // Fetch podcast_recordings to get subscription tier info AND recording id
         const audioUrls = audioData.map(p => p.audio_file_url);
         const { data: podcastRecordings } = await supabase
           .from('podcast_recordings')
-          .select('audio_url, subscription_enabled, subscription_tier, tier_description')
+          .select('id, audio_url, subscription_enabled, subscription_tier, tier_description')
           .in('audio_url', audioUrls);
 
         let enrichedData = audioData;
@@ -81,6 +83,7 @@ const ProfilePodcastSection: React.FC<ProfilePodcastSectionProps> = ({
               subscription_enabled: recording?.subscription_enabled || false,
               subscription_tier: recording?.subscription_tier || null,
               tier_description: recording?.tier_description || null,
+              podcast_recording_id: recording?.id || null,
             };
           });
         }
@@ -129,17 +132,52 @@ const ProfilePodcastSection: React.FC<ProfilePodcastSectionProps> = ({
     }
   };
 
-  const getAccessBadge = (podcast: PodcastProduct) => {
-    if (podcast.access_level === 'merchant_only') {
-      return <Badge className="bg-purple-600 hover:bg-purple-700 text-xs">Merchant Only</Badge>;
+  const handleSubscribe = async (podcast: PodcastProduct) => {
+    if (!user) {
+      toast.error('Please sign in to subscribe');
+      return;
     }
-    if (podcast.access_level === 'paid' && podcast.price) {
-      return <Badge className="bg-blue-600 hover:bg-blue-700 text-xs">${podcast.price.toFixed(2)}</Badge>;
+
+    if (!podcast.podcast_recording_id) {
+      toast.error('Subscription not available for this podcast');
+      return;
     }
-    if (podcast.is_free) {
-      return <Badge className="bg-green-600 hover:bg-green-700 text-xs">Free</Badge>;
+
+    setSubscribingId(podcast.id);
+
+    try {
+      const tier = podcast.subscription_tier || 'moon';
+      const returnUrl = `${window.location.origin}/payment-success?type=subscription&podcastId=${podcast.podcast_recording_id}&tier=${tier}`;
+      const cancelUrl = `${window.location.origin}/payment-cancelled`;
+
+      const { data, error } = await supabase.functions.invoke('create-podcast-subscription', {
+        body: {
+          podcastRecordingId: podcast.podcast_recording_id,
+          tier,
+          returnUrl,
+          cancelUrl,
+        },
+        headers: {
+          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+        },
+      });
+
+      if (error) {
+        console.error('Subscription creation error:', error);
+        throw error;
+      }
+
+      if (data?.approvalUrl) {
+        window.location.href = data.approvalUrl;
+      } else {
+        throw new Error('No approval URL received from PayPal');
+      }
+    } catch (error: any) {
+      console.error('Error creating subscription:', error);
+      toast.error(error.message || 'Failed to start subscription. Please try again.');
+    } finally {
+      setSubscribingId(null);
     }
-    return <Badge variant="secondary" className="text-xs">Public</Badge>;
   };
 
   if (loading) {
@@ -234,22 +272,12 @@ const ProfilePodcastSection: React.FC<ProfilePodcastSectionProps> = ({
                       <Badge variant="secondary" className="capitalize text-xs px-2 py-1">
                         Podcast
                       </Badge>
-                      {/* Show subscription status or monthly pricing */}
-                      {hasSubscription ? (
+                      {/* Show subscription status badge only */}
+                      {hasSubscription && (
                         <Badge className="bg-green-600 hover:bg-green-700 text-xs flex items-center gap-1">
                           <CheckCircle className="w-3 h-3" />
                           Active Subscription
                         </Badge>
-                      ) : podcast.access_level === 'paid' && podcast.price ? (
-                        <Badge className="bg-blue-600 hover:bg-blue-700 text-xs">
-                          Monthly Subscription
-                        </Badge>
-                      ) : podcast.is_free ? (
-                        <Badge className="bg-green-600 hover:bg-green-700 text-xs">Free</Badge>
-                      ) : podcast.access_level === 'merchant_only' ? (
-                        <Badge className="bg-orange-600 hover:bg-orange-700 text-xs">Merchants Only</Badge>
-                      ) : (
-                        <Badge className="bg-green-600 hover:bg-green-700 text-xs">Public</Badge>
                       )}
                     </div>
                     
@@ -274,12 +302,13 @@ const ProfilePodcastSection: React.FC<ProfilePodcastSectionProps> = ({
                         </Button>
                       ) : podcast.access_level === 'paid' && podcast.price ? (
                         <Button
+                          onClick={() => handleSubscribe(podcast)}
+                          disabled={subscribingId === podcast.id}
                           className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1"
                           size="sm"
-                          disabled
                         >
                           <DollarSign className="w-3 h-3 mr-1" />
-                          Subscribe ${podcast.price.toFixed(2)}/mo
+                          {subscribingId === podcast.id ? 'Processing...' : `Subscribe $${podcast.price.toFixed(2)}/mo`}
                         </Button>
                       ) : null}
                     </div>
