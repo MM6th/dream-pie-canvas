@@ -9,7 +9,8 @@ import {
   Library,
   Clock,
   Calendar,
-  Upload
+  Upload,
+  Download
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -177,6 +178,47 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
         title: "Error",
         description: "Could not delete recording.",
         variant: "destructive"
+      });
+    }
+  };
+
+  const downloadRecording = async (recording: Recording) => {
+    try {
+      toast({
+        title: "Downloading...",
+        description: "Preparing your file for download.",
+      });
+
+      const response = await fetch(recording.audio_url);
+      if (!response.ok) throw new Error('Failed to fetch audio file');
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      
+      // Create a temporary link and trigger download
+      const link = document.createElement('a');
+      link.href = url;
+      // Use recording title for filename, sanitize and add extension
+      const sanitizedTitle = recording.title.replace(/[^a-zA-Z0-9-_\s]/g, '').trim() || 'recording';
+      const extension = recording.audio_url.split('.').pop()?.split('?')[0] || 'mp3';
+      link.download = `${sanitizedTitle}.${extension}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Clean up the blob URL
+      window.URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Download Started",
+        description: "Your recording is being downloaded.",
+      });
+    } catch (error) {
+      console.error('Error downloading recording:', error);
+      toast({
+        title: "Download Failed",
+        description: "Could not download the recording. Please try again.",
+        variant: "destructive",
       });
     }
   };
@@ -381,6 +423,15 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
                       ) : (
                         <Play className="w-4 h-4" />
                       )}
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      onClick={() => downloadRecording(recording)}
+                      className="h-8 w-8"
+                      title="Download"
+                    >
+                      <Download className="w-4 h-4" />
                     </Button>
                     <Button
                       size="icon"
