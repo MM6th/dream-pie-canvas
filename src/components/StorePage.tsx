@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import { AudioLines, Download, DollarSign, Video, Lock, Shirt, Star, Shield, Users, CheckCircle } from "lucide-react";
+import { AudioLines, Download, DollarSign, Video, Lock, Shirt, Star, Shield, Users, CheckCircle, Moon, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
@@ -1017,7 +1017,13 @@ const StorePage = () => {
                         {product.subscription_enabled && product.tier_description && (
                           <div className="mt-3 p-2 bg-primary/10 rounded-lg border border-primary/20">
                             <div className="flex items-center gap-1 mb-1">
-                              <Star className="w-3 h-3 text-primary" />
+                              {product.subscription_tier === 'moon' ? (
+                                <Moon className="w-3 h-3 text-primary" />
+                              ) : product.subscription_tier === 'jupiter' ? (
+                                <Sparkles className="w-3 h-3 text-primary" />
+                              ) : (
+                                <Star className="w-3 h-3 text-primary" />
+                              )}
                               <span className="text-xs font-medium text-primary capitalize">
                                 {product.subscription_tier || 'Premium'} Tier Perks
                               </span>
