@@ -122,10 +122,10 @@ export const PodcastPublishModal = ({
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
-  // Trailer preview controls - uses Media Fragments URI for reliable seeking
+  // Trailer preview controls - simplified, actual seeking happens on listener playback
   const playTrailerPreview = async () => {
     const audio = trailerAudioRef.current;
-    if (!audio || !isFinite(trailerStartTime) || !recording) return;
+    if (!audio || !recording) return;
 
     try {
       // Clear any previous timers
@@ -138,48 +138,14 @@ export const PodcastPublishModal = ({
         trailerIntervalRef.current = null;
       }
 
-      // Use Media Fragments URI for reliable seeking: url#t=start,end
-      const endTime = trailerStartTime + 30;
-      const fragmentUrl = `${recording.audio_url}#t=${trailerStartTime},${endTime}`;
+      // Try to seek - may not work for all MP3 files
+      audio.currentTime = trailerStartTime;
       
-      // Only update src if it's different (to trigger reload with fragment)
-      if (!audio.src.includes(`#t=${trailerStartTime}`)) {
-        audio.src = fragmentUrl;
-        audio.load();
-      }
-
-      // Wait for audio to be ready
-      await new Promise<void>((resolve) => {
-        if (audio.readyState >= 2) {
-          resolve();
-          return;
-        }
-        const timeout = setTimeout(() => resolve(), 5000);
-        const onCanPlay = () => {
-          clearTimeout(timeout);
-          resolve();
-        };
-        audio.addEventListener("canplay", onCanPlay, { once: true });
-      });
-
       await audio.play();
-      
-      // Verify the seek worked (within 5 seconds tolerance)
-      const actualTime = audio.currentTime;
-      const seekWorked = Math.abs(actualTime - trailerStartTime) < 5;
-      
-      if (!seekWorked && trailerStartTime > 10) {
-        // Seeking failed - notify user but continue playing from where it is
-        toast({
-          title: "Seek limited",
-          description: `Trailer will play from ${formatTime(actualTime)} instead of ${formatTime(trailerStartTime)}. The full podcast will be seekable after upload.`,
-        });
-      }
-
       setIsPlayingTrailer(true);
       setTrailerCurrentTime(0);
 
-      // Use interval-based counter (more reliable than onTimeUpdate)
+      // Use interval-based counter
       trailerIntervalRef.current = setInterval(() => {
         setTrailerCurrentTime(prev => {
           if (prev >= 30) {
@@ -197,7 +163,7 @@ export const PodcastPublishModal = ({
       console.error("Trailer preview error:", error);
       toast({
         title: "Preview unavailable",
-        description: "Could not load the audio preview. Please try again.",
+        description: "Could not load the audio preview.",
         variant: "destructive",
       });
     }
@@ -484,14 +450,8 @@ export const PodcastPublishModal = ({
               <div className="space-y-3 p-3 bg-muted/50 rounded-lg">
                 <audio 
                   ref={trailerAudioRef}
-                  src={`${recording.audio_url}#t=${trailerStartTime},${trailerStartTime + 30}`}
+                  src={recording.audio_url}
                   preload="none"
-                  onLoadedMetadata={(e) => {
-                    const duration = (e.target as HTMLAudioElement).duration;
-                    if (isFinite(duration) && duration > 0) {
-                      setAudioDuration(duration);
-                    }
-                  }}
                   onEnded={stopTrailerPreview}
                 />
                 
@@ -519,6 +479,10 @@ export const PodcastPublishModal = ({
                       </div>
                     </div>
                     
+                    <p className="text-xs text-muted-foreground bg-amber-500/10 border border-amber-500/20 rounded p-2">
+                      Select your 30-second trailer segment above. Listeners will hear this clip when previewing your podcast.
+                    </p>
+                    
                     {isPlayingTrailer && (
                       <div className="flex items-center justify-center gap-2 py-2 px-3 bg-primary/10 rounded-lg">
                         <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
@@ -543,7 +507,7 @@ export const PodcastPublishModal = ({
                       ) : (
                         <>
                           <Play className="w-4 h-4 mr-2" />
-                          Preview 30s Trailer
+                          Test Preview (may start from beginning)
                         </>
                       )}
                     </Button>
