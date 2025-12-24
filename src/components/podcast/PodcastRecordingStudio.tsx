@@ -42,7 +42,13 @@ export const PodcastRecordingStudio = ({ onRecordingSaved }: PodcastRecordingStu
   const [lastAutoSave, setLastAutoSave] = useState<Date | null>(null);
   const [recoveryData, setRecoveryData] = useState<RecoveryData | null>(null);
   const [isRecovering, setIsRecovering] = useState(false);
-  
+
+  // Auto-fill a default title once a recording is ready to be saved
+  useEffect(() => {
+    if (!audioUrl) return;
+    setTitle((prev) => (prev.trim() ? prev : `Voice Drop Recording - ${new Date().toLocaleString()}`));
+  }, [audioUrl]);
+
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -50,7 +56,7 @@ export const PodcastRecordingStudio = ({ onRecordingSaved }: PodcastRecordingStu
   const sessionIdRef = useRef<string>(`session_${Date.now()}`);
   const segmentIndexRef = useRef<number>(0);
   const savedSegmentsRef = useRef<string[]>([]);
-  const mimeTypeRef = useRef<string>('audio/webm');
+  const mimeTypeRef = useRef<string>("audio/webm");
 
   // Check for recovery data on mount
   useEffect(() => {
@@ -409,21 +415,21 @@ export const PodcastRecordingStudio = ({ onRecordingSaved }: PodcastRecordingStu
       if (chunksRef.current.length > 0) {
         await autoSaveSegment();
       }
-      
+
       mediaRecorderRef.current.stop();
       setIsRecording(false);
       setIsPaused(false);
-      
+
       if (timerRef.current) {
         clearInterval(timerRef.current);
       }
       if (autoSaveTimerRef.current) {
         clearInterval(autoSaveTimerRef.current);
       }
-      
+
       toast({
         title: "Recording Stopped",
-        description: "Your recording has been saved. Review it below.",
+        description: "Preview it below, then click \"Save Recording\" to add it to My Recordings.",
       });
     }
   };
@@ -524,7 +530,7 @@ export const PodcastRecordingStudio = ({ onRecordingSaved }: PodcastRecordingStu
       
       toast({
         title: "Recording Saved",
-        description: "Your voice drop recording has been saved successfully.",
+        description: "Saved to My Recordings below.",
       });
       
       discardRecording();
