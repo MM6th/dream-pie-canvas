@@ -73,10 +73,16 @@ export const PodcastPublishModal = ({
   const [trailerCurrentTime, setTrailerCurrentTime] = useState(0);
   const trailerTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const fullDurationSeconds =
-    (recording?.duration_seconds && recording.duration_seconds > 0
-      ? recording.duration_seconds
-      : audioDuration) || 0;
+  // Use database duration_seconds first, fallback to audio element duration
+  const fullDurationSeconds = React.useMemo(() => {
+    if (recording?.duration_seconds && recording.duration_seconds > 0) {
+      return recording.duration_seconds;
+    }
+    if (audioDuration > 0) {
+      return audioDuration;
+    }
+    return 0;
+  }, [recording?.duration_seconds, audioDuration]);
 
   const maxTrailerStartTime = Math.max(0, Math.floor(fullDurationSeconds - 30));
 
@@ -90,6 +96,7 @@ export const PodcastPublishModal = ({
   // Reset form when modal opens with a recording
   React.useEffect(() => {
     if (open && recording) {
+      console.log('Modal opened with recording:', recording.title, 'duration_seconds:', recording.duration_seconds);
       setTitle(recording.title);
       setDescription(recording.description || "");
       setIsFree(true);
@@ -102,6 +109,8 @@ export const PodcastPublishModal = ({
       setTrailerStartTime(0);
       setIsPlayingTrailer(false);
       setTrailerCurrentTime(0);
+      // Reset audioDuration so we use recording.duration_seconds as primary
+      setAudioDuration(0);
     }
   }, [open, recording]);
 

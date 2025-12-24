@@ -243,14 +243,35 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
         .from('audio-files')
         .getPublicUrl(fileName);
 
-      // Create audio element to get duration
-      const audio = new Audio(URL.createObjectURL(file));
-      await new Promise<void>((resolve) => {
-        audio.onloadedmetadata = () => resolve();
-        audio.onerror = () => resolve();
-      });
-
-      const duration = Math.round(audio.duration) || null;
+      // Create audio element to get duration - wait for full metadata load
+      let duration: number | null = null;
+      try {
+        const audio = new Audio();
+        const objectUrl = URL.createObjectURL(file);
+        audio.src = objectUrl;
+        
+        await new Promise<void>((resolve, reject) => {
+          const timeout = setTimeout(() => {
+            resolve(); // Still proceed even if timeout
+          }, 10000); // 10 second timeout
+          
+          audio.onloadedmetadata = () => {
+            clearTimeout(timeout);
+            if (isFinite(audio.duration) && audio.duration > 0) {
+              duration = Math.round(audio.duration);
+            }
+            resolve();
+          };
+          audio.onerror = () => {
+            clearTimeout(timeout);
+            resolve();
+          };
+        });
+        
+        URL.revokeObjectURL(objectUrl);
+      } catch (e) {
+        console.error('Error getting audio duration:', e);
+      }
 
       // Save to database
       const { error: dbError } = await supabase
