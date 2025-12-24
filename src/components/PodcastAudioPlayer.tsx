@@ -2,7 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { Mic, Play, Pause, Volume2, VolumeX, SkipBack, SkipForward } from "lucide-react";
+import { Mic, Play, Pause, Volume2, VolumeX, SkipBack, SkipForward, Download } from "lucide-react";
+import { toast } from "sonner";
 
 interface PodcastTrack {
   id: string;
@@ -166,6 +167,32 @@ const PodcastAudioPlayer = ({ tracks }: PodcastAudioPlayerProps) => {
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
+  const handleDownload = async (track: PodcastTrack) => {
+    try {
+      toast.info('Starting download...');
+      
+      const response = await fetch(track.audio_file_url);
+      const blob = await response.blob();
+      
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      
+      const filename = `${track.title.replace(/[^a-z0-9]/gi, '_')}.mp3`;
+      link.download = filename;
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      toast.success('Download started!');
+    } catch (error) {
+      console.error('Download error:', error);
+      toast.error('Failed to download file');
+    }
+  };
+
   if (!tracks.length) {
     return (
       <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
@@ -287,22 +314,35 @@ const PodcastAudioPlayer = ({ tracks }: PodcastAudioPlayerProps) => {
               </Button>
             </div>
 
-            <div className="flex items-center gap-2 w-32">
+            <div className="flex items-center gap-3">
               <Button
                 size="sm"
                 variant="ghost"
-                onClick={toggleMute}
+                onClick={() => currentTrack && handleDownload(currentTrack)}
+                disabled={!currentTrack}
                 className="text-white hover:bg-gray-700"
+                title="Download to device"
               >
-                {isMuted || volume === 0 ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                <Download className="w-4 h-4" />
               </Button>
-              <Slider
-                value={[isMuted ? 0 : volume * 100]}
-                onValueChange={handleVolumeChange}
-                max={100}
-                step={1}
-                className="flex-1"
-              />
+              
+              <div className="flex items-center gap-2 w-28">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={toggleMute}
+                  className="text-white hover:bg-gray-700"
+                >
+                  {isMuted || volume === 0 ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                </Button>
+                <Slider
+                  value={[isMuted ? 0 : volume * 100]}
+                  onValueChange={handleVolumeChange}
+                  max={100}
+                  step={1}
+                  className="flex-1"
+                />
+              </div>
             </div>
           </div>
         </div>
