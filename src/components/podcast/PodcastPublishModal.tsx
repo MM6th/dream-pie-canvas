@@ -65,35 +65,12 @@ export const PodcastPublishModal = ({
   const [subscriptionEnabled, setSubscriptionEnabled] = useState(false);
   const [selectedTier, setSelectedTier] = useState<SubscriptionTier>('moon');
   
-  // Trailer state
+  // Trailer state - simplified to always use first 30 seconds
   const [trailerEnabled, setTrailerEnabled] = useState(false);
-  const [trailerStartTime, setTrailerStartTime] = useState(0);
   const [isPlayingTrailer, setIsPlayingTrailer] = useState(false);
-  const [audioDuration, setAudioDuration] = useState(0);
   const [trailerCurrentTime, setTrailerCurrentTime] = useState(0);
-  const [previewSeekError, setPreviewSeekError] = useState<string | null>(null);
   const trailerTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const trailerIntervalRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Use database duration_seconds first, fallback to audio element duration
-  const fullDurationSeconds = React.useMemo(() => {
-    if (recording?.duration_seconds && recording.duration_seconds > 0) {
-      return recording.duration_seconds;
-    }
-    if (audioDuration > 0) {
-      return audioDuration;
-    }
-    return 0;
-  }, [recording?.duration_seconds, audioDuration]);
-
-  const maxTrailerStartTime = Math.max(0, Math.floor(fullDurationSeconds - 30));
-
-  React.useEffect(() => {
-    if (!trailerEnabled) return;
-    if (trailerStartTime > maxTrailerStartTime) {
-      setTrailerStartTime(maxTrailerStartTime);
-    }
-  }, [trailerEnabled, trailerStartTime, maxTrailerStartTime]);
 
   // Reset form when modal opens with a recording
   React.useEffect(() => {
@@ -107,31 +84,17 @@ export const PodcastPublishModal = ({
       setSubscriptionEnabled(false);
       setSelectedTier('moon');
       setTrailerEnabled(false);
-      setTrailerStartTime(0);
       setIsPlayingTrailer(false);
       setTrailerCurrentTime(0);
-      setPreviewSeekError(null);
-      // Reset audioDuration so we use recording.duration_seconds as primary
-      setAudioDuration(0);
     }
   }, [open, recording]);
 
-  // Format time helper
-  const formatTime = (seconds: number) => {
-    if (!isFinite(seconds) || isNaN(seconds)) return "0:00";
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
-  };
-
-  // Trailer preview controls
+  // Trailer preview - plays first 30 seconds from the beginning
   const playTrailerPreview = async () => {
     const audio = trailerAudioRef.current;
     if (!audio || !recording) return;
 
     try {
-      setPreviewSeekError(null);
-
       // Clear any previous timers
       if (trailerTimeoutRef.current) {
         clearTimeout(trailerTimeoutRef.current);
@@ -142,61 +105,13 @@ export const PodcastPublishModal = ({
         trailerIntervalRef.current = null;
       }
 
-      // Ensure metadata is loaded before seeking
-      if (audio.readyState < 1) {
-        await new Promise<void>((resolve, reject) => {
-          const timeout = setTimeout(resolve, 4000);
-          const onLoaded = () => {
-            clearTimeout(timeout);
-            resolve();
-          };
-          const onErr = () => {
-            clearTimeout(timeout);
-            reject(new Error("Audio failed to load"));
-          };
-          audio.addEventListener("loadedmetadata", onLoaded, { once: true });
-          audio.addEventListener("error", onErr, { once: true });
-          audio.load();
-        });
-      }
-
-      const target = Math.max(0, trailerStartTime);
-
-      // Attempt seek + wait briefly for it to take effect
-      try {
-        audio.currentTime = target;
-      } catch {
-        // ignore
-      }
-
-      await new Promise<void>((resolve) => {
-        const t = setTimeout(resolve, 1500);
-        const onSeeked = () => {
-          clearTimeout(t);
-          resolve();
-        };
-        audio.addEventListener("seeked", onSeeked, { once: true });
-      });
-
-      const actual = audio.currentTime;
-      const seekOk = target === 0 || Math.abs(actual - target) <= 1.5;
-
-      if (!seekOk) {
-        setPreviewSeekError(
-          "This episode file cant be preview-scrubbed in the browser. Re-upload it as a seekable MP3 (CBR export) to audition the trailer start time."
-        );
-        toast({
-          title: "Preview cant seek",
-          description: "Re-upload a seekable MP3 to preview from the selected time.",
-        });
-        return;
-      }
-
+      // Start from beginning
+      audio.currentTime = 0;
       await audio.play();
       setIsPlayingTrailer(true);
       setTrailerCurrentTime(0);
 
-      // Use interval-based counter
+      // Counter interval
       trailerIntervalRef.current = setInterval(() => {
         setTrailerCurrentTime((prev) => {
           if (prev >= 30) {
@@ -207,6 +122,7 @@ export const PodcastPublishModal = ({
         });
       }, 1000);
 
+      // Auto-stop after 30 seconds
       trailerTimeoutRef.current = setTimeout(() => {
         stopTrailerPreview();
       }, 30 * 1000);
@@ -214,7 +130,7 @@ export const PodcastPublishModal = ({
       console.error("Trailer preview error:", error);
       toast({
         title: "Preview unavailable",
-        description: "Could not load the audio preview.",
+        description: "Could not play the audio preview.",
         variant: "destructive",
       });
     }
@@ -224,9 +140,7 @@ export const PodcastPublishModal = ({
     const audio = trailerAudioRef.current;
     if (audio) {
       audio.pause();
-      if (isFinite(trailerStartTime)) {
-        audio.currentTime = trailerStartTime;
-      }
+      audio.currentTime = 0;
     }
     setIsPlayingTrailer(false);
     setTrailerCurrentTime(0);
@@ -330,12 +244,10 @@ export const PodcastPublishModal = ({
         thumbnailUrl = publicUrl;
       }
 
-      // Upload trailer if enabled (extract 30-second clip URL with start time)
+      // Trailer URL - always starts at 0 (first 30 seconds)
       let trailerUrl: string | null = null;
       if (trailerEnabled) {
-        // Store trailer as the original audio URL with a query param for start time
-        // The player will handle playing only 30 seconds from this position
-        trailerUrl = `${recording.audio_url}#t=${trailerStartTime}`;
+        trailerUrl = `${recording.audio_url}#t=0`;
       }
 
       // Update podcast_recordings with subscription and trailer settings
@@ -506,78 +418,38 @@ export const PodcastPublishModal = ({
                   onEnded={stopTrailerPreview}
                 />
                 
-                {fullDurationSeconds > 0 ? (
-                  <>
-                    <div className="space-y-2">
-                      <Label className="text-sm">Trailer starts at: {formatTime(trailerStartTime)}</Label>
-                      <input
-                        type="range"
-                        min={0}
-                        max={maxTrailerStartTime}
-                        value={Math.min(trailerStartTime, maxTrailerStartTime)}
-                        onChange={(e) => {
-                          const value = parseInt(e.target.value, 10);
-                          setTrailerStartTime(value);
-                          if (isPlayingTrailer) {
-                            stopTrailerPreview();
-                          }
-                          // Clear any previous seek error when user changes selection
-                          setPreviewSeekError(null);
-                        }}
-                        className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
-                      />
-                      <div className="flex justify-between text-xs text-muted-foreground">
-                        <span>0:00</span>
-                        <span>{formatTime(fullDurationSeconds)}</span>
-                      </div>
-                    </div>
-                    
-                    <p className="text-xs text-muted-foreground bg-muted/60 border border-border rounded p-2">
-                      Click “Preview 30s” to audition the selected moment. If preview won’t jump to the selected time, re-upload the episode as a seekable MP3.
-                    </p>
-
-                    {previewSeekError && (
-                      <p className="text-xs text-destructive">
-                        {previewSeekError}
-                      </p>
-                    )}
-                    
-                    {isPlayingTrailer && (
-                      <div className="flex items-center justify-center gap-2 py-2 px-3 bg-primary/10 rounded-lg">
-                        <div className="w-2 h-2 bg-destructive rounded-full animate-pulse" />
-                        <span className="text-lg font-mono font-semibold">
-                          {Math.floor(trailerCurrentTime)}s / 30s
-                        </span>
-                      </div>
-                    )}
-                    
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={toggleTrailerPreview}
-                      className="w-full"
-                      disabled={!!previewSeekError}
-                    >
-                      {isPlayingTrailer ? (
-                        <>
-                          <Pause className="w-4 h-4 mr-2" />
-                          Stop Preview
-                        </>
-                      ) : (
-                        <>
-                          <Play className="w-4 h-4 mr-2" />
-                          Preview 30s
-                        </>
-                      )}
-                    </Button>
-                  </>
-                ) : (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Loading episode length...
+                <p className="text-sm text-muted-foreground">
+                  Listeners will hear the first 30 seconds of your episode as a preview.
+                </p>
+                
+                {isPlayingTrailer && (
+                  <div className="flex items-center justify-center gap-2 py-2 px-3 bg-primary/10 rounded-lg">
+                    <div className="w-2 h-2 bg-destructive rounded-full animate-pulse" />
+                    <span className="text-lg font-mono font-semibold">
+                      {Math.floor(trailerCurrentTime)}s / 30s
+                    </span>
                   </div>
                 )}
+                
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={toggleTrailerPreview}
+                  className="w-full"
+                >
+                  {isPlayingTrailer ? (
+                    <>
+                      <Pause className="w-4 h-4 mr-2" />
+                      Stop Preview
+                    </>
+                  ) : (
+                    <>
+                      <Play className="w-4 h-4 mr-2" />
+                      Preview First 30s
+                    </>
+                  )}
+                </Button>
               </div>
             )}
           </div>
