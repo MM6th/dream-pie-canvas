@@ -12,8 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Slider } from "@/components/ui/slider";
-import { Upload, Image, Loader2, Moon, Star, Sparkles, Play, Pause, Music } from "lucide-react";
+import { Image, Loader2, Moon, Star, Sparkles, Play, Pause } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -74,6 +73,20 @@ export const PodcastPublishModal = ({
   const [trailerCurrentTime, setTrailerCurrentTime] = useState(0);
   const trailerTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  const fullDurationSeconds =
+    (recording?.duration_seconds && recording.duration_seconds > 0
+      ? recording.duration_seconds
+      : audioDuration) || 0;
+
+  const maxTrailerStartTime = Math.max(0, Math.floor(fullDurationSeconds - 30));
+
+  React.useEffect(() => {
+    if (!trailerEnabled) return;
+    if (trailerStartTime > maxTrailerStartTime) {
+      setTrailerStartTime(maxTrailerStartTime);
+    }
+  }, [trailerEnabled, trailerStartTime, maxTrailerStartTime]);
+
   // Reset form when modal opens with a recording
   React.useEffect(() => {
     if (open && recording) {
@@ -101,18 +114,50 @@ export const PodcastPublishModal = ({
   };
 
   // Trailer preview controls
-  const playTrailerPreview = () => {
+  const playTrailerPreview = async () => {
     const audio = trailerAudioRef.current;
     if (!audio || !isFinite(trailerStartTime)) return;
-    
-    audio.currentTime = trailerStartTime;
-    audio.play().catch(console.error);
-    setIsPlayingTrailer(true);
-    setTrailerCurrentTime(0);
-    
-    trailerTimeoutRef.current = setTimeout(() => {
-      stopTrailerPreview();
-    }, 30 * 1000);
+
+    try {
+      // Clear any previous timer
+      if (trailerTimeoutRef.current) {
+        clearTimeout(trailerTimeoutRef.current);
+        trailerTimeoutRef.current = null;
+      }
+
+      // Ensure metadata is loaded so seeking works more reliably
+      if (audio.readyState < 1) {
+        await new Promise<void>((resolve, reject) => {
+          const onLoaded = () => resolve();
+          const onErr = () => reject(new Error("Audio failed to load"));
+          audio.addEventListener("loadedmetadata", onLoaded, { once: true });
+          audio.addEventListener("error", onErr, { once: true });
+          audio.load();
+        });
+      }
+
+      try {
+        audio.currentTime = trailerStartTime;
+      } catch (err) {
+        console.error("Trailer seek failed", err);
+        audio.currentTime = 0;
+      }
+
+      await audio.play();
+      setIsPlayingTrailer(true);
+      setTrailerCurrentTime(0);
+
+      trailerTimeoutRef.current = setTimeout(() => {
+        stopTrailerPreview();
+      }, 30 * 1000);
+    } catch (error) {
+      console.error("Trailer preview error:", error);
+      toast({
+        title: "Preview unavailable",
+        description: "Could not load the audio preview. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const stopTrailerPreview = () => {
@@ -410,15 +455,15 @@ export const PodcastPublishModal = ({
                   }}
                 />
                 
-                {audioDuration > 0 ? (
+                {fullDurationSeconds > 0 ? (
                   <>
                     <div className="space-y-2">
                       <Label className="text-sm">Trailer starts at: {formatTime(trailerStartTime)}</Label>
                       <input
                         type="range"
                         min={0}
-                        max={Math.max(0, Math.floor(audioDuration - 30))}
-                        value={trailerStartTime}
+                        max={maxTrailerStartTime}
+                        value={Math.min(trailerStartTime, maxTrailerStartTime)}
                         onChange={(e) => {
                           const value = parseInt(e.target.value, 10);
                           setTrailerStartTime(value);
@@ -430,7 +475,7 @@ export const PodcastPublishModal = ({
                       />
                       <div className="flex justify-between text-xs text-muted-foreground">
                         <span>0:00</span>
-                        <span>{formatTime(audioDuration)}</span>
+                        <span>{formatTime(fullDurationSeconds)}</span>
                       </div>
                     </div>
                     
@@ -457,7 +502,7 @@ export const PodcastPublishModal = ({
                 ) : (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    Loading audio...
+                    Loading episode length...
                   </div>
                 )}
               </div>
