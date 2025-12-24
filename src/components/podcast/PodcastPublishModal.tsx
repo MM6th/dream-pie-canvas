@@ -97,7 +97,6 @@ export const PodcastPublishModal = ({
   // Reset form when modal opens with a recording
   React.useEffect(() => {
     if (open && recording) {
-      console.log('Modal opened with recording:', recording.title, 'duration_seconds:', recording.duration_seconds);
       setTitle(recording.title);
       setDescription(recording.description || "");
       setIsFree(true);
