@@ -129,29 +129,42 @@ export const PodcastPublishModal = ({
     if (!audio || !isFinite(trailerStartTime)) return;
 
     try {
-      // Clear any previous timer
+      // Clear any previous timers
       if (trailerTimeoutRef.current) {
         clearTimeout(trailerTimeoutRef.current);
         trailerTimeoutRef.current = null;
       }
+      if (trailerIntervalRef.current) {
+        clearInterval(trailerIntervalRef.current);
+        trailerIntervalRef.current = null;
+      }
 
-      // Ensure metadata is loaded so seeking works more reliably
-      if (audio.readyState < 1) {
+      // Wait for audio to be ready for seeking
+      if (audio.readyState < 2) {
         await new Promise<void>((resolve, reject) => {
-          const onLoaded = () => resolve();
-          const onErr = () => reject(new Error("Audio failed to load"));
-          audio.addEventListener("loadedmetadata", onLoaded, { once: true });
+          const timeout = setTimeout(() => resolve(), 5000);
+          const onCanPlay = () => {
+            clearTimeout(timeout);
+            resolve();
+          };
+          const onErr = () => {
+            clearTimeout(timeout);
+            reject(new Error("Audio failed to load"));
+          };
+          audio.addEventListener("canplay", onCanPlay, { once: true });
           audio.addEventListener("error", onErr, { once: true });
           audio.load();
         });
       }
 
-      try {
-        audio.currentTime = trailerStartTime;
-      } catch (err) {
-        console.error("Trailer seek failed", err);
-        audio.currentTime = 0;
-      }
+      // Seek and wait for it to complete
+      audio.currentTime = trailerStartTime;
+      await new Promise<void>((resolve) => {
+        const onSeeked = () => resolve();
+        audio.addEventListener("seeked", onSeeked, { once: true });
+        // Fallback timeout in case seeked never fires
+        setTimeout(() => resolve(), 2000);
+      });
 
       await audio.play();
       setIsPlayingTrailer(true);
