@@ -1034,23 +1034,22 @@ const StorePage = () => {
                             <Badge variant="secondary" className="capitalize text-xs px-2 py-1">
                               Podcast
                             </Badge>
-                            {/* Show Subscribed badge if user has active subscription to this merchant */}
-                            {product.merchant_id && subscriptionMap[product.merchant_id] && (
+                            {/* Show subscription status or monthly price */}
+                            {product.merchant_id && subscriptionMap[product.merchant_id] ? (
                               <Badge className="bg-green-600 hover:bg-green-700 text-xs flex items-center gap-1">
                                 <CheckCircle className="w-3 h-3" />
-                                Subscribed
+                                Active Subscription
                               </Badge>
-                            )}
-                          </div>
-                          
-                          <div className="flex items-center justify-between flex-wrap gap-2">
-                            {/* If subscribed, show "Included" instead of price badge */}
-                            {product.merchant_id && subscriptionMap[product.merchant_id] ? (
-                              <Badge className="bg-green-600 hover:bg-green-700">
-                                Included in Subscription
+                            ) : product.access_level === 'paid' && product.price ? (
+                              <Badge className="bg-blue-600 hover:bg-blue-700 text-xs">
+                                ${product.price.toFixed(2)}/mo
                               </Badge>
+                            ) : product.is_free ? (
+                              <Badge className="bg-green-600 hover:bg-green-700 text-xs">Free</Badge>
+                            ) : product.access_level === 'merchant_only' ? (
+                              <Badge className="bg-orange-600 hover:bg-orange-700 text-xs">Merchants Only</Badge>
                             ) : (
-                              getAccessLevelBadgeForAudio(product)
+                              <Badge className="bg-green-600 hover:bg-green-700 text-xs">Public</Badge>
                             )}
                           </div>
                           
@@ -1103,7 +1102,7 @@ const StorePage = () => {
                                 size="sm"
                               >
                                 <DollarSign className="w-3 h-3 mr-1" />
-                                {purchasingId === product.id ? 'Processing...' : `Buy $${product.price.toFixed(2)}`}
+                                {purchasingId === product.id ? 'Processing...' : `Subscribe $${product.price.toFixed(2)}/mo`}
                               </Button>
                             ) : (
                               <Button
