@@ -122,10 +122,10 @@ export const PodcastPublishModal = ({
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
-  // Trailer preview controls
+  // Trailer preview controls - uses Media Fragments URI for reliable seeking
   const playTrailerPreview = async () => {
     const audio = trailerAudioRef.current;
-    if (!audio || !isFinite(trailerStartTime)) return;
+    if (!audio || !isFinite(trailerStartTime) || !recording) return;
 
     try {
       // Clear any previous timers
@@ -138,34 +138,44 @@ export const PodcastPublishModal = ({
         trailerIntervalRef.current = null;
       }
 
-      // Wait for audio to be ready for seeking
-      if (audio.readyState < 2) {
-        await new Promise<void>((resolve, reject) => {
-          const timeout = setTimeout(() => resolve(), 5000);
-          const onCanPlay = () => {
-            clearTimeout(timeout);
-            resolve();
-          };
-          const onErr = () => {
-            clearTimeout(timeout);
-            reject(new Error("Audio failed to load"));
-          };
-          audio.addEventListener("canplay", onCanPlay, { once: true });
-          audio.addEventListener("error", onErr, { once: true });
-          audio.load();
-        });
+      // Use Media Fragments URI for reliable seeking: url#t=start,end
+      const endTime = trailerStartTime + 30;
+      const fragmentUrl = `${recording.audio_url}#t=${trailerStartTime},${endTime}`;
+      
+      // Only update src if it's different (to trigger reload with fragment)
+      if (!audio.src.includes(`#t=${trailerStartTime}`)) {
+        audio.src = fragmentUrl;
+        audio.load();
       }
 
-      // Seek and wait for it to complete
-      audio.currentTime = trailerStartTime;
+      // Wait for audio to be ready
       await new Promise<void>((resolve) => {
-        const onSeeked = () => resolve();
-        audio.addEventListener("seeked", onSeeked, { once: true });
-        // Fallback timeout in case seeked never fires
-        setTimeout(() => resolve(), 2000);
+        if (audio.readyState >= 2) {
+          resolve();
+          return;
+        }
+        const timeout = setTimeout(() => resolve(), 5000);
+        const onCanPlay = () => {
+          clearTimeout(timeout);
+          resolve();
+        };
+        audio.addEventListener("canplay", onCanPlay, { once: true });
       });
 
       await audio.play();
+      
+      // Verify the seek worked (within 5 seconds tolerance)
+      const actualTime = audio.currentTime;
+      const seekWorked = Math.abs(actualTime - trailerStartTime) < 5;
+      
+      if (!seekWorked && trailerStartTime > 10) {
+        // Seeking failed - notify user but continue playing from where it is
+        toast({
+          title: "Seek limited",
+          description: `Trailer will play from ${formatTime(actualTime)} instead of ${formatTime(trailerStartTime)}. The full podcast will be seekable after upload.`,
+        });
+      }
+
       setIsPlayingTrailer(true);
       setTrailerCurrentTime(0);
 
@@ -474,22 +484,15 @@ export const PodcastPublishModal = ({
               <div className="space-y-3 p-3 bg-muted/50 rounded-lg">
                 <audio 
                   ref={trailerAudioRef}
-                  src={recording.audio_url}
-                  preload="metadata"
+                  src={`${recording.audio_url}#t=${trailerStartTime},${trailerStartTime + 30}`}
+                  preload="none"
                   onLoadedMetadata={(e) => {
                     const duration = (e.target as HTMLAudioElement).duration;
                     if (isFinite(duration) && duration > 0) {
                       setAudioDuration(duration);
                     }
                   }}
-                  onTimeUpdate={(e) => {
-                    const audio = e.target as HTMLAudioElement;
-                    const elapsed = audio.currentTime - trailerStartTime;
-                    setTrailerCurrentTime(Math.max(0, elapsed));
-                    if (elapsed >= 30) {
-                      stopTrailerPreview();
-                    }
-                  }}
+                  onEnded={stopTrailerPreview}
                 />
                 
                 {fullDurationSeconds > 0 ? (
