@@ -488,6 +488,15 @@ export const PodcastPublishModal = ({
                       </div>
                     </div>
                     
+                    {isPlayingTrailer && (
+                      <div className="flex items-center justify-center gap-2 py-2 px-3 bg-primary/10 rounded-lg">
+                        <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                        <span className="text-lg font-mono font-semibold">
+                          {Math.floor(trailerCurrentTime)}s / 30s
+                        </span>
+                      </div>
+                    )}
+                    
                     <Button
                       type="button"
                       variant="outline"
@@ -498,7 +507,7 @@ export const PodcastPublishModal = ({
                       {isPlayingTrailer ? (
                         <>
                           <Pause className="w-4 h-4 mr-2" />
-                          Stop ({formatTime(trailerCurrentTime)} / 0:30)
+                          Stop Preview
                         </>
                       ) : (
                         <>
