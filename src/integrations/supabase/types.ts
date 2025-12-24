@@ -1887,6 +1887,7 @@ export type Database = {
           subscription_enabled: boolean | null
           subscription_tier: string | null
           title: string
+          trailer_url: string | null
           updated_at: string
         }
         Insert: {
@@ -1902,6 +1903,7 @@ export type Database = {
           subscription_enabled?: boolean | null
           subscription_tier?: string | null
           title: string
+          trailer_url?: string | null
           updated_at?: string
         }
         Update: {
@@ -1917,6 +1919,7 @@ export type Database = {
           subscription_enabled?: boolean | null
           subscription_tier?: string | null
           title?: string
+          trailer_url?: string | null
           updated_at?: string
         }
         Relationships: [

@@ -12,7 +12,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Upload, Image, Loader2, Moon, Star, Sparkles } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
+import { Upload, Image, Loader2, Moon, Star, Sparkles, Play, Pause, Music } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -51,6 +52,7 @@ export const PodcastPublishModal = ({
   const { user } = useAuth();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const trailerAudioRef = useRef<HTMLAudioElement>(null);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -63,6 +65,14 @@ export const PodcastPublishModal = ({
   // Subscription state
   const [subscriptionEnabled, setSubscriptionEnabled] = useState(false);
   const [selectedTier, setSelectedTier] = useState<SubscriptionTier>('moon');
+  
+  // Trailer state
+  const [trailerEnabled, setTrailerEnabled] = useState(false);
+  const [trailerStartTime, setTrailerStartTime] = useState(0);
+  const [isPlayingTrailer, setIsPlayingTrailer] = useState(false);
+  const [audioDuration, setAudioDuration] = useState(0);
+  const [trailerCurrentTime, setTrailerCurrentTime] = useState(0);
+  const trailerTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Reset form when modal opens with a recording
   React.useEffect(() => {
@@ -75,8 +85,57 @@ export const PodcastPublishModal = ({
       setThumbnailPreview(null);
       setSubscriptionEnabled(false);
       setSelectedTier('moon');
+      setTrailerEnabled(false);
+      setTrailerStartTime(0);
+      setIsPlayingTrailer(false);
+      setTrailerCurrentTime(0);
     }
   }, [open, recording]);
+
+  // Format time helper
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  // Trailer preview controls
+  const playTrailerPreview = () => {
+    const audio = trailerAudioRef.current;
+    if (!audio) return;
+    
+    audio.currentTime = trailerStartTime;
+    audio.play();
+    setIsPlayingTrailer(true);
+    setTrailerCurrentTime(0);
+    
+    trailerTimeoutRef.current = setTimeout(() => {
+      stopTrailerPreview();
+    }, 30 * 1000);
+  };
+
+  const stopTrailerPreview = () => {
+    const audio = trailerAudioRef.current;
+    if (audio) {
+      audio.pause();
+      audio.currentTime = trailerStartTime;
+    }
+    setIsPlayingTrailer(false);
+    setTrailerCurrentTime(0);
+    
+    if (trailerTimeoutRef.current) {
+      clearTimeout(trailerTimeoutRef.current);
+      trailerTimeoutRef.current = null;
+    }
+  };
+
+  const toggleTrailerPreview = () => {
+    if (isPlayingTrailer) {
+      stopTrailerPreview();
+    } else {
+      playTrailerPreview();
+    }
+  };
 
   const handleThumbnailSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -159,14 +218,30 @@ export const PodcastPublishModal = ({
         thumbnailUrl = publicUrl;
       }
 
-      // Update podcast_recordings with subscription settings if enabled
+      // Upload trailer if enabled (extract 30-second clip URL with start time)
+      let trailerUrl: string | null = null;
+      if (trailerEnabled) {
+        // Store trailer as the original audio URL with a query param for start time
+        // The player will handle playing only 30 seconds from this position
+        trailerUrl = `${recording.audio_url}#t=${trailerStartTime}`;
+      }
+
+      // Update podcast_recordings with subscription and trailer settings
+      const recordingUpdateData: Record<string, unknown> = {};
+      
       if (subscriptionEnabled) {
+        recordingUpdateData.subscription_enabled = true;
+        recordingUpdateData.subscription_tier = selectedTier;
+      }
+      
+      if (trailerEnabled) {
+        recordingUpdateData.trailer_url = trailerUrl;
+      }
+      
+      if (Object.keys(recordingUpdateData).length > 0) {
         const { error: updateRecordingError } = await supabase
           .from("podcast_recordings")
-          .update({
-            subscription_enabled: true,
-            subscription_tier: selectedTier,
-          })
+          .update(recordingUpdateData)
           .eq("id", recording.id);
 
         if (updateRecordingError) throw updateRecordingError;
@@ -293,6 +368,94 @@ export const PodcastPublishModal = ({
               className="bg-background"
               rows={3}
             />
+          </div>
+
+          {/* Trailer Settings */}
+          <div className="space-y-3 border-t pt-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label>30-Second Trailer</Label>
+                <p className="text-xs text-muted-foreground">
+                  Let listeners preview your podcast
+                </p>
+              </div>
+              <Switch 
+                checked={trailerEnabled} 
+                onCheckedChange={setTrailerEnabled} 
+              />
+            </div>
+            
+            {trailerEnabled && recording && (
+              <div className="space-y-3 p-3 bg-muted/50 rounded-lg">
+                <audio 
+                  ref={trailerAudioRef}
+                  src={recording.audio_url}
+                  preload="metadata"
+                  onLoadedMetadata={(e) => {
+                    setAudioDuration((e.target as HTMLAudioElement).duration);
+                  }}
+                  onTimeUpdate={(e) => {
+                    const audio = e.target as HTMLAudioElement;
+                    const elapsed = audio.currentTime - trailerStartTime;
+                    setTrailerCurrentTime(elapsed);
+                    if (elapsed >= 30) {
+                      stopTrailerPreview();
+                    }
+                  }}
+                />
+                
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm">Start Time</Label>
+                    <span className="text-xs text-muted-foreground">
+                      {formatTime(trailerStartTime)} - {formatTime(Math.min(trailerStartTime + 30, audioDuration))}
+                    </span>
+                  </div>
+                  <Slider
+                    value={[trailerStartTime]}
+                    max={Math.max(0, audioDuration - 30)}
+                    step={1}
+                    onValueChange={([value]) => {
+                      setTrailerStartTime(value);
+                      if (isPlayingTrailer) {
+                        stopTrailerPreview();
+                      }
+                    }}
+                    className="w-full"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Select where your 30-second trailer begins
+                  </p>
+                </div>
+                
+                <div className="flex items-center gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={toggleTrailerPreview}
+                    className="h-9"
+                  >
+                    {isPlayingTrailer ? (
+                      <>
+                        <Pause className="w-4 h-4 mr-2" />
+                        Stop Preview
+                      </>
+                    ) : (
+                      <>
+                        <Play className="w-4 h-4 mr-2" />
+                        Preview Trailer
+                      </>
+                    )}
+                  </Button>
+                  {isPlayingTrailer && (
+                    <span className="text-sm text-muted-foreground">
+                      {formatTime(trailerCurrentTime)} / 0:30
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Subscription Toggle */}
