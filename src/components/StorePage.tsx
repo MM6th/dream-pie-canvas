@@ -50,6 +50,10 @@ interface AudioProduct {
   };
   isAlbum?: boolean;
   albumId?: string;
+  // Subscription tier info (from podcast_recordings)
+  subscription_enabled?: boolean | null;
+  subscription_tier?: string | null;
+  tier_description?: string | null;
 }
 
 interface VideoAdOpportunity {
@@ -372,8 +376,36 @@ const StorePage = () => {
       const adultFilteredAudioData = filterAdultContent(filteredAudioData, profile);
       const adultFilteredVideoAdData = filterAdultContent(videoAdData || [], profile);
       
-      const finalAudioData = filterAccessLevel(adultFilteredAudioData, profile);
+      let finalAudioData: AudioProduct[] = filterAccessLevel(adultFilteredAudioData, profile) as AudioProduct[];
       const filteredVideoAdData = filterAccessLevel(adultFilteredVideoAdData, profile);
+      
+      // Fetch podcast_recordings to get subscription tier info for podcasts
+      const podcastProducts = finalAudioData.filter(p => p.audio_type === 'podcast');
+      if (podcastProducts.length > 0) {
+        const audioUrls = podcastProducts.map(p => p.audio_file_url);
+        const { data: podcastRecordings } = await supabase
+          .from('podcast_recordings')
+          .select('audio_url, subscription_enabled, subscription_tier, tier_description')
+          .in('audio_url', audioUrls);
+        
+        if (podcastRecordings) {
+          const recordingsMap = new Map(podcastRecordings.map(r => [r.audio_url, r]));
+          finalAudioData = finalAudioData.map(product => {
+            if (product.audio_type === 'podcast') {
+              const recording = recordingsMap.get(product.audio_file_url);
+              if (recording) {
+                return {
+                  ...product,
+                  subscription_enabled: recording.subscription_enabled,
+                  subscription_tier: recording.subscription_tier,
+                  tier_description: recording.tier_description,
+                };
+              }
+            }
+            return product;
+          });
+        }
+      }
       
       console.log('Final filtered audio products:', finalAudioData.length);
       console.log('Final filtered video ad opportunities:', filteredVideoAdData.length);
@@ -968,6 +1000,20 @@ const StorePage = () => {
                             maxLength={80}
                             className="mt-2"
                           />
+                        )}
+                        {/* Subscription Tier Description */}
+                        {product.subscription_enabled && product.tier_description && (
+                          <div className="mt-3 p-2 bg-primary/10 rounded-lg border border-primary/20">
+                            <div className="flex items-center gap-1 mb-1">
+                              <Star className="w-3 h-3 text-primary" />
+                              <span className="text-xs font-medium text-primary capitalize">
+                                {product.subscription_tier || 'Premium'} Tier Perks
+                              </span>
+                            </div>
+                            <p className="text-xs text-gray-300 line-clamp-3">
+                              {product.tier_description}
+                            </p>
+                          </div>
                         )}
                       </CardHeader>
                       <CardContent className="p-4 pt-0">
