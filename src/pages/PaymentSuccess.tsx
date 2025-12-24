@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, Music, ArrowLeft, Shirt } from "lucide-react";
+import { CheckCircle, Music, ArrowLeft, Shirt, Repeat } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
@@ -78,6 +78,27 @@ const PaymentSuccess = () => {
           result = await supabase.functions.invoke('capture-portfolio-payment', {
             body: { orderId, portfolioId }
           });
+        } else if (paymentType === "subscription") {
+          // Handle podcast subscription capture
+          const podcastId = searchParams.get('podcastId');
+          const tier = searchParams.get('tier');
+          result = await supabase.functions.invoke('capture-podcast-subscription', {
+            body: { 
+              subscriptionId: orderId, 
+              podcastRecordingId: podcastId,
+              tier 
+            }
+          });
+          
+          if (!result?.error) {
+            setSuccess(true);
+            setProcessing(false);
+            toast({
+              title: "Subscription Active!",
+              description: `Your ${tier} subscription is now active. Enjoy your content!`
+            });
+            return;
+          }
         } else if (paymentType === "astrology" || paymentType === "credit") {
           // Astrology and credit payments are captured by the edge function before redirecting here
           setSuccess(true);
@@ -142,6 +163,9 @@ const PaymentSuccess = () => {
     if (success) {
       return <CheckCircle className="w-16 h-16 text-green-500" />;
     }
+    if (paymentType === 'subscription') {
+      return <Repeat className="w-16 h-16 text-red-500" />;
+    }
     return paymentType === 'fashion' ? 
       <Shirt className="w-16 h-16 text-red-500" /> : 
       <Music className="w-16 h-16 text-red-500" />;
@@ -162,6 +186,10 @@ const PaymentSuccess = () => {
     if (paymentType === 'credit') {
       const credits = searchParams.get('credits') || '50';
       return `Thank you! ${credits} messaging credits have been added to your account.`;
+    }
+    if (paymentType === 'subscription') {
+      const tier = searchParams.get('tier') || 'Moon';
+      return `Your ${tier} subscription is now active! Enjoy unlimited access to this podcast.`;
     }
     return "Thank you for your purchase! Your audio has been added to your music library.";
   };

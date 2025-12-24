@@ -155,6 +155,98 @@ Deno.serve(async (req) => {
       console.log('Payment capture completed - handled by existing capture functions');
     }
 
+    // Handle subscription events
+    if (eventType === 'BILLING.SUBSCRIPTION.ACTIVATED') {
+      const resource = payload.resource;
+      console.log('Subscription activated:', resource.id);
+      
+      try {
+        const customData = JSON.parse(resource.custom_id);
+        const { userId, podcastRecordingId, merchantId, tier, amount } = customData;
+
+        // Check if already exists
+        const { data: existing } = await supabaseAdmin
+          .from('podcast_subscriptions')
+          .select('id')
+          .eq('paypal_subscription_id', resource.id)
+          .single();
+
+        if (!existing) {
+          await supabaseAdmin
+            .from('podcast_subscriptions')
+            .insert({
+              subscriber_id: userId,
+              podcast_recording_id: podcastRecordingId,
+              merchant_id: merchantId,
+              paypal_subscription_id: resource.id,
+              tier,
+              amount,
+              status: 'active',
+              next_billing_date: resource.billing_info?.next_billing_time
+            });
+
+          // Notify merchant
+          await supabaseAdmin
+            .from('notifications')
+            .insert({
+              user_id: merchantId,
+              type: 'new_subscription',
+              title: 'New Subscription!',
+              message: `Someone subscribed to your podcast at the ${tier} tier ($${amount}/month).`
+            });
+        }
+      } catch (e) {
+        console.error('Error processing subscription activation:', e);
+      }
+    }
+
+    if (eventType === 'BILLING.SUBSCRIPTION.CANCELLED' ||
+        eventType === 'BILLING.SUBSCRIPTION.SUSPENDED' ||
+        eventType === 'BILLING.SUBSCRIPTION.EXPIRED') {
+      const resource = payload.resource;
+      const newStatus = eventType.includes('CANCELLED') ? 'cancelled' 
+                      : eventType.includes('SUSPENDED') ? 'suspended' 
+                      : 'expired';
+      
+      console.log(`Subscription ${newStatus}:`, resource.id);
+
+      const { error } = await supabaseAdmin
+        .from('podcast_subscriptions')
+        .update({
+          status: newStatus,
+          cancelled_at: newStatus === 'cancelled' ? new Date().toISOString() : null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('paypal_subscription_id', resource.id);
+
+      if (error) {
+        console.error('Error updating subscription status:', error);
+      }
+    }
+
+    if (eventType === 'BILLING.SUBSCRIPTION.PAYMENT.FAILED') {
+      const resource = payload.resource;
+      console.log('Subscription payment failed:', resource.id);
+
+      // Get subscription details
+      const { data: subscription } = await supabaseAdmin
+        .from('podcast_subscriptions')
+        .select('subscriber_id, merchant_id')
+        .eq('paypal_subscription_id', resource.id)
+        .single();
+
+      if (subscription) {
+        await supabaseAdmin
+          .from('notifications')
+          .insert({
+            user_id: subscription.subscriber_id,
+            type: 'subscription_payment_failed',
+            title: 'Subscription Payment Failed',
+            message: 'Your subscription payment could not be processed. Please update your payment method.'
+          });
+      }
+    }
+
     return new Response(
       JSON.stringify({ received: true }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

@@ -97,3 +97,9 @@ verify_jwt = true
 
 [functions.paypal-webhook]
 verify_jwt = false
+
+[functions.create-podcast-subscription]
+verify_jwt = true
+
+[functions.capture-podcast-subscription]
+verify_jwt = false
