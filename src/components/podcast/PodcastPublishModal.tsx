@@ -71,6 +71,7 @@ export const PodcastPublishModal = ({
   const [isPlayingTrailer, setIsPlayingTrailer] = useState(false);
   const [audioDuration, setAudioDuration] = useState(0);
   const [trailerCurrentTime, setTrailerCurrentTime] = useState(0);
+  const [previewSeekError, setPreviewSeekError] = useState<string | null>(null);
   const trailerTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const trailerIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -109,6 +110,7 @@ export const PodcastPublishModal = ({
       setTrailerStartTime(0);
       setIsPlayingTrailer(false);
       setTrailerCurrentTime(0);
+      setPreviewSeekError(null);
       // Reset audioDuration so we use recording.duration_seconds as primary
       setAudioDuration(0);
     }
@@ -122,12 +124,14 @@ export const PodcastPublishModal = ({
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
-  // Trailer preview controls - simplified, actual seeking happens on listener playback
+  // Trailer preview controls
   const playTrailerPreview = async () => {
     const audio = trailerAudioRef.current;
     if (!audio || !recording) return;
 
     try {
+      setPreviewSeekError(null);
+
       // Clear any previous timers
       if (trailerTimeoutRef.current) {
         clearTimeout(trailerTimeoutRef.current);
@@ -138,16 +142,63 @@ export const PodcastPublishModal = ({
         trailerIntervalRef.current = null;
       }
 
-      // Try to seek - may not work for all MP3 files
-      audio.currentTime = trailerStartTime;
-      
+      // Ensure metadata is loaded before seeking
+      if (audio.readyState < 1) {
+        await new Promise<void>((resolve, reject) => {
+          const timeout = setTimeout(resolve, 4000);
+          const onLoaded = () => {
+            clearTimeout(timeout);
+            resolve();
+          };
+          const onErr = () => {
+            clearTimeout(timeout);
+            reject(new Error("Audio failed to load"));
+          };
+          audio.addEventListener("loadedmetadata", onLoaded, { once: true });
+          audio.addEventListener("error", onErr, { once: true });
+          audio.load();
+        });
+      }
+
+      const target = Math.max(0, trailerStartTime);
+
+      // Attempt seek + wait briefly for it to take effect
+      try {
+        audio.currentTime = target;
+      } catch {
+        // ignore
+      }
+
+      await new Promise<void>((resolve) => {
+        const t = setTimeout(resolve, 1500);
+        const onSeeked = () => {
+          clearTimeout(t);
+          resolve();
+        };
+        audio.addEventListener("seeked", onSeeked, { once: true });
+      });
+
+      const actual = audio.currentTime;
+      const seekOk = target === 0 || Math.abs(actual - target) <= 1.5;
+
+      if (!seekOk) {
+        setPreviewSeekError(
+          "This episode file cant be preview-scrubbed in the browser. Re-upload it as a seekable MP3 (CBR export) to audition the trailer start time."
+        );
+        toast({
+          title: "Preview cant seek",
+          description: "Re-upload a seekable MP3 to preview from the selected time.",
+        });
+        return;
+      }
+
       await audio.play();
       setIsPlayingTrailer(true);
       setTrailerCurrentTime(0);
 
       // Use interval-based counter
       trailerIntervalRef.current = setInterval(() => {
-        setTrailerCurrentTime(prev => {
+        setTrailerCurrentTime((prev) => {
           if (prev >= 30) {
             stopTrailerPreview();
             return 30;
@@ -451,7 +502,7 @@ export const PodcastPublishModal = ({
                 <audio 
                   ref={trailerAudioRef}
                   src={recording.audio_url}
-                  preload="none"
+                  preload="metadata"
                   onEnded={stopTrailerPreview}
                 />
                 
@@ -470,6 +521,8 @@ export const PodcastPublishModal = ({
                           if (isPlayingTrailer) {
                             stopTrailerPreview();
                           }
+                          // Clear any previous seek error when user changes selection
+                          setPreviewSeekError(null);
                         }}
                         className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
                       />
@@ -479,13 +532,19 @@ export const PodcastPublishModal = ({
                       </div>
                     </div>
                     
-                    <p className="text-xs text-muted-foreground bg-amber-500/10 border border-amber-500/20 rounded p-2">
-                      Select your 30-second trailer segment above. Listeners will hear this clip when previewing your podcast.
+                    <p className="text-xs text-muted-foreground bg-muted/60 border border-border rounded p-2">
+                      Click “Preview 30s” to audition the selected moment. If preview won’t jump to the selected time, re-upload the episode as a seekable MP3.
                     </p>
+
+                    {previewSeekError && (
+                      <p className="text-xs text-destructive">
+                        {previewSeekError}
+                      </p>
+                    )}
                     
                     {isPlayingTrailer && (
                       <div className="flex items-center justify-center gap-2 py-2 px-3 bg-primary/10 rounded-lg">
-                        <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                        <div className="w-2 h-2 bg-destructive rounded-full animate-pulse" />
                         <span className="text-lg font-mono font-semibold">
                           {Math.floor(trailerCurrentTime)}s / 30s
                         </span>
@@ -498,6 +557,7 @@ export const PodcastPublishModal = ({
                       size="sm"
                       onClick={toggleTrailerPreview}
                       className="w-full"
+                      disabled={!!previewSeekError}
                     >
                       {isPlayingTrailer ? (
                         <>
@@ -507,7 +567,7 @@ export const PodcastPublishModal = ({
                       ) : (
                         <>
                           <Play className="w-4 h-4 mr-2" />
-                          Test Preview (may start from beginning)
+                          Preview 30s
                         </>
                       )}
                     </Button>
