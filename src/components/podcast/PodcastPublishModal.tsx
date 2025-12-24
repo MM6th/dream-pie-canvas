@@ -64,6 +64,7 @@ export const PodcastPublishModal = ({
   // Subscription state
   const [subscriptionEnabled, setSubscriptionEnabled] = useState(false);
   const [selectedTier, setSelectedTier] = useState<SubscriptionTier>('moon');
+  const [tierDescription, setTierDescription] = useState("");
   
   // Trailer state - simplified to always use first 30 seconds
   const [trailerEnabled, setTrailerEnabled] = useState(false);
@@ -83,6 +84,7 @@ export const PodcastPublishModal = ({
       setThumbnailPreview(null);
       setSubscriptionEnabled(false);
       setSelectedTier('moon');
+      setTierDescription("");
       setTrailerEnabled(false);
       setIsPlayingTrailer(false);
       setTrailerCurrentTime(0);
@@ -256,6 +258,7 @@ export const PodcastPublishModal = ({
       if (subscriptionEnabled) {
         recordingUpdateData.subscription_enabled = true;
         recordingUpdateData.subscription_tier = selectedTier;
+        recordingUpdateData.tier_description = tierDescription.trim() || null;
       }
       
       if (trailerEnabled) {
@@ -511,6 +514,22 @@ export const PodcastPublishModal = ({
                   }
                 )}
               </RadioGroup>
+              
+              {/* Tier Description / Perks */}
+              <div className="space-y-2 pt-2">
+                <Label htmlFor="tierDescription">Tier Perks & Benefits</Label>
+                <p className="text-xs text-muted-foreground">
+                  Describe what subscribers get at this tier (shown on the podcast card)
+                </p>
+                <Textarea
+                  id="tierDescription"
+                  value={tierDescription}
+                  onChange={(e) => setTierDescription(e.target.value)}
+                  placeholder="e.g., Early access to episodes, exclusive bonus content, ad-free listening..."
+                  className="bg-background"
+                  rows={3}
+                />
+              </div>
             </div>
           )}
 

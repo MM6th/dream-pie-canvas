@@ -1886,6 +1886,7 @@ export type Database = {
           status: string
           subscription_enabled: boolean | null
           subscription_tier: string | null
+          tier_description: string | null
           title: string
           trailer_url: string | null
           updated_at: string
@@ -1902,6 +1903,7 @@ export type Database = {
           status?: string
           subscription_enabled?: boolean | null
           subscription_tier?: string | null
+          tier_description?: string | null
           title: string
           trailer_url?: string | null
           updated_at?: string
@@ -1918,6 +1920,7 @@ export type Database = {
           status?: string
           subscription_enabled?: boolean | null
           subscription_tier?: string | null
+          tier_description?: string | null
           title?: string
           trailer_url?: string | null
           updated_at?: string
