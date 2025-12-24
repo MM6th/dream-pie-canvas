@@ -72,6 +72,7 @@ export const PodcastPublishModal = ({
   const [audioDuration, setAudioDuration] = useState(0);
   const [trailerCurrentTime, setTrailerCurrentTime] = useState(0);
   const trailerTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const trailerIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Use database duration_seconds first, fallback to audio element duration
   const fullDurationSeconds = React.useMemo(() => {
@@ -156,6 +157,17 @@ export const PodcastPublishModal = ({
       setIsPlayingTrailer(true);
       setTrailerCurrentTime(0);
 
+      // Use interval-based counter (more reliable than onTimeUpdate)
+      trailerIntervalRef.current = setInterval(() => {
+        setTrailerCurrentTime(prev => {
+          if (prev >= 30) {
+            stopTrailerPreview();
+            return 30;
+          }
+          return prev + 1;
+        });
+      }, 1000);
+
       trailerTimeoutRef.current = setTimeout(() => {
         stopTrailerPreview();
       }, 30 * 1000);
@@ -183,6 +195,10 @@ export const PodcastPublishModal = ({
     if (trailerTimeoutRef.current) {
       clearTimeout(trailerTimeoutRef.current);
       trailerTimeoutRef.current = null;
+    }
+    if (trailerIntervalRef.current) {
+      clearInterval(trailerIntervalRef.current);
+      trailerIntervalRef.current = null;
     }
   };
 
