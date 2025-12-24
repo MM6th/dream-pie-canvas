@@ -192,26 +192,42 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
       const response = await fetch(recording.audio_url);
       if (!response.ok) throw new Error('Failed to fetch audio file');
       
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
+      // Get content type from response or default to audio/mpeg
+      const contentType = response.headers.get('content-type') || 'audio/mpeg';
+      const originalBlob = await response.blob();
+      
+      // Create a new blob with the correct audio MIME type
+      const audioBlob = new Blob([originalBlob], { type: contentType });
+      const url = window.URL.createObjectURL(audioBlob);
+      
+      // Determine file extension based on content type
+      let extension = 'mp3';
+      if (contentType.includes('wav')) extension = 'wav';
+      else if (contentType.includes('m4a') || contentType.includes('mp4')) extension = 'm4a';
+      else if (contentType.includes('ogg')) extension = 'ogg';
+      else if (contentType.includes('webm')) extension = 'webm';
+      else if (contentType.includes('mpeg') || contentType.includes('mp3')) extension = 'mp3';
+      
+      // Use recording title for filename, sanitize
+      const sanitizedTitle = recording.title.replace(/[^a-zA-Z0-9-_\s]/g, '').trim() || 'recording';
       
       // Create a temporary link and trigger download
       const link = document.createElement('a');
       link.href = url;
-      // Use recording title for filename, sanitize and add extension
-      const sanitizedTitle = recording.title.replace(/[^a-zA-Z0-9-_\s]/g, '').trim() || 'recording';
-      const extension = recording.audio_url.split('.').pop()?.split('?')[0] || 'mp3';
       link.download = `${sanitizedTitle}.${extension}`;
+      link.style.display = 'none';
       document.body.appendChild(link);
       link.click();
-      document.body.removeChild(link);
       
-      // Clean up the blob URL
-      window.URL.revokeObjectURL(url);
+      // Small delay before cleanup to ensure download starts
+      setTimeout(() => {
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      }, 100);
       
       toast({
         title: "Download Started",
-        description: "Your recording is being downloaded.",
+        description: `Downloading "${sanitizedTitle}.${extension}"`,
       });
     } catch (error) {
       console.error('Error downloading recording:', error);
