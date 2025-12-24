@@ -234,23 +234,22 @@ const ProfilePodcastSection: React.FC<ProfilePodcastSectionProps> = ({
                       <Badge variant="secondary" className="capitalize text-xs px-2 py-1">
                         Podcast
                       </Badge>
-                      {/* Show Subscribed badge if user has active subscription */}
-                      {hasSubscription && (
+                      {/* Show subscription status or monthly price */}
+                      {hasSubscription ? (
                         <Badge className="bg-green-600 hover:bg-green-700 text-xs flex items-center gap-1">
                           <CheckCircle className="w-3 h-3" />
-                          Subscribed
+                          Active Subscription
                         </Badge>
-                      )}
-                    </div>
-                    
-                    <div className="flex items-center justify-between flex-wrap gap-2">
-                      {/* If subscribed, show "Included" instead of price badge */}
-                      {hasSubscription ? (
-                        <Badge className="bg-green-600 hover:bg-green-700">
-                          Included in Subscription
+                      ) : podcast.access_level === 'paid' && podcast.price ? (
+                        <Badge className="bg-blue-600 hover:bg-blue-700 text-xs">
+                          ${podcast.price.toFixed(2)}/mo
                         </Badge>
+                      ) : podcast.is_free ? (
+                        <Badge className="bg-green-600 hover:bg-green-700 text-xs">Free</Badge>
+                      ) : podcast.access_level === 'merchant_only' ? (
+                        <Badge className="bg-orange-600 hover:bg-orange-700 text-xs">Merchants Only</Badge>
                       ) : (
-                        getAccessBadge(podcast)
+                        <Badge className="bg-green-600 hover:bg-green-700 text-xs">Public</Badge>
                       )}
                     </div>
                     
@@ -280,7 +279,7 @@ const ProfilePodcastSection: React.FC<ProfilePodcastSectionProps> = ({
                           disabled
                         >
                           <DollarSign className="w-3 h-3 mr-1" />
-                          Buy ${podcast.price.toFixed(2)}
+                          Subscribe ${podcast.price.toFixed(2)}/mo
                         </Button>
                       ) : null}
                     </div>
