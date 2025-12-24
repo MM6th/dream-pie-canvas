@@ -234,7 +234,7 @@ const ProfilePodcastSection: React.FC<ProfilePodcastSectionProps> = ({
                       <Badge variant="secondary" className="capitalize text-xs px-2 py-1">
                         Podcast
                       </Badge>
-                      {/* Show subscription status or monthly price */}
+                      {/* Show subscription status or monthly pricing */}
                       {hasSubscription ? (
                         <Badge className="bg-green-600 hover:bg-green-700 text-xs flex items-center gap-1">
                           <CheckCircle className="w-3 h-3" />
@@ -242,7 +242,7 @@ const ProfilePodcastSection: React.FC<ProfilePodcastSectionProps> = ({
                         </Badge>
                       ) : podcast.access_level === 'paid' && podcast.price ? (
                         <Badge className="bg-blue-600 hover:bg-blue-700 text-xs">
-                          ${podcast.price.toFixed(2)}/mo
+                          Monthly Subscription
                         </Badge>
                       ) : podcast.is_free ? (
                         <Badge className="bg-green-600 hover:bg-green-700 text-xs">Free</Badge>

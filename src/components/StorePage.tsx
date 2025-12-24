@@ -1034,7 +1034,7 @@ const StorePage = () => {
                             <Badge variant="secondary" className="capitalize text-xs px-2 py-1">
                               Podcast
                             </Badge>
-                            {/* Show subscription status or monthly price */}
+                            {/* Show subscription status or monthly pricing */}
                             {product.merchant_id && subscriptionMap[product.merchant_id] ? (
                               <Badge className="bg-green-600 hover:bg-green-700 text-xs flex items-center gap-1">
                                 <CheckCircle className="w-3 h-3" />
@@ -1042,7 +1042,7 @@ const StorePage = () => {
                               </Badge>
                             ) : product.access_level === 'paid' && product.price ? (
                               <Badge className="bg-blue-600 hover:bg-blue-700 text-xs">
-                                ${product.price.toFixed(2)}/mo
+                                Monthly Subscription
                               </Badge>
                             ) : product.is_free ? (
                               <Badge className="bg-green-600 hover:bg-green-700 text-xs">Free</Badge>
