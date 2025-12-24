@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import { AudioLines, Star, Download, DollarSign, Lock, CheckCircle } from "lucide-react";
+import { AudioLines, Star, Download, DollarSign, Lock, CheckCircle, Moon, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { usePodcastSubscriptions } from "@/hooks/usePodcastSubscription";
@@ -255,7 +255,13 @@ const ProfilePodcastSection: React.FC<ProfilePodcastSectionProps> = ({
                   {podcast.subscription_enabled && podcast.tier_description && (
                     <div className="mt-3 p-2 bg-primary/10 rounded-lg border border-primary/20">
                       <div className="flex items-center gap-1 mb-1">
-                        <Star className="w-3 h-3 text-primary" />
+                        {podcast.subscription_tier === 'moon' ? (
+                          <Moon className="w-3 h-3 text-primary" />
+                        ) : podcast.subscription_tier === 'jupiter' ? (
+                          <Sparkles className="w-3 h-3 text-primary" />
+                        ) : (
+                          <Star className="w-3 h-3 text-primary" />
+                        )}
                         <span className="text-xs font-medium text-primary capitalize">
                           {podcast.subscription_tier || 'Premium'} Tier Perks
                         </span>
