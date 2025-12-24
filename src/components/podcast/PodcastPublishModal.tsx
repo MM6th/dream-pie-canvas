@@ -12,10 +12,11 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Upload, Image, Loader2 } from "lucide-react";
+import { Upload, Image, Loader2, Moon, Star, Sparkles } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 interface Recording {
   id: string;
@@ -31,6 +32,15 @@ interface PodcastPublishModalProps {
   recording: Recording | null;
   onPublished: () => void;
 }
+
+// Subscription tier configuration
+const SUBSCRIPTION_TIERS = {
+  moon: { name: 'Moon', price: 4.99, icon: Moon, description: 'Basic monthly access' },
+  venus: { name: 'Venus', price: 9.99, icon: Star, description: 'Premium monthly access' },
+  jupiter: { name: 'Jupiter', price: 14.99, icon: Sparkles, description: 'VIP monthly access' },
+} as const;
+
+type SubscriptionTier = keyof typeof SUBSCRIPTION_TIERS;
 
 export const PodcastPublishModal = ({
   open,
@@ -49,6 +59,10 @@ export const PodcastPublishModal = ({
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
   const [isPublishing, setIsPublishing] = useState(false);
+  
+  // Subscription state
+  const [subscriptionEnabled, setSubscriptionEnabled] = useState(false);
+  const [selectedTier, setSelectedTier] = useState<SubscriptionTier>('moon');
 
   // Reset form when modal opens with a recording
   React.useEffect(() => {
@@ -59,6 +73,8 @@ export const PodcastPublishModal = ({
       setPrice("");
       setThumbnailFile(null);
       setThumbnailPreview(null);
+      setSubscriptionEnabled(false);
+      setSelectedTier('moon');
     }
   }, [open, recording]);
 
@@ -90,7 +106,7 @@ export const PodcastPublishModal = ({
   };
 
   const validatePrice = (): boolean => {
-    if (isFree) return true;
+    if (isFree || subscriptionEnabled) return true;
     const numPrice = parseFloat(price);
     if (isNaN(numPrice) || numPrice < 2) {
       toast({
@@ -143,6 +159,19 @@ export const PodcastPublishModal = ({
         thumbnailUrl = publicUrl;
       }
 
+      // Update podcast_recordings with subscription settings if enabled
+      if (subscriptionEnabled) {
+        const { error: updateRecordingError } = await supabase
+          .from("podcast_recordings")
+          .update({
+            subscription_enabled: true,
+            subscription_tier: selectedTier,
+          })
+          .eq("id", recording.id);
+
+        if (updateRecordingError) throw updateRecordingError;
+      }
+
       // Create audio product entry
       const { error: productError } = await supabase
         .from("audio_products")
@@ -153,9 +182,11 @@ export const PodcastPublishModal = ({
           audio_type: "podcast",
           audio_file_url: recording.audio_url,
           thumbnail_url: thumbnailUrl,
-          is_free: isFree,
-          price: isFree ? null : parseFloat(price),
-          access_level: isFree ? "public" : "paid",
+          is_free: subscriptionEnabled ? false : isFree,
+          price: subscriptionEnabled 
+            ? SUBSCRIPTION_TIERS[selectedTier].price 
+            : (isFree ? null : parseFloat(price)),
+          access_level: subscriptionEnabled ? "paid" : (isFree ? "public" : "paid"),
           status: "published",
           published_at: new Date().toISOString(),
         });
@@ -170,7 +201,9 @@ export const PodcastPublishModal = ({
 
       toast({
         title: "Published!",
-        description: "Your podcast is now live in the store.",
+        description: subscriptionEnabled 
+          ? `Your podcast is now live with ${SUBSCRIPTION_TIERS[selectedTier].name} tier subscription ($${SUBSCRIPTION_TIERS[selectedTier].price}/month).`
+          : "Your podcast is now live in the store.",
       });
 
       onPublished();
@@ -189,7 +222,7 @@ export const PodcastPublishModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Publish Podcast</DialogTitle>
           <DialogDescription>
@@ -262,38 +295,102 @@ export const PodcastPublishModal = ({
             />
           </div>
 
-          {/* Pricing Toggle */}
-          <div className="flex items-center justify-between py-2">
+          {/* Subscription Toggle */}
+          <div className="flex items-center justify-between py-2 border-t pt-4">
             <div>
-              <Label>Free Episode</Label>
+              <Label>Enable Subscription</Label>
               <p className="text-xs text-muted-foreground">
-                Toggle off to set a price
+                Charge monthly via PayPal
               </p>
             </div>
-            <Switch checked={isFree} onCheckedChange={setIsFree} />
+            <Switch 
+              checked={subscriptionEnabled} 
+              onCheckedChange={(checked) => {
+                setSubscriptionEnabled(checked);
+                if (checked) setIsFree(false);
+              }} 
+            />
           </div>
 
-          {/* Price Input (shown only when not free) */}
-          {!isFree && (
-            <div className="space-y-2">
-              <Label htmlFor="price">Price (USD)</Label>
-              <p className="text-xs text-muted-foreground">Minimum $2.00</p>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                  $
-                </span>
-                <Input
-                  id="price"
-                  type="number"
-                  min="2"
-                  step="0.01"
-                  value={price}
-                  onChange={(e) => setPrice(e.target.value)}
-                  placeholder="2.00"
-                  className="bg-background pl-7"
-                />
-              </div>
+          {/* Subscription Tier Selection */}
+          {subscriptionEnabled && (
+            <div className="space-y-3 p-3 bg-muted/50 rounded-lg">
+              <Label>Select Subscription Tier</Label>
+              <RadioGroup
+                value={selectedTier}
+                onValueChange={(value) => setSelectedTier(value as SubscriptionTier)}
+                className="space-y-2"
+              >
+                {(Object.entries(SUBSCRIPTION_TIERS) as [SubscriptionTier, typeof SUBSCRIPTION_TIERS[SubscriptionTier]][]).map(
+                  ([tier, config]) => {
+                    const Icon = config.icon;
+                    return (
+                      <div
+                        key={tier}
+                        className={`flex items-center space-x-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                          selectedTier === tier
+                            ? "border-primary bg-primary/5"
+                            : "border-border hover:border-primary/50"
+                        }`}
+                        onClick={() => setSelectedTier(tier)}
+                      >
+                        <RadioGroupItem value={tier} id={tier} />
+                        <Icon className="w-5 h-5 text-primary" />
+                        <div className="flex-1">
+                          <Label htmlFor={tier} className="cursor-pointer font-medium">
+                            {config.name}
+                          </Label>
+                          <p className="text-xs text-muted-foreground">
+                            {config.description}
+                          </p>
+                        </div>
+                        <span className="font-semibold text-primary">
+                          ${config.price}/mo
+                        </span>
+                      </div>
+                    );
+                  }
+                )}
+              </RadioGroup>
             </div>
+          )}
+
+          {/* Pricing Toggle (only shown when subscription is not enabled) */}
+          {!subscriptionEnabled && (
+            <>
+              <div className="flex items-center justify-between py-2">
+                <div>
+                  <Label>Free Episode</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Toggle off to set a one-time price
+                  </p>
+                </div>
+                <Switch checked={isFree} onCheckedChange={setIsFree} />
+              </div>
+
+              {/* Price Input (shown only when not free) */}
+              {!isFree && (
+                <div className="space-y-2">
+                  <Label htmlFor="price">One-Time Price (USD)</Label>
+                  <p className="text-xs text-muted-foreground">Minimum $2.00</p>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                      $
+                    </span>
+                    <Input
+                      id="price"
+                      type="number"
+                      min="2"
+                      step="0.01"
+                      value={price}
+                      onChange={(e) => setPrice(e.target.value)}
+                      placeholder="2.00"
+                      className="bg-background pl-7"
+                    />
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
 

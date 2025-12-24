@@ -1882,7 +1882,10 @@ export type Database = {
           file_size_bytes: number | null
           id: string
           merchant_id: string
+          paypal_plan_id: string | null
           status: string
+          subscription_enabled: boolean | null
+          subscription_tier: string | null
           title: string
           updated_at: string
         }
@@ -1894,7 +1897,10 @@ export type Database = {
           file_size_bytes?: number | null
           id?: string
           merchant_id: string
+          paypal_plan_id?: string | null
           status?: string
+          subscription_enabled?: boolean | null
+          subscription_tier?: string | null
           title: string
           updated_at?: string
         }
@@ -1906,7 +1912,10 @@ export type Database = {
           file_size_bytes?: number | null
           id?: string
           merchant_id?: string
+          paypal_plan_id?: string | null
           status?: string
+          subscription_enabled?: boolean | null
+          subscription_tier?: string | null
           title?: string
           updated_at?: string
         }
@@ -2049,6 +2058,69 @@ export type Database = {
             columns: ["host_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      podcast_subscriptions: {
+        Row: {
+          amount: number
+          cancelled_at: string | null
+          created_at: string
+          id: string
+          merchant_id: string
+          next_billing_date: string | null
+          paypal_subscription_id: string
+          podcast_recording_id: string
+          started_at: string
+          status: string
+          subscriber_id: string
+          tier: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          cancelled_at?: string | null
+          created_at?: string
+          id?: string
+          merchant_id: string
+          next_billing_date?: string | null
+          paypal_subscription_id: string
+          podcast_recording_id: string
+          started_at?: string
+          status?: string
+          subscriber_id: string
+          tier: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          cancelled_at?: string | null
+          created_at?: string
+          id?: string
+          merchant_id?: string
+          next_billing_date?: string | null
+          paypal_subscription_id?: string
+          podcast_recording_id?: string
+          started_at?: string
+          status?: string
+          subscriber_id?: string
+          tier?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "podcast_subscriptions_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "podcast_subscriptions_podcast_recording_id_fkey"
+            columns: ["podcast_recording_id"]
+            isOneToOne: false
+            referencedRelation: "podcast_recordings"
             referencedColumns: ["id"]
           },
         ]
