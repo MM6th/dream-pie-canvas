@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import { AudioLines, Download, DollarSign, Video, Lock, Shirt, Star, Shield, Users } from "lucide-react";
+import { AudioLines, Download, DollarSign, Video, Lock, Shirt, Star, Shield, Users, CheckCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
@@ -20,6 +20,7 @@ import ProductInstructionalText from "@/components/ui/ProductInstructionalText";
 import ASMRSubmissionModal from "./ASMRSubmissionModal";
 import AudioPreviewPlayer from "./AudioPreviewPlayer";
 import AlbumTracklistHover from "./AlbumTracklistHover";
+import { usePodcastSubscriptions } from "@/hooks/usePodcastSubscription";
 
 interface AudioProduct {
   id: string;
@@ -43,6 +44,7 @@ interface AudioProduct {
   preview_start_time?: number | null;
   preview_duration?: number | null;
   preview_url?: string | null;
+  merchant_id?: string;
   albums?: {
     id: string;
     name: string;
@@ -91,6 +93,15 @@ const StorePage = () => {
   const [selectedAsmrProduct, setSelectedAsmrProduct] = useState<AudioProduct | null>(null);
   const [asmrSubmissionModalOpen, setAsmrSubmissionModalOpen] = useState(false);
   const [currentlyPlayingId, setCurrentlyPlayingId] = useState<string | null>(null);
+
+  // Get unique merchant IDs from podcast products for subscription checking
+  const podcastMerchantIds = useMemo(() => {
+    const podcasts = audioProducts.filter(p => p.audio_type === 'podcast' && p.merchant_id);
+    return [...new Set(podcasts.map(p => p.merchant_id!))];
+  }, [audioProducts]);
+
+  // Check subscription status for all podcast merchants
+  const { subscriptionMap, loading: subscriptionsLoading } = usePodcastSubscriptions(podcastMerchantIds);
 
   const fetchUserProfile = async () => {
     if (!user) return null;
@@ -221,6 +232,7 @@ const StorePage = () => {
           preview_duration,
           preview_url,
           created_at,
+          merchant_id,
           albums!audio_products_album_id_fkey (
             id,
             name,
@@ -1022,14 +1034,38 @@ const StorePage = () => {
                             <Badge variant="secondary" className="capitalize text-xs px-2 py-1">
                               Podcast
                             </Badge>
+                            {/* Show Subscribed badge if user has active subscription to this merchant */}
+                            {product.merchant_id && subscriptionMap[product.merchant_id] && (
+                              <Badge className="bg-green-600 hover:bg-green-700 text-xs flex items-center gap-1">
+                                <CheckCircle className="w-3 h-3" />
+                                Subscribed
+                              </Badge>
+                            )}
                           </div>
                           
                           <div className="flex items-center justify-between flex-wrap gap-2">
-                            {getAccessLevelBadgeForAudio(product)}
+                            {/* If subscribed, show "Included" instead of price badge */}
+                            {product.merchant_id && subscriptionMap[product.merchant_id] ? (
+                              <Badge className="bg-green-600 hover:bg-green-700">
+                                Included in Subscription
+                              </Badge>
+                            ) : (
+                              getAccessLevelBadgeForAudio(product)
+                            )}
                           </div>
                           
                           <div className="flex items-center justify-end gap-2 flex-wrap">
-                            {product.access_level === 'merchant_only' ? (
+                            {/* If user has active subscription to this merchant, allow free access */}
+                            {product.merchant_id && subscriptionMap[product.merchant_id] ? (
+                              <Button
+                                onClick={() => handleFreeAudioDownload(product)}
+                                className="bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1"
+                                size="sm"
+                              >
+                                <Download className="w-3 h-3 mr-1" />
+                                Add to Library
+                              </Button>
+                            ) : product.access_level === 'merchant_only' ? (
                               <DownloadOpportunityChecker
                                 audioProductId={product.id}
                                 maxDownloads={product.max_downloads}

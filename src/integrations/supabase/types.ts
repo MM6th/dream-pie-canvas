@@ -3300,6 +3300,10 @@ export type Database = {
       generate_receipt_number: { Args: never; Returns: string }
       get_user_max_storage: { Args: { user_uuid: string }; Returns: number }
       get_user_storage_usage: { Args: { user_uuid: string }; Returns: number }
+      has_active_podcast_subscription: {
+        Args: { p_merchant_id: string; p_user_id: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
