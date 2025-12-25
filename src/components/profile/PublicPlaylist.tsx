@@ -14,6 +14,7 @@ interface AudioProduct {
   price: number | null;
   audio_file_url: string;
   thumbnail_url: string;
+  audio_type?: string;
   is_free?: boolean;
   access_level?: string;
 }
@@ -65,32 +66,81 @@ export default function PublicPlaylist({ userId }: PublicPlaylistProps) {
 
   const fetchUserPurchases = async () => {
     try {
-      const { data, error } = await supabase
-        .from('user_purchases')
-        .select(`
-          id,
-          audio_product_id,
-          audio_products!inner (
-            id,
-            title,
-            artist_name,
-            price,
-            audio_file_url,
-            thumbnail_url,
-            audio_type,
-            is_free,
-            access_level
-          )
-        `)
-        .eq('user_id', userId)
-        .eq('audio_products.audio_type', 'music')
-        .order('purchase_date', { ascending: false })
-        .limit(5);
+      // Get current user to check if viewing own playlist
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      const isOwnPlaylist = currentUser?.id === userId;
 
-      if (error) {
-        console.error('Error fetching user purchases:', error);
+      if (isOwnPlaylist) {
+        // Owner can access their own data directly
+        const { data, error } = await supabase
+          .from('user_purchases')
+          .select(`
+            id,
+            audio_product_id,
+            audio_products!inner (
+              id,
+              title,
+              artist_name,
+              price,
+              audio_file_url,
+              thumbnail_url,
+              audio_type,
+              is_free,
+              access_level
+            )
+          `)
+          .eq('user_id', userId)
+          .eq('audio_products.audio_type', 'music')
+          .order('purchase_date', { ascending: false })
+          .limit(5);
+
+        if (error) {
+          console.error('Error fetching user purchases:', error);
+        } else {
+          setPurchases(data || []);
+        }
       } else {
-        setPurchases(data || []);
+        // For other users' playlists, use the secure view (excludes financial data)
+        const { data: playlistItems, error: playlistError } = await supabase
+          .from('public_playlist_items')
+          .select('id, audio_product_id')
+          .eq('user_id', userId)
+          .order('purchase_date', { ascending: false })
+          .limit(5);
+
+        if (playlistError) {
+          console.error('Error fetching public playlist:', playlistError);
+          setPurchases([]);
+        } else if (playlistItems && playlistItems.length > 0) {
+          // Fetch audio product details separately
+          const productIds = playlistItems.map(item => item.audio_product_id);
+          const { data: products, error: productsError } = await supabase
+            .from('audio_products')
+            .select('id, title, artist_name, price, audio_file_url, thumbnail_url, audio_type, is_free, access_level')
+            .in('id', productIds)
+            .eq('audio_type', 'music');
+
+          if (productsError) {
+            console.error('Error fetching audio products:', productsError);
+            setPurchases([]);
+          } else {
+            // Map playlist items to purchases format
+            const mappedPurchases = playlistItems
+              .map(item => {
+                const product = products?.find(p => p.id === item.audio_product_id);
+                if (!product) return null;
+                return {
+                  id: item.id,
+                  audio_product_id: item.audio_product_id,
+                  audio_products: product
+                };
+              })
+              .filter((p): p is NonNullable<typeof p> => p !== null) as UserPurchase[];
+            setPurchases(mappedPurchases);
+          }
+        } else {
+          setPurchases([]);
+        }
       }
     } catch (error) {
       console.error('Error fetching user purchases:', error);

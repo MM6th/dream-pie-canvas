@@ -3507,6 +3507,25 @@ export type Database = {
       }
     }
     Views: {
+      public_playlist_items: {
+        Row: {
+          audio_product_id: string | null
+          created_at: string | null
+          id: string | null
+          is_free_download: boolean | null
+          purchase_date: string | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_purchases_audio_product_id_fkey"
+            columns: ["audio_product_id"]
+            isOneToOne: false
+            referencedRelation: "audio_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       public_profile_data: {
         Row: {
           adult_content_restricted: boolean | null
