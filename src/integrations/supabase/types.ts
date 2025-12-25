@@ -73,6 +73,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "album_tracks_featuring_artist_user_id_fkey"
+            columns: ["featuring_artist_user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profile_data"
+            referencedColumns: ["id"]
+          },
         ]
       }
       albums: {
@@ -634,6 +641,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "audio_products_featuring_artist_user_id_fkey"
+            columns: ["featuring_artist_user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profile_data"
+            referencedColumns: ["id"]
+          },
         ]
       }
       bulletin_posts: {
@@ -726,6 +740,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "bulletin_posts_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "public_profile_data"
+            referencedColumns: ["id"]
+          },
         ]
       }
       contracts: {
@@ -802,6 +823,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "contracts_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "public_profile_data"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "contracts_modeling_application_id_fkey"
             columns: ["modeling_application_id"]
             isOneToOne: false
@@ -847,6 +875,13 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_transactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profile_data"
             referencedColumns: ["id"]
           },
         ]
@@ -937,6 +972,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "dance_products_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "public_profile_data"
+            referencedColumns: ["id"]
+          },
         ]
       }
       digital_receipts: {
@@ -985,6 +1027,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "digital_receipts_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "public_profile_data"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "digital_receipts_contract_id_fkey"
             columns: ["contract_id"]
             isOneToOne: false
@@ -996,6 +1045,13 @@ export type Database = {
             columns: ["merchant_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "digital_receipts_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "public_profile_data"
             referencedColumns: ["id"]
           },
         ]
@@ -1244,6 +1300,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "film_products_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "public_profile_data"
+            referencedColumns: ["id"]
+          },
         ]
       }
       film_scripts: {
@@ -1280,6 +1343,13 @@ export type Database = {
             columns: ["merchant_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "film_scripts_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "public_profile_data"
             referencedColumns: ["id"]
           },
         ]
@@ -1364,6 +1434,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "food_products_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "public_profile_data"
+            referencedColumns: ["id"]
+          },
         ]
       }
       livestream_entries: {
@@ -1403,6 +1480,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "livestream_entries_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profile_data"
+            referencedColumns: ["id"]
+          },
         ]
       }
       livestream_settings: {
@@ -1439,6 +1523,13 @@ export type Database = {
             columns: ["merchant_id"]
             isOneToOne: true
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "livestream_settings_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: true
+            referencedRelation: "public_profile_data"
             referencedColumns: ["id"]
           },
         ]
@@ -1488,6 +1579,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "merchant_payouts_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "public_profile_data"
+            referencedColumns: ["id"]
+          },
         ]
       }
       message_settings: {
@@ -1521,6 +1619,13 @@ export type Database = {
             columns: ["merchant_id"]
             isOneToOne: true
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_settings_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: true
+            referencedRelation: "public_profile_data"
             referencedColumns: ["id"]
           },
         ]
@@ -1575,10 +1680,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "messages_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "public_profile_data"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "messages_sender_id_fkey"
             columns: ["sender_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "public_profile_data"
             referencedColumns: ["id"]
           },
         ]
@@ -1617,6 +1736,13 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: true
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messaging_credits_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "public_profile_data"
             referencedColumns: ["id"]
           },
         ]
@@ -1683,10 +1809,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "fk_modeling_applications_merchant"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "public_profile_data"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "fk_modeling_applications_reviewer"
             columns: ["reviewed_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_modeling_applications_reviewer"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "public_profile_data"
             referencedColumns: ["id"]
           },
           {
@@ -1858,10 +1998,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "podcast_invitations_guest_user_id_fkey"
+            columns: ["guest_user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profile_data"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "podcast_invitations_host_user_id_fkey"
             columns: ["host_user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "podcast_invitations_host_user_id_fkey"
+            columns: ["host_user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profile_data"
             referencedColumns: ["id"]
           },
           {
@@ -1933,6 +2087,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "podcast_recordings_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "public_profile_data"
+            referencedColumns: ["id"]
+          },
         ]
       }
       podcast_session_participants: {
@@ -1979,6 +2140,13 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "podcast_session_participants_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profile_data"
             referencedColumns: ["id"]
           },
         ]
@@ -2066,6 +2234,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "podcast_sessions_host_id_fkey"
+            columns: ["host_id"]
+            isOneToOne: false
+            referencedRelation: "public_profile_data"
+            referencedColumns: ["id"]
+          },
         ]
       }
       podcast_subscriptions: {
@@ -2120,6 +2295,13 @@ export type Database = {
             columns: ["merchant_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "podcast_subscriptions_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "public_profile_data"
             referencedColumns: ["id"]
           },
           {
@@ -2292,6 +2474,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "post_comments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profile_data"
+            referencedColumns: ["id"]
+          },
         ]
       }
       post_likes: {
@@ -2398,10 +2587,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "profile_follow_requests_requester_id_fkey"
+            columns: ["requester_id"]
+            isOneToOne: false
+            referencedRelation: "public_profile_data"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "profile_follow_requests_target_merchant_id_fkey"
             columns: ["target_merchant_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profile_follow_requests_target_merchant_id_fkey"
+            columns: ["target_merchant_id"]
+            isOneToOne: false
+            referencedRelation: "public_profile_data"
             referencedColumns: ["id"]
           },
         ]
@@ -2434,10 +2637,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "profile_followers_follower_id_fkey"
+            columns: ["follower_id"]
+            isOneToOne: false
+            referencedRelation: "public_profile_data"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "profile_followers_merchant_id_fkey"
             columns: ["merchant_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profile_followers_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "public_profile_data"
             referencedColumns: ["id"]
           },
         ]
@@ -2632,10 +2849,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "script_invitations_invitee_id_fkey"
+            columns: ["invitee_id"]
+            isOneToOne: false
+            referencedRelation: "public_profile_data"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "script_invitations_inviter_id_fkey"
             columns: ["inviter_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "script_invitations_inviter_id_fkey"
+            columns: ["inviter_id"]
+            isOneToOne: false
+            referencedRelation: "public_profile_data"
             referencedColumns: ["id"]
           },
           {
@@ -2742,6 +2973,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "support_tickets_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profile_data"
+            referencedColumns: ["id"]
+          },
         ]
       }
       ticket_replies: {
@@ -2775,6 +3013,13 @@ export type Database = {
             columns: ["admin_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ticket_replies_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "public_profile_data"
             referencedColumns: ["id"]
           },
           {
@@ -2868,6 +3113,13 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_free_resources_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profile_data"
             referencedColumns: ["id"]
           },
         ]
@@ -3255,7 +3507,96 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      public_profile_data: {
+        Row: {
+          adult_content_restricted: boolean | null
+          approval_status: string | null
+          avatar_url: string | null
+          background_image_url: string | null
+          business_name: string | null
+          created_at: string | null
+          display_name: string | null
+          facebook_url: string | null
+          id: string | null
+          industry: string | null
+          instagram_url: string | null
+          is_admin: boolean | null
+          is_adult_creator: boolean | null
+          is_live_stream_artist: boolean | null
+          is_private: boolean | null
+          onlyfans_url: string | null
+          pinterest_url: string | null
+          playlist_public: boolean | null
+          portfolios_public: boolean | null
+          profile_complete: boolean | null
+          skills: string[] | null
+          snapchat_url: string | null
+          social_links_public: boolean | null
+          updated_at: string | null
+          user_type: string | null
+          website: string | null
+          youtube_url: string | null
+        }
+        Insert: {
+          adult_content_restricted?: boolean | null
+          approval_status?: string | null
+          avatar_url?: string | null
+          background_image_url?: string | null
+          business_name?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          facebook_url?: never
+          id?: string | null
+          industry?: string | null
+          instagram_url?: never
+          is_admin?: boolean | null
+          is_adult_creator?: boolean | null
+          is_live_stream_artist?: boolean | null
+          is_private?: boolean | null
+          onlyfans_url?: never
+          pinterest_url?: never
+          playlist_public?: boolean | null
+          portfolios_public?: boolean | null
+          profile_complete?: boolean | null
+          skills?: string[] | null
+          snapchat_url?: never
+          social_links_public?: boolean | null
+          updated_at?: string | null
+          user_type?: string | null
+          website?: never
+          youtube_url?: never
+        }
+        Update: {
+          adult_content_restricted?: boolean | null
+          approval_status?: string | null
+          avatar_url?: string | null
+          background_image_url?: string | null
+          business_name?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          facebook_url?: never
+          id?: string | null
+          industry?: string | null
+          instagram_url?: never
+          is_admin?: boolean | null
+          is_adult_creator?: boolean | null
+          is_live_stream_artist?: boolean | null
+          is_private?: boolean | null
+          onlyfans_url?: never
+          pinterest_url?: never
+          playlist_public?: boolean | null
+          portfolios_public?: boolean | null
+          profile_complete?: boolean | null
+          skills?: string[] | null
+          snapchat_url?: never
+          social_links_public?: boolean | null
+          updated_at?: string | null
+          user_type?: string | null
+          website?: never
+          youtube_url?: never
+        }
+        Relationships: []
+      }
     }
     Functions: {
       can_user_upload: {
