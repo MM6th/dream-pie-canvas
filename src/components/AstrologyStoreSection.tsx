@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import { Clock, Shield, Lock, Play, Gift, Download, Check } from "lucide-react";
+import { Clock, Shield, Lock, Play, Gift, Download, Check, FileAudio, Video, Star } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
@@ -451,8 +451,11 @@ const AstrologyStoreSection = () => {
                       </div>
                       {product.delivery_type && (
                         <div className="flex items-center gap-1 text-gray-400">
-                          <Clock className="w-4 h-4" />
-                          <span className="text-sm capitalize">{product.delivery_type}</span>
+                          {product.delivery_type === 'telephone' && <Clock className="w-4 h-4" />}
+                          {product.delivery_type === 'audio_file' && <FileAudio className="w-4 h-4" />}
+                          {product.delivery_type === 'video_file' && <Video className="w-4 h-4" />}
+                          {!['telephone', 'audio_file', 'video_file'].includes(product.delivery_type) && <Star className="w-4 h-4" />}
+                          <span className="text-sm capitalize">{product.delivery_type.replace('_', ' ')}</span>
                         </div>
                       )}
                     </div>

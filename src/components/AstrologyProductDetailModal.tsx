@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Clock, Star, AlertTriangle } from "lucide-react";
+import { Clock, Star, AlertTriangle, FileAudio, Video } from "lucide-react";
 
 interface AstrologyProduct {
   id: string;
@@ -93,8 +93,11 @@ const AstrologyProductDetailModal = ({ product, isOpen, onClose, onPurchase }: A
               </div>
               {product.delivery_type && (
                 <div className="flex items-center gap-2 text-gray-400">
-                  <Clock className="w-4 h-4" />
-                  <span className="text-sm capitalize">{product.delivery_type}</span>
+                  {product.delivery_type === 'telephone' && <Clock className="w-4 h-4" />}
+                  {product.delivery_type === 'audio_file' && <FileAudio className="w-4 h-4" />}
+                  {product.delivery_type === 'video_file' && <Video className="w-4 h-4" />}
+                  {!['telephone', 'audio_file', 'video_file'].includes(product.delivery_type) && <Star className="w-4 h-4" />}
+                  <span className="text-sm capitalize">{product.delivery_type.replace('_', ' ')}</span>
                 </div>
               )}
             </div>
