@@ -107,6 +107,20 @@ const DashboardView = ({
       );
     }
 
+    // Admins always get the merchant-style dashboard (it includes AdminDashboard + product managers)
+    if (isAdmin) {
+      return (
+        <MerchantDashboard 
+          onSuccess={onSuccess}
+          onViewStore={onStoreView}
+          onBackgroundUpload={onBackgroundUpload}
+          purchasedTracks={purchasedTracks}
+          purchasedPodcasts={purchasedPodcasts}
+          userProfile={userProfile}
+        />
+      );
+    }
+
     // Check if user is a supporter (not a merchant)
     if (userProfile?.user_type !== "merchant") {
       return (
