@@ -35,36 +35,33 @@ export const useApprovalStatus = (): ApprovalStatus => {
       }
 
       try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('is_admin, approval_status, user_type')
-          .eq('id', user.id)
-          .maybeSingle();
+        const [profileRes, isAdminRes] = await Promise.all([
+          supabase
+            .from('profiles')
+            .select('approval_status, user_type')
+            .eq('id', user.id)
+            .maybeSingle(),
+          supabase.rpc('is_admin', { user_id: user.id })
+        ]);
 
-        if (error) {
-          console.error('Error fetching approval status:', error);
-          setStatus(prev => ({ ...prev, loading: false }));
-          return;
+        if (profileRes.error) {
+          console.error('Error fetching approval status:', profileRes.error);
+        }
+        if (isAdminRes.error) {
+          console.error('Error checking admin status:', isAdminRes.error);
         }
 
-        if (data) {
-          setStatus({
-            isAdmin: data.is_admin || false,
-            isApproved: data.approval_status === 'approved',
-            approvalStatus: data.approval_status || 'pending',
-            userType: data.user_type || '',
-            loading: false
-          });
-        } else {
-          // Profile doesn't exist yet
-          setStatus({
-            isAdmin: false,
-            isApproved: false,
-            approvalStatus: 'pending',
-            loading: false,
-            userType: ''
-          });
-        }
+        const approvalStatusValue = profileRes.data?.approval_status || 'pending';
+        const userTypeValue = profileRes.data?.user_type || '';
+        const isAdminValue = Boolean(isAdminRes.data);
+
+        setStatus({
+          isAdmin: isAdminValue,
+          isApproved: approvalStatusValue === 'approved',
+          approvalStatus: approvalStatusValue,
+          userType: userTypeValue,
+          loading: false
+        });
       } catch (error) {
         console.error('Error fetching approval status:', error);
         setStatus(prev => ({ ...prev, loading: false }));
