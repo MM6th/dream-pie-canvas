@@ -208,8 +208,13 @@ export const PodcastRecordingStudio = ({ onRecordingSaved }: PodcastRecordingStu
     setIsAutoSaving(true);
     
     try {
-      // Create blob from current chunks
-      const blob = new Blob(chunksRef.current, { type: mimeTypeRef.current });
+      // CRITICAL: Capture the chunks to save NOW to avoid race condition
+      // New chunks that arrive during upload will be preserved
+      const chunksToSave = [...chunksRef.current];
+      const chunkCountToRemove = chunksToSave.length;
+      
+      // Create blob from captured chunks
+      const blob = new Blob(chunksToSave, { type: mimeTypeRef.current });
       const segmentIndex = segmentIndexRef.current;
       const fileName = `podcast-recordings/${user.id}/temp/${sessionIdRef.current}/segment_${segmentIndex}.webm`;
       
@@ -235,14 +240,15 @@ export const PodcastRecordingStudio = ({ onRecordingSaved }: PodcastRecordingStu
       savedSegmentsRef.current[segmentIndex] = publicUrl;
       segmentIndexRef.current++;
       
-      // Clear chunks since they're now saved
-      chunksRef.current = [];
+      // CRITICAL: Only remove the chunks we actually saved, preserve any new ones
+      // that arrived during the upload
+      chunksRef.current = chunksRef.current.slice(chunkCountToRemove);
       
       // Save recovery data using ref (avoids stale closure)
       saveRecoveryData(savedSegmentsRef.current.filter(Boolean), recordingTimeRef.current);
       
       setLastAutoSave(new Date());
-      console.log(`Auto-saved segment ${segmentIndex}, total segments: ${savedSegmentsRef.current.length}`);
+      console.log(`Auto-saved segment ${segmentIndex}, preserved ${chunksRef.current.length} new chunks`);
     } catch (error) {
       console.error('Error auto-saving segment:', error);
     } finally {
