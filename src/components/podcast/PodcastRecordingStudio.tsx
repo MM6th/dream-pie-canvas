@@ -9,7 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { AudioLevelMeter } from "./AudioLevelMeter";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface PodcastRecordingStudioProps {
   onRecordingSaved?: () => void;
@@ -433,8 +433,16 @@ export const PodcastRecordingStudio = ({ onRecordingSaved }: PodcastRecordingStu
 
       toast({
         title: "Recording Stopped",
-        description: "Preview it below, then click \"Save Recording\" to add it to My Recordings.",
+        description: "Scroll down to save your recording!",
       });
+
+      // Auto-scroll to the save section after a brief delay for UI to render
+      setTimeout(() => {
+        const saveSection = document.getElementById('save-recording-section');
+        if (saveSection) {
+          saveSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
     }
   };
 
@@ -686,9 +694,21 @@ export const PodcastRecordingStudio = ({ onRecordingSaved }: PodcastRecordingStu
           )}
         </div>
         
-        {/* Preview and Save Section */}
+        {/* Preview and Save Section - Highlighted when recording is ready */}
         {audioUrl && !isRecording && (
-          <div className="space-y-4 pt-4 border-t border-border">
+          <div 
+            id="save-recording-section"
+            className="space-y-4 pt-4 border-2 border-primary rounded-lg p-4 bg-primary/5"
+          >
+            {/* Prominent Save Alert */}
+            <Alert className="bg-primary/10 border-primary">
+              <Save className="h-4 w-4" />
+              <AlertTitle className="text-primary font-semibold">Recording Ready to Save!</AlertTitle>
+              <AlertDescription>
+                Your {formatTime(recordingTime)} recording is ready. Enter a title below and click "Save Recording" to add it to My Recordings.
+              </AlertDescription>
+            </Alert>
+
             <div className="space-y-2">
               <Label htmlFor="preview">Preview Recording</Label>
               <audio 
@@ -700,13 +720,14 @@ export const PodcastRecordingStudio = ({ onRecordingSaved }: PodcastRecordingStu
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="title">Title *</Label>
+              <Label htmlFor="title" className="text-base font-medium">Title * <span className="text-muted-foreground text-sm">(required to save)</span></Label>
               <Input
                 id="title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Enter a title for your recording"
-                className="bg-background"
+                className="bg-background border-2 focus:border-primary"
+                autoFocus
               />
             </div>
             
@@ -727,6 +748,7 @@ export const PodcastRecordingStudio = ({ onRecordingSaved }: PodcastRecordingStu
                 onClick={saveRecording} 
                 disabled={isSaving || !title.trim()}
                 className="gap-2"
+                size="lg"
               >
                 <Save className="w-4 h-4" />
                 {isSaving ? 'Saving...' : 'Save Recording'}
