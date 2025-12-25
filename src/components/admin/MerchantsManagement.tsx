@@ -47,9 +47,33 @@ const MerchantsManagement = () => {
 
   const fetchMerchants = async () => {
     try {
+      // Explicitly select only required fields to minimize data exposure
+      // Even though admins have full access, this follows data minimization principles
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select(`
+          id,
+          email,
+          display_name,
+          avatar_url,
+          business_name,
+          business_description,
+          industry,
+          skills,
+          website,
+          contact_email,
+          facebook_url,
+          instagram_url,
+          youtube_url,
+          pinterest_url,
+          onlyfans_url,
+          snapchat_url,
+          paypal_email,
+          is_adult_creator,
+          approval_status,
+          created_at,
+          is_live_stream_artist
+        `)
         .eq('user_type', 'merchant')
         .order('created_at', { ascending: false });
 
