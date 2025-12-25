@@ -31,6 +31,8 @@ import { useApprovalStatus } from "@/hooks/useApprovalStatus";
 import ApprovalStatusBanner from "@/components/ApprovalStatusBanner";
 import RestrictedAccess from "@/components/dashboard/merchant/RestrictedAccess";
 import { FollowRequestsManager } from "@/components/profile/FollowRequestsManager";
+import AdminDashboard from "@/components/admin/AdminDashboard";
+import DashboardWidgets from "@/components/dashboard/merchant/DashboardWidgets";
 
 interface AudioTrack {
   id: string;
@@ -183,10 +185,32 @@ const AudioPodcasterDashboard = ({
     );
   }
 
+  const onViewStore = () => {
+    const storeTab = document.querySelector('[data-tutorial="store-tab"]') as HTMLElement;
+    if (storeTab) storeTab.click();
+  };
+
   return (
     <div className={`max-w-6xl mx-auto ${isMobile ? 'p-4' : 'p-6'} pt-20`}>
       {/* Approval Status Banner */}
       <ApprovalStatusBanner approvalStatus={approvalStatus} isAdmin={isAdmin} />
+
+      {/* Admin Dashboard - Admin Only */}
+      {isAdmin && (
+        <div className="mb-12">
+          <AdminDashboard />
+        </div>
+      )}
+
+      {/* Admin Widgets (Astrology, Fashion, Audio Products) - Admin Only */}
+      {isAdmin && (
+        <DashboardWidgets 
+          onSuccess={onSuccess || (() => {})} 
+          onViewStore={onViewStore} 
+          onBackgroundUpload={onBackgroundUpload} 
+          isAdmin={isAdmin}
+        />
+      )}
 
       {/* Follow Requests Card - shows when profile is private and has pending requests */}
       {isPrivate && pendingRequestsCount > 0 && (
