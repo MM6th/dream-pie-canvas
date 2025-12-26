@@ -294,9 +294,16 @@ export const PodcastRecordingStudio = ({ onRecordingSaved }: PodcastRecordingStu
       };
       
       mediaRecorder.onstop = async () => {
+        console.log('MediaRecorder stopped, processing recording...');
+        console.log('Chunks in memory:', chunksRef.current.length);
+        console.log('Saved segments:', savedSegmentsRef.current.filter(Boolean).length);
+        
+        // Keep a copy of current chunks before any async operations
+        const currentChunks = [...chunksRef.current];
+        
         // Final save of any remaining chunks
-        if (chunksRef.current.length > 0 && user) {
-          const blob = new Blob(chunksRef.current, { type: mimeType });
+        if (currentChunks.length > 0 && user) {
+          const blob = new Blob(currentChunks, { type: mimeType });
           const segmentIndex = segmentIndexRef.current;
           const fileName = `podcast-recordings/${user.id}/temp/${sessionIdRef.current}/segment_${segmentIndex}.webm`;
           
@@ -313,6 +320,9 @@ export const PodcastRecordingStudio = ({ onRecordingSaved }: PodcastRecordingStu
                 .from('audio-files')
                 .getPublicUrl(fileName);
               savedSegmentsRef.current[segmentIndex] = publicUrl;
+              console.log('Final segment saved:', publicUrl);
+            } else {
+              console.error('Error uploading final segment:', error);
             }
           } catch (e) {
             console.error('Error saving final segment:', e);
@@ -320,38 +330,58 @@ export const PodcastRecordingStudio = ({ onRecordingSaved }: PodcastRecordingStu
         }
         
         // Combine all saved segments into final blob
-        if (savedSegmentsRef.current.length > 0) {
+        const validSegmentUrls = savedSegmentsRef.current.filter(Boolean);
+        console.log('Valid segment URLs to fetch:', validSegmentUrls.length);
+        
+        let finalBlob: Blob | null = null;
+        
+        if (validSegmentUrls.length > 0) {
           const blobs: Blob[] = [];
           
-          for (const url of savedSegmentsRef.current) {
-            if (url) {
-              try {
-                const response = await fetch(url);
-                if (response.ok) {
-                  const blob = await response.blob();
-                  blobs.push(blob);
-                }
-              } catch (e) {
-                console.error('Error fetching saved segment:', e);
+          for (const url of validSegmentUrls) {
+            try {
+              console.log('Fetching segment:', url);
+              const response = await fetch(url);
+              if (response.ok) {
+                const blob = await response.blob();
+                blobs.push(blob);
+                console.log('Segment fetched successfully, size:', blob.size);
+              } else {
+                console.error('Failed to fetch segment, status:', response.status);
               }
+            } catch (e) {
+              console.error('Error fetching saved segment:', e);
             }
           }
           
-          // Also add any unsaved chunks
-          if (chunksRef.current.length > 0) {
-            blobs.push(new Blob(chunksRef.current, { type: mimeType }));
-          }
+          console.log('Total blobs fetched:', blobs.length);
           
           if (blobs.length > 0) {
-            const combinedBlob = new Blob(blobs, { type: mimeType });
-            setAudioBlob(combinedBlob);
-            setAudioUrl(URL.createObjectURL(combinedBlob));
+            finalBlob = new Blob(blobs, { type: mimeType });
+            console.log('Combined blob created, size:', finalBlob.size);
           }
-        } else if (chunksRef.current.length > 0) {
-          // Fallback if no auto-saves happened
-          const blob = new Blob(chunksRef.current, { type: mimeType });
-          setAudioBlob(blob);
-          setAudioUrl(URL.createObjectURL(blob));
+        }
+        
+        // Fallback: if we couldn't fetch saved segments, use chunks from memory
+        if (!finalBlob && currentChunks.length > 0) {
+          console.log('Using fallback: creating blob from memory chunks');
+          finalBlob = new Blob(currentChunks, { type: mimeType });
+          console.log('Fallback blob created, size:', finalBlob.size);
+        }
+        
+        // Set the audio URL if we have a blob
+        if (finalBlob && finalBlob.size > 0) {
+          setAudioBlob(finalBlob);
+          const url = URL.createObjectURL(finalBlob);
+          setAudioUrl(url);
+          console.log('Audio URL set:', url);
+        } else {
+          console.error('No audio data available to create recording');
+          toast({
+            title: "Recording Error",
+            description: "Could not process the recording. Please try again.",
+            variant: "destructive"
+          });
         }
         
         // Update recovery data with final state
