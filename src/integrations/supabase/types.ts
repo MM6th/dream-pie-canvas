@@ -1243,8 +1243,10 @@ export type Database = {
           is_adult_content: boolean | null
           is_free: boolean
           merchant_id: string
+          meter_reset_count: number | null
           ownership_confirmed: boolean
           price: number | null
+          sales_count: number | null
           stars: string[] | null
           status: string
           thumbnail_url: string | null
@@ -1263,8 +1265,10 @@ export type Database = {
           is_adult_content?: boolean | null
           is_free?: boolean
           merchant_id: string
+          meter_reset_count?: number | null
           ownership_confirmed?: boolean
           price?: number | null
+          sales_count?: number | null
           stars?: string[] | null
           status?: string
           thumbnail_url?: string | null
@@ -1283,8 +1287,10 @@ export type Database = {
           is_adult_content?: boolean | null
           is_free?: boolean
           merchant_id?: string
+          meter_reset_count?: number | null
           ownership_confirmed?: boolean
           price?: number | null
+          sales_count?: number | null
           stars?: string[] | null
           status?: string
           thumbnail_url?: string | null
@@ -1303,6 +1309,110 @@ export type Database = {
           {
             foreignKeyName: "film_products_merchant_id_fkey"
             columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "public_profile_data"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      film_purchases: {
+        Row: {
+          amount_paid: number
+          created_at: string | null
+          film_product_id: string
+          id: string
+          paypal_transaction_id: string | null
+          purchase_date: string | null
+          user_id: string
+        }
+        Insert: {
+          amount_paid: number
+          created_at?: string | null
+          film_product_id: string
+          id?: string
+          paypal_transaction_id?: string | null
+          purchase_date?: string | null
+          user_id: string
+        }
+        Update: {
+          amount_paid?: number
+          created_at?: string | null
+          film_product_id?: string
+          id?: string
+          paypal_transaction_id?: string | null
+          purchase_date?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "film_purchases_film_product_id_fkey"
+            columns: ["film_product_id"]
+            isOneToOne: false
+            referencedRelation: "film_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "film_purchases_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "film_purchases_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profile_data"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      film_reviews: {
+        Row: {
+          created_at: string | null
+          film_product_id: string
+          id: string
+          rating: number
+          review_text: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          film_product_id: string
+          id?: string
+          rating: number
+          review_text?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          film_product_id?: string
+          id?: string
+          rating?: number
+          review_text?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "film_reviews_film_product_id_fkey"
+            columns: ["film_product_id"]
+            isOneToOne: false
+            referencedRelation: "film_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "film_reviews_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "film_reviews_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "public_profile_data"
             referencedColumns: ["id"]
@@ -2661,18 +2771,22 @@ export type Database = {
       }
       profiles: {
         Row: {
+          active_film_id: string | null
           adult_content_restricted: boolean | null
           approval_status: string | null
           avatar_url: string | null
           background_image_url: string | null
           business_description: string | null
           business_name: string | null
+          can_publish_film: boolean | null
           contact_email: string | null
           created_at: string | null
+          current_film_sales: number | null
           display_name: string | null
           email: string
           facebook_url: string | null
           first_name: string | null
+          free_films_published: number | null
           google_voice_number: string | null
           id: string
           industry: string | null
@@ -2697,18 +2811,22 @@ export type Database = {
           youtube_url: string | null
         }
         Insert: {
+          active_film_id?: string | null
           adult_content_restricted?: boolean | null
           approval_status?: string | null
           avatar_url?: string | null
           background_image_url?: string | null
           business_description?: string | null
           business_name?: string | null
+          can_publish_film?: boolean | null
           contact_email?: string | null
           created_at?: string | null
+          current_film_sales?: number | null
           display_name?: string | null
           email: string
           facebook_url?: string | null
           first_name?: string | null
+          free_films_published?: number | null
           google_voice_number?: string | null
           id: string
           industry?: string | null
@@ -2733,18 +2851,22 @@ export type Database = {
           youtube_url?: string | null
         }
         Update: {
+          active_film_id?: string | null
           adult_content_restricted?: boolean | null
           approval_status?: string | null
           avatar_url?: string | null
           background_image_url?: string | null
           business_description?: string | null
           business_name?: string | null
+          can_publish_film?: boolean | null
           contact_email?: string | null
           created_at?: string | null
+          current_film_sales?: number | null
           display_name?: string | null
           email?: string
           facebook_url?: string | null
           first_name?: string | null
+          free_films_published?: number | null
           google_voice_number?: string | null
           id?: string
           industry?: string | null
@@ -2768,7 +2890,15 @@ export type Database = {
           website?: string | null
           youtube_url?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_active_film_id_fkey"
+            columns: ["active_film_id"]
+            isOneToOne: false
+            referencedRelation: "film_products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       quarterly_income: {
         Row: {

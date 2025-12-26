@@ -2,12 +2,13 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Film, Plus, Edit, Trash2, Play } from "lucide-react";
+import { Film, Plus, Edit, Trash2, Play, Gauge } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import FilmUploadModal from "@/components/FilmUploadModal";
 import EditFilmModal from "@/components/EditFilmModal";
+import TransitMeter from "@/components/TransitMeter";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,6 +32,7 @@ interface FilmProduct {
   trailer_url: string | null;
   status: string;
   is_adult_content: boolean;
+  sales_count: number;
   created_at: string;
 }
 

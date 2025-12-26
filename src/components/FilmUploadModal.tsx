@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +25,13 @@ interface FilmUploadModalProps {
   onSuccess: () => void;
 }
 
+interface PublishingStatus {
+  canPublish: boolean;
+  freeFilmsUsed: number;
+  currentFilmSales: number;
+  activeFilmId: string | null;
+}
+
 const FilmUploadModal = ({ isOpen, onClose, onSuccess }: FilmUploadModalProps) => {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
@@ -37,6 +44,8 @@ const FilmUploadModal = ({ isOpen, onClose, onSuccess }: FilmUploadModalProps) =
   const [isFree, setIsFree] = useState(false);
   const [ownershipConfirmed, setOwnershipConfirmed] = useState(false);
   const [isAdultContent, setIsAdultContent] = useState(false);
+  const [publishingStatus, setPublishingStatus] = useState<PublishingStatus | null>(null);
+  const [loadingStatus, setLoadingStatus] = useState(true);
   
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
@@ -44,6 +53,45 @@ const FilmUploadModal = ({ isOpen, onClose, onSuccess }: FilmUploadModalProps) =
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const [trailerFile, setTrailerFile] = useState<File | null>(null);
   const [fullVideoFile, setFullVideoFile] = useState<File | null>(null);
+
+  useEffect(() => {
+    if (isOpen && user) {
+      checkPublishingStatus();
+    }
+  }, [isOpen, user]);
+
+  const checkPublishingStatus = async () => {
+    if (!user) return;
+    setLoadingStatus(true);
+    
+    try {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('free_films_published, current_film_sales, active_film_id, can_publish_film')
+        .eq('id', user.id)
+        .single();
+
+      if (error) throw error;
+
+      setPublishingStatus({
+        canPublish: profile.can_publish_film ?? true,
+        freeFilmsUsed: profile.free_films_published ?? 0,
+        currentFilmSales: profile.current_film_sales ?? 0,
+        activeFilmId: profile.active_film_id
+      });
+    } catch (error) {
+      console.error('Error checking publishing status:', error);
+      // Default to allowing publishing if we can't check
+      setPublishingStatus({
+        canPublish: true,
+        freeFilmsUsed: 0,
+        currentFilmSales: 0,
+        activeFilmId: null
+      });
+    } finally {
+      setLoadingStatus(false);
+    }
+  };
 
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -239,6 +287,27 @@ const FilmUploadModal = ({ isOpen, onClose, onSuccess }: FilmUploadModalProps) =
 
         <ScrollArea className="max-h-[70vh] pr-4">
           <div className="space-y-4">
+            {/* Publishing Status Warning */}
+            {loadingStatus ? (
+              <div className="p-3 bg-gray-700/50 rounded text-gray-400 text-sm">
+                Checking publishing status...
+              </div>
+            ) : publishingStatus && !publishingStatus.canPublish && publishingStatus.activeFilmId ? (
+              <div className="p-3 bg-yellow-500/20 border border-yellow-500/30 rounded">
+                <p className="text-yellow-400 text-sm font-medium">Publishing Locked</p>
+                <p className="text-yellow-300/80 text-xs mt-1">
+                  You must sell 30 copies of your current film before publishing another.
+                  Current sales: {publishingStatus.currentFilmSales}/30
+                </p>
+              </div>
+            ) : publishingStatus && publishingStatus.freeFilmsUsed >= 1 ? (
+              <div className="p-3 bg-blue-500/20 border border-blue-500/30 rounded">
+                <p className="text-blue-400 text-sm font-medium">Free Film Limit Reached</p>
+                <p className="text-blue-300/80 text-xs mt-1">
+                  You've already published 1 free film. All additional films must have a price.
+                </p>
+              </div>
+            ) : null}
             {/* Title */}
             <div>
               <Label htmlFor="title" className="text-white">Film Title *</Label>
