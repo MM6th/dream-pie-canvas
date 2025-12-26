@@ -103,3 +103,9 @@ verify_jwt = true
 
 [functions.capture-podcast-subscription]
 verify_jwt = false
+
+[functions.create-film-payment]
+verify_jwt = true
+
+[functions.capture-film-payment]
+verify_jwt = false

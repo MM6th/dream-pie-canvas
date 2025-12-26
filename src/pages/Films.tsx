@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -7,15 +6,23 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
-import VideoPlayer from "@/components/VideoPlayer";
+import FilmCard from "@/components/FilmCard";
 
-interface VideoProduct {
+interface FilmProduct {
   id: string;
+  merchant_id: string;
   title: string;
   description: string | null;
-  video_file_url: string;
+  stars: string[];
+  genres: string[];
+  price: number | null;
+  is_free: boolean;
   thumbnail_url: string | null;
-  background_music_url: string | null;
+  trailer_url: string | null;
+  full_video_url: string | null;
+  status: string;
+  is_adult_content: boolean;
+  sales_count: number;
   created_at: string;
 }
 
@@ -23,27 +30,28 @@ const Films = () => {
   const navigate = useNavigate();
   const { signOut, user } = useAuth();
   const isMobile = useIsMobile();
-  const [videos, setVideos] = useState<VideoProduct[]>([]);
+  const [films, setFilms] = useState<FilmProduct[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchVideos();
+    fetchFilms();
   }, []);
 
-  const fetchVideos = async () => {
+  const fetchFilms = async () => {
     try {
       const { data, error } = await supabase
-        .from('video_products')
+        .from('film_products')
         .select('*')
+        .eq('status', 'published')
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching videos:', error);
+        console.error('Error fetching films:', error);
       } else {
-        setVideos(data || []);
+        setFilms((data as FilmProduct[]) || []);
       }
     } catch (error) {
-      console.error('Error fetching videos:', error);
+      console.error('Error fetching films:', error);
     } finally {
       setLoading(false);
     }
@@ -161,21 +169,36 @@ const Films = () => {
       </div>
 
       {/* Main Content */}
-      <div className="relative z-10 max-w-6xl mx-auto px-6">
+      <div className="relative z-10 max-w-6xl mx-auto px-6 pb-12">
         <div className="mb-8">
           <div className="mb-6">
             <h1 className="text-4xl font-bold text-white mb-2">Films</h1>
-            <p className="text-gray-300">Discover our collection of videos and films</p>
+            <p className="text-gray-300">Discover our collection of films from independent creators</p>
           </div>
 
-          {/* Videos Section */}
-          <div className="space-y-6">
-            {loading ? (
-              <div className="text-center text-white">Loading videos...</div>
-            ) : (
-              <VideoPlayer videos={videos} />
-            )}
-          </div>
+          {/* Films Grid */}
+          {loading ? (
+            <div className="text-center text-white py-12">
+              <Film className="w-12 h-12 mx-auto mb-4 animate-pulse" />
+              <p>Loading films...</p>
+            </div>
+          ) : films.length === 0 ? (
+            <div className="text-center py-12">
+              <Film className="w-16 h-16 text-gray-500 mx-auto mb-4" />
+              <h3 className="text-xl text-white mb-2">No Films Available</h3>
+              <p className="text-gray-400">Check back soon for new releases!</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {films.map((film) => (
+                <FilmCard 
+                  key={film.id} 
+                  film={film} 
+                  onPurchase={fetchFilms}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
