@@ -167,19 +167,25 @@ const FilmCard = ({ film, onPurchase }: FilmCardProps) => {
           </div>
         )}
 
-        {/* Overlay with play button for trailer */}
+        {/* Play button for trailer - always visible */}
         {film.trailer_url && (
-          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-            <Button
-              size="lg"
-              variant="secondary"
-              className="rounded-full"
+          <>
+            {/* Always visible play icon */}
+            <button
               onClick={() => setTrailerModalOpen(true)}
+              className="absolute inset-0 flex items-center justify-center cursor-pointer group/play"
             >
-              <Play className="w-6 h-6 mr-2" />
-              Watch Trailer
-            </Button>
-          </div>
+              <div className="w-14 h-14 rounded-full bg-black/60 flex items-center justify-center border-2 border-white/80 group-hover/play:bg-primary/80 group-hover/play:border-primary group-hover/play:scale-110 transition-all">
+                <Play className="w-6 h-6 text-white fill-white ml-1" />
+              </div>
+            </button>
+            {/* "Watch Trailer" text on hover */}
+            <div className="absolute bottom-12 left-0 right-0 text-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+              <span className="text-white text-sm font-medium bg-black/60 px-3 py-1 rounded-full">
+                Watch Trailer
+              </span>
+            </div>
+          </>
         )}
 
         {/* Badges */}
