@@ -115,11 +115,7 @@ const FilmProductManager = () => {
           ) : films.length === 0 ? (
             <div className="text-center py-8">
               <Film className="w-12 h-12 text-gray-500 mx-auto mb-3" />
-              <p className="text-gray-400 mb-4">You haven't uploaded any films yet.</p>
-              <Button onClick={() => setShowUploadModal(true)}>
-                <Plus className="w-4 h-4 mr-2" />
-                Upload Film
-              </Button>
+              <p className="text-gray-400">You haven't uploaded any films yet.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
