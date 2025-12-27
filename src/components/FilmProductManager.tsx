@@ -30,6 +30,7 @@ interface FilmProduct {
   is_free: boolean;
   thumbnail_url: string | null;
   trailer_url: string | null;
+  full_video_url: string | null;
   status: string;
   is_adult_content: boolean;
   sales_count: number;
