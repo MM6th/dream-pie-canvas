@@ -172,6 +172,14 @@ const FilmProductManager = () => {
                         {film.is_free ? 'Free' : `$${film.price?.toFixed(2)}`}
                       </span>
                     </div>
+                    
+                    {/* Transit Meter for paid films */}
+                    {!film.is_free && (
+                      <div className="mt-3">
+                        <TransitMeter currentSales={film.sales_count || 0} size="sm" showLabel={false} />
+                      </div>
+                    )}
+                    
                     <div className="flex gap-2 mt-3">
                       <Button
                         variant="outline"
