@@ -153,17 +153,27 @@ const FilmCard = ({ film, onPurchase }: FilmCardProps) => {
   return (
     <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm overflow-hidden group">
       {/* Thumbnail / Video Preview */}
-      <div className="relative aspect-video">
+      <div className="relative aspect-video bg-black">
         {playingTrailer && film.trailer_url ? (
           <video
-            src={film.trailer_url}
-            className="w-full h-full object-contain bg-black"
+            key={film.trailer_url}
+            className="w-full h-full object-contain"
             controls
             autoPlay
             playsInline
-            crossOrigin="anonymous"
+            muted={false}
             onEnded={() => setPlayingTrailer(false)}
-          />
+            onError={(e) => {
+              console.error('Video error:', e);
+              // Fallback: open in new tab if video fails to play
+              window.open(film.trailer_url!, '_blank');
+              setPlayingTrailer(false);
+            }}
+          >
+            <source src={film.trailer_url} type="video/mp4" />
+            <source src={film.trailer_url} type="video/quicktime" />
+            Your browser does not support this video format.
+          </video>
         ) : (
           <>
             {film.thumbnail_url ? (

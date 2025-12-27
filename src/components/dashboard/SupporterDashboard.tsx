@@ -7,6 +7,7 @@ import AudioPlayer from "@/components/AudioPlayer";
 
 import PodcastAudioPlayer from "@/components/PodcastAudioPlayer";
 import PurchasedPortfoliosViewer from "@/components/dashboard/PurchasedPortfoliosViewer";
+import PurchasedFilmsViewer from "@/components/dashboard/PurchasedFilmsViewer";
 import BackgroundUpload from "@/components/BackgroundUpload";
 import ContentGallery from "@/components/ContentGallery";
 import BulletinPostManager from "@/components/BulletinPostManager";
@@ -319,6 +320,7 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
                 <PodcastAudioPlayer tracks={purchasedPodcasts} />
               </div>
               <PurchasedPortfoliosViewer portfolios={purchasedPortfolios} />
+              <PurchasedFilmsViewer />
             </TabsContent>
             
             

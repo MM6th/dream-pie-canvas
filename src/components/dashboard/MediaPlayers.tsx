@@ -1,8 +1,8 @@
-
 import React from "react";
 import AudioPlayer from "@/components/AudioPlayer";
 import PodcastAudioPlayer from "@/components/PodcastAudioPlayer";
 import PurchasedPortfoliosViewer from "@/components/dashboard/PurchasedPortfoliosViewer";
+import PurchasedFilmsViewer from "@/components/dashboard/PurchasedFilmsViewer";
 
 interface MediaPlayersProps {
   purchasedTracks: any[];
@@ -18,6 +18,7 @@ const MediaPlayers = ({ purchasedTracks, purchasedPodcasts, purchasedPortfolios 
         <PodcastAudioPlayer tracks={purchasedPodcasts} />
       </div>
       <PurchasedPortfoliosViewer portfolios={purchasedPortfolios} />
+      <PurchasedFilmsViewer />
     </div>
   );
 };
