@@ -319,7 +319,7 @@ const EditFilmModal = ({ isOpen, onClose, onSuccess, film }: EditFilmModalProps)
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <FileVideo className="w-4 h-4" />
                     <span className="truncate max-w-[200px]">
-                      {trailerFile ? trailerFile.name : getFileNameFromUrl(film.trailer_url)}
+                      {trailerFile ? trailerFile.name : (film.trailer_url ? getFileNameFromUrl(film.trailer_url) : 'No trailer uploaded')}
                     </span>
                   </div>
                   <Button
@@ -330,7 +330,7 @@ const EditFilmModal = ({ isOpen, onClose, onSuccess, film }: EditFilmModalProps)
                     disabled={isUploading}
                   >
                     <Upload className="w-4 h-4 mr-1" />
-                    Replace
+                    {film.trailer_url || trailerFile ? 'Replace' : 'Upload'}
                   </Button>
                   <input
                     ref={trailerInputRef}
@@ -343,7 +343,7 @@ const EditFilmModal = ({ isOpen, onClose, onSuccess, film }: EditFilmModalProps)
                     }}
                   />
                 </div>
-                {trailerFile && uploadProgress.trailer > 0 && (
+                {isUploading && uploadProgress.trailer > 0 && (
                   <Progress value={uploadProgress.trailer} className="h-2" />
                 )}
               </div>
@@ -357,7 +357,7 @@ const EditFilmModal = ({ isOpen, onClose, onSuccess, film }: EditFilmModalProps)
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <FileVideo className="w-4 h-4" />
                     <span className="truncate max-w-[200px]">
-                      {filmFile ? filmFile.name : getFileNameFromUrl(film.full_video_url)}
+                      {filmFile ? filmFile.name : (film.full_video_url ? getFileNameFromUrl(film.full_video_url) : 'No film uploaded')}
                     </span>
                   </div>
                   <Button
@@ -368,7 +368,7 @@ const EditFilmModal = ({ isOpen, onClose, onSuccess, film }: EditFilmModalProps)
                     disabled={isUploading}
                   >
                     <Upload className="w-4 h-4 mr-1" />
-                    Replace
+                    {film.full_video_url || filmFile ? 'Replace' : 'Upload'}
                   </Button>
                   <input
                     ref={filmInputRef}
@@ -381,7 +381,7 @@ const EditFilmModal = ({ isOpen, onClose, onSuccess, film }: EditFilmModalProps)
                     }}
                   />
                 </div>
-                {filmFile && uploadProgress.film > 0 && (
+                {isUploading && uploadProgress.film > 0 && (
                   <Progress value={uploadProgress.film} className="h-2" />
                 )}
               </div>
