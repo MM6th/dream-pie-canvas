@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { X, Film, Upload, FileVideo, Loader2, Check, AlertCircle } from "lucide-react";
+import { X, Film, Upload, FileVideo, Loader2, Check, AlertCircle, Image as ImageIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -28,6 +28,7 @@ interface FilmProduct {
   price: number | null;
   is_free: boolean;
   thumbnail_url: string | null;
+  cover_photo_url: string | null;
   trailer_url: string | null;
   full_video_url: string | null;
   status: string;
@@ -51,6 +52,11 @@ interface UploadState {
   isComplete: boolean;
   url: string | null;
   error: string | null;
+}
+
+interface ImageUploadState {
+  isUploading: boolean;
+  url: string | null;
 }
 
 const EditFilmModal = ({ isOpen, onClose, onSuccess, film }: EditFilmModalProps) => {
@@ -79,8 +85,14 @@ const EditFilmModal = ({ isOpen, onClose, onSuccess, film }: EditFilmModalProps)
   });
   const [uploadProgress, setUploadProgress] = useState<UploadProgress>({ trailer: 0, film: 0 });
   
+  // Image upload state
+  const [thumbnailUpload, setThumbnailUpload] = useState<ImageUploadState>({ isUploading: false, url: null });
+  const [coverUpload, setCoverUpload] = useState<ImageUploadState>({ isUploading: false, url: null });
+  
   const trailerInputRef = useRef<HTMLInputElement>(null);
   const filmInputRef = useRef<HTMLInputElement>(null);
+  const thumbnailInputRef = useRef<HTMLInputElement>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
   const trailerUploadRef = useRef<tus.Upload | null>(null);
   const filmUploadRef = useRef<tus.Upload | null>(null);
 
@@ -96,6 +108,8 @@ const EditFilmModal = ({ isOpen, onClose, onSuccess, film }: EditFilmModalProps)
     setTrailerUpload({ isUploading: false, isComplete: false, url: null, error: null });
     setFilmUpload({ isUploading: false, isComplete: false, url: null, error: null });
     setUploadProgress({ trailer: 0, film: 0 });
+    setThumbnailUpload({ isUploading: false, url: null });
+    setCoverUpload({ isUploading: false, url: null });
   }, [film]);
 
   const addStar = () => {
@@ -255,9 +269,60 @@ const EditFilmModal = ({ isOpen, onClose, onSuccess, film }: EditFilmModalProps)
     e.target.value = '';
   };
 
+  // Image upload handler (immediate upload using regular storage)
+  const handleImageUpload = async (file: File, type: 'thumbnail' | 'cover') => {
+    const setUploadState = type === 'thumbnail' ? setThumbnailUpload : setCoverUpload;
+    const bucketName = type === 'thumbnail' ? 'film-thumbnails' : 'film-covers';
+    
+    setUploadState({ isUploading: true, url: null });
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Not authenticated");
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${session.user.id}/${Date.now()}_${type}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from(bucketName)
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from(bucketName)
+        .getPublicUrl(fileName);
+
+      setUploadState({ isUploading: false, url: publicUrl });
+      toast({ title: `${type === 'thumbnail' ? 'Thumbnail' : 'Cover photo'} uploaded!` });
+    } catch (error: any) {
+      console.error(`Error uploading ${type}:`, error);
+      setUploadState({ isUploading: false, url: null });
+      toast({
+        title: "Upload failed",
+        description: error.message || `Failed to upload ${type}`,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleThumbnailSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) handleImageUpload(file, 'thumbnail');
+    e.target.value = '';
+  };
+
+  const handleCoverSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) handleImageUpload(file, 'cover');
+    e.target.value = '';
+  };
+
   // Get the final URLs to save (prioritize newly uploaded, fall back to existing)
   const getFinalTrailerUrl = () => trailerUpload.url || film.trailer_url;
   const getFinalFilmUrl = () => filmUpload.url || film.full_video_url;
+  const getFinalThumbnailUrl = () => thumbnailUpload.url || film.thumbnail_url;
+  const getFinalCoverUrl = () => coverUpload.url || film.cover_photo_url;
 
   // Check if can publish (has required fields)
   const canPublish = () => {
@@ -269,7 +334,7 @@ const EditFilmModal = ({ isOpen, onClose, onSuccess, film }: EditFilmModalProps)
     return hasTitle && hasGenres && hasPrice && hasTrailer && hasFilm;
   };
 
-  const isAnyUploading = trailerUpload.isUploading || filmUpload.isUploading;
+  const isAnyUploading = trailerUpload.isUploading || filmUpload.isUploading || thumbnailUpload.isUploading || coverUpload.isUploading;
 
   // Unified save function
   const handleSave = async (publish: boolean) => {
@@ -314,7 +379,9 @@ const EditFilmModal = ({ isOpen, onClose, onSuccess, film }: EditFilmModalProps)
           is_adult_content: isAdultContent,
           status: publish ? 'published' : 'draft',
           trailer_url: getFinalTrailerUrl(),
-          full_video_url: getFinalFilmUrl()
+          full_video_url: getFinalFilmUrl(),
+          thumbnail_url: getFinalThumbnailUrl(),
+          cover_photo_url: getFinalCoverUrl()
         })
         .eq('id', film.id);
 
@@ -392,6 +459,116 @@ const EditFilmModal = ({ isOpen, onClose, onSuccess, film }: EditFilmModalProps)
                 placeholder="Enter film description..."
                 className="min-h-[100px]"
               />
+            </div>
+
+            {/* Thumbnail Upload */}
+            <div className="space-y-2">
+              <Label>Thumbnail Image</Label>
+              <div className="p-3 rounded-lg border border-border bg-muted/50">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    {thumbnailUpload.isUploading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : thumbnailUpload.url || film.thumbnail_url ? (
+                      <Check className="w-4 h-4 text-green-500" />
+                    ) : (
+                      <ImageIcon className="w-4 h-4" />
+                    )}
+                    <span className="truncate max-w-[200px]">
+                      {thumbnailUpload.isUploading 
+                        ? 'Uploading...' 
+                        : thumbnailUpload.url 
+                          ? 'Upload complete' 
+                          : film.thumbnail_url 
+                            ? 'Thumbnail uploaded' 
+                            : 'No thumbnail'}
+                    </span>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => thumbnailInputRef.current?.click()}
+                    disabled={isSaving || thumbnailUpload.isUploading}
+                  >
+                    {thumbnailUpload.isUploading ? (
+                      <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                    ) : (
+                      <Upload className="w-4 h-4 mr-1" />
+                    )}
+                    {getFinalThumbnailUrl() ? 'Replace' : 'Upload'}
+                  </Button>
+                  <input
+                    ref={thumbnailInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleThumbnailSelect}
+                  />
+                </div>
+                {(thumbnailUpload.url || film.thumbnail_url) && (
+                  <img 
+                    src={getFinalThumbnailUrl() || ''} 
+                    alt="Thumbnail preview" 
+                    className="mt-2 w-24 h-16 object-cover rounded border border-border"
+                  />
+                )}
+              </div>
+            </div>
+
+            {/* Cover Photo Upload */}
+            <div className="space-y-2">
+              <Label>Cover Photo</Label>
+              <div className="p-3 rounded-lg border border-border bg-muted/50">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    {coverUpload.isUploading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : coverUpload.url || film.cover_photo_url ? (
+                      <Check className="w-4 h-4 text-green-500" />
+                    ) : (
+                      <ImageIcon className="w-4 h-4" />
+                    )}
+                    <span className="truncate max-w-[200px]">
+                      {coverUpload.isUploading 
+                        ? 'Uploading...' 
+                        : coverUpload.url 
+                          ? 'Upload complete' 
+                          : film.cover_photo_url 
+                            ? 'Cover uploaded' 
+                            : 'No cover photo'}
+                    </span>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => coverInputRef.current?.click()}
+                    disabled={isSaving || coverUpload.isUploading}
+                  >
+                    {coverUpload.isUploading ? (
+                      <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                    ) : (
+                      <Upload className="w-4 h-4 mr-1" />
+                    )}
+                    {getFinalCoverUrl() ? 'Replace' : 'Upload'}
+                  </Button>
+                  <input
+                    ref={coverInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleCoverSelect}
+                  />
+                </div>
+                {(coverUpload.url || film.cover_photo_url) && (
+                  <img 
+                    src={getFinalCoverUrl() || ''} 
+                    alt="Cover preview" 
+                    className="mt-2 w-24 h-36 object-cover rounded border border-border"
+                  />
+                )}
+              </div>
             </div>
 
             {/* Trailer Upload */}
