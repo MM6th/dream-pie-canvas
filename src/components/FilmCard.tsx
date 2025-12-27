@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import FilmReviewsSection from "@/components/reviews/FilmReviewsSection";
 import TransitMeter from "@/components/TransitMeter";
+import FilmTrailerPlayerModal from "@/components/FilmTrailerPlayerModal";
 
 interface FilmProduct {
   id: string;
@@ -42,7 +43,7 @@ const FilmCard = ({ film, onPurchase }: FilmCardProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [averageRating, setAverageRating] = useState(0);
   const [reviewCount, setReviewCount] = useState(0);
-  const [playingTrailer, setPlayingTrailer] = useState(false);
+  const [trailerModalOpen, setTrailerModalOpen] = useState(false);
 
   const isOwner = user?.id === film.merchant_id;
 
