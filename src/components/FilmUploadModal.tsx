@@ -39,6 +39,23 @@ interface UploadProgress {
   film: number;
 }
 
+interface PendingUpload {
+  title: string;
+  description: string;
+  stars: string[];
+  selectedGenres: string[];
+  price: string;
+  isFree: boolean;
+  ownershipConfirmed: boolean;
+  isAdultContent: boolean;
+  trailerProgress: number;
+  filmProgress: number;
+  startedAt: number;
+  isDraft: boolean;
+}
+
+const PENDING_UPLOAD_KEY = 'film_upload_pending';
+
 const FilmUploadModal = ({ isOpen, onClose, onSuccess }: FilmUploadModalProps) => {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
@@ -56,8 +73,12 @@ const FilmUploadModal = ({ isOpen, onClose, onSuccess }: FilmUploadModalProps) =
   const [loadingStatus, setLoadingStatus] = useState(true);
   const [uploadProgress, setUploadProgress] = useState<UploadProgress>({ trailer: 0, film: 0 });
   const [isUploading, setIsUploading] = useState(false);
+  const [pendingUpload, setPendingUpload] = useState<PendingUpload | null>(null);
+  const [showResumePrompt, setShowResumePrompt] = useState(false);
   const submitLockRef = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const trailerUploadRef = useRef<tus.Upload | null>(null);
+  const filmUploadRef = useRef<tus.Upload | null>(null);
   
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
@@ -66,11 +87,104 @@ const FilmUploadModal = ({ isOpen, onClose, onSuccess }: FilmUploadModalProps) =
   const [trailerFile, setTrailerFile] = useState<File | null>(null);
   const [fullVideoFile, setFullVideoFile] = useState<File | null>(null);
 
+  // Check for pending uploads when modal opens
   useEffect(() => {
     if (isOpen && user) {
       checkPublishingStatus();
+      checkForPendingUpload();
     }
   }, [isOpen, user]);
+
+  const checkForPendingUpload = () => {
+    try {
+      const saved = localStorage.getItem(PENDING_UPLOAD_KEY);
+      if (saved) {
+        const pending = JSON.parse(saved) as PendingUpload;
+        // Only show resume prompt if upload was started in last 24 hours
+        const ageHours = (Date.now() - pending.startedAt) / (1000 * 60 * 60);
+        if (ageHours < 24) {
+          setPendingUpload(pending);
+          setShowResumePrompt(true);
+        } else {
+          // Clear old pending uploads
+          localStorage.removeItem(PENDING_UPLOAD_KEY);
+        }
+      }
+    } catch (e) {
+      console.error('Error checking pending upload:', e);
+      localStorage.removeItem(PENDING_UPLOAD_KEY);
+    }
+  };
+
+  const savePendingUpload = (isDraft: boolean) => {
+    const pending: PendingUpload = {
+      title,
+      description,
+      stars,
+      selectedGenres,
+      price,
+      isFree,
+      ownershipConfirmed,
+      isAdultContent,
+      trailerProgress: uploadProgress.trailer,
+      filmProgress: uploadProgress.film,
+      startedAt: Date.now(),
+      isDraft,
+    };
+    localStorage.setItem(PENDING_UPLOAD_KEY, JSON.stringify(pending));
+  };
+
+  const clearPendingUpload = () => {
+    localStorage.removeItem(PENDING_UPLOAD_KEY);
+    setPendingUpload(null);
+    setShowResumePrompt(false);
+  };
+
+  const restorePendingUpload = () => {
+    if (!pendingUpload) return;
+    setTitle(pendingUpload.title);
+    setDescription(pendingUpload.description);
+    setStars(pendingUpload.stars);
+    setSelectedGenres(pendingUpload.selectedGenres);
+    setPrice(pendingUpload.price);
+    setIsFree(pendingUpload.isFree);
+    setOwnershipConfirmed(pendingUpload.ownershipConfirmed);
+    setIsAdultContent(pendingUpload.isAdultContent);
+    setShowResumePrompt(false);
+    toast({
+      title: "Form Restored",
+      description: "Your previous form data has been restored. Please re-select your video files to continue uploading.",
+    });
+  };
+
+  const discardPendingUpload = () => {
+    clearPendingUpload();
+    toast({
+      title: "Discarded",
+      description: "Previous upload session has been discarded.",
+    });
+  };
+
+  const cancelUpload = () => {
+    if (trailerUploadRef.current) {
+      trailerUploadRef.current.abort();
+      trailerUploadRef.current = null;
+    }
+    if (filmUploadRef.current) {
+      filmUploadRef.current.abort();
+      filmUploadRef.current = null;
+    }
+    setIsUploading(false);
+    setIsLoading(false);
+    setUploadProgress({ trailer: 0, film: 0 });
+    setActiveAction(null);
+    submitLockRef.current = false;
+    clearPendingUpload();
+    toast({
+      title: "Upload Cancelled",
+      description: "Your upload has been cancelled.",
+    });
+  };
 
   const checkPublishingStatus = async () => {
     if (!user) return;
@@ -215,13 +329,34 @@ const FilmUploadModal = ({ isOpen, onClose, onSuccess }: FilmUploadModalProps) =
         chunkSize: 6 * 1024 * 1024, // 6MB chunks
         onError: (error) => {
           console.error('TUS upload error:', error);
+          // Clear ref on error
+          if (progressKey === 'trailer') trailerUploadRef.current = null;
+          if (progressKey === 'film') filmUploadRef.current = null;
           reject(error);
         },
         onProgress: (bytesUploaded, bytesTotal) => {
           const progress = Math.round((bytesUploaded / bytesTotal) * 100);
-          setUploadProgress(prev => ({ ...prev, [progressKey]: progress }));
+          setUploadProgress(prev => {
+            const newProgress = { ...prev, [progressKey]: progress };
+            // Update pending upload progress in localStorage
+            const saved = localStorage.getItem(PENDING_UPLOAD_KEY);
+            if (saved) {
+              try {
+                const pending = JSON.parse(saved);
+                pending.trailerProgress = newProgress.trailer;
+                pending.filmProgress = newProgress.film;
+                localStorage.setItem(PENDING_UPLOAD_KEY, JSON.stringify(pending));
+              } catch (e) {
+                // Ignore
+              }
+            }
+            return newProgress;
+          });
         },
         onSuccess: () => {
+          // Clear ref on success
+          if (progressKey === 'trailer') trailerUploadRef.current = null;
+          if (progressKey === 'film') filmUploadRef.current = null;
           const { data: { publicUrl } } = supabase.storage
             .from(bucket)
             .getPublicUrl(filePath);
@@ -229,9 +364,17 @@ const FilmUploadModal = ({ isOpen, onClose, onSuccess }: FilmUploadModalProps) =
         },
       });
 
+      // Store ref for potential cancellation
+      if (progressKey === 'trailer') trailerUploadRef.current = upload;
+      if (progressKey === 'film') filmUploadRef.current = upload;
+
       upload.findPreviousUploads().then((previousUploads) => {
         if (previousUploads.length) {
           upload.resumeFromPreviousUpload(previousUploads[0]);
+          toast({
+            title: "Resuming Upload",
+            description: `Found previous ${progressKey} upload, resuming...`,
+          });
         }
         upload.start();
       });
@@ -295,6 +438,9 @@ const FilmUploadModal = ({ isOpen, onClose, onSuccess }: FilmUploadModalProps) =
     setIsLoading(true);
     setIsUploading(true);
     setUploadProgress({ trailer: 0, film: 0 });
+    
+    // Save pending upload state to localStorage
+    savePendingUpload(isDraft);
 
     try {
       // Upload image files (small, no progress needed)
@@ -341,6 +487,9 @@ const FilmUploadModal = ({ isOpen, onClose, onSuccess }: FilmUploadModalProps) =
 
       if (error) throw error;
 
+      // Clear pending upload on success
+      clearPendingUpload();
+
       toast({ 
         title: "Success", 
         description: isDraft ? "Your film has been saved as a draft!" : "Your film has been published!" 
@@ -351,8 +500,8 @@ const FilmUploadModal = ({ isOpen, onClose, onSuccess }: FilmUploadModalProps) =
     } catch (error: any) {
       console.error('Error uploading film:', error);
       toast({
-        title: "Error",
-        description: error.message || "Failed to upload film. Please try again.",
+        title: "Upload Interrupted",
+        description: "Your upload was interrupted. Reopen this modal to resume where you left off.",
         variant: "destructive"
       });
     } finally {
@@ -395,6 +544,25 @@ const FilmUploadModal = ({ isOpen, onClose, onSuccess }: FilmUploadModalProps) =
 
         <ScrollArea className="max-h-[70vh] pr-4">
           <div className="space-y-4">
+            {/* Resume Upload Prompt */}
+            {showResumePrompt && pendingUpload && (
+              <div className="p-4 bg-blue-500/20 border border-blue-500/30 rounded-lg">
+                <p className="text-blue-400 text-sm font-medium mb-2">📥 Incomplete Upload Found</p>
+                <p className="text-blue-300/80 text-xs mb-3">
+                  You have an unfinished upload for "{pendingUpload.title}" started {new Date(pendingUpload.startedAt).toLocaleString()}.
+                  Would you like to restore your form data and continue?
+                </p>
+                <div className="flex gap-2">
+                  <Button size="sm" onClick={restorePendingUpload}>
+                    Restore & Continue
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={discardPendingUpload}>
+                    Discard
+                  </Button>
+                </div>
+              </div>
+            )}
+
             {/* Publishing Status Warning */}
             {loadingStatus ? (
               <div className="p-3 bg-gray-700/50 rounded text-gray-400 text-sm">
@@ -675,20 +843,28 @@ const FilmUploadModal = ({ isOpen, onClose, onSuccess }: FilmUploadModalProps) =
 
             {/* Submit Buttons */}
             <div className="flex justify-end gap-2 pt-4">
-              <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
-                Cancel
-              </Button>
-              <Button 
-                type="button"
-                variant="secondary" 
-                onClick={handleSaveDraft} 
-                disabled={isLoading}
-              >
-                {activeAction === 'draft' ? "Saving..." : "Save Draft"}
-              </Button>
-              <Button type="button" onClick={handlePublish} disabled={isLoading}>
-                {activeAction === 'publish' ? "Publishing..." : "Publish Film"}
-              </Button>
+              {isUploading ? (
+                <Button type="button" variant="destructive" onClick={cancelUpload}>
+                  Cancel Upload
+                </Button>
+              ) : (
+                <>
+                  <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
+                    Cancel
+                  </Button>
+                  <Button 
+                    type="button"
+                    variant="secondary" 
+                    onClick={handleSaveDraft} 
+                    disabled={isLoading}
+                  >
+                    {activeAction === 'draft' ? "Saving..." : "Save Draft"}
+                  </Button>
+                  <Button type="button" onClick={handlePublish} disabled={isLoading}>
+                    {activeAction === 'publish' ? "Publishing..." : "Publish Film"}
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </ScrollArea>
