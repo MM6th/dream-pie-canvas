@@ -42,6 +42,7 @@ interface UploadProgress {
 const FilmUploadModal = ({ isOpen, onClose, onSuccess }: FilmUploadModalProps) => {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [activeAction, setActiveAction] = useState<'draft' | 'publish' | null>(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [stars, setStars] = useState<string[]>([]);
@@ -55,6 +56,7 @@ const FilmUploadModal = ({ isOpen, onClose, onSuccess }: FilmUploadModalProps) =
   const [loadingStatus, setLoadingStatus] = useState(true);
   const [uploadProgress, setUploadProgress] = useState<UploadProgress>({ trailer: 0, film: 0 });
   const [isUploading, setIsUploading] = useState(false);
+  const submitLockRef = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
@@ -236,7 +238,25 @@ const FilmUploadModal = ({ isOpen, onClose, onSuccess }: FilmUploadModalProps) =
     });
   };
 
-  const handleSubmit = async (isDraft: boolean = false) => {
+  const handleSaveDraft = async () => {
+    if (submitLockRef.current) return;
+    submitLockRef.current = true;
+    setActiveAction('draft');
+    await submitFilm(true);
+    submitLockRef.current = false;
+    setActiveAction(null);
+  };
+
+  const handlePublish = async () => {
+    if (submitLockRef.current) return;
+    submitLockRef.current = true;
+    setActiveAction('publish');
+    await submitFilm(false);
+    submitLockRef.current = false;
+    setActiveAction(null);
+  };
+
+  const submitFilm = async (isDraft: boolean) => {
     if (!user) return;
 
     if (!title.trim()) {
@@ -564,10 +584,12 @@ const FilmUploadModal = ({ isOpen, onClose, onSuccess }: FilmUploadModalProps) =
                         <X className="w-4 h-4" />
                       </Button>
                     </div>
-                    {isUploading && uploadProgress.trailer > 0 && (
+                    {isUploading && (
                       <div className="space-y-1">
                         <Progress value={uploadProgress.trailer} className="h-2" />
-                        <p className="text-xs text-gray-400">Uploading trailer: {uploadProgress.trailer}%</p>
+                        <p className="text-xs text-gray-400">
+                          {uploadProgress.trailer === 0 ? "Preparing trailer upload..." : `Uploading trailer: ${uploadProgress.trailer}%`}
+                        </p>
                       </div>
                     )}
                   </div>
@@ -602,10 +624,12 @@ const FilmUploadModal = ({ isOpen, onClose, onSuccess }: FilmUploadModalProps) =
                         <X className="w-4 h-4" />
                       </Button>
                     </div>
-                    {isUploading && uploadProgress.film > 0 && (
+                    {isUploading && (
                       <div className="space-y-1">
                         <Progress value={uploadProgress.film} className="h-2" />
-                        <p className="text-xs text-gray-400">Uploading film: {uploadProgress.film}%</p>
+                        <p className="text-xs text-gray-400">
+                          {uploadProgress.film === 0 ? "Preparing film upload..." : `Uploading film: ${uploadProgress.film}%`}
+                        </p>
                       </div>
                     )}
                   </div>
@@ -657,13 +681,13 @@ const FilmUploadModal = ({ isOpen, onClose, onSuccess }: FilmUploadModalProps) =
               <Button 
                 type="button"
                 variant="secondary" 
-                onClick={() => handleSubmit(true)} 
+                onClick={handleSaveDraft} 
                 disabled={isLoading}
               >
-                {isLoading ? "Saving..." : "Save Draft"}
+                {activeAction === 'draft' ? "Saving..." : "Save Draft"}
               </Button>
-              <Button type="button" onClick={() => handleSubmit(false)} disabled={isLoading}>
-                {isLoading ? "Publishing..." : "Publish Film"}
+              <Button type="button" onClick={handlePublish} disabled={isLoading}>
+                {activeAction === 'publish' ? "Publishing..." : "Publish Film"}
               </Button>
             </div>
           </div>
