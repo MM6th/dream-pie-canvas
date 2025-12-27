@@ -59,10 +59,6 @@ const FilmTrailerPlayerModal = ({
             Your browser does not support the video tag.
           </video>
         </div>
-
-        <div className="text-sm text-muted-foreground text-center">
-          If the trailer doesn’t play, try opening it in a new tab or downloading it.
-        </div>
       </DialogContent>
     </Dialog>
   );
