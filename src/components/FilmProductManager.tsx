@@ -29,6 +29,7 @@ interface FilmProduct {
   price: number | null;
   is_free: boolean;
   thumbnail_url: string | null;
+  cover_photo_url: string | null;
   trailer_url: string | null;
   full_video_url: string | null;
   status: string;
