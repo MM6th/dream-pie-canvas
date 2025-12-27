@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,11 +6,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { X, Upload, Film, Image, Play, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import * as tus from 'tus-js-client';
 
 
 const GENRE_OPTIONS = [
@@ -32,6 +34,11 @@ interface PublishingStatus {
   activeFilmId: string | null;
 }
 
+interface UploadProgress {
+  trailer: number;
+  film: number;
+}
+
 const FilmUploadModal = ({ isOpen, onClose, onSuccess }: FilmUploadModalProps) => {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
@@ -46,6 +53,9 @@ const FilmUploadModal = ({ isOpen, onClose, onSuccess }: FilmUploadModalProps) =
   const [isAdultContent, setIsAdultContent] = useState(false);
   const [publishingStatus, setPublishingStatus] = useState<PublishingStatus | null>(null);
   const [loadingStatus, setLoadingStatus] = useState(true);
+  const [uploadProgress, setUploadProgress] = useState<UploadProgress>({ trailer: 0, film: 0 });
+  const [isUploading, setIsUploading] = useState(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
   
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
@@ -168,6 +178,64 @@ const FilmUploadModal = ({ isOpen, onClose, onSuccess }: FilmUploadModalProps) =
     return publicUrl;
   };
 
+  const uploadVideoWithProgress = async (
+    file: File, 
+    bucket: string, 
+    folder: string, 
+    progressKey: 'trailer' | 'film'
+  ): Promise<string | null> => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      console.error('No session found');
+      return null;
+    }
+
+    const fileExt = file.name.split('.').pop();
+    const filePath = `${user?.id}/${folder}/${Date.now()}.${fileExt}`;
+    const projectId = 'veaupehwfsbagzfuvach';
+
+    return new Promise((resolve, reject) => {
+      const upload = new tus.Upload(file, {
+        endpoint: `https://${projectId}.supabase.co/storage/v1/upload/resumable`,
+        retryDelays: [0, 3000, 5000, 10000, 20000],
+        headers: {
+          authorization: `Bearer ${session.access_token}`,
+          'x-upsert': 'false',
+        },
+        uploadDataDuringCreation: true,
+        removeFingerprintOnSuccess: true,
+        metadata: {
+          bucketName: bucket,
+          objectName: filePath,
+          contentType: file.type,
+          cacheControl: '3600',
+        },
+        chunkSize: 6 * 1024 * 1024, // 6MB chunks
+        onError: (error) => {
+          console.error('TUS upload error:', error);
+          reject(error);
+        },
+        onProgress: (bytesUploaded, bytesTotal) => {
+          const progress = Math.round((bytesUploaded / bytesTotal) * 100);
+          setUploadProgress(prev => ({ ...prev, [progressKey]: progress }));
+        },
+        onSuccess: () => {
+          const { data: { publicUrl } } = supabase.storage
+            .from(bucket)
+            .getPublicUrl(filePath);
+          resolve(publicUrl);
+        },
+      });
+
+      upload.findPreviousUploads().then((previousUploads) => {
+        if (previousUploads.length) {
+          upload.resumeFromPreviousUpload(previousUploads[0]);
+        }
+        upload.start();
+      });
+    });
+  };
+
   const handleSubmit = async (isDraft: boolean = false) => {
     if (!user) return;
 
@@ -205,15 +273,27 @@ const FilmUploadModal = ({ isOpen, onClose, onSuccess }: FilmUploadModalProps) =
     }
 
     setIsLoading(true);
+    setIsUploading(true);
+    setUploadProgress({ trailer: 0, film: 0 });
 
     try {
-      // Upload files
-      const [thumbnailUrl, coverUrl, trailerUrl, fullVideoUrl] = await Promise.all([
+      // Upload image files (small, no progress needed)
+      const [thumbnailUrl, coverUrl] = await Promise.all([
         thumbnailFile ? uploadFile(thumbnailFile, 'film-thumbnails', 'thumbnails') : Promise.resolve(null),
         coverFile ? uploadFile(coverFile, 'film-covers', 'covers') : Promise.resolve(null),
-        trailerFile ? uploadFile(trailerFile, 'film-trailers', 'trailers') : Promise.resolve(null),
-        fullVideoFile ? uploadFile(fullVideoFile, 'film-videos', 'films') : Promise.resolve(null)
       ]);
+
+      // Upload video files with progress tracking (sequential for better UX)
+      let trailerUrl: string | null = null;
+      let fullVideoUrl: string | null = null;
+
+      if (trailerFile) {
+        trailerUrl = await uploadVideoWithProgress(trailerFile, 'film-trailers', 'trailers', 'trailer');
+      }
+
+      if (fullVideoFile) {
+        fullVideoUrl = await uploadVideoWithProgress(fullVideoFile, 'film-videos', 'films', 'film');
+      }
 
       if (!isDraft && (!thumbnailUrl || !fullVideoUrl)) {
         throw new Error("Failed to upload required files");
@@ -257,6 +337,8 @@ const FilmUploadModal = ({ isOpen, onClose, onSuccess }: FilmUploadModalProps) =
       });
     } finally {
       setIsLoading(false);
+      setIsUploading(false);
+      setUploadProgress({ trailer: 0, film: 0 });
     }
   };
 
@@ -466,18 +548,28 @@ const FilmUploadModal = ({ isOpen, onClose, onSuccess }: FilmUploadModalProps) =
               <Label className="text-white">Trailer (Optional)</Label>
               <div className="mt-2">
                 {trailerFile ? (
-                  <div className="flex items-center gap-2">
-                    <Badge variant="secondary" className="flex items-center gap-1">
-                      <Play className="w-3 h-3" /> {trailerFile.name}
-                    </Badge>
-                    <Button
-                      size="icon"
-                      variant="destructive"
-                      className="w-6 h-6"
-                      onClick={() => setTrailerFile(null)}
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary" className="flex items-center gap-1">
+                        <Play className="w-3 h-3" /> {trailerFile.name}
+                      </Badge>
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="destructive"
+                        className="w-6 h-6"
+                        onClick={() => setTrailerFile(null)}
+                        disabled={isUploading}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                    {isUploading && uploadProgress.trailer > 0 && (
+                      <div className="space-y-1">
+                        <Progress value={uploadProgress.trailer} className="h-2" />
+                        <p className="text-xs text-gray-400">Uploading trailer: {uploadProgress.trailer}%</p>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <label className="flex flex-col items-center justify-center w-full h-20 border-2 border-dashed border-gray-600 rounded cursor-pointer hover:border-gray-500">
@@ -494,18 +586,28 @@ const FilmUploadModal = ({ isOpen, onClose, onSuccess }: FilmUploadModalProps) =
               <Label className="text-white">Full Film Video *</Label>
               <div className="mt-2">
                 {fullVideoFile ? (
-                  <div className="flex items-center gap-2">
-                    <Badge variant="secondary" className="flex items-center gap-1">
-                      <Film className="w-3 h-3" /> {fullVideoFile.name}
-                    </Badge>
-                    <Button
-                      size="icon"
-                      variant="destructive"
-                      className="w-6 h-6"
-                      onClick={() => setFullVideoFile(null)}
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary" className="flex items-center gap-1">
+                        <Film className="w-3 h-3" /> {fullVideoFile.name}
+                      </Badge>
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="destructive"
+                        className="w-6 h-6"
+                        onClick={() => setFullVideoFile(null)}
+                        disabled={isUploading}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                    {isUploading && uploadProgress.film > 0 && (
+                      <div className="space-y-1">
+                        <Progress value={uploadProgress.film} className="h-2" />
+                        <p className="text-xs text-gray-400">Uploading film: {uploadProgress.film}%</p>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-gray-600 rounded cursor-pointer hover:border-gray-500">
@@ -549,17 +651,18 @@ const FilmUploadModal = ({ isOpen, onClose, onSuccess }: FilmUploadModalProps) =
 
             {/* Submit Buttons */}
             <div className="flex justify-end gap-2 pt-4">
-              <Button variant="outline" onClick={onClose} disabled={isLoading}>
+              <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
                 Cancel
               </Button>
               <Button 
+                type="button"
                 variant="secondary" 
                 onClick={() => handleSubmit(true)} 
                 disabled={isLoading}
               >
                 {isLoading ? "Saving..." : "Save Draft"}
               </Button>
-              <Button onClick={() => handleSubmit(false)} disabled={isLoading}>
+              <Button type="button" onClick={() => handleSubmit(false)} disabled={isLoading}>
                 {isLoading ? "Publishing..." : "Publish Film"}
               </Button>
             </div>
