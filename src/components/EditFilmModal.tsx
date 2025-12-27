@@ -573,7 +573,7 @@ const EditFilmModal = ({ isOpen, onClose, onSuccess, film }: EditFilmModalProps)
 
             {/* Trailer Upload */}
             <div className="space-y-2">
-              <Label>Trailer Video</Label>
+              <Label>Trailer Video <span className="text-xs text-muted-foreground font-medium">(MP4 format only)</span></Label>
               <div className="p-3 rounded-lg border border-border bg-muted/50">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -612,7 +612,7 @@ const EditFilmModal = ({ isOpen, onClose, onSuccess, film }: EditFilmModalProps)
                   <input
                     ref={trailerInputRef}
                     type="file"
-                    accept="video/*"
+                    accept="video/mp4,.mp4"
                     className="hidden"
                     onChange={handleTrailerFileSelect}
                   />
@@ -625,7 +625,7 @@ const EditFilmModal = ({ isOpen, onClose, onSuccess, film }: EditFilmModalProps)
 
             {/* Full Film Upload */}
             <div className="space-y-2">
-              <Label>Full Film Video</Label>
+              <Label>Full Film Video <span className="text-xs text-muted-foreground font-medium">(MP4 format only)</span></Label>
               <div className="p-3 rounded-lg border border-border bg-muted/50">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -664,7 +664,7 @@ const EditFilmModal = ({ isOpen, onClose, onSuccess, film }: EditFilmModalProps)
                   <input
                     ref={filmInputRef}
                     type="file"
-                    accept="video/*"
+                    accept="video/mp4,.mp4"
                     className="hidden"
                     onChange={handleFilmFileSelect}
                   />
