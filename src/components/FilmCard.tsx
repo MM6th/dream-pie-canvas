@@ -153,59 +153,35 @@ const FilmCard = ({ film, onPurchase }: FilmCardProps) => {
 
   return (
     <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm overflow-hidden group">
-      {/* Thumbnail / Video Preview */}
+      {/* Thumbnail / Trailer Preview (Astrology-style: opens a modal player) */}
       <div className="relative aspect-video bg-black">
-        {playingTrailer && film.trailer_url ? (
-          <video
-            key={film.trailer_url}
-            className="w-full h-full object-contain"
-            controls
-            autoPlay
-            playsInline
-            muted={false}
-            onEnded={() => setPlayingTrailer(false)}
-            onError={(e) => {
-              console.error('Video error:', e);
-              // Fallback: open in new tab if video fails to play
-              window.open(film.trailer_url!, '_blank');
-              setPlayingTrailer(false);
-            }}
-          >
-            <source src={film.trailer_url} type="video/mp4" />
-            <source src={film.trailer_url} type="video/quicktime" />
-            Your browser does not support this video format.
-          </video>
+        {film.thumbnail_url ? (
+          <img
+            src={film.thumbnail_url}
+            alt={film.title}
+            className="w-full h-full object-cover transition-transform group-hover:scale-105"
+          />
         ) : (
-          <>
-            {film.thumbnail_url ? (
-              <img
-                src={film.thumbnail_url}
-                alt={film.title}
-                className="w-full h-full object-cover transition-transform group-hover:scale-105"
-              />
-            ) : (
-              <div className="w-full h-full bg-gray-700 flex items-center justify-center">
-                <Film className="w-16 h-16 text-gray-500" />
-              </div>
-            )}
-            
-            {/* Overlay with play button for trailer */}
-            {film.trailer_url && (
-              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                <Button
-                  size="lg"
-                  variant="secondary"
-                  className="rounded-full"
-                  onClick={() => setPlayingTrailer(true)}
-                >
-                  <Play className="w-6 h-6 mr-2" />
-                  Watch Trailer
-                </Button>
-              </div>
-            )}
-          </>
+          <div className="w-full h-full bg-gray-700 flex items-center justify-center">
+            <Film className="w-16 h-16 text-gray-500" />
+          </div>
         )}
-        
+
+        {/* Overlay with play button for trailer */}
+        {film.trailer_url && (
+          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+            <Button
+              size="lg"
+              variant="secondary"
+              className="rounded-full"
+              onClick={() => setTrailerModalOpen(true)}
+            >
+              <Play className="w-6 h-6 mr-2" />
+              Watch Trailer
+            </Button>
+          </div>
+        )}
+
         {/* Badges */}
         <div className="absolute top-2 left-2 flex gap-1 flex-wrap">
           {film.genres.slice(0, 2).map((genre) => (
@@ -214,13 +190,13 @@ const FilmCard = ({ film, onPurchase }: FilmCardProps) => {
             </Badge>
           ))}
         </div>
-        
+
         {film.is_adult_content && (
           <Badge variant="destructive" className="absolute top-2 right-2 text-xs">
             18+
           </Badge>
         )}
-        
+
         {/* Price badge */}
         <div className="absolute bottom-2 right-2">
           <Badge className={film.is_free ? "bg-green-600" : "bg-blue-600"}>
@@ -228,6 +204,16 @@ const FilmCard = ({ film, onPurchase }: FilmCardProps) => {
           </Badge>
         </div>
       </div>
+
+      {/* Trailer Modal (matching Astrology video player pattern) */}
+      {film.trailer_url && (
+        <FilmTrailerPlayerModal
+          isOpen={trailerModalOpen}
+          onClose={() => setTrailerModalOpen(false)}
+          videoUrl={film.trailer_url}
+          filmTitle={film.title}
+        />
+      )}
 
       <CardContent className="p-4 space-y-3">
         {/* Title & Rating */}
