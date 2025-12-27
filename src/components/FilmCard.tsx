@@ -157,9 +157,11 @@ const FilmCard = ({ film, onPurchase }: FilmCardProps) => {
         {playingTrailer && film.trailer_url ? (
           <video
             src={film.trailer_url}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-contain bg-black"
             controls
             autoPlay
+            playsInline
+            crossOrigin="anonymous"
             onEnded={() => setPlayingTrailer(false)}
           />
         ) : (
