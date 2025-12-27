@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import AudioPlayer from "@/components/AudioPlayer";
 import PodcastAudioPlayer from "@/components/PodcastAudioPlayer";
 import PurchasedPortfoliosViewer from "@/components/dashboard/PurchasedPortfoliosViewer";
-import BackgroundUpload from "@/components/BackgroundUpload";
+import PurchasedFilmsViewer from "@/components/dashboard/PurchasedFilmsViewer";
 import ContentGallery from "@/components/ContentGallery";
 import BulletinPostManager from "@/components/BulletinPostManager";
 import MerchantAudioManager from "@/components/MerchantAudioManager";
@@ -314,6 +314,7 @@ const MusicArtistDashboard = ({
               <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-2'} gap-6`}>
                 <AudioPlayer tracks={purchasedTracks} />
                 <PodcastAudioPlayer tracks={purchasedPodcasts} />
+                <PurchasedFilmsViewer />
               </div>
               <PurchasedPortfoliosViewer portfolios={purchasedPortfolios} />
             </TabsContent>

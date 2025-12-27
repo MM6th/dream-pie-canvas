@@ -291,7 +291,7 @@ const FilmPlayer = ({ films }: FilmPlayerProps) => {
                 </span>
               </div>
               <p className="text-muted-foreground text-xs mt-1">
-                Purchased on {new Date(currentFilm.purchase_date).toLocaleDateString()}
+                Purchased on {currentFilm.purchase_date ? new Date(currentFilm.purchase_date).toLocaleDateString() : '—'}
               </p>
             </div>
           </div>
@@ -390,7 +390,6 @@ const FilmPlayer = ({ films }: FilmPlayerProps) => {
           </div>
         </div>
 
-        <video ref={videoRef} className="hidden" preload="metadata" />
       </CardContent>
     </Card>
   );

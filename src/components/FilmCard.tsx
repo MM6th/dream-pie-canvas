@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
   Film, Play, Star, ShoppingCart, Eye, Lock,
-  ChevronDown, ChevronUp
+  ChevronDown, ChevronUp, Download
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -97,7 +97,7 @@ const FilmCard = ({ film, onPurchase }: FilmCardProps) => {
     }
 
     if (film.is_free) {
-      // Free film - just create purchase record
+      // Free film - save to user's film playlist/library
       setIsProcessing(true);
       try {
         const { error } = await supabase
@@ -105,15 +105,16 @@ const FilmCard = ({ film, onPurchase }: FilmCardProps) => {
           .insert({
             user_id: user.id,
             film_product_id: film.id,
-            amount_paid: 0
+            amount_paid: 0,
+            purchase_date: new Date().toISOString(),
           });
 
         if (error) throw error;
 
         setHasPurchased(true);
         toast({
-          title: "Success",
-          description: "Film added to your library!"
+          title: "Downloaded",
+          description: "You can watch your film now in your Film Player on your dashboard.",
         });
         onPurchase?.();
       } catch (error: any) {
@@ -135,9 +136,10 @@ const FilmCard = ({ film, onPurchase }: FilmCardProps) => {
   };
 
   const handleWatch = () => {
-    if (film.full_video_url) {
-      window.open(film.full_video_url, '_blank');
-    }
+    toast({
+      title: "Ready to watch",
+      description: "Open your dashboard to watch this film in your Film Player.",
+    });
   };
 
   const renderStars = (rating: number) => {
@@ -256,7 +258,7 @@ const FilmCard = ({ film, onPurchase }: FilmCardProps) => {
           ) : hasPurchased ? (
             <Button onClick={handleWatch} className="flex-1 bg-green-600 hover:bg-green-700">
               <Play className="w-4 h-4 mr-2" />
-              Watch Now
+              Watch in Dashboard
             </Button>
           ) : (
             <Button 
@@ -268,8 +270,8 @@ const FilmCard = ({ film, onPurchase }: FilmCardProps) => {
                 "Processing..."
               ) : film.is_free ? (
                 <>
-                  <Play className="w-4 h-4 mr-2" />
-                  Get Free
+                  <Download className="w-4 h-4 mr-2" />
+                  Download
                 </>
               ) : (
                 <>
