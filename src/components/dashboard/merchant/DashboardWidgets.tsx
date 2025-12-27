@@ -6,7 +6,6 @@ import BackgroundUpload from "@/components/BackgroundUpload";
 import AudioUploadModal from "@/components/AudioUploadModal";
 import FashionProductUploadModal from "@/components/FashionProductUploadModal";
 import AstrologyProductUploadModal from "@/components/AstrologyProductUploadModal";
-import FilmUploadModal from "@/components/FilmUploadModal";
 import FashionProductManager from "@/components/FashionProductManager";
 import AudioProductManager from "@/components/AudioProductManager";
 import AstrologyProductManager from "@/components/AstrologyProductManager";
@@ -22,7 +21,6 @@ interface DashboardWidgetsProps {
 const DashboardWidgets = ({ onSuccess, onViewStore, onBackgroundUpload, isAdmin }: DashboardWidgetsProps) => {
   const [isFashionModalOpen, setIsFashionModalOpen] = useState(false);
   const [isAstrologyModalOpen, setIsAstrologyModalOpen] = useState(false);
-  const [isFilmModalOpen, setIsFilmModalOpen] = useState(false);
 
   return (
     <div className="max-w-6xl mx-auto w-full overflow-x-hidden">
@@ -146,41 +144,6 @@ const DashboardWidgets = ({ onSuccess, onViewStore, onBackgroundUpload, isAdmin 
         </div>
       )}
 
-      {/* Films - Admin Only */}
-      {isAdmin && (
-        <div className="grid grid-cols-1 lg:grid-cols-1 gap-6 mb-8" data-tutorial="films">
-          <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-bold text-white">Films</h3>
-                <Button
-                  onClick={() => setIsFilmModalOpen(true)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
-                >
-                  Upload Film
-                </Button>
-              </div>
-              <p className="text-gray-400 mb-4">Upload and manage your video content for the films page</p>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg">
-                  <div>
-                    <p className="text-white font-medium">Total Films</p>
-                    <p className="text-gray-400 text-sm">Manage your video library</p>
-                  </div>
-                  <Button
-                    onClick={onViewStore}
-                    variant="outline"
-                    className="border-gray-600 text-white bg-black hover:bg-gray-800"
-                  >
-                    View in Store
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
       {/* Film Product Management - Admin Only */}
       {isAdmin && (
         <div className="mb-12">
@@ -208,13 +171,6 @@ const DashboardWidgets = ({ onSuccess, onViewStore, onBackgroundUpload, isAdmin 
       <AstrologyProductUploadModal 
         isOpen={isAstrologyModalOpen}
         onClose={() => setIsAstrologyModalOpen(false)}
-        onSuccess={onSuccess} 
-      />
-
-      {/* Film Upload Modal */}
-      <FilmUploadModal 
-        isOpen={isFilmModalOpen}
-        onClose={() => setIsFilmModalOpen(false)}
         onSuccess={onSuccess} 
       />
     </div>

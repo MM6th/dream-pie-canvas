@@ -118,7 +118,7 @@ const FilmProductManager = () => {
               <p className="text-gray-400 mb-4">You haven't uploaded any films yet.</p>
               <Button onClick={() => setShowUploadModal(true)}>
                 <Plus className="w-4 h-4 mr-2" />
-                Upload Your First Film
+                Upload Film
               </Button>
             </div>
           ) : (
