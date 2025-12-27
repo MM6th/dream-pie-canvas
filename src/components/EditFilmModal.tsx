@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { X, Film, Upload, FileVideo, Loader2 } from "lucide-react";
+import { X, Film, Upload, FileVideo, Loader2, Check, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -46,8 +46,15 @@ interface UploadProgress {
   film: number;
 }
 
+interface UploadState {
+  isUploading: boolean;
+  isComplete: boolean;
+  url: string | null;
+  error: string | null;
+}
+
 const EditFilmModal = ({ isOpen, onClose, onSuccess, film }: EditFilmModalProps) => {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [title, setTitle] = useState(film.title);
   const [description, setDescription] = useState(film.description || "");
   const [stars, setStars] = useState<string[]>(film.stars || []);
@@ -56,13 +63,21 @@ const EditFilmModal = ({ isOpen, onClose, onSuccess, film }: EditFilmModalProps)
   const [price, setPrice] = useState(film.price?.toString() || "");
   const [isFree, setIsFree] = useState(film.is_free);
   const [isAdultContent, setIsAdultContent] = useState(film.is_adult_content);
-  const [status, setStatus] = useState(film.status);
 
-  // Video upload state
-  const [trailerFile, setTrailerFile] = useState<File | null>(null);
-  const [filmFile, setFilmFile] = useState<File | null>(null);
+  // Immediate upload state - separate for trailer and film
+  const [trailerUpload, setTrailerUpload] = useState<UploadState>({
+    isUploading: false,
+    isComplete: false,
+    url: null,
+    error: null
+  });
+  const [filmUpload, setFilmUpload] = useState<UploadState>({
+    isUploading: false,
+    isComplete: false,
+    url: null,
+    error: null
+  });
   const [uploadProgress, setUploadProgress] = useState<UploadProgress>({ trailer: 0, film: 0 });
-  const [isUploading, setIsUploading] = useState(false);
   
   const trailerInputRef = useRef<HTMLInputElement>(null);
   const filmInputRef = useRef<HTMLInputElement>(null);
@@ -78,9 +93,8 @@ const EditFilmModal = ({ isOpen, onClose, onSuccess, film }: EditFilmModalProps)
     setPrice(film.price?.toString() || "");
     setIsFree(film.is_free);
     setIsAdultContent(film.is_adult_content);
-    setStatus(film.status);
-    setTrailerFile(null);
-    setFilmFile(null);
+    setTrailerUpload({ isUploading: false, isComplete: false, url: null, error: null });
+    setFilmUpload({ isUploading: false, isComplete: false, url: null, error: null });
     setUploadProgress({ trailer: 0, film: 0 });
   }, [film]);
 
@@ -132,81 +146,133 @@ const EditFilmModal = ({ isOpen, onClose, onSuccess, film }: EditFilmModalProps)
     }
   };
 
-  const uploadVideoWithProgress = async (
-    file: File,
-    type: 'trailer' | 'film'
-  ): Promise<string> => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) throw new Error("Not authenticated");
+  // Immediate upload function - starts as soon as file is selected
+  const startImmediateUpload = async (file: File, type: 'trailer' | 'film') => {
+    const setUploadState = type === 'trailer' ? setTrailerUpload : setFilmUpload;
+    
+    // Reset and start uploading
+    setUploadState({ isUploading: true, isComplete: false, url: null, error: null });
+    setUploadProgress(prev => ({ ...prev, [type]: 0 }));
 
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Date.now()}_${type}.${fileExt}`;
-    const filePath = `${session.user.id}/${fileName}`;
-    const bucketName = 'film-videos';
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Not authenticated");
 
-    return new Promise((resolve, reject) => {
-      const upload = new tus.Upload(file, {
-        endpoint: `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/upload/resumable`,
-        retryDelays: [0, 3000, 5000, 10000, 20000],
-        headers: {
-          authorization: `Bearer ${session.access_token}`,
-          'x-upsert': 'true',
-        },
-        uploadDataDuringCreation: true,
-        removeFingerprintOnSuccess: true,
-        metadata: {
-          bucketName,
-          objectName: filePath,
-          contentType: file.type,
-          cacheControl: '3600',
-        },
-        chunkSize: 6 * 1024 * 1024,
-        onError: (error) => {
-          console.error(`${type} upload error:`, error);
-          reject(error);
-        },
-        onProgress: (bytesUploaded, bytesTotal) => {
-          const percentage = Math.round((bytesUploaded / bytesTotal) * 100);
-          setUploadProgress(prev => ({ ...prev, [type]: percentage }));
-        },
-        onSuccess: () => {
-          const publicUrl = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/${bucketName}/${filePath}`;
-          resolve(publicUrl);
-        },
-      });
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}_${type}.${fileExt}`;
+      const filePath = `${session.user.id}/${fileName}`;
+      const bucketName = 'film-videos';
 
-      if (type === 'trailer') {
-        trailerUploadRef.current = upload;
-      } else {
-        filmUploadRef.current = upload;
-      }
+      const uploadedUrl = await new Promise<string>((resolve, reject) => {
+        const upload = new tus.Upload(file, {
+          endpoint: `https://veaupehwfsbagzfuvach.supabase.co/storage/v1/upload/resumable`,
+          retryDelays: [0, 3000, 5000, 10000, 20000],
+          headers: {
+            authorization: `Bearer ${session.access_token}`,
+            'x-upsert': 'true',
+          },
+          uploadDataDuringCreation: true,
+          removeFingerprintOnSuccess: true,
+          metadata: {
+            bucketName,
+            objectName: filePath,
+            contentType: file.type,
+            cacheControl: '3600',
+          },
+          chunkSize: 6 * 1024 * 1024,
+          onError: (error) => {
+            console.error(`${type} upload error:`, error);
+            reject(error);
+          },
+          onProgress: (bytesUploaded, bytesTotal) => {
+            const percentage = Math.round((bytesUploaded / bytesTotal) * 100);
+            setUploadProgress(prev => ({ ...prev, [type]: percentage }));
+          },
+          onSuccess: () => {
+            const publicUrl = `https://veaupehwfsbagzfuvach.supabase.co/storage/v1/object/public/${bucketName}/${filePath}`;
+            resolve(publicUrl);
+          },
+        });
 
-      upload.findPreviousUploads().then((previousUploads) => {
-        if (previousUploads.length) {
-          upload.resumeFromPreviousUpload(previousUploads[0]);
+        if (type === 'trailer') {
+          trailerUploadRef.current = upload;
+        } else {
+          filmUploadRef.current = upload;
         }
-        upload.start();
+
+        upload.findPreviousUploads().then((previousUploads) => {
+          if (previousUploads.length) {
+            upload.resumeFromPreviousUpload(previousUploads[0]);
+          }
+          upload.start();
+        });
       });
-    });
+
+      setUploadState({ isUploading: false, isComplete: true, url: uploadedUrl, error: null });
+      toast({ title: `${type === 'trailer' ? 'Trailer' : 'Film'} uploaded successfully!` });
+    } catch (error: any) {
+      console.error(`Error uploading ${type}:`, error);
+      setUploadState({ isUploading: false, isComplete: false, url: null, error: error.message });
+      toast({
+        title: "Upload failed",
+        description: error.message || `Failed to upload ${type}`,
+        variant: "destructive"
+      });
+    }
   };
 
-  const cancelUpload = () => {
-    if (trailerUploadRef.current) {
+  const cancelUpload = (type: 'trailer' | 'film') => {
+    if (type === 'trailer' && trailerUploadRef.current) {
       trailerUploadRef.current.abort();
       trailerUploadRef.current = null;
+      setTrailerUpload({ isUploading: false, isComplete: false, url: null, error: null });
+      setUploadProgress(prev => ({ ...prev, trailer: 0 }));
     }
-    if (filmUploadRef.current) {
+    if (type === 'film' && filmUploadRef.current) {
       filmUploadRef.current.abort();
       filmUploadRef.current = null;
+      setFilmUpload({ isUploading: false, isComplete: false, url: null, error: null });
+      setUploadProgress(prev => ({ ...prev, film: 0 }));
     }
-    setIsUploading(false);
-    setUploadProgress({ trailer: 0, film: 0 });
-    setTrailerFile(null);
-    setFilmFile(null);
     toast({ title: "Upload cancelled" });
   };
 
-  const handleSubmit = async () => {
+  // File selection handlers - trigger immediate upload
+  const handleTrailerFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      startImmediateUpload(file, 'trailer');
+    }
+    // Reset input so same file can be selected again
+    e.target.value = '';
+  };
+
+  const handleFilmFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      startImmediateUpload(file, 'film');
+    }
+    e.target.value = '';
+  };
+
+  // Get the final URLs to save (prioritize newly uploaded, fall back to existing)
+  const getFinalTrailerUrl = () => trailerUpload.url || film.trailer_url;
+  const getFinalFilmUrl = () => filmUpload.url || film.full_video_url;
+
+  // Check if can publish (has required fields)
+  const canPublish = () => {
+    const hasTitle = title.trim().length > 0;
+    const hasGenres = selectedGenres.length > 0;
+    const hasPrice = isFree || (price && parseFloat(price) > 0);
+    const hasTrailer = getFinalTrailerUrl() !== null;
+    const hasFilm = getFinalFilmUrl() !== null;
+    return hasTitle && hasGenres && hasPrice && hasTrailer && hasFilm;
+  };
+
+  const isAnyUploading = trailerUpload.isUploading || filmUpload.isUploading;
+
+  // Unified save function
+  const handleSave = async (publish: boolean) => {
     if (!title.trim()) {
       toast({ title: "Error", description: "Please enter a film title.", variant: "destructive" });
       return;
@@ -222,23 +288,20 @@ const EditFilmModal = ({ isOpen, onClose, onSuccess, film }: EditFilmModalProps)
       return;
     }
 
-    setIsLoading(true);
-    setIsUploading(trailerFile !== null || filmFile !== null);
+    if (publish) {
+      if (!getFinalTrailerUrl()) {
+        toast({ title: "Error", description: "Please upload a trailer before publishing.", variant: "destructive" });
+        return;
+      }
+      if (!getFinalFilmUrl()) {
+        toast({ title: "Error", description: "Please upload the full film before publishing.", variant: "destructive" });
+        return;
+      }
+    }
+
+    setIsSaving(true);
 
     try {
-      let trailerUrl = film.trailer_url;
-      let fullVideoUrl = film.full_video_url;
-
-      // Upload new trailer if selected
-      if (trailerFile) {
-        trailerUrl = await uploadVideoWithProgress(trailerFile, 'trailer');
-      }
-
-      // Upload new film if selected
-      if (filmFile) {
-        fullVideoUrl = await uploadVideoWithProgress(filmFile, 'film');
-      }
-
       const { error } = await supabase
         .from('film_products')
         .update({
@@ -249,15 +312,18 @@ const EditFilmModal = ({ isOpen, onClose, onSuccess, film }: EditFilmModalProps)
           price: isFree ? null : parseFloat(price),
           is_free: isFree,
           is_adult_content: isAdultContent,
-          status,
-          trailer_url: trailerUrl,
-          full_video_url: fullVideoUrl
+          status: publish ? 'published' : 'draft',
+          trailer_url: getFinalTrailerUrl(),
+          full_video_url: getFinalFilmUrl()
         })
         .eq('id', film.id);
 
       if (error) throw error;
 
-      toast({ title: "Success", description: "Film updated successfully!" });
+      toast({ 
+        title: "Success", 
+        description: publish ? "Film published successfully!" : "Draft saved successfully!" 
+      });
       onSuccess();
       onClose();
     } catch (error: any) {
@@ -268,10 +334,27 @@ const EditFilmModal = ({ isOpen, onClose, onSuccess, film }: EditFilmModalProps)
         variant: "destructive"
       });
     } finally {
-      setIsLoading(false);
-      setIsUploading(false);
+      setIsSaving(false);
     }
   };
+
+  // Get display info for upload sections
+  const getTrailerDisplayInfo = () => {
+    if (trailerUpload.isUploading) return { text: 'Uploading...', showProgress: true };
+    if (trailerUpload.isComplete && trailerUpload.url) return { text: 'Upload complete', showProgress: false };
+    if (film.trailer_url) return { text: getFileNameFromUrl(film.trailer_url), showProgress: false };
+    return { text: 'No trailer uploaded', showProgress: false };
+  };
+
+  const getFilmDisplayInfo = () => {
+    if (filmUpload.isUploading) return { text: 'Uploading...', showProgress: true };
+    if (filmUpload.isComplete && filmUpload.url) return { text: 'Upload complete', showProgress: false };
+    if (film.full_video_url) return { text: getFileNameFromUrl(film.full_video_url), showProgress: false };
+    return { text: 'No film uploaded', showProgress: false };
+  };
+
+  const trailerInfo = getTrailerDisplayInfo();
+  const filmInfo = getFilmDisplayInfo();
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -282,7 +365,7 @@ const EditFilmModal = ({ isOpen, onClose, onSuccess, film }: EditFilmModalProps)
             Edit Film
           </DialogTitle>
           <DialogDescription>
-            Update your film details below.
+            Update your film details below. Files upload immediately when selected.
           </DialogDescription>
         </DialogHeader>
 
@@ -317,33 +400,47 @@ const EditFilmModal = ({ isOpen, onClose, onSuccess, film }: EditFilmModalProps)
               <div className="p-3 rounded-lg border border-border bg-muted/50">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <FileVideo className="w-4 h-4" />
+                    {trailerUpload.isComplete ? (
+                      <Check className="w-4 h-4 text-green-500" />
+                    ) : trailerUpload.isUploading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <FileVideo className="w-4 h-4" />
+                    )}
                     <span className="truncate max-w-[200px]">
-                      {trailerFile ? trailerFile.name : (film.trailer_url ? getFileNameFromUrl(film.trailer_url) : 'No trailer uploaded')}
+                      {trailerInfo.text}
                     </span>
                   </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => trailerInputRef.current?.click()}
-                    disabled={isUploading}
-                  >
-                    <Upload className="w-4 h-4 mr-1" />
-                    {film.trailer_url || trailerFile ? 'Replace' : 'Upload'}
-                  </Button>
+                  {trailerUpload.isUploading ? (
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => cancelUpload('trailer')}
+                    >
+                      Cancel
+                    </Button>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => trailerInputRef.current?.click()}
+                      disabled={isSaving}
+                    >
+                      <Upload className="w-4 h-4 mr-1" />
+                      {getFinalTrailerUrl() ? 'Replace' : 'Upload'}
+                    </Button>
+                  )}
                   <input
                     ref={trailerInputRef}
                     type="file"
                     accept="video/*"
                     className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) setTrailerFile(file);
-                    }}
+                    onChange={handleTrailerFileSelect}
                   />
                 </div>
-                {isUploading && uploadProgress.trailer > 0 && (
+                {trailerUpload.isUploading && (
                   <Progress value={uploadProgress.trailer} className="h-2" />
                 )}
               </div>
@@ -355,33 +452,47 @@ const EditFilmModal = ({ isOpen, onClose, onSuccess, film }: EditFilmModalProps)
               <div className="p-3 rounded-lg border border-border bg-muted/50">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <FileVideo className="w-4 h-4" />
+                    {filmUpload.isComplete ? (
+                      <Check className="w-4 h-4 text-green-500" />
+                    ) : filmUpload.isUploading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <FileVideo className="w-4 h-4" />
+                    )}
                     <span className="truncate max-w-[200px]">
-                      {filmFile ? filmFile.name : (film.full_video_url ? getFileNameFromUrl(film.full_video_url) : 'No film uploaded')}
+                      {filmInfo.text}
                     </span>
                   </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => filmInputRef.current?.click()}
-                    disabled={isUploading}
-                  >
-                    <Upload className="w-4 h-4 mr-1" />
-                    {film.full_video_url || filmFile ? 'Replace' : 'Upload'}
-                  </Button>
+                  {filmUpload.isUploading ? (
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => cancelUpload('film')}
+                    >
+                      Cancel
+                    </Button>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => filmInputRef.current?.click()}
+                      disabled={isSaving}
+                    >
+                      <Upload className="w-4 h-4 mr-1" />
+                      {getFinalFilmUrl() ? 'Replace' : 'Upload'}
+                    </Button>
+                  )}
                   <input
                     ref={filmInputRef}
                     type="file"
                     accept="video/*"
                     className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) setFilmFile(file);
-                    }}
+                    onChange={handleFilmFileSelect}
                   />
                 </div>
-                {isUploading && uploadProgress.film > 0 && (
+                {filmUpload.isUploading && (
                   <Progress value={uploadProgress.film} className="h-2" />
                 )}
               </div>
@@ -456,31 +567,6 @@ const EditFilmModal = ({ isOpen, onClose, onSuccess, film }: EditFilmModalProps)
               </div>
             </div>
 
-            {/* Status */}
-            <div className="space-y-2">
-              <Label>Status</Label>
-              <div className="flex gap-4">
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="radio"
-                    id="published"
-                    checked={status === 'published'}
-                    onChange={() => setStatus('published')}
-                  />
-                  <Label htmlFor="published">Published</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="radio"
-                    id="draft"
-                    checked={status === 'draft'}
-                    onChange={() => setStatus('draft')}
-                  />
-                  <Label htmlFor="draft">Draft</Label>
-                </div>
-              </div>
-            </div>
-
             {/* Adult Content */}
             <div className="flex items-center space-x-2">
               <Checkbox
@@ -491,25 +577,53 @@ const EditFilmModal = ({ isOpen, onClose, onSuccess, film }: EditFilmModalProps)
               <Label htmlFor="adult">This film contains adult content</Label>
             </div>
 
-            {/* Submit Buttons */}
+            {/* Publish Requirements Notice */}
+            {!canPublish() && (
+              <div className="flex items-start gap-2 p-3 rounded-lg bg-muted border border-border text-sm text-muted-foreground">
+                <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="font-medium">To publish, you need:</p>
+                  <ul className="list-disc list-inside mt-1 space-y-0.5">
+                    {!title.trim() && <li>Film title</li>}
+                    {selectedGenres.length === 0 && <li>At least one genre</li>}
+                    {!isFree && (!price || parseFloat(price) <= 0) && <li>Valid price (or mark as free)</li>}
+                    {!getFinalTrailerUrl() && <li>Trailer video</li>}
+                    {!getFinalFilmUrl() && <li>Full film video</li>}
+                  </ul>
+                </div>
+              </div>
+            )}
+
+            {/* Action Buttons - Save Draft and Publish are separate */}
             <div className="flex justify-end gap-2 pt-4">
-              {isUploading ? (
-                <Button variant="destructive" onClick={cancelUpload}>
-                  Cancel Upload
-                </Button>
-              ) : (
-                <Button variant="outline" onClick={onClose} disabled={isLoading}>
-                  Cancel
-                </Button>
-              )}
-              <Button onClick={handleSubmit} disabled={isLoading || isUploading}>
-                {isLoading ? (
+              <Button variant="outline" onClick={onClose} disabled={isSaving || isAnyUploading}>
+                Cancel
+              </Button>
+              <Button 
+                variant="secondary" 
+                onClick={() => handleSave(false)} 
+                disabled={isSaving || isAnyUploading}
+              >
+                {isSaving ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    {isUploading ? "Uploading..." : "Saving..."}
+                    Saving...
                   </>
                 ) : (
-                  "Save Changes"
+                  "Save Draft"
+                )}
+              </Button>
+              <Button 
+                onClick={() => handleSave(true)} 
+                disabled={isSaving || isAnyUploading || !canPublish()}
+              >
+                {isSaving ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Publishing...
+                  </>
+                ) : (
+                  "Publish"
                 )}
               </Button>
             </div>
