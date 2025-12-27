@@ -3815,20 +3815,15 @@ export type Database = {
         Args: { merchant_id: string; new_status: string }
         Returns: boolean
       }
-      update_quarterly_income:
-        | {
-            Args: { p_amount: number; p_income_type: string; p_user_id: string }
-            Returns: undefined
-          }
-        | {
-            Args: {
-              p_amount: number
-              p_income_type: string
-              p_is_test_data?: boolean
-              p_user_id: string
-            }
-            Returns: undefined
-          }
+      update_quarterly_income: {
+        Args: {
+          p_amount: number
+          p_income_type: string
+          p_is_test_data?: boolean
+          p_user_id: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       access_level: "public" | "merchant_only" | "paid"
