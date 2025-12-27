@@ -168,7 +168,7 @@ const FilmUploadModal = ({ isOpen, onClose, onSuccess }: FilmUploadModalProps) =
     return publicUrl;
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (isDraft: boolean = false) => {
     if (!user) return;
 
     if (!title.trim()) {
@@ -176,29 +176,32 @@ const FilmUploadModal = ({ isOpen, onClose, onSuccess }: FilmUploadModalProps) =
       return;
     }
 
-    if (!ownershipConfirmed) {
-      toast({ title: "Error", description: "Please confirm you own or have rights to this film.", variant: "destructive" });
-      return;
-    }
+    // For drafts, we only require title and at least one file
+    if (!isDraft) {
+      if (!ownershipConfirmed) {
+        toast({ title: "Error", description: "Please confirm you own or have rights to this film.", variant: "destructive" });
+        return;
+      }
 
-    if (!thumbnailFile) {
-      toast({ title: "Error", description: "Please upload a thumbnail image.", variant: "destructive" });
-      return;
-    }
+      if (!thumbnailFile) {
+        toast({ title: "Error", description: "Please upload a thumbnail image.", variant: "destructive" });
+        return;
+      }
 
-    if (!fullVideoFile) {
-      toast({ title: "Error", description: "Please upload the full film video.", variant: "destructive" });
-      return;
-    }
+      if (!fullVideoFile) {
+        toast({ title: "Error", description: "Please upload the full film video.", variant: "destructive" });
+        return;
+      }
 
-    if (selectedGenres.length === 0) {
-      toast({ title: "Error", description: "Please select at least one genre.", variant: "destructive" });
-      return;
-    }
+      if (selectedGenres.length === 0) {
+        toast({ title: "Error", description: "Please select at least one genre.", variant: "destructive" });
+        return;
+      }
 
-    if (!isFree && (!price || parseFloat(price) <= 0)) {
-      toast({ title: "Error", description: "Please enter a valid price or mark as free.", variant: "destructive" });
-      return;
+      if (!isFree && (!price || parseFloat(price) <= 0)) {
+        toast({ title: "Error", description: "Please enter a valid price or mark as free.", variant: "destructive" });
+        return;
+      }
     }
 
     setIsLoading(true);
@@ -206,13 +209,13 @@ const FilmUploadModal = ({ isOpen, onClose, onSuccess }: FilmUploadModalProps) =
     try {
       // Upload files
       const [thumbnailUrl, coverUrl, trailerUrl, fullVideoUrl] = await Promise.all([
-        uploadFile(thumbnailFile, 'film-thumbnails', 'thumbnails'),
+        thumbnailFile ? uploadFile(thumbnailFile, 'film-thumbnails', 'thumbnails') : Promise.resolve(null),
         coverFile ? uploadFile(coverFile, 'film-covers', 'covers') : Promise.resolve(null),
         trailerFile ? uploadFile(trailerFile, 'film-trailers', 'trailers') : Promise.resolve(null),
-        uploadFile(fullVideoFile, 'film-videos', 'films')
+        fullVideoFile ? uploadFile(fullVideoFile, 'film-videos', 'films') : Promise.resolve(null)
       ]);
 
-      if (!thumbnailUrl || !fullVideoUrl) {
+      if (!isDraft && (!thumbnailUrl || !fullVideoUrl)) {
         throw new Error("Failed to upload required files");
       }
 
@@ -225,7 +228,7 @@ const FilmUploadModal = ({ isOpen, onClose, onSuccess }: FilmUploadModalProps) =
           description: description.trim() || null,
           stars,
           genres: selectedGenres,
-          price: isFree ? null : parseFloat(price),
+          price: isFree ? null : (price ? parseFloat(price) : null),
           is_free: isFree,
           thumbnail_url: thumbnailUrl,
           cover_photo_url: coverUrl,
@@ -233,12 +236,15 @@ const FilmUploadModal = ({ isOpen, onClose, onSuccess }: FilmUploadModalProps) =
           full_video_url: fullVideoUrl,
           ownership_confirmed: ownershipConfirmed,
           is_adult_content: isAdultContent,
-          status: 'published'
+          status: isDraft ? 'draft' : 'published'
         });
 
       if (error) throw error;
 
-      toast({ title: "Success", description: "Your film has been published!" });
+      toast({ 
+        title: "Success", 
+        description: isDraft ? "Your film has been saved as a draft!" : "Your film has been published!" 
+      });
       onSuccess();
       onClose();
       resetForm();
@@ -533,12 +539,27 @@ const FilmUploadModal = ({ isOpen, onClose, onSuccess }: FilmUploadModalProps) =
               </Label>
             </div>
 
-            {/* Submit Button */}
+            {/* Final Warning */}
+            <div className="p-3 bg-red-500/10 border border-red-500/30 rounded">
+              <p className="text-red-400 text-sm font-medium">⚠️ Important Notice</p>
+              <p className="text-red-300/80 text-xs mt-1">
+                Once your film is published, you cannot remove it yourself. You will need to contact an admin to have it taken down. Please make sure all content is correct before publishing.
+              </p>
+            </div>
+
+            {/* Submit Buttons */}
             <div className="flex justify-end gap-2 pt-4">
               <Button variant="outline" onClick={onClose} disabled={isLoading}>
                 Cancel
               </Button>
-              <Button onClick={handleSubmit} disabled={isLoading}>
+              <Button 
+                variant="secondary" 
+                onClick={() => handleSubmit(true)} 
+                disabled={isLoading}
+              >
+                {isLoading ? "Saving..." : "Save Draft"}
+              </Button>
+              <Button onClick={() => handleSubmit(false)} disabled={isLoading}>
                 {isLoading ? "Publishing..." : "Publish Film"}
               </Button>
             </div>
