@@ -16,9 +16,9 @@ const MediaPlayers = ({ purchasedTracks, purchasedPodcasts, purchasedPortfolios 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <AudioPlayer tracks={purchasedTracks} />
         <PodcastAudioPlayer tracks={purchasedPodcasts} />
+        <PurchasedFilmsViewer />
       </div>
       <PurchasedPortfoliosViewer portfolios={purchasedPortfolios} />
-      <PurchasedFilmsViewer />
     </div>
   );
 };
