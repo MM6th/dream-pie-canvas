@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { 
   Play, 
   Pause, 
@@ -26,6 +28,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { PodcastPublishModal } from "./PodcastPublishModal";
 
@@ -57,9 +66,10 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [showPublishModal, setShowPublishModal] = useState(false);
   const [selectedRecording, setSelectedRecording] = useState<Recording | null>(null);
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const audioRefs = React.useRef<Map<string, HTMLAudioElement>>(new Map());
-  const uploadInputRef = React.useRef<HTMLInputElement | null>(null);
 
   const fetchRecordings = async () => {
     if (!user) {
@@ -381,23 +391,10 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
     );
   }
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) {
-      setUploadStatusTone("default");
-      setUploadStatusText("No file selected.");
-      return;
-    }
-
-    if (!user) {
-      setUploadStatusTone("error");
-      setUploadStatusText("Please sign in to upload a recording.");
-      toast({
-        title: "Sign in required",
-        description: "Please log in to upload podcast recordings.",
-        variant: "destructive",
-      });
-      e.target.value = '';
+      setSelectedFile(null);
       return;
     }
 
@@ -406,8 +403,6 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
     const isAudioMime = (file.type || "").toLowerCase().startsWith("audio/");
     const isAllowedExt = !!ext && allowedExts.has(ext);
 
-    // Some mobile file pickers report audio as application/octet-stream or video/mp4.
-    // Allow known audio extensions as a fallback.
     if (!isAudioMime && !isAllowedExt) {
       toast({
         title: "Unsupported file",
@@ -415,10 +410,10 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
         variant: "destructive",
       });
       e.target.value = '';
+      setSelectedFile(null);
       return;
     }
 
-    // Validate file size (100MB max)
     if (file.size > 100 * 1024 * 1024) {
       toast({
         title: "File Too Large",
@@ -426,26 +421,40 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
         variant: "destructive",
       });
       e.target.value = '';
+      setSelectedFile(null);
+      return;
+    }
+
+    setSelectedFile(file);
+  };
+
+  const handleUploadSubmit = async () => {
+    if (!selectedFile || !user) {
+      toast({
+        title: "Error",
+        description: "Please select a file to upload.",
+        variant: "destructive",
+      });
       return;
     }
 
     setUploading(true);
     setUploadStatusTone("default");
-    setUploadStatusText(`Uploading: ${file.name}`);
-    toast({
-      title: "Uploading…",
-      description: "Uploading your audio file to My Recordings.",
-    });
+    setUploadStatusText(`Uploading: ${selectedFile.name}`);
 
     try {
+      const ext = selectedFile.name.split('.').pop()?.toLowerCase();
+      const allowedExts = new Set(["mp3", "wav", "m4a", "aac", "ogg", "webm"]);
+      const isAllowedExt = !!ext && allowedExts.has(ext);
+      
       const timestamp = Date.now();
       const fileExt = isAllowedExt ? ext : "audio";
       const fileName = `podcast-recordings/${user.id}/${timestamp}-uploaded.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from('audio-files')
-        .upload(fileName, file, {
-          contentType: file.type || 'application/octet-stream',
+        .upload(fileName, selectedFile, {
+          contentType: selectedFile.type || 'application/octet-stream',
           upsert: false,
         });
 
@@ -455,18 +464,15 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
         .from('audio-files')
         .getPublicUrl(fileName);
 
-      // Create audio element to get duration - wait for full metadata load
+      // Get audio duration
       let duration: number | null = null;
       try {
         const audio = new Audio();
-        const objectUrl = URL.createObjectURL(file);
+        const objectUrl = URL.createObjectURL(selectedFile);
         audio.src = objectUrl;
 
         await new Promise<void>((resolve) => {
-          const timeout = setTimeout(() => {
-            resolve();
-          }, 10000);
-
+          const timeout = setTimeout(() => resolve(), 10000);
           audio.onloadedmetadata = () => {
             clearTimeout(timeout);
             if (isFinite(audio.duration) && audio.duration > 0) {
@@ -489,28 +495,26 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
         .from('podcast_recordings')
         .insert({
           merchant_id: user.id,
-          title: file.name.replace(/\.[^/.]+$/, "") || `Uploaded Recording - ${new Date().toLocaleDateString()}`,
+          title: selectedFile.name.replace(/\.[^/.]+$/, "") || `Uploaded Recording - ${new Date().toLocaleDateString()}`,
           description: 'Uploaded recording',
           audio_url: publicUrl,
           duration_seconds: duration,
-          file_size_bytes: file.size,
+          file_size_bytes: selectedFile.size,
           status: 'draft',
         });
 
       if (dbError) throw dbError;
 
       setUploadStatusTone("success");
-      setUploadStatusText("Upload complete. Refreshing your recordings…");
+      setUploadStatusText("Upload complete!");
       toast({
         title: "Upload Complete",
         description: "Your recording has been uploaded successfully.",
       });
 
+      setUploadDialogOpen(false);
+      setSelectedFile(null);
       await fetchRecordings();
-      // Sometimes mobile browsers show the new row only after a moment; re-check once.
-      window.setTimeout(() => {
-        fetchRecordings();
-      }, 2000);
     } catch (error: any) {
       console.error('Error uploading recording:', error);
       const message = error?.message || "Could not upload your recording. Please try again.";
@@ -523,7 +527,6 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
       });
     } finally {
       setUploading(false);
-      e.target.value = '';
     }
   };
 
@@ -536,59 +539,108 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
               <Library className="w-5 h-5" />
               My Recordings
             </CardTitle>
-            <div className="text-right">
-              <input
-                ref={uploadInputRef}
-                type="file"
-                accept="audio/mpeg,audio/mp3,audio/wav,audio/x-wav,audio/m4a,audio/mp4,audio/aac,audio/ogg,audio/webm,audio/*"
-                onChange={handleFileUpload}
-                className="hidden"
-                disabled={!user || uploading}
-              />
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled={!user || uploading}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-
-                  setUploadStatusTone("default");
-                  setUploadStatusText("Choose an audio file to upload…");
-
-                  if (!user) {
-                    setUploadStatusTone("error");
-                    setUploadStatusText("Please sign in to upload a recording.");
-                    toast({
-                      title: "Sign in required",
-                      description: "Please log in to upload podcast recordings.",
-                      variant: "destructive",
-                    });
-                    return;
+            <Dialog 
+              open={uploadDialogOpen} 
+              onOpenChange={(open) => {
+                setUploadDialogOpen(open);
+                if (!open) {
+                  setSelectedFile(null);
+                  setUploadStatusText(null);
+                }
+              }}
+            >
+              <DialogTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={!user}
+                >
+                  <Upload className="w-4 h-4 mr-1" />
+                  Upload Audio
+                </Button>
+              </DialogTrigger>
+              <DialogContent 
+                className="max-w-md bg-card text-foreground"
+                onInteractOutside={(e) => {
+                  // Prevent closing when file input is triggered on mobile
+                  const target = e.target as HTMLElement;
+                  if (target.tagName === 'INPUT' && target.getAttribute('type') === 'file') {
+                    e.preventDefault();
                   }
-                  uploadInputRef.current?.click();
                 }}
               >
-                <Upload className={"w-4 h-4 mr-1 " + (uploading ? "animate-spin" : "")} />
-                {uploading ? "Uploading…" : "Upload Audio"}
-              </Button>
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Upload className="w-5 h-5" />
+                    Upload Podcast Recording
+                  </DialogTitle>
+                </DialogHeader>
+                
+                <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
+                  <div>
+                    <Label htmlFor="podcastAudioFile">Audio File *</Label>
+                    <Input
+                      id="podcastAudioFile"
+                      type="file"
+                      accept="audio/mpeg,audio/mp3,audio/wav,audio/x-wav,audio/m4a,audio/mp4,audio/aac,audio/ogg,audio/webm,audio/*"
+                      onChange={handleFileSelect}
+                      className="bg-background border-border"
+                      disabled={uploading}
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Supported formats: MP3, WAV, M4A, AAC, OGG, WEBM. Max size: 100MB
+                    </p>
+                  </div>
 
-              {uploadStatusText && (
-                <p
-                  className={
-                    "mt-2 text-xs " +
-                    (uploadStatusTone === "error"
-                      ? "text-destructive"
-                      : uploadStatusTone === "success"
-                        ? "text-foreground"
-                        : "text-muted-foreground")
-                  }
-                >
-                  {uploadStatusText}
-                </p>
-              )}
-            </div>
+                  {selectedFile && (
+                    <div className="p-3 bg-muted/50 rounded-lg">
+                      <p className="text-sm font-medium text-foreground">{selectedFile.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB
+                      </p>
+                    </div>
+                  )}
+
+                  {uploadStatusText && (
+                    <p
+                      className={
+                        "text-sm " +
+                        (uploadStatusTone === "error"
+                          ? "text-destructive"
+                          : uploadStatusTone === "success"
+                            ? "text-green-600"
+                            : "text-muted-foreground")
+                      }
+                    >
+                      {uploadStatusText}
+                    </p>
+                  )}
+
+                  <div className="flex justify-end gap-2 pt-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setUploadDialogOpen(false);
+                        setSelectedFile(null);
+                        setUploadStatusText(null);
+                      }}
+                      disabled={uploading}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={handleUploadSubmit}
+                      disabled={!selectedFile || uploading}
+                    >
+                      {uploading ? "Uploading…" : "Upload"}
+                    </Button>
+                  </div>
+                </form>
+              </DialogContent>
+            </Dialog>
           </div>
       </CardHeader>
       <CardContent>
