@@ -1,6 +1,5 @@
 import React, { useState } from "react";
-import { Play, ChevronLeft, ChevronRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
   Carousel,
   CarouselContent,
@@ -95,15 +94,9 @@ const NowPlayingCarousel = ({ films, onFilmClick }: NowPlayingCarouselProps) => 
                         )}
                       </div>
                       
-                      {/* Play Button / Price */}
+                      {/* Price Badge */}
                       <div className="flex flex-col items-center gap-2">
-                        <Button
-                          size="lg"
-                          className="rounded-full w-14 h-14 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/30 transition-all duration-300 group-hover:scale-110"
-                        >
-                          <Play className="w-6 h-6 text-primary-foreground fill-current ml-1" />
-                        </Button>
-                        <span className="text-sm font-semibold text-white">
+                        <span className="text-lg font-bold text-white bg-black/50 px-4 py-2 rounded-lg backdrop-blur-sm border border-white/20">
                           {film.is_free ? "Free" : `$${film.price?.toFixed(2)}`}
                         </span>
                       </div>
