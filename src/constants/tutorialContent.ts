@@ -456,6 +456,12 @@ export const filmMakerTutorialSteps: TutorialStep[] = [
     placement: 'bottom',
   },
   {
+    id: 'film-upload-rules',
+    title: 'Film Upload Rules 📋',
+    description: 'Storage: You have up to 5GB of storage space in your gallery (this is subject to increase). Format: Films must be uploaded as MP4 files. Publishing: You must earn 30 PAID sales before you can upload another film. Note: Free downloads do NOT count toward your 30-sale goal.',
+    duration: 14000,
+  },
+  {
     id: 'script-writing',
     title: 'Script Writing',
     description: 'Write and manage your film scripts directly in the dashboard. Create drafts and finalize scripts for production.',
