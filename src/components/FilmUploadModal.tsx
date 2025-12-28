@@ -532,8 +532,24 @@ const FilmUploadModal = ({ isOpen, onClose, onSuccess }: FilmUploadModalProps) =
 
         <ScrollArea className="max-h-[70vh] pr-4">
           <div className="space-y-4">
-            {/* Publishing Status Warning - hidden if bypass is enabled */}
-
+            {/* Publishing Status Warning */}
+            {publishingStatus && !publishingStatus.canPublish && publishingStatus.activeFilmId && (
+              <div className="p-4 rounded-lg border border-amber-500/50 bg-amber-500/10">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                  <div className="space-y-1">
+                    <p className="font-medium text-amber-500">Publishing Locked</p>
+                    <p className="text-sm text-muted-foreground">
+                      You must earn 30 PAID sales on your current film before you can publish another. 
+                      Free downloads do not count toward this goal.
+                    </p>
+                    <p className="text-sm font-medium">
+                      Current progress: {publishingStatus.currentFilmSales}/30 paid sales
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
             {/* Title */}
             <div>
               <Label htmlFor="title">Film Title *</Label>
