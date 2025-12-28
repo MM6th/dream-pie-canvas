@@ -45,6 +45,11 @@ const FilmProductManager = () => {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [editingFilm, setEditingFilm] = useState<FilmProduct | null>(null);
   const [deletingFilmId, setDeletingFilmId] = useState<string | null>(null);
+  const [publishingStatus, setPublishingStatus] = useState<{
+    canPublish: boolean;
+    activeFilmId: string | null;
+    currentFilmSales: number;
+  } | null>(null);
 
   const fetchFilms = async () => {
     if (!user) return;
@@ -65,8 +70,31 @@ const FilmProductManager = () => {
     }
   };
 
+  const fetchPublishingStatus = async () => {
+    if (!user) return;
+    
+    try {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('can_publish_film, active_film_id, current_film_sales')
+        .eq('id', user.id)
+        .single();
+
+      if (error) throw error;
+      
+      setPublishingStatus({
+        canPublish: profile.can_publish_film ?? true,
+        activeFilmId: profile.active_film_id,
+        currentFilmSales: profile.current_film_sales ?? 0
+      });
+    } catch (error) {
+      console.error('Error fetching publishing status:', error);
+    }
+  };
+
   useEffect(() => {
     fetchFilms();
+    fetchPublishingStatus();
   }, [user]);
 
   const handleDelete = async () => {
@@ -171,10 +199,19 @@ const FilmProductManager = () => {
                       </span>
                     </div>
                     
-                    {/* Transit Meter for paid films */}
-                    {!film.is_free && (
+                    {/* Transit Meter - show for active locked film OR paid films */}
+                    {(publishingStatus?.activeFilmId === film.id || !film.is_free) && (
                       <div className="mt-3">
-                        <TransitMeter currentSales={film.sales_count || 0} size="sm" showLabel={false} />
+                        <TransitMeter 
+                          currentSales={publishingStatus?.activeFilmId === film.id ? (publishingStatus?.currentFilmSales || 0) : (film.sales_count || 0)} 
+                          size="sm" 
+                          showLabel={false} 
+                        />
+                        {publishingStatus?.activeFilmId === film.id && !publishingStatus?.canPublish && (
+                          <p className="text-xs text-amber-400 mt-1 text-center">
+                            🔒 {30 - (publishingStatus?.currentFilmSales || 0)} paid sales to unlock next upload
+                          </p>
+                        )}
                       </div>
                     )}
                     
