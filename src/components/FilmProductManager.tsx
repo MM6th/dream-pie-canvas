@@ -199,11 +199,11 @@ const FilmProductManager = () => {
                       </span>
                     </div>
                     
-                    {/* Transit Meter - show for active locked film OR paid films */}
-                    {(publishingStatus?.activeFilmId === film.id || !film.is_free) && (
+                    {/* Transit Meter - only for paid films */}
+                    {!film.is_free && (
                       <div className="mt-3">
                         <TransitMeter 
-                          currentSales={publishingStatus?.activeFilmId === film.id ? (publishingStatus?.currentFilmSales || 0) : (film.sales_count || 0)} 
+                          currentSales={film.sales_count || 0} 
                           size="sm" 
                           showLabel={false} 
                         />
@@ -215,27 +215,29 @@ const FilmProductManager = () => {
                       </div>
                     )}
                     
-                    <div className="flex gap-2 mt-3">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex-1"
-                        onClick={() => setEditingFilm(film)}
-                      >
-                        <Edit className="w-3 h-3 mr-1" />
-                        Edit
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => setDeletingFilmId(film.id)}
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </Button>
-                    </div>
-                    {film.status === 'published' && (
-                      <p className="text-xs text-yellow-400 mt-1">
-                        ⚠️ Editing published films affects buyers
+                    {/* Show Edit/Delete only for unpublished films */}
+                    {film.status !== 'published' ? (
+                      <div className="flex gap-2 mt-3">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1"
+                          onClick={() => setEditingFilm(film)}
+                        >
+                          <Edit className="w-3 h-3 mr-1" />
+                          Edit
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => setDeletingFilmId(film.id)}
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-amber-400 mt-3 text-center">
+                        🔒 Published films are locked. Submit a support ticket to request changes.
                       </p>
                     )}
                   </CardContent>
