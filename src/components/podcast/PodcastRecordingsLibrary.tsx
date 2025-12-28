@@ -490,17 +490,23 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
             <Library className="w-5 h-5" />
             My Recordings
           </CardTitle>
-          <div className="relative">
+          <div>
             <input
               type="file"
-              accept="audio/*"
+              id="podcast-audio-upload"
+              accept="audio/mpeg,audio/mp3,audio/wav,audio/x-wav,audio/m4a,audio/mp4,audio/aac,audio/ogg,audio/webm,audio/*"
               onChange={handleFileUpload}
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              className="hidden"
               disabled={loading}
             />
-            <Button variant="outline" size="sm" disabled={loading}>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              disabled={loading}
+              onClick={() => document.getElementById('podcast-audio-upload')?.click()}
+            >
               <Upload className="w-4 h-4 mr-1" />
-              Upload
+              Upload Audio
             </Button>
           </div>
         </div>
