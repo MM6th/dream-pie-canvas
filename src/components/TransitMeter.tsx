@@ -76,10 +76,10 @@ const TransitMeter = ({
         <div className="flex flex-col items-center">
           <svg width={config.width} height={config.height} className="overflow-visible">
             <defs>
-              <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="hsl(220, 80%, 50%)" />
+              <linearGradient id={gradientId} x1="100%" y1="0%" x2="0%" y2="0%">
+                <stop offset="0%" stopColor="hsl(0, 80%, 50%)" />
                 <stop offset="50%" stopColor="hsl(280, 80%, 50%)" />
-                <stop offset="100%" stopColor="hsl(0, 80%, 50%)" />
+                <stop offset="100%" stopColor="hsl(220, 80%, 50%)" />
               </linearGradient>
             </defs>
             
@@ -92,28 +92,17 @@ const TransitMeter = ({
               strokeLinecap="round"
             />
             
-            {/* Progress arc */}
+            {/* Progress arc with gradient */}
             {clampedSales > 0 && (
               <path
                 d={progressArc}
                 fill="none"
-                stroke={color}
+                stroke={`url(#${gradientId})`}
                 strokeWidth={config.strokeWidth}
                 strokeLinecap="round"
                 className="transition-all duration-500 ease-out"
               />
             )}
-            
-            {/* Needle indicator */}
-            <circle
-              cx={current.x}
-              cy={current.y}
-              r={config.strokeWidth / 2 + 2}
-              fill={color}
-              stroke="white"
-              strokeWidth={2}
-              className="transition-all duration-500 ease-out"
-            />
             
             {/* Center text */}
             <text
