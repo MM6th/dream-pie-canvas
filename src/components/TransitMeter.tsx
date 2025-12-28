@@ -79,7 +79,7 @@ const TransitMeter = ({
               <linearGradient id={gradientId} x1="100%" y1="0%" x2="0%" y2="0%">
                 <stop offset="0%" stopColor="hsl(0, 80%, 50%)" />
                 <stop offset="50%" stopColor="hsl(280, 80%, 50%)" />
-                <stop offset="100%" stopColor="hsl(220, 80%, 50%)" />
+                <stop offset="100%" stopColor="hsl(210, 100%, 60%)" />
               </linearGradient>
             </defs>
             
@@ -103,21 +103,10 @@ const TransitMeter = ({
                 className="transition-all duration-500 ease-out"
               />
             )}
-            
-            {/* Center text */}
-            <text
-              x={centerX}
-              y={config.height - 5}
-              textAnchor="middle"
-              className={`fill-white font-bold ${config.fontSize}`}
-              style={{ fontSize: size === "sm" ? "14px" : size === "md" ? "18px" : "22px" }}
-            >
-              {clampedSales}
-            </text>
           </svg>
           
-          <div className="flex items-center justify-between w-full mt-2 px-2">
-            <span className="text-blue-400 text-xs font-medium">0</span>
+          <div className="flex items-center justify-between w-full px-2">
+            <span className="text-blue-400 text-xs font-medium">{clampedSales}</span>
             <span className={`text-gray-400 ${config.fontSize}`}>
               {clampedSales}/{maxSales} Sales
             </span>
