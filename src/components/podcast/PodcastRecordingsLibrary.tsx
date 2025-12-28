@@ -47,27 +47,33 @@ interface PodcastRecordingsLibraryProps {
 export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLibraryProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
-  
+
   const [recordings, setRecordings] = useState<Recording[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loadingRecordings, setLoadingRecordings] = useState(true);
+  const [uploading, setUploading] = useState(false);
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [showPublishModal, setShowPublishModal] = useState(false);
   const [selectedRecording, setSelectedRecording] = useState<Recording | null>(null);
-  
+
   const audioRefs = React.useRef<Map<string, HTMLAudioElement>>(new Map());
+  const uploadInputRef = React.useRef<HTMLInputElement | null>(null);
 
   const fetchRecordings = async () => {
-    if (!user) return;
-    
-    setLoading(true);
+    if (!user) {
+      setRecordings([]);
+      setLoadingRecordings(false);
+      return;
+    }
+
+    setLoadingRecordings(true);
     try {
       const { data, error } = await supabase
         .from('podcast_recordings')
         .select('*')
         .eq('merchant_id', user.id)
         .order('created_at', { ascending: false });
-      
+
       if (error) throw error;
       setRecordings(data || []);
     } catch (error) {
@@ -78,7 +84,7 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
         variant: "destructive"
       });
     } finally {
-      setLoading(false);
+      setLoadingRecordings(false);
     }
   };
 
@@ -363,7 +369,7 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
     };
   }, []);
 
-  if (loading) {
+  if (loadingRecordings) {
     return (
       <Card className="bg-card/50 border-border backdrop-blur-sm">
         <CardContent className="py-8 text-center">
@@ -375,15 +381,32 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !user) return;
+    if (!file) return;
 
-    // Validate file type
-    if (!file.type.startsWith('audio/')) {
+    if (!user) {
       toast({
-        title: "Invalid File",
-        description: "Please select an audio file (MP3, WAV, M4A, etc.)",
+        title: "Sign in required",
+        description: "Please log in to upload podcast recordings.",
         variant: "destructive",
       });
+      e.target.value = '';
+      return;
+    }
+
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    const allowedExts = new Set(["mp3", "wav", "m4a", "aac", "ogg", "webm"]);
+    const isAudioMime = (file.type || "").toLowerCase().startsWith("audio/");
+    const isAllowedExt = !!ext && allowedExts.has(ext);
+
+    // Some mobile file pickers report audio as application/octet-stream or video/mp4.
+    // Allow known audio extensions as a fallback.
+    if (!isAudioMime && !isAllowedExt) {
+      toast({
+        title: "Unsupported file",
+        description: "Please select an audio file (MP3, WAV, M4A, AAC, OGG, WEBM).",
+        variant: "destructive",
+      });
+      e.target.value = '';
       return;
     }
 
@@ -394,20 +417,26 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
         description: "Please select a file smaller than 100MB.",
         variant: "destructive",
       });
+      e.target.value = '';
       return;
     }
 
-    setLoading(true);
+    setUploading(true);
+    toast({
+      title: "Uploading…",
+      description: "Uploading your audio file to My Recordings.",
+    });
+
     try {
       const timestamp = Date.now();
-      const fileExt = file.name.split('.').pop();
+      const fileExt = isAllowedExt ? ext : "audio";
       const fileName = `podcast-recordings/${user.id}/${timestamp}-uploaded.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from('audio-files')
         .upload(fileName, file, {
-          contentType: file.type,
-          upsert: false
+          contentType: file.type || 'application/octet-stream',
+          upsert: false,
         });
 
       if (uploadError) throw uploadError;
@@ -422,12 +451,12 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
         const audio = new Audio();
         const objectUrl = URL.createObjectURL(file);
         audio.src = objectUrl;
-        
-        await new Promise<void>((resolve, reject) => {
+
+        await new Promise<void>((resolve) => {
           const timeout = setTimeout(() => {
-            resolve(); // Still proceed even if timeout
-          }, 10000); // 10 second timeout
-          
+            resolve();
+          }, 10000);
+
           audio.onloadedmetadata = () => {
             clearTimeout(timeout);
             if (isFinite(audio.duration) && audio.duration > 0) {
@@ -440,13 +469,12 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
             resolve();
           };
         });
-        
+
         URL.revokeObjectURL(objectUrl);
-      } catch (e) {
-        console.error('Error getting audio duration:', e);
+      } catch (err) {
+        console.error('Error getting audio duration:', err);
       }
 
-      // Save to database
       const { error: dbError } = await supabase
         .from('podcast_recordings')
         .insert({
@@ -456,7 +484,7 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
           audio_url: publicUrl,
           duration_seconds: duration,
           file_size_bytes: file.size,
-          status: 'draft'
+          status: 'draft',
         });
 
       if (dbError) throw dbError;
@@ -467,16 +495,15 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
       });
 
       fetchRecordings();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error uploading recording:', error);
       toast({
         title: "Upload Failed",
-        description: "Could not upload your recording. Please try again.",
+        description: error?.message || "Could not upload your recording. Please try again.",
         variant: "destructive",
       });
     } finally {
-      setLoading(false);
-      // Reset file input
+      setUploading(false);
       e.target.value = '';
     }
   };
@@ -492,21 +519,31 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
           </CardTitle>
           <div>
             <input
+              ref={uploadInputRef}
               type="file"
-              id="podcast-audio-upload"
               accept="audio/mpeg,audio/mp3,audio/wav,audio/x-wav,audio/m4a,audio/mp4,audio/aac,audio/ogg,audio/webm,audio/*"
               onChange={handleFileUpload}
               className="hidden"
-              disabled={loading}
+              disabled={!user || uploading}
             />
-            <Button 
-              variant="outline" 
-              size="sm" 
-              disabled={loading}
-              onClick={() => document.getElementById('podcast-audio-upload')?.click()}
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={!user || uploading}
+              onClick={() => {
+                if (!user) {
+                  toast({
+                    title: "Sign in required",
+                    description: "Please log in to upload podcast recordings.",
+                    variant: "destructive",
+                  });
+                  return;
+                }
+                uploadInputRef.current?.click();
+              }}
             >
-              <Upload className="w-4 h-4 mr-1" />
-              Upload Audio
+              <Upload className={"w-4 h-4 mr-1 " + (uploading ? "animate-spin" : "")} />
+              {uploading ? "Uploading…" : "Upload Audio"}
             </Button>
           </div>
         </div>
