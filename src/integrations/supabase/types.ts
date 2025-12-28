@@ -3640,6 +3640,61 @@ export type Database = {
       }
     }
     Views: {
+      public_film_playlist_items: {
+        Row: {
+          cover_photo_url: string | null
+          description: string | null
+          film_product_id: string | null
+          genres: string[] | null
+          is_free: boolean | null
+          merchant_id: string | null
+          price: number | null
+          purchase_date: string | null
+          stars: string[] | null
+          status: string | null
+          thumbnail_url: string | null
+          title: string | null
+          trailer_url: string | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "film_products_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "film_products_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "public_profile_data"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "film_purchases_film_product_id_fkey"
+            columns: ["film_product_id"]
+            isOneToOne: false
+            referencedRelation: "film_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "film_purchases_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "film_purchases_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profile_data"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       public_playlist_items: {
         Row: {
           audio_product_id: string | null
