@@ -19,10 +19,24 @@ const TransitMeter = ({
   const clampedSales = Math.min(Math.max(currentSales, 0), maxSales);
   const percentage = (clampedSales / maxSales) * 100;
   
-  // Calculate color gradient from blue (0) to red (30)
-  // HSL: Blue is ~220, Red is ~0
-  const hue = 220 - (percentage * 2.2); // 220 -> 0 as percentage goes 0 -> 100
-  const color = `hsl(${hue}, 80%, 50%)`;
+  // Calculate color based on progress: Blue (210) -> Purple (280) -> Red (360/0)
+  const getProgressColor = () => {
+    if (percentage <= 40) {
+      // Blue to purple transition (0-40%)
+      const hue = 210 + (percentage / 40) * 70; // 210 -> 280
+      return `hsl(${hue}, 80%, 55%)`;
+    } else if (percentage <= 65) {
+      // Purple zone (40-65%)
+      return `hsl(280, 80%, 55%)`;
+    } else {
+      // Purple to red transition (65-100%)
+      const progress = (percentage - 65) / 35; // 0 -> 1
+      const hue = 280 + progress * 80; // 280 -> 360 (red)
+      return `hsl(${hue >= 360 ? hue - 360 : hue}, 80%, 55%)`;
+    }
+  };
+  
+  const progressColor = getProgressColor();
   
   // Size configurations
   const sizeConfig = {
@@ -60,9 +74,6 @@ const TransitMeter = ({
   const backgroundArc = createArc(start, end, 0);
   const progressArc = createArc(start, current, percentage > 50 ? 1 : 0);
   
-  // Create gradient definition
-  const gradientId = `transit-gradient-${Math.random().toString(36).substr(2, 9)}`;
-  
   return (
     <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
       <CardContent className="p-4">
@@ -75,14 +86,6 @@ const TransitMeter = ({
         
         <div className="flex flex-col items-center">
           <svg width={config.width} height={config.height} className="overflow-visible">
-            <defs>
-              <linearGradient id={gradientId} x1="100%" y1="0%" x2="0%" y2="0%">
-                <stop offset="0%" stopColor="hsl(0, 80%, 50%)" />
-                <stop offset="50%" stopColor="hsl(280, 80%, 50%)" />
-                <stop offset="100%" stopColor="hsl(210, 100%, 60%)" />
-              </linearGradient>
-            </defs>
-            
             {/* Background arc */}
             <path
               d={backgroundArc}
@@ -92,12 +95,12 @@ const TransitMeter = ({
               strokeLinecap="round"
             />
             
-            {/* Progress arc with gradient */}
+            {/* Progress arc with solid color based on progress */}
             {clampedSales > 0 && (
               <path
                 d={progressArc}
                 fill="none"
-                stroke={`url(#${gradientId})`}
+                stroke={progressColor}
                 strokeWidth={config.strokeWidth}
                 strokeLinecap="round"
                 className="transition-all duration-500 ease-out"
