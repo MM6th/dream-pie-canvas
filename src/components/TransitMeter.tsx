@@ -19,20 +19,17 @@ const TransitMeter = ({
   const clampedSales = Math.min(Math.max(currentSales, 0), maxSales);
   const percentage = (clampedSales / maxSales) * 100;
   
-  // Calculate color based on progress: Blue (210) -> Purple (280) -> Red (360/0)
+  // Calculate solid color based on progress zones
   const getProgressColor = () => {
     if (percentage <= 40) {
-      // Blue to purple transition (0-40%)
-      const hue = 210 + (percentage / 40) * 70; // 210 -> 280
-      return `hsl(${hue}, 80%, 55%)`;
+      // Blue zone (0-40%, sales 0-12)
+      return `hsl(210, 100%, 55%)`;
     } else if (percentage <= 65) {
-      // Purple zone (40-65%)
+      // Purple zone (40-65%, sales 12-19)
       return `hsl(280, 80%, 55%)`;
     } else {
-      // Purple to red transition (65-100%)
-      const progress = (percentage - 65) / 35; // 0 -> 1
-      const hue = 280 + progress * 80; // 280 -> 360 (red)
-      return `hsl(${hue >= 360 ? hue - 360 : hue}, 80%, 55%)`;
+      // Red zone (65-100%, sales 19-30)
+      return `hsl(0, 80%, 55%)`;
     }
   };
   
