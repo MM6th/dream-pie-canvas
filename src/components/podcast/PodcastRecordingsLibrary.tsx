@@ -51,6 +51,8 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
   const [recordings, setRecordings] = useState<Recording[]>([]);
   const [loadingRecordings, setLoadingRecordings] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [uploadStatusText, setUploadStatusText] = useState<string | null>(null);
+  const [uploadStatusTone, setUploadStatusTone] = useState<"default" | "error" | "success">("default");
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [showPublishModal, setShowPublishModal] = useState(false);
@@ -381,9 +383,15 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file) {
+      setUploadStatusTone("default");
+      setUploadStatusText("No file selected.");
+      return;
+    }
 
     if (!user) {
+      setUploadStatusTone("error");
+      setUploadStatusText("Please sign in to upload a recording.");
       toast({
         title: "Sign in required",
         description: "Please log in to upload podcast recordings.",
@@ -422,6 +430,8 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
     }
 
     setUploading(true);
+    setUploadStatusTone("default");
+    setUploadStatusText(`Uploading: ${file.name}`);
     toast({
       title: "Uploading…",
       description: "Uploading your audio file to My Recordings.",
@@ -489,17 +499,26 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
 
       if (dbError) throw dbError;
 
+      setUploadStatusTone("success");
+      setUploadStatusText("Upload complete. Refreshing your recordings…");
       toast({
         title: "Upload Complete",
         description: "Your recording has been uploaded successfully.",
       });
 
-      fetchRecordings();
+      await fetchRecordings();
+      // Sometimes mobile browsers show the new row only after a moment; re-check once.
+      window.setTimeout(() => {
+        fetchRecordings();
+      }, 2000);
     } catch (error: any) {
       console.error('Error uploading recording:', error);
+      const message = error?.message || "Could not upload your recording. Please try again.";
+      setUploadStatusTone("error");
+      setUploadStatusText(`Upload failed: ${message}`);
       toast({
         title: "Upload Failed",
-        description: error?.message || "Could not upload your recording. Please try again.",
+        description: message,
         variant: "destructive",
       });
     } finally {
@@ -512,45 +531,65 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
     <>
     <Card className="bg-card/50 border-border backdrop-blur-sm">
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-foreground">
-            <Library className="w-5 h-5" />
-            My Recordings
-          </CardTitle>
-          <div>
-            <input
-              ref={uploadInputRef}
-              type="file"
-              accept="audio/mpeg,audio/mp3,audio/wav,audio/x-wav,audio/m4a,audio/mp4,audio/aac,audio/ogg,audio/webm,audio/*"
-              onChange={handleFileUpload}
-              className="hidden"
-              disabled={!user || uploading}
-            />
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={!user || uploading}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-foreground">
+              <Library className="w-5 h-5" />
+              My Recordings
+            </CardTitle>
+            <div className="text-right">
+              <input
+                ref={uploadInputRef}
+                type="file"
+                accept="audio/mpeg,audio/mp3,audio/wav,audio/x-wav,audio/m4a,audio/mp4,audio/aac,audio/ogg,audio/webm,audio/*"
+                onChange={handleFileUpload}
+                className="hidden"
+                disabled={!user || uploading}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={!user || uploading}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
 
-                if (!user) {
-                  toast({
-                    title: "Sign in required",
-                    description: "Please log in to upload podcast recordings.",
-                    variant: "destructive",
-                  });
-                  return;
-                }
-                uploadInputRef.current?.click();
-              }}
-            >
-              <Upload className={"w-4 h-4 mr-1 " + (uploading ? "animate-spin" : "")} />
-              {uploading ? "Uploading…" : "Upload Audio"}
-            </Button>
+                  setUploadStatusTone("default");
+                  setUploadStatusText("Choose an audio file to upload…");
+
+                  if (!user) {
+                    setUploadStatusTone("error");
+                    setUploadStatusText("Please sign in to upload a recording.");
+                    toast({
+                      title: "Sign in required",
+                      description: "Please log in to upload podcast recordings.",
+                      variant: "destructive",
+                    });
+                    return;
+                  }
+                  uploadInputRef.current?.click();
+                }}
+              >
+                <Upload className={"w-4 h-4 mr-1 " + (uploading ? "animate-spin" : "")} />
+                {uploading ? "Uploading…" : "Upload Audio"}
+              </Button>
+
+              {uploadStatusText && (
+                <p
+                  className={
+                    "mt-2 text-xs " +
+                    (uploadStatusTone === "error"
+                      ? "text-destructive"
+                      : uploadStatusTone === "success"
+                        ? "text-foreground"
+                        : "text-muted-foreground")
+                  }
+                >
+                  {uploadStatusText}
+                </p>
+              )}
+            </div>
           </div>
-        </div>
       </CardHeader>
       <CardContent>
         {recordings.length === 0 ? (
