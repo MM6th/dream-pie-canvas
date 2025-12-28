@@ -25,6 +25,7 @@ interface FilmProduct {
   status: string;
   is_adult_content: boolean;
   sales_count: number;
+  download_count?: number;
   created_at: string;
 }
 
