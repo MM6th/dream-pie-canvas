@@ -28,6 +28,7 @@ interface FilmProduct {
   status: string;
   is_adult_content: boolean;
   sales_count: number;
+  download_count?: number;
   created_at: string;
 }
 
@@ -97,10 +98,11 @@ const FilmCard = ({ film, onPurchase }: FilmCardProps) => {
     }
 
     if (film.is_free) {
-      // Free film - save to user's film playlist/library
+      // Free film - save to user's film playlist/library and track download
       setIsProcessing(true);
       try {
-        const { error } = await supabase
+        // First, create film purchase record
+        const { error: purchaseError } = await supabase
           .from('film_purchases')
           .insert({
             user_id: user.id,
@@ -109,7 +111,20 @@ const FilmCard = ({ film, onPurchase }: FilmCardProps) => {
             purchase_date: new Date().toISOString(),
           });
 
-        if (error) throw error;
+        if (purchaseError) throw purchaseError;
+
+        // Track download for free films (triggers notification to filmmaker)
+        const { error: downloadError } = await supabase
+          .from('film_downloads')
+          .insert({
+            user_id: user.id,
+            film_product_id: film.id,
+          });
+
+        // Ignore duplicate download errors (user already downloaded)
+        if (downloadError && !downloadError.message.includes('duplicate')) {
+          console.error('Error tracking download:', downloadError);
+        }
 
         setHasPurchased(true);
         toast({
@@ -303,10 +318,16 @@ const FilmCard = ({ film, onPurchase }: FilmCardProps) => {
           </div>
         )}
 
-        {/* Transit Meter - Only visible to film owner */}
+        {/* Transit Meter for paid films OR Download count for free films - Only visible to film owner */}
         {isOwner && (
           <div className="pt-3 border-t border-gray-700">
-            <TransitMeter currentSales={film.sales_count || 0} size="sm" />
+            {film.is_free ? (
+              <p className="text-sm text-gray-400 text-center">
+                📥 {film.download_count || 0} download{(film.download_count || 0) !== 1 ? 's' : ''}
+              </p>
+            ) : (
+              <TransitMeter currentSales={film.sales_count || 0} size="sm" />
+            )}
           </div>
         )}
       </CardContent>
