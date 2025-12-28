@@ -62,43 +62,23 @@ EPISODE TITLE: ${sessionTitle}
 AGREEMENT TERMS:
 
 1. PURPOSE
-This agreement establishes the revenue sharing arrangement between the Host and Guest for podcast episode(s) created through collaboration on the PIE Platform.
+This agreement establishes the collaboration arrangement between the Host and Guest for podcast episode(s) created through collaboration on the PIE Platform.
 
-2. REVENUE SPLIT
-Both parties agree to a 50/50 revenue split calculated as follows:
-- PayPal processing fees (~3%) are deducted first
-- PIE Platform takes 10% of the remaining amount
-- The remaining revenue is split equally (50/50) between Host and Guest
-
-3. EXAMPLE CALCULATION
-For a $5.00 episode purchase:
-- PayPal Processing Fee (~3%): $0.15
-- Subtotal after PayPal: $4.85
-- PIE Platform Fee (10%): $0.49
-- Remaining Revenue: $4.36
-- Host Share (50%): $2.18
-- Guest Share (50%): $2.18
-
-4. CONTENT RIGHTS
+2. CONTENT RIGHTS
 - Both Host and Guest retain rights to their individual contributions
-- The combined podcast episode may be distributed on PIE Platform and other platforms
+- The combined podcast episode may be distributed on PIE Platform and other platforms as part of the Host's subscription content
 - Neither party may independently sell or distribute the collaborative content without written consent
 
-5. PAYMENT TERMS
-- Revenue shares are distributed monthly
-- Minimum payout threshold: $50.00
-- Payments are made via PayPal to the email on file
-
-6. REPRESENTATIONS
+3. REPRESENTATIONS
 Both parties represent that:
 - They have the right to participate in this collaboration
 - They will not include copyrighted material without proper licensing
 - All content is original or properly licensed
 
-7. TERMINATION
-This agreement remains in effect for as long as the episode is available for sale. Either party may request removal of the episode with 30 days written notice.
+4. TERMINATION
+This agreement remains in effect for as long as the episode is available. Either party may request removal of the episode with 30 days written notice.
 
-8. GOVERNING LAW
+5. GOVERNING LAW
 This agreement is governed by the laws applicable to the PIE Platform Terms of Service.
 
 BY SIGNING BELOW, BOTH PARTIES AGREE TO THE TERMS ABOVE.
@@ -228,29 +208,9 @@ BY SIGNING BELOW, BOTH PARTIES AGREE TO THE TERMS ABOVE.
               <div className="p-4 bg-muted rounded-lg">
                 <h4 className="font-semibold mb-2">Episode: {sessionTitle}</h4>
                 <p className="text-sm text-muted-foreground">
-                  By signing this agreement, you agree to a 50/50 revenue split with the host
-                  after PayPal fees and PIE's 10% platform fee.
+                  By signing this agreement, you agree to collaborate on this podcast episode
+                  which will be part of the host's subscription-based podcast content.
                 </p>
-              </div>
-
-              <div className="space-y-3 text-sm">
-                <h4 className="font-semibold">Revenue Split Breakdown:</h4>
-                <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                  <li>PayPal Processing (~3%): Deducted first</li>
-                  <li>PIE Platform Fee (10%): Supports hosting & distribution</li>
-                  <li>Host Share: 50% of remaining</li>
-                  <li>Your Share: 50% of remaining</li>
-                </ul>
-
-                <div className="p-3 bg-primary/10 rounded-lg">
-                  <h5 className="font-medium">Example: $5.00 Episode Sale</h5>
-                  <ul className="text-xs mt-1 space-y-0.5">
-                    <li>PayPal Fee: -$0.15</li>
-                    <li>PIE Fee: -$0.49</li>
-                    <li>Host: $2.18</li>
-                    <li>You: $2.18</li>
-                  </ul>
-                </div>
               </div>
 
               <div className="border-t pt-4">
@@ -259,6 +219,14 @@ BY SIGNING BELOW, BOTH PARTIES AGREE TO THE TERMS ABOVE.
                   <li>Provide original content without copyright infringement</li>
                   <li>Allow distribution on PIE Platform and associated channels</li>
                   <li>Not redistribute the collaborative content independently</li>
+                </ul>
+              </div>
+
+              <div className="border-t pt-4">
+                <h4 className="font-semibold mb-2">Content Rights:</h4>
+                <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1">
+                  <li>Both parties retain rights to their individual contributions</li>
+                  <li>The combined episode may be distributed as part of the host's subscription content</li>
                 </ul>
               </div>
             </div>
