@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { X, Upload, Film, Image as ImageIcon, Loader2, Check, AlertCircle, FileVideo } from "lucide-react";
+import { X, Upload, Film, Image as ImageIcon, Loader2, Check, AlertCircle, FileVideo, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
@@ -755,7 +755,7 @@ const FilmUploadModal = ({ isOpen, onClose, onSuccess }: FilmUploadModalProps) =
                   placeholder="Enter actor name"
                 />
                 <Button type="button" onClick={addStar} variant="outline" size="icon">
-                  <Upload className="w-4 h-4" />
+                  <Plus className="w-4 h-4" />
                 </Button>
               </div>
               {stars.length > 0 && (
