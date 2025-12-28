@@ -16,13 +16,13 @@ const INDUSTRY_OPTIONS = [
   'Music Artist',
   'Audio Podcaster',
   'Cook/Baker',
+  'Film Maker',
 ];
 
 // Industries under construction (hidden but preserved for future use)
 const UNDER_CONSTRUCTION_INDUSTRIES = [
   'Fashion Retailer',
   'Pole Dancer',
-  'Film Maker',
   'Film Editor',
   'Videographer',
   'Live Stream Artist',
