@@ -26,9 +26,9 @@ const TransitMeter = ({
   
   // Size configurations
   const sizeConfig = {
-    sm: { width: 120, height: 70, strokeWidth: 6, fontSize: "text-xs" },
-    md: { width: 160, height: 90, strokeWidth: 8, fontSize: "text-sm" },
-    lg: { width: 200, height: 110, strokeWidth: 10, fontSize: "text-base" }
+    sm: { width: 140, height: 50, strokeWidth: 10, fontSize: "text-xs" },
+    md: { width: 180, height: 60, strokeWidth: 12, fontSize: "text-sm" },
+    lg: { width: 220, height: 75, strokeWidth: 14, fontSize: "text-base" }
   };
   
   const config = sizeConfig[size];
@@ -106,11 +106,8 @@ const TransitMeter = ({
           </svg>
           
           <div className="flex items-center justify-between w-full px-2">
-            <span className="text-blue-400 text-xs font-medium">{clampedSales}</span>
-            <span className={`text-gray-400 ${config.fontSize}`}>
-              {clampedSales}/{maxSales} Sales
-            </span>
-            <span className="text-red-400 text-xs font-medium">{maxSales}</span>
+            <span className="text-blue-400 text-sm font-bold">{clampedSales}</span>
+            <span className="text-red-400 text-sm font-bold">{maxSales}</span>
           </div>
           
           {clampedSales >= maxSales && (
