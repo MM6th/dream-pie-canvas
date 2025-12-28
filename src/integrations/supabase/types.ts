@@ -2782,6 +2782,7 @@ export type Database = {
           contact_email: string | null
           created_at: string | null
           current_film_sales: number | null
+          disable_film_publish_lock: boolean | null
           display_name: string | null
           email: string
           facebook_url: string | null
@@ -2822,6 +2823,7 @@ export type Database = {
           contact_email?: string | null
           created_at?: string | null
           current_film_sales?: number | null
+          disable_film_publish_lock?: boolean | null
           display_name?: string | null
           email: string
           facebook_url?: string | null
@@ -2862,6 +2864,7 @@ export type Database = {
           contact_email?: string | null
           created_at?: string | null
           current_film_sales?: number | null
+          disable_film_publish_lock?: boolean | null
           display_name?: string | null
           email?: string
           facebook_url?: string | null

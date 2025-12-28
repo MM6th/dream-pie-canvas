@@ -1,7 +1,5 @@
 import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
 
 interface FilmTrailerPlayerModalProps {
   isOpen: boolean;
@@ -16,28 +14,28 @@ const FilmTrailerPlayerModal = ({
   videoUrl,
   filmTitle,
 }: FilmTrailerPlayerModalProps) => {
+  // Determine video type based on extension
+  const getVideoType = (url: string): string => {
+    const ext = url.split('.').pop()?.toLowerCase();
+    if (ext === 'mov') return 'video/quicktime';
+    if (ext === 'webm') return 'video/webm';
+    return 'video/mp4';
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl w-full bg-card">
         <DialogHeader>
-          <div className="flex items-center justify-between">
-            <DialogTitle className="text-foreground">{filmTitle} - Trailer</DialogTitle>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onClose}
-              className="h-6 w-6"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
+          <DialogTitle className="text-foreground">{filmTitle} - Trailer</DialogTitle>
         </DialogHeader>
 
-        <div className="relative w-full aspect-video bg-muted rounded-lg overflow-hidden">
+        <div className="relative w-full aspect-video bg-black rounded-lg overflow-hidden">
           <video
-            src={videoUrl}
+            key={videoUrl}
             controls
             autoPlay
+            playsInline
+            crossOrigin="anonymous"
             className="w-full h-full object-contain"
             preload="metadata"
             onError={(e) => {
@@ -56,6 +54,7 @@ const FilmTrailerPlayerModal = ({
               });
             }}
           >
+            <source src={videoUrl} type={getVideoType(videoUrl)} />
             Your browser does not support the video tag.
           </video>
         </div>

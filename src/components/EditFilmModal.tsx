@@ -251,19 +251,89 @@ const EditFilmModal = ({ isOpen, onClose, onSuccess, film }: EditFilmModalProps)
     toast({ title: "Upload cancelled" });
   };
 
+  // Preflight check for video playability
+  const checkVideoPlayability = (file: File): Promise<boolean> => {
+    return new Promise((resolve) => {
+      const video = document.createElement('video');
+      const objectUrl = URL.createObjectURL(file);
+      
+      video.preload = 'metadata';
+      
+      const cleanup = () => {
+        URL.revokeObjectURL(objectUrl);
+        video.remove();
+      };
+      
+      video.onloadedmetadata = () => {
+        if (video.videoWidth > 0 && video.videoHeight > 0) {
+          cleanup();
+          resolve(true);
+        } else {
+          cleanup();
+          resolve(false);
+        }
+      };
+      
+      video.onerror = () => {
+        cleanup();
+        resolve(false);
+      };
+      
+      setTimeout(() => {
+        cleanup();
+        resolve(false);
+      }, 5000);
+      
+      video.src = objectUrl;
+    });
+  };
+
   // File selection handlers - trigger immediate upload
-  const handleTrailerFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleTrailerFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      const isMov = file.name.toLowerCase().endsWith('.mov');
+      const isMp4 = file.type.includes('mp4') || file.name.toLowerCase().endsWith('.mp4');
+      
+      if (isMov || !isMp4) {
+        const isPlayable = await checkVideoPlayability(file);
+        
+        if (!isPlayable) {
+          toast({
+            title: "Video codec not supported",
+            description: "This video uses a codec (likely HEVC/H.265) that most browsers cannot play. Please export as H.264 MP4 for universal compatibility.",
+            variant: "destructive"
+          });
+          e.target.value = '';
+          return;
+        }
+      }
+      
       startImmediateUpload(file, 'trailer');
     }
-    // Reset input so same file can be selected again
     e.target.value = '';
   };
 
-  const handleFilmFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFilmFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      const isMov = file.name.toLowerCase().endsWith('.mov');
+      const isMp4 = file.type.includes('mp4') || file.name.toLowerCase().endsWith('.mp4');
+      
+      if (isMov || !isMp4) {
+        const isPlayable = await checkVideoPlayability(file);
+        
+        if (!isPlayable) {
+          toast({
+            title: "Video codec not supported",
+            description: "This video uses a codec (likely HEVC/H.265) that most browsers cannot play. Please export as H.264 MP4 for universal compatibility.",
+            variant: "destructive"
+          });
+          e.target.value = '';
+          return;
+        }
+      }
+      
       startImmediateUpload(file, 'film');
     }
     e.target.value = '';

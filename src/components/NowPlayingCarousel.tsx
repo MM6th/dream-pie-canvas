@@ -103,15 +103,7 @@ const NowPlayingCarousel = ({ films, onFilmClick }: NowPlayingCarouselProps) => 
                     </div>
                   </div>
                   
-                  {/* Now Playing Badge */}
-                  <div className="absolute top-4 left-4">
-                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-red-600/90 backdrop-blur-sm">
-                      <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
-                      <span className="text-xs font-semibold text-white uppercase tracking-wider">
-                        Now Playing
-                      </span>
-                    </div>
-                  </div>
+                  {/* Subtle indicator removed - section header already says "Now Playing" */}
                 </div>
               </div>
             </CarouselItem>
