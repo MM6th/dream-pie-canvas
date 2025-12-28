@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Film, Plus, Edit, Trash2, Play, Gauge, Lock, HelpCircle } from "lucide-react";
+import { Film, Plus, Edit, Trash2, Play, Gauge } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
@@ -178,44 +178,29 @@ const FilmProductManager = () => {
                       </div>
                     )}
                     
-                                    <div className="flex gap-2 mt-3">
-                                      {film.status === 'published' ? (
-                                        <div className="flex-1 flex flex-col gap-1">
-                                          <Button
-                                            variant="outline"
-                                            size="sm"
-                                            className="w-full opacity-60 cursor-not-allowed"
-                                            disabled
-                                          >
-                                            <Lock className="w-3 h-3 mr-1" />
-                                            Locked
-                                          </Button>
-                                          <p className="text-xs text-gray-400 flex items-center gap-1">
-                                            <HelpCircle className="w-3 h-3" />
-                                            Submit a support ticket for changes
-                                          </p>
-                                        </div>
-                                      ) : (
-                                        <Button
-                                          variant="outline"
-                                          size="sm"
-                                          className="flex-1"
-                                          onClick={() => setEditingFilm(film)}
-                                        >
-                                          <Edit className="w-3 h-3 mr-1" />
-                                          Edit
-                                        </Button>
-                                      )}
-                                      {film.status !== 'published' && (
-                                        <Button
-                                          variant="destructive"
-                                          size="sm"
-                                          onClick={() => setDeletingFilmId(film.id)}
-                                        >
-                                          <Trash2 className="w-3 h-3" />
-                                        </Button>
-                                      )}
-                                    </div>
+                    <div className="flex gap-2 mt-3">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => setEditingFilm(film)}
+                      >
+                        <Edit className="w-3 h-3 mr-1" />
+                        Edit
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => setDeletingFilmId(film.id)}
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
+                    </div>
+                    {film.status === 'published' && (
+                      <p className="text-xs text-yellow-400 mt-1">
+                        ⚠️ Editing published films affects buyers
+                      </p>
+                    )}
                   </CardContent>
                 </Card>
               ))}
