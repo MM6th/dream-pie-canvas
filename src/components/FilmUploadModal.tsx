@@ -599,7 +599,7 @@ const FilmUploadModal = ({ isOpen, onClose, onSuccess }: FilmUploadModalProps) =
 
             {/* Trailer Upload */}
             <div className="space-y-2">
-              <Label>Trailer Video * <span className="text-xs text-muted-foreground font-medium">(MP4 format only)</span></Label>
+              <Label>Trailer Video * <span className="text-xs text-muted-foreground font-medium">(MP4 or MOV format)</span></Label>
               <div className="p-3 rounded-lg border border-border bg-muted/50">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -638,7 +638,7 @@ const FilmUploadModal = ({ isOpen, onClose, onSuccess }: FilmUploadModalProps) =
                   <input
                     ref={trailerInputRef}
                     type="file"
-                    accept="video/mp4,.mp4"
+                    accept="video/mp4,video/quicktime,.mp4,.mov"
                     className="hidden"
                     onChange={handleTrailerFileSelect}
                   />
@@ -651,7 +651,7 @@ const FilmUploadModal = ({ isOpen, onClose, onSuccess }: FilmUploadModalProps) =
 
             {/* Full Film Upload */}
             <div className="space-y-2">
-              <Label>Full Film Video * <span className="text-xs text-muted-foreground font-medium">(MP4 format only)</span></Label>
+              <Label>Full Film Video * <span className="text-xs text-muted-foreground font-medium">(MP4 or MOV format)</span></Label>
               <div className="p-3 rounded-lg border border-border bg-muted/50">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -690,7 +690,7 @@ const FilmUploadModal = ({ isOpen, onClose, onSuccess }: FilmUploadModalProps) =
                   <input
                     ref={filmInputRef}
                     type="file"
-                    accept="video/mp4,.mp4"
+                    accept="video/mp4,video/quicktime,.mp4,.mov"
                     className="hidden"
                     onChange={handleFilmFileSelect}
                   />
