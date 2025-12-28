@@ -1231,12 +1231,45 @@ export type Database = {
           },
         ]
       }
+      film_downloads: {
+        Row: {
+          created_at: string
+          downloaded_at: string
+          film_product_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          downloaded_at?: string
+          film_product_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          downloaded_at?: string
+          film_product_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "film_downloads_film_product_id_fkey"
+            columns: ["film_product_id"]
+            isOneToOne: false
+            referencedRelation: "film_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       film_products: {
         Row: {
           access_level: Database["public"]["Enums"]["access_level"] | null
           cover_photo_url: string | null
           created_at: string
           description: string | null
+          download_count: number | null
           full_video_url: string | null
           genres: string[] | null
           id: string
@@ -1259,6 +1292,7 @@ export type Database = {
           cover_photo_url?: string | null
           created_at?: string
           description?: string | null
+          download_count?: number | null
           full_video_url?: string | null
           genres?: string[] | null
           id?: string
@@ -1281,6 +1315,7 @@ export type Database = {
           cover_photo_url?: string | null
           created_at?: string
           description?: string | null
+          download_count?: number | null
           full_video_url?: string | null
           genres?: string[] | null
           id?: string

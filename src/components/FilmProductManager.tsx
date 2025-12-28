@@ -35,6 +35,7 @@ interface FilmProduct {
   status: string;
   is_adult_content: boolean;
   sales_count: number;
+  download_count?: number;
   created_at: string;
 }
 
@@ -199,8 +200,12 @@ const FilmProductManager = () => {
                       </span>
                     </div>
                     
-                    {/* Transit Meter - only for paid films */}
-                    {!film.is_free && (
+                    {/* Transit Meter for paid films OR Download count for free films */}
+                    {film.is_free ? (
+                      <p className="text-sm text-gray-400 mt-2 text-center">
+                        📥 {film.download_count || 0} download{(film.download_count || 0) !== 1 ? 's' : ''}
+                      </p>
+                    ) : (
                       <div className="mt-3">
                         <TransitMeter 
                           currentSales={film.sales_count || 0} 
