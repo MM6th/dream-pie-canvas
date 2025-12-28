@@ -527,10 +527,14 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
               disabled={!user || uploading}
             />
             <Button
+              type="button"
               variant="outline"
               size="sm"
               disabled={!user || uploading}
-              onClick={() => {
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+
                 if (!user) {
                   toast({
                     title: "Sign in required",
