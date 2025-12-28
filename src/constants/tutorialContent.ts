@@ -635,4 +635,10 @@ export const adminTutorialSteps: TutorialStep[] = [
     target: '[data-tutorial="video-ads"]',
     placement: 'top',
   },
+  {
+    id: 'film-upload-rules',
+    title: 'Film Maker Upload Rules 📋',
+    description: 'Film Makers have up to 5GB of storage space (subject to increase). Films must be MP4 format. Merchants must earn 30 PAID sales before uploading another film. Free downloads do NOT count toward the 30-sale goal.',
+    duration: 14000,
+  },
 ];
