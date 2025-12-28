@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import FilmCard from "@/components/FilmCard";
+import NowPlayingCarousel from "@/components/NowPlayingCarousel";
 
 interface FilmProduct {
   id: string;
@@ -20,6 +21,7 @@ interface FilmProduct {
   thumbnail_url: string | null;
   trailer_url: string | null;
   full_video_url: string | null;
+  cover_photo_url: string | null;
   status: string;
   is_adult_content: boolean;
   sales_count: number;
@@ -170,6 +172,27 @@ const Films = () => {
 
       {/* Main Content */}
       <div className="relative z-10 max-w-6xl mx-auto px-6 pb-12">
+        {/* Now Playing Carousel - only films with cover photos */}
+        {!loading && films.filter(f => f.cover_photo_url).length > 0 && (
+          <NowPlayingCarousel 
+            films={films.filter(f => f.cover_photo_url).map(f => ({
+              id: f.id,
+              title: f.title,
+              description: f.description,
+              cover_photo_url: f.cover_photo_url!,
+              price: f.price,
+              is_free: f.is_free,
+              genres: f.genres || [],
+            }))}
+            onFilmClick={(filmId) => {
+              const filmElement = document.getElementById(`film-${filmId}`);
+              if (filmElement) {
+                filmElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              }
+            }}
+          />
+        )}
+
         <div className="mb-8">
           <div className="mb-6">
             <h1 className="text-4xl font-bold text-white mb-2">Films</h1>
@@ -191,11 +214,12 @@ const Films = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {films.map((film) => (
-                <FilmCard 
-                  key={film.id} 
-                  film={film} 
-                  onPurchase={fetchFilms}
-                />
+                <div key={film.id} id={`film-${film.id}`}>
+                  <FilmCard 
+                    film={film} 
+                    onPurchase={fetchFilms}
+                  />
+                </div>
               ))}
             </div>
           )}
