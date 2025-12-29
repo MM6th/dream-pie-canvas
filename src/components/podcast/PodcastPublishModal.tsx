@@ -35,7 +35,7 @@ interface PodcastPublishModalProps {
 
 // Subscription tier configuration
 const SUBSCRIPTION_TIERS = {
-  moon: { name: 'Moon', price: 4.99, icon: Moon, description: 'Basic monthly access' },
+  moon: { name: 'Moon', price: 4.99, icon: Moon, description: 'Benjiman discussing dreams, topics that are mysterious, and occult' },
   venus: { name: 'Venus', price: 9.99, icon: Star, description: 'Premium monthly access' },
   jupiter: { name: 'Jupiter', price: 14.99, icon: Sparkles, description: 'VIP monthly access' },
 } as const;
