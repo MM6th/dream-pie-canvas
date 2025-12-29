@@ -84,12 +84,19 @@ export const PodcastPublishModal = ({
       setThumbnailPreview(null);
       setSubscriptionEnabled(false);
       setSelectedTier('moon');
-      setTierDescription("");
+      setTierDescription(SUBSCRIPTION_TIERS.moon.description);
       setTrailerEnabled(false);
       setIsPlayingTrailer(false);
       setTrailerCurrentTime(0);
     }
   }, [open, recording]);
+
+  // Update tier description when tier changes
+  React.useEffect(() => {
+    if (subscriptionEnabled) {
+      setTierDescription(SUBSCRIPTION_TIERS[selectedTier].description);
+    }
+  }, [selectedTier, subscriptionEnabled]);
 
   // Trailer preview - plays first 30 seconds from the beginning
   const playTrailerPreview = async () => {
