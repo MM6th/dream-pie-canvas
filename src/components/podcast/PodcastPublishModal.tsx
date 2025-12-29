@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -12,11 +12,13 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Image, Loader2, Moon, Star, Sparkles, Play, Pause } from "lucide-react";
+import { Image, Loader2, Moon, Star, Sparkles, Play, Pause, Search, X } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface Recording {
   id: string;
@@ -24,6 +26,19 @@ interface Recording {
   description: string | null;
   audio_url: string;
   duration_seconds: number | null;
+}
+
+interface CastMember {
+  id: string;
+  display_name: string;
+  avatar_url: string | null;
+}
+
+interface UserProfile {
+  id: string;
+  display_name: string;
+  avatar_url: string | null;
+  user_type: string;
 }
 
 interface PodcastPublishModalProps {
@@ -75,6 +90,12 @@ export const PodcastPublishModal = ({
   const trailerTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const trailerIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Cast member state
+  const [castMembers, setCastMembers] = useState<CastMember[]>([]);
+  const [castSearchQuery, setCastSearchQuery] = useState("");
+  const [castSearchResults, setCastSearchResults] = useState<UserProfile[]>([]);
+  const [castSearchLoading, setCastSearchLoading] = useState(false);
+
   // Initialize form (and hydrate existing published data when editing)
   React.useEffect(() => {
     if (!open || !recording) return;
@@ -98,6 +119,9 @@ export const PodcastPublishModal = ({
     setTrailerEnabled(false);
     setIsPlayingTrailer(false);
     setTrailerCurrentTime(0);
+    setCastMembers([]);
+    setCastSearchQuery("");
+    setCastSearchResults([]);
 
     const hydrate = async () => {
       if (!user) return;
@@ -174,6 +198,20 @@ export const PodcastPublishModal = ({
         } else {
           setIsFree(false);
         }
+
+        // Fetch existing cast members
+        const { data: castData, error: castError } = await supabase
+          .from("podcast_cast_members")
+          .select("user_id, display_name, avatar_url")
+          .eq("podcast_recording_id", recording.id);
+
+        if (!castError && castData) {
+          setCastMembers(castData.map(c => ({
+            id: c.user_id,
+            display_name: c.display_name || "",
+            avatar_url: c.avatar_url
+          })));
+        }
       } catch (err) {
         console.error("Error hydrating podcast publish modal:", err);
       }
@@ -203,6 +241,56 @@ export const PodcastPublishModal = ({
       return prev;
     });
   }, [selectedTier, subscriptionEnabled]);
+
+  // Cast member search
+  useEffect(() => {
+    const searchUsers = async () => {
+      if (!castSearchQuery.trim() || castSearchQuery.length < 2) {
+        setCastSearchResults([]);
+        return;
+      }
+
+      setCastSearchLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("id, display_name, avatar_url, user_type")
+          .neq("id", user?.id || "")
+          .ilike("display_name", `%${castSearchQuery}%`)
+          .limit(10);
+
+        if (error) throw error;
+        
+        // Filter out users already in cast
+        const existingIds = new Set(castMembers.map(c => c.id));
+        setCastSearchResults((data || []).filter(u => !existingIds.has(u.id)));
+      } catch (error) {
+        console.error("Error searching users:", error);
+      } finally {
+        setCastSearchLoading(false);
+      }
+    };
+
+    const debounce = setTimeout(searchUsers, 300);
+    return () => clearTimeout(debounce);
+  }, [castSearchQuery, user?.id, castMembers]);
+
+  // Add cast member
+  const addCastMember = (profile: UserProfile) => {
+    if (castMembers.some(c => c.id === profile.id)) return;
+    setCastMembers(prev => [...prev, {
+      id: profile.id,
+      display_name: profile.display_name,
+      avatar_url: profile.avatar_url
+    }]);
+    setCastSearchQuery("");
+    setCastSearchResults([]);
+  };
+
+  // Remove cast member
+  const removeCastMember = (userId: string) => {
+    setCastMembers(prev => prev.filter(c => c.id !== userId));
+  };
 
   // Trailer preview - plays first 30 seconds from the beginning
   const playTrailerPreview = async () => {
@@ -406,6 +494,8 @@ export const PodcastPublishModal = ({
         published_at: new Date().toISOString(),
       };
 
+      let audioProductId = existingAudioProductId;
+
       if (existingAudioProductId) {
         const { error: productError } = await supabase
           .from("audio_products")
@@ -415,11 +505,14 @@ export const PodcastPublishModal = ({
 
         if (productError) throw productError;
       } else {
-        const { error: productError } = await supabase
+        const { data: newProduct, error: productError } = await supabase
           .from("audio_products")
-          .insert(baseProductPayload);
+          .insert(baseProductPayload)
+          .select("id")
+          .single();
 
         if (productError) throw productError;
+        audioProductId = newProduct?.id || null;
       }
 
       // Update recording status
@@ -427,6 +520,56 @@ export const PodcastPublishModal = ({
         .from("podcast_recordings")
         .update({ status: "published" })
         .eq("id", recording.id);
+
+      // Save cast members
+      // First, delete existing cast members for this recording
+      await supabase
+        .from("podcast_cast_members")
+        .delete()
+        .eq("podcast_recording_id", recording.id);
+
+      // Insert new cast members
+      if (castMembers.length > 0) {
+        const castInserts = castMembers.map(member => ({
+          podcast_recording_id: recording.id,
+          user_id: member.id,
+          display_name: member.display_name,
+          avatar_url: member.avatar_url
+        }));
+
+        const { error: castError } = await supabase
+          .from("podcast_cast_members")
+          .insert(castInserts);
+
+        if (castError) {
+          console.error("Error saving cast members:", castError);
+        }
+
+        // Grant free access to cast members via podcast_downloads
+        // Only if there's an audio product to grant access to
+        if (audioProductId) {
+          for (const member of castMembers) {
+            // Check if they already have access
+            const { data: existingDownload } = await supabase
+              .from("podcast_downloads")
+              .select("id")
+              .eq("audio_product_id", audioProductId)
+              .eq("merchant_id", member.id)
+              .maybeSingle();
+
+            if (!existingDownload) {
+              // Grant free access
+              await supabase
+                .from("podcast_downloads")
+                .insert({
+                  audio_product_id: audioProductId,
+                  merchant_id: member.id,
+                  contract_generated: false
+                });
+            }
+          }
+        }
+      }
 
       toast({
         title: "Published!",
@@ -522,6 +665,93 @@ export const PodcastPublishModal = ({
               className="bg-background"
               rows={3}
             />
+          </div>
+
+          {/* Cast Members */}
+          <div className="space-y-3 border-t pt-4">
+            <div>
+              <Label>Cast</Label>
+              <p className="text-xs text-muted-foreground">
+                Add guests to your podcast. They'll get free access when published.
+              </p>
+            </div>
+
+            {/* Selected Cast Members */}
+            {castMembers.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {castMembers.map((member) => (
+                  <div
+                    key={member.id}
+                    className="flex items-center gap-1.5 bg-muted rounded-full pl-1 pr-2 py-1"
+                  >
+                    <Avatar className="w-6 h-6">
+                      <AvatarImage src={member.avatar_url || undefined} />
+                      <AvatarFallback className="text-xs">
+                        {member.display_name?.charAt(0).toUpperCase() || "?"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="text-sm">{member.display_name}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeCastMember(member.id)}
+                      className="ml-1 text-muted-foreground hover:text-foreground"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Cast Search */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                value={castSearchQuery}
+                onChange={(e) => setCastSearchQuery(e.target.value)}
+                placeholder="Search users by name..."
+                className="pl-10 bg-background"
+              />
+            </div>
+
+            {/* Search Results */}
+            {castSearchResults.length > 0 && (
+              <ScrollArea className="max-h-32 border rounded-lg">
+                <div className="p-1">
+                  {castSearchResults.map((profile) => (
+                    <button
+                      key={profile.id}
+                      type="button"
+                      onClick={() => addCastMember(profile)}
+                      className="w-full flex items-center gap-2 p-2 rounded hover:bg-muted text-left"
+                    >
+                      <Avatar className="w-7 h-7">
+                        <AvatarImage src={profile.avatar_url || undefined} />
+                        <AvatarFallback className="text-xs">
+                          {profile.display_name?.charAt(0).toUpperCase() || "?"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{profile.display_name}</p>
+                        <p className="text-xs text-muted-foreground capitalize">{profile.user_type}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </ScrollArea>
+            )}
+
+            {castSearchQuery.length >= 2 && castSearchResults.length === 0 && !castSearchLoading && (
+              <p className="text-xs text-muted-foreground text-center py-2">
+                No users found matching "{castSearchQuery}"
+              </p>
+            )}
+
+            {castSearchLoading && (
+              <p className="text-xs text-muted-foreground text-center py-2">
+                Searching...
+              </p>
+            )}
           </div>
 
           {/* Trailer Settings */}
