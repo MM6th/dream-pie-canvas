@@ -401,7 +401,7 @@ export const PodcastPublishModal = ({
           : isFree
             ? null
             : parseFloat(price),
-        access_level: subscriptionEnabled ? "paid" : isFree ? "public" : "paid",
+        access_level: (subscriptionEnabled ? "paid" : isFree ? "public" : "paid") as "public" | "paid" | "merchant_only",
         status: "published" as const,
         published_at: new Date().toISOString(),
       };
