@@ -318,16 +318,19 @@ const FilmCard = ({ film, onPurchase }: FilmCardProps) => {
           </div>
         )}
 
-        {/* Transit Meter for paid films OR Download count for free films - Only visible to film owner */}
-        {isOwner && (
+        {/* Download count visible to all users for free films */}
+        {film.is_free && (
           <div className="pt-3 border-t border-gray-700">
-            {film.is_free ? (
-              <p className="text-sm text-gray-400 text-center">
-                📥 {film.download_count || 0} download{(film.download_count || 0) !== 1 ? 's' : ''}
-              </p>
-            ) : (
-              <TransitMeter currentSales={film.sales_count || 0} size="sm" />
-            )}
+            <p className="text-sm text-gray-400 text-center">
+              📥 {film.download_count || 0} download{(film.download_count || 0) !== 1 ? 's' : ''}
+            </p>
+          </div>
+        )}
+
+        {/* Transit Meter for paid films - Only visible to film owner */}
+        {isOwner && !film.is_free && (
+          <div className="pt-3 border-t border-gray-700">
+            <TransitMeter currentSales={film.sales_count || 0} size="sm" />
           </div>
         )}
       </CardContent>
