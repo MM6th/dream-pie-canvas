@@ -2049,6 +2049,41 @@ export type Database = {
         }
         Relationships: []
       }
+      podcast_cast_members: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          podcast_recording_id: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          podcast_recording_id: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          podcast_recording_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "podcast_cast_members_podcast_recording_id_fkey"
+            columns: ["podcast_recording_id"]
+            isOneToOne: false
+            referencedRelation: "podcast_recordings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       podcast_downloads: {
         Row: {
           audio_product_id: string
