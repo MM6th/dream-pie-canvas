@@ -60,12 +60,14 @@ export const PodcastPublishModal = ({
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
   const [isPublishing, setIsPublishing] = useState(false);
-  
+  const [existingAudioProductId, setExistingAudioProductId] = useState<string | null>(null);
+
   // Subscription state
   const [subscriptionEnabled, setSubscriptionEnabled] = useState(false);
-  const [selectedTier, setSelectedTier] = useState<SubscriptionTier>('moon');
+  const [selectedTier, setSelectedTier] = useState<SubscriptionTier>("moon");
   const [tierDescription, setTierDescription] = useState("");
-  
+  const lastTierRef = useRef<SubscriptionTier>("moon");
+
   // Trailer state - simplified to always use first 30 seconds
   const [trailerEnabled, setTrailerEnabled] = useState(false);
   const [isPlayingTrailer, setIsPlayingTrailer] = useState(false);
@@ -73,29 +75,133 @@ export const PodcastPublishModal = ({
   const trailerTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const trailerIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Reset form when modal opens with a recording
+  // Initialize form (and hydrate existing published data when editing)
   React.useEffect(() => {
-    if (open && recording) {
-      setTitle(recording.title);
-      setDescription(recording.description || "");
-      setIsFree(true);
-      setPrice("");
-      setThumbnailFile(null);
-      setThumbnailPreview(null);
-      setSubscriptionEnabled(false);
-      setSelectedTier('moon');
-      setTierDescription(SUBSCRIPTION_TIERS.moon.description);
-      setTrailerEnabled(false);
-      setIsPlayingTrailer(false);
-      setTrailerCurrentTime(0);
-    }
-  }, [open, recording]);
+    if (!open || !recording) return;
 
-  // Update tier description when tier changes
+    let cancelled = false;
+
+    // Base reset
+    setExistingAudioProductId(null);
+    setTitle(recording.title);
+    setDescription(recording.description || "");
+    setIsFree(true);
+    setPrice("");
+    setThumbnailFile(null);
+    setThumbnailPreview(null);
+
+    setSubscriptionEnabled(false);
+    setSelectedTier("moon");
+    lastTierRef.current = "moon";
+    setTierDescription(SUBSCRIPTION_TIERS.moon.description);
+
+    setTrailerEnabled(false);
+    setIsPlayingTrailer(false);
+    setTrailerCurrentTime(0);
+
+    const hydrate = async () => {
+      if (!user) return;
+
+      try {
+        const [{ data: recData, error: recError }, { data: prodData, error: prodError }] =
+          await Promise.all([
+            supabase
+              .from("podcast_recordings")
+              .select(
+                "title, description, status, subscription_enabled, subscription_tier, tier_description, trailer_url"
+              )
+              .eq("id", recording.id)
+              .maybeSingle(),
+            supabase
+              .from("audio_products")
+              .select("id, title, description, thumbnail_url, is_free, price, access_level, status")
+              .eq("merchant_id", user.id)
+              .eq("audio_type", "podcast")
+              .eq("audio_file_url", recording.audio_url)
+              .maybeSingle(),
+          ]);
+
+        if (cancelled) return;
+        if (recError) throw recError;
+        if (prodError) throw prodError;
+
+        const mergedTitle = (prodData?.title || recData?.title || recording.title || "").toString();
+        const mergedDescription =
+          (prodData?.description ?? recData?.description ?? recording.description ?? "") || "";
+
+        setTitle(mergedTitle);
+        setDescription(typeof mergedDescription === "string" ? mergedDescription : "");
+
+        if (prodData?.id) setExistingAudioProductId(prodData.id);
+
+        if (prodData?.thumbnail_url) {
+          setThumbnailPreview(prodData.thumbnail_url);
+        }
+
+        const subEnabled = !!recData?.subscription_enabled;
+        setSubscriptionEnabled(subEnabled);
+
+        const tierCandidate = (recData?.subscription_tier as SubscriptionTier) || "moon";
+        const safeTier = (Object.keys(SUBSCRIPTION_TIERS) as SubscriptionTier[]).includes(
+          tierCandidate
+        )
+          ? tierCandidate
+          : "moon";
+
+        setSelectedTier(safeTier);
+        lastTierRef.current = safeTier;
+
+        const perks = (recData?.tier_description || "").trim();
+        setTierDescription(perks || SUBSCRIPTION_TIERS[safeTier].description);
+
+        setTrailerEnabled(!!recData?.trailer_url);
+
+        // If this is a one-time paid episode (not subscription), prefill price toggle
+        if (!subEnabled) {
+          const accessLevel = (prodData?.access_level || (prodData?.is_free ? "public" : "paid")) as
+            | "public"
+            | "paid"
+            | "merchant_only"
+            | null;
+
+          if (accessLevel === "paid") {
+            setIsFree(false);
+            setPrice(prodData?.price != null ? String(prodData.price) : "");
+          } else {
+            setIsFree(true);
+            setPrice("");
+          }
+        } else {
+          setIsFree(false);
+        }
+      } catch (err) {
+        console.error("Error hydrating podcast publish modal:", err);
+      }
+    };
+
+    hydrate();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [open, recording?.id, user?.id]);
+
+  // When changing tiers, only auto-swap the perks text if the user hasn't customized it.
   React.useEffect(() => {
-    if (subscriptionEnabled) {
-      setTierDescription(SUBSCRIPTION_TIERS[selectedTier].description);
-    }
+    if (!subscriptionEnabled) return;
+
+    setTierDescription((prev) => {
+      const prevTier = lastTierRef.current;
+      if (prevTier === selectedTier) return prev;
+
+      const prevDefault = SUBSCRIPTION_TIERS[prevTier].description;
+      const nextDefault = SUBSCRIPTION_TIERS[selectedTier].description;
+      lastTierRef.current = selectedTier;
+
+      const trimmed = (prev || "").trim();
+      if (!trimmed || trimmed === prevDefault) return nextDefault;
+      return prev;
+    });
   }, [selectedTier, subscriptionEnabled]);
 
   // Trailer preview - plays first 30 seconds from the beginning
@@ -281,26 +387,40 @@ export const PodcastPublishModal = ({
         if (updateRecordingError) throw updateRecordingError;
       }
 
-      // Create audio product entry
-      const { error: productError } = await supabase
-        .from("audio_products")
-        .insert({
-          merchant_id: user.id,
-          title: title.trim(),
-          description: description.trim() || null,
-          audio_type: "podcast",
-          audio_file_url: recording.audio_url,
-          thumbnail_url: thumbnailUrl,
-          is_free: subscriptionEnabled ? false : isFree,
-          price: subscriptionEnabled 
-            ? SUBSCRIPTION_TIERS[selectedTier].price 
-            : (isFree ? null : parseFloat(price)),
-          access_level: subscriptionEnabled ? "paid" : (isFree ? "public" : "paid"),
-          status: "published",
-          published_at: new Date().toISOString(),
-        });
+      // Create or update audio product entry (so edits persist)
+      const baseProductPayload = {
+        merchant_id: user.id,
+        title: title.trim(),
+        description: description.trim() || null,
+        audio_type: "podcast" as const,
+        audio_file_url: recording.audio_url,
+        thumbnail_url: thumbnailUrl ?? thumbnailPreview ?? null,
+        is_free: subscriptionEnabled ? false : isFree,
+        price: subscriptionEnabled
+          ? SUBSCRIPTION_TIERS[selectedTier].price
+          : isFree
+            ? null
+            : parseFloat(price),
+        access_level: subscriptionEnabled ? "paid" : isFree ? "public" : "paid",
+        status: "published" as const,
+        published_at: new Date().toISOString(),
+      };
 
-      if (productError) throw productError;
+      if (existingAudioProductId) {
+        const { error: productError } = await supabase
+          .from("audio_products")
+          .update(baseProductPayload)
+          .eq("id", existingAudioProductId)
+          .eq("merchant_id", user.id);
+
+        if (productError) throw productError;
+      } else {
+        const { error: productError } = await supabase
+          .from("audio_products")
+          .insert(baseProductPayload);
+
+        if (productError) throw productError;
+      }
 
       // Update recording status
       await supabase
