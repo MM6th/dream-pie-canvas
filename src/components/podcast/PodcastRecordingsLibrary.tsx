@@ -3,6 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Progress } from "@/components/ui/progress";
 import { 
   Play, 
   Pause, 
@@ -12,7 +14,11 @@ import {
   Clock,
   Calendar,
   Upload,
-  Download
+  Download,
+  CheckCircle,
+  X,
+  Loader2,
+  HardDrive
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -31,6 +37,8 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -53,21 +61,33 @@ interface PodcastRecordingsLibraryProps {
   refreshTrigger?: number;
 }
 
+type UploadPhase = 'select' | 'uploading' | 'editing';
+
 export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLibraryProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
 
   const [recordings, setRecordings] = useState<Recording[]>([]);
   const [loadingRecordings, setLoadingRecordings] = useState(true);
-  const [uploading, setUploading] = useState(false);
-  const [uploadStatusText, setUploadStatusText] = useState<string | null>(null);
-  const [uploadStatusTone, setUploadStatusTone] = useState<"default" | "error" | "success">("default");
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [showPublishModal, setShowPublishModal] = useState(false);
   const [selectedRecording, setSelectedRecording] = useState<Recording | null>(null);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+  // Upload phase management
+  const [uploadPhase, setUploadPhase] = useState<UploadPhase>('select');
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadedFileUrl, setUploadedFileUrl] = useState<string | null>(null);
+  const [uploadedFilePath, setUploadedFilePath] = useState<string | null>(null);
+  const [uploadedFileDuration, setUploadedFileDuration] = useState<number | null>(null);
+  const [uploadedFileSize, setUploadedFileSize] = useState<number | null>(null);
+  
+  // Metadata for saving
+  const [recordingTitle, setRecordingTitle] = useState('');
+  const [recordingDescription, setRecordingDescription] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
   const audioRefs = React.useRef<Map<string, HTMLAudioElement>>(new Map());
 
@@ -107,7 +127,7 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
   const formatDuration = (seconds: number | null) => {
     if (!seconds) return '--:--';
     const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
+    const secs = Math.floor(seconds % 60);
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
@@ -116,6 +136,19 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  const resetUploadState = () => {
+    setSelectedFile(null);
+    setUploadPhase('select');
+    setUploadProgress(0);
+    setUploadedFileUrl(null);
+    setUploadedFilePath(null);
+    setUploadedFileDuration(null);
+    setUploadedFileSize(null);
+    setRecordingTitle('');
+    setRecordingDescription('');
+    setIsSaving(false);
   };
 
   const togglePlay = (recordingId: string, audioUrl: string) => {
@@ -426,6 +459,9 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
     }
 
     setSelectedFile(file);
+    // Pre-fill title with filename (without extension)
+    const titleFromFile = file.name.replace(/\.[^/.]+$/, '');
+    setRecordingTitle(titleFromFile);
   };
 
   const handleUploadSubmit = async () => {
@@ -438,9 +474,8 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
       return;
     }
 
-    setUploading(true);
-    setUploadStatusTone("default");
-    setUploadStatusText(`Uploading: ${selectedFile.name}`);
+    setUploadPhase('uploading');
+    setUploadProgress(0);
 
     try {
       const ext = selectedFile.name.split('.').pop()?.toLowerCase();
@@ -451,6 +486,14 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
       const fileExt = isAllowedExt ? ext : "audio";
       const fileName = `podcast-recordings/${user.id}/${timestamp}-uploaded.${fileExt}`;
 
+      // Simulate progress since Supabase SDK doesn't support progress events
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => {
+          if (prev >= 90) return prev;
+          return prev + Math.random() * 15;
+        });
+      }, 200);
+
       const { error: uploadError } = await supabase.storage
         .from('audio-files')
         .upload(fileName, selectedFile, {
@@ -458,7 +501,12 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
           upsert: false,
         });
 
+      clearInterval(progressInterval);
+
       if (uploadError) throw uploadError;
+
+      // Complete progress
+      setUploadProgress(100);
 
       const { data: { publicUrl } } = supabase.storage
         .from('audio-files')
@@ -491,42 +539,102 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
         console.error('Error getting audio duration:', err);
       }
 
-      const { error: dbError } = await supabase
-        .from('podcast_recordings')
-        .insert({
-          merchant_id: user.id,
-          title: selectedFile.name.replace(/\.[^/.]+$/, "") || `Uploaded Recording - ${new Date().toLocaleDateString()}`,
-          description: 'Uploaded recording',
-          audio_url: publicUrl,
-          duration_seconds: duration,
-          file_size_bytes: selectedFile.size,
-          status: 'draft',
-        });
+      // Store upload info for the editing phase
+      setUploadedFileUrl(publicUrl);
+      setUploadedFilePath(fileName);
+      setUploadedFileDuration(duration);
+      setUploadedFileSize(selectedFile.size);
 
-      if (dbError) throw dbError;
-
-      setUploadStatusTone("success");
-      setUploadStatusText("Upload complete!");
+      // Show success toast
       toast({
         title: "Upload Complete",
-        description: "Your recording has been uploaded successfully.",
+        description: "Your audio file has been uploaded successfully.",
       });
 
-      setUploadDialogOpen(false);
-      setSelectedFile(null);
-      await fetchRecordings();
+      // Move to editing phase (don't close dialog)
+      setUploadPhase('editing');
+
     } catch (error: any) {
       console.error('Error uploading recording:', error);
       const message = error?.message || "Could not upload your recording. Please try again.";
-      setUploadStatusTone("error");
-      setUploadStatusText(`Upload failed: ${message}`);
       toast({
         title: "Upload Failed",
         description: message,
         variant: "destructive",
       });
+      setUploadPhase('select');
+      setUploadProgress(0);
+    }
+  };
+
+  const handleSaveRecording = async () => {
+    if (!uploadedFileUrl || !user) return;
+
+    try {
+      setIsSaving(true);
+
+      const { error } = await supabase
+        .from('podcast_recordings')
+        .insert({
+          merchant_id: user.id,
+          title: recordingTitle.trim() || 'Untitled Recording',
+          description: recordingDescription.trim() || null,
+          audio_url: uploadedFileUrl,
+          duration_seconds: uploadedFileDuration,
+          file_size_bytes: uploadedFileSize,
+          status: 'draft',
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Saved",
+        description: "Recording saved to your library.",
+      });
+
+      resetUploadState();
+      setUploadDialogOpen(false);
+      await fetchRecordings();
+
+    } catch (error: any) {
+      console.error('Save error:', error);
+      toast({
+        title: "Save Failed",
+        description: error.message || "Failed to save recording",
+        variant: "destructive",
+      });
     } finally {
-      setUploading(false);
+      setIsSaving(false);
+    }
+  };
+
+  const handleDiscard = async () => {
+    // Delete the uploaded file from storage if it exists
+    if (uploadedFilePath) {
+      try {
+        await supabase.storage
+          .from('audio-files')
+          .remove([uploadedFilePath]);
+      } catch (e) {
+        console.error('Error deleting uploaded file:', e);
+      }
+    }
+
+    resetUploadState();
+    setUploadDialogOpen(false);
+  };
+
+  const handleDialogClose = (open: boolean) => {
+    if (!open) {
+      // If we're in the editing phase, confirm before closing
+      if (uploadPhase === 'editing') {
+        handleDiscard();
+      } else if (uploadPhase !== 'uploading') {
+        resetUploadState();
+        setUploadDialogOpen(false);
+      }
+    } else {
+      setUploadDialogOpen(true);
     }
   };
 
@@ -541,13 +649,7 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
             </CardTitle>
             <Dialog 
               open={uploadDialogOpen} 
-              onOpenChange={(open) => {
-                setUploadDialogOpen(open);
-                if (!open) {
-                  setSelectedFile(null);
-                  setUploadStatusText(null);
-                }
-              }}
+              onOpenChange={handleDialogClose}
             >
               <DialogTrigger asChild>
                 <Button
@@ -563,7 +665,11 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
               <DialogContent 
                 className="max-w-md bg-card text-foreground"
                 onInteractOutside={(e) => {
-                  // Prevent closing when file input is triggered on mobile
+                  // Prevent closing when uploading or file input is triggered
+                  if (uploadPhase === 'uploading') {
+                    e.preventDefault();
+                    return;
+                  }
                   const target = e.target as HTMLElement;
                   if (target.tagName === 'INPUT' && target.getAttribute('type') === 'file') {
                     e.preventDefault();
@@ -573,72 +679,156 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2">
                     <Upload className="w-5 h-5" />
-                    Upload Podcast Recording
+                    {uploadPhase === 'select' && 'Upload Audio File'}
+                    {uploadPhase === 'uploading' && 'Uploading...'}
+                    {uploadPhase === 'editing' && 'Save Recording'}
                   </DialogTitle>
+                  <DialogDescription>
+                    {uploadPhase === 'select' && 'Select an audio file to upload to your recordings library.'}
+                    {uploadPhase === 'uploading' && 'Please wait while your file is being uploaded.'}
+                    {uploadPhase === 'editing' && 'Add a title and description for your recording.'}
+                  </DialogDescription>
                 </DialogHeader>
                 
-                <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
-                  <div>
-                    <Label htmlFor="podcastAudioFile">Audio File *</Label>
-                    <Input
-                      id="podcastAudioFile"
-                      type="file"
-                      accept="audio/mpeg,audio/mp3,audio/wav,audio/x-wav,audio/m4a,audio/mp4,audio/aac,audio/ogg,audio/webm,audio/*"
-                      onChange={handleFileSelect}
-                      className="bg-background border-border"
-                      disabled={uploading}
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Supported formats: MP3, WAV, M4A, AAC, OGG, WEBM. Max size: 100MB
-                    </p>
-                  </div>
-
-                  {selectedFile && (
-                    <div className="p-3 bg-muted/50 rounded-lg">
-                      <p className="text-sm font-medium text-foreground">{selectedFile.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB
+                {/* Phase 1: File Selection */}
+                {uploadPhase === 'select' && (
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="podcastAudioFile">Audio File *</Label>
+                      <Input
+                        id="podcastAudioFile"
+                        type="file"
+                        accept="audio/mpeg,audio/mp3,audio/wav,audio/x-wav,audio/m4a,audio/mp4,audio/aac,audio/ogg,audio/webm,audio/*"
+                        onChange={handleFileSelect}
+                        className="bg-background border-border cursor-pointer"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Supported formats: MP3, WAV, M4A, AAC, OGG, WEBM. Max size: 100MB
                       </p>
                     </div>
-                  )}
 
-                  {uploadStatusText && (
-                    <p
-                      className={
-                        "text-sm " +
-                        (uploadStatusTone === "error"
-                          ? "text-destructive"
-                          : uploadStatusTone === "success"
-                            ? "text-green-600"
-                            : "text-muted-foreground")
-                      }
-                    >
-                      {uploadStatusText}
-                    </p>
-                  )}
+                    {selectedFile && (
+                      <div className="p-3 bg-muted/50 rounded-lg">
+                        <p className="text-sm font-medium text-foreground truncate">{selectedFile.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {formatFileSize(selectedFile.size)}
+                        </p>
+                      </div>
+                    )}
 
-                  <div className="flex justify-end gap-2 pt-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => {
-                        setUploadDialogOpen(false);
-                        setSelectedFile(null);
-                        setUploadStatusText(null);
-                      }}
-                      disabled={uploading}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      type="button"
-                      onClick={handleUploadSubmit}
-                      disabled={!selectedFile || uploading}
-                    >
-                      {uploading ? "Uploading…" : "Upload"}
-                    </Button>
+                    <DialogFooter className="gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => handleDialogClose(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={handleUploadSubmit}
+                        disabled={!selectedFile}
+                        className="gap-2"
+                      >
+                        <Upload className="w-4 h-4" />
+                        Upload
+                      </Button>
+                    </DialogFooter>
                   </div>
-                </form>
+                )}
+
+                {/* Phase 2: Uploading with Progress */}
+                {uploadPhase === 'uploading' && (
+                  <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                      <Progress value={uploadProgress} className="h-3" />
+                      <p className="text-sm text-center text-muted-foreground">
+                        Uploading... {Math.round(uploadProgress)}%
+                      </p>
+                    </div>
+                    {selectedFile && (
+                      <p className="text-xs text-center text-muted-foreground truncate">
+                        {selectedFile.name}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* Phase 3: Editing Metadata */}
+                {uploadPhase === 'editing' && (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+                      <CheckCircle className="h-5 w-5 text-green-500 shrink-0" />
+                      <p className="text-sm text-green-400">Upload complete!</p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="recording-title">Title</Label>
+                      <Input
+                        id="recording-title"
+                        value={recordingTitle}
+                        onChange={(e) => setRecordingTitle(e.target.value)}
+                        placeholder="Enter recording title"
+                        className="bg-background border-border"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="recording-description">Description (optional)</Label>
+                      <Textarea
+                        id="recording-description"
+                        value={recordingDescription}
+                        onChange={(e) => setRecordingDescription(e.target.value)}
+                        placeholder="Add a description for this recording"
+                        rows={3}
+                        className="bg-background border-border"
+                      />
+                    </div>
+
+                    <div className="text-xs text-muted-foreground space-y-1">
+                      {uploadedFileDuration && (
+                        <p className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          Duration: {formatDuration(uploadedFileDuration)}
+                        </p>
+                      )}
+                      {uploadedFileSize && (
+                        <p className="flex items-center gap-1">
+                          <HardDrive className="h-3 w-3" />
+                          Size: {formatFileSize(uploadedFileSize)}
+                        </p>
+                      )}
+                    </div>
+
+                    <DialogFooter className="gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleDiscard}
+                        disabled={isSaving}
+                        className="gap-2"
+                      >
+                        <X className="h-4 w-4" />
+                        Discard
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={handleSaveRecording}
+                        disabled={isSaving}
+                        className="gap-2"
+                      >
+                        {isSaving ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Saving...
+                          </>
+                        ) : (
+                          'Save'
+                        )}
+                      </Button>
+                    </DialogFooter>
+                  </div>
+                )}
               </DialogContent>
             </Dialog>
           </div>
