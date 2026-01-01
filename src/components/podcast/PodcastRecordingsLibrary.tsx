@@ -21,7 +21,10 @@ import {
   Clock,
   Calendar,
   Upload,
-  Download
+  Download,
+  Moon,
+  Star,
+  Sparkles
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -46,6 +49,15 @@ import {
 } from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { PodcastPublishModal } from "./PodcastPublishModal";
+
+// Subscription tier configuration (same as PodcastPublishModal)
+const SUBSCRIPTION_TIERS = {
+  moon: { name: 'Moon', price: 4.99, icon: Moon, description: 'Benjiman discussing dreams, topics that are mysterious, and occult' },
+  venus: { name: 'Venus', price: 9.99, icon: Star, description: 'Premium monthly access' },
+  jupiter: { name: 'Jupiter', price: 14.99, icon: Sparkles, description: 'VIP monthly access' },
+} as const;
+
+type SubscriptionTier = keyof typeof SUBSCRIPTION_TIERS;
 
 interface Recording {
   id: string;
@@ -73,12 +85,14 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
   const [showPublishModal, setShowPublishModal] = useState(false);
   const [selectedRecording, setSelectedRecording] = useState<Recording | null>(null);
   
-  // Upload dialog state - replicating AudioUploadModal pattern
+  // Upload dialog state
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [subscriptionTier, setSubscriptionTier] = useState<SubscriptionTier>("moon");
 
   const audioRefs = React.useRef<Map<string, HTMLAudioElement>>(new Map());
 
@@ -134,6 +148,8 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
     setTitle("");
     setDescription("");
     setUploading(false);
+    setUploadProgress(0);
+    setSubscriptionTier("moon");
   };
 
   const togglePlay = (recordingId: string, audioUrl: string) => {
@@ -390,28 +406,36 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
     }
   };
 
-  // Upload file helper - replicating AudioUploadModal pattern exactly
+  // Upload file helper with progress simulation for mobile feedback
   const uploadFile = async (file: File, bucket: string, folder: string = '') => {
     const fileExt = file.name.split('.').pop();
     const fileName = `${folder}${Date.now()}.${fileExt}`;
     
-    const { data, error } = await supabase.storage
-      .from(bucket)
-      .upload(fileName, file);
+    // Simulate progress for mobile users (Supabase SDK doesn't expose upload progress)
+    const progressInterval = setInterval(() => {
+      setUploadProgress(prev => Math.min(prev + 10, 90));
+    }, 300);
     
-    if (error) throw error;
-    
-    const { data: { publicUrl } } = supabase.storage
-      .from(bucket)
-      .getPublicUrl(fileName);
-    
-    return publicUrl;
+    try {
+      const { data, error } = await supabase.storage
+        .from(bucket)
+        .upload(fileName, file);
+      
+      if (error) throw error;
+      
+      const { data: { publicUrl } } = supabase.storage
+        .from(bucket)
+        .getPublicUrl(fileName);
+      
+      setUploadProgress(100);
+      return publicUrl;
+    } finally {
+      clearInterval(progressInterval);
+    }
   };
 
-  // Submit handler - replicating AudioUploadModal pattern
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  // Submit handler - button click, no form submit to avoid mobile refresh issues
+  const handleSaveRecording = async () => {
     if (!user || !selectedFile) {
       toast({
         title: "Error",
@@ -431,6 +455,7 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
     }
 
     setUploading(true);
+    setUploadProgress(5);
 
     try {
       // Upload audio file using the proven pattern
@@ -458,7 +483,7 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
         console.error('Error getting audio duration:', err);
       }
 
-      // Insert into database
+      // Insert into database with subscription tier
       const { error: dbError } = await supabase
         .from('podcast_recordings')
         .insert({
@@ -469,6 +494,8 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
           duration_seconds: duration,
           file_size_bytes: selectedFile.size,
           status: 'draft',
+          subscription_tier: subscriptionTier,
+          subscription_enabled: true,
         });
 
       if (dbError) throw dbError;
@@ -516,6 +543,8 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
           <Dialog 
             open={uploadDialogOpen} 
             onOpenChange={(open) => {
+              // Prevent closing during upload
+              if (uploading && !open) return;
               setUploadDialogOpen(open);
               if (!open) resetUploadForm();
             }}
@@ -526,7 +555,21 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
                 Upload Audio
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-md bg-card text-foreground">
+            <DialogContent 
+              className="max-w-md bg-card text-foreground"
+              onPointerDownOutside={(e) => {
+                // Prevent closing when clicking outside during upload
+                if (uploading) e.preventDefault();
+              }}
+              onInteractOutside={(e) => {
+                // Prevent closing when interacting outside (file picker, etc.) during upload
+                if (uploading) e.preventDefault();
+              }}
+              onEscapeKeyDown={(e) => {
+                // Prevent closing with Escape during upload
+                if (uploading) e.preventDefault();
+              }}
+            >
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
                   <Upload className="w-5 h-5" />
@@ -534,7 +577,7 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
                 </DialogTitle>
               </DialogHeader>
               
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-4">
                 <div>
                   <Label htmlFor="podcastTitle">Title *</Label>
                   <Input
@@ -561,12 +604,46 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
                 </div>
 
                 <div>
+                  <Label>Subscription Tier *</Label>
+                  <Select
+                    value={subscriptionTier}
+                    onValueChange={(value) => setSubscriptionTier(value as SubscriptionTier)}
+                    disabled={uploading}
+                  >
+                    <SelectTrigger className="bg-background border-border">
+                      <SelectValue placeholder="Select tier" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(Object.keys(SUBSCRIPTION_TIERS) as SubscriptionTier[]).map((tier) => {
+                        const TierIcon = SUBSCRIPTION_TIERS[tier].icon;
+                        return (
+                          <SelectItem key={tier} value={tier}>
+                            <div className="flex items-center gap-2">
+                              <TierIcon className="w-4 h-4" />
+                              <span>{SUBSCRIPTION_TIERS[tier].name}</span>
+                              <span className="text-muted-foreground">${SUBSCRIPTION_TIERS[tier].price}/mo</span>
+                            </div>
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {SUBSCRIPTION_TIERS[subscriptionTier].description}
+                  </p>
+                </div>
+
+                <div>
                   <Label htmlFor="podcastAudioFile">Audio File *</Label>
                   <Input
                     id="podcastAudioFile"
                     type="file"
                     accept="audio/mpeg,audio/mp3,audio/wav,audio/x-wav,audio/m4a,audio/mp4,audio/aac,audio/ogg,audio/webm,audio/*"
-                    onChange={handleFileSelect}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      handleFileSelect(e);
+                    }}
+                    onClick={(e) => e.stopPropagation()}
                     className="bg-background border-border"
                     disabled={uploading}
                   />
@@ -584,23 +661,38 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
                   </div>
                 )}
 
+                {uploading && (
+                  <div className="space-y-2">
+                    <Progress value={uploadProgress} className="h-2" />
+                    <p className="text-sm text-muted-foreground text-center">
+                      Uploading... {uploadProgress}%
+                    </p>
+                  </div>
+                )}
+
                 <div className="flex justify-end gap-2 pt-2">
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => {
-                      setUploadDialogOpen(false);
-                      resetUploadForm();
+                      if (!uploading) {
+                        setUploadDialogOpen(false);
+                        resetUploadForm();
+                      }
                     }}
                     disabled={uploading}
                   >
                     Cancel
                   </Button>
-                  <Button type="submit" disabled={!selectedFile || !title.trim() || uploading}>
+                  <Button 
+                    type="button" 
+                    onClick={handleSaveRecording}
+                    disabled={!selectedFile || !title.trim() || uploading}
+                  >
                     {uploading ? "Uploading…" : "Save"}
                   </Button>
                 </div>
-              </form>
+              </div>
             </DialogContent>
           </Dialog>
         </div>
