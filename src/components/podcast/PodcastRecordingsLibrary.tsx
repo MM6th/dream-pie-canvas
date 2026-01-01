@@ -542,11 +542,10 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
           </CardTitle>
           <Dialog 
             open={uploadDialogOpen} 
-            onOpenChange={(open) => {
-              // Prevent closing during upload
-              if (uploading && !open) return;
-              setUploadDialogOpen(open);
-              if (!open) resetUploadForm();
+            onOpenChange={(nextOpen) => {
+              // On mobile, the OS file picker can trigger Radix "outside" events that close the dialog.
+              // We only allow opening via Radix; closing is handled explicitly by our Cancel/Save buttons.
+              if (nextOpen) setUploadDialogOpen(true);
             }}
           >
             <DialogTrigger asChild>
@@ -557,18 +556,10 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
             </DialogTrigger>
             <DialogContent 
               className="max-w-md bg-card text-foreground"
-              onPointerDownOutside={(e) => {
-                // Prevent closing when clicking outside during upload
-                if (uploading) e.preventDefault();
-              }}
-              onInteractOutside={(e) => {
-                // Prevent closing when interacting outside (file picker, etc.) during upload
-                if (uploading) e.preventDefault();
-              }}
-              onEscapeKeyDown={(e) => {
-                // Prevent closing with Escape during upload
-                if (uploading) e.preventDefault();
-              }}
+              // Critical for mobile: prevent the dialog from closing due to OS file picker focus/outside events
+              onPointerDownOutside={(e) => e.preventDefault()}
+              onInteractOutside={(e) => e.preventDefault()}
+              onEscapeKeyDown={(e) => e.preventDefault()}
             >
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
