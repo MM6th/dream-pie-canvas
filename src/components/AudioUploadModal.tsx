@@ -573,13 +573,10 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
       </DialogTrigger>
       <DialogContent 
         className="max-w-2xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-gray-900 to-gray-800 text-white"
-        onInteractOutside={(e) => {
-          // Prevent closing when file input is triggered on mobile
-          const target = e.target as HTMLElement;
-          if (target.tagName === 'INPUT' && target.getAttribute('type') === 'file') {
-            e.preventDefault();
-          }
-        }}
+        // Critical for mobile: prevent the OS file picker / focus changes from closing the dialog
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onInteractOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
       >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -588,7 +585,7 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
           </DialogTitle>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
           <div>
             <Label htmlFor="audioType">Audio Type *</Label>
             <Select
@@ -643,6 +640,7 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
                   id="audioFile"
                   type="file"
                   accept="audio/*"
+                  onClick={(e) => e.stopPropagation()}
                   onChange={handleAudioFileChange}
                   className="bg-gray-700 border-gray-600 text-white"
                   required
@@ -716,6 +714,7 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
               id="thumbnail"
               type="file"
               accept="image/*"
+              onClick={(e) => e.stopPropagation()}
               onChange={handleThumbnailChange}
               className="bg-gray-700 border-gray-600 text-white"
               required={formData.hasAlbum}
