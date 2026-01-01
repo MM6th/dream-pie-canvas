@@ -432,7 +432,11 @@ const MerchantAudioUploadModal = ({ onSuccess }: MerchantAudioUploadModalProps) 
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={open} onOpenChange={(nextOpen) => {
+      // On mobile, the OS file picker can trigger Radix "outside" events that close the dialog.
+      // We only allow opening via Radix; closing is handled explicitly by our Cancel/Save buttons.
+      if (nextOpen) setOpen(true);
+    }}>
       <DialogTrigger asChild>
         <Button className="bg-black text-white hover:bg-gray-800">
           <Plus className="w-4 h-4 mr-2" />
@@ -441,13 +445,10 @@ const MerchantAudioUploadModal = ({ onSuccess }: MerchantAudioUploadModalProps) 
       </DialogTrigger>
       <DialogContent 
         className="max-w-2xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-gray-900 to-gray-800 text-white"
-        onInteractOutside={(e) => {
-          // Prevent closing when file input is triggered on mobile
-          const target = e.target as HTMLElement;
-          if (target.tagName === 'INPUT' && target.getAttribute('type') === 'file') {
-            e.preventDefault();
-          }
-        }}
+        // Critical for mobile: prevent the OS file picker / focus changes from closing the dialog
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onInteractOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
       >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -489,6 +490,7 @@ const MerchantAudioUploadModal = ({ onSuccess }: MerchantAudioUploadModalProps) 
                   id="audioFile"
                   type="file"
                   accept="audio/*"
+                  onClick={(e) => e.stopPropagation()}
                   onChange={handleAudioFileChange}
                   className="bg-gray-700 border-gray-600 text-white"
                   required
@@ -607,6 +609,7 @@ const MerchantAudioUploadModal = ({ onSuccess }: MerchantAudioUploadModalProps) 
               id="thumbnail"
               type="file"
               accept="image/*"
+              onClick={(e) => e.stopPropagation()}
               onChange={handleThumbnailChange}
               className="bg-gray-700 border-gray-600 text-white"
               required={formData.hasAlbum}
@@ -655,6 +658,7 @@ const MerchantAudioUploadModal = ({ onSuccess }: MerchantAudioUploadModalProps) 
                         id={`track-file-${index}`}
                         type="file"
                         accept="audio/*"
+                        onClick={(e) => e.stopPropagation()}
                         onChange={(e) => updateTrack(index, 'audioFile', e.target.files?.[0] || null)}
                         className="bg-gray-700 border-gray-600 text-white"
                         required
@@ -791,7 +795,7 @@ const MerchantAudioUploadModal = ({ onSuccess }: MerchantAudioUploadModalProps) 
           </div>
 
           <DialogFooter className="gap-2">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={loading}>
               Cancel
             </Button>
             <Button 
