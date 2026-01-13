@@ -423,6 +423,7 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
         endpoint: "https://veaupehwfsbagzfuvach.supabase.co/storage/v1/upload/resumable",
         retryDelays: [0, 3000, 5000, 10000, 20000],
         headers: {
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
           authorization: `Bearer ${session.access_token}`,
           "x-upsert": "false",
         },
@@ -484,7 +485,7 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
     }
 
     setUploading(true);
-    setUploadProgress(5);
+    setUploadProgress(0);
 
     try {
       // Upload audio file using the proven pattern
