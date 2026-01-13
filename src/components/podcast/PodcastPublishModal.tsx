@@ -453,8 +453,11 @@ export const PodcastPublishModal = ({
         trailerUrl = `${recording.audio_url}#t=0`;
       }
 
-      // Update podcast_recordings with subscription and trailer settings
-      const recordingUpdateData: Record<string, unknown> = {};
+      // Update podcast_recordings with title, description, subscription and trailer settings
+      const recordingUpdateData: Record<string, unknown> = {
+        title: title.trim(),
+        description: description.trim() || null,
+      };
       
       if (subscriptionEnabled) {
         recordingUpdateData.subscription_enabled = true;
@@ -466,14 +469,12 @@ export const PodcastPublishModal = ({
         recordingUpdateData.trailer_url = trailerUrl;
       }
       
-      if (Object.keys(recordingUpdateData).length > 0) {
-        const { error: updateRecordingError } = await supabase
-          .from("podcast_recordings")
-          .update(recordingUpdateData)
-          .eq("id", recording.id);
+      const { error: updateRecordingError } = await supabase
+        .from("podcast_recordings")
+        .update(recordingUpdateData)
+        .eq("id", recording.id);
 
-        if (updateRecordingError) throw updateRecordingError;
-      }
+      if (updateRecordingError) throw updateRecordingError;
 
       // Create or update audio product entry (so edits persist)
       const baseProductPayload = {
