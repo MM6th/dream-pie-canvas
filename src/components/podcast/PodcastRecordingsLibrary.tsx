@@ -49,6 +49,7 @@ import {
 } from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { PodcastPublishModal } from "./PodcastPublishModal";
+import * as tus from "tus-js-client";
 
 // Subscription tier configuration (same as PodcastPublishModal)
 const SUBSCRIPTION_TIERS = {
@@ -406,32 +407,60 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
     }
   };
 
-  // Upload file helper with progress simulation for mobile feedback
-  const uploadFile = async (file: File, bucket: string, folder: string = '') => {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${folder}${Date.now()}.${fileExt}`;
-    
-    // Simulate progress for mobile users (Supabase SDK doesn't expose upload progress)
-    const progressInterval = setInterval(() => {
-      setUploadProgress(prev => Math.min(prev + 10, 90));
-    }, 300);
-    
-    try {
-      const { data, error } = await supabase.storage
-        .from(bucket)
-        .upload(fileName, file);
-      
-      if (error) throw error;
-      
-      const { data: { publicUrl } } = supabase.storage
-        .from(bucket)
-        .getPublicUrl(fileName);
-      
-      setUploadProgress(100);
-      return publicUrl;
-    } finally {
-      clearInterval(progressInterval);
-    }
+  // Upload file helper with real progress via TUS resumable uploads
+  const uploadFile = async (file: File, bucket: string, folder: string = "") => {
+    const fileExt = file.name.split(".").pop() || "bin";
+    const objectName = `${folder}${Date.now()}.${fileExt}`;
+
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError) throw sessionError;
+    if (!session) throw new Error("You must be logged in to upload files.");
+
+    setUploadProgress(0);
+
+    await new Promise<void>((resolve, reject) => {
+      const upload = new tus.Upload(file, {
+        endpoint: "https://veaupehwfsbagzfuvach.supabase.co/storage/v1/upload/resumable",
+        retryDelays: [0, 3000, 5000, 10000, 20000],
+        headers: {
+          authorization: `Bearer ${session.access_token}`,
+          "x-upsert": "false",
+        },
+        uploadDataDuringCreation: true,
+        removeFingerprintOnSuccess: true,
+        metadata: {
+          bucketName: bucket,
+          objectName,
+          contentType: file.type || "application/octet-stream",
+          cacheControl: "3600",
+        },
+        chunkSize: 6 * 1024 * 1024,
+        onError: (error) => {
+          console.error("TUS upload error:", error);
+          reject(error);
+        },
+        onProgress: (bytesUploaded, bytesTotal) => {
+          if (!bytesTotal) return;
+          const pct = Math.round((bytesUploaded / bytesTotal) * 100);
+          setUploadProgress(pct);
+        },
+        onSuccess: () => resolve(),
+      });
+
+      upload.findPreviousUploads().then((previousUploads) => {
+        if (previousUploads.length) {
+          upload.resumeFromPreviousUpload(previousUploads[0]);
+        }
+        upload.start();
+      });
+    });
+
+    const { data: { publicUrl } } = supabase.storage
+      .from(bucket)
+      .getPublicUrl(objectName);
+
+    setUploadProgress(100);
+    return publicUrl;
   };
 
   // Submit handler - button click, no form submit to avoid mobile refresh issues
