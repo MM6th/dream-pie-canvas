@@ -2220,6 +2220,7 @@ export type Database = {
           status: string
           subscription_enabled: boolean | null
           subscription_tier: string | null
+          thumbnail_url: string | null
           tier_description: string | null
           title: string
           trailer_url: string | null
@@ -2237,6 +2238,7 @@ export type Database = {
           status?: string
           subscription_enabled?: boolean | null
           subscription_tier?: string | null
+          thumbnail_url?: string | null
           tier_description?: string | null
           title: string
           trailer_url?: string | null
@@ -2254,6 +2256,7 @@ export type Database = {
           status?: string
           subscription_enabled?: boolean | null
           subscription_tier?: string | null
+          thumbnail_url?: string | null
           tier_description?: string | null
           title?: string
           trailer_url?: string | null

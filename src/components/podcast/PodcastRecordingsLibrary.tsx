@@ -24,7 +24,10 @@ import {
   Download,
   Moon,
   Star,
-  Sparkles
+  Sparkles,
+  Send,
+  Image,
+  Loader2
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -48,8 +51,9 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { format } from "date-fns";
-import { PodcastPublishModal } from "./PodcastPublishModal";
+import { PodcastEditModal } from "./PodcastEditModal";
 import * as tus from "tus-js-client";
+import { Badge } from "@/components/ui/badge";
 
 // Subscription tier configuration (same as PodcastPublishModal)
 const SUBSCRIPTION_TIERS = {
@@ -69,6 +73,9 @@ interface Recording {
   file_size_bytes: number | null;
   status: string;
   created_at: string;
+  thumbnail_url?: string | null;
+  subscription_tier?: string | null;
+  subscription_enabled?: boolean | null;
 }
 
 interface PodcastRecordingsLibraryProps {
@@ -83,8 +90,9 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
   const [loadingRecordings, setLoadingRecordings] = useState(true);
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
-  const [showPublishModal, setShowPublishModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [selectedRecording, setSelectedRecording] = useState<Recording | null>(null);
+  const [publishingId, setPublishingId] = useState<string | null>(null);
   
   // Upload dialog state
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
@@ -94,6 +102,11 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [subscriptionTier, setSubscriptionTier] = useState<SubscriptionTier>("moon");
+  
+  // Thumbnail upload state
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
+  const thumbnailInputRef = React.useRef<HTMLInputElement>(null);
 
   const audioRefs = React.useRef<Map<string, HTMLAudioElement>>(new Map());
 
@@ -151,6 +164,8 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
     setUploading(false);
     setUploadProgress(0);
     setSubscriptionTier("moon");
+    setThumbnailFile(null);
+    setThumbnailPreview(null);
   };
 
   const togglePlay = (recordingId: string, audioUrl: string) => {
@@ -178,9 +193,104 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
     }
   };
 
-  const openPublishModal = (recording: Recording) => {
+  const openEditModal = (recording: Recording) => {
     setSelectedRecording(recording);
-    setShowPublishModal(true);
+    setShowEditModal(true);
+  };
+
+  const handleThumbnailSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast({
+        title: "Invalid File",
+        description: "Please select an image file (JPG, PNG, etc.)",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File Too Large",
+        description: "Please select an image smaller than 5MB.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setThumbnailFile(file);
+    setThumbnailPreview(URL.createObjectURL(file));
+  };
+
+  const publishRecording = async (recording: Recording) => {
+    if (!user) return;
+    
+    setPublishingId(recording.id);
+    try {
+      // Check if audio product already exists
+      const { data: existingProduct } = await supabase
+        .from('audio_products')
+        .select('id')
+        .eq('merchant_id', user.id)
+        .eq('audio_type', 'podcast')
+        .eq('audio_file_url', recording.audio_url)
+        .maybeSingle();
+
+      const tier = recording.subscription_tier as SubscriptionTier || 'moon';
+      const tierPrice = SUBSCRIPTION_TIERS[tier]?.price || 4.99;
+
+      if (existingProduct?.id) {
+        // Update existing product to published
+        await supabase
+          .from('audio_products')
+          .update({
+            status: 'published',
+            published_at: new Date().toISOString(),
+          })
+          .eq('id', existingProduct.id);
+      } else {
+        // Create new audio product
+        await supabase
+          .from('audio_products')
+          .insert({
+            merchant_id: user.id,
+            title: recording.title,
+            description: recording.description,
+            audio_type: 'podcast',
+            audio_file_url: recording.audio_url,
+            thumbnail_url: recording.thumbnail_url || null,
+            is_free: false,
+            price: tierPrice,
+            access_level: 'paid',
+            status: 'published',
+            published_at: new Date().toISOString(),
+          });
+      }
+
+      // Update recording status
+      await supabase
+        .from('podcast_recordings')
+        .update({ status: 'published' })
+        .eq('id', recording.id);
+
+      toast({
+        title: "Published!",
+        description: "Your podcast is now live in the store.",
+      });
+
+      await fetchRecordings();
+    } catch (error) {
+      console.error('Error publishing recording:', error);
+      toast({
+        title: "Publish Failed",
+        description: "Could not publish your podcast. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setPublishingId(null);
+    }
   };
 
   const deleteRecording = async (recordingId: string, audioUrl: string) => {
@@ -513,7 +623,30 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
         console.error('Error getting audio duration:', err);
       }
 
-      // Insert into database with subscription tier
+      // Upload thumbnail if provided
+      let thumbnailUrl: string | null = null;
+      if (thumbnailFile) {
+        const timestamp = Date.now();
+        const fileExt = thumbnailFile.name.split(".").pop();
+        const fileName = `podcast-thumbnails/${user.id}/${timestamp}.${fileExt}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("thumbnails")
+          .upload(fileName, thumbnailFile, {
+            contentType: thumbnailFile.type,
+            upsert: false,
+          });
+
+        if (uploadError) throw uploadError;
+
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from("thumbnails").getPublicUrl(fileName);
+
+        thumbnailUrl = publicUrl;
+      }
+
+      // Insert into database with subscription tier and thumbnail
       const { error: dbError } = await supabase
         .from('podcast_recordings')
         .insert({
@@ -526,6 +659,7 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
           status: 'draft',
           subscription_tier: subscriptionTier,
           subscription_enabled: true,
+          thumbnail_url: thumbnailUrl,
         });
 
       if (dbError) throw dbError;
@@ -620,6 +754,42 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
                     placeholder="Add a description"
                     rows={3}
                     className="bg-background border-border"
+                    disabled={uploading}
+                  />
+                </div>
+
+                {/* Thumbnail Upload */}
+                <div>
+                  <Label>Thumbnail (optional)</Label>
+                  <p className="text-xs text-muted-foreground mb-2">
+                    Recommended: 500×500px square image
+                  </p>
+                  <div
+                    onClick={() => !uploading && thumbnailInputRef.current?.click()}
+                    className="border-2 border-dashed border-border rounded-lg p-3 cursor-pointer hover:border-primary/50 transition-colors"
+                  >
+                    {thumbnailPreview ? (
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={thumbnailPreview}
+                          alt="Thumbnail preview"
+                          className="w-16 h-16 object-cover rounded-lg"
+                        />
+                        <p className="text-xs text-muted-foreground">Click to change</p>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2 py-2">
+                        <Image className="w-6 h-6 text-muted-foreground" />
+                        <p className="text-sm text-muted-foreground">Click to upload thumbnail</p>
+                      </div>
+                    )}
+                  </div>
+                  <input
+                    ref={thumbnailInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleThumbnailSelect}
+                    className="hidden"
                     disabled={uploading}
                   />
                 </div>
@@ -731,7 +901,15 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
               <div key={recording.id} className="p-4 bg-background/50 rounded-lg border border-border">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-medium text-foreground truncate">{recording.title}</h4>
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-medium text-foreground truncate">{recording.title}</h4>
+                      <Badge 
+                        variant={recording.status === 'published' ? 'default' : 'secondary'}
+                        className="text-xs"
+                      >
+                        {recording.status === 'published' ? 'Published' : 'Draft'}
+                      </Badge>
+                    </div>
                     {recording.description && (
                       <p className="text-sm text-muted-foreground line-clamp-2 mt-1">{recording.description}</p>
                     )}
@@ -749,18 +927,32 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
                   </div>
                   
                   <div className="flex gap-2 flex-shrink-0">
-                    <Button size="icon" variant="outline" onClick={() => togglePlay(recording.id, recording.audio_url)} className="h-8 w-8">
+                    <Button size="icon" variant="outline" onClick={() => togglePlay(recording.id, recording.audio_url)} className="h-8 w-8" title="Play">
                       {playingId === recording.id ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
                     </Button>
                     <Button type="button" size="icon" variant="outline" onClick={() => downloadRecording(recording)} className="h-8 w-8" title="Download WAV" disabled={downloadingId === recording.id}>
                       <Download className="w-4 h-4" />
                     </Button>
-                    <Button size="icon" variant="outline" onClick={() => openPublishModal(recording)} className="h-8 w-8" title="Edit & Publish">
+                    <Button size="icon" variant="outline" onClick={() => openEditModal(recording)} className="h-8 w-8" title="Edit">
                       <Edit2 className="w-4 h-4" />
+                    </Button>
+                    <Button 
+                      size="icon" 
+                      variant={recording.status === 'published' ? 'secondary' : 'default'}
+                      onClick={() => publishRecording(recording)} 
+                      className="h-8 w-8" 
+                      title={recording.status === 'published' ? 'Already Published' : 'Publish'}
+                      disabled={publishingId === recording.id || recording.status === 'published'}
+                    >
+                      {publishingId === recording.id ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Send className="w-4 h-4" />
+                      )}
                     </Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button size="icon" variant="destructive" className="h-8 w-8">
+                        <Button size="icon" variant="destructive" className="h-8 w-8" title="Delete">
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </AlertDialogTrigger>
@@ -788,11 +980,11 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
       </CardContent>
     </Card>
 
-    <PodcastPublishModal
-      open={showPublishModal}
-      onOpenChange={setShowPublishModal}
+    <PodcastEditModal
+      open={showEditModal}
+      onOpenChange={setShowEditModal}
       recording={selectedRecording}
-      onPublished={fetchRecordings}
+      onSaved={fetchRecordings}
     />
     </>
   );
