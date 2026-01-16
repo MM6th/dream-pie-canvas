@@ -325,7 +325,7 @@ const EditAlbumModal = ({ album, onSuccess, onClose }: EditAlbumModalProps) => {
           `${user.id}/`
         );
 
-        // Create audio product
+        // Create audio product - no price since album tracks inherit album pricing
         const { data: audioProduct, error: audioError } = await supabase
           .from('audio_products')
           .insert({
@@ -337,6 +337,8 @@ const EditAlbumModal = ({ album, onSuccess, onClose }: EditAlbumModalProps) => {
             published_at: shouldPublish ? new Date().toISOString() : null,
             thumbnail_url: thumbnailUrl,
             is_adult_content: isAdultContent,
+            is_free: true, // Album tracks don't have individual pricing
+            price: null, // Album-level pricing applies
             album_id: album.id,
             preview_start_time: newTrack.previewStartTime,
             preview_duration: 30,
