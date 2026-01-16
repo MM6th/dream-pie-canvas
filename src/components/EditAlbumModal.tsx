@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +7,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Slider } from "@/components/ui/slider";
-import { Lock, Music, ChevronDown, ChevronUp } from "lucide-react";
+import { Lock, Music, ChevronDown, ChevronUp, Plus, Trash2, Upload, Image } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
@@ -20,6 +20,17 @@ interface TrackData {
   audio_file_url: string;
   preview_start_time: number;
   audioDuration: number;
+}
+
+interface NewTrackData {
+  audioFile: File | null;
+  title: string;
+  featuringArtistName: string;
+  featuringArtistPaypal: string;
+  featuringPercentage: number;
+  previewStartTime: number;
+  audioDuration: number;
+  audioPreviewUrl: string;
 }
 
 interface Album {
@@ -46,6 +57,7 @@ const EditAlbumModal = ({ album, onSuccess, onClose }: EditAlbumModalProps) => {
   const [loading, setLoading] = useState(false);
   const [loadingTracks, setLoadingTracks] = useState(true);
   const isPublished = album.status === 'published';
+  const thumbnailInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
     name: album.name,
@@ -57,6 +69,10 @@ const EditAlbumModal = ({ album, onSuccess, onClose }: EditAlbumModalProps) => {
   const [tracksData, setTracksData] = useState<TrackData[]>([]);
   const [expandedTrack, setExpandedTrack] = useState<string | null>(null);
   const [selectedPreviewTrackId, setSelectedPreviewTrackId] = useState<string | null>(album.preview_track_id || null);
+  
+  // New tracks state
+  const [newTracks, setNewTracks] = useState<NewTrackData[]>([]);
+  const [expandedNewTrack, setExpandedNewTrack] = useState<number | null>(null);
 
   // Fetch full track data including audio URLs and preview settings
   useEffect(() => {
@@ -130,6 +146,69 @@ const EditAlbumModal = ({ album, onSuccess, onClose }: EditAlbumModalProps) => {
     return publicUrl;
   };
 
+  // New track management functions
+  const addNewTrack = () => {
+    setNewTracks(prev => [...prev, {
+      audioFile: null,
+      title: '',
+      featuringArtistName: '',
+      featuringArtistPaypal: '',
+      featuringPercentage: 0,
+      previewStartTime: 0,
+      audioDuration: 0,
+      audioPreviewUrl: ''
+    }]);
+  };
+
+  const removeNewTrack = (index: number) => {
+    setNewTracks(prev => {
+      const updated = [...prev];
+      // Revoke object URL to prevent memory leak
+      if (updated[index].audioPreviewUrl) {
+        URL.revokeObjectURL(updated[index].audioPreviewUrl);
+      }
+      updated.splice(index, 1);
+      return updated;
+    });
+    if (expandedNewTrack === index) {
+      setExpandedNewTrack(null);
+    }
+  };
+
+  const updateNewTrack = (index: number, field: keyof NewTrackData, value: any) => {
+    setNewTracks(prev => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: value };
+      return updated;
+    });
+  };
+
+  const handleNewTrackAudioChange = async (index: number, file: File | null) => {
+    if (!file) return;
+    
+    // Get audio duration
+    const audioUrl = URL.createObjectURL(file);
+    const audio = new Audio(audioUrl);
+    
+    audio.onloadedmetadata = () => {
+      setNewTracks(prev => {
+        const updated = [...prev];
+        // Revoke old URL if exists
+        if (updated[index].audioPreviewUrl) {
+          URL.revokeObjectURL(updated[index].audioPreviewUrl);
+        }
+        updated[index] = {
+          ...updated[index],
+          audioFile: file,
+          audioDuration: audio.duration,
+          audioPreviewUrl: audioUrl,
+          title: updated[index].title || file.name.replace(/\.[^/.]+$/, '')
+        };
+        return updated;
+      });
+    };
+  };
+
   const handleSubmit = async (e: React.FormEvent, shouldPublish: boolean = false) => {
     e.preventDefault();
     if (!user || isPublished) return;
@@ -150,6 +229,35 @@ const EditAlbumModal = ({ album, onSuccess, onClose }: EditAlbumModalProps) => {
         variant: "destructive"
       });
       return;
+    }
+
+    // Validate new tracks
+    for (let i = 0; i < newTracks.length; i++) {
+      const track = newTracks[i];
+      if (!track.audioFile) {
+        toast({
+          title: "Error",
+          description: `Please select an audio file for new track ${i + 1}`,
+          variant: "destructive"
+        });
+        return;
+      }
+      if (!track.title.trim()) {
+        toast({
+          title: "Error",
+          description: `Please enter a title for new track ${i + 1}`,
+          variant: "destructive"
+        });
+        return;
+      }
+      if (track.featuringArtistName && !track.featuringArtistPaypal) {
+        toast({
+          title: "Error",
+          description: `Please enter PayPal email for featuring artist on track ${i + 1}`,
+          variant: "destructive"
+        });
+        return;
+      }
     }
 
     setLoading(true);
@@ -203,6 +311,58 @@ const EditAlbumModal = ({ album, onSuccess, onClose }: EditAlbumModalProps) => {
 
         if (trackError) throw trackError;
       }
+
+      // Upload and create new tracks
+      const currentTrackCount = tracksData.length;
+      for (let i = 0; i < newTracks.length; i++) {
+        const newTrack = newTracks[i];
+        if (!newTrack.audioFile) continue;
+
+        // Upload audio file
+        const audioUrl = await uploadFile(
+          newTrack.audioFile,
+          'audio-files',
+          `${user.id}/`
+        );
+
+        // Create audio product
+        const { data: audioProduct, error: audioError } = await supabase
+          .from('audio_products')
+          .insert({
+            merchant_id: user.id,
+            title: newTrack.title,
+            audio_file_url: audioUrl,
+            audio_type: 'music',
+            status: shouldPublish ? 'published' : album.status,
+            published_at: shouldPublish ? new Date().toISOString() : null,
+            thumbnail_url: thumbnailUrl,
+            is_adult_content: isAdultContent,
+            album_id: album.id,
+            preview_start_time: newTrack.previewStartTime,
+            preview_duration: 30,
+            featuring_artist_name: newTrack.featuringArtistName || null,
+            featuring_artist_paypal: newTrack.featuringArtistPaypal || null,
+            featuring_percentage: newTrack.featuringPercentage || null
+          })
+          .select()
+          .single();
+
+        if (audioError) throw audioError;
+
+        // Create album track entry
+        const { error: albumTrackError } = await supabase
+          .from('album_tracks')
+          .insert({
+            album_id: album.id,
+            audio_product_id: audioProduct.id,
+            track_number: currentTrackCount + i + 1,
+            featuring_artist_name: newTrack.featuringArtistName || null,
+            featuring_artist_paypal: newTrack.featuringArtistPaypal || null,
+            featuring_percentage: newTrack.featuringPercentage || null
+          });
+
+        if (albumTrackError) throw albumTrackError;
+      }
       
       toast({
         title: "Success",
@@ -252,7 +412,7 @@ const EditAlbumModal = ({ album, onSuccess, onClose }: EditAlbumModalProps) => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="thumbnail">Album Cover</Label>
+            <Label>Album Cover</Label>
             {album.thumbnail_url && (
               <div className="mb-2 p-2 bg-secondary rounded-lg">
                 <p className="text-xs text-muted-foreground mb-1">Current cover:</p>
@@ -263,12 +423,29 @@ const EditAlbumModal = ({ album, onSuccess, onClose }: EditAlbumModalProps) => {
                 />
               </div>
             )}
-            <Input
-              id="thumbnail"
+            <div className="flex items-center gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => thumbnailInputRef.current?.click()}
+                disabled={isPublished}
+                className="flex items-center gap-2"
+              >
+                <Image className="w-4 h-4" />
+                Replace Album Cover
+              </Button>
+              {formData.thumbnail && (
+                <span className="text-sm text-muted-foreground">
+                  Selected: {formData.thumbnail.name}
+                </span>
+              )}
+            </div>
+            <input
+              ref={thumbnailInputRef}
               type="file"
               accept="image/*"
               onChange={(e) => setFormData({ ...formData, thumbnail: e.target.files?.[0] || null })}
-              disabled={isPublished}
+              className="hidden"
             />
           </div>
 
@@ -381,6 +558,158 @@ const EditAlbumModal = ({ album, onSuccess, onClose }: EditAlbumModalProps) => {
               </p>
             )}
           </div>
+
+          {/* Add New Tracks Section */}
+          {!isPublished && (
+            <div className="space-y-3 border-t border-border pt-4">
+              <div className="flex items-center justify-between">
+                <Label className="text-base font-semibold">Add New Tracks</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addNewTrack}
+                  className="flex items-center gap-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Track
+                </Button>
+              </div>
+
+              {newTracks.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  No new tracks added. Click "Add Track" to add more songs to this album.
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {newTracks.map((track, index) => (
+                    <div key={index} className="border border-border rounded-lg overflow-hidden">
+                      <div className="flex items-center justify-between p-3 bg-secondary">
+                        <button
+                          type="button"
+                          onClick={() => setExpandedNewTrack(expandedNewTrack === index ? null : index)}
+                          className="flex items-center gap-2 text-sm flex-1 text-left"
+                        >
+                          <Upload className="w-4 h-4 text-primary" />
+                          <span className="text-muted-foreground">Track {tracksData.length + index + 1} (New)</span>
+                          <span className="font-medium">{track.title || 'Untitled'}</span>
+                          {expandedNewTrack === index ? (
+                            <ChevronUp className="w-4 h-4 ml-auto" />
+                          ) : (
+                            <ChevronDown className="w-4 h-4 ml-auto" />
+                          )}
+                        </button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeNewTrack(index)}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+
+                      {expandedNewTrack === index && (
+                        <div className="p-4 space-y-4 bg-primary/5">
+                          {/* Audio File */}
+                          <div className="space-y-2">
+                            <Label>Audio File *</Label>
+                            <Input
+                              type="file"
+                              accept="audio/*"
+                              onChange={(e) => handleNewTrackAudioChange(index, e.target.files?.[0] || null)}
+                            />
+                            {track.audioFile && (
+                              <p className="text-xs text-muted-foreground">
+                                Duration: {Math.floor(track.audioDuration / 60)}:{Math.floor(track.audioDuration % 60).toString().padStart(2, '0')}
+                              </p>
+                            )}
+                          </div>
+
+                          {/* Track Title */}
+                          <div className="space-y-2">
+                            <Label>Track Title *</Label>
+                            <Input
+                              value={track.title}
+                              onChange={(e) => updateNewTrack(index, 'title', e.target.value)}
+                              placeholder="Enter track title"
+                            />
+                          </div>
+
+                          {/* 30-Second Preview */}
+                          {track.audioDuration > 0 && (
+                            <div className="space-y-2">
+                              <Label>30-Second Preview Selection</Label>
+                              <div className="flex justify-between text-sm">
+                                <span>Preview: {Math.floor(track.previewStartTime / 60)}:{Math.floor(track.previewStartTime % 60).toString().padStart(2, '0')}</span>
+                                <span>to {Math.floor((track.previewStartTime + 30) / 60)}:{Math.floor((track.previewStartTime + 30) % 60).toString().padStart(2, '0')}</span>
+                              </div>
+                              <Slider
+                                value={[track.previewStartTime]}
+                                onValueChange={(value) => updateNewTrack(index, 'previewStartTime', value[0])}
+                                max={Math.max(0, track.audioDuration - 30)}
+                                min={0}
+                                step={1}
+                                className="w-full"
+                              />
+                              <div className="flex justify-between text-xs text-muted-foreground">
+                                <span>0:00</span>
+                                <span>{Math.floor(track.audioDuration / 60)}:{Math.floor(track.audioDuration % 60).toString().padStart(2, '0')}</span>
+                              </div>
+                              {track.audioPreviewUrl && (
+                                <AudioPreviewPlayer
+                                  audioUrl={track.audioPreviewUrl}
+                                  previewStartTime={track.previewStartTime}
+                                  previewDuration={30}
+                                  className="mt-2"
+                                />
+                              )}
+                            </div>
+                          )}
+
+                          {/* Featuring Artist */}
+                          <div className="space-y-2">
+                            <Label>Featuring Artist (Optional)</Label>
+                            <Input
+                              value={track.featuringArtistName}
+                              onChange={(e) => updateNewTrack(index, 'featuringArtistName', e.target.value)}
+                              placeholder="Artist name"
+                            />
+                          </div>
+
+                          {track.featuringArtistName && (
+                            <>
+                              <div className="space-y-2">
+                                <Label>Featuring Artist PayPal Email *</Label>
+                                <Input
+                                  type="email"
+                                  value={track.featuringArtistPaypal}
+                                  onChange={(e) => updateNewTrack(index, 'featuringArtistPaypal', e.target.value)}
+                                  placeholder="paypal@email.com"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label>Featuring Artist Percentage (%)</Label>
+                                <Input
+                                  type="number"
+                                  min="0"
+                                  max="100"
+                                  value={track.featuringPercentage}
+                                  onChange={(e) => updateNewTrack(index, 'featuringPercentage', parseFloat(e.target.value) || 0)}
+                                  placeholder="0"
+                                />
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
           
           <div className="space-y-2">
             <Label>Access Level *</Label>
