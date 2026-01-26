@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
   Dialog,
@@ -18,13 +17,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useQuarterlyIncome } from "@/hooks/useQuarterlyIncome";
 import { useApprovalStatus } from "@/hooks/useApprovalStatus";
-
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-  }).format(amount);
-};
+import { 
+  calculateQuarterlyTaxLiability, 
+  formatCurrency 
+} from "@/utils/taxCalculations";
 
 interface TaxData {
   platformIncome: number;
@@ -83,43 +79,12 @@ const SECalculatorModal = ({ userId, autoPopulateIncome = 0 }: SECalculatorModal
   }, [autoPopulateIncome]);
 
   const calculateTaxes = (data: TaxData): TaxResults => {
-    // Calculate from gross revenue (net revenue + processing fees) minus business expenses
-    const grossRevenue = data.quarterlyIncome + totalProcessingFees;
-    const netEarnings = Math.max(0, grossRevenue - data.businessExpenses);
-    
-    // Self-employment tax calculation (15.3% of net earnings × 0.9235)
-    // Calculate for all income levels for security and accuracy purposes
-    const selfEmploymentTax = netEarnings * 0.153 * 0.9235;
-    
-    // Basic NY state tax estimation (simplified progressive calculation)
-    let nyStateTax = 0;
-    const annualIncome = netEarnings * 4;
-    
-    if (annualIncome > 8500) {
-      if (annualIncome <= 11700) {
-        nyStateTax = (annualIncome - 8500) * 0.04;
-      } else if (annualIncome <= 13900) {
-        nyStateTax = 128 + (annualIncome - 11700) * 0.045;
-      } else if (annualIncome <= 80650) {
-        nyStateTax = 227 + (annualIncome - 13900) * 0.0525;
-      } else {
-        nyStateTax = 3781 + (annualIncome - 80650) * 0.0585;
-      }
-    }
-    
-    // Quarterly NY tax
-    nyStateTax = nyStateTax / 4;
-    
-    const totalQuarterlyPayment = selfEmploymentTax + nyStateTax;
-    const annualProjection = totalQuarterlyPayment * 4;
-
-    return {
-      netEarnings,
-      selfEmploymentTax,
-      nyStateTax,
-      totalQuarterlyPayment,
-      annualProjection,
-    };
+    // Use shared tax calculation utility
+    return calculateQuarterlyTaxLiability(
+      data.quarterlyIncome,
+      data.businessExpenses,
+      totalProcessingFees
+    );
   };
 
   const handleCalculate = (data: TaxData) => {
@@ -198,7 +163,7 @@ const SECalculatorModal = ({ userId, autoPopulateIncome = 0 }: SECalculatorModal
                   platformFee={platformFee}
                 />
               )}
-              <QuarterlyDueDates />
+              <QuarterlyDueDates userId={user?.id} />
             </div>
           </div>
         </div>
