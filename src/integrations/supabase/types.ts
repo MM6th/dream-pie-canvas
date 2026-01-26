@@ -3015,6 +3015,42 @@ export type Database = {
         }
         Relationships: []
       }
+      quarterly_tax_settings: {
+        Row: {
+          business_expenses: number | null
+          created_at: string
+          filing_status: string | null
+          id: string
+          previous_year_agi: number | null
+          quarter: number
+          updated_at: string
+          user_id: string
+          year: number
+        }
+        Insert: {
+          business_expenses?: number | null
+          created_at?: string
+          filing_status?: string | null
+          id?: string
+          previous_year_agi?: number | null
+          quarter: number
+          updated_at?: string
+          user_id: string
+          year: number
+        }
+        Update: {
+          business_expenses?: number | null
+          created_at?: string
+          filing_status?: string | null
+          id?: string
+          previous_year_agi?: number | null
+          quarter?: number
+          updated_at?: string
+          user_id?: string
+          year?: number
+        }
+        Relationships: []
+      }
       script_invitations: {
         Row: {
           credits_spent: number

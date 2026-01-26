@@ -1,38 +1,27 @@
-
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, Clock, AlertCircle } from "lucide-react";
+import { Calendar, Clock, AlertCircle, DollarSign } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useHistoricalQuarterlyIncome } from "@/hooks/useHistoricalQuarterlyIncome";
+import { 
+  calculateQuarterlyTaxLiability, 
+  formatCurrency, 
+  generateQuarterlyDueDates 
+} from "@/utils/taxCalculations";
 
-const QuarterlyDueDates = () => {
+interface QuarterlyDueDatesProps {
+  userId?: string;
+}
+
+const QuarterlyDueDates = ({ userId }: QuarterlyDueDatesProps) => {
   const currentDate = new Date();
+  const currentYear = currentDate.getFullYear();
   
-  const dueDates = [
-    {
-      quarter: "Q1 2025",
-      period: "Jan 1 - Mar 31, 2025",
-      dueDate: "April 15, 2025",
-      date: new Date("2025-04-15"),
-    },
-    {
-      quarter: "Q2 2025",
-      period: "Apr 1 - Jun 30, 2025",
-      dueDate: "June 17, 2025",
-      date: new Date("2025-06-17"),
-    },
-    {
-      quarter: "Q3 2025",
-      period: "Jul 1 - Sep 30, 2025",
-      dueDate: "September 16, 2025",
-      date: new Date("2025-09-16"),
-    },
-    {
-      quarter: "Q4 2025",
-      period: "Oct 1 - Dec 31, 2025",
-      dueDate: "January 15, 2026",
-      date: new Date("2026-01-15"),
-    },
-  ];
+  // Fetch historical income data
+  const { quarters: incomeData, loading } = useHistoricalQuarterlyIncome(userId);
+  
+  // Generate due dates for current year
+  const dueDates = generateQuarterlyDueDates(currentYear);
 
   const getQuarterStatus = (dueDate: Date) => {
     const today = new Date();
@@ -52,6 +41,11 @@ const QuarterlyDueDates = () => {
     return dueDates.find(quarter => quarter.date > today);
   };
 
+  // Find income data for a specific quarter
+  const getQuarterIncome = (year: number, quarter: number) => {
+    return incomeData.find(q => q.year === year && q.quarter === quarter);
+  };
+
   const nextDue = getNextDueDate();
 
   return (
@@ -59,7 +53,7 @@ const QuarterlyDueDates = () => {
       <CardHeader>
         <CardTitle className="text-white flex items-center gap-2">
           <Calendar className="w-5 h-5" />
-          2025 Quarterly Due Dates
+          {currentYear} Quarterly Due Dates
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -71,7 +65,7 @@ const QuarterlyDueDates = () => {
               <span className="text-blue-400 font-medium">Next Payment Due</span>
             </div>
             <div className="text-lg font-bold text-blue-300">{nextDue.dueDate}</div>
-            <div className="text-blue-200 text-sm">{nextDue.quarter}</div>
+            <div className="text-blue-200 text-sm">Q{nextDue.quarter} {nextDue.year}</div>
           </div>
         )}
 
@@ -80,10 +74,23 @@ const QuarterlyDueDates = () => {
           <h4 className="text-gray-300 font-medium">All Quarterly Deadlines</h4>
           {dueDates.map((quarter) => {
             const status = getQuarterStatus(quarter.date);
+            const incomeForQuarter = getQuarterIncome(quarter.year, quarter.quarter);
+            const hasIncome = incomeForQuarter && incomeForQuarter.totalIncome > 0;
+            
+            // Calculate tax liability if there's income
+            let taxLiability = null;
+            if (hasIncome) {
+              taxLiability = calculateQuarterlyTaxLiability(
+                incomeForQuarter.totalIncome,
+                0, // Default business expenses (user can customize in calculator)
+                incomeForQuarter.processingFees
+              );
+            }
+            
             return (
-              <div key={quarter.quarter} className="bg-gray-800/50 p-3 rounded-lg">
+              <div key={`${quarter.year}-${quarter.quarter}`} className="bg-gray-800/50 p-3 rounded-lg">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-white font-medium">{quarter.quarter}</span>
+                  <span className="text-white font-medium">Q{quarter.quarter} {quarter.year}</span>
                   <Badge className={`${status.color} text-white`}>
                     {status.text}
                   </Badge>
@@ -95,6 +102,38 @@ const QuarterlyDueDates = () => {
                     Due: {quarter.dueDate}
                   </div>
                 </div>
+                
+                {/* Show income and tax liability for past due quarters */}
+                {status.status === "past" && userId && (
+                  <div className="mt-3 pt-3 border-t border-gray-700">
+                    {loading ? (
+                      <div className="text-gray-500 text-sm">Loading...</div>
+                    ) : hasIncome && taxLiability ? (
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-gray-400">Income:</span>
+                          <span className="text-green-400 font-medium">
+                            {formatCurrency(incomeForQuarter.totalIncome)}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-gray-400 flex items-center gap-1">
+                            <DollarSign className="w-3 h-3" />
+                            Est. Tax Due:
+                          </span>
+                          <span className="text-red-400 font-medium">
+                            {formatCurrency(taxLiability.totalQuarterlyPayment)}
+                          </span>
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          SE Tax: {formatCurrency(taxLiability.selfEmploymentTax)} | NY: {formatCurrency(taxLiability.nyStateTax)}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-gray-500 text-sm">No income recorded</div>
+                    )}
+                  </div>
+                )}
               </div>
             );
           })}
