@@ -119,7 +119,7 @@ const SECalculatorModal = ({ userId, autoPopulateIncome = 0 }: SECalculatorModal
         <DialogHeader>
           <DialogTitle className="text-white text-xl flex items-center gap-2">
             <Calculator className="w-5 h-5 text-green-400" />
-            Q4 2025 Self-Employment Tax Calculator
+            Self-Employment Tax Calculator
             <Badge className="bg-green-600 text-white text-xs ml-2">Real Revenue</Badge>
           </DialogTitle>
           <DialogDescription className="text-gray-400">

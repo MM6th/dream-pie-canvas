@@ -13,6 +13,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { NotificationBellButton } from "@/components/NotificationBellButton";
 import { MessageCreditsIcon } from "@/components/messaging/MessageCreditsIcon";
 
+// Calculate current quarter and year
+const getCurrentQuarterLabel = () => {
+  const now = new Date();
+  const quarter = Math.floor(now.getMonth() / 3) + 1;
+  const year = now.getFullYear();
+  return `Q${quarter} ${year}`;
+};
+
 interface DashboardHeaderProps {
   onStoreView: () => void;
   onBulletinView: () => void;
@@ -68,7 +76,7 @@ const DashboardHeader = ({
               <DollarSign className="w-6 h-6 text-green-400" />
             </div>
             <div className="flex flex-col">
-              <span className="text-xs text-gray-400 uppercase tracking-wider">Q4 2025 Income</span>
+              <span className="text-xs text-gray-400 uppercase tracking-wider">{getCurrentQuarterLabel()} Income</span>
               <span className="text-2xl font-bold text-green-400">
                 ${currentQuarterIncome.toFixed(2)}
               </span>
