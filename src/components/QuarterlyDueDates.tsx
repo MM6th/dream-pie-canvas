@@ -20,8 +20,14 @@ const QuarterlyDueDates = ({ userId }: QuarterlyDueDatesProps) => {
   // Fetch historical income data
   const { quarters: incomeData, loading } = useHistoricalQuarterlyIncome(userId);
   
-  // Generate due dates for current year
-  const dueDates = generateQuarterlyDueDates(currentYear);
+  // Generate due dates for current year + Q4 from previous year (due in current year)
+  const currentYearDueDates = generateQuarterlyDueDates(currentYear);
+  const previousYearQ4 = generateQuarterlyDueDates(currentYear - 1).find(q => q.quarter === 4);
+  
+  // Combine: current year quarters first, then previous year Q4 at the end
+  const dueDates = previousYearQ4 
+    ? [...currentYearDueDates, previousYearQ4]
+    : currentYearDueDates;
 
   const getQuarterStatus = (dueDate: Date) => {
     const today = new Date();
