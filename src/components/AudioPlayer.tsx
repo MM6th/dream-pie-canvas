@@ -4,10 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { AudioLines, Play, Pause, Volume2, VolumeX, SkipBack, SkipForward, Globe, Lock, Download } from "lucide-react";
+import { AudioLines, Play, Pause, Volume2, VolumeX, SkipBack, SkipForward, Globe, Lock, Download, Camera } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import CoverApplicationModal from "./CoverApplicationModal";
 
 interface AudioTrack {
   id: string;
@@ -17,6 +18,7 @@ interface AudioTrack {
   thumbnail_url: string | null;
   access_level?: "public" | "merchant_only" | "paid" | null;
   audio_type?: string;
+  advance_fee_rate?: number | null;
 }
 
 interface AudioPlayerProps {
@@ -31,12 +33,50 @@ const AudioPlayer = ({ tracks }: AudioPlayerProps) => {
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
   const [playlistPublic, setPlaylistPublic] = useState(false);
+  const [coverModalOpen, setCoverModalOpen] = useState(false);
+  const [existingSubmissions, setExistingSubmissions] = useState<Set<string>>(new Set());
+  const [userType, setUserType] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const { user } = useAuth();
 
   const currentTrack = tracks[currentTrackIndex];
 
-  // Add debugging for tracks
+  // Check if current track is a cover opportunity (merchant_only music)
+  const isCoverOpportunity = currentTrack?.access_level === 'merchant_only' && currentTrack?.audio_type === 'music';
+  const hasAlreadyApplied = currentTrack ? existingSubmissions.has(currentTrack.id) : false;
+
+  // Fetch user profile and check for existing submissions
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (!user) return;
+      
+      // Get user type
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('playlist_public, user_type')
+        .eq('id', user.id)
+        .single();
+
+      if (profileData) {
+        setPlaylistPublic(profileData.playlist_public || false);
+        setUserType(profileData.user_type);
+      }
+
+      // Get existing cover submissions for this user
+      const { data: submissions } = await supabase
+        .from('song_cover_submissions')
+        .select('audio_product_id')
+        .eq('merchant_id', user.id);
+
+      if (submissions) {
+        setExistingSubmissions(new Set(submissions.map(s => s.audio_product_id)));
+      }
+    };
+
+    fetchUserData();
+  }, [user]);
+
+  // Debug logging
   useEffect(() => {
     console.log('AudioPlayer received tracks:', tracks);
     console.log('Number of tracks in AudioPlayer:', tracks.length);
@@ -44,28 +84,6 @@ const AudioPlayer = ({ tracks }: AudioPlayerProps) => {
       console.log('Sample track:', tracks[0]);
     }
   }, [tracks]);
-
-  // Fetch user profile to get playlist visibility setting
-  useEffect(() => {
-    const fetchUserProfile = async () => {
-      if (!user) return;
-      
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('playlist_public')
-        .eq('id', user.id)
-        .single();
-
-      if (error) {
-        console.error('Error fetching user profile:', error);
-        return;
-      }
-
-      setPlaylistPublic(data?.playlist_public || false);
-    };
-
-    fetchUserProfile();
-  }, [user]);
 
   // Toggle playlist visibility
   const togglePlaylistVisibility = async (checked: boolean) => {
@@ -85,6 +103,13 @@ const AudioPlayer = ({ tracks }: AudioPlayerProps) => {
     setPlaylistPublic(checked);
     toast.success(checked ? 'Playlist is now public' : 'Playlist is now private');
   };
+
+  const handleCoverSubmissionSuccess = () => {
+    if (currentTrack) {
+      setExistingSubmissions(prev => new Set([...prev, currentTrack.id]));
+    }
+  };
+
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -354,15 +379,32 @@ const AudioPlayer = ({ tracks }: AudioPlayerProps) => {
 
             <div className="flex items-center gap-3">
               <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => currentTrack && handleDownload(currentTrack)}
-                disabled={!currentTrack}
-                className="text-white hover:bg-gray-700"
-                title="Download to device"
-              >
-                <Download className="w-4 h-4" />
-              </Button>
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => currentTrack && handleDownload(currentTrack)}
+                  disabled={!currentTrack}
+                  className="text-white hover:bg-gray-700"
+                  title="Download to device"
+                >
+                  <Download className="w-4 h-4" />
+                </Button>
+                
+                {/* Apply for Cover button - only for merchant_only music tracks */}
+                {isCoverOpportunity && userType === 'merchant' && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setCoverModalOpen(true)}
+                    disabled={hasAlreadyApplied}
+                    className={hasAlreadyApplied 
+                      ? "text-gray-500 cursor-not-allowed" 
+                      : "text-blue-400 hover:bg-blue-900/50 hover:text-blue-300"
+                    }
+                    title={hasAlreadyApplied ? "Already applied" : "Apply for cover opportunity"}
+                  >
+                    <Camera className="w-4 h-4" />
+                  </Button>
+                )}
               
               <div className="flex items-center gap-2 w-28">
                 <Button
@@ -386,6 +428,16 @@ const AudioPlayer = ({ tracks }: AudioPlayerProps) => {
         </div>
 
         <audio ref={audioRef} preload="metadata" />
+
+        {/* Cover Application Modal */}
+        {currentTrack && (
+          <CoverApplicationModal
+            isOpen={coverModalOpen}
+            onClose={() => setCoverModalOpen(false)}
+            audioProduct={currentTrack}
+            onSubmissionSuccess={handleCoverSubmissionSuccess}
+          />
+        )}
       </CardContent>
     </Card>
   );

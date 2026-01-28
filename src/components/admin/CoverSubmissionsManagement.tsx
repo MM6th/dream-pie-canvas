@@ -18,6 +18,9 @@ interface CoverSubmissionData {
   merchant_id: string;
   audio_product_id: string;
   cover_image_url: string;
+  cover_photos?: string[] | null;
+  requested_advance_price?: number | null;
+  negotiation_text?: string | null;
   submission_notes: string | null;
   status: string;
   admin_notes: string | null;
@@ -336,7 +339,17 @@ Both parties acknowledge they have read, understood, and agree to be legally bou
                         <p className="text-gray-400 text-sm mb-2">
                           Submitted by: {submission.merchant_name}
                         </p>
-                        {submission.submission_notes && (
+                        {submission.requested_advance_price !== null && submission.requested_advance_price !== undefined && (
+                          <p className="text-green-400 text-sm mb-2 font-medium">
+                            💰 Requested Advance: ${submission.requested_advance_price.toFixed(2)}
+                          </p>
+                        )}
+                        {submission.negotiation_text && (
+                          <p className="text-gray-300 text-sm mb-2 line-clamp-2">
+                            Why Me: {submission.negotiation_text}
+                          </p>
+                        )}
+                        {submission.submission_notes && submission.submission_notes !== submission.negotiation_text && (
                           <p className="text-gray-300 text-sm mb-2 line-clamp-2">
                             Notes: {submission.submission_notes}
                           </p>

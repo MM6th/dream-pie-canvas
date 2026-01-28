@@ -1,14 +1,16 @@
-
 import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, User, FileText, ExternalLink } from "lucide-react";
+import { Calendar, User, FileText, ExternalLink, DollarSign, Camera } from "lucide-react";
 
 interface CoverSubmissionData {
   id: string;
   merchant_id: string;
   audio_product_id: string;
   cover_image_url: string;
+  cover_photos?: string[] | null;
+  requested_advance_price?: number | null;
+  negotiation_text?: string | null;
   submission_notes: string | null;
   status: string;
   admin_notes: string | null;
@@ -50,24 +52,44 @@ const CoverSubmissionDetailModal = ({
     }
   };
 
+  // Use cover_photos array if available, otherwise fall back to single cover_image_url
+  const photos = submission.cover_photos && submission.cover_photos.length > 0 
+    ? submission.cover_photos 
+    : [submission.cover_image_url];
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl bg-gray-800 border-gray-700 text-white">
+      <DialogContent className="sm:max-w-2xl bg-gray-800 border-gray-700 text-white max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileText className="w-5 h-5" />
-            Cover Submission Details
+            Cover Application Details
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Cover Image */}
-          <div className="flex justify-center">
-            <img
-              src={submission.cover_image_url}
-              alt={submission.audio_product_title || "Cover submission"}
-              className="max-w-sm max-h-64 object-contain rounded-lg border border-gray-600"
-            />
+          {/* Cover Photos */}
+          <div>
+            <h3 className="text-sm font-medium text-gray-400 mb-2 flex items-center gap-2">
+              <Camera className="w-4 h-4" />
+              Submitted Photos ({photos.length})
+            </h3>
+            <div className={`grid gap-3 ${photos.length === 1 ? 'grid-cols-1 max-w-sm mx-auto' : photos.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}`}>
+              {photos.map((url, index) => (
+                <div key={index} className="relative">
+                  <img
+                    src={url}
+                    alt={`Cover photo ${index + 1}`}
+                    className="w-full aspect-square object-cover rounded-lg border border-gray-600"
+                  />
+                  {index === 0 && (
+                    <span className="absolute bottom-2 left-2 bg-blue-600 text-white text-xs px-2 py-1 rounded">
+                      Primary
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Basic Information */}
@@ -77,7 +99,7 @@ const CoverSubmissionDetailModal = ({
               <p className="text-white">{submission.audio_product_title || 'Unknown Track'}</p>
             </div>
             <div>
-              <h3 className="text-sm font-medium text-gray-400 mb-1">Merchant</h3>
+              <h3 className="text-sm font-medium text-gray-400 mb-1">Applicant</h3>
               <p className="text-white">{submission.merchant_name || 'Unknown Merchant'}</p>
             </div>
             <div>
@@ -95,10 +117,33 @@ const CoverSubmissionDetailModal = ({
             </div>
           </div>
 
-          {/* Submission Notes */}
-          {submission.submission_notes && (
+          {/* Requested Advance */}
+          {(submission.requested_advance_price !== null && submission.requested_advance_price !== undefined) && (
+            <div className="bg-green-600/20 border border-green-600/30 p-4 rounded">
+              <h3 className="text-green-400 font-medium mb-2 flex items-center gap-2">
+                <DollarSign className="w-4 h-4" />
+                Requested Cash Advance
+              </h3>
+              <p className="text-2xl font-bold text-green-300">
+                ${submission.requested_advance_price.toFixed(2)}
+              </p>
+            </div>
+          )}
+
+          {/* Negotiation Text */}
+          {submission.negotiation_text && (
             <div>
-              <h3 className="text-sm font-medium text-gray-400 mb-2">Submission Notes</h3>
+              <h3 className="text-sm font-medium text-gray-400 mb-2">Why They're Right for This Job</h3>
+              <div className="bg-gray-700/50 p-4 rounded border border-gray-600">
+                <p className="text-gray-300 whitespace-pre-wrap">{submission.negotiation_text}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Submission Notes (legacy) */}
+          {submission.submission_notes && submission.submission_notes !== submission.negotiation_text && (
+            <div>
+              <h3 className="text-sm font-medium text-gray-400 mb-2">Additional Notes</h3>
               <div className="bg-gray-700/50 p-3 rounded border border-gray-600">
                 <p className="text-gray-300 text-sm">{submission.submission_notes}</p>
               </div>
