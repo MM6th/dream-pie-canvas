@@ -3127,9 +3127,12 @@ export type Database = {
           contract_generated_at: string | null
           contract_id: string | null
           cover_image_url: string
+          cover_photos: string[] | null
           created_at: string
           id: string
           merchant_id: string
+          negotiation_text: string | null
+          requested_advance_price: number | null
           requires_contract: boolean | null
           reviewed_at: string | null
           reviewed_by: string | null
@@ -3143,9 +3146,12 @@ export type Database = {
           contract_generated_at?: string | null
           contract_id?: string | null
           cover_image_url: string
+          cover_photos?: string[] | null
           created_at?: string
           id?: string
           merchant_id: string
+          negotiation_text?: string | null
+          requested_advance_price?: number | null
           requires_contract?: boolean | null
           reviewed_at?: string | null
           reviewed_by?: string | null
@@ -3159,9 +3165,12 @@ export type Database = {
           contract_generated_at?: string | null
           contract_id?: string | null
           cover_image_url?: string
+          cover_photos?: string[] | null
           created_at?: string
           id?: string
           merchant_id?: string
+          negotiation_text?: string | null
+          requested_advance_price?: number | null
           requires_contract?: boolean | null
           reviewed_at?: string | null
           reviewed_by?: string | null
