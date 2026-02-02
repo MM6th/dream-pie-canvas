@@ -1118,8 +1118,8 @@ const StorePage = () => {
                   </CarouselItem>
                 ))}
               </CarouselContent>
-              <CarouselPrevious className="hidden sm:flex -left-4 bg-gray-800 border-gray-600 text-white hover:bg-gray-700" />
-              <CarouselNext className="hidden sm:flex -right-4 bg-gray-800 border-gray-600 text-white hover:bg-gray-700" />
+              <CarouselPrevious className="flex -left-4 bg-gray-800 border-gray-600 text-white hover:bg-gray-700" />
+              <CarouselNext className="flex -right-4 bg-gray-800 border-gray-600 text-white hover:bg-gray-700" />
             </Carousel>
           )}
         </div>
@@ -1236,8 +1236,8 @@ const StorePage = () => {
                   </CarouselItem>
                 ))}
               </CarouselContent>
-              <CarouselPrevious className="hidden sm:flex -left-4 bg-gray-800 border-gray-600 text-white hover:bg-gray-700" />
-              <CarouselNext className="hidden sm:flex -right-4 bg-gray-800 border-gray-600 text-white hover:bg-gray-700" />
+              <CarouselPrevious className="flex -left-4 bg-gray-800 border-gray-600 text-white hover:bg-gray-700" />
+              <CarouselNext className="flex -right-4 bg-gray-800 border-gray-600 text-white hover:bg-gray-700" />
             </Carousel>
           )}
         </div>
