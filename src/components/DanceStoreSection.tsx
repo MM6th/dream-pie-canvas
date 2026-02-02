@@ -285,8 +285,8 @@ const DanceStoreSection = () => {
             );
           })}
         </CarouselContent>
-        <CarouselPrevious className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
-        <CarouselNext className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
+        <CarouselPrevious className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600 -left-4" />
+        <CarouselNext className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600 -right-4" />
       </Carousel>
     </div>
   );
