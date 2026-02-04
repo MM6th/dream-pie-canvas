@@ -27,7 +27,8 @@ import {
   Sparkles,
   Send,
   Image,
-  Loader2
+  Loader2,
+  Settings
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -52,14 +53,16 @@ import {
 } from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { PodcastEditModal } from "./PodcastEditModal";
+import { PodcastSettingsModal } from "./PodcastSettingsModal";
 import * as tus from "tus-js-client";
 import { Badge } from "@/components/ui/badge";
+import { usePodcastSettings, DEFAULT_TIER_DESCRIPTIONS } from "@/hooks/usePodcastSettings";
 
-// Subscription tier configuration (same as PodcastPublishModal)
+// Subscription tier configuration
 const SUBSCRIPTION_TIERS = {
-  moon: { name: 'Moon', price: 4.99, icon: Moon, description: 'Benjiman discussing dreams, topics that are mysterious, and occult' },
-  venus: { name: 'Venus', price: 9.99, icon: Star, description: 'Premium monthly access' },
-  jupiter: { name: 'Jupiter', price: 14.99, icon: Sparkles, description: 'VIP monthly access' },
+  moon: { name: 'Moon', price: 4.99, icon: Moon },
+  venus: { name: 'Venus', price: 9.99, icon: Star },
+  jupiter: { name: 'Jupiter', price: 14.99, icon: Sparkles },
 } as const;
 
 type SubscriptionTier = keyof typeof SUBSCRIPTION_TIERS;
@@ -85,6 +88,7 @@ interface PodcastRecordingsLibraryProps {
 export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLibraryProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { settings, getTierDescription, defaultTier, defaultThumbnail, refetch: refetchSettings } = usePodcastSettings();
 
   const [recordings, setRecordings] = useState<Recording[]>([]);
   const [loadingRecordings, setLoadingRecordings] = useState(true);
@@ -93,6 +97,7 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedRecording, setSelectedRecording] = useState<Recording | null>(null);
   const [publishingId, setPublishingId] = useState<string | null>(null);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
   
   // Upload dialog state
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
@@ -163,10 +168,20 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
     setDescription("");
     setUploading(false);
     setUploadProgress(0);
-    setSubscriptionTier("moon");
+    setSubscriptionTier(defaultTier);
     setThumbnailFile(null);
-    setThumbnailPreview(null);
+    setThumbnailPreview(defaultThumbnail);
   };
+
+  // Initialize upload form with settings defaults when dialog opens
+  useEffect(() => {
+    if (uploadDialogOpen) {
+      setSubscriptionTier(defaultTier);
+      if (defaultThumbnail && !thumbnailPreview) {
+        setThumbnailPreview(defaultThumbnail);
+      }
+    }
+  }, [uploadDialogOpen, defaultTier, defaultThumbnail]);
 
   const togglePlay = (recordingId: string, audioUrl: string) => {
     const currentAudio = audioRefs.current.get(recordingId);
@@ -699,20 +714,31 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
     <>
     <Card className="bg-card/50 border-border backdrop-blur-sm">
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <CardTitle className="flex items-center gap-2 text-foreground">
             <Library className="w-5 h-5" />
             My Recordings
           </CardTitle>
-          <Dialog 
-            open={uploadDialogOpen} 
-            onOpenChange={(nextOpen) => {
-              // On mobile, the OS file picker can trigger Radix "outside" events that close the dialog.
-              // We only allow opening via Radix; closing is handled explicitly by our Cancel/Save buttons.
-              if (nextOpen) setUploadDialogOpen(true);
-            }}
-          >
-            <DialogTrigger asChild>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setShowSettingsModal(true)}
+              className="bg-background border-border text-foreground hover:bg-muted"
+            >
+              <Settings className="w-4 h-4 mr-1" />
+              Settings
+            </Button>
+            <Dialog 
+              open={uploadDialogOpen} 
+              onOpenChange={(nextOpen) => {
+                // On mobile, the OS file picker can trigger Radix "outside" events that close the dialog.
+                // We only allow opening via Radix; closing is handled explicitly by our Cancel/Save buttons.
+                if (nextOpen) setUploadDialogOpen(true);
+              }}
+            >
+              <DialogTrigger asChild>
               <Button type="button" variant="outline" size="sm" disabled={!user}>
                 <Upload className="w-4 h-4 mr-1" />
                 Upload Audio
@@ -820,7 +846,7 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {SUBSCRIPTION_TIERS[subscriptionTier].description}
+                    {getTierDescription(subscriptionTier)}
                   </p>
                 </div>
 
@@ -886,6 +912,7 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
               </div>
             </DialogContent>
           </Dialog>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
@@ -985,6 +1012,11 @@ export const PodcastRecordingsLibrary = ({ refreshTrigger }: PodcastRecordingsLi
       onOpenChange={setShowEditModal}
       recording={selectedRecording}
       onSaved={fetchRecordings}
+    />
+    <PodcastSettingsModal
+      open={showSettingsModal}
+      onOpenChange={setShowSettingsModal}
+      onSettingsSaved={refetchSettings}
     />
     </>
   );
