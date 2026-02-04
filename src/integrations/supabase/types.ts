@@ -2426,6 +2426,57 @@ export type Database = {
           },
         ]
       }
+      podcast_settings: {
+        Row: {
+          created_at: string | null
+          default_thumbnail_url: string | null
+          default_tier: string | null
+          id: string
+          jupiter_tier_description: string | null
+          merchant_id: string
+          moon_tier_description: string | null
+          updated_at: string | null
+          venus_tier_description: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          default_thumbnail_url?: string | null
+          default_tier?: string | null
+          id?: string
+          jupiter_tier_description?: string | null
+          merchant_id: string
+          moon_tier_description?: string | null
+          updated_at?: string | null
+          venus_tier_description?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          default_thumbnail_url?: string | null
+          default_tier?: string | null
+          id?: string
+          jupiter_tier_description?: string | null
+          merchant_id?: string
+          moon_tier_description?: string | null
+          updated_at?: string | null
+          venus_tier_description?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "podcast_settings_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "podcast_settings_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: true
+            referencedRelation: "public_profile_data"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       podcast_subscriptions: {
         Row: {
           amount: number

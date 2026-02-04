@@ -19,6 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { usePodcastSettings, DEFAULT_TIER_DESCRIPTIONS } from "@/hooks/usePodcastSettings";
 
 interface Recording {
   id: string;
@@ -48,11 +49,11 @@ interface PodcastPublishModalProps {
   onPublished: () => void;
 }
 
-// Subscription tier configuration
+// Subscription tier configuration (prices only, descriptions come from settings)
 const SUBSCRIPTION_TIERS = {
-  moon: { name: 'Moon', price: 4.99, icon: Moon, description: 'Benjiman discussing dreams, topics that are mysterious, and occult' },
-  venus: { name: 'Venus', price: 9.99, icon: Star, description: 'Premium monthly access' },
-  jupiter: { name: 'Jupiter', price: 14.99, icon: Sparkles, description: 'VIP monthly access' },
+  moon: { name: 'Moon', price: 4.99, icon: Moon },
+  venus: { name: 'Venus', price: 9.99, icon: Star },
+  jupiter: { name: 'Jupiter', price: 14.99, icon: Sparkles },
 } as const;
 
 type SubscriptionTier = keyof typeof SUBSCRIPTION_TIERS;
@@ -65,6 +66,7 @@ export const PodcastPublishModal = ({
 }: PodcastPublishModalProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { getTierDescription, defaultTier, defaultThumbnail } = usePodcastSettings();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const trailerAudioRef = useRef<HTMLAudioElement>(null);
 
@@ -112,9 +114,9 @@ export const PodcastPublishModal = ({
     setThumbnailPreview(null);
 
     setSubscriptionEnabled(false);
-    setSelectedTier("moon");
-    lastTierRef.current = "moon";
-    setTierDescription(SUBSCRIPTION_TIERS.moon.description);
+    setSelectedTier(defaultTier);
+    lastTierRef.current = defaultTier;
+    setTierDescription(getTierDescription(defaultTier));
 
     setTrailerEnabled(false);
     setIsPlayingTrailer(false);
@@ -176,7 +178,7 @@ export const PodcastPublishModal = ({
         lastTierRef.current = safeTier;
 
         const perks = (recData?.tier_description || "").trim();
-        setTierDescription(perks || SUBSCRIPTION_TIERS[safeTier].description);
+        setTierDescription(perks || getTierDescription(safeTier));
 
         setTrailerEnabled(!!recData?.trailer_url);
 
@@ -232,8 +234,8 @@ export const PodcastPublishModal = ({
       const prevTier = lastTierRef.current;
       if (prevTier === selectedTier) return prev;
 
-      const prevDefault = SUBSCRIPTION_TIERS[prevTier].description;
-      const nextDefault = SUBSCRIPTION_TIERS[selectedTier].description;
+      const prevDefault = getTierDescription(prevTier);
+      const nextDefault = getTierDescription(selectedTier);
       lastTierRef.current = selectedTier;
 
       const trimmed = (prev || "").trim();
@@ -861,7 +863,7 @@ export const PodcastPublishModal = ({
                             {config.name}
                           </Label>
                           <p className="text-xs text-muted-foreground">
-                            {config.description}
+                            {getTierDescription(tier as SubscriptionTier)}
                           </p>
                         </div>
                         <span className="font-semibold text-primary">
