@@ -1,222 +1,143 @@
 
+# Podcast Settings System Implementation Plan
 
-## Plan: Track and Display Past Due Tax Amounts in Quarterly Due Dates Cards
-
-### Overview
-Create a system to automatically calculate and display tax liability amounts for each quarter in the Quarterly Due Dates section. For past due quarters (like Q4 2025), the card will show the estimated tax owed based on the user's income for that period.
-
----
-
-### Current State Analysis
-
-**What exists today:**
-- `quarterly_income` table stores income totals by user, year, quarter, and income_type
-- `QuarterlyDueDates` component displays static due dates with "Past Due" badges
-- `SECalculatorModal` calculates taxes in real-time but does NOT persist results
-- `useQuarterlyIncome` hook fetches only the CURRENT quarter's income
-
-**What's missing:**
-- No storage of calculated tax liabilities
-- No ability to fetch historical quarter income
-- No display of tax amounts on the quarterly due date cards
+## Overview
+This plan implements two key features:
+1. **Data Fix**: Update the Venus tier podcast ("Noc BeTeck Interview") from chaunceymoore9@gmail.com to have the description: "Benjiman interviews people on the website, and invites co-hosts for discussions"
+2. **New Feature**: Create a "Podcast Settings" modal that allows each podcaster to define their own default settings (tier descriptions, default thumbnail, default tier) which will auto-populate when uploading new podcasts
 
 ---
 
-### Implementation Approach
+## Current Architecture Understanding
 
-I recommend a **hybrid approach**: 
+The podcast system currently uses:
+- `podcast_recordings` table: Stores individual podcast recordings with `subscription_tier`, `tier_description`, and `thumbnail_url`
+- `audio_products` table: Stores the published store listing for podcasts
+- Hardcoded tier descriptions in `SUBSCRIPTION_TIERS` constant (e.g., "Benjiman discussing dreams, topics that are mysterious, and occult")
 
-1. **Automatic tax calculation** based on stored quarterly income (no manual save required)
-2. **Optional persistence** of user-entered business expenses for more accurate calculations
-
-This way, past due cards will always show an estimated tax amount based on actual income, even if the user never opened the calculator.
+**Problem**: All podcasters currently see the same hardcoded tier descriptions, which are specific to Benjiman/chaunceymoore9@gmail.com.
 
 ---
+
+## Solution Architecture
 
 ### Database Changes
 
-**New Table: `quarterly_tax_settings`**
-Stores user preferences for tax calculations (business expenses, filing status) that persist across sessions.
+Create a new `podcast_settings` table to store per-merchant podcast defaults:
 
-```text
-+--------------------------------+
-| quarterly_tax_settings         |
-+--------------------------------+
-| id (uuid, PK)                  |
-| user_id (uuid, FK)             |
-| year (integer)                 |
-| quarter (integer)              |
-| business_expenses (numeric)    |
-| filing_status (text)           |
-| previous_year_agi (numeric)    |
-| created_at (timestamptz)       |
-| updated_at (timestamptz)       |
-+--------------------------------+
+```sql
+CREATE TABLE public.podcast_settings (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  merchant_id UUID NOT NULL UNIQUE REFERENCES profiles(id) ON DELETE CASCADE,
+  default_thumbnail_url TEXT,
+  moon_tier_description TEXT,
+  venus_tier_description TEXT,
+  jupiter_tier_description TEXT,
+  default_tier TEXT DEFAULT 'moon',
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
 ```
 
-**RLS Policies:**
-- Users can view/create/update their own settings
-- Unique constraint on (user_id, year, quarter)
+RLS Policies:
+- Users can view/update their own settings
+- Insert allowed for authenticated users (their own row only)
 
 ---
 
-### File Changes
+### Component Changes
 
-#### 1. Create New Hook: `src/hooks/useHistoricalQuarterlyIncome.tsx`
+#### 1. New Component: `PodcastSettingsModal.tsx`
+A modal triggered by a "Podcast Settings" button in the Podcaster Dashboard that allows merchants to configure:
+- Default thumbnail (with upload capability)
+- Custom tier descriptions for Moon, Venus, and Jupiter tiers
+- Default subscription tier selection
 
-**Purpose:** Fetch income data for ALL quarters (not just current), enabling tax calculations for past periods.
+#### 2. Update `PodcastRecordingsLibrary.tsx`
+- Add a "Podcast Settings" button (gear icon) near the upload section
+- Opens the new PodcastSettingsModal
 
-**Key Features:**
-- Fetches all quarterly_income records for a user
-- Groups by year and quarter
-- Calculates total income per quarter
-- Fetches processing fees from platform_revenue for each quarter
+#### 3. Update `PodcastPublishModal.tsx` and `PodcastEditModal.tsx`
+- Fetch the merchant's podcast settings on modal open
+- Pre-populate tier descriptions from settings instead of hardcoded `SUBSCRIPTION_TIERS`
+- Pre-populate thumbnail from settings if no thumbnail exists
+- Pre-select the default tier from settings
 
-**Returns:**
-```typescript
-{
-  quarters: Array<{
-    year: number;
-    quarter: number;
-    totalIncome: number;
-    processingFees: number;
-    incomeTypes: string[];
-  }>;
-  loading: boolean;
-}
-```
+#### 4. Update `PodcastRecordingsLibrary.tsx` Upload Section
+- Fetch podcast settings when opening upload dialog
+- Pre-fill thumbnail and tier from saved settings
 
 ---
 
-#### 2. Update Component: `src/components/QuarterlyDueDates.tsx`
+### Data Migration
 
-**Changes:**
-- Accept `userId` prop
-- Import and use `useHistoricalQuarterlyIncome` hook
-- Import tax calculation logic (extract from SECalculatorModal)
-- For each quarter card, calculate and display:
-  - Total income for that quarter
-  - Estimated SE tax owed
-  - Only show tax amount if income > 0
-
-**New UI for Past Due Cards:**
-```text
-┌─────────────────────────────────────┐
-│ Q4 2025                [Past Due]   │
-│ Period: Oct 1 - Dec 31, 2025        │
-│ Due: January 15, 2026               │
-│                                     │
-│ Income: $100.86                     │
-│ Estimated Tax Due: $14.29           │
-└─────────────────────────────────────┘
+Update the Venus tier podcast for chaunceymoore9@gmail.com:
+```sql
+UPDATE podcast_recordings 
+SET tier_description = 'Benjiman interviews people on the website, and invites co-hosts for discussions'
+WHERE id = '7de1624e-9aa1-46ea-ad7d-9ac7a5cc12af';
 ```
 
 ---
 
-#### 3. Extract Tax Calculation Utility: `src/utils/taxCalculations.ts`
+## Detailed Implementation Steps
 
-**Purpose:** Centralize tax calculation logic so it can be reused by both SECalculatorModal and QuarterlyDueDates.
+### Step 1: Database Migration
+- Create `podcast_settings` table with columns for each tier's custom description
+- Add RLS policies for user self-management
+- Run data update for the Venus tier podcast
 
-**Functions:**
-```typescript
-export const calculateSelfEmploymentTax = (
-  income: number,
-  businessExpenses: number,
-  processingFees: number
-) => { ... }
+### Step 2: Create PodcastSettingsModal Component
+Location: `src/components/podcast/PodcastSettingsModal.tsx`
 
-export const calculateNYStateTax = (netEarnings: number) => { ... }
+Features:
+- Thumbnail upload with preview
+- Three textarea fields for Moon/Venus/Jupiter tier descriptions with placeholders showing the intended purpose
+- Tier dropdown to set default subscription tier
+- Save and Cancel buttons
+- Fetches existing settings on open, saves on submit
 
-export const calculateQuarterlyTaxLiability = (
-  income: number,
-  businessExpenses: number,
-  processingFees: number
-) => {
-  const netEarnings = Math.max(0, income + processingFees - businessExpenses);
-  const seTax = calculateSelfEmploymentTax(netEarnings);
-  const nyTax = calculateNYStateTax(netEarnings);
-  return { netEarnings, seTax, nyTax, totalDue: seTax + nyTax };
-}
-```
+### Step 3: Integrate Settings Button
+Add a Settings gear icon button in `PodcastRecordingsLibrary.tsx` header area that opens the modal
 
----
+### Step 4: Modify Publishing and Edit Modals
+Update `PodcastPublishModal.tsx` and `PodcastEditModal.tsx`:
+- Add a query to fetch `podcast_settings` for the current user
+- Replace hardcoded `SUBSCRIPTION_TIERS[tier].description` with the user's custom description (falling back to default if not set)
+- Pre-populate thumbnail from settings when no thumbnail exists
+- Use default tier from settings
 
-#### 4. Update Component: `src/components/SECalculatorModal.tsx`
-
-**Changes:**
-- Import shared tax calculation utilities
-- Optionally save business expenses to `quarterly_tax_settings` when user calculates
-- Add "Save Settings" button to persist expenses/filing status for future calculations
+### Step 5: Modify Upload Dialog in Library
+Update the upload section in `PodcastRecordingsLibrary.tsx`:
+- Fetch podcast settings when dialog opens
+- Pre-fill thumbnail preview from settings
+- Pre-select tier from settings
 
 ---
 
-#### 5. Update Parent Components
+## Technical Details
 
-**Files:** `src/components/dashboard/DashboardHeader.tsx`, `src/components/dashboard/merchant/ContentManagement.tsx`
+### File Changes Summary
 
-**Changes:**
-- Pass `userId` to QuarterlyDueDates component
-- Ensure QuarterlyDueDates has access to user context
+| File | Change Type | Description |
+|------|-------------|-------------|
+| `supabase/migrations/` | New | Create podcast_settings table, RLS, update Venus podcast |
+| `src/components/podcast/PodcastSettingsModal.tsx` | New | Settings modal component |
+| `src/components/podcast/PodcastRecordingsLibrary.tsx` | Edit | Add settings button, integrate settings fetch in upload |
+| `src/components/podcast/PodcastPublishModal.tsx` | Edit | Fetch and use custom tier descriptions |
+| `src/components/podcast/PodcastEditModal.tsx` | Edit | Fetch and use custom tier descriptions |
 
----
+### User Experience Flow
 
-### Dynamic Year Support
-
-To ensure the system works moving forward:
-
-1. **Generate due dates dynamically** based on current year + 1 year ahead
-2. **Fetch historical income** for past 2 years to cover all visible quarters
-3. **Due date calculation logic:**
-   - Q1 due: April 15
-   - Q2 due: June 15 (or next business day)
-   - Q3 due: September 15 (or next business day)
-   - Q4 due: January 15 of next year
+1. **First-time setup**: Podcaster clicks "Podcast Settings" gear icon in their dashboard
+2. **Configure settings**: They enter their custom tier descriptions (e.g., "Premium interviews with industry experts") and optionally upload a default thumbnail
+3. **Upload new podcast**: When recording/uploading a new podcast, the tier description field auto-populates with their custom text
+4. **Publish/Edit**: The publish modal shows their custom tier descriptions instead of the default Benjiman-specific text
 
 ---
 
-### Technical Details
+## Edge Cases Handled
 
-**Tax Calculation Formula (for reference):**
-```text
-Net Earnings = Income + Processing Fees - Business Expenses
-SE Tax = Net Earnings * 0.9235 * 0.153
-NY State Tax = Progressive rate based on annualized income
-Total Quarterly Due = SE Tax + NY State Tax
-```
-
-**Data Flow:**
-```text
-quarterly_income (DB)
-       ↓
-useHistoricalQuarterlyIncome (Hook)
-       ↓
-QuarterlyDueDates (Component)
-       ↓
-taxCalculations (Utility)
-       ↓
-Display in UI
-```
-
----
-
-### Summary of Changes
-
-| File | Action | Description |
-|------|--------|-------------|
-| `supabase/migrations/...` | CREATE | New `quarterly_tax_settings` table |
-| `src/utils/taxCalculations.ts` | CREATE | Shared tax calculation functions |
-| `src/hooks/useHistoricalQuarterlyIncome.tsx` | CREATE | Hook for fetching all quarters' income |
-| `src/components/QuarterlyDueDates.tsx` | UPDATE | Add income/tax display, accept userId prop |
-| `src/components/SECalculatorModal.tsx` | UPDATE | Use shared utilities, optional save |
-| `src/components/dashboard/DashboardHeader.tsx` | UPDATE | Pass userId to QuarterlyDueDates |
-| `src/integrations/supabase/types.ts` | AUTO-UPDATE | Types for new table |
-
----
-
-### User Experience After Implementation
-
-1. **Admin opens dashboard** - sees Q4 2025 card with "Past Due" badge AND the estimated $14.29 tax owed
-2. **As new quarters complete** - tax amounts automatically appear on past due cards
-3. **If user wants more accurate calculation** - they can open the SE Calculator, enter business expenses, and save those settings
-4. **Settings persist** - next time they view past due cards, business expenses are factored in
-
+- **No settings exist**: Falls back to generic tier descriptions ("Basic monthly access", "Premium monthly access", "VIP monthly access")
+- **Partial settings**: Only override fields that have values; use defaults for empty fields
+- **Existing podcasts**: Existing tier descriptions on published podcasts remain unchanged; only new uploads get the defaults
