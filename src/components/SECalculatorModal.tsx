@@ -21,6 +21,8 @@ import {
   calculateQuarterlyTaxLiability, 
   formatCurrency 
 } from "@/utils/taxCalculations";
+import { useDistributionObligations } from "@/hooks/useDistributionObligations";
+import DistributionObligationsCard from "./DistributionObligationsCard";
 
 interface TaxData {
   platformIncome: number;
@@ -48,6 +50,7 @@ const SECalculatorModal = ({ userId, autoPopulateIncome = 0 }: SECalculatorModal
   const isMobile = useIsMobile();
   const { isAdmin } = useApprovalStatus();
   const { currentQuarterIncome, companyIncome, contractorIncome, totalProcessingFees } = useQuarterlyIncome(user?.id);
+  const { obligations, totalOwed, isLoading: distributionLoading } = useDistributionObligations(isAdmin);
   
   // Check if user is admin - both merchants AND supporters should see the platform fee
   // Only admin users skip the platform fee calculation
@@ -161,6 +164,13 @@ const SECalculatorModal = ({ userId, autoPopulateIncome = 0 }: SECalculatorModal
                   grossRevenue={isAdmin ? (autoPopulateIncome + totalProcessingFees) : userGrossRevenue}
                   isAdmin={isAdmin}
                   platformFee={platformFee}
+                />
+              )}
+              {isAdmin && (
+                <DistributionObligationsCard
+                  obligations={obligations}
+                  totalOwed={totalOwed}
+                  isLoading={distributionLoading}
                 />
               )}
               <QuarterlyDueDates userId={user?.id} />
