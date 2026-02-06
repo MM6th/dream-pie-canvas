@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import { ArrowLeft, Users, User, Shield, Building, Search, MessageSquare, Calendar, LogOut, ShoppingBag, BookOpen, Film } from "lucide-react";
+import { ArrowLeft, Users, User, Shield, Building, Search, MessageSquare, Calendar, LogOut, ShoppingBag, BookOpen, Film, DollarSign } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import UserStatsDisplay from "@/components/UserStatsDisplay";
@@ -36,9 +36,11 @@ const ProfilesDirectory = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
+  const [messagingPrices, setMessagingPrices] = useState<Record<string, number>>({});
 
   useEffect(() => {
     fetchProfiles();
+    fetchMessagingPrices();
   }, []);
 
   useEffect(() => {
@@ -103,6 +105,22 @@ const ProfilesDirectory = () => {
       toast.error("Failed to load profiles");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchMessagingPrices = async () => {
+    try {
+      const { data } = await supabase
+        .from('message_settings')
+        .select('merchant_id, credits_per_message, enabled')
+        .eq('enabled', true);
+      if (data) {
+        const prices: Record<string, number> = {};
+        data.forEach(s => { prices[s.merchant_id] = s.credits_per_message; });
+        setMessagingPrices(prices);
+      }
+    } catch (error) {
+      console.error('Error fetching messaging prices:', error);
     }
   };
 
@@ -407,6 +425,14 @@ const ProfilesDirectory = () => {
                         </div>
                       )}
 
+                      {/* Messaging Price */}
+                      {messagingPrices[profile.id] && (
+                        <div className="flex items-center justify-center gap-1 text-xs text-green-400 mb-1">
+                          <DollarSign className="w-3 h-3" />
+                          <span>{messagingPrices[profile.id]} credits/msg</span>
+                        </div>
+                      )}
+
                       {/* Join Date */}
                       <div className="flex items-center justify-center gap-1 text-xs text-gray-500">
                         <Calendar className="w-3 h-3" />
@@ -556,6 +582,14 @@ const ProfilesDirectory = () => {
                                 +{profile.skills.length - 2}
                               </Badge>
                             )}
+                          </div>
+                        )}
+
+                        {/* Messaging Price */}
+                        {messagingPrices[profile.id] && (
+                          <div className="flex items-center justify-center gap-1 text-xs text-green-400 mb-1">
+                            <DollarSign className="w-3 h-3" />
+                            <span>{messagingPrices[profile.id]} credits/msg</span>
                           </div>
                         )}
 

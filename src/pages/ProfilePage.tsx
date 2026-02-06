@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { DollarSign } from "lucide-react";
 import { ArrowLeft, User, Calendar, MapPin, Globe, Shield, Building, MessageSquare, ExternalLink, FolderOpen, Lock } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
@@ -85,6 +86,7 @@ const ProfilePage = () => {
   const [loading, setLoading] = useState(true);
   const [followStatus, setFollowStatus] = useState<FollowStatus>('none');
   const [followStatusLoading, setFollowStatusLoading] = useState(true);
+  const [messagingPrice, setMessagingPrice] = useState<number | null>(null);
   
   const { 
     socialLinksVisible, 
@@ -103,6 +105,7 @@ const ProfilePage = () => {
       fetchUserPosts();
       fetchPortfolios();
       updateFollowStatus();
+      fetchMessagingPrice();
     }
   }, [userId, user?.id, authLoading]);
 
@@ -112,6 +115,22 @@ const ProfilePage = () => {
     const status = await checkFollowStatus(userId);
     setFollowStatus(status);
     setFollowStatusLoading(false);
+  };
+
+  const fetchMessagingPrice = async () => {
+    if (!userId) return;
+    try {
+      const { data } = await supabase
+        .from('message_settings')
+        .select('credits_per_message, enabled')
+        .eq('merchant_id', userId)
+        .single();
+      if (data?.enabled) {
+        setMessagingPrice(data.credits_per_message);
+      }
+    } catch (error) {
+      // No settings found, that's ok
+    }
   };
 
   const handleRequestSent = () => {
@@ -347,6 +366,14 @@ const ProfilePage = () => {
                       onRequestSent={handleRequestSent}
                       className="w-full mt-2 mb-4"
                     />
+                  )}
+
+                  {/* Messaging Price */}
+                  {messagingPrice !== null && (
+                    <div className="flex items-center gap-2 text-sm text-green-400 bg-green-900/20 border border-green-600/30 rounded-lg px-3 py-2 w-full justify-center">
+                      <DollarSign className="w-4 h-4" />
+                      <span>{messagingPrice} credits per message</span>
+                    </div>
                   )}
                 </div>
               </CardContent>
