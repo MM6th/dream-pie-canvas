@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Megaphone, User, Calendar, ExternalLink, Shield } from "lucide-react";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { BulletinPost } from "@/types/bulletin";
+import ExpandableDescription from "./ui/ExpandableDescription";
 
 interface AnnouncementPostsSectionProps {
   posts: BulletinPost[];
@@ -70,7 +71,7 @@ const AnnouncementPostsSection = ({ posts }: AnnouncementPostsSectionProps) => {
                     </Badge>
                   </div>
                   
-                  <p className="text-gray-300 text-sm mb-4 leading-relaxed">{post.content}</p>
+                  <ExpandableDescription description={post.content} maxLength={150} className="mb-4" />
                   
                   <div className="flex items-center gap-4 text-xs text-gray-400 mb-4">
                      <div className="flex items-center gap-2">
