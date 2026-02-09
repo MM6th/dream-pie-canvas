@@ -12,6 +12,7 @@ import { useMessagingCredits } from "@/hooks/useMessagingCredits";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { format, differenceInSeconds, isPast } from "date-fns";
+import ExpandableDescription from "./ui/ExpandableDescription";
 
 interface TVGuideSectionProps {
   posts: BulletinPost[];
@@ -232,7 +233,7 @@ const TVGuideSection = ({ posts, useCarousel = true, onNeedsCredits }: TVGuideSe
         )}
         <CardContent className="p-4 flex flex-col flex-1">
           <CardTitle className="text-white text-lg mb-2">{post.title}</CardTitle>
-          <p className="text-gray-300 text-sm mb-2 leading-relaxed line-clamp-3">{post.content}</p>
+          <ExpandableDescription description={post.content} maxLength={150} className="mb-2" />
           
           {/* Scheduled Time Display */}
           {post.scheduled_at && (

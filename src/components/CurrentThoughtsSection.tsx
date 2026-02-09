@@ -6,6 +6,7 @@ import { MessageSquare, User, Calendar, Shield } from "lucide-react";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { BulletinPost } from "@/types/bulletin";
 import PostInteractions from "./PostInteractions";
+import ExpandableDescription from "./ui/ExpandableDescription";
 
 interface CurrentThoughtsSectionProps {
   posts: BulletinPost[];
@@ -47,7 +48,7 @@ const CurrentThoughtsSection = ({ posts, useCarousel = true }: CurrentThoughtsSe
         {post.post_type !== 'announcement' && (
           <CardTitle className="text-white text-lg mb-2">{post.title}</CardTitle>
         )}
-        <p className="text-gray-300 text-sm mb-2 leading-relaxed line-clamp-4">{post.content}</p>
+        <ExpandableDescription description={post.content} maxLength={150} className="mb-2" />
         
         <div className="flex items-center gap-4 text-sm text-gray-400 mb-2">
            <div className="flex items-center gap-2">
