@@ -186,9 +186,27 @@ export const PodcastSettingsModal = ({
         if (error) throw error;
       }
 
+      // Propagate tier descriptions to existing published podcast_recordings
+      const tierUpdates: { tier: string; description: string | null }[] = [
+        { tier: 'moon', description: settingsData.moon_tier_description },
+        { tier: 'venus', description: settingsData.venus_tier_description },
+        { tier: 'jupiter', description: settingsData.jupiter_tier_description },
+      ];
+
+      for (const { tier, description } of tierUpdates) {
+        if (description) {
+          await supabase
+            .from('podcast_recordings')
+            .update({ tier_description: description })
+            .eq('merchant_id', user.id)
+            .eq('subscription_tier', tier)
+            .eq('subscription_enabled', true);
+        }
+      }
+
       toast({
         title: "Settings Saved",
-        description: "Your podcast settings have been saved. New uploads will use these defaults.",
+        description: "Your podcast settings have been saved and applied to existing published podcasts.",
       });
 
       onSettingsSaved?.();

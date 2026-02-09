@@ -395,10 +395,36 @@ const StorePage = () => {
       const podcastProducts = finalAudioData.filter(p => p.audio_type === 'podcast');
       if (podcastProducts.length > 0) {
         const audioUrls = podcastProducts.map(p => p.audio_file_url);
-        const { data: podcastRecordings } = await supabase
-          .from('podcast_recordings')
-          .select('audio_url, subscription_enabled, subscription_tier, tier_description')
-          .in('audio_url', audioUrls);
+        const merchantIds = [...new Set(podcastProducts.map(p => p.merchant_id).filter(Boolean))] as string[];
+        
+        // Fetch both recordings and merchant podcast settings in parallel
+        const [recordingsResult, settingsResult] = await Promise.all([
+          supabase
+            .from('podcast_recordings')
+            .select('audio_url, subscription_enabled, subscription_tier, tier_description')
+            .in('audio_url', audioUrls),
+          merchantIds.length > 0
+            ? supabase
+                .from('podcast_settings')
+                .select('merchant_id, moon_tier_description, venus_tier_description, jupiter_tier_description')
+                .in('merchant_id', merchantIds)
+            : Promise.resolve({ data: null }),
+        ]);
+
+        const podcastRecordings = recordingsResult.data;
+        const podcastSettings = settingsResult.data;
+        
+        // Build settings lookup by merchant_id
+        const settingsMap = new Map<string, Record<string, string | null>>();
+        if (podcastSettings) {
+          podcastSettings.forEach((s: any) => {
+            settingsMap.set(s.merchant_id, {
+              moon: s.moon_tier_description,
+              venus: s.venus_tier_description,
+              jupiter: s.jupiter_tier_description,
+            });
+          });
+        }
         
         if (podcastRecordings) {
           const recordingsMap = new Map(podcastRecordings.map(r => [r.audio_url, r]));
@@ -406,11 +432,19 @@ const StorePage = () => {
             if (product.audio_type === 'podcast') {
               const recording = recordingsMap.get(product.audio_file_url);
               if (recording) {
+                // Use recording tier_description, falling back to podcast_settings
+                let description = recording.tier_description;
+                if (!description && recording.subscription_enabled && recording.subscription_tier && product.merchant_id) {
+                  const merchantSettings = settingsMap.get(product.merchant_id);
+                  if (merchantSettings) {
+                    description = merchantSettings[recording.subscription_tier] || null;
+                  }
+                }
                 return {
                   ...product,
                   subscription_enabled: recording.subscription_enabled,
                   subscription_tier: recording.subscription_tier,
-                  tier_description: recording.tier_description,
+                  tier_description: description,
                 };
               }
             }

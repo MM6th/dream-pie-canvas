@@ -66,23 +66,41 @@ const ProfilePodcastSection: React.FC<ProfilePodcastSectionProps> = ({
       }
 
       if (audioData && audioData.length > 0) {
-        // Fetch podcast_recordings to get subscription tier info AND recording id
+        // Fetch podcast_recordings and podcast_settings in parallel
         const audioUrls = audioData.map(p => p.audio_file_url);
-        const { data: podcastRecordings } = await supabase
-          .from('podcast_recordings')
-          .select('id, audio_url, subscription_enabled, subscription_tier, tier_description')
-          .in('audio_url', audioUrls);
+        const [recordingsResult, settingsResult] = await Promise.all([
+          supabase
+            .from('podcast_recordings')
+            .select('id, audio_url, subscription_enabled, subscription_tier, tier_description')
+            .in('audio_url', audioUrls),
+          supabase
+            .from('podcast_settings')
+            .select('merchant_id, moon_tier_description, venus_tier_description, jupiter_tier_description')
+            .eq('merchant_id', userId)
+            .maybeSingle(),
+        ]);
+
+        const podcastRecordings = recordingsResult.data;
+        const merchantSettings = settingsResult.data;
+        const tierDescMap: Record<string, string | null> = merchantSettings
+          ? { moon: merchantSettings.moon_tier_description, venus: merchantSettings.venus_tier_description, jupiter: merchantSettings.jupiter_tier_description }
+          : {};
 
         let enrichedData = audioData;
         if (podcastRecordings) {
           const recordingsMap = new Map(podcastRecordings.map(r => [r.audio_url, r]));
           enrichedData = audioData.map(product => {
             const recording = recordingsMap.get(product.audio_file_url);
+            // Fall back to podcast_settings tier description
+            let description = recording?.tier_description || null;
+            if (!description && recording?.subscription_enabled && recording?.subscription_tier) {
+              description = tierDescMap[recording.subscription_tier] || null;
+            }
             return {
               ...product,
               subscription_enabled: recording?.subscription_enabled || false,
               subscription_tier: recording?.subscription_tier || null,
-              tier_description: recording?.tier_description || null,
+              tier_description: description,
               podcast_recording_id: recording?.id || null,
             };
           });
