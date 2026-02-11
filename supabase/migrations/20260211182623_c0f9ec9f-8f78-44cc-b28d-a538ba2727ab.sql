@@ -1,0 +1,1 @@
+ALTER TYPE public.astrology_product_type ADD VALUE IF NOT EXISTS 'venus_value_reading';
