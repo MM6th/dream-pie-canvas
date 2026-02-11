@@ -28,7 +28,8 @@ const productTypes = [
   { value: 'solar_return_reading', label: 'Solar Return Reading' },
   { value: 'north_node_reading', label: 'North Node Reading' },
   { value: 'career_path_reading', label: 'Career Path Reading' },
-  { value: 'horoscope_reading', label: 'Horoscope Forecast' }
+  { value: 'horoscope_reading', label: 'Horoscope Forecast' },
+  { value: 'venus_value_reading', label: 'Venus Value Reading' }
 ];
 
 const deliveryTypes = [
@@ -43,7 +44,8 @@ const getBasePrice = (productType: string, deliveryType: string): number => {
     solar_return_reading: { telephone: 75, audio_file: 350, video_file: 400 },
     north_node_reading: { telephone: 75, audio_file: 400, video_file: 450 },
     career_path_reading: { telephone: 75, audio_file: 500, video_file: 550 },
-    horoscope_reading: { telephone: 75, audio_file: 75, video_file: 100 }
+    horoscope_reading: { telephone: 75, audio_file: 75, video_file: 100 },
+    venus_value_reading: { telephone: 75, audio_file: 250, video_file: 300 }
   };
   
   return prices[productType]?.[deliveryType] || 0;
