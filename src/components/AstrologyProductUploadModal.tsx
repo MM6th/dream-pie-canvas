@@ -38,7 +38,7 @@ const deliveryTypes = [
   { value: 'video_file', label: 'Video File' }
 ];
 
-const getBasePrice = (productType: string, deliveryType: string): number => {
+const getDefaultPrice = (productType: string, deliveryType: string): number => {
   const prices = {
     natal_chart_reading: { telephone: 75, audio_file: 250, video_file: 300 },
     solar_return_reading: { telephone: 75, audio_file: 350, video_file: 400 },
@@ -60,16 +60,25 @@ const AstrologyProductUploadModal = ({ isOpen, onClose, onSuccess }: AstrologyPr
     delivery_type: '',
     hours_selected: 1,
     is_adult_content: false,
-    discount_percentage: ''
+    discount_percentage: '',
+    base_price: ''
   });
   const [thumbnailUrl, setThumbnailUrl] = useState('');
   const [advertisementVideoUrl, setAdvertisementVideoUrl] = useState('');
   const [saleEndDate, setSaleEndDate] = useState<Date | undefined>(undefined);
 
+  // When product_type or delivery_type changes, set default price
+  useEffect(() => {
+    if (formData.product_type && formData.delivery_type) {
+      const defaultPrice = getDefaultPrice(formData.product_type, formData.delivery_type);
+      setFormData(prev => ({ ...prev, base_price: defaultPrice.toString() }));
+    }
+  }, [formData.product_type, formData.delivery_type]);
+
   const calculateTotalPrice = () => {
     if (!formData.product_type || !formData.delivery_type) return 0;
     
-    const basePrice = getBasePrice(formData.product_type, formData.delivery_type);
+    const basePrice = parseFloat(formData.base_price) || 0;
     
     let price = basePrice;
     if (formData.delivery_type === 'telephone') {
@@ -109,7 +118,7 @@ const AstrologyProductUploadModal = ({ isOpen, onClose, onSuccess }: AstrologyPr
           title: title,
           description: formData.description,
           delivery_type: formData.delivery_type as any,
-          base_price: getBasePrice(formData.product_type, formData.delivery_type),
+          base_price: parseFloat(formData.base_price) || 0,
           hours_selected: formData.delivery_type === 'telephone' ? formData.hours_selected : 1,
           total_price: totalPrice,
           buyer_email: null,
@@ -138,7 +147,8 @@ const AstrologyProductUploadModal = ({ isOpen, onClose, onSuccess }: AstrologyPr
         delivery_type: '',
         hours_selected: 1,
         is_adult_content: false,
-        discount_percentage: ''
+        discount_percentage: '',
+        base_price: ''
       });
       setThumbnailUrl('');
       setSaleEndDate(undefined);
@@ -270,6 +280,26 @@ const AstrologyProductUploadModal = ({ isOpen, onClose, onSuccess }: AstrologyPr
             </Select>
           </div>
 
+          {formData.delivery_type && (
+            <div>
+              <Label htmlFor="base_price">Price (USD)*</Label>
+              <input
+                id="base_price"
+                type="number"
+                min="1"
+                step="0.01"
+                value={formData.base_price}
+                onChange={(e) => setFormData(prev => ({ ...prev, base_price: e.target.value }))}
+                placeholder="Enter your price"
+                className="w-full bg-gray-700 border border-gray-600 text-white rounded px-3 py-2"
+                required
+              />
+              <p className="text-sm text-gray-400 mt-1">
+                Default suggestion: ${getDefaultPrice(formData.product_type, formData.delivery_type)}. You can set any price you like.
+              </p>
+            </div>
+          )}
+
           {formData.delivery_type === 'telephone' && (
             <div>
               <Label htmlFor="hours">Hours*</Label>
@@ -366,7 +396,7 @@ const AstrologyProductUploadModal = ({ isOpen, onClose, onSuccess }: AstrologyPr
                 Total Price: ${calculateTotalPrice()}
                 {formData.delivery_type === 'telephone' && (
                   <span className="text-gray-400 text-sm ml-2">
-                    (${getBasePrice(formData.product_type, formData.delivery_type)} × {formData.hours_selected} hour{formData.hours_selected > 1 ? 's' : ''})
+                    (${parseFloat(formData.base_price) || 0} × {formData.hours_selected} hour{formData.hours_selected > 1 ? 's' : ''})
                   </span>
                 )}
               </p>
@@ -384,7 +414,7 @@ const AstrologyProductUploadModal = ({ isOpen, onClose, onSuccess }: AstrologyPr
             </Button>
             <Button
               type="submit"
-              disabled={loading || !formData.product_type || !formData.delivery_type || !formData.description}
+              disabled={loading || !formData.product_type || !formData.delivery_type || !formData.description || !formData.base_price}
               className="bg-blue-600 hover:bg-blue-700"
             >
               {loading ? (
