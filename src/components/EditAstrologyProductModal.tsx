@@ -44,7 +44,8 @@ const productTypes = [
   { value: 'solar_return_reading', label: 'Solar Return Reading' },
   { value: 'north_node_reading', label: 'North Node Reading' },
   { value: 'career_path_reading', label: 'Career Path Reading' },
-  { value: 'horoscope_reading', label: 'Horoscope Forecast' }
+  { value: 'horoscope_reading', label: 'Horoscope Forecast' },
+  { value: 'venus_value_reading', label: 'Venus Value Reading' }
 ];
 
 const deliveryTypes = [
@@ -53,13 +54,14 @@ const deliveryTypes = [
   { value: 'video_file', label: 'Video File' }
 ];
 
-const getBasePrice = (productType: string, deliveryType: string): number => {
+const getDefaultPrice = (productType: string, deliveryType: string): number => {
   const prices = {
     natal_chart_reading: { telephone: 75, audio_file: 250, video_file: 300 },
     solar_return_reading: { telephone: 75, audio_file: 350, video_file: 400 },
     north_node_reading: { telephone: 75, audio_file: 400, video_file: 450 },
     career_path_reading: { telephone: 75, audio_file: 500, video_file: 550 },
-    horoscope_reading: { telephone: 75, audio_file: 75, video_file: 100 }
+    horoscope_reading: { telephone: 75, audio_file: 75, video_file: 100 },
+    venus_value_reading: { telephone: 75, audio_file: 250, video_file: 300 }
   };
   
   return prices[productType]?.[deliveryType] || 0;
@@ -86,7 +88,8 @@ const EditAstrologyProductModal = ({ product, isOpen, onClose, onSuccess }: Edit
     description: product.description || '',
     delivery_type: product.delivery_type,
     hours_selected: product.hours_selected,
-    discount_percentage: calculateExistingDiscount()
+    discount_percentage: calculateExistingDiscount(),
+    base_price: product.base_price.toString()
   });
   const [thumbnailUrl, setThumbnailUrl] = useState(product.thumbnail_url || '');
   const [advertisementVideoUrl, setAdvertisementVideoUrl] = useState((product as any).advertisement_video_url || '');
@@ -98,7 +101,7 @@ const EditAstrologyProductModal = ({ product, isOpen, onClose, onSuccess }: Edit
   const calculateTotalPrice = () => {
     if (!formData.product_type || !formData.delivery_type) return 0;
     
-    const basePrice = getBasePrice(formData.product_type, formData.delivery_type);
+    const basePrice = parseFloat(formData.base_price) || 0;
     
     let price = basePrice;
     if (formData.delivery_type === 'telephone') {
@@ -136,7 +139,7 @@ const EditAstrologyProductModal = ({ product, isOpen, onClose, onSuccess }: Edit
           title: title,
           description: formData.description,
           delivery_type: formData.delivery_type as any,
-          base_price: getBasePrice(formData.product_type, formData.delivery_type),
+          base_price: parseFloat(formData.base_price) || 0,
           hours_selected: formData.delivery_type === 'telephone' ? formData.hours_selected : 1,
           total_price: totalPrice,
           buyer_email: null,
@@ -288,6 +291,26 @@ const EditAstrologyProductModal = ({ product, isOpen, onClose, onSuccess }: Edit
             </Select>
           </div>
 
+          {formData.delivery_type && (
+            <div>
+              <Label htmlFor="base_price">Price (USD)*</Label>
+              <input
+                id="base_price"
+                type="number"
+                min="1"
+                step="0.01"
+                value={formData.base_price}
+                onChange={(e) => setFormData(prev => ({ ...prev, base_price: e.target.value }))}
+                placeholder="Enter your price"
+                className="w-full bg-gray-700 border border-gray-600 text-white rounded px-3 py-2"
+                required
+              />
+              <p className="text-sm text-gray-400 mt-1">
+                Default suggestion: ${getDefaultPrice(formData.product_type, formData.delivery_type)}. You can set any price you like.
+              </p>
+            </div>
+          )}
+
           {formData.delivery_type === 'telephone' && (
             <div>
               <Label htmlFor="hours">Hours*</Label>
@@ -384,7 +407,7 @@ const EditAstrologyProductModal = ({ product, isOpen, onClose, onSuccess }: Edit
                 Total Price: ${calculateTotalPrice()}
                 {formData.delivery_type === 'telephone' && (
                   <span className="text-gray-400 text-sm ml-2">
-                    (${getBasePrice(formData.product_type, formData.delivery_type)} × {formData.hours_selected} hour{formData.hours_selected > 1 ? 's' : ''})
+                    (${parseFloat(formData.base_price) || 0} × {formData.hours_selected} hour{formData.hours_selected > 1 ? 's' : ''})
                   </span>
                 )}
               </p>
