@@ -253,9 +253,18 @@ const AstrologyProductUploadModal = ({ isOpen, onClose, onSuccess }: AstrologyPr
                     controls
                     className="w-full h-48 object-contain"
                   />
-                  <p className="absolute bottom-0 left-0 right-0 bg-green-500/90 text-white text-xs text-center py-1">
-                    Video uploaded successfully
-                  </p>
+                  <div className="flex items-center justify-between bg-green-500/90 text-white text-xs px-3 py-1">
+                    <span>Video uploaded successfully</span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setAdvertisementVideoUrl('')}
+                      className="h-6 px-2 text-white hover:bg-red-600/80 hover:text-white text-xs"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>
