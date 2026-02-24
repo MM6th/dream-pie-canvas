@@ -3,9 +3,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { CheckCircle, Clock, AlertTriangle, Video, FileText, Send, Upload, Trash2, RefreshCw, Play } from "lucide-react";
+import { CheckCircle, Clock, AlertTriangle, Video, FileText, Send, Upload, Trash2, RefreshCw, Play, Music, Headphones } from "lucide-react";
 import { VideoRecorder } from "./VideoRecorder";
 import { VideoFileUploader } from "./VideoFileUploader";
+import { AudioFileUploader } from "./AudioFileUploader";
 import { Button } from "@/components/ui/button";
 
 interface Delivery {
@@ -25,6 +26,7 @@ interface Delivery {
   attachment_filename?: string | null;
   astrology_products: {
     title: string;
+    delivery_type: string;
   };
 }
 
@@ -65,7 +67,8 @@ export const AstrologyDeliveryManager = () => {
         .select(`
           *,
           astrology_products (
-            title
+            title,
+            delivery_type
           )
         `)
         .eq("admin_id", user.id)
@@ -837,8 +840,8 @@ export const AstrologyDeliveryManager = () => {
                         disabled={uploading === delivery.id}
                         className="w-full sm:w-auto"
                       >
-                        <Video className="w-4 h-4 mr-2" />
-                        Continue Editing
+                         <Video className="w-4 h-4 mr-2" />
+                         {delivery.astrology_products.delivery_type === 'audio_file' ? 'Continue Editing Audio' : 'Continue Editing'}
                       </Button>
                       <Button
                         onClick={() => handleClearDraft(delivery.id)}
@@ -857,11 +860,19 @@ export const AstrologyDeliveryManager = () => {
                   <div className="space-y-3">
                     <div>
                       <p className="text-sm font-medium mb-2">Draft Preview:</p>
-                      <video
-                        src={delivery.draft_video_url}
-                        controls
-                        className="w-full max-w-2xl rounded-lg"
-                      />
+                      {delivery.astrology_products.delivery_type === 'audio_file' ? (
+                        <audio
+                          src={delivery.draft_video_url}
+                          controls
+                          className="w-full"
+                        />
+                      ) : (
+                        <video
+                          src={delivery.draft_video_url}
+                          controls
+                          className="w-full max-w-2xl rounded-lg"
+                        />
+                      )}
                     </div>
                     <div className="flex flex-col sm:flex-row gap-2">
                       <Button
@@ -918,37 +929,66 @@ export const AstrologyDeliveryManager = () => {
                  recordingDeliveryId !== delivery.id && 
                  uploadingDeliveryId !== delivery.id && (
                   <div className="space-y-4">
-                    <div className="flex flex-col sm:flex-row gap-2">
-                      <Button 
-                        onClick={() => setRecordingDeliveryId(delivery.id)}
-                        disabled={uploading === delivery.id}
-                        variant="outline"
-                        className="w-full sm:w-auto"
-                      >
-                        <Video className="w-4 h-4 mr-2" />
-                        Record Video
-                      </Button>
-                      <Button 
-                        onClick={() => setUploadingDeliveryId(delivery.id)}
-                        disabled={uploading === delivery.id}
-                        variant="outline"
-                        className="w-full sm:w-auto"
-                      >
-                        <Upload className="w-4 h-4 mr-2" />
-                        Upload Video
-                      </Button>
-                      <Button
-                        onClick={() => handleRecoverSegments(delivery.id)}
-                        variant="outline"
-                        disabled={recovering === delivery.id}
-                        className="w-full sm:w-auto"
-                      >
-                        <RefreshCw className={`w-4 h-4 mr-2 ${recovering === delivery.id ? 'animate-spin' : ''}`} />
-                        Recover Segments
-                      </Button>
-                    </div>
+                    {delivery.astrology_products.delivery_type === 'audio_file' ? (
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <Button 
+                          onClick={() => setUploadingDeliveryId(delivery.id)}
+                          disabled={uploading === delivery.id}
+                          variant="outline"
+                          className="w-full sm:w-auto"
+                        >
+                          <Music className="w-4 h-4 mr-2" />
+                          Upload Audio
+                        </Button>
+                      </div>
+                    ) : delivery.astrology_products.delivery_type === 'telephone' ? (
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <Button
+                          onClick={() => handleSubmitDraft(delivery.id)}
+                          disabled={uploading === delivery.id}
+                          className="w-full sm:w-auto"
+                        >
+                          <CheckCircle className="w-4 h-4 mr-2" />
+                          Mark as Completed
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <Button 
+                          onClick={() => setRecordingDeliveryId(delivery.id)}
+                          disabled={uploading === delivery.id}
+                          variant="outline"
+                          className="w-full sm:w-auto"
+                        >
+                          <Video className="w-4 h-4 mr-2" />
+                          Record Video
+                        </Button>
+                        <Button 
+                          onClick={() => setUploadingDeliveryId(delivery.id)}
+                          disabled={uploading === delivery.id}
+                          variant="outline"
+                          className="w-full sm:w-auto"
+                        >
+                          <Upload className="w-4 h-4 mr-2" />
+                          Upload Video
+                        </Button>
+                        <Button
+                          onClick={() => handleRecoverSegments(delivery.id)}
+                          variant="outline"
+                          disabled={recovering === delivery.id}
+                          className="w-full sm:w-auto"
+                        >
+                          <RefreshCw className={`w-4 h-4 mr-2 ${recovering === delivery.id ? 'animate-spin' : ''}`} />
+                          Recover Segments
+                        </Button>
+                      </div>
+                    )}
                     <p className="text-xs text-muted-foreground">
-                      Try "Recover Segments" if you had auto-saved progress that's not showing
+                      {delivery.astrology_products.delivery_type === 'audio_file' 
+                        ? 'Upload an audio file for this reading'
+                        : delivery.astrology_products.delivery_type === 'telephone'
+                        ? 'Mark this telephone reading as completed once the call is done'
+                        : 'Try "Recover Segments" if you had auto-saved progress that\'s not showing'}
                     </p>
                   </div>
                 )}
@@ -973,41 +1013,64 @@ export const AstrologyDeliveryManager = () => {
                 )}
 
                 {uploadingDeliveryId === delivery.id && (
-                  <VideoFileUploader
-                    deliveryId={delivery.id}
-                    onDraftSave={(blob) => handleDraftSave(delivery.id, blob)}
-                    onSubmit={(blob) => handleVideoUpload(delivery.id, blob)}
-                    onCancel={() => setUploadingDeliveryId(null)}
-                    isUploading={uploading === delivery.id}
-                  />
+                  delivery.astrology_products.delivery_type === 'audio_file' ? (
+                    <AudioFileUploader
+                      deliveryId={delivery.id}
+                      onDraftSave={(blob) => handleDraftSave(delivery.id, blob)}
+                      onSubmit={(blob) => handleVideoUpload(delivery.id, blob)}
+                      onCancel={() => setUploadingDeliveryId(null)}
+                      isUploading={uploading === delivery.id}
+                    />
+                  ) : (
+                    <VideoFileUploader
+                      deliveryId={delivery.id}
+                      onDraftSave={(blob) => handleDraftSave(delivery.id, blob)}
+                      onSubmit={(blob) => handleVideoUpload(delivery.id, blob)}
+                      onCancel={() => setUploadingDeliveryId(null)}
+                      isUploading={uploading === delivery.id}
+                    />
+                  )
                 )}
 
                 {delivery.admin_video_url && delivery.status === "delivered" && (
                   <div className="space-y-3">
-                    <p className="text-sm font-medium">Delivered Video:</p>
+                    <p className="text-sm font-medium">
+                      {delivery.astrology_products.delivery_type === 'audio_file' ? 'Delivered Audio:' : 'Delivered Video:'}
+                    </p>
                     {playingDelivery === delivery.id ? (
                       <div className="space-y-2">
-                        {delivery.video_segments && delivery.video_segments.length > 0 && (
-                          <div className="text-sm font-medium mb-2">
-                            Segment {currentSegmentIndex + 1} of {delivery.video_segments.length}
-                          </div>
+                        {delivery.astrology_products.delivery_type === 'audio_file' ? (
+                          <audio
+                            src={getCurrentVideoUrl(delivery)}
+                            controls
+                            autoPlay
+                            className="w-full"
+                          />
+                        ) : (
+                          <>
+                            {delivery.video_segments && delivery.video_segments.length > 0 && (
+                              <div className="text-sm font-medium mb-2">
+                                Segment {currentSegmentIndex + 1} of {delivery.video_segments.length}
+                              </div>
+                            )}
+                            <video
+                              key={currentSegmentIndex}
+                              src={getCurrentVideoUrl(delivery)}
+                              controls
+                              autoPlay
+                              className="w-full max-w-2xl rounded-lg"
+                              onEnded={() => handleSegmentEnded(delivery)}
+                              preload="metadata"
+                            >
+                              Your browser does not support the video tag.
+                            </video>
+                            <div className="text-xs text-muted-foreground">
+                              {delivery.video_segments && delivery.video_segments.length > 1 
+                                ? 'Video will auto-advance to next segment when current one finishes'
+                                : 'Complete reading'}
+                            </div>
+                          </>
                         )}
-                        <video
-                          key={currentSegmentIndex}
-                          src={getCurrentVideoUrl(delivery)}
-                          controls
-                          autoPlay
-                          className="w-full max-w-2xl rounded-lg"
-                          onEnded={() => handleSegmentEnded(delivery)}
-                          preload="metadata"
-                        >
-                          Your browser does not support the video tag.
-                        </video>
-                        <div className="text-xs text-muted-foreground">
-                          {delivery.video_segments && delivery.video_segments.length > 1 
-                            ? 'Video will auto-advance to next segment when current one finishes'
-                            : 'Complete reading'}
-                        </div>
                         <Button
                           variant="outline"
                           onClick={() => {
@@ -1016,12 +1079,13 @@ export const AstrologyDeliveryManager = () => {
                           }}
                           size="sm"
                         >
-                          Close Video
+                          {delivery.astrology_products.delivery_type === 'audio_file' ? 'Close Audio' : 'Close Video'}
                         </Button>
                       </div>
                     ) : (
                       <div className="space-y-2">
-                        {delivery.video_segments && delivery.video_segments.length > 1 && (
+                        {delivery.astrology_products.delivery_type !== 'audio_file' && 
+                         delivery.video_segments && delivery.video_segments.length > 1 && (
                           <div className="text-sm text-muted-foreground mb-2">
                             This reading contains {delivery.video_segments.length} video segments
                           </div>
@@ -1034,8 +1098,11 @@ export const AstrologyDeliveryManager = () => {
                           variant="outline"
                           size="sm"
                         >
-                          <Play className="w-4 h-4 mr-2" />
-                          Watch Complete Reading
+                          {delivery.astrology_products.delivery_type === 'audio_file' ? (
+                            <><Headphones className="w-4 h-4 mr-2" />Listen to Complete Reading</>
+                          ) : (
+                            <><Play className="w-4 h-4 mr-2" />Watch Complete Reading</>
+                          )}
                         </Button>
                       </div>
                     )}

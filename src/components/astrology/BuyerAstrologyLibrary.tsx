@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Download, Play, Clock, CheckCircle, AlertTriangle, FileText, Gift } from "lucide-react";
+import { Download, Play, Clock, CheckCircle, AlertTriangle, FileText, Gift, Headphones } from "lucide-react";
 import { FreeResourceDownloadModal } from "@/components/FreeResourceDownloadModal";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -27,6 +27,7 @@ interface AstrologyReading {
   astrology_products: {
     title: string;
     description: string;
+    delivery_type: string;
   };
 }
 
@@ -99,7 +100,8 @@ export const BuyerAstrologyLibrary = () => {
           *,
           astrology_products (
             title,
-            description
+            description,
+            delivery_type
           )
         `)
         .eq("buyer_id", user.id)
@@ -122,22 +124,23 @@ export const BuyerAstrologyLibrary = () => {
     }
   };
 
-  const handleDownload = async (videoUrl: string, title: string) => {
+  const handleDownload = async (videoUrl: string, title: string, deliveryType?: string) => {
     try {
       const response = await fetch(videoUrl);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `${title.replace(/[^a-z0-9]/gi, "_")}.mp4`;
+      const ext = deliveryType === 'audio_file' ? 'mp3' : 'mp4';
+      a.download = `${title.replace(/[^a-z0-9]/gi, "_")}.${ext}`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
       toast.success("Download started");
     } catch (error) {
-      console.error("Error downloading video:", error);
-      toast.error("Failed to download video. Try opening the video URL directly.");
+      console.error("Error downloading:", error);
+      toast.error("Failed to download. Try opening the URL directly.");
     }
   };
 
@@ -287,29 +290,40 @@ export const BuyerAstrologyLibrary = () => {
                   <div className="space-y-4">
                     {playingVideo === reading.id ? (
                       <div className="space-y-2">
-                        {reading.video_segments && reading.video_segments.length > 0 && (
-                          <div className="text-sm font-medium mb-2">
-                            Segment {currentSegmentIndex + 1} of {reading.video_segments.length}
-                          </div>
+                        {reading.astrology_products.delivery_type === 'audio_file' ? (
+                          <audio
+                            src={getCurrentVideoUrl(reading)}
+                            controls
+                            autoPlay
+                            className="w-full"
+                          />
+                        ) : (
+                          <>
+                            {reading.video_segments && reading.video_segments.length > 0 && (
+                              <div className="text-sm font-medium mb-2">
+                                Segment {currentSegmentIndex + 1} of {reading.video_segments.length}
+                              </div>
+                            )}
+                            <video
+                              key={currentSegmentIndex}
+                              src={getCurrentVideoUrl(reading)}
+                              controls
+                              autoPlay
+                              className="w-full max-w-2xl rounded-lg"
+                              onError={(e) => handleVideoError(e, reading)}
+                              onLoadedMetadata={handleVideoLoaded}
+                              onEnded={() => handleSegmentEnded(reading)}
+                              preload="metadata"
+                            >
+                              Your browser does not support the video tag.
+                            </video>
+                            <div className="text-xs text-muted-foreground text-center">
+                              {reading.video_segments && reading.video_segments.length > 1 
+                                ? 'Video will auto-advance to next segment when current one finishes'
+                                : 'If video doesn\'t play, try opening it in a new tab or downloading it'}
+                            </div>
+                          </>
                         )}
-                        <video
-                          key={currentSegmentIndex}
-                          src={getCurrentVideoUrl(reading)}
-                          controls
-                          autoPlay
-                          className="w-full max-w-2xl rounded-lg"
-                          onError={(e) => handleVideoError(e, reading)}
-                          onLoadedMetadata={handleVideoLoaded}
-                          onEnded={() => handleSegmentEnded(reading)}
-                          preload="metadata"
-                        >
-                          Your browser does not support the video tag.
-                        </video>
-                        <div className="text-xs text-muted-foreground text-center">
-                          {reading.video_segments && reading.video_segments.length > 1 
-                            ? 'Video will auto-advance to next segment when current one finishes'
-                            : 'If video doesn\'t play, try opening it in a new tab or downloading it'}
-                        </div>
                         <Button
                           variant="outline"
                           onClick={() => {
@@ -318,12 +332,13 @@ export const BuyerAstrologyLibrary = () => {
                           }}
                           className="mt-2"
                         >
-                          Close Video
+                          {reading.astrology_products.delivery_type === 'audio_file' ? 'Close Audio' : 'Close Video'}
                         </Button>
                       </div>
                      ) : (
                       <div className="space-y-2">
-                        {reading.video_segments && reading.video_segments.length > 1 && (
+                        {reading.astrology_products.delivery_type !== 'audio_file' && 
+                         reading.video_segments && reading.video_segments.length > 1 && (
                           <div className="text-sm text-muted-foreground mb-2">
                             This reading contains {reading.video_segments.length} video segments
                           </div>
@@ -333,15 +348,19 @@ export const BuyerAstrologyLibrary = () => {
                             setPlayingVideo(reading.id);
                             setCurrentSegmentIndex(0);
                           }} className="w-full sm:w-auto">
-                            <Play className="w-4 h-4 mr-2" />
-                            Watch Reading
+                            {reading.astrology_products.delivery_type === 'audio_file' ? (
+                              <><Headphones className="w-4 h-4 mr-2" />Listen to Reading</>
+                            ) : (
+                              <><Play className="w-4 h-4 mr-2" />Watch Reading</>
+                            )}
                           </Button>
                           <Button
                             variant="outline"
                             onClick={() =>
                               handleDownload(
                                 reading.admin_video_url!,
-                                reading.astrology_products.title
+                                reading.astrology_products.title,
+                                reading.astrology_products.delivery_type
                               )
                             }
                             className="w-full sm:w-auto"
@@ -356,7 +375,7 @@ export const BuyerAstrologyLibrary = () => {
                           variant="ghost"
                           size="sm"
                         >
-                          Test Video URL (Opens in New Tab)
+                          Test URL (Opens in New Tab)
                         </Button>
                       </div>
                     )}
