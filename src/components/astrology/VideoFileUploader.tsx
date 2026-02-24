@@ -340,6 +340,14 @@ export const VideoFileUploader = ({
           <Upload className="h-4 w-4 mr-2" />
           Select Video File
         </Button>
+        <Button
+          onClick={onCancel}
+          variant="ghost"
+          className="text-muted-foreground"
+        >
+          <X className="h-4 w-4 mr-2" />
+          Cancel
+        </Button>
       </div>
     );
   }
