@@ -30,6 +30,7 @@ import { TutorialHelpButton } from "@/components/TutorialHelpButton";
 import SupporterCurrentAffirmationsModal from "@/components/SupporterCurrentAffirmationsModal";
 // Messaging components now accessed via MessageCreditsIcon in header
 import { BuyerAstrologyLibrary } from "@/components/astrology/BuyerAstrologyLibrary";
+import AstrologyAudioPlayer from "@/components/AstrologyAudioPlayer";
 import { FreeAstrologyResourceModal } from "@/components/FreeAstrologyResourceModal";
 import { useFreeAstrologyResource } from "@/hooks/useFreeAstrologyResource";
 import UserTicketsTab from "@/components/support/UserTicketsTab";
@@ -396,6 +397,9 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
       {/* Astrology Library Section - At Bottom */}
       <div className="mb-6">
         <BuyerAstrologyLibrary />
+        <div className="mt-4">
+          <AstrologyAudioPlayer />
+        </div>
       </div>
 
       {/* Free Astrology Resource Modal */}

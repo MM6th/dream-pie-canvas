@@ -29,6 +29,7 @@ import { FollowRequestsManager } from "@/components/profile/FollowRequestsManage
 import { Users } from "lucide-react";
 import { AstrologyDeliveryManager } from "@/components/astrology/AstrologyDeliveryManager";
 import { BuyerAstrologyLibrary } from "@/components/astrology/BuyerAstrologyLibrary";
+import AstrologyAudioPlayer from "@/components/AstrologyAudioPlayer";
 import { FreeAstrologyResourceModal } from "@/components/FreeAstrologyResourceModal";
 import { useFreeAstrologyResource } from "@/hooks/useFreeAstrologyResource";
 import SupportCenterCard from "@/components/support/SupportCenterCard";
@@ -298,6 +299,9 @@ const MerchantDashboard = ({
           {/* Astrology Library Section */}
           <div className="mt-6">
             <BuyerAstrologyLibrary />
+            <div className="mt-4">
+              <AstrologyAudioPlayer />
+            </div>
           </div>
 
           {/* Support Center Card */}
