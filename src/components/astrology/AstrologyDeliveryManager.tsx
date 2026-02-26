@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { CheckCircle, Clock, AlertTriangle, Video, FileText, Send, Upload, Trash2, RefreshCw, Play, Music, Headphones } from "lucide-react";
+import { CheckCircle, Clock, AlertTriangle, Video, FileText, Send, Upload, Trash2, RefreshCw, Play, Music, Headphones, Paperclip } from "lucide-react";
 import { VideoRecorder } from "./VideoRecorder";
 import { VideoFileUploader } from "./VideoFileUploader";
 import { AudioFileUploader } from "./AudioFileUploader";
@@ -853,6 +853,14 @@ export const AstrologyDeliveryManager = () => {
                         Clear & Start Over
                       </Button>
                     </div>
+                    {/* Attachment indicator in segments view */}
+                    {delivery.attachment_url && (
+                      <div className="flex items-center gap-2 p-2 bg-muted/50 rounded-md">
+                        <Paperclip className="w-4 h-4 text-primary flex-shrink-0" />
+                        <span className="text-sm truncate">{delivery.attachment_filename || 'Attachment'}</span>
+                        <a href={delivery.attachment_url} target="_blank" rel="noopener noreferrer" className="ml-auto text-xs text-primary hover:underline flex-shrink-0">View</a>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -874,6 +882,14 @@ export const AstrologyDeliveryManager = () => {
                         />
                       )}
                     </div>
+                    {/* Attachment indicator */}
+                    {delivery.attachment_url && (
+                      <div className="flex items-center gap-2 p-2 bg-muted/50 rounded-md">
+                        <Paperclip className="w-4 h-4 text-primary flex-shrink-0" />
+                        <span className="text-sm truncate">{delivery.attachment_filename || 'Attachment'}</span>
+                        <a href={delivery.attachment_url} target="_blank" rel="noopener noreferrer" className="ml-auto text-xs text-primary hover:underline flex-shrink-0">View</a>
+                      </div>
+                    )}
                     <div className="flex flex-col sm:flex-row gap-2">
                       <Button
                         onClick={() => setRecordingDeliveryId(delivery.id)}
