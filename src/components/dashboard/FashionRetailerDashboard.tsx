@@ -24,6 +24,7 @@ import { TutorialTooltip } from "@/components/TutorialTooltip";
 import { TutorialSpotlight } from "@/components/TutorialSpotlight";
 import SupporterCurrentAffirmationsModal from "@/components/SupporterCurrentAffirmationsModal";
 import { BuyerAstrologyLibrary } from "@/components/astrology/BuyerAstrologyLibrary";
+import AstrologyAudioPlayer from "@/components/AstrologyAudioPlayer";
 import TVGuideModal from "@/components/TVGuideModal";
 import { MessageSettingsCard } from "@/components/messaging/MessageSettingsCard";
 import UserTicketsTab from "@/components/support/UserTicketsTab";
@@ -416,6 +417,9 @@ const FashionRetailerDashboard = ({
       {/* Astrology Library Section - At Bottom */}
       <div className="mb-6">
         <BuyerAstrologyLibrary />
+        <div className="mt-4">
+          <AstrologyAudioPlayer />
+        </div>
       </div>
 
       {/* Fashion Product Upload Modal */}

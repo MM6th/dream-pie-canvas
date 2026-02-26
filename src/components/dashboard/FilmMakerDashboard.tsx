@@ -18,6 +18,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import SupporterCurrentAffirmationsModal from "@/components/SupporterCurrentAffirmationsModal";
 import { BuyerAstrologyLibrary } from "@/components/astrology/BuyerAstrologyLibrary";
+import AstrologyAudioPlayer from "@/components/AstrologyAudioPlayer";
 import TVGuideModal from "@/components/TVGuideModal";
 import UserTicketsTab from "@/components/support/UserTicketsTab";
 import { useApprovalStatus } from "@/hooks/useApprovalStatus";
@@ -428,6 +429,9 @@ const FilmMakerDashboard = ({
       {/* Astrology Library Section - At Bottom */}
       <div className="mb-6">
         <BuyerAstrologyLibrary />
+        <div className="mt-4">
+          <AstrologyAudioPlayer />
+        </div>
       </div>
     </div>
   );
