@@ -299,7 +299,7 @@ const MerchantDashboard = ({
           {/* Astrology Library Section */}
           <div className="mt-6">
             <BuyerAstrologyLibrary />
-            <div className="mt-4">
+            <div className="mt-4 max-w-xl">
               <AstrologyAudioPlayer />
             </div>
           </div>

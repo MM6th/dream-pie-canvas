@@ -359,7 +359,7 @@ const CookBakerDashboard = ({
       {/* Astrology Library Section - At Bottom */}
       <div className="mb-6">
         <BuyerAstrologyLibrary />
-        <div className="mt-4">
+        <div className="mt-4 max-w-xl">
           <AstrologyAudioPlayer />
         </div>
       </div>
