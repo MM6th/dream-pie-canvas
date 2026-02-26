@@ -299,6 +299,9 @@ export const AudioFileUploader = ({
       setPreviewUrl(null);
       setAttachmentFile(null);
       resetUploadState();
+      
+      // Close the uploader and return to the delivery card
+      onCancel();
     } catch (error: any) {
       console.error("Upload error:", error);
       toast.error(error.message || "Upload failed", { id: "upload" });

@@ -1018,7 +1018,7 @@ export const AstrologyDeliveryManager = () => {
                       deliveryId={delivery.id}
                       onDraftSave={(blob) => handleDraftSave(delivery.id, blob)}
                       onSubmit={(blob) => handleVideoUpload(delivery.id, blob)}
-                      onCancel={() => setUploadingDeliveryId(null)}
+                      onCancel={() => { setUploadingDeliveryId(null); fetchDeliveries(); }}
                       isUploading={uploading === delivery.id}
                     />
                   ) : (
