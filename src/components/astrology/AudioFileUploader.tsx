@@ -188,7 +188,12 @@ export const AudioFileUploader = ({
           chunkSize: 6 * 1024 * 1024,
           onError: (error) => {
             console.error('TUS upload error:', error);
-            reject(error);
+            const errorMsg = error?.message || String(error);
+            if (errorMsg.includes('413') || errorMsg.includes('Maximum size exceeded')) {
+              reject(new Error(`File too large for storage. Please use a smaller file or compress your audio. Server limit may be lower than expected.`));
+            } else {
+              reject(error);
+            }
           },
           onProgress: (bytesUploaded, bytesTotal) => {
             const progress = Math.round((bytesUploaded / bytesTotal) * 100);
