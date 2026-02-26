@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Upload, X, Save, Send, AlertCircle, Loader2, Music } from "lucide-react";
+import { Upload, X, Save, Send, AlertCircle, Loader2, Music, Paperclip, FileText, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -10,14 +10,14 @@ import * as tus from "tus-js-client";
 
 interface AudioFileUploaderProps {
   deliveryId: string;
-  onDraftSave: (blob: Blob) => Promise<void>;
-  onSubmit: (blob: Blob) => Promise<void>;
+  onDraftSave: (blob: Blob, attachment?: File) => Promise<void>;
+  onSubmit: (blob: Blob, attachment?: File) => Promise<void>;
   onCancel: () => void;
   isUploading: boolean;
 }
 
 const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
-const ACCEPTED_FORMATS: Record<string, string[]> = {
+const ACCEPTED_AUDIO_FORMATS: Record<string, string[]> = {
   'audio/mpeg': ['.mp3'],
   'audio/wav': ['.wav'],
   'audio/x-wav': ['.wav'],
@@ -27,6 +27,8 @@ const ACCEPTED_FORMATS: Record<string, string[]> = {
   'audio/aac': ['.aac'],
 };
 
+const ACCEPTED_ATTACHMENT_FORMATS = '.pdf,.doc,.docx,.jpg,.jpeg,.png,.txt';
+
 export const AudioFileUploader = ({
   deliveryId,
   onDraftSave,
@@ -35,6 +37,7 @@ export const AudioFileUploader = ({
   isUploading
 }: AudioFileUploaderProps) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadSpeed, setUploadSpeed] = useState(0);
@@ -44,6 +47,7 @@ export const AudioFileUploader = ({
   const [isAdmin, setIsAdmin] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const attachmentInputRef = useRef<HTMLInputElement>(null);
   const startTimeRef = useRef<number>(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -78,7 +82,7 @@ export const AudioFileUploader = ({
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if (!Object.keys(ACCEPTED_FORMATS).includes(file.type)) {
+    if (!Object.keys(ACCEPTED_AUDIO_FORMATS).includes(file.type)) {
       toast.error("Please select a valid audio file (MP3, WAV, M4A, OGG, or AAC)");
       return;
     }
@@ -109,6 +113,26 @@ export const AudioFileUploader = ({
     setSelectedFile(file);
     const url = URL.createObjectURL(file);
     setPreviewUrl(url);
+  };
+
+  const handleAttachmentSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Attachment must be less than 10MB");
+      return;
+    }
+
+    setAttachmentFile(file);
+    toast.success(`Attachment added: ${file.name}`);
+  };
+
+  const handleRemoveAttachment = () => {
+    setAttachmentFile(null);
+    if (attachmentInputRef.current) {
+      attachmentInputRef.current.value = '';
+    }
   };
 
   const uploadWithProgress = async (file: File, isDraft: boolean) => {
@@ -200,16 +224,41 @@ export const AudioFileUploader = ({
         .from("user-media")
         .getPublicUrl(filePath);
 
+      // Handle attachment upload
+      let attachmentUrl: string | null = null;
+      let attachmentFilename: string | null = null;
+
+      if (attachmentFile) {
+        const attachmentPath = `astrology-deliveries/attachment-${deliveryId}-${Date.now()}-${attachmentFile.name}`;
+        const { error: attachmentError } = await supabase.storage
+          .from("user-media")
+          .upload(attachmentPath, attachmentFile);
+
+        if (attachmentError) {
+          console.error("Attachment upload error:", attachmentError);
+          toast.error("Audio uploaded but attachment failed. You can re-upload the attachment later.");
+        } else {
+          const { data: { publicUrl: attachmentPublicUrl } } = supabase.storage
+            .from("user-media")
+            .getPublicUrl(attachmentPath);
+          attachmentUrl = attachmentPublicUrl;
+          attachmentFilename = attachmentFile.name;
+        }
+      }
+
       const updateData = isDraft
         ? {
             draft_video_url: publicUrl,
             draft_saved_at: new Date().toISOString(),
+            ...(attachmentUrl && { attachment_url: attachmentUrl, attachment_filename: attachmentFilename }),
           }
         : {
             admin_video_url: publicUrl,
+            buyer_video_url: publicUrl,
             status: "delivered",
             delivered_at: new Date().toISOString(),
             draft_video_url: null,
+            ...(attachmentUrl && { attachment_url: attachmentUrl, attachment_filename: attachmentFilename }),
           };
 
       const { error: updateError } = await supabase
@@ -219,11 +268,31 @@ export const AudioFileUploader = ({
 
       if (updateError) throw updateError;
 
+      // Send notification to buyer when submitting (not draft)
+      if (!isDraft) {
+        const { data: delivery } = await supabase
+          .from("astrology_deliveries")
+          .select("buyer_id")
+          .eq("id", deliveryId)
+          .single();
+
+        if (delivery) {
+          await supabase.from("notifications").insert({
+            user_id: delivery.buyer_id,
+            title: "Astrology Reading Ready",
+            message: "Your personalized astrology audio reading is ready! You can now listen to and download it.",
+            type: "ready",
+            related_delivery_id: deliveryId,
+          });
+        }
+      }
+
       toast.success(isDraft ? "Draft saved successfully!" : "Audio delivered successfully!", { id: "upload" });
 
       if (previewUrl) URL.revokeObjectURL(previewUrl);
       setSelectedFile(null);
       setPreviewUrl(null);
+      setAttachmentFile(null);
       resetUploadState();
     } catch (error: any) {
       console.error("Upload error:", error);
@@ -263,6 +332,7 @@ export const AudioFileUploader = ({
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     setSelectedFile(null);
     setPreviewUrl(null);
+    setAttachmentFile(null);
     resetUploadState();
     setUploading(false);
     onCancel();
@@ -308,7 +378,7 @@ export const AudioFileUploader = ({
         <input
           ref={fileInputRef}
           type="file"
-          accept={Object.values(ACCEPTED_FORMATS).flat().join(',')}
+          accept={Object.values(ACCEPTED_AUDIO_FORMATS).flat().join(',')}
           onChange={handleFileSelect}
           className="hidden"
         />
@@ -316,7 +386,10 @@ export const AudioFileUploader = ({
         <div className="text-center">
           <p className="text-sm font-medium mb-1">Upload an audio file from your device</p>
           <p className="text-xs text-muted-foreground">
-            MP3, WAV, M4A, OGG, or AAC {isAdmin ? '(unlimited size)' : '(max 100MB)'}
+            Accepted formats: <span className="font-medium">MP3, WAV, M4A, OGG, AAC</span>
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            {isAdmin ? 'Unlimited file size' : 'Max file size: 100MB'}
           </p>
         </div>
         <Button
@@ -364,6 +437,50 @@ export const AudioFileUploader = ({
             className="w-full"
           />
         )}
+
+        {/* Attachment Section */}
+        <div className="border border-border/50 rounded-lg p-3 space-y-2">
+          <input
+            ref={attachmentInputRef}
+            type="file"
+            accept={ACCEPTED_ATTACHMENT_FORMATS}
+            onChange={handleAttachmentSelect}
+            className="hidden"
+          />
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground flex items-center gap-1.5">
+              <Paperclip className="h-4 w-4" />
+              Attachment (optional)
+            </p>
+            {!attachmentFile && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => attachmentInputRef.current?.click()}
+                disabled={uploading}
+              >
+                <Paperclip className="h-3.5 w-3.5 mr-1.5" />
+                Add File
+              </Button>
+            )}
+          </div>
+          {attachmentFile ? (
+            <div className="flex items-center justify-between bg-muted/50 rounded-md px-3 py-2">
+              <div className="flex items-center gap-2 text-sm">
+                <FileText className="h-4 w-4 text-primary" />
+                <span className="truncate max-w-[200px]">{attachmentFile.name}</span>
+                <span className="text-xs text-muted-foreground">({formatFileSize(attachmentFile.size)})</span>
+              </div>
+              <Button variant="ghost" size="sm" onClick={handleRemoveAttachment} disabled={uploading}>
+                <Trash2 className="h-3.5 w-3.5 text-destructive" />
+              </Button>
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              PDF, DOC, DOCX, JPG, PNG, or TXT (max 10MB)
+            </p>
+          )}
+        </div>
 
         {uploading && (
           <div className="space-y-4">
