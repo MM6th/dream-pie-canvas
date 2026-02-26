@@ -1,6 +1,7 @@
 import React from "react";
 import AudioPlayer from "@/components/AudioPlayer";
 import PodcastAudioPlayer from "@/components/PodcastAudioPlayer";
+import AstrologyAudioPlayer from "@/components/AstrologyAudioPlayer";
 import PurchasedPortfoliosViewer from "@/components/dashboard/PurchasedPortfoliosViewer";
 import PurchasedFilmsViewer from "@/components/dashboard/PurchasedFilmsViewer";
 
@@ -16,6 +17,7 @@ const MediaPlayers = ({ purchasedTracks, purchasedPodcasts, purchasedPortfolios 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <AudioPlayer tracks={purchasedTracks} />
         <PodcastAudioPlayer tracks={purchasedPodcasts} />
+        <AstrologyAudioPlayer />
         <PurchasedFilmsViewer />
       </div>
       <PurchasedPortfoliosViewer portfolios={purchasedPortfolios} />
