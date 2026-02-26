@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Download, Play, Clock, CheckCircle, AlertTriangle, FileText, Gift, Headphones } from "lucide-react";
+import { Download, Play, Clock, CheckCircle, AlertTriangle, FileText, Gift, Headphones, Paperclip } from "lucide-react";
 import { FreeResourceDownloadModal } from "@/components/FreeResourceDownloadModal";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -24,6 +24,8 @@ interface AstrologyReading {
   admin_video_url: string | null;
   video_segments: VideoSegment[] | null;
   status: string;
+  attachment_url?: string | null;
+  attachment_filename?: string | null;
   astrology_products: {
     title: string;
     description: string;
@@ -377,6 +379,27 @@ export const BuyerAstrologyLibrary = () => {
                         >
                           Test URL (Opens in New Tab)
                         </Button>
+
+                        {/* Attachment download */}
+                        {reading.attachment_url && (
+                          <div className="flex items-center gap-2 mt-2 p-2 bg-muted/50 rounded-md">
+                            <Paperclip className="w-4 h-4 text-primary flex-shrink-0" />
+                            <span className="text-sm truncate">{reading.attachment_filename || 'Attachment'}</span>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDownload(
+                                reading.attachment_url!,
+                                reading.attachment_filename || 'attachment',
+                                undefined
+                              )}
+                              className="ml-auto flex-shrink-0"
+                            >
+                              <Download className="w-3.5 h-3.5 mr-1" />
+                              Download
+                            </Button>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
