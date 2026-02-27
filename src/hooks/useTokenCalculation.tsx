@@ -83,26 +83,48 @@ const reserveAt = (s: number) =>
 export const useTokenCalculation = (): TokenCalculationResult => {
   const [totalDollarValue, setTotalDollarValue] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [dbBuyTaxRevenue, setDbBuyTaxRevenue] = useState(0);
+  const [dbTokenSupply, setDbTokenSupply] = useState(0);
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const { data: revenueRows, error } = await supabase
-        .from("platform_revenue")
-        .select("amount")
-        .eq("revenue_type", "credit_purchase");
+      // Fetch credit purchase revenue and buy tax revenue in parallel
+      const [revenueResult, taxResult, supplyResult] = await Promise.all([
+        supabase
+          .from("platform_revenue")
+          .select("amount")
+          .eq("revenue_type", "credit_purchase"),
+        supabase
+          .from("platform_revenue")
+          .select("amount")
+          .eq("revenue_type", "token_buy_tax"),
+        (supabase as any)
+          .from("token_balances")
+          .select("balance"),
+      ]);
 
-      if (error) {
-        console.error("Error fetching platform revenue:", error);
+      if (revenueResult.error) {
+        console.error("Error fetching platform revenue:", revenueResult.error);
         return;
       }
 
-      const totalRevenue = (revenueRows || []).reduce(
-        (sum, row) => sum + (row.amount || 0),
+      const totalRevenue = (revenueResult.data || []).reduce(
+        (sum: number, row: any) => sum + (row.amount || 0),
+        0
+      );
+      const totalTax = (taxResult.data || []).reduce(
+        (sum: number, row: any) => sum + (row.amount || 0),
+        0
+      );
+      const totalSupply = (supplyResult.data || []).reduce(
+        (sum: number, row: any) => sum + (row.balance || 0),
         0
       );
 
       setTotalDollarValue(totalRevenue);
+      setDbBuyTaxRevenue(totalTax);
+      setDbTokenSupply(totalSupply);
     } catch (err) {
       console.error("Token calculation error:", err);
     } finally {
@@ -120,6 +142,11 @@ export const useTokenCalculation = (): TokenCalculationResult => {
         { event: "*", schema: "public", table: "platform_revenue" },
         () => fetchData()
       )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "token_balances" },
+        () => fetchData()
+      )
       .subscribe();
 
     return () => {
@@ -127,9 +154,10 @@ export const useTokenCalculation = (): TokenCalculationResult => {
     };
   }, [fetchData]);
 
-  const tokensPurchased = totalDollarValue > 0
-    ? Math.floor(totalDollarValue / INITIAL_PRICE)
-    : 0;
+  // Use DB-tracked supply if available, otherwise estimate from revenue
+  const tokensPurchased = dbTokenSupply > 0
+    ? dbTokenSupply
+    : (totalDollarValue > 0 ? Math.floor(totalDollarValue / INITIAL_PRICE) : 0);
 
   // Circulating supply = tokens in holders' hands
   const circulatingSupply = tokensPurchased;
@@ -143,10 +171,10 @@ export const useTokenCalculation = (): TokenCalculationResult => {
   // Actual USD collected via the integral of the curve
   const reserveBalance = reserveAt(tokensPurchased);
 
-  // Tax revenue: 1% buy tax on all purchases
-  const buyTaxRevenue = totalDollarValue * BUY_TAX_RATE;
-  // Sell tax placeholder: simulated as 3% of total volume sold back (placeholder — no real sells yet)
-  const sellTaxRevenue = 0; // Will accumulate when sell-back mechanism is live
+  // Tax revenue: use DB-tracked tax if available, otherwise estimate
+  const buyTaxRevenue = dbBuyTaxRevenue > 0 ? dbBuyTaxRevenue : totalDollarValue * BUY_TAX_RATE;
+  // Sell tax placeholder: will accumulate when sell-back mechanism is live
+  const sellTaxRevenue = 0;
   const totalTaxRevenue = buyTaxRevenue + sellTaxRevenue;
 
   // Required reserve = 70% of current market cap (price × tokens outstanding)

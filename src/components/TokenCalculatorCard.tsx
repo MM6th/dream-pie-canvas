@@ -213,7 +213,7 @@ const TokenCalculatorCard = () => {
             </p>
             <p className="text-xs text-gray-400">
               Total reserve: <span className="font-semibold text-amber-400">${isLoading ? "..." : totalReserve.toFixed(2)}</span>{" "}
-              (seed ${initialSeed.toFixed(2)} + curve ${isLoading ? "..." : reserveBalance.toFixed(2)}).
+              (seed ${initialSeed.toFixed(2)} + curve ${isLoading ? "..." : reserveBalance.toFixed(2)} + tax ${isLoading ? "..." : totalTaxRevenue.toFixed(4)}).
               Full market cap value: ${isLoading ? "..." : (22_000_000 * newPricePerToken).toFixed(2)}.
             </p>
           </div>
