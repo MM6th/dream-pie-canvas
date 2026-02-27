@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { Settings, DollarSign } from 'lucide-react';
+import SixthPriceTag from '@/components/SixthPriceTag';
 
 export const MessageSettingsCard = () => {
   const [enabled, setEnabled] = useState(true);
@@ -204,8 +205,9 @@ export const MessageSettingsCard = () => {
                 <DollarSign className="w-4 h-4" />
                 Your Revenue Per Message
               </div>
-              <div className="text-2xl font-bold text-primary">
+              <div className="text-2xl font-bold text-primary flex items-center gap-2 flex-wrap">
                 ${revenuePerMessage}
+                <SixthPriceTag usdPrice={parseFloat(revenuePerMessage)} size="md" showUsd={false} />
               </div>
               <p className="text-xs text-muted-foreground">
                 You earn $0.10 per credit. This revenue is tracked quarterly for tax reporting.

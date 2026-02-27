@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import UserStatsDisplay from "@/components/UserStatsDisplay";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import SixthPriceTag from "@/components/SixthPriceTag";
 
 interface Profile {
   id: string;
@@ -427,9 +428,10 @@ const ProfilesDirectory = () => {
 
                       {/* Messaging Price */}
                       {messagingPrices[profile.id] && (
-                        <div className="flex items-center justify-center gap-1 text-xs text-green-400 mb-1">
+                        <div className="flex items-center justify-center gap-1 text-xs text-green-400 mb-1 flex-wrap">
                           <DollarSign className="w-3 h-3" />
                           <span>{messagingPrices[profile.id]} credits/msg</span>
+                          <SixthPriceTag usdPrice={messagingPrices[profile.id] * 0.10} size="sm" showUsd={false} />
                         </div>
                       )}
 
@@ -587,9 +589,10 @@ const ProfilesDirectory = () => {
 
                         {/* Messaging Price */}
                         {messagingPrices[profile.id] && (
-                          <div className="flex items-center justify-center gap-1 text-xs text-green-400 mb-1">
+                          <div className="flex items-center justify-center gap-1 text-xs text-green-400 mb-1 flex-wrap">
                             <DollarSign className="w-3 h-3" />
                             <span>{messagingPrices[profile.id]} credits/msg</span>
+                            <SixthPriceTag usdPrice={messagingPrices[profile.id] * 0.10} size="sm" showUsd={false} />
                           </div>
                         )}
 
