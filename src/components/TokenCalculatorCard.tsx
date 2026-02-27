@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import sixthCoinLogo from "@/assets/sixth-coin-logo.jpg";
 import { useTokenCalculation } from "@/hooks/useTokenCalculation";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceDot } from "recharts";
-import { ShieldCheck, AlertTriangle, TrendingUp, Waves, PieChart } from "lucide-react";
+import { ShieldCheck, AlertTriangle, TrendingUp, Waves, PieChart, LogOut } from "lucide-react";
 
 const FULL_MARKET_CAP = 22_000_000;
 const INITIAL_PRICE = 0.00001;
@@ -40,6 +40,7 @@ const TokenCalculatorCard = () => {
     reserveFromCurve,
     reserveFromSeed,
     reserveFromTax,
+    exitCostAnalysis,
   } = useTokenCalculation();
 
   const formatPrice = (price: number) => {
@@ -264,6 +265,48 @@ const TokenCalculatorCard = () => {
                 ({fmt(dangerTokensSold)} tokens sold). Consider adding liquidity before this point.
               </p>
             </div>
+          </div>
+        )}
+
+        {/* Total Exit Cost Analysis */}
+        {tokensPurchased > 0 && (
+          <div className="rounded-lg p-4 border bg-gray-900/50 border-gray-700">
+            <div className="flex items-center gap-2 mb-3">
+              <LogOut className="w-4 h-4 text-purple-400" />
+              <p className="text-sm font-medium text-gray-200">Total Exit Cost — Slippage + Tax Reality</p>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
+              <div className="text-center p-2 rounded-lg bg-gray-800/50 border border-gray-700">
+                <p className="text-[10px] text-gray-400 uppercase tracking-wider">Paper Value</p>
+                <p className="text-sm font-bold text-white">{formatPrice(exitCostAnalysis.spotValueAllTokens)}</p>
+              </div>
+              <div className="text-center p-2 rounded-lg bg-amber-950/30 border border-amber-800/40">
+                <p className="text-[10px] text-gray-400 uppercase tracking-wider">Curve Payout</p>
+                <p className="text-sm font-bold text-amber-300">{formatPrice(exitCostAnalysis.grossExitValue)}</p>
+                <p className="text-[10px] text-gray-500">-{formatPrice(exitCostAnalysis.curveSlippageLoss)} slippage</p>
+              </div>
+              <div className="text-center p-2 rounded-lg bg-red-950/30 border border-red-800/40">
+                <p className="text-[10px] text-gray-400 uppercase tracking-wider">Sell Tax (3%)</p>
+                <p className="text-sm font-bold text-red-300">-{formatPrice(exitCostAnalysis.sellTaxCost)}</p>
+              </div>
+              <div className="text-center p-2 rounded-lg bg-emerald-950/30 border border-emerald-800/40">
+                <p className="text-[10px] text-gray-400 uppercase tracking-wider">Net Payout</p>
+                <p className="text-sm font-bold text-emerald-300">{formatPrice(exitCostAnalysis.netExitPayout)}</p>
+              </div>
+            </div>
+            <div className="flex items-center justify-between text-xs border-t border-gray-700 pt-2">
+              <span className="text-gray-400">
+                Total exit loss: <span className={`font-semibold ${exitCostAnalysis.totalExitLossPercent < 10 ? "text-emerald-400" : exitCostAnalysis.totalExitLossPercent < 30 ? "text-amber-400" : "text-red-400"}`}>
+                  {exitCostAnalysis.totalExitLossPercent.toFixed(2)}%
+                </span>
+              </span>
+              <span className="text-gray-400">
+                Vault surplus after exit: <span className="font-semibold text-emerald-400">${exitCostAnalysis.vaultSurplus.toFixed(4)}</span>
+              </span>
+            </div>
+            <p className="text-[10px] text-gray-500 mt-1">
+              If all {fmt(tokensPurchased)} tokens sold back at once: holders lose {exitCostAnalysis.totalExitLossPercent.toFixed(1)}% to curve slippage + sell tax. Vault keeps ${exitCostAnalysis.vaultRetained.toFixed(4)}.
+            </p>
           </div>
         )}
 

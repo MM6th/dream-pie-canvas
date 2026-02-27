@@ -55,6 +55,16 @@ interface TokenCalculationResult {
   reserveFromCurve: number;
   reserveFromSeed: number;
   reserveFromTax: number;
+  exitCostAnalysis: {
+    grossExitValue: number;
+    sellTaxCost: number;
+    netExitPayout: number;
+    vaultRetained: number;
+    vaultSurplus: number;
+    spotValueAllTokens: number;
+    curveSlippageLoss: number;
+    totalExitLossPercent: number;
+  };
 }
 
 /** Exponential price at s tokens sold */
@@ -159,6 +169,37 @@ export const useTokenCalculation = (): TokenCalculationResult => {
     ? ((newPricePerToken - avgPrice) / avgPrice) * 100
     : 0;
 
+  // --- Total Exit Cost Analysis: slippage + sell tax reality ---
+  // Gross exit value = integral from 0 to tokensPurchased (what curve pays back)
+  const grossExitValue = reserveBalance; // selling all tokens returns this from curve
+  // Spot value = what holders think they have (tokens × spot price)
+  const spotValueAllTokens = tokensPurchased * newPricePerToken;
+  // Curve slippage loss = difference between "paper value" and actual curve payout
+  const curveSlippageLoss = spotValueAllTokens - grossExitValue;
+  // Sell tax applied on gross exit
+  const exitSellTaxCost = grossExitValue * SELL_TAX_RATE;
+  // Net payout to holders after tax
+  const netExitPayout = grossExitValue - exitSellTaxCost;
+  // Vault retains: seed + tax from buys + sell tax from exit
+  const vaultRetainedAfterExit = INITIAL_SEED + buyTaxRevenue + exitSellTaxCost;
+  // Surplus = total reserve - net payout
+  const vaultSurplus = totalReserve - netExitPayout;
+  // Total loss % for holders (slippage + tax vs paper value)
+  const totalExitLossPercent = spotValueAllTokens > 0
+    ? ((spotValueAllTokens - netExitPayout) / spotValueAllTokens) * 100
+    : 0;
+
+  const exitCostAnalysis = {
+    grossExitValue,
+    sellTaxCost: exitSellTaxCost,
+    netExitPayout,
+    vaultRetained: vaultRetainedAfterExit,
+    vaultSurplus,
+    spotValueAllTokens,
+    curveSlippageLoss,
+    totalExitLossPercent,
+  };
+
   // --- Danger zone: find the token count where reserve ratio drops below threshold ---
   // Reserve ratio = (reserveAt(s) + INITIAL_SEED) / (priceAt(s) * FULL_MARKET_CAP)
   // We search for the point where this drops below e.g. 10%
@@ -241,5 +282,6 @@ export const useTokenCalculation = (): TokenCalculationResult => {
     reserveFromCurve,
     reserveFromSeed,
     reserveFromTax,
+    exitCostAnalysis,
   };
 };
