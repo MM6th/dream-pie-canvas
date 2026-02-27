@@ -1,23 +1,24 @@
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 const INITIAL_PRICE = 0.00001;
 const TARGET_PRICE = 0.01;
+const FULL_MARKET_CAP = 22_000_000;
+const BASE_CIRCULATING_SUPPLY = Math.floor(FULL_MARKET_CAP * 0.49);
 const RESERVE_RATIO = 0.70;
+
+// Exponential bonding curve: P(s) = P0 * e^(k * s)
+// k calibrated so P(maxSupply) = TARGET_PRICE
+const K = Math.log(TARGET_PRICE / INITIAL_PRICE) / BASE_CIRCULATING_SUPPLY;
 
 export interface BondingCurvePoint {
   tokensSold: number;
   price: number;
 }
 
-interface TokenCalculationConfig {
-  fullMarketCap?: number;
-  circulatingSupply?: number;
-}
-
 interface TokenCalculationResult {
   tokensPurchased: number;
-  circulatingSupplyRemaining: number;
+  circulatingSupply: number;
   tokensLeft: number;
   newPricePerToken: number;
   totalDollarValue: number;
@@ -28,24 +29,19 @@ interface TokenCalculationResult {
 }
 
 /** Exponential price at s tokens sold */
-const priceAt = (s: number, k: number) => INITIAL_PRICE * Math.exp(k * s);
+const priceAt = (s: number) => INITIAL_PRICE * Math.exp(K * s);
 
 /** Reserve collected (integral of price curve from 0 to s) */
-const reserveAt = (s: number, k: number) =>
-  s === 0 ? 0 : (INITIAL_PRICE / k) * (Math.exp(k * s) - 1);
+const reserveAt = (s: number) =>
+  s === 0 ? 0 : (INITIAL_PRICE / K) * (Math.exp(K * s) - 1);
 
-export const useTokenCalculation = (
-  config?: TokenCalculationConfig
-): TokenCalculationResult => {
-  const fullMarketCap = config?.fullMarketCap ?? 22_000_000;
-  const baseCirculatingSupply = config?.circulatingSupply ?? Math.floor(fullMarketCap * 0.49);
-
-  // k calibrated so P(maxSupply) = TARGET_PRICE
-  const K = useMemo(
-    () => Math.log(TARGET_PRICE / INITIAL_PRICE) / baseCirculatingSupply,
-    [baseCirculatingSupply]
-  );
-
+/**
+ * Calculates SIXTH token metrics using an exponential bonding curve.
+ * - Price increases exponentially as tokens are purchased
+ * - Reserve ratio: 70% of market cap must be held in reserve
+ * - Target price: $0.01 when full circulating supply is sold
+ */
+export const useTokenCalculation = (): TokenCalculationResult => {
   const [totalDollarValue, setTotalDollarValue] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -96,30 +92,33 @@ export const useTokenCalculation = (
     ? Math.floor(totalDollarValue / INITIAL_PRICE)
     : 0;
 
-  const circulatingSupplyRemaining = Math.max(1, baseCirculatingSupply - tokensPurchased);
-  const tokensLeft = fullMarketCap - circulatingSupplyRemaining;
+  const circulatingSupply = Math.max(1, BASE_CIRCULATING_SUPPLY - tokensPurchased);
+  const tokensLeft = FULL_MARKET_CAP - circulatingSupply;
 
-  const newPricePerToken = priceAt(tokensPurchased, K);
-  const reserveBalance = reserveAt(tokensPurchased, K);
+  // Exponential bonding curve price
+  const newPricePerToken = priceAt(tokensPurchased);
+
+  // Actual USD collected via the integral of the curve
+  const reserveBalance = reserveAt(tokensPurchased);
+
+  // Required reserve = 70% of current market cap (price × tokens outstanding)
   const requiredReserve = newPricePerToken * tokensPurchased * RESERVE_RATIO;
 
-  const bondingCurveData: BondingCurvePoint[] = useMemo(() => {
-    const data: BondingCurvePoint[] = [];
-    const steps = 25;
-    const maxTokens = Math.min(
-      baseCirculatingSupply,
-      Math.max(tokensPurchased * 3, baseCirculatingSupply * 0.5)
-    );
-    for (let i = 0; i <= steps; i++) {
-      const sold = Math.floor((maxTokens / steps) * i);
-      data.push({ tokensSold: sold, price: priceAt(sold, K) });
-    }
-    return data;
-  }, [baseCirculatingSupply, tokensPurchased, K]);
+  // Generate bonding curve data points
+  const bondingCurveData: BondingCurvePoint[] = [];
+  const steps = 25;
+  const maxTokens = Math.min(
+    BASE_CIRCULATING_SUPPLY,
+    Math.max(tokensPurchased * 3, BASE_CIRCULATING_SUPPLY * 0.5)
+  );
+  for (let i = 0; i <= steps; i++) {
+    const sold = Math.floor((maxTokens / steps) * i);
+    bondingCurveData.push({ tokensSold: sold, price: priceAt(sold) });
+  }
 
   return {
     tokensPurchased,
-    circulatingSupplyRemaining,
+    circulatingSupply,
     tokensLeft,
     newPricePerToken,
     totalDollarValue,
