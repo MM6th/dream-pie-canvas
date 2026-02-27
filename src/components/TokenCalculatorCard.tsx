@@ -171,7 +171,7 @@ const TokenCalculatorCard = () => {
             <p className="text-xs text-gray-400">
               Total reserve: <span className="font-semibold text-amber-400">${isLoading ? "..." : totalReserve.toFixed(2)}</span>{" "}
               (seed ${initialSeed.toFixed(2)} + curve ${isLoading ? "..." : reserveBalance.toFixed(2)}).
-              Required: ${isLoading ? "..." : requiredReserve.toFixed(2)} (70% of {formatPrice(newPricePerToken)} × {isLoading ? "..." : fmt(tokensPurchased)} tokens).
+              Full market cap value: ${isLoading ? "..." : (22_000_000 * newPricePerToken).toFixed(2)}.
             </p>
           </div>
         </div>

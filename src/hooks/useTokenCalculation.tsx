@@ -115,8 +115,9 @@ export const useTokenCalculation = (): TokenCalculationResult => {
   // Total reserve = curve-collected reserve + initial seed
   const totalReserve = reserveBalance + INITIAL_SEED;
 
-  // Reserve health ratio: >= 1.0 means fully collateralized
-  const reserveHealthRatio = requiredReserve > 0 ? totalReserve / requiredReserve : 1;
+  // Reserve ratio = total reserve / full market cap value
+  const fullMarketCapValue = newPricePerToken * FULL_MARKET_CAP;
+  const reserveHealthRatio = fullMarketCapValue > 0 ? totalReserve / fullMarketCapValue : 1;
   const bondingCurveData: BondingCurvePoint[] = [];
   const steps = 25;
   const maxTokens = Math.min(
