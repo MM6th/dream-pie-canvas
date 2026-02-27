@@ -139,10 +139,11 @@ const TokenCalculatorCard = () => {
             <p className="text-xs text-gray-400">
               PIE's bank account must hold at least{" "}
               <span className="text-amber-400 font-semibold">
-                {isLoading ? "..." : `$${totalDollarValue.toFixed(2)}`}
+                {isLoading ? "..." : `$${(tokensPurchased * newPricePerToken).toFixed(2)}`}
               </span>{" "}
+              (redemption value at current bonding curve price of {formatPrice(newPricePerToken)}/token)
               to fully back all {isLoading ? "..." : fmt(tokensPurchased)} SIXTH tokens in circulation.
-              This guarantees any holder can redeem tokens back to USD at the current bonding curve price.
+              This guarantees any holder can redeem tokens back to USD.
             </p>
           </div>
         </div>
