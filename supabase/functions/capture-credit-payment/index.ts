@@ -87,7 +87,7 @@ serve(async (req) => {
     const transactionId = captureData.purchase_units?.[0]?.payments?.captures?.[0]?.id;
     const amountPaid = parseFloat(captureData.purchase_units?.[0]?.payments?.captures?.[0]?.amount?.value || '0');
 
-    // Calculate revenue splits
+    // PayPal fee is a platform cost — full gross amount used for token minting
     const paypalFee = (amountPaid * 0.0349) + 0.49;
     const netRevenue = amountPaid - paypalFee;
 
@@ -129,11 +129,12 @@ serve(async (req) => {
         paypal_order_id: transactionId,
       });
 
-    // Record platform revenue
+    // Record platform revenue using GROSS amount so token minting uses full buyer payment
+    // PayPal fee is absorbed as a platform operating cost, not deducted from buyer's token yield
     await supabase
       .from('platform_revenue')
       .insert({
-        amount: netRevenue,
+        amount: amountPaid,
         revenue_type: 'credit_purchase',
         source_user_id: userId,
         source_transaction_id: transactionId,
@@ -141,6 +142,7 @@ serve(async (req) => {
           credits_purchased: packageInfo.credits,
           price: packageInfo.price,
           paypal_fee: paypalFee,
+          net_after_fee: netRevenue,
         }
       });
 
@@ -152,7 +154,7 @@ serve(async (req) => {
       .single();
 
     if (adminProfile) {
-      // Update quarterly income for admin (company revenue)
+      // Track net revenue (after PayPal fee) for quarterly income reporting
       await supabase.rpc('update_quarterly_income', {
         p_user_id: adminProfile.id,
         p_income_type: 'company_revenue',
