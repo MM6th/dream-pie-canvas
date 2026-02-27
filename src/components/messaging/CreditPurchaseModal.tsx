@@ -377,8 +377,11 @@ export const CreditPurchaseModal = ({
                         ${(pkg.price / pkg.credits).toFixed(2)} per credit
                       </div>
                     </div>
-                    <div className="text-2xl font-bold">
-                      ${pkg.price.toFixed(2)}
+                    <div className="text-right">
+                      <div className="text-2xl font-bold">
+                        ${pkg.price.toFixed(2)}
+                      </div>
+                      <SixthPriceTag usdPrice={pkg.price} size="sm" showUsd={false} />
                     </div>
                   </div>
                 </div>
