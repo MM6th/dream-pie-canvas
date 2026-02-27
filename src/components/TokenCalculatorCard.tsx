@@ -2,21 +2,21 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import sixthCoinLogo from "@/assets/sixth-coin-logo.jpg";
-import { useMemo, useState } from "react";
+import { useTokenCalculation } from "@/hooks/useTokenCalculation";
 
 const FULL_MARKET_CAP = 22_000_000;
-const CIRCULATING_SUPPLY = Math.floor(FULL_MARKET_CAP * 0.49);
-const TOKENS_LEFT = FULL_MARKET_CAP - CIRCULATING_SUPPLY;
 const INITIAL_PRICE = 0.00001;
 
 const fmt = (n: number) => n.toLocaleString();
 
 const TokenCalculatorCard = () => {
-  const [tokensPurchased, setTokensPurchased] = useState(0);
-
-  const newPricePerToken = useMemo(() => {
-    return tokensPurchased * INITIAL_PRICE;
-  }, [tokensPurchased]);
+  const {
+    tokensPurchased,
+    circulatingSupply,
+    tokensLeft,
+    newPricePerToken,
+    isLoading,
+  } = useTokenCalculation();
 
   const formatPrice = (price: number) => {
     if (price === 0) return "$0.00";
@@ -25,13 +25,14 @@ const TokenCalculatorCard = () => {
   };
 
   const fields = [
-    { label: "Tokens Purchased", placeholder: fmt(tokensPurchased), hasCoinIcon: false },
+    { label: "Tokens Purchased", placeholder: isLoading ? "Loading..." : fmt(tokensPurchased), hasCoinIcon: false },
     { label: "Initial Price Per Token", placeholder: `$${INITIAL_PRICE}`, hasCoinIcon: false },
     { label: "Full Market Cap", placeholder: fmt(FULL_MARKET_CAP), hasCoinIcon: true },
-    { label: "Circulating Supply", placeholder: fmt(CIRCULATING_SUPPLY), hasCoinIcon: true },
-    { label: "Tokens Left", placeholder: fmt(TOKENS_LEFT), hasCoinIcon: true },
-    { label: "New Price Per Token", placeholder: formatPrice(newPricePerToken), hasCoinIcon: false },
+    { label: "Circulating Supply", placeholder: isLoading ? "Loading..." : fmt(circulatingSupply), hasCoinIcon: true },
+    { label: "Tokens Left", placeholder: isLoading ? "Loading..." : fmt(tokensLeft), hasCoinIcon: true },
+    { label: "New Price Per Token", placeholder: isLoading ? "Loading..." : formatPrice(newPricePerToken), hasCoinIcon: false },
   ];
+
   return (
     <Card className="bg-gray-800/50 border-gray-700">
       <CardHeader className="pb-3">
