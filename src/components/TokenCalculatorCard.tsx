@@ -15,6 +15,7 @@ const TokenCalculatorCard = () => {
     circulatingSupply,
     tokensLeft,
     newPricePerToken,
+    totalDollarValue,
     isLoading,
   } = useTokenCalculation();
 
@@ -25,6 +26,7 @@ const TokenCalculatorCard = () => {
   };
 
   const fields = [
+    { label: "Total Credit Revenue (USD)", placeholder: isLoading ? "Loading..." : `$${totalDollarValue.toFixed(2)}`, hasCoinIcon: false },
     { label: "Tokens Purchased", placeholder: isLoading ? "Loading..." : fmt(tokensPurchased), hasCoinIcon: false },
     { label: "Initial Price Per Token", placeholder: `$${INITIAL_PRICE}`, hasCoinIcon: false },
     { label: "Full Market Cap", placeholder: fmt(FULL_MARKET_CAP), hasCoinIcon: true },
