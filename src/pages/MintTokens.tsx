@@ -10,8 +10,9 @@ import { useTokenCalculation } from "@/hooks/useTokenCalculation";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceDot } from "recharts";
-import { ArrowLeft, Coins, TrendingUp, Wallet, History, Calculator } from "lucide-react";
+import { Coins, TrendingUp, Wallet, History, Calculator } from "lucide-react";
 import sixthCoinLogo from "@/assets/sixth-coin-logo.jpg";
+import DashboardHeader from "@/components/dashboard/DashboardHeader";
 
 const LIQUIDITY_POOL_SIZE = 10_780_000;
 const INITIAL_PRICE = 0.00001;
@@ -150,19 +151,25 @@ const MintTokens = () => {
   const chartData = bondingCurveData.map((d) => ({ tokensSold: d.tokensSold, price: d.price }));
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <Button variant="ghost" onClick={() => navigate("/")} className="text-gray-400 hover:text-white">
-            <ArrowLeft className="w-4 h-4 mr-2" /> Back
-          </Button>
-          <div className="flex items-center gap-3">
-            <img src={sixthCoinLogo} alt="SIXTH" className="w-10 h-10 rounded-full" />
-            <div>
-              <h1 className="text-2xl font-bold">Mint SIXTH Tokens</h1>
-              <p className="text-sm text-gray-400">Direct token purchase via bonding curve</p>
-            </div>
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800 text-white overflow-x-hidden">
+      <DashboardHeader
+        onStoreView={() => navigate("/")}
+        onBulletinView={() => navigate("/bulletin")}
+        onProfilesView={() => navigate("/profiles")}
+        onSignOut={async () => { await supabase.auth.signOut(); navigate("/"); }}
+        userType="merchant"
+        onProfileUpdate={() => {}}
+        isApproved={true}
+        isAdmin={isAdmin}
+      />
+
+      <div className="max-w-6xl mx-auto px-4 py-4">
+        {/* Page Title */}
+        <div className="flex items-center gap-3 mb-6">
+          <img src={sixthCoinLogo} alt="SIXTH" className="w-10 h-10 rounded-full" />
+          <div>
+            <h1 className="text-2xl font-bold">Mint SIXTH Tokens</h1>
+            <p className="text-sm text-gray-400">Direct token purchase via bonding curve</p>
           </div>
         </div>
 
