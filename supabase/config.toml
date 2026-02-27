@@ -109,3 +109,9 @@ verify_jwt = true
 
 [functions.capture-film-payment]
 verify_jwt = false
+
+[functions.create-token-purchase]
+verify_jwt = true
+
+[functions.capture-token-purchase]
+verify_jwt = false
