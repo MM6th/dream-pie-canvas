@@ -68,7 +68,7 @@ const TokenCalculatorCard = () => {
     { label: "Initial Seed", placeholder: `$${initialSeed.toFixed(2)}`, hasCoinIcon: false },
     { label: "Curve Reserve", placeholder: isLoading ? "Loading..." : `$${reserveBalance.toFixed(2)}`, hasCoinIcon: false },
     { label: "Total Reserve", placeholder: isLoading ? "Loading..." : `$${totalReserve.toFixed(2)}`, hasCoinIcon: false },
-    { label: "Required Reserve (70%)", placeholder: isLoading ? "Loading..." : `$${requiredReserve.toFixed(2)}`, hasCoinIcon: false },
+    { label: "Buy Tax (1%)", placeholder: isLoading ? "Loading..." : `$${buyTaxRevenue.toFixed(4)}`, hasCoinIcon: false },
     { label: "Buy Tax (1%)", placeholder: isLoading ? "Loading..." : `$${buyTaxRevenue.toFixed(4)}`, hasCoinIcon: false },
     { label: "Sell Tax (3%)", placeholder: `$${sellTaxRevenue.toFixed(4)} (placeholder)`, hasCoinIcon: false },
     { label: "Total Tax Revenue", placeholder: isLoading ? "Loading..." : `$${totalTaxRevenue.toFixed(4)}`, hasCoinIcon: false },
