@@ -17,6 +17,16 @@ export interface BondingCurvePoint {
   price: number;
 }
 
+export interface WhaleImpact {
+  usdAmount: number;
+  tokensAcquired: number;
+  avgPrice: number;
+  spotPriceAfter: number;
+  slippagePercent: number;
+  reserveAfter: number;
+  reserveRatioAfter: number;
+}
+
 interface TokenCalculationResult {
   tokensPurchased: number;
   circulatingSupply: number;
@@ -31,6 +41,10 @@ interface TokenCalculationResult {
   reserveHealthRatio: number;
   bondingCurveData: BondingCurvePoint[];
   isLoading: boolean;
+  slippagePercent: number;
+  dangerPrice: number;
+  dangerTokensSold: number;
+  whaleImpacts: WhaleImpact[];
 }
 
 /** Exponential price at s tokens sold */
@@ -118,6 +132,57 @@ export const useTokenCalculation = (): TokenCalculationResult => {
   // Reserve ratio = total reserve / full market cap value
   const fullMarketCapValue = newPricePerToken * FULL_MARKET_CAP;
   const reserveHealthRatio = fullMarketCapValue > 0 ? totalReserve / fullMarketCapValue : 1;
+  // --- Slippage: difference between spot price and average price paid ---
+  const avgPrice = tokensPurchased > 0 ? reserveBalance / tokensPurchased : INITIAL_PRICE;
+  const slippagePercent = tokensPurchased > 0
+    ? ((newPricePerToken - avgPrice) / avgPrice) * 100
+    : 0;
+
+  // --- Danger zone: find the token count where reserve ratio drops below threshold ---
+  // Reserve ratio = (reserveAt(s) + INITIAL_SEED) / (priceAt(s) * FULL_MARKET_CAP)
+  // We search for the point where this drops below e.g. 10%
+  const DANGER_THRESHOLD = 0.10;
+  let dangerTokensSold = 0;
+  let dangerPrice = 0;
+  for (let s = 0; s <= LIQUIDITY_POOL_SIZE; s += 1000) {
+    const p = priceAt(s);
+    const r = reserveAt(s) + INITIAL_SEED;
+    const mcv = p * FULL_MARKET_CAP;
+    if (mcv > 0 && r / mcv < DANGER_THRESHOLD) {
+      dangerTokensSold = s;
+      dangerPrice = p;
+      break;
+    }
+  }
+
+  // --- Whale impact: simulate large USD purchases from current position ---
+  const whaleAmounts = [10, 50, 100, 500, 1000];
+  const whaleImpacts: WhaleImpact[] = whaleAmounts.map((usd) => {
+    // Find how many tokens `usd` buys starting from tokensPurchased
+    // Integral from tokensPurchased to tokensPurchased+n = usd
+    // reserveAt(tokensPurchased+n) - reserveAt(tokensPurchased) = usd
+    const currentReserve = reserveAt(tokensPurchased);
+    const targetReserve = currentReserve + usd;
+    // Solve: (P0/K)(e^(K*s) - 1) = targetReserve => s = ln(targetReserve*K/P0 + 1) / K
+    const sAfter = Math.log(targetReserve * K / INITIAL_PRICE + 1) / K;
+    const tokensAcquired = Math.max(0, Math.floor(sAfter - tokensPurchased));
+    const spotAfter = priceAt(sAfter);
+    const avg = tokensAcquired > 0 ? usd / tokensAcquired : spotAfter;
+    const slip = ((spotAfter - avg) / avg) * 100;
+    const rAfter = reserveAt(sAfter) + INITIAL_SEED;
+    const mcvAfter = spotAfter * FULL_MARKET_CAP;
+    const rrAfter = mcvAfter > 0 ? rAfter / mcvAfter : 1;
+    return {
+      usdAmount: usd,
+      tokensAcquired,
+      avgPrice: avg,
+      spotPriceAfter: spotAfter,
+      slippagePercent: slip,
+      reserveAfter: rAfter,
+      reserveRatioAfter: rrAfter,
+    };
+  });
+
   const bondingCurveData: BondingCurvePoint[] = [];
   const steps = 25;
   const maxTokens = Math.min(
@@ -143,5 +208,9 @@ export const useTokenCalculation = (): TokenCalculationResult => {
     reserveHealthRatio,
     bondingCurveData,
     isLoading,
+    slippagePercent,
+    dangerPrice,
+    dangerTokensSold,
+    whaleImpacts,
   };
 };
