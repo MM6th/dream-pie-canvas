@@ -178,7 +178,7 @@ const MintTokens = () => {
           <Card className="bg-gray-800/50 border-gray-700">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-lg">
-                <Coins className="w-5 h-5 text-amber-400" /> Purchase SIXTH Tokens
+                <img src={sixthCoinLogo} alt="SIXTH" className="w-5 h-5 rounded-full" /> Purchase SIXTH Tokens
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
