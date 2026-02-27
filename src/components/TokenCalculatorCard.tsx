@@ -23,6 +23,9 @@ const TokenCalculatorCard = () => {
     totalDollarValue,
     reserveBalance,
     requiredReserve,
+    initialSeed,
+    totalReserve,
+    reserveHealthRatio,
     bondingCurveData,
     isLoading,
   } = useTokenCalculation();
@@ -49,6 +52,10 @@ const TokenCalculatorCard = () => {
     { label: "Tokens Left Value", placeholder: isLoading ? "Loading..." : `$${(tokensLeft * newPricePerToken).toFixed(2)}`, hasCoinIcon: false },
     { label: "Spot Price", placeholder: isLoading ? "Loading..." : formatPrice(newPricePerToken), hasCoinIcon: false },
     { label: "Average Price", placeholder: isLoading ? "Loading..." : (tokensPurchased > 0 ? formatPrice(reserveBalance / tokensPurchased) : "$0.00"), hasCoinIcon: false },
+    { label: "Initial Seed", placeholder: `$${initialSeed.toFixed(2)}`, hasCoinIcon: false },
+    { label: "Curve Reserve", placeholder: isLoading ? "Loading..." : `$${reserveBalance.toFixed(2)}`, hasCoinIcon: false },
+    { label: "Total Reserve", placeholder: isLoading ? "Loading..." : `$${totalReserve.toFixed(2)}`, hasCoinIcon: false },
+    { label: "Required Reserve (70%)", placeholder: isLoading ? "Loading..." : `$${requiredReserve.toFixed(2)}`, hasCoinIcon: false },
   ];
 
   const chartData = bondingCurveData.map((d) => ({
@@ -145,18 +152,26 @@ const TokenCalculatorCard = () => {
           </div>
         </div>
 
-        {/* Reserve Requirement Card */}
-        <div className="bg-amber-950/30 border border-amber-700/40 rounded-lg p-4 flex items-start gap-3">
-          <ShieldCheck className="w-5 h-5 text-amber-400 mt-0.5 shrink-0" />
+        {/* Reserve Health Card */}
+        <div className={`rounded-lg p-4 flex items-start gap-3 border ${
+          reserveHealthRatio >= 1 
+            ? "bg-emerald-950/30 border-emerald-700/40" 
+            : "bg-red-950/30 border-red-700/40"
+        }`}>
+          <ShieldCheck className={`w-5 h-5 mt-0.5 shrink-0 ${
+            reserveHealthRatio >= 1 ? "text-emerald-400" : "text-red-400"
+          }`} />
           <div className="space-y-1">
-            <p className="text-sm font-medium text-amber-300">Reserve Requirement (70%)</p>
+            <p className={`text-sm font-medium ${
+              reserveHealthRatio >= 1 ? "text-emerald-300" : "text-red-300"
+            }`}>
+              Reserve Health: {isLoading ? "..." : `${(reserveHealthRatio * 100).toFixed(1)}%`}
+              {!isLoading && (reserveHealthRatio >= 1 ? " ✓ Fully Collateralized" : " ⚠ Undercollateralized")}
+            </p>
             <p className="text-xs text-gray-400">
-              PIE's bank account must hold at least{" "}
-              <span className="text-amber-400 font-semibold">
-                {isLoading ? "..." : `$${requiredReserve.toFixed(2)}`}
-              </span>{" "}
-              (70% of market cap at {formatPrice(newPricePerToken)}/token × {isLoading ? "..." : fmt(tokensPurchased)} tokens).
-              Actual reserve collected via curve: {isLoading ? "..." : `$${reserveBalance.toFixed(2)}`}.
+              Total reserve: <span className="font-semibold text-amber-400">${isLoading ? "..." : totalReserve.toFixed(2)}</span>{" "}
+              (seed ${initialSeed.toFixed(2)} + curve ${isLoading ? "..." : reserveBalance.toFixed(2)}).
+              Required: ${isLoading ? "..." : requiredReserve.toFixed(2)} (70% of {formatPrice(newPricePerToken)} × {isLoading ? "..." : fmt(tokensPurchased)} tokens).
             </p>
           </div>
         </div>

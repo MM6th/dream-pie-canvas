@@ -6,6 +6,7 @@ const TARGET_PRICE = 0.01;
 const FULL_MARKET_CAP = 22_000_000;
 const LIQUIDITY_POOL_SIZE = Math.floor(FULL_MARKET_CAP * 0.49);
 const RESERVE_RATIO = 0.70;
+const INITIAL_SEED = 70; // USD manually deposited into reserve
 
 // Exponential bonding curve: P(s) = P0 * e^(k * s)
 // k calibrated so P(maxSupply) = TARGET_PRICE
@@ -25,6 +26,9 @@ interface TokenCalculationResult {
   totalDollarValue: number;
   reserveBalance: number;
   requiredReserve: number;
+  initialSeed: number;
+  totalReserve: number;
+  reserveHealthRatio: number;
   bondingCurveData: BondingCurvePoint[];
   isLoading: boolean;
 }
@@ -108,7 +112,11 @@ export const useTokenCalculation = (): TokenCalculationResult => {
   // Required reserve = 70% of current market cap (price × tokens outstanding)
   const requiredReserve = newPricePerToken * tokensPurchased * RESERVE_RATIO;
 
-  // Generate bonding curve data points
+  // Total reserve = curve-collected reserve + initial seed
+  const totalReserve = reserveBalance + INITIAL_SEED;
+
+  // Reserve health ratio: >= 1.0 means fully collateralized
+  const reserveHealthRatio = requiredReserve > 0 ? totalReserve / requiredReserve : 1;
   const bondingCurveData: BondingCurvePoint[] = [];
   const steps = 25;
   const maxTokens = Math.min(
@@ -129,6 +137,9 @@ export const useTokenCalculation = (): TokenCalculationResult => {
     totalDollarValue,
     reserveBalance,
     requiredReserve,
+    initialSeed: INITIAL_SEED,
+    totalReserve,
+    reserveHealthRatio,
     bondingCurveData,
     isLoading,
   };
