@@ -161,6 +161,7 @@ const MintTokens = () => {
         onProfileUpdate={() => {}}
         isApproved={true}
         isAdmin={isAdmin}
+        hideTokenCalculator
       />
 
       <div className="max-w-6xl mx-auto px-4 pb-8">

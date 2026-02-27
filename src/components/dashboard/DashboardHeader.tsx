@@ -32,6 +32,7 @@ interface DashboardHeaderProps {
   isApproved: boolean;
   isAdmin: boolean;
   tutorialHelpButton?: React.ReactNode;
+  hideTokenCalculator?: boolean;
 }
 
 const DashboardHeader = ({ 
@@ -43,7 +44,8 @@ const DashboardHeader = ({
   onProfileUpdate,
   isApproved,
   isAdmin,
-  tutorialHelpButton
+  tutorialHelpButton,
+  hideTokenCalculator
 }: DashboardHeaderProps) => {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
@@ -95,7 +97,7 @@ const DashboardHeader = ({
         </div>
       )}
 
-      {isAdmin && (
+      {isAdmin && !hideTokenCalculator && (
         <div className="mb-4">
           <TokenCalculatorCard />
         </div>
