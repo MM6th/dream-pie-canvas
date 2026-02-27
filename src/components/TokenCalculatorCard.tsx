@@ -40,7 +40,9 @@ const TokenCalculatorCard = () => {
     { label: "Reserve Ratio", placeholder: `${(RESERVE_RATIO * 100).toFixed(0)}%`, hasCoinIcon: false },
     { label: "Full Market Cap", placeholder: fmt(FULL_MARKET_CAP), hasCoinIcon: true },
     { label: "Circulating Supply", placeholder: isLoading ? "Loading..." : fmt(circulatingSupply), hasCoinIcon: true },
+    { label: "Circulating Supply Value", placeholder: isLoading ? "Loading..." : `$${(circulatingSupply * newPricePerToken).toFixed(2)}`, hasCoinIcon: false },
     { label: "Tokens Left", placeholder: isLoading ? "Loading..." : fmt(tokensLeft), hasCoinIcon: true },
+    { label: "Tokens Left Value", placeholder: isLoading ? "Loading..." : `$${(tokensLeft * newPricePerToken).toFixed(2)}`, hasCoinIcon: false },
     { label: "Current Price Per Token", placeholder: isLoading ? "Loading..." : formatPrice(newPricePerToken), hasCoinIcon: false },
   ];
 
