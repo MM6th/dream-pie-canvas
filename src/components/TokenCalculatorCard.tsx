@@ -11,7 +11,7 @@ const fmt = (n: number) => n.toLocaleString();
 
 const fields = [
   { label: "Tokens Purchased", placeholder: "0", hasCoinIcon: false },
-  { label: "Initial Price Per Token", placeholder: "$0.00", hasCoinIcon: false },
+  { label: "Initial Price Per Token", placeholder: "$0.00001", hasCoinIcon: false },
   { label: "Full Market Cap", placeholder: fmt(FULL_MARKET_CAP), hasCoinIcon: true },
   { label: "Circulating Supply", placeholder: fmt(CIRCULATING_SUPPLY), hasCoinIcon: true },
   { label: "Tokens Left", placeholder: fmt(TOKENS_LEFT), hasCoinIcon: true },
