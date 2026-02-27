@@ -9,6 +9,7 @@ import { Plus, Minus, Trash2, Save, X, Shield } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import SixthPriceTag from "./SixthPriceTag";
 import MultiImagePicker from "./MultiImagePicker";
 
 interface FashionProduct {
@@ -381,6 +382,11 @@ const EditFashionProductModal = ({ isOpen, onClose, product, onSuccess }: EditFa
                 required
                 className="bg-gray-700 border-gray-600 text-white"
               />
+              {price && parseFloat(price) > 0 && (
+                <div className="mt-1">
+                  <SixthPriceTag usdPrice={parseFloat(price)} size="md" />
+                </div>
+              )}
             </div>
 
             <div>

@@ -10,6 +10,7 @@ import { Upload, X, Loader2, Image, Video } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
+import SixthPriceTag from "./SixthPriceTag";
 
 interface DanceProductImage {
   id: string;
@@ -349,6 +350,9 @@ const EditDanceProductModal = ({ product, open, onOpenChange, onSuccess }: EditD
                   className="bg-gray-700 border-gray-600 text-white pl-7"
                 />
               </div>
+              {price && parseFloat(price) > 0 && (
+                <SixthPriceTag usdPrice={parseFloat(price)} size="md" />
+              )}
             </div>
           )}
 

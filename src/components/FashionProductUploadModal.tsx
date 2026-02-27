@@ -10,6 +10,7 @@ import { Plus, Minus, Save, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
+import SixthPriceTag from "./SixthPriceTag";
 import MultiImagePicker from "./MultiImagePicker";
 
 interface FashionProductUploadModalProps {
@@ -278,6 +279,11 @@ const FashionProductUploadModal = ({ isOpen, onClose, onSuccess }: FashionProduc
                 required
                 className="bg-gray-700 border-gray-600 text-white"
               />
+              {price && parseFloat(price) > 0 && (
+                <div className="mt-1">
+                  <SixthPriceTag usdPrice={parseFloat(price)} size="md" />
+                </div>
+              )}
             </div>
 
             <div>

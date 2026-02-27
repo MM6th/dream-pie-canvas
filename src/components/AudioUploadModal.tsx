@@ -13,6 +13,7 @@ import { Upload, AudioLines, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
+import SixthPriceTag from "./SixthPriceTag";
 import AudioPreviewPlayer from "@/components/AudioPreviewPlayer";
 
 interface AudioUploadModalProps {
@@ -957,6 +958,11 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
                 placeholder="Price in USD"
                 required
               />
+              {formData.price && parseFloat(formData.price) > 0 && (
+                <div className="mt-1">
+                  <SixthPriceTag usdPrice={parseFloat(formData.price)} size="md" />
+                </div>
+              )}
             </div>
           )}
 

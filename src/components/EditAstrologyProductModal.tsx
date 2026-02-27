@@ -11,6 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Edit, Loader2, Shield, CalendarIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import SixthPriceTag from "./SixthPriceTag";
 import ImagePicker from "./ImagePicker";
 import VideoUpload from "./VideoUpload";
 import { format } from "date-fns";
@@ -308,6 +309,11 @@ const EditAstrologyProductModal = ({ product, isOpen, onClose, onSuccess }: Edit
               <p className="text-sm text-gray-400 mt-1">
                 Default suggestion: ${getDefaultPrice(formData.product_type, formData.delivery_type)}. You can set any price you like.
               </p>
+              {formData.base_price && parseFloat(formData.base_price) > 0 && (
+                <div className="mt-1">
+                  <SixthPriceTag usdPrice={parseFloat(formData.base_price)} size="md" />
+                </div>
+              )}
             </div>
           )}
 

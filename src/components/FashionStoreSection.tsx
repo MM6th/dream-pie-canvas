@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { ShoppingCart, Shirt, Shield, Lock } from "lucide-react";
+import SixthPriceTag from "./SixthPriceTag";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
@@ -281,8 +282,9 @@ const FashionStoreSection = () => {
                   <CardContent className="p-4 pt-0">
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
-                        <div className="text-white font-semibold">
-                          ${product.price.toFixed(2)}
+                        <div className="flex items-center gap-2">
+                          <span className="text-white font-semibold">${product.price.toFixed(2)}</span>
+                          <SixthPriceTag usdPrice={product.price} />
                         </div>
                       </div>
                       

@@ -8,6 +8,7 @@ import { Upload, X, Loader2, Image, Video } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
+import SixthPriceTag from "./SixthPriceTag";
 
 interface FoodProductImage {
   id: string;
@@ -299,6 +300,9 @@ const EditFoodProductModal = ({ product, open, onOpenChange, onSuccess }: EditFo
               />
             </div>
             {priceError && <p className="text-red-400 text-sm">{priceError}</p>}
+            {price && parseFloat(price) > 0 && !priceError && (
+              <SixthPriceTag usdPrice={parseFloat(price)} size="md" />
+            )}
           </div>
 
           {/* Description */}

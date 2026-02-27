@@ -11,6 +11,7 @@ import { X, Upload, Film, Image as ImageIcon, Loader2, Check, AlertCircle, FileV
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
+import SixthPriceTag from "./SixthPriceTag";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import * as tus from 'tus-js-client';
 
@@ -832,6 +833,9 @@ const FilmUploadModal = ({ isOpen, onClose, onSuccess }: FilmUploadModalProps) =
                       step="0.01"
                       min="0"
                     />
+                    {price && parseFloat(price) > 0 && (
+                      <SixthPriceTag usdPrice={parseFloat(price)} size="md" />
+                    )}
                   </div>
                 )}
               </div>

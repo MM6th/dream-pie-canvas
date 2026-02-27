@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { AudioLines, Download, DollarSign, Video, Lock, Shirt, Star, Shield, Users, CheckCircle, Moon, Sparkles } from "lucide-react";
+import SixthPriceTag from "./SixthPriceTag";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
@@ -541,10 +542,13 @@ const StorePage = () => {
               );
             case "paid":
               return (
-                <Badge className="bg-blue-600 hover:bg-blue-700 flex items-center gap-1">
-                  <DollarSign className="w-3 h-3" />
-                  {product.price?.toFixed(2)}
-                </Badge>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <Badge className="bg-blue-600 hover:bg-blue-700 flex items-center gap-1">
+                    <DollarSign className="w-3 h-3" />
+                    {product.price?.toFixed(2)}
+                  </Badge>
+                  <SixthPriceTag usdPrice={product.price || 0} />
+                </div>
               );
             default:
               return (
@@ -1132,7 +1136,7 @@ const StorePage = () => {
                                 size="sm"
                               >
                                 <DollarSign className="w-3 h-3 mr-1" />
-                                {purchasingId === product.id ? 'Processing...' : `Subscribe $${product.price.toFixed(2)}/mo`}
+                                {purchasingId === product.id ? 'Processing...' : <><span>Subscribe ${product.price.toFixed(2)}/mo</span> <SixthPriceTag usdPrice={product.price} showUsd={false} /></>}
                               </Button>
                             ) : (
                               <Button
