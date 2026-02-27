@@ -166,9 +166,10 @@ const MintTokens = () => {
       />
 
       <div className="max-w-6xl mx-auto px-4 pb-8">
-        {/* Education CTA */}
-        <div className="flex items-center justify-between mb-4">
-          <p className="text-sm text-gray-400">Invest in your community's future — learn how SIXTH works before you buy.</p>
+        {/* SIXTH branding + Education CTA */}
+        <div className="flex flex-col items-center py-6 mb-4">
+          <img src={sixthCoinLogo} alt="SIXTH Coin" className="w-20 h-20 rounded-full shadow-lg shadow-amber-500/20 border-2 border-amber-500/30 mb-3" />
+          <p className="text-sm text-gray-400 mb-3 text-center max-w-md">Invest in your community's future — learn how SIXTH works before you buy.</p>
           <SixthTokenEducationModal />
         </div>
 
