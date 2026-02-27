@@ -3333,6 +3333,54 @@ export type Database = {
           },
         ]
       }
+      token_balances: {
+        Row: {
+          balance: number
+          created_at: string
+          id: string
+          total_buy_tax_paid: number
+          total_purchased: number
+          total_spent_usd: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          id?: string
+          total_buy_tax_paid?: number
+          total_purchased?: number
+          total_spent_usd?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          id?: string
+          total_buy_tax_paid?: number
+          total_purchased?: number
+          total_spent_usd?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "token_balances_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "token_balances_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "public_profile_data"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_birth_data: {
         Row: {
           birth_city: string

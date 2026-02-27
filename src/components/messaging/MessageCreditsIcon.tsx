@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { useMessagingCredits } from "@/hooks/useMessagingCredits";
 import { CreditPurchaseModal } from "./CreditPurchaseModal";
+import { supabase } from "@/integrations/supabase/client";
 import sixthCoinLogo from "@/assets/sixth-coin-logo.jpg";
 
 interface MessageCreditsIconProps {
@@ -10,12 +10,53 @@ interface MessageCreditsIconProps {
 }
 
 export const MessageCreditsIcon = ({ userId, userType = 'supporter' }: MessageCreditsIconProps) => {
-  const { balance, loading, refetch } = useMessagingCredits(userId);
+  const [tokenBalance, setTokenBalance] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
 
+  const fetchBalance = useCallback(async () => {
+    try {
+      const { data, error } = await (supabase as any)
+        .from('token_balances')
+        .select('balance')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error fetching token balance:', error);
+        setTokenBalance(0);
+      } else {
+        setTokenBalance((data as any)?.balance ?? 0);
+      }
+    } catch {
+      setTokenBalance(0);
+    } finally {
+      setLoading(false);
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    fetchBalance();
+
+    const channel = supabase
+      .channel(`token-balance-${userId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'token_balances', filter: `user_id=eq.${userId}` },
+        () => fetchBalance()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchBalance, userId]);
+
   const handlePurchaseComplete = () => {
-    refetch();
+    fetchBalance();
   };
+
+  const fmt = (n: number) => n.toLocaleString();
 
   return (
     <>
@@ -27,7 +68,7 @@ export const MessageCreditsIcon = ({ userId, userType = 'supporter' }: MessageCr
       >
         <img src={sixthCoinLogo} alt="SIXTH" className="w-4 h-4 rounded-full object-cover" />
         <span className="text-sm font-medium">
-          {loading ? "..." : balance}
+          {loading ? "..." : fmt(tokenBalance ?? 0)}
         </span>
       </Button>
 
