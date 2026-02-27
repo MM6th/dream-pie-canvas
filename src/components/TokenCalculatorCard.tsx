@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import sixthCoinLogo from "@/assets/sixth-coin-logo.jpg";
 import { useTokenCalculation } from "@/hooks/useTokenCalculation";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceDot } from "recharts";
+import { ShieldCheck } from "lucide-react";
 
 const FULL_MARKET_CAP = 22_000_000;
 const INITIAL_PRICE = 0.00001;
@@ -127,6 +128,22 @@ const TokenCalculatorCard = () => {
                 ● Current position: {fmt(tokensPurchased)} tokens sold → {formatPrice(newPricePerToken)}/token
               </p>
             )}
+          </div>
+        </div>
+
+        {/* Reserve Requirement Card */}
+        <div className="bg-amber-950/30 border border-amber-700/40 rounded-lg p-4 flex items-start gap-3">
+          <ShieldCheck className="w-5 h-5 text-amber-400 mt-0.5 shrink-0" />
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-amber-300">Reserve Requirement</p>
+            <p className="text-xs text-gray-400">
+              PIE's bank account must hold at least{" "}
+              <span className="text-amber-400 font-semibold">
+                {isLoading ? "..." : `$${totalDollarValue.toFixed(2)}`}
+              </span>{" "}
+              to fully back all {isLoading ? "..." : fmt(tokensPurchased)} SIXTH tokens in circulation.
+              This guarantees any holder can redeem tokens back to USD at the current bonding curve price.
+            </p>
           </div>
         </div>
       </CardContent>
