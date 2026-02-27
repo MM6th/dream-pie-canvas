@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -6,7 +7,7 @@ import { useTokenCalculation } from "@/hooks/useTokenCalculation";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceDot } from "recharts";
 import { ShieldCheck } from "lucide-react";
 
-const FULL_MARKET_CAP = 22_000_000;
+const DEFAULT_MARKET_CAP = 22_000_000;
 const INITIAL_PRICE = 0.00001;
 const TARGET_PRICE = 0.01;
 const RESERVE_RATIO = 0.70;
@@ -14,9 +15,12 @@ const RESERVE_RATIO = 0.70;
 const fmt = (n: number) => n.toLocaleString();
 
 const TokenCalculatorCard = () => {
+  const [fullMarketCap, setFullMarketCap] = useState(DEFAULT_MARKET_CAP);
+  const [circulatingSupply, setCirculatingSupply] = useState(Math.floor(DEFAULT_MARKET_CAP * 0.49));
+
   const {
     tokensPurchased,
-    circulatingSupply,
+    circulatingSupplyRemaining,
     tokensLeft,
     newPricePerToken,
     totalDollarValue,
@@ -24,7 +28,7 @@ const TokenCalculatorCard = () => {
     requiredReserve,
     bondingCurveData,
     isLoading,
-  } = useTokenCalculation();
+  } = useTokenCalculation({ fullMarketCap, circulatingSupply });
 
   const formatPrice = (price: number) => {
     if (price === 0) return "$0.00";
@@ -32,16 +36,35 @@ const TokenCalculatorCard = () => {
     return `$${price.toFixed(4)}`;
   };
 
-  const fields = [
-    { label: "Total Credit Revenue (USD)", placeholder: isLoading ? "Loading..." : `$${totalDollarValue.toFixed(2)}`, hasCoinIcon: false },
-    { label: "Tokens Purchased", placeholder: isLoading ? "Loading..." : fmt(tokensPurchased), hasCoinIcon: false },
-    { label: "Initial Price Per Token", placeholder: `$${INITIAL_PRICE}`, hasCoinIcon: false },
-    { label: "Target Price", placeholder: `$${TARGET_PRICE}`, hasCoinIcon: false },
-    { label: "Reserve Ratio", placeholder: `${(RESERVE_RATIO * 100).toFixed(0)}%`, hasCoinIcon: false },
-    { label: "Full Market Cap", placeholder: fmt(FULL_MARKET_CAP), hasCoinIcon: true },
-    { label: "Circulating Supply", placeholder: isLoading ? "Loading..." : fmt(circulatingSupply), hasCoinIcon: true },
-    { label: "Tokens Left", placeholder: isLoading ? "Loading..." : fmt(tokensLeft), hasCoinIcon: true },
-    { label: "Current Price Per Token", placeholder: isLoading ? "Loading..." : formatPrice(newPricePerToken), hasCoinIcon: false },
+  const handleMarketCapChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value.replace(/[^0-9]/g, "");
+    const val = parseInt(raw, 10);
+    if (!isNaN(val) && val > 0) {
+      setFullMarketCap(val);
+    } else if (raw === "") {
+      setFullMarketCap(0);
+    }
+  };
+
+  const handleCirculatingSupplyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value.replace(/[^0-9]/g, "");
+    const val = parseInt(raw, 10);
+    if (!isNaN(val) && val > 0) {
+      setCirculatingSupply(val);
+    } else if (raw === "") {
+      setCirculatingSupply(0);
+    }
+  };
+
+  const readOnlyFields = [
+    { label: "Total Credit Revenue (USD)", value: isLoading ? "Loading..." : `$${totalDollarValue.toFixed(2)}` },
+    { label: "Tokens Purchased", value: isLoading ? "Loading..." : fmt(tokensPurchased) },
+    { label: "Initial Price Per Token", value: `$${INITIAL_PRICE}` },
+    { label: "Target Price", value: `$${TARGET_PRICE}` },
+    { label: "Reserve Ratio", value: `${(RESERVE_RATIO * 100).toFixed(0)}%` },
+    { label: "Remaining Supply", value: isLoading ? "Loading..." : fmt(circulatingSupplyRemaining), hasCoinIcon: true },
+    { label: "Tokens Left", value: isLoading ? "Loading..." : fmt(tokensLeft), hasCoinIcon: true },
+    { label: "Current Price Per Token", value: isLoading ? "Loading..." : formatPrice(newPricePerToken) },
   ];
 
   const chartData = bondingCurveData.map((d) => ({
@@ -59,8 +82,45 @@ const TokenCalculatorCard = () => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-5">
+        {/* Editable inputs */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-1">
+            <Label className="text-xs text-amber-400">Full Market Cap (USD)</Label>
+            <div className="relative">
+              <img
+                src={sixthCoinLogo}
+                alt="SIXTH"
+                className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full object-cover pointer-events-none"
+              />
+              <Input
+                value={fullMarketCap > 0 ? fmt(fullMarketCap) : ""}
+                onChange={handleMarketCapChange}
+                placeholder="e.g. 22,000,000"
+                className="bg-gray-900/80 border-amber-700/50 text-white pl-8 focus:border-amber-500"
+              />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs text-amber-400">Circulating Supply</Label>
+            <div className="relative">
+              <img
+                src={sixthCoinLogo}
+                alt="SIXTH"
+                className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full object-cover pointer-events-none"
+              />
+              <Input
+                value={circulatingSupply > 0 ? fmt(circulatingSupply) : ""}
+                onChange={handleCirculatingSupplyChange}
+                placeholder="e.g. 10,780,000"
+                className="bg-gray-900/80 border-amber-700/50 text-white pl-8 focus:border-amber-500"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Read-only fields */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-          {fields.map((field) => (
+          {readOnlyFields.map((field) => (
             <div key={field.label} className="space-y-1">
               <Label className="text-xs text-gray-400">{field.label}</Label>
               {field.hasCoinIcon ? (
@@ -72,14 +132,14 @@ const TokenCalculatorCard = () => {
                   />
                   <Input
                     disabled
-                    placeholder={field.placeholder}
+                    placeholder={field.value}
                     className="bg-gray-900/50 border-gray-600 text-white disabled:opacity-70 pl-8"
                   />
                 </div>
               ) : (
                 <Input
                   disabled
-                  placeholder={field.placeholder}
+                  placeholder={field.value}
                   className="bg-gray-900/50 border-gray-600 text-white disabled:opacity-70"
                 />
               )}
