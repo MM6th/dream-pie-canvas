@@ -5,12 +5,18 @@ const INITIAL_PRICE = 0.00001;
 const FULL_MARKET_CAP = 22_000_000;
 const BASE_CIRCULATING_SUPPLY = Math.floor(FULL_MARKET_CAP * 0.49);
 
+export interface BondingCurvePoint {
+  tokensSold: number;
+  price: number;
+}
+
 interface TokenCalculationResult {
   tokensPurchased: number;
   circulatingSupply: number;
   tokensLeft: number;
   newPricePerToken: number;
   totalDollarValue: number;
+  bondingCurveData: BondingCurvePoint[];
   isLoading: boolean;
 }
 
@@ -67,9 +73,22 @@ export const useTokenCalculation = (): TokenCalculationResult => {
     ? Math.floor(totalDollarValue / INITIAL_PRICE)
     : 0;
 
-  const circulatingSupply = Math.max(0, BASE_CIRCULATING_SUPPLY - tokensPurchased);
+  const circulatingSupply = Math.max(1, BASE_CIRCULATING_SUPPLY - tokensPurchased);
   const tokensLeft = FULL_MARKET_CAP - circulatingSupply;
-  const newPricePerToken = tokensPurchased * INITIAL_PRICE;
+
+  // Bonding curve: price = INITIAL_PRICE × (initialSupply / remainingSupply)
+  const newPricePerToken = INITIAL_PRICE * (BASE_CIRCULATING_SUPPLY / circulatingSupply);
+
+  // Generate bonding curve data points for the chart
+  const bondingCurveData: BondingCurvePoint[] = [];
+  const steps = 20;
+  const maxTokens = Math.min(BASE_CIRCULATING_SUPPLY - 1, Math.max(tokensPurchased * 3, BASE_CIRCULATING_SUPPLY * 0.5));
+  for (let i = 0; i <= steps; i++) {
+    const sold = Math.floor((maxTokens / steps) * i);
+    const remaining = Math.max(1, BASE_CIRCULATING_SUPPLY - sold);
+    const price = INITIAL_PRICE * (BASE_CIRCULATING_SUPPLY / remaining);
+    bondingCurveData.push({ tokensSold: sold, price });
+  }
 
   return {
     tokensPurchased,
@@ -77,6 +96,7 @@ export const useTokenCalculation = (): TokenCalculationResult => {
     tokensLeft,
     newPricePerToken,
     totalDollarValue,
+    bondingCurveData,
     isLoading,
   };
 };
