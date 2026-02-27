@@ -2,8 +2,14 @@ import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 const INITIAL_PRICE = 0.00001;
+const TARGET_PRICE = 0.01;
 const FULL_MARKET_CAP = 22_000_000;
 const BASE_CIRCULATING_SUPPLY = Math.floor(FULL_MARKET_CAP * 0.49);
+const RESERVE_RATIO = 0.70;
+
+// Exponential bonding curve: P(s) = P0 * e^(k * s)
+// k calibrated so P(maxSupply) = TARGET_PRICE
+const K = Math.log(TARGET_PRICE / INITIAL_PRICE) / BASE_CIRCULATING_SUPPLY;
 
 export interface BondingCurvePoint {
   tokensSold: number;
@@ -16,15 +22,24 @@ interface TokenCalculationResult {
   tokensLeft: number;
   newPricePerToken: number;
   totalDollarValue: number;
+  reserveBalance: number;
+  requiredReserve: number;
   bondingCurveData: BondingCurvePoint[];
   isLoading: boolean;
 }
 
+/** Exponential price at s tokens sold */
+const priceAt = (s: number) => INITIAL_PRICE * Math.exp(K * s);
+
+/** Reserve collected (integral of price curve from 0 to s) */
+const reserveAt = (s: number) =>
+  s === 0 ? 0 : (INITIAL_PRICE / K) * (Math.exp(K * s) - 1);
+
 /**
- * Calculates SIXTH token metrics from platform messaging credit activity.
- * - Total $ from credit purchases (platform_revenue) / initial price = tokens purchased
- * - Tokens purchased are subtracted from the circulating supply
- * - New price per token = tokens purchased × initial price
+ * Calculates SIXTH token metrics using an exponential bonding curve.
+ * - Price increases exponentially as tokens are purchased
+ * - Reserve ratio: 70% of market cap must be held in reserve
+ * - Target price: $0.01 when full circulating supply is sold
  */
 export const useTokenCalculation = (): TokenCalculationResult => {
   const [totalDollarValue, setTotalDollarValue] = useState(0);
@@ -59,7 +74,6 @@ export const useTokenCalculation = (): TokenCalculationResult => {
   useEffect(() => {
     fetchData();
 
-    // Subscribe to realtime changes so the calculator updates live
     const channel = supabase
       .channel("token-calc-revenue")
       .on(
@@ -81,18 +95,25 @@ export const useTokenCalculation = (): TokenCalculationResult => {
   const circulatingSupply = Math.max(1, BASE_CIRCULATING_SUPPLY - tokensPurchased);
   const tokensLeft = FULL_MARKET_CAP - circulatingSupply;
 
-  // Bonding curve: price = INITIAL_PRICE × (initialSupply / remainingSupply)
-  const newPricePerToken = INITIAL_PRICE * (BASE_CIRCULATING_SUPPLY / circulatingSupply);
+  // Exponential bonding curve price
+  const newPricePerToken = priceAt(tokensPurchased);
 
-  // Generate bonding curve data points for the chart
+  // Actual USD collected via the integral of the curve
+  const reserveBalance = reserveAt(tokensPurchased);
+
+  // Required reserve = 70% of current market cap (price × tokens outstanding)
+  const requiredReserve = newPricePerToken * tokensPurchased * RESERVE_RATIO;
+
+  // Generate bonding curve data points
   const bondingCurveData: BondingCurvePoint[] = [];
-  const steps = 20;
-  const maxTokens = Math.min(BASE_CIRCULATING_SUPPLY - 1, Math.max(tokensPurchased * 3, BASE_CIRCULATING_SUPPLY * 0.5));
+  const steps = 25;
+  const maxTokens = Math.min(
+    BASE_CIRCULATING_SUPPLY,
+    Math.max(tokensPurchased * 3, BASE_CIRCULATING_SUPPLY * 0.5)
+  );
   for (let i = 0; i <= steps; i++) {
     const sold = Math.floor((maxTokens / steps) * i);
-    const remaining = Math.max(1, BASE_CIRCULATING_SUPPLY - sold);
-    const price = INITIAL_PRICE * (BASE_CIRCULATING_SUPPLY / remaining);
-    bondingCurveData.push({ tokensSold: sold, price });
+    bondingCurveData.push({ tokensSold: sold, price: priceAt(sold) });
   }
 
   return {
@@ -101,6 +122,8 @@ export const useTokenCalculation = (): TokenCalculationResult => {
     tokensLeft,
     newPricePerToken,
     totalDollarValue,
+    reserveBalance,
+    requiredReserve,
     bondingCurveData,
     isLoading,
   };

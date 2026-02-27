@@ -8,6 +8,8 @@ import { ShieldCheck } from "lucide-react";
 
 const FULL_MARKET_CAP = 22_000_000;
 const INITIAL_PRICE = 0.00001;
+const TARGET_PRICE = 0.01;
+const RESERVE_RATIO = 0.70;
 
 const fmt = (n: number) => n.toLocaleString();
 
@@ -18,6 +20,8 @@ const TokenCalculatorCard = () => {
     tokensLeft,
     newPricePerToken,
     totalDollarValue,
+    reserveBalance,
+    requiredReserve,
     bondingCurveData,
     isLoading,
   } = useTokenCalculation();
@@ -25,17 +29,19 @@ const TokenCalculatorCard = () => {
   const formatPrice = (price: number) => {
     if (price === 0) return "$0.00";
     if (price < 0.01) return `$${price.toFixed(8)}`;
-    return `$${price.toFixed(2)}`;
+    return `$${price.toFixed(4)}`;
   };
 
   const fields = [
     { label: "Total Credit Revenue (USD)", placeholder: isLoading ? "Loading..." : `$${totalDollarValue.toFixed(2)}`, hasCoinIcon: false },
     { label: "Tokens Purchased", placeholder: isLoading ? "Loading..." : fmt(tokensPurchased), hasCoinIcon: false },
     { label: "Initial Price Per Token", placeholder: `$${INITIAL_PRICE}`, hasCoinIcon: false },
+    { label: "Target Price", placeholder: `$${TARGET_PRICE}`, hasCoinIcon: false },
+    { label: "Reserve Ratio", placeholder: `${(RESERVE_RATIO * 100).toFixed(0)}%`, hasCoinIcon: false },
     { label: "Full Market Cap", placeholder: fmt(FULL_MARKET_CAP), hasCoinIcon: true },
     { label: "Circulating Supply", placeholder: isLoading ? "Loading..." : fmt(circulatingSupply), hasCoinIcon: true },
     { label: "Tokens Left", placeholder: isLoading ? "Loading..." : fmt(tokensLeft), hasCoinIcon: true },
-    { label: "New Price Per Token", placeholder: isLoading ? "Loading..." : formatPrice(newPricePerToken), hasCoinIcon: false },
+    { label: "Current Price Per Token", placeholder: isLoading ? "Loading..." : formatPrice(newPricePerToken), hasCoinIcon: false },
   ];
 
   const chartData = bondingCurveData.map((d) => ({
@@ -49,6 +55,7 @@ const TokenCalculatorCard = () => {
         <CardTitle className="flex items-center gap-2 text-lg text-white">
           <img src={sixthCoinLogo} alt="SIXTH Coin" className="w-8 h-8 rounded-full object-cover" />
           Token Economics Calculator
+          <span className="ml-auto text-[10px] font-normal text-gray-500 uppercase tracking-wider">Exponential Curve</span>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-5">
@@ -82,7 +89,7 @@ const TokenCalculatorCard = () => {
 
         {/* Bonding Curve Chart */}
         <div className="pt-2">
-          <Label className="text-xs text-gray-400 mb-2 block">Bonding Curve — Price vs Tokens Sold</Label>
+          <Label className="text-xs text-gray-400 mb-2 block">Exponential Bonding Curve — Price vs Tokens Sold</Label>
           <div className="bg-gray-900/50 rounded-lg p-3 border border-gray-700">
             <ResponsiveContainer width="100%" height={220}>
               <LineChart data={chartData} margin={{ top: 10, right: 20, left: 10, bottom: 5 }}>
@@ -94,15 +101,15 @@ const TokenCalculatorCard = () => {
                   label={{ value: "Tokens Sold", position: "insideBottomRight", offset: -5, fill: "#9ca3af", fontSize: 10 }}
                 />
                 <YAxis
-                  tickFormatter={(v) => `$${v.toFixed(5)}`}
+                  tickFormatter={(v) => v < 0.001 ? `$${v.toFixed(6)}` : `$${v.toFixed(4)}`}
                   stroke="#6b7280"
                   fontSize={10}
-                  width={72}
+                  width={78}
                 />
                 <Tooltip
                   contentStyle={{ backgroundColor: "#1f2937", border: "1px solid #374151", borderRadius: 8 }}
                   labelFormatter={(v) => `Tokens Sold: ${Number(v).toLocaleString()}`}
-                  formatter={(value: number) => [`$${value.toFixed(8)}`, "Price"]}
+                  formatter={(value: number) => [formatPrice(value), "Price"]}
                 />
                 <Line
                   type="monotone"
@@ -135,15 +142,14 @@ const TokenCalculatorCard = () => {
         <div className="bg-amber-950/30 border border-amber-700/40 rounded-lg p-4 flex items-start gap-3">
           <ShieldCheck className="w-5 h-5 text-amber-400 mt-0.5 shrink-0" />
           <div className="space-y-1">
-            <p className="text-sm font-medium text-amber-300">Reserve Requirement</p>
+            <p className="text-sm font-medium text-amber-300">Reserve Requirement (70%)</p>
             <p className="text-xs text-gray-400">
               PIE's bank account must hold at least{" "}
               <span className="text-amber-400 font-semibold">
-                {isLoading ? "..." : `$${(tokensPurchased * newPricePerToken).toFixed(2)}`}
+                {isLoading ? "..." : `$${requiredReserve.toFixed(2)}`}
               </span>{" "}
-              (redemption value at current bonding curve price of {formatPrice(newPricePerToken)}/token)
-              to fully back all {isLoading ? "..." : fmt(tokensPurchased)} SIXTH tokens in circulation.
-              This guarantees any holder can redeem tokens back to USD.
+              (70% of market cap at {formatPrice(newPricePerToken)}/token × {isLoading ? "..." : fmt(tokensPurchased)} tokens).
+              Actual reserve collected via curve: {isLoading ? "..." : `$${reserveBalance.toFixed(2)}`}.
             </p>
           </div>
         </div>
