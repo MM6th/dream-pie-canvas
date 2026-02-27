@@ -19,6 +19,7 @@ import { useAuth } from "@/hooks/useAuth";
 import type { FollowStatus } from "@/hooks/useFollowRequest";
 import { MessageButton } from "@/components/profile/MessageButton";
 import { FollowButton } from "@/components/profile/FollowButton";
+import SixthPriceTag from "@/components/SixthPriceTag";
 
 interface Profile {
   id: string;
@@ -369,10 +370,11 @@ const ProfilePage = () => {
                   )}
 
                   {/* Messaging Price */}
-                  {messagingPrice !== null && (
-                    <div className="flex items-center gap-2 text-sm text-green-400 bg-green-900/20 border border-green-600/30 rounded-lg px-3 py-2 w-full justify-center">
+                   {messagingPrice !== null && (
+                    <div className="flex items-center gap-2 text-sm text-green-400 bg-green-900/20 border border-green-600/30 rounded-lg px-3 py-2 w-full justify-center flex-wrap">
                       <DollarSign className="w-4 h-4" />
                       <span>{messagingPrice} credits per message</span>
+                      <SixthPriceTag usdPrice={messagingPrice * 0.10} size="sm" showUsd={false} />
                     </div>
                   )}
                 </div>

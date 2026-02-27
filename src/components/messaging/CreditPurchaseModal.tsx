@@ -17,6 +17,7 @@ import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, MessageCircle, CreditCard, Info, Settings, DollarSign, Video, Clock } from 'lucide-react';
+import SixthPriceTag from '@/components/SixthPriceTag';
 
 interface CreditPurchaseModalProps {
   open: boolean;
@@ -530,8 +531,9 @@ export const CreditPurchaseModal = ({
                           <DollarSign className="w-3 h-3" />
                           Your Revenue Per Message
                         </div>
-                        <div className="text-xl font-bold text-primary">
+                        <div className="text-xl font-bold text-primary flex items-center gap-2 flex-wrap">
                           ${revenuePerMessage}
+                          <SixthPriceTag usdPrice={parseFloat(revenuePerMessage)} size="sm" showUsd={false} />
                         </div>
                         <p className="text-xs text-muted-foreground">
                           You earn $0.10 per credit.
