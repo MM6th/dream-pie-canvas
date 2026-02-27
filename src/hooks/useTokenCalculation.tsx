@@ -4,12 +4,12 @@ import { supabase } from "@/integrations/supabase/client";
 const INITIAL_PRICE = 0.00001;
 const TARGET_PRICE = 0.01;
 const FULL_MARKET_CAP = 22_000_000;
-const BASE_CIRCULATING_SUPPLY = Math.floor(FULL_MARKET_CAP * 0.49);
+const LIQUIDITY_POOL_SIZE = Math.floor(FULL_MARKET_CAP * 0.49);
 const RESERVE_RATIO = 0.70;
 
 // Exponential bonding curve: P(s) = P0 * e^(k * s)
 // k calibrated so P(maxSupply) = TARGET_PRICE
-const K = Math.log(TARGET_PRICE / INITIAL_PRICE) / BASE_CIRCULATING_SUPPLY;
+const K = Math.log(TARGET_PRICE / INITIAL_PRICE) / LIQUIDITY_POOL_SIZE;
 
 export interface BondingCurvePoint {
   tokensSold: number;
@@ -19,6 +19,7 @@ export interface BondingCurvePoint {
 interface TokenCalculationResult {
   tokensPurchased: number;
   circulatingSupply: number;
+  liquidityPool: number;
   tokensLeft: number;
   newPricePerToken: number;
   totalDollarValue: number;
@@ -92,8 +93,11 @@ export const useTokenCalculation = (): TokenCalculationResult => {
     ? Math.floor(totalDollarValue / INITIAL_PRICE)
     : 0;
 
-  const circulatingSupply = Math.max(1, BASE_CIRCULATING_SUPPLY - tokensPurchased);
-  const tokensLeft = FULL_MARKET_CAP - circulatingSupply;
+  // Circulating supply = tokens in holders' hands
+  const circulatingSupply = tokensPurchased;
+  // Liquidity pool = unsold tokens available on the bonding curve
+  const liquidityPool = Math.max(0, LIQUIDITY_POOL_SIZE - tokensPurchased);
+  const tokensLeft = FULL_MARKET_CAP - tokensPurchased;
 
   // Exponential bonding curve price
   const newPricePerToken = priceAt(tokensPurchased);
@@ -108,8 +112,8 @@ export const useTokenCalculation = (): TokenCalculationResult => {
   const bondingCurveData: BondingCurvePoint[] = [];
   const steps = 25;
   const maxTokens = Math.min(
-    BASE_CIRCULATING_SUPPLY,
-    Math.max(tokensPurchased * 3, BASE_CIRCULATING_SUPPLY * 0.5)
+    LIQUIDITY_POOL_SIZE,
+    Math.max(tokensPurchased * 3, LIQUIDITY_POOL_SIZE * 0.5)
   );
   for (let i = 0; i <= steps; i++) {
     const sold = Math.floor((maxTokens / steps) * i);
@@ -119,6 +123,7 @@ export const useTokenCalculation = (): TokenCalculationResult => {
   return {
     tokensPurchased,
     circulatingSupply,
+    liquidityPool,
     tokensLeft,
     newPricePerToken,
     totalDollarValue,

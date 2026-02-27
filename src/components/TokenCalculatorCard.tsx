@@ -17,6 +17,7 @@ const TokenCalculatorCard = () => {
   const {
     tokensPurchased,
     circulatingSupply,
+    liquidityPool,
     tokensLeft,
     newPricePerToken,
     totalDollarValue,
@@ -42,6 +43,8 @@ const TokenCalculatorCard = () => {
     { label: "Full Market Cap Value", placeholder: isLoading ? "Loading..." : `$${(FULL_MARKET_CAP * newPricePerToken).toFixed(2)}`, hasCoinIcon: false },
     { label: "Circulating Supply", placeholder: isLoading ? "Loading..." : fmt(circulatingSupply), hasCoinIcon: true },
     { label: "Circulating Supply Value", placeholder: isLoading ? "Loading..." : `$${(circulatingSupply * newPricePerToken).toFixed(2)}`, hasCoinIcon: false },
+    { label: "Liquidity Pool", placeholder: isLoading ? "Loading..." : fmt(liquidityPool), hasCoinIcon: true },
+    { label: "Liquidity Pool Value", placeholder: isLoading ? "Loading..." : `$${(liquidityPool * newPricePerToken).toFixed(2)}`, hasCoinIcon: false },
     { label: "Tokens Left", placeholder: isLoading ? "Loading..." : fmt(tokensLeft), hasCoinIcon: true },
     { label: "Tokens Left Value", placeholder: isLoading ? "Loading..." : `$${(tokensLeft * newPricePerToken).toFixed(2)}`, hasCoinIcon: false },
     { label: "Current Price Per Token", placeholder: isLoading ? "Loading..." : formatPrice(newPricePerToken), hasCoinIcon: false },
