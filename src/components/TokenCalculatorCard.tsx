@@ -4,12 +4,12 @@ import { Input } from "@/components/ui/input";
 import sixthCoinLogo from "@/assets/sixth-coin-logo.jpg";
 
 const fields = [
-  { label: "Tokens Purchased", placeholder: "0" },
-  { label: "Initial Price Per Token", placeholder: "$0.00" },
-  { label: "Full Market Cap", placeholder: "$0.00" },
-  { label: "Circulating Supply", placeholder: "0" },
-  { label: "Tokens Left", placeholder: "0" },
-  { label: "New Price Per Token", placeholder: "$0.00" },
+  { label: "Tokens Purchased", placeholder: "0", hasCoinIcon: false },
+  { label: "Initial Price Per Token", placeholder: "$0.00", hasCoinIcon: false },
+  { label: "Full Market Cap", placeholder: "0.00", hasCoinIcon: true },
+  { label: "Circulating Supply", placeholder: "0", hasCoinIcon: true },
+  { label: "Tokens Left", placeholder: "0", hasCoinIcon: true },
+  { label: "New Price Per Token", placeholder: "$0.00", hasCoinIcon: false },
 ];
 
 const TokenCalculatorCard = () => {
@@ -25,11 +25,26 @@ const TokenCalculatorCard = () => {
         {fields.map((field) => (
           <div key={field.label} className="space-y-1">
             <Label className="text-xs text-gray-400">{field.label}</Label>
-            <Input
-              disabled
-              placeholder={field.placeholder}
-              className="bg-gray-900/50 border-gray-600 text-white disabled:opacity-70"
-            />
+            {field.hasCoinIcon ? (
+              <div className="relative">
+                <img
+                  src={sixthCoinLogo}
+                  alt="SIXTH"
+                  className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full object-cover pointer-events-none"
+                />
+                <Input
+                  disabled
+                  placeholder={field.placeholder}
+                  className="bg-gray-900/50 border-gray-600 text-white disabled:opacity-70 pl-8"
+                />
+              </div>
+            ) : (
+              <Input
+                disabled
+                placeholder={field.placeholder}
+                className="bg-gray-900/50 border-gray-600 text-white disabled:opacity-70"
+              />
+            )}
           </div>
         ))}
       </CardContent>
