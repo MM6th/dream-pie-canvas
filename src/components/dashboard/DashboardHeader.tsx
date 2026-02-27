@@ -12,6 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { NotificationBellButton } from "@/components/NotificationBellButton";
 import { MessageCreditsIcon } from "@/components/messaging/MessageCreditsIcon";
+import TokenCalculatorCard from "@/components/TokenCalculatorCard";
 
 // Calculate current quarter and year
 const getCurrentQuarterLabel = () => {
@@ -91,6 +92,12 @@ const DashboardHeader = ({
             userId={user?.id} 
             autoPopulateIncome={currentQuarterIncome} 
           />
+        </div>
+      )}
+
+      {isAdmin && (
+        <div className="mb-4">
+          <TokenCalculatorCard />
         </div>
       )}
       
