@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Coins } from "lucide-react";
+import sixthCoinLogo from "@/assets/sixth-coin-logo.jpg";
 
 const fields = [
   { label: "Tokens Purchased", placeholder: "0" },
@@ -17,7 +17,7 @@ const TokenCalculatorCard = () => {
     <Card className="bg-gray-800/50 border-gray-700">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-lg text-white">
-          <Coins className="w-5 h-5 text-yellow-400" />
+          <img src={sixthCoinLogo} alt="SIXTH Coin" className="w-8 h-8 rounded-full object-cover" />
           Token Economics Calculator
         </CardTitle>
       </CardHeader>
