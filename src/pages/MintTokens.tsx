@@ -163,224 +163,210 @@ const MintTokens = () => {
         isAdmin={isAdmin}
       />
 
-      <div className="max-w-6xl mx-auto px-4 py-4">
-        {/* Page Title */}
-        <div className="flex items-center gap-3 mb-6">
-          <img src={sixthCoinLogo} alt="SIXTH" className="w-10 h-10 rounded-full" />
-          <div>
-            <h1 className="text-2xl font-bold">Mint SIXTH Tokens</h1>
-            <p className="text-sm text-gray-400">Direct token purchase via bonding curve</p>
-          </div>
+      <div className="max-w-6xl mx-auto px-4 pb-8">
+        {/* Purchase + Balance row */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          {/* Purchase Card */}
+          <Card className="bg-gray-800/50 border-gray-700">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Coins className="w-5 h-5 text-amber-400" /> Purchase SIXTH Tokens
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label className="text-xs text-gray-400">USD Amount ($1 – $10,000)</Label>
+                <Input
+                  type="number"
+                  min="1"
+                  max="10000"
+                  step="0.01"
+                  value={usdInput}
+                  onChange={(e) => setUsdInput(e.target.value)}
+                  placeholder="Enter USD amount"
+                  className="bg-gray-900/50 border-gray-600 text-white mt-1"
+                />
+              </div>
+
+              {estimatedTokens > 0 && (
+                <div className="bg-gray-900/50 rounded-lg p-3 border border-gray-700 space-y-1">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-400">Estimated tokens:</span>
+                    <span className="text-amber-400 font-bold">{fmt(estimatedTokens)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-400">Avg price/token:</span>
+                    <span className="text-gray-300">{formatPrice(estimatedAvgPrice)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-400">Buy tax (1%):</span>
+                    <span className="text-red-400">-${(parseFloat(usdInput) * buyTaxRate).toFixed(4)}</span>
+                  </div>
+                </div>
+              )}
+
+              <Button
+                onClick={handlePurchase}
+                disabled={isPurchasing || !usdInput || parseFloat(usdInput) < 1}
+                className="w-full bg-amber-600 hover:bg-amber-700 text-white"
+              >
+                {isPurchasing ? "Redirecting to PayPal..." : "Buy with PayPal"}
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Your Balance */}
+          <Card className="bg-gray-800/50 border-gray-700">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Wallet className="w-5 h-5 text-emerald-400" /> Your Balance
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-3">
+                <img src={sixthCoinLogo} alt="SIXTH" className="w-8 h-8 rounded-full" />
+                <div>
+                  <p className="text-2xl font-bold text-white">{fmt(userBalance)}</p>
+                  <p className="text-xs text-gray-400">≈ {formatPrice(userBalance * newPricePerToken)}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left column: Purchase + Calculator */}
-          <div className="space-y-6">
-            {/* Purchase Card */}
-            <Card className="bg-gray-800/50 border-gray-700">
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Coins className="w-5 h-5 text-amber-400" /> Purchase Tokens
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label className="text-xs text-gray-400">USD Amount ($1 – $10,000)</Label>
-                  <Input
-                    type="number"
-                    min="1"
-                    max="10000"
-                    step="0.01"
-                    value={usdInput}
-                    onChange={(e) => setUsdInput(e.target.value)}
-                    placeholder="Enter USD amount"
-                    className="bg-gray-900/50 border-gray-600 text-white mt-1"
-                  />
+        {/* Live Stats */}
+        <Card className="bg-gray-800/50 border-gray-700 mb-4">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <TrendingUp className="w-5 h-5 text-blue-400" /> Live Stats
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+              {[
+                { label: "Spot Price", value: formatPrice(newPricePerToken) },
+                { label: "Total Supply", value: fmt(circulatingSupply) },
+                { label: "Remaining", value: fmt(tokensLeft) },
+                { label: "Total Reserve", value: `$${totalReserve.toFixed(2)}` },
+                { label: "Total Revenue", value: `$${totalDollarValue.toFixed(2)}` },
+                { label: "Liquidity Pool", value: fmt(liquidityPool) },
+              ].map((stat) => (
+                <div key={stat.label} className="bg-gray-900/50 rounded-lg p-3 border border-gray-700">
+                  <p className="text-[10px] text-gray-400 uppercase tracking-wider">{stat.label}</p>
+                  <p className="text-sm font-bold text-white">{isLoading ? "..." : stat.value}</p>
                 </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
 
-                {estimatedTokens > 0 && (
-                  <div className="bg-gray-900/50 rounded-lg p-3 border border-gray-700 space-y-1">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-400">Estimated tokens:</span>
-                      <span className="text-amber-400 font-bold">{fmt(estimatedTokens)}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-400">Avg price/token:</span>
-                      <span className="text-gray-300">{formatPrice(estimatedAvgPrice)}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-400">Buy tax (1%):</span>
-                      <span className="text-red-400">-${(parseFloat(usdInput) * buyTaxRate).toFixed(4)}</span>
-                    </div>
-                  </div>
+        {/* Bonding Curve Chart */}
+        <Card className="bg-gray-800/50 border-gray-700 mb-4">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm text-gray-400">Bonding Curve — Price vs Supply</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={220}>
+              <LineChart data={chartData} margin={{ top: 10, right: 20, left: 10, bottom: 5 }}>
+                <XAxis
+                  dataKey="tokensSold"
+                  tickFormatter={(v) => `${(v / 1_000_000).toFixed(1)}M`}
+                  stroke="#6b7280"
+                  fontSize={11}
+                />
+                <YAxis
+                  tickFormatter={(v) => v < 0.001 ? `$${v.toFixed(6)}` : `$${v.toFixed(4)}`}
+                  stroke="#6b7280"
+                  fontSize={10}
+                  width={78}
+                />
+                <Tooltip
+                  contentStyle={{ backgroundColor: "#1f2937", border: "1px solid #374151", borderRadius: 8 }}
+                  labelFormatter={(v) => `Supply: ${Number(v).toLocaleString()}`}
+                  formatter={(value: number) => [formatPrice(value), "Price"]}
+                />
+                <Line type="monotone" dataKey="price" stroke="#f59e0b" strokeWidth={2} dot={false} />
+                {tokensPurchased > 0 && (
+                  <ReferenceDot x={tokensPurchased} y={newPricePerToken} r={5} fill="#f59e0b" stroke="#fff" strokeWidth={2} />
                 )}
+              </LineChart>
+            </ResponsiveContainer>
+            {tokensPurchased > 0 && (
+              <p className="text-[10px] text-gray-500 text-center mt-1">
+                ● {fmt(tokensPurchased)} tokens → {formatPrice(newPricePerToken)}/token
+              </p>
+            )}
+          </CardContent>
+        </Card>
 
-                <Button
-                  onClick={handlePurchase}
-                  disabled={isPurchasing || !usdInput || parseFloat(usdInput) < 1}
-                  className="w-full bg-amber-600 hover:bg-amber-700 text-white"
-                >
-                  {isPurchasing ? "Redirecting to PayPal..." : "Buy with PayPal"}
-                </Button>
-              </CardContent>
-            </Card>
+        {/* Quick Estimates + Purchase History row */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Quick Estimates */}
+          <Card className="bg-gray-800/50 border-gray-700">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Calculator className="w-5 h-5 text-purple-400" /> Quick Estimates
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {[5, 10, 25, 50, 100, 500].map((usd) => {
+                  const k = Math.log(TARGET_PRICE / INITIAL_PRICE) / LIQUIDITY_POOL_SIZE;
+                  const taxed = usd * (1 - buyTaxRate);
+                  const curReserve = circulatingSupply === 0 ? 0 : (INITIAL_PRICE / k) * (Math.exp(k * circulatingSupply) - 1);
+                  const tgtReserve = curReserve + taxed;
+                  const sAfter = Math.log(tgtReserve * k / INITIAL_PRICE + 1) / k;
+                  const tokens = Math.max(0, Math.min(Math.floor(sAfter - circulatingSupply), LIQUIDITY_POOL_SIZE - circulatingSupply));
+                  return (
+                    <div key={usd} className="flex items-center justify-between bg-gray-900/50 rounded p-2 border border-gray-700">
+                      <span className="text-sm text-gray-300">${usd}</span>
+                      <span className="text-sm text-amber-400 font-medium">{isLoading ? "..." : fmt(tokens)} SIXTH</span>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-xs text-blue-400 hover:text-blue-300 h-6 px-2"
+                        onClick={() => setUsdInput(usd.toString())}
+                      >
+                        Use
+                      </Button>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
 
-            {/* Your Balance */}
-            <Card className="bg-gray-800/50 border-gray-700">
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Wallet className="w-5 h-5 text-emerald-400" /> Your Balance
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center gap-3">
-                  <img src={sixthCoinLogo} alt="SIXTH" className="w-8 h-8 rounded-full" />
-                  <div>
-                    <p className="text-2xl font-bold text-white">{fmt(userBalance)}</p>
-                    <p className="text-xs text-gray-400">≈ {formatPrice(userBalance * newPricePerToken)}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Center column: Live Stats + Chart */}
-          <div className="space-y-6">
-            {/* Live Stats */}
-            <Card className="bg-gray-800/50 border-gray-700">
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <TrendingUp className="w-5 h-5 text-blue-400" /> Live Stats
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-3">
-                  {[
-                    { label: "Spot Price", value: formatPrice(newPricePerToken) },
-                    { label: "Total Supply", value: fmt(circulatingSupply) },
-                    { label: "Remaining", value: fmt(tokensLeft) },
-                    { label: "Total Reserve", value: `$${totalReserve.toFixed(2)}` },
-                    { label: "Total Revenue", value: `$${totalDollarValue.toFixed(2)}` },
-                    { label: "Liquidity Pool", value: fmt(liquidityPool) },
-                  ].map((stat) => (
-                    <div key={stat.label} className="bg-gray-900/50 rounded-lg p-3 border border-gray-700">
-                      <p className="text-[10px] text-gray-400 uppercase tracking-wider">{stat.label}</p>
-                      <p className="text-sm font-bold text-white">{isLoading ? "..." : stat.value}</p>
+          {/* Purchase History */}
+          <Card className="bg-gray-800/50 border-gray-700">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <History className="w-5 h-5 text-gray-400" /> Purchase History
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {loadingTx ? (
+                <p className="text-sm text-gray-500">Loading...</p>
+              ) : transactions.length === 0 ? (
+                <p className="text-sm text-gray-500">No purchases yet.</p>
+              ) : (
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {transactions.map((tx) => (
+                    <div key={tx.id} className="bg-gray-900/50 rounded p-2 border border-gray-700">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-white font-medium">${tx.amount?.toFixed(2)}</span>
+                        <span className="text-gray-500 text-xs">
+                          {new Date(tx.created_at).toLocaleDateString()}
+                        </span>
+                      </div>
+                      {tx.metadata?.type === 'direct_token_purchase' && (
+                        <span className="text-[10px] text-purple-400">Direct purchase</span>
+                      )}
                     </div>
                   ))}
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Bonding Curve */}
-            <Card className="bg-gray-800/50 border-gray-700">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm text-gray-400">Bonding Curve — Price vs Supply</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={220}>
-                  <LineChart data={chartData} margin={{ top: 10, right: 20, left: 10, bottom: 5 }}>
-                    <XAxis
-                      dataKey="tokensSold"
-                      tickFormatter={(v) => `${(v / 1_000_000).toFixed(1)}M`}
-                      stroke="#6b7280"
-                      fontSize={11}
-                    />
-                    <YAxis
-                      tickFormatter={(v) => v < 0.001 ? `$${v.toFixed(6)}` : `$${v.toFixed(4)}`}
-                      stroke="#6b7280"
-                      fontSize={10}
-                      width={78}
-                    />
-                    <Tooltip
-                      contentStyle={{ backgroundColor: "#1f2937", border: "1px solid #374151", borderRadius: 8 }}
-                      labelFormatter={(v) => `Supply: ${Number(v).toLocaleString()}`}
-                      formatter={(value: number) => [formatPrice(value), "Price"]}
-                    />
-                    <Line type="monotone" dataKey="price" stroke="#f59e0b" strokeWidth={2} dot={false} />
-                    {tokensPurchased > 0 && (
-                      <ReferenceDot x={tokensPurchased} y={newPricePerToken} r={5} fill="#f59e0b" stroke="#fff" strokeWidth={2} />
-                    )}
-                  </LineChart>
-                </ResponsiveContainer>
-                {tokensPurchased > 0 && (
-                  <p className="text-[10px] text-gray-500 text-center mt-1">
-                    ● {fmt(tokensPurchased)} tokens → {formatPrice(newPricePerToken)}/token
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Right column: Calculator + History */}
-          <div className="space-y-6">
-            {/* Quick Calculator */}
-            <Card className="bg-gray-800/50 border-gray-700">
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Calculator className="w-5 h-5 text-purple-400" /> Quick Estimates
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {[5, 10, 25, 50, 100, 500].map((usd) => {
-                    const k = Math.log(TARGET_PRICE / INITIAL_PRICE) / LIQUIDITY_POOL_SIZE;
-                    const taxed = usd * (1 - buyTaxRate);
-                    const curReserve = circulatingSupply === 0 ? 0 : (INITIAL_PRICE / k) * (Math.exp(k * circulatingSupply) - 1);
-                    const tgtReserve = curReserve + taxed;
-                    const sAfter = Math.log(tgtReserve * k / INITIAL_PRICE + 1) / k;
-                    const tokens = Math.max(0, Math.min(Math.floor(sAfter - circulatingSupply), LIQUIDITY_POOL_SIZE - circulatingSupply));
-                    return (
-                      <div key={usd} className="flex items-center justify-between bg-gray-900/50 rounded p-2 border border-gray-700">
-                        <span className="text-sm text-gray-300">${usd}</span>
-                        <span className="text-sm text-amber-400 font-medium">{isLoading ? "..." : fmt(tokens)} SIXTH</span>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="text-xs text-blue-400 hover:text-blue-300 h-6 px-2"
-                          onClick={() => setUsdInput(usd.toString())}
-                        >
-                          Use
-                        </Button>
-                      </div>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Transaction History */}
-            <Card className="bg-gray-800/50 border-gray-700">
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <History className="w-5 h-5 text-gray-400" /> Purchase History
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {loadingTx ? (
-                  <p className="text-sm text-gray-500">Loading...</p>
-                ) : transactions.length === 0 ? (
-                  <p className="text-sm text-gray-500">No purchases yet.</p>
-                ) : (
-                  <div className="space-y-2 max-h-64 overflow-y-auto">
-                    {transactions.map((tx) => (
-                      <div key={tx.id} className="bg-gray-900/50 rounded p-2 border border-gray-700">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-white font-medium">${tx.amount?.toFixed(2)}</span>
-                          <span className="text-gray-500 text-xs">
-                            {new Date(tx.created_at).toLocaleDateString()}
-                          </span>
-                        </div>
-                        {tx.metadata?.type === 'direct_token_purchase' && (
-                          <span className="text-[10px] text-purple-400">Direct purchase</span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
