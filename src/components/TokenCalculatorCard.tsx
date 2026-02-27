@@ -3,12 +3,18 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import sixthCoinLogo from "@/assets/sixth-coin-logo.jpg";
 
+const FULL_MARKET_CAP = 22_000_000;
+const CIRCULATING_SUPPLY = Math.floor(FULL_MARKET_CAP * 0.49);
+const TOKENS_LEFT = FULL_MARKET_CAP - CIRCULATING_SUPPLY;
+
+const fmt = (n: number) => n.toLocaleString();
+
 const fields = [
   { label: "Tokens Purchased", placeholder: "0", hasCoinIcon: false },
   { label: "Initial Price Per Token", placeholder: "$0.00", hasCoinIcon: false },
-  { label: "Full Market Cap", placeholder: "0.00", hasCoinIcon: true },
-  { label: "Circulating Supply", placeholder: "0", hasCoinIcon: true },
-  { label: "Tokens Left", placeholder: "0", hasCoinIcon: true },
+  { label: "Full Market Cap", placeholder: fmt(FULL_MARKET_CAP), hasCoinIcon: true },
+  { label: "Circulating Supply", placeholder: fmt(CIRCULATING_SUPPLY), hasCoinIcon: true },
+  { label: "Tokens Left", placeholder: fmt(TOKENS_LEFT), hasCoinIcon: true },
   { label: "New Price Per Token", placeholder: "$0.00", hasCoinIcon: false },
 ];
 
