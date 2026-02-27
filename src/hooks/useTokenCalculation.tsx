@@ -7,6 +7,8 @@ const FULL_MARKET_CAP = 22_000_000;
 const LIQUIDITY_POOL_SIZE = Math.floor(FULL_MARKET_CAP * 0.49);
 const RESERVE_RATIO = 0.70;
 const INITIAL_SEED = 70; // USD manually deposited into reserve
+const BUY_TAX_RATE = 0.01; // 1% buy tax → vault
+const SELL_TAX_RATE = 0.03; // 3% sell tax → vault
 
 // Exponential bonding curve: P(s) = P0 * e^(k * s)
 // k calibrated so P(maxSupply) = TARGET_PRICE
@@ -45,6 +47,14 @@ interface TokenCalculationResult {
   dangerPrice: number;
   dangerTokensSold: number;
   whaleImpacts: WhaleImpact[];
+  buyTaxRate: number;
+  sellTaxRate: number;
+  buyTaxRevenue: number;
+  sellTaxRevenue: number;
+  totalTaxRevenue: number;
+  reserveFromCurve: number;
+  reserveFromSeed: number;
+  reserveFromTax: number;
 }
 
 /** Exponential price at s tokens sold */
@@ -123,11 +133,22 @@ export const useTokenCalculation = (): TokenCalculationResult => {
   // Actual USD collected via the integral of the curve
   const reserveBalance = reserveAt(tokensPurchased);
 
+  // Tax revenue: 1% buy tax on all purchases
+  const buyTaxRevenue = totalDollarValue * BUY_TAX_RATE;
+  // Sell tax placeholder: simulated as 3% of total volume sold back (placeholder — no real sells yet)
+  const sellTaxRevenue = 0; // Will accumulate when sell-back mechanism is live
+  const totalTaxRevenue = buyTaxRevenue + sellTaxRevenue;
+
   // Required reserve = 70% of current market cap (price × tokens outstanding)
   const requiredReserve = newPricePerToken * tokensPurchased * RESERVE_RATIO;
 
-  // Total reserve = curve-collected reserve + initial seed
-  const totalReserve = reserveBalance + INITIAL_SEED;
+  // Reserve breakdown
+  const reserveFromSeed = INITIAL_SEED;
+  const reserveFromCurve = reserveBalance;
+  const reserveFromTax = totalTaxRevenue;
+
+  // Total reserve = curve-collected reserve + initial seed + tax revenue
+  const totalReserve = reserveBalance + INITIAL_SEED + totalTaxRevenue;
 
   // Reserve ratio = total reserve / full market cap value
   const fullMarketCapValue = newPricePerToken * FULL_MARKET_CAP;
@@ -212,5 +233,13 @@ export const useTokenCalculation = (): TokenCalculationResult => {
     dangerPrice,
     dangerTokensSold,
     whaleImpacts,
+    buyTaxRate: BUY_TAX_RATE,
+    sellTaxRate: SELL_TAX_RATE,
+    buyTaxRevenue,
+    sellTaxRevenue,
+    totalTaxRevenue,
+    reserveFromCurve,
+    reserveFromSeed,
+    reserveFromTax,
   };
 };

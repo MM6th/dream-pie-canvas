@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import sixthCoinLogo from "@/assets/sixth-coin-logo.jpg";
 import { useTokenCalculation } from "@/hooks/useTokenCalculation";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceDot } from "recharts";
-import { ShieldCheck, AlertTriangle, TrendingUp, Waves } from "lucide-react";
+import { ShieldCheck, AlertTriangle, TrendingUp, Waves, PieChart } from "lucide-react";
 
 const FULL_MARKET_CAP = 22_000_000;
 const INITIAL_PRICE = 0.00001;
@@ -32,6 +32,14 @@ const TokenCalculatorCard = () => {
     dangerPrice,
     dangerTokensSold,
     whaleImpacts,
+    buyTaxRate,
+    sellTaxRate,
+    buyTaxRevenue,
+    sellTaxRevenue,
+    totalTaxRevenue,
+    reserveFromCurve,
+    reserveFromSeed,
+    reserveFromTax,
   } = useTokenCalculation();
 
   const formatPrice = (price: number) => {
@@ -60,6 +68,9 @@ const TokenCalculatorCard = () => {
     { label: "Curve Reserve", placeholder: isLoading ? "Loading..." : `$${reserveBalance.toFixed(2)}`, hasCoinIcon: false },
     { label: "Total Reserve", placeholder: isLoading ? "Loading..." : `$${totalReserve.toFixed(2)}`, hasCoinIcon: false },
     { label: "Required Reserve (70%)", placeholder: isLoading ? "Loading..." : `$${requiredReserve.toFixed(2)}`, hasCoinIcon: false },
+    { label: "Buy Tax (1%)", placeholder: isLoading ? "Loading..." : `$${buyTaxRevenue.toFixed(4)}`, hasCoinIcon: false },
+    { label: "Sell Tax (3%)", placeholder: `$${sellTaxRevenue.toFixed(4)} (placeholder)`, hasCoinIcon: false },
+    { label: "Total Tax Revenue", placeholder: isLoading ? "Loading..." : `$${totalTaxRevenue.toFixed(4)}`, hasCoinIcon: false },
   ];
 
   const chartData = bondingCurveData.map((d) => ({
@@ -207,7 +218,41 @@ const TokenCalculatorCard = () => {
           </div>
         </div>
 
-        {/* Danger Zone Alert */}
+        {/* Reserve Source Breakdown */}
+        <div className="rounded-lg p-4 border bg-gray-900/50 border-gray-700">
+          <div className="flex items-center gap-2 mb-3">
+            <PieChart className="w-4 h-4 text-amber-400" />
+            <p className="text-sm font-medium text-gray-200">Vault Reserve Breakdown</p>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="text-center p-3 rounded-lg bg-blue-950/30 border border-blue-800/40">
+              <p className="text-[10px] text-gray-400 uppercase tracking-wider">Initial Seed</p>
+              <p className="text-lg font-bold text-blue-300">${reserveFromSeed.toFixed(2)}</p>
+              <p className="text-[10px] text-gray-500">
+                {totalReserve > 0 ? ((reserveFromSeed / totalReserve) * 100).toFixed(1) : "0"}%
+              </p>
+            </div>
+            <div className="text-center p-3 rounded-lg bg-amber-950/30 border border-amber-800/40">
+              <p className="text-[10px] text-gray-400 uppercase tracking-wider">Curve Revenue</p>
+              <p className="text-lg font-bold text-amber-300">${isLoading ? "..." : reserveFromCurve.toFixed(4)}</p>
+              <p className="text-[10px] text-gray-500">
+                {totalReserve > 0 ? ((reserveFromCurve / totalReserve) * 100).toFixed(1) : "0"}%
+              </p>
+            </div>
+            <div className="text-center p-3 rounded-lg bg-emerald-950/30 border border-emerald-800/40">
+              <p className="text-[10px] text-gray-400 uppercase tracking-wider">Tax Revenue</p>
+              <p className="text-lg font-bold text-emerald-300">${isLoading ? "..." : reserveFromTax.toFixed(4)}</p>
+              <p className="text-[10px] text-gray-500">
+                {totalReserve > 0 ? ((reserveFromTax / totalReserve) * 100).toFixed(1) : "0"}%
+              </p>
+            </div>
+          </div>
+          <p className="text-[10px] text-gray-500 mt-2">
+            Buy tax: {(buyTaxRate * 100).toFixed(0)}% on purchases → vault. Sell tax: {(sellTaxRate * 100).toFixed(0)}% on sell-backs → vault. Dynamic reserve grows with trading friction.
+          </p>
+        </div>
+
+
         {dangerPrice > 0 && (
           <div className="rounded-lg p-4 flex items-start gap-3 border bg-red-950/30 border-red-700/40">
             <AlertTriangle className="w-5 h-5 mt-0.5 shrink-0 text-red-400" />
