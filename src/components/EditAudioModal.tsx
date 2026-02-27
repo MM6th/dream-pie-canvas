@@ -12,6 +12,7 @@ import { Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
+import SixthPriceTag from "./SixthPriceTag";
 import AudioPreviewPlayer from "./AudioPreviewPlayer";
 
 interface AudioProduct {
@@ -422,6 +423,9 @@ const EditAudioModal = ({ product, onSuccess, onClose }: EditAudioModalProps) =>
                 placeholder="0.00"
                 disabled={isPublished}
               />
+              {formData.price && parseFloat(formData.price) > 0 && (
+                <SixthPriceTag usdPrice={parseFloat(formData.price)} size="md" />
+              )}
             </div>
           )}
 

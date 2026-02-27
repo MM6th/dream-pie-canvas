@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { X, Film, Upload, FileVideo, Loader2, Check, AlertCircle, Image as ImageIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import SixthPriceTag from "./SixthPriceTag";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
 import * as tus from "tus-js-client";
@@ -809,6 +810,9 @@ const EditFilmModal = ({ isOpen, onClose, onSuccess, film }: EditFilmModalProps)
                       min="0.01"
                       step="0.01"
                     />
+                    {price && parseFloat(price) > 0 && (
+                      <SixthPriceTag usdPrice={parseFloat(price)} size="md" />
+                    )}
                   </div>
                 )}
               </div>

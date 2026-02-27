@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Clock, Shield, Lock, Play, Gift, Download, Check, FileAudio, Video, Star } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import SixthPriceTag from "./SixthPriceTag";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import AstrologyProductDetailModal from "./AstrologyProductDetailModal";
@@ -448,6 +449,7 @@ const AstrologyStoreSection = () => {
                         ) : (
                           <span className="text-2xl font-bold text-white">${displayPrice}</span>
                         )}
+                        <SixthPriceTag usdPrice={displayPrice} size="md" />
                       </div>
                       {product.delivery_type && (
                         <div className="flex items-center gap-1 text-gray-400">

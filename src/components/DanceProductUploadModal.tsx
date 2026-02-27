@@ -12,6 +12,7 @@ import { Plus, Upload, X, Loader2, Image, Video, AlertTriangle } from "lucide-re
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
+import SixthPriceTag from "./SixthPriceTag";
 import * as tus from "tus-js-client";
 
 interface DanceProductUploadModalProps {
@@ -429,6 +430,9 @@ const DanceProductUploadModal = ({ onSuccess }: DanceProductUploadModalProps) =>
                   className="bg-gray-700 border-gray-600 text-white pl-7"
                 />
               </div>
+              {price && parseFloat(price) > 0 && (
+                <SixthPriceTag usdPrice={parseFloat(price)} size="md" />
+              )}
             </div>
           )}
 

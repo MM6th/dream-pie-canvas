@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { ChefHat, DollarSign, ShoppingCart, ChevronLeft, ChevronRight } from "lucide-react";
+import SixthPriceTag from "./SixthPriceTag";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
@@ -222,6 +223,7 @@ const FoodStoreSection = () => {
                         <DollarSign className="w-3 h-3" />
                         {product.price.toFixed(2)}
                       </Badge>
+                      <SixthPriceTag usdPrice={product.price} />
                       <Button
                         size="sm"
                         onClick={() => handlePurchase(product)}

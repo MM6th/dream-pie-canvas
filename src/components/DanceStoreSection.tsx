@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Sparkles, DollarSign, ShoppingCart, ChevronLeft, ChevronRight, Clock } from "lucide-react";
+import SixthPriceTag from "./SixthPriceTag";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
@@ -270,6 +271,9 @@ const DanceStoreSection = () => {
                           </>
                         )}
                       </Badge>
+                      {!product.is_free && product.price && (
+                        <SixthPriceTag usdPrice={product.price} />
+                      )}
                       <Button
                         size="sm"
                         onClick={() => handlePurchase(product)}
