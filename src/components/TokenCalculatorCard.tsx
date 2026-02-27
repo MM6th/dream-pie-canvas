@@ -47,7 +47,8 @@ const TokenCalculatorCard = () => {
     { label: "Liquidity Pool Value", placeholder: isLoading ? "Loading..." : `$${(liquidityPool * newPricePerToken).toFixed(2)}`, hasCoinIcon: false },
     { label: "Tokens Left", placeholder: isLoading ? "Loading..." : fmt(tokensLeft), hasCoinIcon: true },
     { label: "Tokens Left Value", placeholder: isLoading ? "Loading..." : `$${(tokensLeft * newPricePerToken).toFixed(2)}`, hasCoinIcon: false },
-    { label: "Current Price Per Token", placeholder: isLoading ? "Loading..." : formatPrice(newPricePerToken), hasCoinIcon: false },
+    { label: "Spot Price", placeholder: isLoading ? "Loading..." : formatPrice(newPricePerToken), hasCoinIcon: false },
+    { label: "Average Price", placeholder: isLoading ? "Loading..." : (tokensPurchased > 0 ? formatPrice(reserveBalance / tokensPurchased) : "$0.00"), hasCoinIcon: false },
   ];
 
   const chartData = bondingCurveData.map((d) => ({
