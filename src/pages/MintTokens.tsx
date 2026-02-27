@@ -13,6 +13,7 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceD
 import { Coins, TrendingUp, Wallet, History, Calculator } from "lucide-react";
 import sixthCoinLogo from "@/assets/sixth-coin-logo.jpg";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
+import SixthTokenEducationModal from "@/components/SixthTokenEducationModal";
 
 const LIQUIDITY_POOL_SIZE = 10_780_000;
 const INITIAL_PRICE = 0.00001;
@@ -165,6 +166,12 @@ const MintTokens = () => {
       />
 
       <div className="max-w-6xl mx-auto px-4 pb-8">
+        {/* Education CTA */}
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-sm text-gray-400">Invest in your community's future — learn how SIXTH works before you buy.</p>
+          <SixthTokenEducationModal />
+        </div>
+
         {/* Purchase + Balance row */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           {/* Purchase Card */}
