@@ -10,10 +10,11 @@ import { useTokenCalculation } from "@/hooks/useTokenCalculation";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceDot } from "recharts";
-import { Coins, TrendingUp, Wallet, History, Calculator } from "lucide-react";
+import { TrendingUp, Wallet, History, Calculator } from "lucide-react";
 import sixthCoinLogo from "@/assets/sixth-coin-logo.jpg";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import SixthTokenEducationModal from "@/components/SixthTokenEducationModal";
+import SellTokenCard from "@/components/SellTokenCard";
 
 const LIQUIDITY_POOL_SIZE = 10_780_000;
 const INITIAL_PRICE = 0.00001;
@@ -173,8 +174,8 @@ const MintTokens = () => {
           <SixthTokenEducationModal />
         </div>
 
-        {/* Purchase + Balance row */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        {/* Purchase + Sell + Balance row */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           {/* Purchase Card */}
           <Card className="bg-gray-800/50 border-gray-700">
             <CardHeader className="pb-3">
@@ -223,6 +224,15 @@ const MintTokens = () => {
               </Button>
             </CardContent>
           </Card>
+
+          {/* Sell Card */}
+          <SellTokenCard
+            userBalance={userBalance}
+            circulatingSupply={circulatingSupply}
+            spotPrice={newPricePerToken}
+            isLoading={isLoading}
+            userId={user!.id}
+          />
 
           {/* Your Balance */}
           <Card className="bg-gray-800/50 border-gray-700">
