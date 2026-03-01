@@ -19,6 +19,15 @@ const MyAssets = () => {
   const [selectedNft, setSelectedNft] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
+  const formatTransactionLabel = (type: string) => {
+    switch (type) {
+      case 'credit_purchase': return 'Token Purchase';
+      case 'token_buy_tax': return 'Buy Tax';
+      case 'nft_mint': return 'NFT Minted';
+      default: return type.replace(/_/g, ' ');
+    }
+  };
+
   useEffect(() => {
     if (!user) return;
     
@@ -33,7 +42,28 @@ const MyAssets = () => {
 
       setTokenBalance(balanceRes.data);
       setNfts(nftsRes.data || []);
-      setTransactions(txRes.data || []);
+
+      // Combine platform revenue transactions with NFT mint events
+      const revenueTx = (txRes.data || []).map((tx: any) => ({
+        id: tx.id,
+        type: tx.revenue_type,
+        amount: tx.amount,
+        date: tx.created_at,
+      }));
+
+      const nftMintTx = (nftsRes.data || []).map((nft: any) => ({
+        id: `nft-${nft.id}`,
+        type: 'nft_mint',
+        amount: nft.sixth_value_at_mint,
+        date: nft.minted_at,
+        label: (nft.metadata as any)?.title || 'Audio NFT',
+      }));
+
+      const combined = [...revenueTx, ...nftMintTx]
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        .slice(0, 20);
+
+      setTransactions(combined);
       setLoading(false);
     };
 
@@ -168,10 +198,13 @@ const MyAssets = () => {
                 {transactions.map((tx) => (
                   <div key={tx.id} className="flex items-center justify-between py-2 border-b border-gray-700/50">
                     <div>
-                      <p className="text-white text-sm capitalize">{tx.revenue_type.replace(/_/g, ' ')}</p>
-                      <p className="text-gray-500 text-xs">{new Date(tx.created_at).toLocaleDateString()}</p>
+                      <p className="text-white text-sm">{formatTransactionLabel(tx.type)}</p>
+                      {tx.label && <p className="text-gray-400 text-xs">{tx.label}</p>}
+                      <p className="text-gray-500 text-xs">{new Date(tx.date).toLocaleDateString()}</p>
                     </div>
-                    <span className="text-amber-400 font-mono text-sm">${tx.amount?.toFixed(2)}</span>
+                    <span className={`font-mono text-sm ${tx.type === 'nft_mint' ? 'text-green-400' : 'text-amber-400'}`}>
+                      {tx.type === 'nft_mint' ? `${tx.amount?.toFixed(6)} SIXTH` : `$${tx.amount?.toFixed(2)}`}
+                    </span>
                   </div>
                 ))}
               </div>
