@@ -164,7 +164,7 @@ const DashboardHeader = ({
                 variant="outline"
                 className={`border-amber-600/50 text-amber-400 bg-transparent hover:bg-amber-900/20 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
               >
-                <Coins className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
+                <img src={sixthCoinLogo} alt="SIXTH" className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} rounded-full mr-1`} />
                 {isMobile ? 'Assets' : 'My Assets'}
               </Button>
             </>
