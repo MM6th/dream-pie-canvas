@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Coins, Image, TrendingUp, TrendingDown, History } from "lucide-react";
+import { ArrowLeft, Image, TrendingUp, TrendingDown, History } from "lucide-react";
+import sixthCoinLogo from "@/assets/sixth-coin-logo.jpg";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -98,7 +99,7 @@ const MyAssets = () => {
         <Card className="bg-gradient-to-br from-amber-900/20 to-gray-800/50 border-amber-500/20">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-amber-400">
-              <Coins className="w-5 h-5" />
+              <img src={sixthCoinLogo} alt="SIXTH" className="w-5 h-5 rounded-full" />
               SIXTH Token Holdings
             </CardTitle>
           </CardHeader>
