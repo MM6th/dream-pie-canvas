@@ -514,6 +514,81 @@ export type Database = {
           },
         ]
       }
+      audio_nfts: {
+        Row: {
+          audio_product_id: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          minted_at: string
+          minted_by: string
+          owner_id: string
+          sixth_value_at_mint: number
+          token_id: number
+          updated_at: string
+        }
+        Insert: {
+          audio_product_id: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          minted_at?: string
+          minted_by: string
+          owner_id: string
+          sixth_value_at_mint?: number
+          token_id?: number
+          updated_at?: string
+        }
+        Update: {
+          audio_product_id?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          minted_at?: string
+          minted_by?: string
+          owner_id?: string
+          sixth_value_at_mint?: number
+          token_id?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audio_nfts_audio_product_id_fkey"
+            columns: ["audio_product_id"]
+            isOneToOne: true
+            referencedRelation: "audio_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audio_nfts_minted_by_fkey"
+            columns: ["minted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audio_nfts_minted_by_fkey"
+            columns: ["minted_by"]
+            isOneToOne: false
+            referencedRelation: "public_profile_data"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audio_nfts_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audio_nfts_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "public_profile_data"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audio_products: {
         Row: {
           access_level: Database["public"]["Enums"]["access_level"] | null
