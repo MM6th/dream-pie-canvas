@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import CoverApplicationModal from "./CoverApplicationModal";
+import NFTDetailModal from "./NFTDetailModal";
 
 interface AudioTrack {
   id: string;
@@ -36,6 +37,8 @@ const AudioPlayer = ({ tracks }: AudioPlayerProps) => {
   const [coverModalOpen, setCoverModalOpen] = useState(false);
   const [existingSubmissions, setExistingSubmissions] = useState<Set<string>>(new Set());
   const [userType, setUserType] = useState<string | null>(null);
+  const [nftData, setNftData] = useState<Record<string, any>>({});
+  const [selectedNft, setSelectedNft] = useState<any>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const { user } = useAuth();
 
@@ -75,6 +78,25 @@ const AudioPlayer = ({ tracks }: AudioPlayerProps) => {
 
     fetchUserData();
   }, [user]);
+
+  // Fetch NFT data for all tracks
+  useEffect(() => {
+    const fetchNfts = async () => {
+      if (!tracks.length) return;
+      const trackIds = tracks.map(t => t.id);
+      const { data } = await supabase
+        .from('audio_nfts')
+        .select('*')
+        .in('audio_product_id', trackIds);
+      
+      if (data) {
+        const map: Record<string, any> = {};
+        data.forEach(nft => { map[nft.audio_product_id] = nft; });
+        setNftData(map);
+      }
+    };
+    fetchNfts();
+  }, [tracks]);
 
   // Debug logging
   useEffect(() => {
@@ -328,6 +350,14 @@ const AudioPlayer = ({ tracks }: AudioPlayerProps) => {
                   </span>
                 )}
               </div>
+              {currentTrack && nftData[currentTrack.id] && (
+                <button
+                  onClick={() => setSelectedNft(nftData[currentTrack.id])}
+                  className="text-amber-400 text-xs hover:text-amber-300 underline mt-1 transition-colors"
+                >
+                  View NFT #{nftData[currentTrack.id].token_id}
+                </button>
+              )}
             </div>
           </div>
 
@@ -438,6 +468,13 @@ const AudioPlayer = ({ tracks }: AudioPlayerProps) => {
             onSubmissionSuccess={handleCoverSubmissionSuccess}
           />
         )}
+
+        {/* NFT Detail Modal */}
+        <NFTDetailModal
+          isOpen={!!selectedNft}
+          onClose={() => setSelectedNft(null)}
+          nft={selectedNft}
+        />
       </CardContent>
     </Card>
   );

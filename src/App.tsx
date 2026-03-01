@@ -15,6 +15,7 @@ import ProfilesDirectory from "./pages/ProfilesDirectory";
 import LivestreamRoom from "./pages/LivestreamRoom";
 import PodcastSessionJoin from "./pages/PodcastSessionJoin";
 import MintTokens from "./pages/MintTokens";
+import MyAssets from "./pages/MyAssets";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -37,6 +38,7 @@ const App = () => (
           <Route path="/livestream/:roomId" element={<LivestreamRoom />} />
           <Route path="/podcast-session/:inviteToken" element={<PodcastSessionJoin />} />
           <Route path="/mint" element={<MintTokens />} />
+          <Route path="/my-assets" element={<MyAssets />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { LogOut, ShoppingBag, MessageSquare, User, Users, BookOpen, DollarSign, Film } from "lucide-react";
+import { LogOut, ShoppingBag, MessageSquare, User, Users, BookOpen, DollarSign, Film, Coins } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useNavigate } from "react-router-dom";
 import FullMerchantProfileModal from "@/components/profile/FullMerchantProfileModal";
@@ -159,6 +159,14 @@ const DashboardHeader = ({
                   Mint
                 </Button>
               )}
+              <Button
+                onClick={() => navigate('/my-assets')}
+                variant="outline"
+                className={`border-amber-600/50 text-amber-400 bg-transparent hover:bg-amber-900/20 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
+              >
+                <Coins className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
+                {isMobile ? 'Assets' : 'My Assets'}
+              </Button>
             </>
           )}
           {userType === "merchant" && (

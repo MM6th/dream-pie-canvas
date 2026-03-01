@@ -402,6 +402,16 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
       return;
     }
 
+    // Validate thumbnail is provided (mandatory for NFT minting)
+    if (!formData.thumbnail) {
+      toast({
+        title: "Error",
+        description: "Thumbnail image is required for all audio uploads",
+        variant: "destructive"
+      });
+      return;
+    }
+
     // Validate artist name for music type
     if (formData.audioType === 'music' && !formData.artistName) {
       toast({
@@ -709,7 +719,7 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
           
           <div>
             <Label htmlFor="thumbnail">
-              {formData.hasAlbum ? 'Album Cover (Required) *' : 'Thumbnail Image (Optional, Max 50MB)'}
+              {formData.hasAlbum ? 'Album Cover (Required) *' : 'Thumbnail Image (Required) *'}
             </Label>
             <Input
               id="thumbnail"
