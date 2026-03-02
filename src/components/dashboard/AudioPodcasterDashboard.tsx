@@ -342,7 +342,6 @@ const AudioPodcasterDashboard = ({
               
               <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-2'} gap-6`}>
                 <AudioPlayer tracks={purchasedTracks} />
-                <PodcastAudioPlayer tracks={purchasedPodcasts} />
                 <PurchasedFilmsViewer />
               </div>
               <PurchasedPortfoliosViewer portfolios={purchasedPortfolios} />
