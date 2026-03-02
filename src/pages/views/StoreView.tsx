@@ -1,10 +1,7 @@
 
 import React from "react";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, LogOut, MessageSquare, Users, ShoppingBag, BookOpen, Film } from "lucide-react";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { useNavigate } from "react-router-dom";
 import StorePage from "@/components/StorePage";
+import AppNavBar from "@/components/AppNavBar";
 
 interface StoreViewProps {
   onBackToDashboard: () => void;
@@ -13,74 +10,9 @@ interface StoreViewProps {
 }
 
 const StoreView = ({ onBackToDashboard, onBulletinView, onSignOut }: StoreViewProps) => {
-  const isMobile = useIsMobile();
-  const navigate = useNavigate();
-  
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800 overflow-x-hidden">
-      {/* Header */}
-      <div className="max-w-6xl mx-auto px-4 pt-4 pb-4">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          {/* Main Navigation */}
-          <div className={`flex gap-2 ${isMobile ? 'flex-wrap w-full' : ''}`}>
-            <Button
-              onClick={onBackToDashboard}
-              className={`bg-black text-white border-0 hover:bg-black ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
-            >
-              <ArrowLeft className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
-              {isMobile ? 'Dashboard' : 'Back to Dashboard'}
-            </Button>
-            <Button
-              variant="outline"
-              className={`border bg-primary border-primary text-white hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
-            >
-              <ShoppingBag className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
-              Store
-            </Button>
-            <Button
-              onClick={onBulletinView}
-              variant="outline"
-              className={`border-gray-600 text-white bg-transparent hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
-            >
-              <MessageSquare className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
-              Community
-            </Button>
-            <Button
-              onClick={() => navigate('/profiles')}
-              variant="outline"
-              className={`border-gray-600 text-white bg-transparent hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
-            >
-              <Users className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
-              Trending
-            </Button>
-            <Button
-              onClick={() => navigate('/films')}
-              variant="outline"
-              className={`border-gray-600 text-white bg-transparent hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
-            >
-              <Film className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
-              Films
-            </Button>
-            <Button
-              onClick={() => navigate('/about-author')}
-              variant="outline"
-              className={`border-gray-600 text-white bg-transparent hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
-            >
-              <BookOpen className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
-              {isMobile ? 'Founder' : 'About Founder'}
-            </Button>
-          </div>
-          
-          {/* Sign Out Button */}
-          <Button
-            onClick={onSignOut}
-            className={`bg-white text-black hover:bg-gray-100 ${isMobile ? 'text-xs px-3 py-2 h-8 w-full sm:w-auto' : ''}`}
-          >
-            <LogOut className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
-            Sign Out
-          </Button>
-        </div>
-      </div>
+      <AppNavBar />
 
       {/* Store content with proper container */}
       <div className="max-w-6xl mx-auto px-3 sm:px-6">
