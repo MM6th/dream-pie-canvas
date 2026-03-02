@@ -60,6 +60,13 @@ const SellTokenCard = ({ userBalance, circulatingSupply, spotPrice, isLoading, u
   }, [tokenInput, circulatingSupply, isLoading, userBalance]);
 
   const handleSell = async () => {
+    // Block selling until April 1st 2026
+    const sellUnlockDate = new Date("2026-04-01T00:00:00Z");
+    if (new Date() < sellUnlockDate) {
+      toast({ title: "Selling Locked", description: "Selling SIXTH tokens is not available until April 1st, 2026.", variant: "destructive" });
+      return;
+    }
+
     const tokens = parseInt(tokenInput);
     if (!tokens || tokens <= 0 || tokens > userBalance) {
       toast({ title: "Invalid Amount", description: "Enter a valid number of tokens to sell.", variant: "destructive" });
