@@ -350,7 +350,7 @@ const AudioPlayer = ({ tracks }: AudioPlayerProps) => {
                   </span>
                 )}
               </div>
-              {currentTrack && nftData[currentTrack.id] && (
+              {currentTrack && nftData[currentTrack.id] && currentTrack.access_level !== 'merchant_only' && (
                 <button
                   onClick={() => setSelectedNft(nftData[currentTrack.id])}
                   className="text-amber-400 text-xs hover:text-amber-300 underline mt-1 transition-colors"
