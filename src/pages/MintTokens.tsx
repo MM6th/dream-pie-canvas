@@ -12,7 +12,7 @@ import { toast } from "@/hooks/use-toast";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceDot } from "recharts";
 import { TrendingUp, Wallet, History, Calculator } from "lucide-react";
 import sixthCoinLogo from "@/assets/sixth-coin-logo.jpg";
-import DashboardHeader from "@/components/dashboard/DashboardHeader";
+import AppNavBar from "@/components/AppNavBar";
 import SixthTokenEducationModal from "@/components/SixthTokenEducationModal";
 import SellTokenCard from "@/components/SellTokenCard";
 
@@ -154,17 +154,7 @@ const MintTokens = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800 text-white overflow-x-hidden">
-      <DashboardHeader
-        onStoreView={() => navigate("/")}
-        onBulletinView={() => navigate("/bulletin")}
-        onProfilesView={() => navigate("/profiles")}
-        onSignOut={async () => { await supabase.auth.signOut(); navigate("/"); }}
-        userType="merchant"
-        onProfileUpdate={() => {}}
-        isApproved={true}
-        isAdmin={isAdmin}
-        hideTokenCalculator
-      />
+      <AppNavBar />
 
       <div className="max-w-6xl mx-auto px-4 pb-8">
         {/* SIXTH branding + Education CTA */}

@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, LogOut, MessageSquare, ShoppingBag, Users, Film, BookOpen } from "lucide-react";
+import { Film as FilmIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
+import AppNavBar from "@/components/AppNavBar";
 import { supabase } from "@/integrations/supabase/client";
 import FilmCard from "@/components/FilmCard";
 import NowPlayingCarousel from "@/components/NowPlayingCarousel";
@@ -60,34 +61,6 @@ const Films = () => {
     }
   };
 
-  const handleBackToDashboard = () => {
-    navigate('/');
-  };
-
-  const handleStoreView = () => {
-    navigate('/');
-    setTimeout(() => {
-      window.dispatchEvent(new Event('navigateToStore'));
-    }, 100);
-  };
-
-  const handleBulletinView = () => {
-    navigate('/bulletin');
-  };
-
-  const handleProfilesView = () => {
-    navigate('/profiles');
-  };
-
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-      navigate('/');
-    } catch (error) {
-      console.error('Error signing out:', error);
-      navigate('/');
-    }
-  };
 
   if (!user) {
     return (
@@ -96,7 +69,7 @@ const Films = () => {
           <CardContent className="text-center">
             <h2 className="text-2xl font-bold text-white mb-4">Access Denied</h2>
             <p className="text-gray-400 mb-6">You must be logged in to access this page.</p>
-            <Button onClick={handleBackToDashboard} className="bg-blue-600 hover:bg-blue-700 text-white">
+            <Button onClick={() => navigate('/')} className="bg-blue-600 hover:bg-blue-700 text-white">
               Back to Dashboard
             </Button>
           </CardContent>
@@ -107,69 +80,7 @@ const Films = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800">
-      {/* Header */}
-      <div className="relative z-10 max-w-6xl mx-auto px-4 pt-4 pb-4">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          {/* Main Navigation */}
-          <div className={`flex gap-2 ${isMobile ? 'flex-wrap w-full' : ''}`}>
-            <Button
-              onClick={handleBackToDashboard}
-              className={`bg-black text-white border-0 hover:bg-black ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
-            >
-              <ArrowLeft className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
-              {isMobile ? 'Dashboard' : 'Back to Dashboard'}
-            </Button>
-            <Button
-              onClick={handleStoreView}
-              variant="outline"
-              className={`border-gray-600 text-white bg-transparent hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
-            >
-              <ShoppingBag className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
-              {isMobile ? 'Store' : 'Browse Store'}
-            </Button>
-            <Button
-              onClick={handleBulletinView}
-              variant="outline"
-              className={`border-gray-600 text-white bg-transparent hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
-            >
-              <MessageSquare className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
-              Community
-            </Button>
-            <Button
-              onClick={handleProfilesView}
-              variant="outline"
-              className={`border-gray-600 text-white bg-transparent hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
-            >
-              <Users className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
-              Trending
-            </Button>
-            <Button
-              variant="outline"
-              className={`bg-primary border-primary text-white hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
-            >
-              <Film className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
-              Films
-            </Button>
-            <Button
-              onClick={() => navigate('/about-author')}
-              variant="outline"
-              className={`border-gray-600 text-white bg-transparent hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
-            >
-              <BookOpen className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
-              {isMobile ? 'Founder' : 'About Founder'}
-            </Button>
-          </div>
-          
-          {/* Sign Out Button */}
-          <Button
-            onClick={handleSignOut}
-            className={`bg-white text-black hover:bg-gray-100 ${isMobile ? 'text-xs px-3 py-2 h-8 w-full sm:w-auto' : ''}`}
-          >
-            <LogOut className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
-            Sign Out
-          </Button>
-        </div>
-      </div>
+      <AppNavBar />
 
       {/* Main Content */}
       <div className="relative z-10 max-w-6xl mx-auto px-6 pb-12">
@@ -203,12 +114,12 @@ const Films = () => {
           {/* Films Grid */}
           {loading ? (
             <div className="text-center text-white py-12">
-              <Film className="w-12 h-12 mx-auto mb-4 animate-pulse" />
+              <FilmIcon className="w-12 h-12 mx-auto mb-4 animate-pulse" />
               <p>Loading films...</p>
             </div>
           ) : films.length === 0 ? (
             <div className="text-center py-12">
-              <Film className="w-16 h-16 text-gray-500 mx-auto mb-4" />
+              <FilmIcon className="w-16 h-16 text-gray-500 mx-auto mb-4" />
               <h3 className="text-xl text-white mb-2">No Films Available</h3>
               <p className="text-gray-400">Check back soon for new releases!</p>
             </div>
