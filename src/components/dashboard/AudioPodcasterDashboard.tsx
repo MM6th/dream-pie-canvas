@@ -29,6 +29,7 @@ import UserTicketsTab from "@/components/support/UserTicketsTab";
 import { PodcastRecordingStudio } from "@/components/podcast/PodcastRecordingStudio";
 import { PodcastRecordingsLibrary } from "@/components/podcast/PodcastRecordingsLibrary";
 import { CollaborativePodcastStudio } from "@/components/podcast/CollaborativePodcastStudio";
+import OwnPodcastsByTier from "@/components/podcast/OwnPodcastsByTier";
 import { useApprovalStatus } from "@/hooks/useApprovalStatus";
 import ApprovalStatusBanner from "@/components/ApprovalStatusBanner";
 import RestrictedAccess from "@/components/dashboard/merchant/RestrictedAccess";
@@ -279,6 +280,7 @@ const AudioPodcasterDashboard = ({
         <CollaborativePodcastStudio onRecordingSaved={handleRecordingSaved} />
         <PodcastRecordingStudio onRecordingSaved={handleRecordingSaved} />
         <PodcastRecordingsLibrary refreshTrigger={recordingRefreshTrigger} />
+        <OwnPodcastsByTier />
       </div>
 
       <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm mb-6">
