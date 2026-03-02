@@ -54,7 +54,7 @@ const AppNavBar = ({ showBackToDashboard, onBackToDashboard }: AppNavBarProps = 
               {isMobile ? 'Dashboard' : 'Back to Dashboard'}
             </Button>
           )}
-          <Button onClick={handleStoreView} variant="outline" className={btnClass(false)}>
+          <Button onClick={handleStoreView} variant="outline" className={btnClass(showBackToDashboard === true)}>
             <ShoppingBag className={`${iconClass} mr-1`} />
             Store
           </Button>
