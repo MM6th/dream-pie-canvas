@@ -1,54 +1,20 @@
 import React from "react";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
+import AppNavBar from "@/components/AppNavBar";
 
 const AboutAuthor = () => {
   const navigate = useNavigate();
   const { signOut } = useAuth();
   const isMobile = useIsMobile();
 
-  const handleBackToDashboard = () => {
-    navigate('/');
-  };
-
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-      navigate('/');
-    } catch (error) {
-      console.error('Error signing out:', error);
-      navigate('/');
-    }
-  };
-
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black">
-      {/* Navigation Header */}
-      <div className="absolute top-4 left-4 right-4 z-20">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <Button
-            onClick={handleBackToDashboard}
-            className={`bg-black text-white border-0 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
-          >
-            <ArrowLeft className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
-            {isMobile ? 'Dashboard' : 'Back to Dashboard'}
-          </Button>
-          <Button
-            onClick={handleSignOut}
-            className={`bg-white text-black hover:bg-gray-100 hover:text-black ${isMobile ? 'text-xs px-3 py-2 h-8 w-full sm:w-auto' : ''}`}
-          >
-            <LogOut className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
-            Sign Out
-          </Button>
-        </div>
-      </div>
+      <AppNavBar />
 
-      <div className={`pt-20 max-w-4xl mx-auto ${isMobile ? 'p-4' : 'p-6'}`}>
+      <div className={`max-w-4xl mx-auto ${isMobile ? 'p-4' : 'p-6'}`}>
         <Card className="bg-gray-800 border-gray-700">
           <CardContent className={isMobile ? 'p-4' : 'p-8'}>
             <div className="text-center mb-8">

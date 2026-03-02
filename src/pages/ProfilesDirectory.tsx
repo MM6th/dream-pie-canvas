@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import { ArrowLeft, Users, User, Shield, Building, Search, MessageSquare, Calendar, LogOut, ShoppingBag, BookOpen, Film, DollarSign } from "lucide-react";
+import { ArrowLeft, Users, User, Shield, Building, Search, MessageSquare, Calendar, DollarSign } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import AppNavBar from "@/components/AppNavBar";
 import { supabase } from "@/integrations/supabase/client";
 import UserStatsDisplay from "@/components/UserStatsDisplay";
 import { useAuth } from "@/hooks/useAuth";
@@ -173,31 +174,6 @@ const ProfilesDirectory = () => {
     navigate(`/profile/${profileId}`);
   };
 
-  const handleBackToDashboard = () => {
-    navigate('/');
-  };
-
-  const handleStoreView = () => {
-    navigate('/');
-    setTimeout(() => {
-      window.dispatchEvent(new Event('navigateToStore'));
-    }, 100);
-  };
-
-
-  const handleBulletinView = () => {
-    navigate('/bulletin');
-  };
-
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-      navigate('/');
-    } catch (error) {
-      console.error('Error signing out:', error);
-      navigate('/');
-    }
-  };
 
   if (loading) {
     return (
@@ -209,70 +185,7 @@ const ProfilesDirectory = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-      {/* Header */}
-      <div className="max-w-6xl mx-auto px-4 pt-4 pb-4">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          {/* Main Navigation */}
-          <div className={`flex gap-2 ${isMobile ? 'flex-wrap w-full' : ''}`}>
-            <Button
-              onClick={handleBackToDashboard}
-              variant="outline"
-              className={`border-gray-600 text-white bg-transparent hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
-            >
-              <ArrowLeft className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
-              {isMobile ? 'Dashboard' : 'Back to Dashboard'}
-            </Button>
-            <Button
-              onClick={handleStoreView}
-              variant="outline"
-              className={`border-gray-600 text-white bg-transparent hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
-            >
-              <ShoppingBag className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
-              {isMobile ? 'Store' : 'Browse Store'}
-            </Button>
-            <Button
-              onClick={handleBulletinView}
-              variant="outline"
-              className={`border-gray-600 text-white bg-transparent hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
-            >
-              <MessageSquare className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
-              Community
-            </Button>
-            <Button
-              variant="outline"
-              className={`${isActivePage('/profiles') ? 'bg-primary border-primary' : 'border-gray-600 bg-transparent'} text-white hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
-            >
-              <Users className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
-              Trending
-            </Button>
-            <Button
-              onClick={() => navigate('/films')}
-              variant="outline"
-              className={`${isActivePage('/films') ? 'bg-primary border-primary' : 'border-gray-600 bg-transparent'} text-white hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
-            >
-              <Film className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
-              Films
-            </Button>
-            <Button
-              onClick={() => navigate('/about-author')}
-              variant="outline"
-              className={`border-gray-600 text-white bg-transparent hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
-            >
-              <BookOpen className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
-              {isMobile ? 'Founder' : 'About Founder'}
-            </Button>
-          </div>
-          
-          {/* Sign Out Button */}
-          <Button
-            onClick={handleSignOut}
-            className={`bg-white text-black hover:bg-gray-100 ${isMobile ? 'text-xs px-3 py-2 h-8 w-full sm:w-auto' : ''}`}
-          >
-            <LogOut className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
-            Sign Out
-          </Button>
-        </div>
-      </div>
+      <AppNavBar />
 
       {/* Main Content */}
       <div className="max-w-6xl mx-auto px-6">

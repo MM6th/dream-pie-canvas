@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Image, TrendingUp, TrendingDown, History } from "lucide-react";
+import { Image, TrendingUp, TrendingDown, History } from "lucide-react";
+import AppNavBar from "@/components/AppNavBar";
 import sixthCoinLogo from "@/assets/sixth-coin-logo.jpg";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -85,15 +86,10 @@ const MyAssets = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 text-white">
       <div className="max-w-6xl mx-auto p-4 md:p-8 space-y-6">
-        {/* Header */}
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="text-gray-400 hover:text-white">
-            <ArrowLeft className="w-4 h-4 mr-1" /> Back
-          </Button>
-          <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-amber-400 to-amber-600 bg-clip-text text-transparent">
-            My Assets
-          </h1>
-        </div>
+        <AppNavBar />
+        <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-amber-400 to-amber-600 bg-clip-text text-transparent">
+          My Assets
+        </h1>
 
         {/* Token Holdings */}
         <Card className="bg-gradient-to-br from-amber-900/20 to-gray-800/50 border-amber-500/20">
