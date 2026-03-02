@@ -12,7 +12,7 @@ interface StoreViewProps {
 const StoreView = ({ onBackToDashboard, onBulletinView, onSignOut }: StoreViewProps) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800 overflow-x-hidden">
-      <AppNavBar />
+      <AppNavBar showBackToDashboard onBackToDashboard={onBackToDashboard} />
 
       {/* Store content with proper container */}
       <div className="max-w-6xl mx-auto px-3 sm:px-6">

@@ -6,7 +6,12 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/hooks/useAuth";
 import sixthCoinLogo from "@/assets/sixth-coin-logo.jpg";
 
-const AppNavBar = () => {
+interface AppNavBarProps {
+  showBackToDashboard?: boolean;
+  onBackToDashboard?: () => void;
+}
+
+const AppNavBar = ({ showBackToDashboard, onBackToDashboard }: AppNavBarProps = {}) => {
   const navigate = useNavigate();
   const location = useLocation();
   const isMobile = useIsMobile();
@@ -40,9 +45,9 @@ const AppNavBar = () => {
     <div className="max-w-6xl mx-auto px-4 pt-4 pb-4 relative z-10">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className={`flex gap-2 ${isMobile ? 'flex-wrap w-full' : ''}`}>
-          {location.pathname !== '/' && (
+          {(location.pathname !== '/' || showBackToDashboard) && (
             <Button
-              onClick={() => navigate('/')}
+              onClick={onBackToDashboard || (() => navigate('/'))}
               className={`bg-black text-white border-0 hover:bg-black ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
             >
               <ArrowLeft className={`${iconClass} mr-1`} />
