@@ -83,7 +83,7 @@ const Films = () => {
       <AppNavBar />
 
       {/* Main Content */}
-      <div className="relative z-10 max-w-6xl mx-auto px-6 pb-12">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 pb-12">
         {/* Now Playing Carousel - only films with cover photos */}
         {!loading && films.filter(f => f.cover_photo_url).length > 0 && (
           <NowPlayingCarousel 

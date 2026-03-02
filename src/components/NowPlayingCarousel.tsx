@@ -46,13 +46,13 @@ const NowPlayingCarousel = ({ films, onFilmClick }: NowPlayingCarouselProps) => 
       >
         <CarouselContent className="-ml-2 md:-ml-4">
           {films.map((film, index) => (
-            <CarouselItem key={film.id} className="pl-2 md:pl-4 basis-full md:basis-1/2 lg:basis-1/2">
+            <CarouselItem key={film.id} className="pl-2 md:pl-4 basis-full">
               <div 
                 className="relative group cursor-pointer overflow-hidden rounded-xl"
                 onClick={() => onFilmClick?.(film.id)}
               >
                 {/* Cover Image */}
-                <div className="relative aspect-[21/9] w-full">
+                <div className="relative aspect-[2.5/1] w-full">
                   <img
                     src={film.cover_photo_url}
                     alt={film.title}
@@ -82,7 +82,7 @@ const NowPlayingCarousel = ({ films, onFilmClick }: NowPlayingCarouselProps) => 
                         )}
                         
                         {/* Title */}
-                        <h3 className="text-2xl md:text-3xl font-bold text-white mb-2 line-clamp-1">
+                        <h3 className="text-3xl md:text-4xl font-bold text-white mb-2 line-clamp-1">
                           {film.title}
                         </h3>
                         
