@@ -137,12 +137,12 @@ const MintTokens = () => {
     return <div className="min-h-screen bg-gray-950 flex items-center justify-center text-white">Loading...</div>;
   }
 
-  if (!user || !isAdmin) {
+  if (!user) {
     return (
       <div className="min-h-screen bg-gray-950 flex items-center justify-center text-white">
         <Card className="bg-gray-800/50 border-gray-700 max-w-md">
           <CardContent className="p-8 text-center">
-            <p className="text-gray-400">Admin access required.</p>
+            <p className="text-gray-400">Please sign in to access the token page.</p>
             <Button onClick={() => navigate("/")} className="mt-4">Go Home</Button>
           </CardContent>
         </Card>
@@ -169,7 +169,9 @@ const MintTokens = () => {
       <div className="max-w-6xl mx-auto px-4 pb-8">
         {/* SIXTH branding + Education CTA */}
         <div className="flex flex-col items-center py-6 mb-4">
-          <img src={sixthCoinLogo} alt="SIXTH Coin" className="w-20 h-20 rounded-full shadow-lg shadow-amber-500/20 border-2 border-amber-500/30 mb-3" />
+          <h1 className="text-xl font-bold text-white mb-2 text-center">Crypto Token Simulation</h1>
+          <img src={sixthCoinLogo} alt="SIXTH Coin" className="w-20 h-20 rounded-full shadow-lg shadow-amber-500/20 border-2 border-amber-500/30 mb-2" />
+          <p className="text-xs text-amber-400/80 mb-3 text-center max-w-md">All assets will be transferred to blockchain when converting</p>
           <p className="text-sm text-gray-400 mb-3 text-center max-w-md">Invest in your community's future — learn how SIXTH works before you buy.</p>
           <SixthTokenEducationModal />
         </div>
