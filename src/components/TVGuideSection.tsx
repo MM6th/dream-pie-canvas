@@ -270,7 +270,7 @@ const TVGuideSection = ({ posts, useCarousel = true, onNeedsCredits }: TVGuideSe
           </div>
 
           <div className="mt-2 mb-2">
-            <PostInteractions postId={post.id} />
+            <PostInteractions postId={post.id} recipientId={post.merchant_id} />
           </div>
 
           <div className="mt-auto">

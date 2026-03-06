@@ -2821,6 +2821,41 @@ export type Database = {
           },
         ]
       }
+      post_tips: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          post_id: string
+          recipient_id: string
+          tipper_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          id?: string
+          post_id: string
+          recipient_id: string
+          tipper_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          post_id?: string
+          recipient_id?: string
+          tipper_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_tips_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "bulletin_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_reviews: {
         Row: {
           astrology_product_id: string
@@ -4153,6 +4188,10 @@ export type Database = {
       }
       is_admin: { Args: { user_id: string }; Returns: boolean }
       is_approved_merchant: { Args: { user_id: string }; Returns: boolean }
+      tip_post: {
+        Args: { p_amount?: number; p_post_id: string; p_recipient_id: string }
+        Returns: boolean
+      }
       update_cover_submission_status: {
         Args: {
           admin_notes_text?: string
