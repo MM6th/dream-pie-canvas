@@ -129,22 +129,29 @@ const ProfilesDirectory = () => {
   const filterProfiles = () => {
     let filtered = profiles;
 
-    // Filter by search term (searches skills/industries)
+    // Filter by search term - context-aware based on selected filter
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase();
-      filtered = filtered.filter(profile => {
-        // Check if any skill matches the search term
-        const skillMatch = profile.skills?.some(skill => 
-          skill.toLowerCase().includes(searchLower)
+      
+      if (selectedFilter === "supporters" || selectedFilter === "merchants") {
+        // When viewing supporters or merchants, search by name only
+        filtered = filtered.filter(profile =>
+          profile.display_name?.toLowerCase().includes(searchLower) ||
+          profile.business_name?.toLowerCase().includes(searchLower)
         );
-        // Also check display name and business name as fallback
-        const nameMatch = profile.display_name?.toLowerCase().includes(searchLower) ||
-          profile.business_name?.toLowerCase().includes(searchLower);
-        // Check user type as industry
-        const typeMatch = profile.user_type?.toLowerCase().includes(searchLower);
-        
-        return skillMatch || nameMatch || typeMatch;
-      });
+      } else {
+        // Default: search skills/industries, names, and user type
+        filtered = filtered.filter(profile => {
+          const skillMatch = profile.skills?.some(skill => 
+            skill.toLowerCase().includes(searchLower)
+          );
+          const nameMatch = profile.display_name?.toLowerCase().includes(searchLower) ||
+            profile.business_name?.toLowerCase().includes(searchLower);
+          const typeMatch = profile.user_type?.toLowerCase().includes(searchLower);
+          
+          return skillMatch || nameMatch || typeMatch;
+        });
+      }
     }
 
     // Filter by type (only if a filter is selected)
@@ -206,7 +213,11 @@ const ProfilesDirectory = () => {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
             <Input
               type="text"
-              placeholder="Search industries"
+              placeholder={
+                selectedFilter === "supporters" || selectedFilter === "merchants"
+                  ? "Search by name"
+                  : "Search industries"
+              }
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyDown={(e) => {
