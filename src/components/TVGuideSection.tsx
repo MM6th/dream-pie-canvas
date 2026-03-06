@@ -372,35 +372,16 @@ const TVGuideSection = ({ posts, useCarousel = true, onNeedsCredits }: TVGuideSe
           <CarouselNext className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
         </Carousel>
       ) : (
-        <div className="relative pt-14 pb-14">
-          <Carousel
-            opts={{
-              align: "start",
-              loop: posts.length > 1,
-            }}
-            className="w-full"
-            orientation="vertical"
-          >
-            <CarouselContent className="h-[500px]">
-              {hasNoPosts ? (
-                <CarouselItem className="basis-auto py-1">
-                  <Card className="bg-gray-800/50 border-gray-700">
-                    <CardContent className="p-8 text-center">
-                      <p className="text-gray-400">No TV Guide entries yet. Check back soon!</p>
-                    </CardContent>
-                  </Card>
-                </CarouselItem>
-              ) : (
-                posts.map((post) => (
-                  <CarouselItem key={post.id} className="basis-auto py-1">
-                    {renderCard(post)}
-                  </CarouselItem>
-                ))
-              )}
-            </CarouselContent>
-            <CarouselPrevious className="text-white bg-gray-800/90 hover:bg-gray-700 border-gray-600 -top-12 left-1/2 -translate-x-1/2 z-20 w-10 h-10" />
-            <CarouselNext className="text-white bg-gray-800/90 hover:bg-gray-700 border-gray-600 -bottom-12 left-1/2 -translate-x-1/2 z-20 w-10 h-10" />
-          </Carousel>
+        <div className="h-[500px] overflow-y-auto space-y-3 pr-2 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent touch-pan-y">
+          {hasNoPosts ? (
+            <Card className="bg-gray-800/50 border-gray-700">
+              <CardContent className="p-8 text-center">
+                <p className="text-gray-400">No TV Guide entries yet. Check back soon!</p>
+              </CardContent>
+            </Card>
+          ) : (
+            posts.map((post) => renderCard(post))
+          )}
         </div>
       )}
     </div>
