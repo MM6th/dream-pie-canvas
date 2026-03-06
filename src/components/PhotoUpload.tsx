@@ -8,6 +8,7 @@ import { Upload, X, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/components/ui/use-toast";
+import { compressImage } from "@/utils/imageOptimization";
 
 interface PhotoUploadProps {
   onSuccess?: () => void;
@@ -89,6 +90,13 @@ const PhotoUpload = ({ onSuccess, trigger }: PhotoUploadProps) => {
     setUploadProgress(0);
 
     try {
+      // Compress image before upload
+      const compressedFile = await compressImage(file, {
+        maxSizeMB: 1,
+        maxWidthOrHeight: 2048,
+        quality: 0.8,
+      });
+
       const fileExt = file.name.split('.').pop();
       const fileName = `${user.id}/${Date.now()}.${fileExt}`;
 
@@ -103,10 +111,10 @@ const PhotoUpload = ({ onSuccess, trigger }: PhotoUploadProps) => {
         });
       }, 200);
 
-      // Upload file to storage
+      // Upload compressed file to storage
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('user-media')
-        .upload(fileName, file);
+        .upload(fileName, compressedFile);
 
       clearInterval(progressInterval);
       setUploadProgress(100);
@@ -120,7 +128,7 @@ const PhotoUpload = ({ onSuccess, trigger }: PhotoUploadProps) => {
           user_id: user.id,
           file_name: file.name,
           file_path: uploadData.path,
-          file_size: file.size,
+          file_size: compressedFile.size,
           file_type: file.type
         });
 
