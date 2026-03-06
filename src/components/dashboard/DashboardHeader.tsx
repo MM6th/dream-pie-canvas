@@ -1,7 +1,8 @@
 
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { LogOut, ShoppingBag, MessageSquare, User, Users, BookOpen, DollarSign, Film, Coins } from "lucide-react";
+import { LogOut, ShoppingBag, MessageSquare, User, Users, BookOpen, DollarSign, Film, Coins, ChevronDown } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useNavigate } from "react-router-dom";
 import FullMerchantProfileModal from "@/components/profile/FullMerchantProfileModal";
@@ -99,9 +100,17 @@ const DashboardHeader = ({
       )}
 
       {isAdmin && !hideTokenCalculator && (
-        <div className="mb-4">
-          <TokenCalculatorCard />
-        </div>
+        <Collapsible className="mb-4">
+          <CollapsibleTrigger asChild>
+            <Button variant="outline" className="w-full flex items-center justify-between border-gray-600 text-white bg-gray-800 hover:bg-gray-700 mb-2">
+              <span className="font-semibold">SIXTH Token Economics Calculator</span>
+              <ChevronDown className="w-4 h-4 transition-transform duration-200 [[data-state=open]>&]:rotate-180" />
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <TokenCalculatorCard />
+          </CollapsibleContent>
+        </Collapsible>
       )}
       
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
