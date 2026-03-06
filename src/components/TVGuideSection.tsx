@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { format, differenceInSeconds, isPast } from "date-fns";
 import ExpandableDescription from "./ui/ExpandableDescription";
+import PostInteractions from "./PostInteractions";
 
 interface TVGuideSectionProps {
   posts: BulletinPost[];
@@ -248,15 +249,17 @@ const TVGuideSection = ({ posts, useCarousel = true, onNeedsCredits }: TVGuideSe
 
           <div className="flex items-center gap-4 text-sm text-gray-400 mb-2">
             <div className="flex items-center gap-2">
-              {post.profiles?.avatar_url ? (
-                <img
-                  src={post.profiles.avatar_url}
-                  alt="Avatar"
-                  className="w-8 h-8 rounded-full object-cover"
-                />
-              ) : (
-                <User className="w-6 h-6" />
-              )}
+              <Link to={`/profile/${post.merchant_id}`}>
+                {post.profiles?.avatar_url ? (
+                  <img
+                    src={post.profiles.avatar_url}
+                    alt="Avatar"
+                    className="w-8 h-8 rounded-full object-cover cursor-pointer hover:ring-2 hover:ring-purple-500 transition-all"
+                  />
+                ) : (
+                  <User className="w-6 h-6 cursor-pointer hover:text-white transition-colors" />
+                )}
+              </Link>
               <Link 
                 to={`/profile/${post.merchant_id}`}
                 className="text-gray-300 hover:text-white transition-colors"
@@ -264,6 +267,10 @@ const TVGuideSection = ({ posts, useCarousel = true, onNeedsCredits }: TVGuideSe
                 {post.profiles?.display_name || 'Community'}
               </Link>
             </div>
+          </div>
+
+          <div className="mt-2 mb-2">
+            <PostInteractions postId={post.id} />
           </div>
 
           <div className="mt-auto">

@@ -52,7 +52,7 @@ const CurrentThoughtsSection = ({ posts, useCarousel = true }: CurrentThoughtsSe
         
         <div className="flex items-center gap-4 text-sm text-gray-400 mb-2">
            <div className="flex items-center gap-2">
-              {post.post_type === 'announcement' ? (
+               {post.post_type === 'announcement' ? (
                 <>
                   <div className="w-8 h-8 rounded-full bg-orange-600 flex items-center justify-center" aria-label="Admin announcement">
                     <Shield className="w-5 h-5 text-white" />
@@ -61,15 +61,17 @@ const CurrentThoughtsSection = ({ posts, useCarousel = true }: CurrentThoughtsSe
                 </>
               ) : (
                 <>
-                  {post.profiles?.avatar_url ? (
-                    <img
-                      src={post.profiles.avatar_url}
-                      alt="Avatar"
-                      className="w-8 h-8 rounded-full object-cover"
-                    />
-                  ) : (
-                    <User className="w-6 h-6" />
-                  )}
+                  <Link to={`/profile/${post.merchant_id}`}>
+                    {post.profiles?.avatar_url ? (
+                      <img
+                        src={post.profiles.avatar_url}
+                        alt="Avatar"
+                        className="w-8 h-8 rounded-full object-cover cursor-pointer hover:ring-2 hover:ring-purple-500 transition-all"
+                      />
+                    ) : (
+                      <User className="w-6 h-6 cursor-pointer hover:text-white transition-colors" />
+                    )}
+                  </Link>
                   <Link 
                     to={`/profile/${post.merchant_id}`}
                     className="text-gray-300 hover:text-white transition-colors"
@@ -84,11 +86,9 @@ const CurrentThoughtsSection = ({ posts, useCarousel = true }: CurrentThoughtsSe
               {new Date(post.created_at).toLocaleDateString()}
             </div>
         </div>
-        {!isSupporterPost(post) && !post.profiles?.is_admin && (
-          <div className="mt-2">
-            <PostInteractions postId={post.id} />
-          </div>
-        )}
+        <div className="mt-2">
+          <PostInteractions postId={post.id} />
+        </div>
       </CardContent>
     </Card>
   );
