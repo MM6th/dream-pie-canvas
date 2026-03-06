@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { ThumbsUp, MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,6 +24,8 @@ const PostInteractions = ({ postId, recipientId, disableComments = false }: Post
   const [hasLiked, setHasLiked] = useState(false);
   const [isCommentsModalOpen, setIsCommentsModalOpen] = useState(false);
   const [isTipping, setIsTipping] = useState(false);
+  const [showTipSelector, setShowTipSelector] = useState(false);
+  const tipSelectorRef = useRef<HTMLDivElement>(null);
   
   const fetchCommentCount = async () => {
     try {
@@ -182,7 +184,7 @@ const PostInteractions = ({ postId, recipientId, disableComments = false }: Post
     }
   };
 
-  const handleTip = async () => {
+  const handleTip = async (amount: number) => {
     if (!user) return;
 
     if (!recipientId) {
@@ -195,12 +197,13 @@ const PostInteractions = ({ postId, recipientId, disableComments = false }: Post
       return;
     }
 
+    setShowTipSelector(false);
     setIsTipping(true);
     try {
       const { data, error } = await supabase.rpc('tip_post', {
         p_post_id: postId,
         p_recipient_id: recipientId,
-        p_amount: 1
+        p_amount: amount
       });
 
       if (error) {
@@ -226,7 +229,7 @@ const PostInteractions = ({ postId, recipientId, disableComments = false }: Post
         return;
       }
 
-      toast({ title: "Tip Sent! 🎉", description: "You tipped 1 SIXTH token to this creator." });
+      toast({ title: "Tip Sent! 🎉", description: `You tipped ${amount} SIXTH token${amount > 1 ? 's' : ''} to this creator.` });
     } catch (error: any) {
       console.error('Error tipping:', error);
       toast({ title: "Error", description: "Could not send tip. Please try again.", variant: "destructive" });
@@ -234,6 +237,21 @@ const PostInteractions = ({ postId, recipientId, disableComments = false }: Post
       setIsTipping(false);
     }
   };
+
+  // Close tip selector when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (tipSelectorRef.current && !tipSelectorRef.current.contains(event.target as Node)) {
+        setShowTipSelector(false);
+      }
+    };
+    if (showTipSelector) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showTipSelector]);
+
+  const tipAmounts = [1, 5, 10, 25];
 
   return (
     <div className="space-y-4">
@@ -260,16 +278,33 @@ const PostInteractions = ({ postId, recipientId, disableComments = false }: Post
           </Button>
         )}
         {recipientId && (
-          <Button
-            onClick={handleTip}
-            variant="ghost"
-            size="sm"
-            className="flex items-center gap-1 text-yellow-400 hover:text-yellow-300"
-            disabled={!user || isTipping}
-          >
-            <img src={sixthCoinLogo} alt="SIXTH" className="w-4 h-4 rounded-full" />
-            {tipCount > 0 ? tipCount : 'Tip'}
-          </Button>
+          <div className="relative" ref={tipSelectorRef}>
+            <Button
+              onClick={() => setShowTipSelector(!showTipSelector)}
+              variant="ghost"
+              size="sm"
+              className="flex items-center gap-1 text-yellow-400 hover:text-yellow-300"
+              disabled={!user || isTipping}
+            >
+              <img src={sixthCoinLogo} alt="SIXTH" className="w-4 h-4 rounded-full" />
+              {tipCount > 0 ? tipCount : 'Tip'}
+            </Button>
+            {showTipSelector && (
+              <div className="absolute bottom-full left-0 mb-1 bg-gray-800 border border-gray-600 rounded-lg p-2 flex gap-1 z-50 shadow-lg">
+                {tipAmounts.map((amount) => (
+                  <Button
+                    key={amount}
+                    onClick={() => handleTip(amount)}
+                    variant="ghost"
+                    size="sm"
+                    className="text-yellow-400 hover:bg-yellow-500/20 hover:text-yellow-300 text-xs px-2 py-1"
+                  >
+                    {amount}
+                  </Button>
+                ))}
+              </div>
+            )}
+          </div>
         )}
       </div>
 
