@@ -290,7 +290,7 @@ const PostInteractions = ({ postId, recipientId, disableComments = false }: Post
               {tipCount > 0 ? tipCount : 'Tip'}
             </Button>
             {showTipSelector && (
-              <div className="absolute bottom-full left-0 mb-1 bg-gray-800 border border-gray-600 rounded-lg p-2 flex gap-1 z-50 shadow-lg">
+              <div className="absolute bottom-full right-0 mb-1 bg-gray-800 border border-gray-600 rounded-lg p-1.5 flex gap-0.5 z-50 shadow-lg whitespace-nowrap">
                 {tipAmounts.map((amount) => (
                   <Button
                     key={amount}
