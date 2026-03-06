@@ -5,19 +5,25 @@ import { ThumbsUp, MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/components/ui/use-toast";
+import { useNavigate } from "react-router-dom";
 import CommentsModal from "./CommentsModal";
+import sixthCoinLogo from "@/assets/sixth-coin-logo.jpg";
 
 interface PostInteractionsProps {
   postId: string;
+  recipientId?: string;
   disableComments?: boolean;
 }
 
-const PostInteractions = ({ postId, disableComments = false }: PostInteractionsProps) => {
+const PostInteractions = ({ postId, recipientId, disableComments = false }: PostInteractionsProps) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [likes, setLikes] = useState<string[]>([]);
   const [commentCount, setCommentCount] = useState(0);
+  const [tipCount, setTipCount] = useState(0);
   const [hasLiked, setHasLiked] = useState(false);
   const [isCommentsModalOpen, setIsCommentsModalOpen] = useState(false);
+  const [isTipping, setIsTipping] = useState(false);
   
   const fetchCommentCount = async () => {
     try {
@@ -36,9 +42,28 @@ const PostInteractions = ({ postId, disableComments = false }: PostInteractionsP
     }
   };
 
+  const fetchTipCount = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('post_tips')
+        .select('amount')
+        .eq('post_id', postId);
+
+      if (error) {
+        console.error('Error fetching tip count:', error);
+        return;
+      }
+      const total = data?.reduce((sum, tip) => sum + (tip.amount || 0), 0) || 0;
+      setTipCount(total);
+    } catch (error) {
+      console.error('Error in fetchTipCount:', error);
+    }
+  };
+
   useEffect(() => {
     fetchLikes();
     fetchCommentCount();
+    fetchTipCount();
     
     const likesChannel = supabase
       .channel(`likes-${postId}`)
@@ -72,9 +97,26 @@ const PostInteractions = ({ postId, disableComments = false }: PostInteractionsP
       )
       .subscribe();
 
+    const tipsChannel = supabase
+      .channel(`tips-${postId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'post_tips',
+          filter: `post_id=eq.${postId}`
+        },
+        () => {
+          fetchTipCount();
+        }
+      )
+      .subscribe();
+
     return () => {
       supabase.removeChannel(likesChannel);
       supabase.removeChannel(commentsChannel);
+      supabase.removeChannel(tipsChannel);
     };
   }, [postId]);
 
@@ -140,6 +182,59 @@ const PostInteractions = ({ postId, disableComments = false }: PostInteractionsP
     }
   };
 
+  const handleTip = async () => {
+    if (!user) return;
+
+    if (!recipientId) {
+      toast({ title: "Error", description: "Unable to identify the post author.", variant: "destructive" });
+      return;
+    }
+
+    if (user.id === recipientId) {
+      toast({ title: "Oops!", description: "You can't tip yourself.", variant: "destructive" });
+      return;
+    }
+
+    setIsTipping(true);
+    try {
+      const { data, error } = await supabase.rpc('tip_post', {
+        p_post_id: postId,
+        p_recipient_id: recipientId,
+        p_amount: 1
+      });
+
+      if (error) {
+        if (error.message.includes('Insufficient token balance')) {
+          toast({
+            title: "No SIXTH Tokens",
+            description: "You don't have enough SIXTH tokens to tip. Visit the Crypto Token Simulation page to purchase some!",
+            variant: "destructive",
+            action: (
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-yellow-500 text-yellow-400 hover:bg-yellow-500/20"
+                onClick={() => navigate('/mint')}
+              >
+                Buy Tokens
+              </Button>
+            ),
+          });
+        } else {
+          throw error;
+        }
+        return;
+      }
+
+      toast({ title: "Tip Sent! 🎉", description: "You tipped 1 SIXTH token to this creator." });
+    } catch (error: any) {
+      console.error('Error tipping:', error);
+      toast({ title: "Error", description: "Could not send tip. Please try again.", variant: "destructive" });
+    } finally {
+      setIsTipping(false);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-4 text-sm text-gray-400">
@@ -162,6 +257,18 @@ const PostInteractions = ({ postId, disableComments = false }: PostInteractionsP
           >
             <MessageCircle className="w-4 h-4" />
             {commentCount} {commentCount === 1 ? 'comment' : 'comments'}
+          </Button>
+        )}
+        {recipientId && (
+          <Button
+            onClick={handleTip}
+            variant="ghost"
+            size="sm"
+            className="flex items-center gap-1 text-yellow-400 hover:text-yellow-300"
+            disabled={!user || isTipping}
+          >
+            <img src={sixthCoinLogo} alt="SIXTH" className="w-4 h-4 rounded-full" />
+            {tipCount > 0 ? tipCount : 'Tip'}
           </Button>
         )}
       </div>

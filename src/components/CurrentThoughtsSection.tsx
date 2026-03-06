@@ -87,7 +87,7 @@ const CurrentThoughtsSection = ({ posts, useCarousel = true }: CurrentThoughtsSe
             </div>
         </div>
         <div className="mt-2">
-          <PostInteractions postId={post.id} />
+          <PostInteractions postId={post.id} recipientId={post.merchant_id} />
         </div>
       </CardContent>
     </Card>
