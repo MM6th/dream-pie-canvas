@@ -39,7 +39,7 @@ const Live = () => {
 
     if (!error && data) {
       // Fetch merchant profiles
-      const merchantIds = [...new Set(data.map((s: any) => s.merchant_id))];
+      const merchantIds = [...new Set(data.map((s: any) => s.merchant_id))] as string[];
       const { data: profiles } = await supabase
         .from("profiles")
         .select("id, display_name, avatar_url")

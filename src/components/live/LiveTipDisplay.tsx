@@ -29,7 +29,7 @@ const LiveTipDisplay = ({ streamId, merchantId }: LiveTipDisplayProps) => {
         .limit(10);
 
       if (data && data.length > 0) {
-        const tipperIds = [...new Set(data.map((t: any) => t.tipper_id))];
+        const tipperIds = [...new Set(data.map((t: any) => t.tipper_id))] as string[];
         const { data: profiles } = await supabase.from("profiles").select("id, display_name").in("id", tipperIds);
         const profileMap = new Map((profiles || []).map((p: any) => [p.id, p.display_name || "User"]));
 
