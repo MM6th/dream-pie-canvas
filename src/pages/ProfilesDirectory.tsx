@@ -13,6 +13,8 @@ import UserStatsDisplay from "@/components/UserStatsDisplay";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import SixthPriceTag from "@/components/SixthPriceTag";
+import FollowButton from "@/components/profile/FollowButton";
+import type { FollowStatus } from "@/hooks/useFollowRequest";
 
 interface Profile {
   id: string;
