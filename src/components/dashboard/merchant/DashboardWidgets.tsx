@@ -1,7 +1,9 @@
 
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Radio } from "lucide-react";
 import BackgroundUpload from "@/components/BackgroundUpload";
 import AudioUploadModal from "@/components/AudioUploadModal";
 import FashionProductUploadModal from "@/components/FashionProductUploadModal";
