@@ -97,7 +97,7 @@ const LiveWatch = () => {
           await pc.setRemoteDescription(new RTCSessionDescription(signal.signal_data));
           const answer = await pc.createAnswer();
           await pc.setLocalDescription(answer);
-          await supabase.from("live_stream_signals").insert({
+          await (supabase.from("live_stream_signals") as any).insert({
             stream_id: streamId,
             sender_id: user.id,
             signal_type: "answer",

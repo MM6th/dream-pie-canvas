@@ -169,7 +169,7 @@ const GoLive = () => {
     // Create and send offer
     const offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
-    await supabase.from("live_stream_signals").insert({
+    await (supabase.from("live_stream_signals") as any).insert({
       stream_id: sid,
       sender_id: user.id,
       signal_type: "offer",
