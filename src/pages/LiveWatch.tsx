@@ -70,7 +70,7 @@ const LiveWatch = () => {
 
     pc.onicecandidate = async (event) => {
       if (event.candidate) {
-        await supabase.from("live_stream_signals").insert({
+        await (supabase.from("live_stream_signals") as any).insert({
           stream_id: streamId,
           sender_id: user.id,
           signal_type: "ice-candidate",
