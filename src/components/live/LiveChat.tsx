@@ -40,8 +40,8 @@ const LiveChat = ({ streamId }: LiveChatProps) => {
   // Fetch existing messages
   useEffect(() => {
     const fetchMessages = async () => {
-      const { data } = await supabase
-        .from("live_chat_messages")
+      const { data } = await (supabase
+        .from("live_chat_messages") as any)
         .select("*")
         .eq("stream_id", streamId)
         .order("created_at", { ascending: true })
