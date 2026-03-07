@@ -16,6 +16,9 @@ import LivestreamRoom from "./pages/LivestreamRoom";
 import PodcastSessionJoin from "./pages/PodcastSessionJoin";
 import MintTokens from "./pages/MintTokens";
 import MyAssets from "./pages/MyAssets";
+import Live from "./pages/Live";
+import GoLive from "./pages/GoLive";
+import LiveWatch from "./pages/LiveWatch";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
