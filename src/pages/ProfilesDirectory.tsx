@@ -13,6 +13,8 @@ import UserStatsDisplay from "@/components/UserStatsDisplay";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import SixthPriceTag from "@/components/SixthPriceTag";
+import FollowButton from "@/components/profile/FollowButton";
+import type { FollowStatus } from "@/hooks/useFollowRequest";
 
 interface Profile {
   id: string;
@@ -39,11 +41,18 @@ const ProfilesDirectory = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
   const [messagingPrices, setMessagingPrices] = useState<Record<string, number>>({});
+  const [followStatuses, setFollowStatuses] = useState<Record<string, FollowStatus>>({});
 
   useEffect(() => {
     fetchProfiles();
     fetchMessagingPrices();
   }, []);
+
+  useEffect(() => {
+    if (user && profiles.length > 0) {
+      fetchFollowStatuses();
+    }
+  }, [user, profiles]);
 
   useEffect(() => {
     filterProfiles();
@@ -123,6 +132,37 @@ const ProfilesDirectory = () => {
       }
     } catch (error) {
       console.error('Error fetching messaging prices:', error);
+    }
+  };
+
+  const fetchFollowStatuses = async () => {
+    if (!user) return;
+    try {
+      // Check which profiles the user is already following
+      const profileIds = profiles.map(p => p.id).filter(id => id !== user.id);
+      
+      const [followersResult, requestsResult] = await Promise.all([
+        supabase
+          .from('profile_followers')
+          .select('merchant_id')
+          .eq('follower_id', user.id)
+          .in('merchant_id', profileIds),
+        supabase
+          .from('profile_follow_requests')
+          .select('target_merchant_id')
+          .eq('requester_id', user.id)
+          .eq('status', 'pending')
+          .in('target_merchant_id', profileIds),
+      ]);
+
+      const statuses: Record<string, FollowStatus> = {};
+      followersResult.data?.forEach(f => { statuses[f.merchant_id] = 'following'; });
+      requestsResult.data?.forEach(r => { 
+        if (!statuses[r.target_merchant_id]) statuses[r.target_merchant_id] = 'pending'; 
+      });
+      setFollowStatuses(statuses);
+    } catch (error) {
+      console.error('Error fetching follow statuses:', error);
     }
   };
 
@@ -359,6 +399,19 @@ const ProfilesDirectory = () => {
                         </div>
                       )}
 
+                      {/* Follow Button */}
+                      {user && user.id !== profile.id && (
+                        <div className="mt-1" onClick={(e) => e.stopPropagation()}>
+                          <FollowButton
+                            targetUserId={profile.id}
+                            targetUserName={profile.display_name || 'User'}
+                            followStatus={followStatuses[profile.id] || 'none'}
+                            onRequestSent={() => fetchFollowStatuses()}
+                            className="w-full text-xs h-7"
+                          />
+                        </div>
+                      )}
+
                       {/* Join Date */}
                       <div className="flex items-center justify-center gap-1 text-xs text-gray-500">
                         <Calendar className="w-3 h-3" />
@@ -517,6 +570,19 @@ const ProfilesDirectory = () => {
                             <DollarSign className="w-3 h-3" />
                             <span>{messagingPrices[profile.id]} credits/msg</span>
                             <SixthPriceTag usdPrice={messagingPrices[profile.id] * 0.10} size="sm" showUsd={false} />
+                          </div>
+                        )}
+
+                        {/* Follow Button */}
+                        {user && user.id !== profile.id && (
+                          <div className="mt-1" onClick={(e) => e.stopPropagation()}>
+                            <FollowButton
+                              targetUserId={profile.id}
+                              targetUserName={profile.display_name || 'User'}
+                              followStatus={followStatuses[profile.id] || 'none'}
+                              onRequestSent={() => fetchFollowStatuses()}
+                              className="w-full text-xs h-7"
+                            />
                           </div>
                         )}
 
