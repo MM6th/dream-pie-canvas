@@ -1663,6 +1663,162 @@ export type Database = {
           },
         ]
       }
+      live_chat_messages: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          stream_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          stream_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          stream_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_chat_messages_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "live_streams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      live_stream_signals: {
+        Row: {
+          created_at: string
+          id: string
+          sender_id: string
+          signal_data: Json
+          signal_type: string
+          stream_id: string
+          target_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          sender_id: string
+          signal_data: Json
+          signal_type: string
+          stream_id: string
+          target_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          sender_id?: string
+          signal_data?: Json
+          signal_type?: string
+          stream_id?: string
+          target_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_stream_signals_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "live_streams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      live_stream_tips: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          recipient_id: string
+          stream_id: string
+          tipper_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          id?: string
+          recipient_id: string
+          stream_id: string
+          tipper_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          recipient_id?: string
+          stream_id?: string
+          tipper_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_stream_tips_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "live_streams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      live_streams: {
+        Row: {
+          created_at: string
+          credits_per_minute: number | null
+          description: string | null
+          ended_at: string | null
+          id: string
+          is_paid: boolean
+          merchant_id: string
+          recording_url: string | null
+          started_at: string | null
+          status: string
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+          viewer_count: number
+        }
+        Insert: {
+          created_at?: string
+          credits_per_minute?: number | null
+          description?: string | null
+          ended_at?: string | null
+          id?: string
+          is_paid?: boolean
+          merchant_id: string
+          recording_url?: string | null
+          started_at?: string | null
+          status?: string
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string
+          viewer_count?: number
+        }
+        Update: {
+          created_at?: string
+          credits_per_minute?: number | null
+          description?: string | null
+          ended_at?: string | null
+          id?: string
+          is_paid?: boolean
+          merchant_id?: string
+          recording_url?: string | null
+          started_at?: string | null
+          status?: string
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
+          viewer_count?: number
+        }
+        Relationships: []
+      }
       livestream_entries: {
         Row: {
           bulletin_post_id: string
@@ -4188,6 +4344,10 @@ export type Database = {
       }
       is_admin: { Args: { user_id: string }; Returns: boolean }
       is_approved_merchant: { Args: { user_id: string }; Returns: boolean }
+      tip_live_stream: {
+        Args: { p_amount?: number; p_recipient_id: string; p_stream_id: string }
+        Returns: boolean
+      }
       tip_post: {
         Args: { p_amount?: number; p_post_id: string; p_recipient_id: string }
         Returns: boolean
