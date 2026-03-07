@@ -49,6 +49,12 @@ const ProfilesDirectory = () => {
   }, []);
 
   useEffect(() => {
+    if (user && profiles.length > 0) {
+      fetchFollowStatuses();
+    }
+  }, [user, profiles]);
+
+  useEffect(() => {
     filterProfiles();
   }, [profiles, searchTerm, selectedFilter]);
 
