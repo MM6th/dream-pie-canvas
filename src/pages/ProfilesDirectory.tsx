@@ -399,6 +399,19 @@ const ProfilesDirectory = () => {
                         </div>
                       )}
 
+                      {/* Follow Button */}
+                      {user && user.id !== profile.id && (
+                        <div className="mt-1" onClick={(e) => e.stopPropagation()}>
+                          <FollowButton
+                            targetUserId={profile.id}
+                            targetUserName={profile.display_name || 'User'}
+                            followStatus={followStatuses[profile.id] || 'none'}
+                            onRequestSent={() => fetchFollowStatuses()}
+                            className="w-full text-xs h-7"
+                          />
+                        </div>
+                      )}
+
                       {/* Join Date */}
                       <div className="flex items-center justify-center gap-1 text-xs text-gray-500">
                         <Calendar className="w-3 h-3" />
