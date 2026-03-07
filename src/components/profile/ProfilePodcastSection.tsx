@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { AudioLines, Star, Download, DollarSign, Lock, CheckCircle, Moon, Sparkles } from "lucide-react";
+import SixthPriceTag from "@/components/SixthPriceTag";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { usePodcastSubscriptions } from "@/hooks/usePodcastSubscription";
@@ -325,15 +326,18 @@ const ProfilePodcastSection: React.FC<ProfilePodcastSectionProps> = ({
                           Free Download
                         </Button>
                       ) : podcast.access_level === 'paid' && podcast.price ? (
-                        <Button
-                          onClick={() => handleSubscribe(podcast)}
-                          disabled={subscribingId === podcast.id}
-                          className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1"
-                          size="sm"
-                        >
-                          <DollarSign className="w-3 h-3 mr-1" />
-                          {subscribingId === podcast.id ? 'Processing...' : `Subscribe $${podcast.price.toFixed(2)}/mo`}
-                        </Button>
+                        <div className="flex flex-col items-end gap-1">
+                          <SixthPriceTag usdPrice={podcast.price} size="sm" />
+                          <Button
+                            onClick={() => handleSubscribe(podcast)}
+                            disabled={subscribingId === podcast.id}
+                            className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1"
+                            size="sm"
+                          >
+                            <DollarSign className="w-3 h-3 mr-1" />
+                            {subscribingId === podcast.id ? 'Processing...' : `Subscribe $${podcast.price.toFixed(2)}/mo`}
+                          </Button>
+                        </div>
                       ) : null}
                     </div>
                   </div>
