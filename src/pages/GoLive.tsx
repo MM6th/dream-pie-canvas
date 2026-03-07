@@ -219,7 +219,7 @@ const GoLive = () => {
 
     const { data: urlData } = supabase.storage.from("user-media").getPublicUrl(fileName);
 
-    await supabase.from("live_streams").update({ recording_url: urlData.publicUrl }).eq("id", streamId);
+    await (supabase.from("live_streams") as any).update({ recording_url: urlData.publicUrl }).eq("id", streamId);
 
     toast({ title: "Recording saved!" });
     setRecordedBlob(null);
