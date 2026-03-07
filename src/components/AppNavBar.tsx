@@ -1,6 +1,6 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ShoppingBag, MessageSquare, Users, BookOpen, Film, LogOut, Coins } from "lucide-react";
+import { ArrowLeft, ShoppingBag, MessageSquare, Users, BookOpen, Film, LogOut, Coins, Radio } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/hooks/useAuth";
@@ -69,6 +69,10 @@ const AppNavBar = ({ showBackToDashboard, onBackToDashboard }: AppNavBarProps = 
           <Button onClick={() => navigate('/about-author')} variant="outline" className={btnClass(isActivePage('/about-author'))}>
             <BookOpen className={`${iconClass} mr-1`} />
             {isMobile ? 'Founder' : 'About Founder'}
+          </Button>
+          <Button onClick={() => navigate('/live')} variant="outline" className={`border ${isActivePage('/live') ? 'bg-red-600 border-red-600' : 'bg-transparent border-red-600/50'} text-red-400 hover:bg-red-900/20 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}>
+            <Radio className={`${iconClass} mr-1`} />
+            Live
           </Button>
           <Button onClick={() => navigate('/films')} variant="outline" className={btnClass(isActivePage('/films'))}>
             <Film className={`${iconClass} mr-1`} />
