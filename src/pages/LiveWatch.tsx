@@ -115,7 +115,7 @@ const LiveWatch = () => {
       .subscribe();
 
     // Send join signal to broadcaster (triggers offer)
-    supabase.from("live_stream_signals").insert({
+    (supabase.from("live_stream_signals") as any).insert({
       stream_id: streamId,
       sender_id: user.id,
       signal_type: "offer",
