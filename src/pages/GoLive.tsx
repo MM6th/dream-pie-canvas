@@ -79,8 +79,8 @@ const GoLive = () => {
       return;
     }
 
-    const { data, error } = await supabase
-      .from("live_streams")
+    const { data, error } = await (supabase
+      .from("live_streams") as any)
       .insert({ merchant_id: user.id, title: title.trim(), description: description.trim() || null, status: "live", started_at: new Date().toISOString() })
       .select()
       .single();
