@@ -135,6 +135,37 @@ const ProfilesDirectory = () => {
     }
   };
 
+  const fetchFollowStatuses = async () => {
+    if (!user) return;
+    try {
+      // Check which profiles the user is already following
+      const profileIds = profiles.map(p => p.id).filter(id => id !== user.id);
+      
+      const [followersResult, requestsResult] = await Promise.all([
+        supabase
+          .from('profile_followers')
+          .select('merchant_id')
+          .eq('follower_id', user.id)
+          .in('merchant_id', profileIds),
+        supabase
+          .from('profile_follow_requests')
+          .select('target_merchant_id')
+          .eq('requester_id', user.id)
+          .eq('status', 'pending')
+          .in('target_merchant_id', profileIds),
+      ]);
+
+      const statuses: Record<string, FollowStatus> = {};
+      followersResult.data?.forEach(f => { statuses[f.merchant_id] = 'following'; });
+      requestsResult.data?.forEach(r => { 
+        if (!statuses[r.target_merchant_id]) statuses[r.target_merchant_id] = 'pending'; 
+      });
+      setFollowStatuses(statuses);
+    } catch (error) {
+      console.error('Error fetching follow statuses:', error);
+    }
+  };
+
   const filterProfiles = () => {
     let filtered = profiles;
 
