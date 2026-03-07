@@ -41,6 +41,7 @@ const ProfilesDirectory = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
   const [messagingPrices, setMessagingPrices] = useState<Record<string, number>>({});
+  const [followStatuses, setFollowStatuses] = useState<Record<string, FollowStatus>>({});
 
   useEffect(() => {
     fetchProfiles();
