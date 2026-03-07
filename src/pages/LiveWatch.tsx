@@ -27,8 +27,8 @@ const LiveWatch = () => {
     if (!streamId) return;
 
     const fetchStream = async () => {
-      const { data, error } = await supabase
-        .from("live_streams")
+      const { data, error } = await (supabase
+        .from("live_streams") as any)
         .select("*")
         .eq("id", streamId)
         .single();

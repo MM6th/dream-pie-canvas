@@ -21,8 +21,8 @@ const LiveTipDisplay = ({ streamId, merchantId }: LiveTipDisplayProps) => {
 
   useEffect(() => {
     const fetchTips = async () => {
-      const { data } = await supabase
-        .from("live_stream_tips")
+      const { data } = await (supabase
+        .from("live_stream_tips") as any)
         .select("*")
         .eq("stream_id", streamId)
         .order("created_at", { ascending: false })

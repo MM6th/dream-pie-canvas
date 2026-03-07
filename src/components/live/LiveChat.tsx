@@ -87,7 +87,7 @@ const LiveChat = ({ streamId }: LiveChatProps) => {
     if (!newMessage.trim() || !user || sending) return;
     setSending(true);
 
-    await supabase.from("live_chat_messages").insert({
+    await (supabase.from("live_chat_messages") as any).insert({
       stream_id: streamId,
       user_id: user.id,
       message: newMessage.trim(),

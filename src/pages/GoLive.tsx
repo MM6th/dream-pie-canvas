@@ -231,7 +231,7 @@ const GoLive = () => {
     if (isRecording) stopRecording();
 
     if (streamId) {
-      await supabase.from("live_streams").update({ status: "ended", ended_at: new Date().toISOString() }).eq("id", streamId);
+      await (supabase.from("live_streams") as any).update({ status: "ended", ended_at: new Date().toISOString() }).eq("id", streamId);
     }
 
     streamRef.current?.getTracks().forEach((t) => t.stop());

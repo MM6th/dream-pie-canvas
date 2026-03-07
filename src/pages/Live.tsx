@@ -31,8 +31,8 @@ const Live = () => {
   const [loading, setLoading] = useState(true);
 
   const fetchStreams = async () => {
-    const { data, error } = await supabase
-      .from("live_streams")
+    const { data, error } = await (supabase
+      .from("live_streams") as any)
       .select("*")
       .eq("status", "live")
       .order("started_at", { ascending: false });
