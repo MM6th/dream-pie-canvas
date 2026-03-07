@@ -42,6 +42,9 @@ const App = () => (
           <Route path="/podcast-session/:inviteToken" element={<PodcastSessionJoin />} />
           <Route path="/mint" element={<MintTokens />} />
           <Route path="/my-assets" element={<MyAssets />} />
+          <Route path="/live" element={<Live />} />
+          <Route path="/go-live" element={<GoLive />} />
+          <Route path="/live/:streamId" element={<LiveWatch />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

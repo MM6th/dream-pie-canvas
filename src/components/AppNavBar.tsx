@@ -70,6 +70,10 @@ const AppNavBar = ({ showBackToDashboard, onBackToDashboard }: AppNavBarProps = 
             <BookOpen className={`${iconClass} mr-1`} />
             {isMobile ? 'Founder' : 'About Founder'}
           </Button>
+          <Button onClick={() => navigate('/live')} variant="outline" className={`border ${isActivePage('/live') ? 'bg-red-600 border-red-600' : 'bg-transparent border-red-600/50'} text-red-400 hover:bg-red-900/20 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}>
+            <Radio className={`${iconClass} mr-1`} />
+            Live
+          </Button>
           <Button onClick={() => navigate('/films')} variant="outline" className={btnClass(isActivePage('/films'))}>
             <Film className={`${iconClass} mr-1`} />
             Films
