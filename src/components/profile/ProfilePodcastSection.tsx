@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { AudioLines, Star, Download, DollarSign, Lock, CheckCircle, Moon, Sparkles } from "lucide-react";
+import SixthPriceTag from "@/components/SixthPriceTag";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { usePodcastSubscriptions } from "@/hooks/usePodcastSubscription";
