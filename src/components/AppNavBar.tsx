@@ -1,6 +1,6 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ShoppingBag, MessageSquare, Users, BookOpen, Film, LogOut, Coins } from "lucide-react";
+import { ArrowLeft, ShoppingBag, MessageSquare, Users, BookOpen, Film, LogOut, Coins, Radio } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/hooks/useAuth";
