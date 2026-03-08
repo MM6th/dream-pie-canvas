@@ -186,7 +186,7 @@ const GoLive = () => {
               .from("live_stream_signals") as any)
               .select("*")
               .eq("stream_id", data.id)
-              .eq("signal_type", "offer")
+              .in("signal_type", ["join-request", "offer"])
               .neq("sender_id", user.id)
               .order("created_at", { ascending: true });
             
