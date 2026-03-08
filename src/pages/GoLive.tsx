@@ -466,14 +466,8 @@ const GoLive = () => {
                   </Badge>
                 </div>
               )}
-              {isRecording && (
-                <div className="absolute top-4 right-4">
-                  <Badge className="bg-red-800 text-white border-0 animate-pulse">
-                    <span className="w-2 h-2 bg-red-400 rounded-full mr-1.5 inline-block" />
-                    REC
-                  </Badge>
-                </div>
-              )}
+
+
             </div>
 
             <div className="flex flex-wrap gap-3 items-center">
