@@ -12,13 +12,14 @@ import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentCancelled from "./pages/PaymentCancelled";
 import ProfilePage from "./pages/ProfilePage";
 import ProfilesDirectory from "./pages/ProfilesDirectory";
-import LivestreamRoom from "./pages/LivestreamRoom";
+
 import PodcastSessionJoin from "./pages/PodcastSessionJoin";
 import MintTokens from "./pages/MintTokens";
 import MyAssets from "./pages/MyAssets";
 import Live from "./pages/Live";
 import GoLive from "./pages/GoLive";
 import LiveWatch from "./pages/LiveWatch";
+import LegacyLivestreamRedirect from "./pages/LegacyLivestreamRedirect";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -38,7 +39,7 @@ const App = () => (
           <Route path="/payment-cancelled" element={<PaymentCancelled />} />
           <Route path="/profiles" element={<ProfilesDirectory />} />
           <Route path="/profile/:userId" element={<ProfilePage />} />
-          <Route path="/livestream/:roomId" element={<LivestreamRoom />} />
+          <Route path="/livestream/:roomId" element={<LegacyLivestreamRedirect />} />
           <Route path="/podcast-session/:inviteToken" element={<PodcastSessionJoin />} />
           <Route path="/mint" element={<MintTokens />} />
           <Route path="/my-assets" element={<MyAssets />} />
