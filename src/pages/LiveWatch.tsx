@@ -227,6 +227,7 @@ const LiveWatch = () => {
         .eq("id", streamId)
         .maybeSingle();
 
+      if (cancelled) return;
       if (streamData?.status === "ended") {
         toast({ title: "Stream ended", description: "The broadcaster has ended the stream." });
         navigate("/live");
