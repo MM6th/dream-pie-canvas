@@ -150,11 +150,8 @@ const GoLive = () => {
         camPub.track.attach(videoRef.current);
       }
 
-      setTimeout(() => {
-        if (roomRef.current) {
-          startRecordingFromRoom(roomRef.current);
-        }
-      }, 1000);
+
+
 
       setViewerCount(countViewers(room));
       toast({ title: "Reconnected to your live stream!" });
