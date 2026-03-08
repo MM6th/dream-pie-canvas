@@ -341,7 +341,7 @@ const GoLive = () => {
         const blob = new Blob(chunksRef.current, { type: "video/webm" });
         console.log("Recording blob size:", blob.size);
         if (blob.size > 0 && user && currentStreamId) {
-          const fileName = `live-recordings/${user.id}/${currentStreamId}-${Date.now()}.webm`;
+          const fileName = `${user.id}/live-recordings/${currentStreamId}-${Date.now()}.webm`;
           const { error: uploadError } = await supabase.storage
             .from("user-media")
             .upload(fileName, blob, { contentType: "video/webm" });

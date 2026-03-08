@@ -122,7 +122,7 @@ const LiveChat = ({ streamId }: LiveChatProps) => {
   };
 
   return (
-    <Card className="bg-card border-border h-[45vh] min-h-[280px] max-h-[500px] lg:h-[500px] flex flex-col">
+    <Card className="bg-card border-border h-[32vh] min-h-[200px] max-h-[500px] lg:h-[500px] flex flex-col">
       <CardHeader className="pb-2">
         <CardTitle className="text-sm flex items-center gap-2">
           <MessageSquare className="w-4 h-4" />
