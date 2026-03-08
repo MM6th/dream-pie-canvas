@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { MessageSquare, Send } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
 
 interface ChatMessage {
   id: string;
@@ -26,19 +25,21 @@ const LiveChat = ({ streamId }: LiveChatProps) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
-  const [profileCache, setProfileCache] = useState<Map<string, { display_name: string; avatar_url: string | null }>>(new Map());
+  const profileCacheRef = useRef<Map<string, { display_name: string; avatar_url: string | null }>>(new Map());
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const fetchProfile = async (userId: string) => {
-    if (profileCache.has(userId)) return profileCache.get(userId)!;
+    if (profileCacheRef.current.has(userId)) return profileCacheRef.current.get(userId)!;
     const { data } = await supabase.from("profiles").select("display_name, avatar_url").eq("id", userId).single();
     const profile = { display_name: data?.display_name || "User", avatar_url: data?.avatar_url || null };
-    setProfileCache((prev) => new Map(prev).set(userId, profile));
+    profileCacheRef.current.set(userId, profile);
     return profile;
   };
 
-  // Fetch existing messages
+  // Fetch existing messages & subscribe to new ones
   useEffect(() => {
+    if (!streamId) return;
+
     const fetchMessages = async () => {
       const { data } = await (supabase
         .from("live_chat_messages") as any)
@@ -60,7 +61,7 @@ const LiveChat = ({ streamId }: LiveChatProps) => {
 
     fetchMessages();
 
-    // Subscribe to new messages
+    // Subscribe to new messages via Realtime
     const channel = supabase
       .channel(`chat-${streamId}`)
       .on("postgres_changes", {
@@ -71,11 +72,17 @@ const LiveChat = ({ streamId }: LiveChatProps) => {
       }, async (payload: any) => {
         const msg = payload.new;
         const profile = await fetchProfile(msg.user_id);
-        setMessages((prev) => [...prev, { ...msg, display_name: profile.display_name, avatar_url: profile.avatar_url }]);
+        const enrichedMsg = { ...msg, display_name: profile.display_name, avatar_url: profile.avatar_url };
+        setMessages((prev) => {
+          if (prev.some((m) => m.id === enrichedMsg.id)) return prev;
+          return [...prev, enrichedMsg];
+        });
       })
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [streamId]);
 
   // Auto scroll
