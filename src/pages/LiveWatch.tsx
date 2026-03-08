@@ -6,7 +6,7 @@ import { useLiveKitToken } from "@/hooks/useLiveKitToken";
 import AppNavBar from "@/components/AppNavBar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Eye, Radio, ArrowLeft } from "lucide-react";
+import { Eye, Radio, ArrowLeft, LogOut } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import LiveChat from "@/components/live/LiveChat";
 import LiveTipButton from "@/components/live/LiveTipButton";
