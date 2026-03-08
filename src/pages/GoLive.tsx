@@ -186,84 +186,55 @@ const GoLive = () => {
     setSetupPhase(false);
     startHeartbeat(data.id);
 
-    // Auto-start recording
-    autoStartRecording();
+    // Set up Broadcast channel for WebRTC signaling FIRST (before recording)
+    const rtcChannel = supabase.channel(`rtc-${data.id}`);
+    broadcastChannelRef.current = rtcChannel;
 
-    // Listen for incoming WebRTC signals — NO stream_id filter (UUID filters unreliable in Supabase Realtime)
-    const signalChannel = supabase
-      .channel(`signals-${data.id}`)
-      .on("postgres_changes", {
-        event: "INSERT",
-        schema: "public",
-        table: "live_stream_signals",
-      }, async (payload: any) => {
-        const signal = payload.new;
-        // Filter in JS: only process signals for THIS stream, not from self
-        if (signal.stream_id !== data.id) return;
-        if (signal.sender_id === user.id) return;
+    rtcChannel
+      .on("broadcast", { event: "signal" }, async ({ payload }: any) => {
+        if (!payload || payload.from === user.id) return;
 
-        console.log("Host: received signal", signal.signal_type, "from", signal.sender_id);
+        console.log("Host: broadcast signal received:", payload.type, "from:", payload.from);
 
-        if (signal.signal_type === "answer") {
-          const pc = peerConnectionsRef.current.get(signal.sender_id);
+        if (payload.type === "join-request") {
+          if (!peerConnectionsRef.current.has(payload.from)) {
+            try {
+              await createPeerConnectionForViewer(payload.from, data.id);
+            } catch (e) {
+              console.error("Host: error creating peer connection for viewer", payload.from, e);
+            }
+          }
+        } else if (payload.type === "answer") {
+          const pc = peerConnectionsRef.current.get(payload.from);
           if (pc) {
             try {
-              await pc.setRemoteDescription(new RTCSessionDescription(signal.signal_data));
+              await pc.setRemoteDescription(new RTCSessionDescription(payload.data));
               console.log("Host: set remote description from viewer answer");
             } catch (e) {
               console.error("Host: error setting remote description", e);
             }
           }
-        } else if (signal.signal_type === "ice-candidate") {
-          const pc = peerConnectionsRef.current.get(signal.sender_id);
-          if (pc && signal.signal_data) {
+        } else if (payload.type === "ice-candidate") {
+          const pc = peerConnectionsRef.current.get(payload.from);
+          if (pc && payload.data) {
             try {
-              await pc.addIceCandidate(new RTCIceCandidate(signal.signal_data));
+              await pc.addIceCandidate(new RTCIceCandidate(payload.data));
             } catch (e) {
               console.warn("Host: error adding ICE candidate", e);
-            }
-          }
-        } else if (signal.signal_type === "join-request") {
-          console.log("Host: viewer join request from", signal.sender_id);
-          if (!peerConnectionsRef.current.has(signal.sender_id)) {
-            try {
-              await createPeerConnectionForViewer(signal.sender_id, data.id);
-            } catch (e) {
-              console.error("Host: error creating peer connection for viewer", signal.sender_id, e);
             }
           }
         }
       })
       .subscribe((status) => {
-        console.log("Host: signal subscription status:", status);
+        console.log("Host: broadcast channel status:", status);
       });
 
-    // Periodic polling fallback for join requests (every 3s)
-    const processedViewers = new Set<string>();
-    const pollInterval = window.setInterval(async () => {
-      const { data: pendingSignals } = await (supabase
-        .from("live_stream_signals") as any)
-        .select("*")
-        .eq("stream_id", data.id)
-        .eq("signal_type", "join-request")
-        .neq("sender_id", user.id)
-        .order("created_at", { ascending: true });
-
-      if (pendingSignals) {
-        for (const signal of pendingSignals) {
-          if (!processedViewers.has(signal.sender_id) && !peerConnectionsRef.current.has(signal.sender_id)) {
-            console.log("Host poll: found join request from", signal.sender_id);
-            processedViewers.add(signal.sender_id);
-            try {
-              await createPeerConnectionForViewer(signal.sender_id, data.id);
-            } catch (e) {
-              console.error("Host poll: error creating peer connection", e);
-            }
-          }
-        }
-      }
-    }, 3000);
-    pollIntervalRef.current = pollInterval;
+    // Auto-start recording AFTER signaling is set up (wrapped in try/catch)
+    try {
+      autoStartRecording();
+    } catch (e) {
+      console.error("Host: autoStartRecording failed, stream will continue without recording:", e);
+    }
 
     // Track viewer count via realtime presence
     const presenceChannel = supabase.channel(`presence-${data.id}`);
