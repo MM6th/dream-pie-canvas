@@ -162,21 +162,12 @@ const LiveWatch = () => {
             setViewerCount(countViewers(room));
           });
 
-          room.on(RoomEvent.Disconnected, async () => {
+          room.on(RoomEvent.Disconnected, () => {
             if (cancelled) return;
-            // Check if the stream actually ended before navigating away
-            const { data: streamCheck } = await (supabase
-              .from("live_streams") as any)
-              .select("status")
-              .eq("id", streamId)
-              .maybeSingle();
-            if (streamCheck?.status === "ended") {
-              toast({ title: "Stream ended", description: "The broadcaster has left." });
-              navigate("/live");
-            } else {
-              console.warn("LiveKit viewer: disconnected but stream still live, not navigating away");
-              toast({ title: "Connection lost", description: "Trying to reconnect..." });
-            }
+            // Transient network disconnects can happen; do not treat as stream ended here.
+            // Stream-end navigation is handled by realtime + polling on live_streams.status.
+            setConnected(false);
+            console.warn("LiveKit viewer: disconnected from room, waiting for stream status sync");
           });
 
           await room.connect(wsUrl, token);
