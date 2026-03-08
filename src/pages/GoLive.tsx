@@ -443,6 +443,7 @@ const GoLive = () => {
     peerConnectionsRef.current.clear();
     viewerIceQueuesRef.current.clear();
     viewerRemoteDescSetRef.current.clear();
+    pendingJoinRequestsRef.current.clear();
     if (broadcastChannelRef.current) {
       supabase.removeChannel(broadcastChannelRef.current);
       broadcastChannelRef.current = null;
