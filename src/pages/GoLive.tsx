@@ -289,12 +289,13 @@ const GoLive = () => {
     if (!recordedBlob || !user || !streamId) return;
     setSaving(true);
 
-    const fileName = `live-recordings/${user.id}/${streamId}-${Date.now()}.webm`;
+    const fileName = `${user.id}/live-recordings/${streamId}-${Date.now()}.webm`;
     const { error: uploadError } = await supabase.storage
       .from("user-media")
       .upload(fileName, recordedBlob, { contentType: "video/webm" });
 
     if (uploadError) {
+      console.error("Recording upload failed:", uploadError);
       toast({ title: "Upload failed", description: uploadError.message, variant: "destructive" });
       setSaving(false);
       return;
