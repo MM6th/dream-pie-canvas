@@ -105,7 +105,7 @@ const LiveChat = ({ streamId }: LiveChatProps) => {
   };
 
   return (
-    <Card className="bg-card border-border h-[60svh] min-h-[320px] max-h-[500px] lg:h-[500px] flex flex-col">
+    <Card className="bg-card border-border h-[50vh] min-h-[320px] max-h-[500px] sm:h-[60vh] lg:h-[500px] flex flex-col">
       <CardHeader className="pb-2">
         <CardTitle className="text-sm flex items-center gap-2">
           <MessageSquare className="w-4 h-4" />

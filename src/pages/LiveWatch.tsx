@@ -175,14 +175,14 @@ const LiveWatch = () => {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <AppNavBar />
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
-        <Button variant="ghost" size="sm" onClick={() => navigate("/live")} className="mb-3">
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        <Button variant="ghost" size="sm" onClick={() => navigate("/live")} className="mb-4">
           <ArrowLeft className="w-4 h-4 mr-1" /> Back to Live
         </Button>
 
-        <div className="flex flex-col gap-4 lg:grid lg:grid-cols-3 lg:gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
           {/* Video */}
-          <div className="lg:col-span-2 space-y-3 lg:space-y-4">
+          <div className="lg:col-span-2 space-y-4">
             <div className="relative aspect-video bg-black rounded-xl overflow-hidden">
               <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
               {!connected && (
@@ -204,9 +204,9 @@ const LiveWatch = () => {
               </div>
             </div>
 
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-xl font-bold">{stream?.title}</h1>
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <h1 className="text-xl font-bold truncate">{stream?.title}</h1>
                 {stream?.description && <p className="text-muted-foreground text-sm mt-1">{stream.description}</p>}
               </div>
               {user && stream && user.id !== stream.merchant_id && (
@@ -215,8 +215,8 @@ const LiveWatch = () => {
             </div>
           </div>
 
-          {/* Chat - always visible on mobile and desktop */}
-          <div className="h-[58svh] min-h-[320px] lg:h-auto lg:min-h-0">
+          {/* Chat - keep visible on mobile */}
+          <div className="w-full">
             {streamId && <LiveChat streamId={streamId} />}
           </div>
         </div>
