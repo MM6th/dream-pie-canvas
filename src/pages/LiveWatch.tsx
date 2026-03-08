@@ -170,13 +170,14 @@ const LiveWatch = () => {
 
     const sendJoinRequest = async () => {
       console.log("Viewer: sending join request to host");
-      await (supabase.from("live_stream_signals") as any).insert({
+      const { error: joinError } = await (supabase.from("live_stream_signals") as any).insert({
         stream_id: streamId,
         sender_id: user.id,
-        signal_type: "offer",
+        signal_type: "join-request",
         signal_data: { type: "join-request" },
         target_id: stream.merchant_id,
       });
+      if (joinError) console.error("Viewer: failed to send join request", joinError);
     };
 
     // Subscribe to signals, wait for confirmation, then send join request
