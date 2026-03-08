@@ -419,6 +419,14 @@ const GoLive = () => {
           <div className="lg:col-span-2 space-y-4">
             <div className="relative aspect-video bg-black rounded-xl overflow-hidden">
               <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover" />
+              {reconnecting && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/70">
+                  <div className="text-center text-white">
+                    <Radio className="w-8 h-8 mx-auto mb-2 animate-pulse" />
+                    <p className="text-lg font-semibold">Reconnecting to stream...</p>
+                  </div>
+                </div>
+              )}
               {isLive && (
                 <div className="absolute top-4 left-4 flex gap-2">
                   <Badge className="bg-red-600 text-white border-0 animate-pulse">
