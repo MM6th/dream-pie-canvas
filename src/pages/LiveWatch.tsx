@@ -80,27 +80,22 @@ const LiveWatch = () => {
     if (!publication.track) return;
 
     if (publication.source === Track.Source.Camera && videoRef.current) {
-      // Ensure muted BEFORE attaching so browser allows autoplay
+      // Keep video autoplay muted and inline to avoid browser playback overlays
       videoRef.current.muted = true;
       videoRef.current.playsInline = true;
       videoRef.current.autoplay = true;
+      publication.track.detach();
       publication.track.attach(videoRef.current);
-      // Force play immediately after attach
-      try {
-        await videoRef.current.play();
-      } catch (e) {
-        console.warn("Video play blocked:", e);
-      }
       setConnected(true);
       return;
     }
 
     if (publication.source === Track.Source.Microphone && audioRef.current) {
+      // Attach only to controlled audio element; rely on element autoplay behavior
       publication.track.detach();
       audioRef.current.muted = false;
       audioRef.current.autoplay = true;
       publication.track.attach(audioRef.current);
-      try { await audioRef.current.play(); } catch (e) { console.warn("Audio autoplay blocked:", e); }
     }
   };
 
@@ -255,8 +250,8 @@ const LiveWatch = () => {
         <div className={`flex flex-col lg:grid lg:grid-cols-3 lg:gap-6 ${isMobile ? 'gap-2' : 'gap-4'}`}>
           <div className="lg:col-span-2 space-y-2">
             <div className={`relative bg-black rounded-xl overflow-hidden ${isMobile ? 'h-[25vh] min-h-[140px]' : 'aspect-video'}`}>
-              <video ref={videoRef} playsInline muted className="w-full h-full object-cover" />
-              <audio ref={audioRef} playsInline muted className="hidden" />
+              <video ref={videoRef} playsInline muted autoPlay className="w-full h-full object-cover" />
+              <audio ref={audioRef} autoPlay className="hidden" />
               {!connected && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/80">
                   <div className="text-center">
