@@ -235,45 +235,72 @@ const GoLive = () => {
 
   // Create peer connection for a viewer
   const createPeerConnectionForViewer = async (viewerId: string, sid: string) => {
-    if (!streamRef.current || !user) return;
+    console.log("Host: createPeerConnectionForViewer called for viewer:", viewerId, "stream:", sid);
+    
+    if (!streamRef.current || !user) {
+      console.error("Host: CANNOT create peer connection — streamRef.current:", !!streamRef.current, "user:", !!user);
+      return;
+    }
 
-    const pc = new RTCPeerConnection({
-      iceServers: [
-        { urls: "stun:stun.l.google.com:19302" },
-        { urls: "stun:stun1.l.google.com:19302" },
-        { urls: "stun:stun2.l.google.com:19302" },
-      ],
-    });
+    try {
+      const pc = new RTCPeerConnection({
+        iceServers: [
+          { urls: "stun:stun.l.google.com:19302" },
+          { urls: "stun:stun1.l.google.com:19302" },
+          { urls: "stun:stun2.l.google.com:19302" },
+        ],
+      });
 
-    peerConnectionsRef.current.set(viewerId, pc);
+      peerConnectionsRef.current.set(viewerId, pc);
+      console.log("Host: RTCPeerConnection created for viewer:", viewerId);
 
-    // Add local tracks
-    streamRef.current.getTracks().forEach((track) => {
-      pc.addTrack(track, streamRef.current!);
-    });
+      // Add local tracks
+      const tracks = streamRef.current.getTracks();
+      console.log("Host: adding", tracks.length, "tracks to peer connection");
+      tracks.forEach((track) => {
+        pc.addTrack(track, streamRef.current!);
+      });
 
-    pc.onicecandidate = async (event) => {
-      if (event.candidate) {
-        await (supabase.from("live_stream_signals") as any).insert({
-          stream_id: sid,
-          sender_id: user.id,
-          signal_type: "ice-candidate",
-          signal_data: event.candidate.toJSON(),
-          target_id: viewerId,
-        });
+      pc.onicecandidate = async (event) => {
+        if (event.candidate) {
+          const { error: iceError } = await (supabase.from("live_stream_signals") as any).insert({
+            stream_id: sid,
+            sender_id: user.id,
+            signal_type: "ice-candidate",
+            signal_data: event.candidate.toJSON(),
+            target_id: viewerId,
+          });
+          if (iceError) console.error("Host: failed to insert ICE candidate signal:", iceError);
+        }
+      };
+
+      pc.oniceconnectionstatechange = () => {
+        console.log("Host: ICE connection state for viewer", viewerId, ":", pc.iceConnectionState);
+      };
+
+      // Create and send offer
+      console.log("Host: creating offer for viewer:", viewerId);
+      const offer = await pc.createOffer();
+      console.log("Host: offer created, setting local description");
+      await pc.setLocalDescription(offer);
+      console.log("Host: local description set, inserting offer signal to DB");
+      
+      const { error: offerError } = await (supabase.from("live_stream_signals") as any).insert({
+        stream_id: sid,
+        sender_id: user.id,
+        signal_type: "offer",
+        signal_data: offer,
+        target_id: viewerId,
+      });
+      
+      if (offerError) {
+        console.error("Host: FAILED to insert offer signal:", offerError);
+      } else {
+        console.log("Host: offer signal inserted successfully for viewer:", viewerId);
       }
-    };
-
-    // Create and send offer
-    const offer = await pc.createOffer();
-    await pc.setLocalDescription(offer);
-    await (supabase.from("live_stream_signals") as any).insert({
-      stream_id: sid,
-      sender_id: user.id,
-      signal_type: "offer",
-      signal_data: offer,
-      target_id: viewerId,
-    });
+    } catch (e) {
+      console.error("Host: createPeerConnectionForViewer THREW for viewer:", viewerId, e);
+    }
   };
 
   // Start recording
