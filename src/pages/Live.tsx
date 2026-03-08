@@ -40,43 +40,72 @@ const Live = () => {
       .gte("updated_at", activeCutoff)
       .order("started_at", { ascending: false });
 
-    if (!error && data) {
-      // Fetch merchant profiles
-      const merchantIds = [...new Set(data.map((s: any) => s.merchant_id))] as string[];
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id, display_name, avatar_url")
-        .in("id", merchantIds);
-
-      const profileMap = new Map(
-        (profiles || []).map((p: any) => [p.id, p])
-      );
-
-      setStreams(
-        data.map((s: any) => ({
-          ...s,
-          merchant_name: profileMap.get(s.merchant_id)?.display_name || "Streamer",
-          merchant_avatar: profileMap.get(s.merchant_id)?.avatar_url,
-        }))
-      );
+    if (error) {
+      setStreams([]);
+      setLoading(false);
+      return;
     }
+
+    const rows = data || [];
+    if (rows.length === 0) {
+      setStreams([]);
+      setLoading(false);
+      return;
+    }
+
+    const merchantIds = [...new Set(rows.map((s: any) => s.merchant_id))] as string[];
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, display_name, avatar_url")
+      .in("id", merchantIds);
+
+    const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
+
+    setStreams(
+      rows.map((s: any) => ({
+        ...s,
+        merchant_name: profileMap.get(s.merchant_id)?.display_name || "Streamer",
+        merchant_avatar: profileMap.get(s.merchant_id)?.avatar_url,
+      }))
+    );
     setLoading(false);
   };
 
   useEffect(() => {
-    fetchStreams();
+    let isActive = true;
+    let pollMs = 5000;
+    let pollTimeout: ReturnType<typeof setTimeout> | null = null;
 
-    // Subscribe to live stream changes
+    const schedulePoll = () => {
+      if (!isActive) return;
+      pollTimeout = setTimeout(async () => {
+        await fetchStreams();
+        pollMs = Math.min(Math.floor(pollMs * 1.5), 30000);
+        schedulePoll();
+      }, pollMs);
+    };
+
+    fetchStreams();
+    schedulePoll();
+
+    // Primary sync: realtime
     const channel = supabase
       .channel("live-streams-browse")
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "live_streams" },
-        () => fetchStreams()
+        async () => {
+          pollMs = 5000;
+          await fetchStreams();
+        }
       )
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      isActive = false;
+      if (pollTimeout) clearTimeout(pollTimeout);
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   return (
