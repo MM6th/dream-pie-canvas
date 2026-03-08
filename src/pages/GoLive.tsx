@@ -93,7 +93,7 @@ const GoLive = () => {
     if (heartbeatIntervalRef.current) window.clearInterval(heartbeatIntervalRef.current);
     const heartbeat = async () => {
       await (supabase.from("live_streams") as any)
-        .update({ status: "live" })
+        .update({ status: "live", updated_at: new Date().toISOString() })
         .eq("id", sid)
         .eq("merchant_id", user?.id);
     };
