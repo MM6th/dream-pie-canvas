@@ -180,7 +180,7 @@ const LiveWatch = () => {
           <ArrowLeft className="w-4 h-4 mr-1" /> Back to Live
         </Button>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="flex flex-col lg:grid lg:grid-cols-3 gap-6">
           {/* Video */}
           <div className="lg:col-span-2 space-y-4">
             <div className="relative aspect-video bg-black rounded-xl overflow-hidden">
@@ -215,8 +215,8 @@ const LiveWatch = () => {
             </div>
           </div>
 
-          {/* Chat */}
-          <div>
+          {/* Chat - always visible, adapts height on mobile */}
+          <div className="min-h-[300px] lg:min-h-0">
             {streamId && <LiveChat streamId={streamId} />}
           </div>
         </div>
