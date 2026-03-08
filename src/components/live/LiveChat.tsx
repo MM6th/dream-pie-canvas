@@ -40,22 +40,33 @@ const LiveChat = ({ streamId }: LiveChatProps) => {
   useEffect(() => {
     if (!streamId) return;
 
-    const fetchMessages = async () => {
-      const { data } = await (supabase
-        .from("live_chat_messages") as any)
-        .select("*")
-        .eq("stream_id", streamId)
-        .order("created_at", { ascending: true })
-        .limit(100);
+    let pollTimer: ReturnType<typeof setInterval> | null = null;
 
-      if (data) {
-        const enriched = await Promise.all(
-          data.map(async (msg: any) => {
-            const profile = await fetchProfile(msg.user_id);
-            return { ...msg, display_name: profile.display_name, avatar_url: profile.avatar_url };
-          })
-        );
-        setMessages(enriched);
+    const fetchMessages = async () => {
+      try {
+        const { data, error } = await (supabase
+          .from("live_chat_messages") as any)
+          .select("*")
+          .eq("stream_id", streamId)
+          .order("created_at", { ascending: true })
+          .limit(100);
+
+        if (error) {
+          console.error("Chat fetch error:", error);
+          return;
+        }
+
+        if (data) {
+          const enriched = await Promise.all(
+            data.map(async (msg: any) => {
+              const profile = await fetchProfile(msg.user_id);
+              return { ...msg, display_name: profile.display_name, avatar_url: profile.avatar_url };
+            })
+          );
+          setMessages(enriched);
+        }
+      } catch (err) {
+        console.error("Chat fetch exception:", err);
       }
     };
 
@@ -78,10 +89,16 @@ const LiveChat = ({ streamId }: LiveChatProps) => {
           return [...prev, enrichedMsg];
         });
       })
-      .subscribe();
+      .subscribe((status) => {
+        console.log("Chat realtime status:", status);
+      });
+
+    // Polling fallback every 5s to catch messages Realtime may miss
+    pollTimer = setInterval(fetchMessages, 5000);
 
     return () => {
       supabase.removeChannel(channel);
+      if (pollTimer) clearInterval(pollTimer);
     };
   }, [streamId]);
 
@@ -136,7 +153,7 @@ const LiveChat = ({ streamId }: LiveChatProps) => {
           </div>
         </ScrollArea>
 
-        {user && (
+        {user ? (
           <div className="flex gap-2 mt-3">
             <Input
               value={newMessage}
@@ -149,6 +166,8 @@ const LiveChat = ({ streamId }: LiveChatProps) => {
               <Send className="w-4 h-4" />
             </Button>
           </div>
+        ) : (
+          <p className="text-xs text-muted-foreground mt-3 text-center">Log in to chat</p>
         )}
       </CardContent>
     </Card>
