@@ -169,10 +169,12 @@ const GoLive = () => {
               console.warn("Host: error adding ICE candidate", e);
             }
           }
-        } else if (signal.signal_type === "offer") {
+        } else if (signal.signal_type === "join-request" || (signal.signal_type === "offer" && signal.signal_data?.type === "join-request")) {
           // Viewer requesting stream - create peer connection and send offer
           console.log("Host: viewer join request from", signal.sender_id);
-          await createPeerConnectionForViewer(signal.sender_id, data.id);
+          if (!peerConnectionsRef.current.has(signal.sender_id)) {
+            await createPeerConnectionForViewer(signal.sender_id, data.id);
+          }
         }
       })
       .subscribe((status) => {
@@ -184,7 +186,7 @@ const GoLive = () => {
               .from("live_stream_signals") as any)
               .select("*")
               .eq("stream_id", data.id)
-              .eq("signal_type", "offer")
+              .in("signal_type", ["join-request", "offer"])
               .neq("sender_id", user.id)
               .order("created_at", { ascending: true });
             
@@ -287,12 +289,13 @@ const GoLive = () => {
     if (!recordedBlob || !user || !streamId) return;
     setSaving(true);
 
-    const fileName = `live-recordings/${user.id}/${streamId}-${Date.now()}.webm`;
+    const fileName = `${user.id}/live-recordings/${streamId}-${Date.now()}.webm`;
     const { error: uploadError } = await supabase.storage
       .from("user-media")
       .upload(fileName, recordedBlob, { contentType: "video/webm" });
 
     if (uploadError) {
+      console.error("Recording upload failed:", uploadError);
       toast({ title: "Upload failed", description: uploadError.message, variant: "destructive" });
       setSaving(false);
       return;
@@ -338,7 +341,7 @@ const GoLive = () => {
         const blob = new Blob(chunksRef.current, { type: "video/webm" });
         console.log("Recording blob size:", blob.size);
         if (blob.size > 0 && user && currentStreamId) {
-          const fileName = `live-recordings/${user.id}/${currentStreamId}-${Date.now()}.webm`;
+          const fileName = `${user.id}/live-recordings/${currentStreamId}-${Date.now()}.webm`;
           const { error: uploadError } = await supabase.storage
             .from("user-media")
             .upload(fileName, blob, { contentType: "video/webm" });

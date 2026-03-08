@@ -31,13 +31,10 @@ const Live = () => {
   const [loading, setLoading] = useState(true);
 
   const fetchStreams = async () => {
-    const activeCutoff = new Date(Date.now() - 60_000).toISOString();
-
     const { data, error } = await (supabase
       .from("live_streams") as any)
       .select("*")
       .eq("status", "live")
-      .gte("updated_at", activeCutoff)
       .order("started_at", { ascending: false });
 
     if (error) {

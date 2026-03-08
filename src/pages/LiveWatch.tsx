@@ -116,7 +116,7 @@ const LiveWatch = () => {
       if (signal.sender_id === user.id) return;
       if (signal.target_id && signal.target_id !== user.id) return;
 
-      if (signal.signal_type === "offer") {
+      if (signal.signal_type === "offer" && signal.signal_data?.sdp) {
         console.log("Viewer: received SDP offer from host");
         try {
           await pc.setRemoteDescription(new RTCSessionDescription(signal.signal_data));
@@ -170,13 +170,14 @@ const LiveWatch = () => {
 
     const sendJoinRequest = async () => {
       console.log("Viewer: sending join request to host");
-      await (supabase.from("live_stream_signals") as any).insert({
+      const { error: joinError } = await (supabase.from("live_stream_signals") as any).insert({
         stream_id: streamId,
         sender_id: user.id,
-        signal_type: "offer",
+        signal_type: "join-request",
         signal_data: { type: "join-request" },
         target_id: stream.merchant_id,
       });
+      if (joinError) console.error("Viewer: failed to send join request", joinError);
     };
 
     // Subscribe to signals, wait for confirmation, then send join request
@@ -281,7 +282,7 @@ const LiveWatch = () => {
         <div className={`flex flex-col lg:grid lg:grid-cols-3 lg:gap-6 ${isMobile ? 'gap-2' : 'gap-4'}`}>
           {/* Video section */}
           <div className="lg:col-span-2 space-y-2">
-            <div className={`relative bg-black rounded-xl overflow-hidden ${isMobile ? 'h-[28vh] min-h-[160px]' : 'aspect-video'}`}>
+            <div className={`relative bg-black rounded-xl overflow-hidden ${isMobile ? 'h-[25vh] min-h-[140px]' : 'aspect-video'}`}>
               <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
               {!connected && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/80">
