@@ -22,6 +22,8 @@ const GoLive = () => {
   const chunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
   const peerConnectionsRef = useRef<Map<string, RTCPeerConnection>>(new Map());
+  const viewerIceQueuesRef = useRef<Map<string, RTCIceCandidateInit[]>>(new Map());
+  const viewerRemoteDescSetRef = useRef<Map<string, boolean>>(new Map());
   const pollIntervalRef = useRef<number | null>(null);
   const heartbeatIntervalRef = useRef<number | null>(null);
 
