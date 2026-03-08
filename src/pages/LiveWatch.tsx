@@ -92,7 +92,6 @@ const LiveWatch = () => {
         console.warn("Video play blocked:", e);
       }
       setConnected(true);
-      setNeedsTapToPlay(true);
       return;
     }
 
