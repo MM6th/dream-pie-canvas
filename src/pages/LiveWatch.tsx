@@ -305,8 +305,19 @@ const LiveWatch = () => {
         <div className={`flex flex-col lg:grid lg:grid-cols-3 lg:gap-6 ${isMobile ? 'gap-2' : 'gap-4'}`}>
           <div className="lg:col-span-2 space-y-2">
             <div className={`relative bg-black rounded-xl overflow-hidden ${isMobile ? 'h-[25vh] min-h-[140px]' : 'aspect-video'}`}>
-              <video ref={videoRef} playsInline muted autoPlay className="w-full h-full object-cover" />
+              <video ref={videoRef} playsInline muted autoPlay className={`w-full h-full object-cover ${hostCameraOff ? 'invisible' : ''}`} />
               <audio ref={audioRef} autoPlay muted={muted} className="hidden" />
+              {hostCameraOff && connected && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black">
+                  {hostAvatarUrl ? (
+                    <img src={hostAvatarUrl} alt="Host" className="w-20 h-20 sm:w-28 sm:h-28 rounded-full object-cover border-2 border-muted" />
+                  ) : (
+                    <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-full bg-muted flex items-center justify-center">
+                      <VideoOff className="w-8 h-8 text-muted-foreground" />
+                    </div>
+                  )}
+                </div>
+              )}
               {!connected && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/80">
                   <div className="text-center">
