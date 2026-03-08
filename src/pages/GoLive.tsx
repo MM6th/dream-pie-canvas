@@ -210,7 +210,6 @@ const GoLive = () => {
   }, [user, startPreview, reconnectToStream]);
 
   // Auto-end stream if host navigates away or logs out while live
-  const streamIdRef = useRef<string | null>(null);
   streamIdRef.current = streamId;
 
   useEffect(() => {
