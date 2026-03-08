@@ -96,11 +96,16 @@ const LiveWatch = () => {
         roomRef.current = room;
 
         // When a new track is subscribed
-        room.on(RoomEvent.TrackSubscribed, (track, publication, participant) => {
+        room.on(RoomEvent.TrackSubscribed, async (track) => {
           if (cancelled) return;
           console.log("LiveKit viewer: track subscribed", track.source);
           if (videoRef.current) {
             track.attach(videoRef.current);
+            try {
+              await videoRef.current.play();
+            } catch {
+              setNeedsTapToPlay(true);
+            }
             if (track.source === Track.Source.Camera) {
               setConnected(true);
             }
