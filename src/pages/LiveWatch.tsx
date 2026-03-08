@@ -76,17 +76,21 @@ const LiveWatch = () => {
     fetchStream();
   }, [streamId, navigate]);
 
-  // Attach remote tracks separately: camera -> video, microphone -> audio
+  // Attach remote tracks separately: camera -> video, microphone -> hidden audio
   const attachTrack = async (publication: RemoteTrackPublication) => {
     if (!publication.track) return;
 
     if (publication.source === Track.Source.Camera && videoRef.current) {
-      publication.track.attach(videoRef.current);
+      // Ensure muted BEFORE attaching so browser allows autoplay
       videoRef.current.muted = true;
+      videoRef.current.playsInline = true;
+      videoRef.current.autoplay = true;
+      publication.track.attach(videoRef.current);
+      // Force play immediately after attach
       try {
         await videoRef.current.play();
-      } catch {
-        // Browser may still block; user gesture can recover
+      } catch (e) {
+        console.warn("Video play blocked:", e);
       }
       setConnected(true);
       setNeedsTapToPlay(true);
@@ -94,6 +98,8 @@ const LiveWatch = () => {
     }
 
     if (publication.source === Track.Source.Microphone && audioRef.current) {
+      // Audio stays muted until user taps
+      audioRef.current.muted = true;
       publication.track.attach(audioRef.current);
     }
   };
