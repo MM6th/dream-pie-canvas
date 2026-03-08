@@ -146,7 +146,7 @@ const Live = () => {
               <Card
                 key={stream.id}
                 className="bg-card border-border hover:border-primary/50 transition-colors cursor-pointer group overflow-hidden"
-                onClick={() => navigate(`/live/${stream.id}`)}
+                onClick={() => user && stream.merchant_id === user.id ? navigate("/go-live") : navigate(`/live/${stream.id}`)}
               >
                 <CardContent className="p-0">
                   <div className="aspect-video bg-muted relative flex items-center justify-center">
