@@ -380,9 +380,13 @@ const GoLive = () => {
       await (supabase.from("live_streams") as any).update({ status: "ended", ended_at: new Date().toISOString() }).eq("id", currentStreamId);
     }
 
-    // Close peer connections immediately (doesn't affect local recording)
+    // Close peer connections and broadcast channel
     peerConnectionsRef.current.forEach((pc) => pc.close());
     peerConnectionsRef.current.clear();
+    if (broadcastChannelRef.current) {
+      supabase.removeChannel(broadcastChannelRef.current);
+      broadcastChannelRef.current = null;
+    }
     setIsLive(false);
     setStreamId(null);
 
