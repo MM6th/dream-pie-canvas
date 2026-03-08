@@ -51,8 +51,11 @@ const LiveWatch = () => {
   const [loading, setLoading] = useState(true);
   const [viewerCount, setViewerCount] = useState(0);
   const [connected, setConnected] = useState(false);
+  const [streamReady, setStreamReady] = useState(false);
+  const userRef = useRef(user);
+  userRef.current = user;
 
-  // Fetch stream data
+  // Fetch stream data — only depends on streamId (runs once)
   useEffect(() => {
     if (!streamId) return;
 
@@ -76,18 +79,20 @@ const LiveWatch = () => {
       }
 
       // If the current user is the host, redirect them to the Go Live controls
-      if (user && data.merchant_id === user.id) {
+      if (userRef.current && data.merchant_id === userRef.current.id) {
         toast({ title: "Redirecting to your stream controls" });
         navigate("/go-live", { replace: true });
         return;
       }
 
       setStream(data);
+      setStreamReady(true);
       setLoading(false);
     };
 
     fetchStream();
-  }, [streamId, navigate, user]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [streamId, navigate]);
 
   // Attach remote tracks separately: camera -> video, microphone -> hidden audio
   const attachTrack = async (publication: RemoteTrackPublication) => {
