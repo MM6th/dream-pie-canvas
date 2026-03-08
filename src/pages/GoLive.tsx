@@ -23,6 +23,17 @@ import {
 } from "livekit-client";
 
 const GoLive = () => {
+  /** Count only viewer participants (exclude other publishers) */
+  const countViewers = (room: Room): number => {
+    let viewers = 0;
+    for (const p of room.remoteParticipants.values()) {
+      const hasPublishedTrack = Array.from(p.trackPublications.values()).some(
+        (pub) => pub.source === Track.Source.Camera || pub.source === Track.Source.Microphone
+      );
+      if (!hasPublishedTrack) viewers++;
+    }
+    return viewers;
+  };
   const navigate = useNavigate();
   const { user } = useAuth();
   const { getToken } = useLiveKitToken();
