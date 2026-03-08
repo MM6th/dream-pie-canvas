@@ -55,10 +55,8 @@ const GoLive = () => {
   const [streamId, setStreamId] = useState<string | null>(null);
   const [isLive, setIsLive] = useState(false);
   const [cameraOn, setCameraOn] = useState(true);
-  const [cameraOn, setCameraOn] = useState(true);
   const [micOn, setMicOn] = useState(true);
   const [viewerCount, setViewerCount] = useState(0);
-  const [saving, setSaving] = useState(false);
   const [setupPhase, setSetupPhase] = useState(true);
   const [reconnecting, setReconnecting] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
