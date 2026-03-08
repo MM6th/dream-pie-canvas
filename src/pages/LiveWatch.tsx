@@ -6,7 +6,7 @@ import { useLiveKitToken } from "@/hooks/useLiveKitToken";
 import AppNavBar from "@/components/AppNavBar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Eye, Radio, ArrowLeft, LogOut } from "lucide-react";
+import { Eye, Radio, ArrowLeft, LogOut, Volume2, VolumeX } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import LiveChat from "@/components/live/LiveChat";
 import LiveTipButton from "@/components/live/LiveTipButton";
@@ -53,6 +53,7 @@ const LiveWatch = () => {
   const [viewerCount, setViewerCount] = useState(0);
   const [connected, setConnected] = useState(false);
   const [streamReady, setStreamReady] = useState(false);
+  const [muted, setMuted] = useState(false);
   const userRef = useRef(user);
   userRef.current = user;
 
@@ -288,7 +289,7 @@ const LiveWatch = () => {
           <div className="lg:col-span-2 space-y-2">
             <div className={`relative bg-black rounded-xl overflow-hidden ${isMobile ? 'h-[25vh] min-h-[140px]' : 'aspect-video'}`}>
               <video ref={videoRef} playsInline muted autoPlay className="w-full h-full object-cover" />
-              <audio ref={audioRef} autoPlay className="hidden" />
+              <audio ref={audioRef} autoPlay muted={muted} className="hidden" />
               {!connected && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/80">
                   <div className="text-center">
@@ -305,6 +306,16 @@ const LiveWatch = () => {
                 <Badge variant="secondary" className="bg-black/60 text-white border-0 text-xs">
                   <Eye className="w-3 h-3 mr-1" /> {connected ? Math.max(viewerCount, 1) : viewerCount}
                 </Badge>
+              </div>
+              <div className="absolute top-2 sm:top-4 right-2 sm:right-4">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="bg-black/60 hover:bg-black/80 text-white rounded-full w-8 h-8 sm:w-9 sm:h-9"
+                  onClick={() => setMuted((prev) => !prev)}
+                >
+                  {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                </Button>
               </div>
             </div>
 
