@@ -260,14 +260,17 @@ const LiveWatch = () => {
                     className="pointer-events-auto"
                     onClick={async () => {
                       try {
-                        await videoRef.current?.play();
+                        if (videoRef.current) {
+                          videoRef.current.muted = false;
+                          await videoRef.current.play();
+                        }
                         setNeedsTapToPlay(false);
                       } catch {
                         toast({ title: "Tap again to start playback", variant: "destructive" });
                       }
                     }}
                   >
-                    Tap to start playback
+                    🔊 Tap to unmute
                   </Button>
                 </div>
               )}
