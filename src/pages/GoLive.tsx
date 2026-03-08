@@ -62,6 +62,7 @@ const GoLive = () => {
   const [saving, setSaving] = useState(false);
   const [setupPhase, setSetupPhase] = useState(true);
   const [reconnecting, setReconnecting] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const reconnectAttemptedRef = useRef(false);
 
   // Start camera preview (before going live)
