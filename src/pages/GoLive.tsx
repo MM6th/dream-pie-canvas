@@ -316,6 +316,17 @@ const GoLive = () => {
 
       pc.oniceconnectionstatechange = () => {
         console.log("Host: ICE connection state for viewer", viewerId, ":", pc.iceConnectionState);
+        if (pc.iceConnectionState === "failed") {
+          console.error("Host: ICE connection FAILED for viewer", viewerId, "- may need TURN server");
+        }
+      };
+
+      pc.onconnectionstatechange = () => {
+        console.log("Host: connection state for viewer", viewerId, ":", pc.connectionState);
+      };
+
+      pc.onsignalingstatechange = () => {
+        console.log("Host: signaling state for viewer", viewerId, ":", pc.signalingState);
       };
 
       // Create and send offer via broadcast
