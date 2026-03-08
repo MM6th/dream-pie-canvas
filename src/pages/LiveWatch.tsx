@@ -111,7 +111,7 @@ const LiveWatch = () => {
     };
 
     // Broadcast channel for WebRTC signaling
-    const rtcChannel = supabase.channel(`rtc-${streamId}`);
+    const rtcChannel = supabase.channel(`rtc-${streamId}`, { config: { broadcast: { ack: true } } });
 
     pc.onicecandidate = (event) => {
       if (event.candidate && !cancelled) {
