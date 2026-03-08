@@ -102,38 +102,8 @@ const GoLive = () => {
   }, [user?.id]);
 
   // Start recording from LiveKit room's local tracks
-  const startRecordingFromRoom = useCallback((room: Room) => {
-    const localParticipant = room.localParticipant;
-    const tracks: MediaStreamTrack[] = [];
 
-    for (const pub of localParticipant.trackPublications.values()) {
-      if (pub.track?.mediaStreamTrack) {
-        tracks.push(pub.track.mediaStreamTrack);
-      }
-    }
 
-    if (tracks.length === 0) {
-      console.warn("No local tracks available for recording");
-      return;
-    }
-
-    const stream = new MediaStream(tracks);
-    chunksRef.current = [];
-
-    const mimeTypes = ["video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm"];
-    let selectedMime = "";
-    for (const mime of mimeTypes) {
-      if (MediaRecorder.isTypeSupported(mime)) { selectedMime = mime; break; }
-    }
-    if (!selectedMime) { console.error("No supported MIME type"); return; }
-
-    const mr = new MediaRecorder(stream, { mimeType: selectedMime });
-    mr.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
-    mr.start(1000);
-    mediaRecorderRef.current = mr;
-    setIsRecording(true);
-    console.log("Recording started with MIME:", selectedMime);
-  }, []);
 
   // Reconnect to an existing live stream after page refresh
   const reconnectToStream = useCallback(async (existingStream: any) => {
