@@ -115,3 +115,6 @@ verify_jwt = true
 
 [functions.capture-token-purchase]
 verify_jwt = false
+
+[functions.livekit-token]
+verify_jwt = false
