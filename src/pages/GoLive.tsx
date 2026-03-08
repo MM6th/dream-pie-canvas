@@ -292,6 +292,8 @@ const GoLive = () => {
       });
 
       peerConnectionsRef.current.set(viewerId, pc);
+      viewerIceQueuesRef.current.set(viewerId, []);
+      viewerRemoteDescSetRef.current.set(viewerId, false);
       console.log("Host: RTCPeerConnection created for viewer:", viewerId);
 
       // Add local tracks
