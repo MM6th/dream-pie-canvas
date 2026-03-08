@@ -268,17 +268,48 @@ const GoLive = () => {
     setSaving(false);
   };
 
-  // End stream
+  // End stream - auto-save recording
   const endStream = async () => {
-    if (isRecording) stopRecording();
-
     if (heartbeatIntervalRef.current) {
       window.clearInterval(heartbeatIntervalRef.current);
       heartbeatIntervalRef.current = null;
     }
 
-    if (streamId) {
-      await (supabase.from("live_streams") as any).update({ status: "ended", ended_at: new Date().toISOString() }).eq("id", streamId);
+    const currentStreamId = streamId;
+
+    if (currentStreamId) {
+      await (supabase.from("live_streams") as any).update({ status: "ended", ended_at: new Date().toISOString() }).eq("id", currentStreamId);
+    }
+
+    // Stop recording and auto-save
+    if (isRecording && mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+      setSaving(true);
+      mediaRecorderRef.current.onstop = async () => {
+        const blob = new Blob(chunksRef.current, { type: "video/webm" });
+        if (blob.size > 0 && user && currentStreamId) {
+          const fileName = `live-recordings/${user.id}/${currentStreamId}-${Date.now()}.webm`;
+          const { error: uploadError } = await supabase.storage
+            .from("user-media")
+            .upload(fileName, blob, { contentType: "video/webm" });
+
+          if (!uploadError) {
+            const { data: urlData } = supabase.storage.from("user-media").getPublicUrl(fileName);
+            await (supabase.from("live_streams") as any).update({ recording_url: urlData.publicUrl }).eq("id", currentStreamId);
+            toast({ title: "Stream ended & recording saved!" });
+          } else {
+            toast({ title: "Stream ended", description: "Recording upload failed: " + uploadError.message, variant: "destructive" });
+          }
+        } else {
+          toast({ title: "Stream ended" });
+        }
+        setSaving(false);
+        navigate("/live");
+      };
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    } else {
+      toast({ title: "Stream ended" });
+      navigate("/live");
     }
 
     streamRef.current?.getTracks().forEach((t) => t.stop());
@@ -286,8 +317,6 @@ const GoLive = () => {
     peerConnectionsRef.current.clear();
     setIsLive(false);
     setStreamId(null);
-    toast({ title: "Stream ended" });
-    navigate("/live");
   };
 
   if (!user) {
