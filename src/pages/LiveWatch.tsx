@@ -137,7 +137,7 @@ const LiveWatch = () => {
         for (const participant of room.remoteParticipants.values()) {
           for (const pub of participant.trackPublications.values()) {
             if (pub.isSubscribed && pub.track) {
-              attachTrack(pub as RemoteTrackPublication);
+              await attachTrack(pub as RemoteTrackPublication);
             }
           }
         }
