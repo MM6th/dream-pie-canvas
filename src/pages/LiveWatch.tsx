@@ -92,6 +92,13 @@ const LiveWatch = () => {
       setStream(data);
       setStreamReady(true);
       setLoading(false);
+
+      // Fetch host avatar
+      const { data: profile } = await (supabase.from("profiles") as any)
+        .select("avatar_url")
+        .eq("id", data.merchant_id)
+        .single();
+      if (profile?.avatar_url) setHostAvatarUrl(profile.avatar_url);
     };
 
     fetchStream();
