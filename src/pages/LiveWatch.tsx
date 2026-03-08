@@ -141,11 +141,14 @@ const LiveWatch = () => {
           const answer = await pc.createAnswer();
           await pc.setLocalDescription(answer);
           console.log("Viewer: sending SDP answer via broadcast");
-          rtcChannel.send({
+          const sendStatus = await rtcChannel.send({
             type: "broadcast",
             event: "signal",
             payload: { type: "answer", from: user.id, to: stream.merchant_id, data: answer },
           });
+          if (sendStatus !== "ok") {
+            console.error("Viewer: failed to relay SDP answer", sendStatus);
+          }
           console.log("Viewer: sent SDP answer to host");
         } catch (e) {
           console.error("Viewer: error handling offer", e);
