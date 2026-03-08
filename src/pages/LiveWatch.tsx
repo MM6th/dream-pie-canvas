@@ -268,8 +268,12 @@ const LiveWatch = () => {
                     onClick={async () => {
                       try {
                         if (videoRef.current) {
-                          videoRef.current.muted = false;
+                          videoRef.current.muted = true;
                           await videoRef.current.play();
+                        }
+                        if (audioRef.current) {
+                          audioRef.current.muted = false;
+                          await audioRef.current.play();
                         }
                         setNeedsTapToPlay(false);
                       } catch {
