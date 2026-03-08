@@ -64,7 +64,7 @@ Deno.serve(async (req) => {
     const isPublisher = canPublish === true;
     const identity = isPublisher
       ? `${userId}:host:${roomName}`
-      : `${userId}:viewer:${crypto.randomUUID().slice(0, 8)}`;
+      : `${userId}:viewer:${roomName}`;
 
     // Generate access token
     const at = new AccessToken(apiKey, apiSecret, {
