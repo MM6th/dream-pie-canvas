@@ -259,7 +259,7 @@ const LiveWatch = () => {
                   </div>
                 </div>
               )}
-              {needsTapToPlay && (
+              {needsTapToPlay && connected && (
                 <div className="absolute inset-0 flex items-end justify-center p-4 pointer-events-none">
                   <Button
                     type="button"
@@ -272,11 +272,11 @@ const LiveWatch = () => {
                         }
                         setNeedsTapToPlay(false);
                       } catch {
-                        toast({ title: "Tap again to start playback", variant: "destructive" });
+                        toast({ title: "Tap again to enable audio", variant: "destructive" });
                       }
                     }}
                   >
-                    🔊 Tap to unmute
+                    🔊 Tap to unmute live audio
                   </Button>
                 </div>
               )}
