@@ -137,7 +137,7 @@ const GoLive = () => {
     autoStartRecording();
 
     // Listen for incoming WebRTC signals (viewer answers and ICE candidates)
-    supabase
+    const signalChannel = supabase
       .channel(`signals-${data.id}`)
       .on("postgres_changes", {
         event: "INSERT",
@@ -148,22 +148,57 @@ const GoLive = () => {
         const signal = payload.new;
         if (signal.sender_id === user.id) return; // Skip own signals
 
+        console.log("Host: received signal", signal.signal_type, "from", signal.sender_id);
+
         if (signal.signal_type === "answer") {
           const pc = peerConnectionsRef.current.get(signal.sender_id);
           if (pc) {
-            await pc.setRemoteDescription(new RTCSessionDescription(signal.signal_data));
+            try {
+              await pc.setRemoteDescription(new RTCSessionDescription(signal.signal_data));
+              console.log("Host: set remote description from viewer answer");
+            } catch (e) {
+              console.error("Host: error setting remote description", e);
+            }
           }
         } else if (signal.signal_type === "ice-candidate") {
           const pc = peerConnectionsRef.current.get(signal.sender_id);
           if (pc && signal.signal_data) {
-            await pc.addIceCandidate(new RTCIceCandidate(signal.signal_data));
+            try {
+              await pc.addIceCandidate(new RTCIceCandidate(signal.signal_data));
+            } catch (e) {
+              console.warn("Host: error adding ICE candidate", e);
+            }
           }
         } else if (signal.signal_type === "offer") {
           // Viewer requesting stream - create peer connection and send offer
+          console.log("Host: viewer join request from", signal.sender_id);
           await createPeerConnectionForViewer(signal.sender_id, data.id);
         }
       })
-      .subscribe();
+      .subscribe((status) => {
+        console.log("Host: signal subscription status:", status);
+        if (status === "SUBSCRIBED") {
+          // Poll for any join requests that arrived before subscription was ready
+          (async () => {
+            const { data: pendingSignals } = await (supabase
+              .from("live_stream_signals") as any)
+              .select("*")
+              .eq("stream_id", data.id)
+              .eq("signal_type", "offer")
+              .neq("sender_id", user.id)
+              .order("created_at", { ascending: true });
+            
+            if (pendingSignals) {
+              for (const signal of pendingSignals) {
+                if (!peerConnectionsRef.current.has(signal.sender_id)) {
+                  console.log("Host: processing missed join request from", signal.sender_id);
+                  await createPeerConnectionForViewer(signal.sender_id, data.id);
+                }
+              }
+            }
+          })();
+        }
+      });
 
     // Track viewer count via realtime presence
     const presenceChannel = supabase.channel(`presence-${data.id}`);
@@ -186,7 +221,11 @@ const GoLive = () => {
     if (!streamRef.current || !user) return;
 
     const pc = new RTCPeerConnection({
-      iceServers: [{ urls: "stun:stun.l.google.com:19302" }, { urls: "stun:stun1.l.google.com:19302" }],
+      iceServers: [
+        { urls: "stun:stun.l.google.com:19302" },
+        { urls: "stun:stun1.l.google.com:19302" },
+        { urls: "stun:stun2.l.google.com:19302" },
+      ],
     });
 
     peerConnectionsRef.current.set(viewerId, pc);
