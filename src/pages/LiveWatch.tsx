@@ -244,7 +244,7 @@ const LiveWatch = () => {
         <div className={`flex flex-col lg:grid lg:grid-cols-3 lg:gap-6 ${isMobile ? 'gap-2' : 'gap-4'}`}>
           <div className="lg:col-span-2 space-y-2">
             <div className={`relative bg-black rounded-xl overflow-hidden ${isMobile ? 'h-[25vh] min-h-[140px]' : 'aspect-video'}`}>
-              <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
+              <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
               {!connected && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/80">
                   <div className="text-center">
