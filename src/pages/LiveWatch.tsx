@@ -96,12 +96,11 @@ const LiveWatch = () => {
     }
 
     if (publication.source === Track.Source.Microphone && audioRef.current) {
-      // Detach any auto-created elements first to prevent unmuted playback
       publication.track.detach();
-      // Now attach only to our controlled, muted audio element
-      audioRef.current.muted = true;
-      audioRef.current.autoplay = false;
+      audioRef.current.muted = false;
+      audioRef.current.autoplay = true;
       publication.track.attach(audioRef.current);
+      try { await audioRef.current.play(); } catch (e) { console.warn("Audio autoplay blocked:", e); }
     }
   };
 
