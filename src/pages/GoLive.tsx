@@ -106,6 +106,7 @@ const GoLive = () => {
   const shouldUploadRef = useRef(false);
   const endStreamIdRef = useRef<string | null>(null);
   const broadcastChannelRef = useRef<any>(null);
+  const pendingJoinRequestsRef = useRef<Set<string>>(new Set());
 
   // Auto-start recording helper with MIME fallbacks
   const autoStartRecording = useCallback(() => {
