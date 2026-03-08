@@ -36,13 +36,13 @@ const LiveWatch = () => {
         .single();
 
       if (error || !data) {
+        console.error("Stream fetch error:", error);
         toast({ title: "Stream not found", variant: "destructive" });
         navigate("/live");
         return;
       }
 
-      const isStale = !data.updated_at || (Date.now() - new Date(data.updated_at).getTime() > 60_000);
-      if (data.status === "ended" || isStale) {
+      if (data.status === "ended") {
         toast({ title: "This stream has ended" });
         navigate("/live");
         return;
