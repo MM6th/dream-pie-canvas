@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useLiveKitToken } from "@/hooks/useLiveKitToken";
 import AppNavBar from "@/components/AppNavBar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,22 +10,27 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
-import { Video, VideoOff, Mic, MicOff, Radio, Square, Save, Eye, MessageSquare } from "lucide-react";
+import { Video, VideoOff, Mic, MicOff, Radio, Eye, MessageSquare } from "lucide-react";
 import LiveChat from "@/components/live/LiveChat";
 import LiveTipDisplay from "@/components/live/LiveTipDisplay";
-import sixthCoinLogo from "@/assets/sixth-coin-logo.jpg";
+import {
+  Room,
+  RoomEvent,
+  LocalParticipant,
+  createLocalTracks,
+  Track,
+  VideoPresets,
+} from "livekit-client";
 
 const GoLive = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { getToken } = useLiveKitToken();
   const videoRef = useRef<HTMLVideoElement>(null);
+  const roomRef = useRef<Room | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
-  const streamRef = useRef<MediaStream | null>(null);
-  const peerConnectionsRef = useRef<Map<string, RTCPeerConnection>>(new Map());
-  const viewerIceQueuesRef = useRef<Map<string, RTCIceCandidateInit[]>>(new Map());
-  const viewerRemoteDescSetRef = useRef<Map<string, boolean>>(new Map());
-  const pollIntervalRef = useRef<number | null>(null);
+  const localStreamRef = useRef<MediaStream | null>(null);
   const heartbeatIntervalRef = useRef<number | null>(null);
 
   const [title, setTitle] = useState("");
@@ -35,136 +41,116 @@ const GoLive = () => {
   const [cameraOn, setCameraOn] = useState(true);
   const [micOn, setMicOn] = useState(true);
   const [viewerCount, setViewerCount] = useState(0);
-  const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
   const [saving, setSaving] = useState(false);
   const [setupPhase, setSetupPhase] = useState(true);
 
-  // Start camera preview
+  // Start camera preview (before going live)
   const startPreview = useCallback(async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-      streamRef.current = stream;
+      localStreamRef.current = stream;
       if (videoRef.current) videoRef.current.srcObject = stream;
-    } catch (err) {
+    } catch {
       toast({ title: "Camera access denied", description: "Please allow camera and microphone access.", variant: "destructive" });
     }
   }, []);
 
   useEffect(() => {
     startPreview();
-
-    // Cleanup on unmount: end stream in DB if still live
     return () => {
-      streamRef.current?.getTracks().forEach((t) => t.stop());
-      if (heartbeatIntervalRef.current) {
-        window.clearInterval(heartbeatIntervalRef.current);
-        heartbeatIntervalRef.current = null;
-      }
-      if (pollIntervalRef.current) {
-        window.clearInterval(pollIntervalRef.current);
-        pollIntervalRef.current = null;
-      }
+      localStreamRef.current?.getTracks().forEach((t) => t.stop());
+      if (heartbeatIntervalRef.current) window.clearInterval(heartbeatIntervalRef.current);
     };
   }, [startPreview]);
 
-  // Keep stream alive while broadcaster is connected
+  // Keep stream alive in DB
   const startHeartbeat = useCallback((sid: string) => {
-    if (heartbeatIntervalRef.current) {
-      window.clearInterval(heartbeatIntervalRef.current);
-    }
-
+    if (heartbeatIntervalRef.current) window.clearInterval(heartbeatIntervalRef.current);
     const heartbeat = async () => {
       await (supabase.from("live_streams") as any)
         .update({ status: "live" })
         .eq("id", sid)
         .eq("merchant_id", user?.id);
     };
-
     heartbeat();
     heartbeatIntervalRef.current = window.setInterval(heartbeat, 15000);
   }, [user?.id]);
 
   // Toggle camera
   const toggleCamera = () => {
-    const videoTrack = streamRef.current?.getVideoTracks()[0];
-    if (videoTrack) {
-      videoTrack.enabled = !videoTrack.enabled;
-      setCameraOn(videoTrack.enabled);
+    if (roomRef.current) {
+      const localParticipant = roomRef.current.localParticipant;
+      const camTrack = localParticipant.getTrackPublication(Track.Source.Camera);
+      if (camTrack?.track) {
+        if (cameraOn) {
+          localParticipant.setCameraEnabled(false);
+        } else {
+          localParticipant.setCameraEnabled(true);
+        }
+        setCameraOn(!cameraOn);
+      }
+    } else {
+      // Pre-live preview toggle
+      const videoTrack = localStreamRef.current?.getVideoTracks()[0];
+      if (videoTrack) {
+        videoTrack.enabled = !videoTrack.enabled;
+        setCameraOn(videoTrack.enabled);
+      }
     }
   };
 
   // Toggle mic
   const toggleMic = () => {
-    const audioTrack = streamRef.current?.getAudioTracks()[0];
-    if (audioTrack) {
-      audioTrack.enabled = !audioTrack.enabled;
-      setMicOn(audioTrack.enabled);
+    if (roomRef.current) {
+      const localParticipant = roomRef.current.localParticipant;
+      if (micOn) {
+        localParticipant.setMicrophoneEnabled(false);
+      } else {
+        localParticipant.setMicrophoneEnabled(true);
+      }
+      setMicOn(!micOn);
+    } else {
+      const audioTrack = localStreamRef.current?.getAudioTracks()[0];
+      if (audioTrack) {
+        audioTrack.enabled = !audioTrack.enabled;
+        setMicOn(audioTrack.enabled);
+      }
     }
   };
 
-  // Ref flag: when true, onstop handler should upload the recording
-  const shouldUploadRef = useRef(false);
-  const endStreamIdRef = useRef<string | null>(null);
-  const broadcastChannelRef = useRef<any>(null);
-  const pendingJoinRequestsRef = useRef<Set<string>>(new Set());
+  // Start recording from LiveKit room's local tracks
+  const startRecordingFromRoom = useCallback((room: Room) => {
+    const localParticipant = room.localParticipant;
+    const tracks: MediaStreamTrack[] = [];
 
-  // Auto-start recording helper with MIME fallbacks
-  const autoStartRecording = useCallback(() => {
-    if (!streamRef.current) return;
+    for (const pub of localParticipant.trackPublications.values()) {
+      if (pub.track?.mediaStreamTrack) {
+        tracks.push(pub.track.mediaStreamTrack);
+      }
+    }
+
+    if (tracks.length === 0) {
+      console.warn("No local tracks available for recording");
+      return;
+    }
+
+    const stream = new MediaStream(tracks);
     chunksRef.current = [];
+
     const mimeTypes = ["video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm"];
     let selectedMime = "";
     for (const mime of mimeTypes) {
       if (MediaRecorder.isTypeSupported(mime)) { selectedMime = mime; break; }
     }
-    if (!selectedMime) { console.error("No supported MIME type for MediaRecorder"); return; }
-    console.log("Recording: using MIME type:", selectedMime);
-    const mr = new MediaRecorder(streamRef.current, { mimeType: selectedMime });
+    if (!selectedMime) { console.error("No supported MIME type"); return; }
+
+    const mr = new MediaRecorder(stream, { mimeType: selectedMime });
     mr.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
-    mr.onstop = async () => {
-      const blob = new Blob(chunksRef.current, { type: "video/webm" });
-      console.log("Recording onstop: blob size:", blob.size, "shouldUpload:", shouldUploadRef.current);
-      setRecordedBlob(blob);
-
-      if (shouldUploadRef.current && blob.size > 0 && user) {
-        const sid = endStreamIdRef.current;
-        if (!sid) {
-          console.error("Recording onstop: no stream ID for upload");
-          setSaving(false);
-          return;
-        }
-        try {
-          const fileName = `${user.id}/live-recordings/${sid}-${Date.now()}.webm`;
-          console.log("Recording onstop: uploading to", fileName);
-          const { error: uploadError } = await supabase.storage
-            .from("user-media")
-            .upload(fileName, blob, { contentType: "video/webm" });
-
-          if (uploadError) {
-            console.error("Recording onstop: upload FAILED:", uploadError);
-            toast({ title: "Stream ended", description: "Recording upload failed: " + uploadError.message, variant: "destructive" });
-          } else {
-            const { data: urlData } = supabase.storage.from("user-media").getPublicUrl(fileName);
-            console.log("Recording onstop: upload success, updating stream with URL");
-            await (supabase.from("live_streams") as any).update({ recording_url: urlData.publicUrl }).eq("id", sid);
-            toast({ title: "Stream ended & recording saved!" });
-            setRecordedBlob(null);
-          }
-        } catch (e) {
-          console.error("Recording onstop: unexpected error during upload:", e);
-          toast({ title: "Stream ended", description: "Recording save error", variant: "destructive" });
-        }
-        setSaving(false);
-        shouldUploadRef.current = false;
-        // Stop camera/mic tracks after save
-        streamRef.current?.getTracks().forEach((t) => t.stop());
-        navigate("/live");
-      }
-    };
     mr.start(1000);
     mediaRecorderRef.current = mr;
     setIsRecording(true);
-  }, [user, navigate]);
+    console.log("Recording started with MIME:", selectedMime);
+  }, []);
 
   // Go Live
   const handleGoLive = async () => {
@@ -173,9 +159,16 @@ const GoLive = () => {
       return;
     }
 
+    // 1. Create stream record in DB
     const { data, error } = await (supabase
       .from("live_streams") as any)
-      .insert({ merchant_id: user.id, title: title.trim(), description: description.trim() || null, status: "live", started_at: new Date().toISOString() })
+      .insert({
+        merchant_id: user.id,
+        title: title.trim(),
+        description: description.trim() || null,
+        status: "live",
+        started_at: new Date().toISOString(),
+      })
       .select()
       .single();
 
@@ -184,286 +177,133 @@ const GoLive = () => {
       return;
     }
 
-    setStreamId(data.id);
+    const sid = data.id;
+    setStreamId(sid);
     setIsLive(true);
     setSetupPhase(false);
-    startHeartbeat(data.id);
+    startHeartbeat(sid);
 
-    // Set up Broadcast channel for WebRTC signaling FIRST (before recording)
-    const rtcChannel = supabase.channel(`rtc-${data.id}`, { config: { broadcast: { ack: true } } });
-    broadcastChannelRef.current = rtcChannel;
+    // 2. Stop preview stream
+    localStreamRef.current?.getTracks().forEach((t) => t.stop());
+    localStreamRef.current = null;
 
-    rtcChannel
-      .on("broadcast", { event: "signal" }, async ({ payload }: any) => {
-        if (!payload || payload.from === user.id) return;
-        if (payload.type !== "join-request" && payload.to && payload.to !== user.id) return;
-
-        console.log("Host: broadcast signal received:", payload.type, "from:", payload.from, "to:", payload.to);
-
-        if (payload.type === "join-request") {
-          const viewerId = payload.from;
-          if (!streamRef.current) {
-            pendingJoinRequestsRef.current.add(viewerId);
-            console.warn("Host: stream not ready, queued join request from", viewerId);
-            return;
-          }
-
-          if (!peerConnectionsRef.current.has(viewerId)) {
-            try {
-              await createPeerConnectionForViewer(viewerId, data.id);
-            } catch (e) {
-              console.error("Host: error creating peer connection for viewer", viewerId, e);
-            }
-          }
-        } else if (payload.type === "answer") {
-          const pc = peerConnectionsRef.current.get(payload.from);
-          if (pc) {
-            try {
-              await pc.setRemoteDescription(new RTCSessionDescription(payload.data));
-              viewerRemoteDescSetRef.current.set(payload.from, true);
-              console.log("Host: set remote description from viewer answer, flushing ICE queue");
-              // Flush queued ICE candidates from this viewer
-              const queue = viewerIceQueuesRef.current.get(payload.from) || [];
-              for (const candidate of queue) {
-                try {
-                  await pc.addIceCandidate(new RTCIceCandidate(candidate));
-                } catch (e) {
-                  console.warn("Host: error adding queued ICE candidate", e);
-                }
-              }
-              viewerIceQueuesRef.current.set(payload.from, []);
-            } catch (e) {
-              console.error("Host: error setting remote description", e);
-            }
-          }
-        } else if (payload.type === "ice-candidate") {
-          const pc = peerConnectionsRef.current.get(payload.from);
-          if (pc && payload.data) {
-            if (viewerRemoteDescSetRef.current.get(payload.from)) {
-              try {
-                await pc.addIceCandidate(new RTCIceCandidate(payload.data));
-                console.log("Host: added ICE candidate from viewer", payload.from);
-              } catch (e) {
-                console.warn("Host: error adding ICE candidate", e);
-              }
-            } else {
-              console.log("Host: queuing ICE candidate from viewer", payload.from, "(remote desc not set yet)");
-              const queue = viewerIceQueuesRef.current.get(payload.from) || [];
-              queue.push(payload.data);
-              viewerIceQueuesRef.current.set(payload.from, queue);
-            }
-          }
-        }
-      })
-      .subscribe(async (status) => {
-        console.log("Host: broadcast channel status:", status);
-        if (status === "SUBSCRIBED" && streamRef.current && pendingJoinRequestsRef.current.size > 0) {
-          const queuedViewerIds = Array.from(pendingJoinRequestsRef.current);
-          pendingJoinRequestsRef.current.clear();
-          for (const viewerId of queuedViewerIds) {
-            if (!peerConnectionsRef.current.has(viewerId)) {
-              await createPeerConnectionForViewer(viewerId, data.id);
-            }
-          }
-        }
-      });
-
-    // Auto-start recording AFTER signaling is set up (wrapped in try/catch)
+    // 3. Get LiveKit token (publisher)
     try {
-      autoStartRecording();
-    } catch (e) {
-      console.error("Host: autoStartRecording failed, stream will continue without recording:", e);
-    }
+      const { token, wsUrl } = await getToken(`stream-${sid}`, true);
 
-    // Track viewer count via realtime presence
-    const presenceChannel = supabase.channel(`presence-${data.id}`);
-    presenceChannel
-      .on("presence", { event: "sync" }, () => {
-        const state = presenceChannel.presenceState();
-        setViewerCount(Object.keys(state).length - 1); // minus broadcaster
-      })
-      .subscribe(async (status) => {
-        if (status === "SUBSCRIBED") {
-          await presenceChannel.track({ user_id: user.id, role: "broadcaster" });
-        }
+      // 4. Connect to LiveKit room
+      const room = new Room({
+        adaptiveStream: true,
+        dynacast: true,
+        videoCaptureDefaults: {
+          resolution: VideoPresets.h720.resolution,
+        },
+      });
+      roomRef.current = room;
+
+      // Track viewer count
+      room.on(RoomEvent.ParticipantConnected, () => {
+        setViewerCount(room.remoteParticipants.size);
+      });
+      room.on(RoomEvent.ParticipantDisconnected, () => {
+        setViewerCount(room.remoteParticipants.size);
       });
 
-    toast({ title: "You're live!", description: "Your stream is being recorded automatically." });
-  };
+      await room.connect(wsUrl, token);
+      console.log("LiveKit: connected to room as publisher");
 
-  // Create peer connection for a viewer
-  const createPeerConnectionForViewer = async (viewerId: string, sid: string) => {
-    console.log("Host: createPeerConnectionForViewer called for viewer:", viewerId, "stream:", sid);
-    
-    if (!streamRef.current || !user) {
-      console.error("Host: CANNOT create peer connection — streamRef.current:", !!streamRef.current, "user:", !!user);
-      return;
-    }
+      // 5. Publish camera + mic
+      await room.localParticipant.enableCameraAndMicrophone();
+      console.log("LiveKit: camera and mic published");
 
-    try {
-      const pc = new RTCPeerConnection({
-        iceServers: [
-          { urls: "stun:stun.l.google.com:19302" },
-          { urls: "stun:stun1.l.google.com:19302" },
-          { urls: "stun:stun2.l.google.com:19302" },
-        ],
-      });
-
-      peerConnectionsRef.current.set(viewerId, pc);
-      viewerIceQueuesRef.current.set(viewerId, []);
-      viewerRemoteDescSetRef.current.set(viewerId, false);
-      console.log("Host: RTCPeerConnection created for viewer:", viewerId);
-
-      // Add local tracks
-      const tracks = streamRef.current.getTracks();
-      console.log("Host: adding", tracks.length, "tracks to peer connection");
-      tracks.forEach((track) => {
-        pc.addTrack(track, streamRef.current!);
-      });
-
-      pc.onicecandidate = async (event) => {
-        if (event.candidate) {
-          console.log("Host: sending ICE candidate to viewer via broadcast");
-          const sendStatus = await broadcastChannelRef.current?.send({
-            type: "broadcast",
-            event: "signal",
-            payload: { type: "ice-candidate", from: user.id, to: viewerId, data: event.candidate.toJSON() },
-          });
-          if (sendStatus && sendStatus !== "ok") {
-            console.error("Host: failed to relay ICE candidate", sendStatus);
-          }
-        }
-      };
-
-      pc.oniceconnectionstatechange = () => {
-        console.log("Host: ICE connection state for viewer", viewerId, ":", pc.iceConnectionState);
-        if (pc.iceConnectionState === "failed") {
-          console.error("Host: ICE connection FAILED for viewer", viewerId, "- may need TURN server");
-        }
-      };
-
-      pc.onconnectionstatechange = () => {
-        console.log("Host: connection state for viewer", viewerId, ":", pc.connectionState);
-      };
-
-      pc.onsignalingstatechange = () => {
-        console.log("Host: signaling state for viewer", viewerId, ":", pc.signalingState);
-      };
-
-      // Create and send offer via broadcast
-      console.log("Host: creating offer for viewer:", viewerId);
-      const offer = await pc.createOffer();
-      console.log("Host: offer created, setting local description");
-      await pc.setLocalDescription(offer);
-      console.log("Host: local description set, sending offer via broadcast");
-      
-      const sendStatus = await broadcastChannelRef.current?.send({
-        type: "broadcast",
-        event: "signal",
-        payload: { type: "offer", from: user.id, to: viewerId, data: offer },
-      });
-      if (sendStatus && sendStatus !== "ok") {
-        console.error("Host: failed to relay offer", sendStatus);
+      // 6. Attach local video to preview
+      const camPub = room.localParticipant.getTrackPublication(Track.Source.Camera);
+      if (camPub?.track && videoRef.current) {
+        camPub.track.attach(videoRef.current);
       }
-      
-      console.log("Host: offer sent via broadcast for viewer:", viewerId);
-    } catch (e) {
-      console.error("Host: createPeerConnectionForViewer THREW for viewer:", viewerId, e);
+
+      // 7. Start recording
+      // Small delay to ensure tracks are fully published
+      setTimeout(() => {
+        if (roomRef.current) {
+          startRecordingFromRoom(roomRef.current);
+        }
+      }, 1000);
+
+      toast({ title: "You're live!", description: "Viewers can now join your stream." });
+    } catch (err: any) {
+      console.error("LiveKit connection error:", err);
+      toast({ title: "Failed to start live stream", description: err.message, variant: "destructive" });
+      // Clean up DB record
+      await (supabase.from("live_streams") as any)
+        .update({ status: "ended", ended_at: new Date().toISOString() })
+        .eq("id", sid);
+      setIsLive(false);
+      setStreamId(null);
+      startPreview();
     }
   };
 
-  // Start recording
-  const startRecording = () => {
-    if (!streamRef.current) return;
-    chunksRef.current = [];
-    const mr = new MediaRecorder(streamRef.current, { mimeType: "video/webm;codecs=vp9,opus" });
-    mr.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
-    mr.onstop = () => {
-      const blob = new Blob(chunksRef.current, { type: "video/webm" });
-      setRecordedBlob(blob);
-    };
-    mr.start(1000);
-    mediaRecorderRef.current = mr;
-    setIsRecording(true);
-    toast({ title: "Recording started" });
-  };
-
-  // Stop recording
-  const stopRecording = () => {
-    mediaRecorderRef.current?.stop();
-    setIsRecording(false);
-    toast({ title: "Recording stopped", description: "You can now save the recording." });
-  };
-
-  // Save recording
-  const saveRecording = async () => {
-    if (!recordedBlob || !user || !streamId) return;
-    setSaving(true);
-
-    const fileName = `${user.id}/live-recordings/${streamId}-${Date.now()}.webm`;
-    const { error: uploadError } = await supabase.storage
-      .from("user-media")
-      .upload(fileName, recordedBlob, { contentType: "video/webm" });
-
-    if (uploadError) {
-      console.error("Recording upload failed:", uploadError);
-      toast({ title: "Upload failed", description: uploadError.message, variant: "destructive" });
-      setSaving(false);
-      return;
-    }
-
-    const { data: urlData } = supabase.storage.from("user-media").getPublicUrl(fileName);
-
-    await (supabase.from("live_streams") as any).update({ recording_url: urlData.publicUrl }).eq("id", streamId);
-
-    toast({ title: "Recording saved!" });
-    setRecordedBlob(null);
-    setSaving(false);
-  };
-
-  // End stream - auto-save recording
+  // End stream
   const endStream = async () => {
     if (heartbeatIntervalRef.current) {
       window.clearInterval(heartbeatIntervalRef.current);
       heartbeatIntervalRef.current = null;
     }
-    if (pollIntervalRef.current) {
-      window.clearInterval(pollIntervalRef.current);
-      pollIntervalRef.current = null;
-    }
 
     const currentStreamId = streamId;
 
+    // Mark stream as ended in DB
     if (currentStreamId) {
-      await (supabase.from("live_streams") as any).update({ status: "ended", ended_at: new Date().toISOString() }).eq("id", currentStreamId);
+      await (supabase.from("live_streams") as any)
+        .update({ status: "ended", ended_at: new Date().toISOString() })
+        .eq("id", currentStreamId);
     }
 
-    // Close peer connections and broadcast channel
-    peerConnectionsRef.current.forEach((pc) => pc.close());
-    peerConnectionsRef.current.clear();
-    viewerIceQueuesRef.current.clear();
-    viewerRemoteDescSetRef.current.clear();
-    pendingJoinRequestsRef.current.clear();
-    if (broadcastChannelRef.current) {
-      supabase.removeChannel(broadcastChannelRef.current);
-      broadcastChannelRef.current = null;
+    // Disconnect from LiveKit
+    if (roomRef.current) {
+      roomRef.current.disconnect();
+      roomRef.current = null;
     }
+
     setIsLive(false);
     setStreamId(null);
 
-
-    // Stop recording and auto-save using the ref flag pattern
+    // Stop recording and auto-save
     if (isRecording && mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
       setSaving(true);
-      shouldUploadRef.current = true;
-      endStreamIdRef.current = currentStreamId;
-      console.log("endStream: stopping recorder, shouldUpload flag set, streamId:", currentStreamId);
+      mediaRecorderRef.current.onstop = async () => {
+        const blob = new Blob(chunksRef.current, { type: "video/webm" });
+        if (blob.size > 0 && user && currentStreamId) {
+          try {
+            const fileName = `${user.id}/live-recordings/${currentStreamId}-${Date.now()}.webm`;
+            const { error: uploadError } = await supabase.storage
+              .from("user-media")
+              .upload(fileName, blob, { contentType: "video/webm" });
+
+            if (uploadError) {
+              toast({ title: "Recording upload failed", description: uploadError.message, variant: "destructive" });
+            } else {
+              const { data: urlData } = supabase.storage.from("user-media").getPublicUrl(fileName);
+              await (supabase.from("live_streams") as any)
+                .update({ recording_url: urlData.publicUrl })
+                .eq("id", currentStreamId);
+              toast({ title: "Stream ended & recording saved!" });
+            }
+          } catch (e) {
+            console.error("Recording save error:", e);
+            toast({ title: "Recording save error", variant: "destructive" });
+          }
+        } else {
+          toast({ title: "Stream ended" });
+        }
+        setSaving(false);
+        navigate("/live");
+      };
       mediaRecorderRef.current.stop();
       setIsRecording(false);
-      // The onstop handler (set in autoStartRecording) will handle upload + navigation
     } else {
       toast({ title: "Stream ended" });
-      streamRef.current?.getTracks().forEach((t) => t.stop());
       navigate("/live");
     }
   };
@@ -480,7 +320,6 @@ const GoLive = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Video + Controls */}
           <div className="lg:col-span-2 space-y-4">
-            {/* Video preview */}
             <div className="relative aspect-video bg-black rounded-xl overflow-hidden">
               <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover" />
               {isLive && (
@@ -504,7 +343,6 @@ const GoLive = () => {
               )}
             </div>
 
-            {/* Controls */}
             <div className="flex flex-wrap gap-3 items-center">
               <Button variant="outline" size="sm" onClick={toggleCamera} className={!cameraOn ? "border-destructive text-destructive" : ""}>
                 {cameraOn ? <Video className="w-4 h-4 mr-1" /> : <VideoOff className="w-4 h-4 mr-1" />}
@@ -514,7 +352,6 @@ const GoLive = () => {
                 {micOn ? <Mic className="w-4 h-4 mr-1" /> : <MicOff className="w-4 h-4 mr-1" />}
                 {micOn ? "Mic" : "Muted"}
               </Button>
-
               {isLive && (
                 <Button onClick={endStream} variant="destructive" size="sm" className="ml-auto" disabled={saving}>
                   {saving ? "Saving Recording..." : "End Stream & Save"}
@@ -522,7 +359,6 @@ const GoLive = () => {
               )}
             </div>
 
-            {/* Setup phase: title + description */}
             {setupPhase && (
               <Card className="bg-card border-border">
                 <CardHeader>
@@ -546,7 +382,7 @@ const GoLive = () => {
             )}
           </div>
 
-          {/* Chat sidebar (visible when live) */}
+          {/* Chat sidebar */}
           <div className="space-y-4">
             {isLive && streamId ? (
               <>
