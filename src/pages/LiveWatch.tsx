@@ -111,23 +111,26 @@ const LiveWatch = () => {
     };
 
     // Broadcast channel for WebRTC signaling
-    const rtcChannel = supabase.channel(`rtc-${streamId}`);
+    const rtcChannel = supabase.channel(`rtc-${streamId}`, { config: { broadcast: { ack: true } } });
 
-    pc.onicecandidate = (event) => {
+    pc.onicecandidate = async (event) => {
       if (event.candidate && !cancelled) {
         console.log("Viewer: sending ICE candidate via broadcast");
-        rtcChannel.send({
+        const sendStatus = await rtcChannel.send({
           type: "broadcast",
           event: "signal",
           payload: { type: "ice-candidate", from: user.id, to: stream.merchant_id, data: event.candidate.toJSON() },
         });
+        if (sendStatus !== "ok") {
+          console.error("Viewer: failed to relay ICE candidate", sendStatus);
+        }
       }
     };
 
     const handleSignal = async (payload: any) => {
       if (cancelled) return;
       if (payload.from === user.id) return;
-      if (payload.to && payload.to !== user.id) return;
+      if (payload.type !== "join-request" && payload.to && payload.to !== user.id) return;
 
       if (payload.type === "offer" && payload.data?.sdp) {
         console.log("Viewer: received SDP offer from host via broadcast");
@@ -138,11 +141,14 @@ const LiveWatch = () => {
           const answer = await pc.createAnswer();
           await pc.setLocalDescription(answer);
           console.log("Viewer: sending SDP answer via broadcast");
-          rtcChannel.send({
+          const sendStatus = await rtcChannel.send({
             type: "broadcast",
             event: "signal",
             payload: { type: "answer", from: user.id, to: stream.merchant_id, data: answer },
           });
+          if (sendStatus !== "ok") {
+            console.error("Viewer: failed to relay SDP answer", sendStatus);
+          }
           console.log("Viewer: sent SDP answer to host");
         } catch (e) {
           console.error("Viewer: error handling offer", e);
@@ -167,33 +173,45 @@ const LiveWatch = () => {
       .subscribe((status) => {
         if (status === "SUBSCRIBED" && !cancelled) {
           console.log("Viewer: broadcast channel ready, sending join request");
-          rtcChannel.send({
-            type: "broadcast",
-            event: "signal",
-            payload: { type: "join-request", from: user.id },
-          });
+          setTimeout(async () => {
+            if (cancelled) return;
+            const sendStatus = await rtcChannel.send({
+              type: "broadcast",
+              event: "signal",
+              payload: { type: "join-request", from: user.id, to: stream.merchant_id },
+            });
+            if (sendStatus !== "ok") {
+              console.error("Viewer: failed to relay join request", sendStatus);
+            }
+          }, 1000);
 
           // Retry join request after 3s if not connected
-          setTimeout(() => {
+          setTimeout(async () => {
             if (!remoteDescriptionSet && !cancelled) {
               console.log("Viewer: retrying join request...");
-              rtcChannel.send({
+              const sendStatus = await rtcChannel.send({
                 type: "broadcast",
                 event: "signal",
-                payload: { type: "join-request", from: user.id },
+                payload: { type: "join-request", from: user.id, to: stream.merchant_id },
               });
+              if (sendStatus !== "ok") {
+                console.error("Viewer: failed to relay retry join request", sendStatus);
+              }
             }
           }, 3000);
 
           // Retry again after 7s
-          setTimeout(() => {
+          setTimeout(async () => {
             if (!remoteDescriptionSet && !cancelled) {
               console.log("Viewer: second retry join request...");
-              rtcChannel.send({
+              const sendStatus = await rtcChannel.send({
                 type: "broadcast",
                 event: "signal",
-                payload: { type: "join-request", from: user.id },
+                payload: { type: "join-request", from: user.id, to: stream.merchant_id },
               });
+              if (sendStatus !== "ok") {
+                console.error("Viewer: failed to relay second retry join request", sendStatus);
+              }
             }
           }, 7000);
         }

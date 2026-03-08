@@ -106,6 +106,7 @@ const GoLive = () => {
   const shouldUploadRef = useRef(false);
   const endStreamIdRef = useRef<string | null>(null);
   const broadcastChannelRef = useRef<any>(null);
+  const pendingJoinRequestsRef = useRef<Set<string>>(new Set());
 
   // Auto-start recording helper with MIME fallbacks
   const autoStartRecording = useCallback(() => {
@@ -189,21 +190,29 @@ const GoLive = () => {
     startHeartbeat(data.id);
 
     // Set up Broadcast channel for WebRTC signaling FIRST (before recording)
-    const rtcChannel = supabase.channel(`rtc-${data.id}`);
+    const rtcChannel = supabase.channel(`rtc-${data.id}`, { config: { broadcast: { ack: true } } });
     broadcastChannelRef.current = rtcChannel;
 
     rtcChannel
       .on("broadcast", { event: "signal" }, async ({ payload }: any) => {
         if (!payload || payload.from === user.id) return;
+        if (payload.type !== "join-request" && payload.to && payload.to !== user.id) return;
 
-        console.log("Host: broadcast signal received:", payload.type, "from:", payload.from);
+        console.log("Host: broadcast signal received:", payload.type, "from:", payload.from, "to:", payload.to);
 
         if (payload.type === "join-request") {
-          if (!peerConnectionsRef.current.has(payload.from)) {
+          const viewerId = payload.from;
+          if (!streamRef.current) {
+            pendingJoinRequestsRef.current.add(viewerId);
+            console.warn("Host: stream not ready, queued join request from", viewerId);
+            return;
+          }
+
+          if (!peerConnectionsRef.current.has(viewerId)) {
             try {
-              await createPeerConnectionForViewer(payload.from, data.id);
+              await createPeerConnectionForViewer(viewerId, data.id);
             } catch (e) {
-              console.error("Host: error creating peer connection for viewer", payload.from, e);
+              console.error("Host: error creating peer connection for viewer", viewerId, e);
             }
           }
         } else if (payload.type === "answer") {
@@ -246,8 +255,17 @@ const GoLive = () => {
           }
         }
       })
-      .subscribe((status) => {
+      .subscribe(async (status) => {
         console.log("Host: broadcast channel status:", status);
+        if (status === "SUBSCRIBED" && streamRef.current && pendingJoinRequestsRef.current.size > 0) {
+          const queuedViewerIds = Array.from(pendingJoinRequestsRef.current);
+          pendingJoinRequestsRef.current.clear();
+          for (const viewerId of queuedViewerIds) {
+            if (!peerConnectionsRef.current.has(viewerId)) {
+              await createPeerConnectionForViewer(viewerId, data.id);
+            }
+          }
+        }
       });
 
     // Auto-start recording AFTER signaling is set up (wrapped in try/catch)
@@ -306,11 +324,14 @@ const GoLive = () => {
       pc.onicecandidate = async (event) => {
         if (event.candidate) {
           console.log("Host: sending ICE candidate to viewer via broadcast");
-          broadcastChannelRef.current?.send({
+          const sendStatus = await broadcastChannelRef.current?.send({
             type: "broadcast",
             event: "signal",
             payload: { type: "ice-candidate", from: user.id, to: viewerId, data: event.candidate.toJSON() },
           });
+          if (sendStatus && sendStatus !== "ok") {
+            console.error("Host: failed to relay ICE candidate", sendStatus);
+          }
         }
       };
 
@@ -336,11 +357,14 @@ const GoLive = () => {
       await pc.setLocalDescription(offer);
       console.log("Host: local description set, sending offer via broadcast");
       
-      broadcastChannelRef.current?.send({
+      const sendStatus = await broadcastChannelRef.current?.send({
         type: "broadcast",
         event: "signal",
         payload: { type: "offer", from: user.id, to: viewerId, data: offer },
       });
+      if (sendStatus && sendStatus !== "ok") {
+        console.error("Host: failed to relay offer", sendStatus);
+      }
       
       console.log("Host: offer sent via broadcast for viewer:", viewerId);
     } catch (e) {
@@ -419,6 +443,7 @@ const GoLive = () => {
     peerConnectionsRef.current.clear();
     viewerIceQueuesRef.current.clear();
     viewerRemoteDescSetRef.current.clear();
+    pendingJoinRequestsRef.current.clear();
     if (broadcastChannelRef.current) {
       supabase.removeChannel(broadcastChannelRef.current);
       broadcastChannelRef.current = null;
