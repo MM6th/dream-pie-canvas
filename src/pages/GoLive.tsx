@@ -45,8 +45,7 @@ const GoLive = () => {
   const { getToken } = useLiveKitToken();
   const videoRef = useRef<HTMLVideoElement>(null);
   const roomRef = useRef<Room | null>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
+  const localStreamRef = useRef<MediaStream | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
   const heartbeatIntervalRef = useRef<number | null>(null);
   const streamIdRef = useRef<string | null>(null);
