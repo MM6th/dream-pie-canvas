@@ -100,20 +100,60 @@ const GoLive = () => {
     }
   };
 
+  // Ref flag: when true, onstop handler should upload the recording
+  const shouldUploadRef = useRef(false);
+  const endStreamIdRef = useRef<string | null>(null);
+
   // Auto-start recording helper
   const autoStartRecording = useCallback(() => {
     if (!streamRef.current) return;
     chunksRef.current = [];
     const mr = new MediaRecorder(streamRef.current, { mimeType: "video/webm;codecs=vp9,opus" });
     mr.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
-    mr.onstop = () => {
+    mr.onstop = async () => {
       const blob = new Blob(chunksRef.current, { type: "video/webm" });
+      console.log("Recording onstop: blob size:", blob.size, "shouldUpload:", shouldUploadRef.current);
       setRecordedBlob(blob);
+
+      if (shouldUploadRef.current && blob.size > 0 && user) {
+        const sid = endStreamIdRef.current;
+        if (!sid) {
+          console.error("Recording onstop: no stream ID for upload");
+          setSaving(false);
+          return;
+        }
+        try {
+          const fileName = `${user.id}/live-recordings/${sid}-${Date.now()}.webm`;
+          console.log("Recording onstop: uploading to", fileName);
+          const { error: uploadError } = await supabase.storage
+            .from("user-media")
+            .upload(fileName, blob, { contentType: "video/webm" });
+
+          if (uploadError) {
+            console.error("Recording onstop: upload FAILED:", uploadError);
+            toast({ title: "Stream ended", description: "Recording upload failed: " + uploadError.message, variant: "destructive" });
+          } else {
+            const { data: urlData } = supabase.storage.from("user-media").getPublicUrl(fileName);
+            console.log("Recording onstop: upload success, updating stream with URL");
+            await (supabase.from("live_streams") as any).update({ recording_url: urlData.publicUrl }).eq("id", sid);
+            toast({ title: "Stream ended & recording saved!" });
+            setRecordedBlob(null);
+          }
+        } catch (e) {
+          console.error("Recording onstop: unexpected error during upload:", e);
+          toast({ title: "Stream ended", description: "Recording save error", variant: "destructive" });
+        }
+        setSaving(false);
+        shouldUploadRef.current = false;
+        // Stop camera/mic tracks after save
+        streamRef.current?.getTracks().forEach((t) => t.stop());
+        navigate("/live");
+      }
     };
     mr.start(1000);
     mediaRecorderRef.current = mr;
     setIsRecording(true);
-  }, []);
+  }, [user, navigate]);
 
   // Go Live
   const handleGoLive = async () => {
@@ -235,45 +275,72 @@ const GoLive = () => {
 
   // Create peer connection for a viewer
   const createPeerConnectionForViewer = async (viewerId: string, sid: string) => {
-    if (!streamRef.current || !user) return;
+    console.log("Host: createPeerConnectionForViewer called for viewer:", viewerId, "stream:", sid);
+    
+    if (!streamRef.current || !user) {
+      console.error("Host: CANNOT create peer connection — streamRef.current:", !!streamRef.current, "user:", !!user);
+      return;
+    }
 
-    const pc = new RTCPeerConnection({
-      iceServers: [
-        { urls: "stun:stun.l.google.com:19302" },
-        { urls: "stun:stun1.l.google.com:19302" },
-        { urls: "stun:stun2.l.google.com:19302" },
-      ],
-    });
+    try {
+      const pc = new RTCPeerConnection({
+        iceServers: [
+          { urls: "stun:stun.l.google.com:19302" },
+          { urls: "stun:stun1.l.google.com:19302" },
+          { urls: "stun:stun2.l.google.com:19302" },
+        ],
+      });
 
-    peerConnectionsRef.current.set(viewerId, pc);
+      peerConnectionsRef.current.set(viewerId, pc);
+      console.log("Host: RTCPeerConnection created for viewer:", viewerId);
 
-    // Add local tracks
-    streamRef.current.getTracks().forEach((track) => {
-      pc.addTrack(track, streamRef.current!);
-    });
+      // Add local tracks
+      const tracks = streamRef.current.getTracks();
+      console.log("Host: adding", tracks.length, "tracks to peer connection");
+      tracks.forEach((track) => {
+        pc.addTrack(track, streamRef.current!);
+      });
 
-    pc.onicecandidate = async (event) => {
-      if (event.candidate) {
-        await (supabase.from("live_stream_signals") as any).insert({
-          stream_id: sid,
-          sender_id: user.id,
-          signal_type: "ice-candidate",
-          signal_data: event.candidate.toJSON(),
-          target_id: viewerId,
-        });
+      pc.onicecandidate = async (event) => {
+        if (event.candidate) {
+          const { error: iceError } = await (supabase.from("live_stream_signals") as any).insert({
+            stream_id: sid,
+            sender_id: user.id,
+            signal_type: "ice-candidate",
+            signal_data: event.candidate.toJSON(),
+            target_id: viewerId,
+          });
+          if (iceError) console.error("Host: failed to insert ICE candidate signal:", iceError);
+        }
+      };
+
+      pc.oniceconnectionstatechange = () => {
+        console.log("Host: ICE connection state for viewer", viewerId, ":", pc.iceConnectionState);
+      };
+
+      // Create and send offer
+      console.log("Host: creating offer for viewer:", viewerId);
+      const offer = await pc.createOffer();
+      console.log("Host: offer created, setting local description");
+      await pc.setLocalDescription(offer);
+      console.log("Host: local description set, inserting offer signal to DB");
+      
+      const { error: offerError } = await (supabase.from("live_stream_signals") as any).insert({
+        stream_id: sid,
+        sender_id: user.id,
+        signal_type: "offer",
+        signal_data: offer,
+        target_id: viewerId,
+      });
+      
+      if (offerError) {
+        console.error("Host: FAILED to insert offer signal:", offerError);
+      } else {
+        console.log("Host: offer signal inserted successfully for viewer:", viewerId);
       }
-    };
-
-    // Create and send offer
-    const offer = await pc.createOffer();
-    await pc.setLocalDescription(offer);
-    await (supabase.from("live_stream_signals") as any).insert({
-      stream_id: sid,
-      sender_id: user.id,
-      signal_type: "offer",
-      signal_data: offer,
-      target_id: viewerId,
-    });
+    } catch (e) {
+      console.error("Host: createPeerConnectionForViewer THREW for viewer:", viewerId, e);
+    }
   };
 
   // Start recording
@@ -348,42 +415,19 @@ const GoLive = () => {
     setIsLive(false);
     setStreamId(null);
 
-    const cleanup = () => {
-      // Stop camera/mic tracks AFTER recording is saved
-      streamRef.current?.getTracks().forEach((t) => t.stop());
-    };
 
-    // Stop recording and auto-save
+    // Stop recording and auto-save using the ref flag pattern
     if (isRecording && mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
       setSaving(true);
-      mediaRecorderRef.current.onstop = async () => {
-        const blob = new Blob(chunksRef.current, { type: "video/webm" });
-        console.log("Recording blob size:", blob.size);
-        if (blob.size > 0 && user && currentStreamId) {
-          const fileName = `${user.id}/live-recordings/${currentStreamId}-${Date.now()}.webm`;
-          const { error: uploadError } = await supabase.storage
-            .from("user-media")
-            .upload(fileName, blob, { contentType: "video/webm" });
-
-          if (!uploadError) {
-            const { data: urlData } = supabase.storage.from("user-media").getPublicUrl(fileName);
-            await (supabase.from("live_streams") as any).update({ recording_url: urlData.publicUrl }).eq("id", currentStreamId);
-            toast({ title: "Stream ended & recording saved!" });
-          } else {
-            toast({ title: "Stream ended", description: "Recording upload failed: " + uploadError.message, variant: "destructive" });
-          }
-        } else {
-          toast({ title: "Stream ended" });
-        }
-        setSaving(false);
-        cleanup();
-        navigate("/live");
-      };
+      shouldUploadRef.current = true;
+      endStreamIdRef.current = currentStreamId;
+      console.log("endStream: stopping recorder, shouldUpload flag set, streamId:", currentStreamId);
       mediaRecorderRef.current.stop();
       setIsRecording(false);
+      // The onstop handler (set in autoStartRecording) will handle upload + navigation
     } else {
       toast({ title: "Stream ended" });
-      cleanup();
+      streamRef.current?.getTracks().forEach((t) => t.stop());
       navigate("/live");
     }
   };
