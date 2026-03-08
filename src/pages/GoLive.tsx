@@ -305,7 +305,14 @@ const GoLive = () => {
       return;
     }
 
-    // 1. Create stream record in DB
+    // 1. Close any stale/previous live rows for this host
+    await (supabase
+      .from("live_streams") as any)
+      .update({ status: "ended", ended_at: new Date().toISOString() })
+      .eq("merchant_id", user.id)
+      .eq("status", "live");
+
+    // 2. Create stream record in DB
     const { data, error } = await (supabase
       .from("live_streams") as any)
       .insert({
