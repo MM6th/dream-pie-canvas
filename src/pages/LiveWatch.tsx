@@ -201,14 +201,17 @@ const LiveWatch = () => {
           }, 3000);
 
           // Retry again after 7s
-          setTimeout(() => {
+          setTimeout(async () => {
             if (!remoteDescriptionSet && !cancelled) {
               console.log("Viewer: second retry join request...");
-              rtcChannel.send({
+              const sendStatus = await rtcChannel.send({
                 type: "broadcast",
                 event: "signal",
-                payload: { type: "join-request", from: user.id },
+                payload: { type: "join-request", from: user.id, to: stream.merchant_id },
               });
+              if (sendStatus !== "ok") {
+                console.error("Viewer: failed to relay second retry join request", sendStatus);
+              }
             }
           }, 7000);
         }
