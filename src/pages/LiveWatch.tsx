@@ -225,6 +225,24 @@ const LiveWatch = () => {
                   </div>
                 </div>
               )}
+              {needsTapToPlay && (
+                <div className="absolute inset-0 flex items-end justify-center p-4 pointer-events-none">
+                  <Button
+                    type="button"
+                    className="pointer-events-auto"
+                    onClick={async () => {
+                      try {
+                        await videoRef.current?.play();
+                        setNeedsTapToPlay(false);
+                      } catch {
+                        toast({ title: "Tap again to start playback", variant: "destructive" });
+                      }
+                    }}
+                  >
+                    Tap to start playback
+                  </Button>
+                </div>
+              )}
               <div className="absolute top-2 sm:top-4 left-2 sm:left-4 flex gap-2">
                 <Badge className="bg-red-600 text-white border-0 animate-pulse text-xs">
                   <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-white rounded-full mr-1 sm:mr-1.5 inline-block" />

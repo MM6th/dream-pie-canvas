@@ -61,20 +61,27 @@ Deno.serve(async (req) => {
       });
     }
 
+    const isPublisher = canPublish === true;
+    const identity = isPublisher
+      ? `${userId}:host:${roomName}`
+      : `${userId}:viewer:${crypto.randomUUID().slice(0, 8)}`;
+
     // Generate access token
     const at = new AccessToken(apiKey, apiSecret, {
-      identity: userId,
+      identity,
       ttl: "6h",
+      name: claimsData.claims.email as string | undefined,
     });
 
     at.addGrant({
       roomJoin: true,
       room: roomName,
-      canPublish: canPublish === true,
+      canPublish: isPublisher,
       canSubscribe: true,
     });
 
     const jwt = await at.toJwt();
+    console.log(`LiveKit token issued: room=${roomName}, identity=${identity}, publisher=${isPublisher}`);
 
     return new Response(
       JSON.stringify({ token: jwt, wsUrl }),
