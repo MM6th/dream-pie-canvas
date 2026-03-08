@@ -94,7 +94,6 @@ const LiveWatch = () => {
       // Attach only to controlled audio element; rely on element autoplay behavior
       publication.track.detach();
       audioRef.current.muted = false;
-      audioRef.current.playsInline = true;
       audioRef.current.autoplay = true;
       publication.track.attach(audioRef.current);
     }
