@@ -125,8 +125,10 @@ const LiveWatch = () => {
             console.log("LiveKit viewer: track subscribed", track.source);
             if (videoRef.current) {
               track.attach(videoRef.current);
+              videoRef.current.muted = true;
               try {
                 await videoRef.current.play();
+                setNeedsTapToPlay(true); // Playing muted, prompt to unmute
               } catch {
                 setNeedsTapToPlay(true);
               }
