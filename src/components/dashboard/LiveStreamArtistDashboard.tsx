@@ -250,8 +250,9 @@ const LiveStreamArtistDashboard = ({
         <TVGuideModal />
       </div>
 
-      {/* Live Stream Control Center */}
       <LiveStreamControlCenter />
+      <MyRecordingsSection />
+
 
 
       <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm mb-6">
