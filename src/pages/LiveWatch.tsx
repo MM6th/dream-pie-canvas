@@ -177,17 +177,16 @@ const LiveWatch = () => {
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
       <AppNavBar />
-      <div className="max-w-6xl mx-auto px-3 sm:px-6 py-4 sm:py-6">
-        <Button variant="ghost" size="sm" onClick={() => navigate("/live")} className="mb-3">
+      <div className="max-w-6xl mx-auto px-3 sm:px-6 py-2 sm:py-6">
+        <Button variant="ghost" size="sm" onClick={() => navigate("/live")} className="mb-2">
           <ArrowLeft className="w-4 h-4 mr-1" /> Back to Live
         </Button>
 
-        {/* Mobile: stacked column layout. Desktop: side-by-side grid */}
-        <div className="flex flex-col lg:grid lg:grid-cols-3 lg:gap-6 gap-4">
+        {/* Mobile: stacked column, both visible. Desktop: side-by-side grid */}
+        <div className={`flex flex-col lg:grid lg:grid-cols-3 lg:gap-6 ${isMobile ? 'gap-2' : 'gap-4'}`}>
           {/* Video section */}
-          <div className="lg:col-span-2 space-y-3">
-            {/* On mobile, use a smaller fixed height instead of aspect-video to leave room for chat */}
-            <div className={`relative bg-black rounded-xl overflow-hidden ${isMobile ? 'h-[30vh] min-h-[180px]' : 'aspect-video'}`}>
+          <div className="lg:col-span-2 space-y-2">
+            <div className={`relative bg-black rounded-xl overflow-hidden ${isMobile ? 'h-[28vh] min-h-[160px]' : 'aspect-video'}`}>
               <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
               {!connected && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/80">
@@ -221,7 +220,7 @@ const LiveWatch = () => {
             </div>
           </div>
 
-          {/* Chat section — always visible, takes remaining space on mobile */}
+          {/* Chat section — always visible immediately */}
           <div className="w-full flex-1 min-h-0">
             {streamId && <LiveChat streamId={streamId} />}
           </div>
