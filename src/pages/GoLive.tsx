@@ -65,6 +65,18 @@ const GoLive = () => {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const reconnectAttemptedRef = useRef(false);
 
+  // Fetch host avatar
+  useEffect(() => {
+    if (!user) return;
+    (supabase.from("profiles") as any)
+      .select("avatar_url")
+      .eq("id", user.id)
+      .single()
+      .then(({ data }: any) => {
+        if (data?.avatar_url) setAvatarUrl(data.avatar_url);
+      });
+  }, [user]);
+
   // Start camera preview (before going live)
   const startPreview = useCallback(async () => {
     try {
