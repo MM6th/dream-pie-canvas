@@ -303,7 +303,7 @@ const LiveWatch = () => {
                   LIVE
                 </Badge>
                 <Badge variant="secondary" className="bg-black/60 text-white border-0 text-xs">
-                  <Eye className="w-3 h-3 mr-1" /> {viewerCount}
+                  <Eye className="w-3 h-3 mr-1" /> {connected ? Math.max(viewerCount, 1) : viewerCount}
                 </Badge>
               </div>
             </div>
