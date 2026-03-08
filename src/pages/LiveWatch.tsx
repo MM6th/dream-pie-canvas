@@ -23,16 +23,18 @@ const RETRY_DELAY_MS = 2000;
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-/** Count only viewer participants (exclude the host/publisher) */
+/** Count only unique viewer users (exclude host/publishers and duplicate reconnect sessions) */
 const countViewers = (room: Room): number => {
-  let viewers = 0;
+  const viewerUserIds = new Set<string>();
   for (const p of room.remoteParticipants.values()) {
     const hasPublishedTrack = Array.from(p.trackPublications.values()).some(
       (pub) => pub.source === Track.Source.Camera || pub.source === Track.Source.Microphone
     );
-    if (!hasPublishedTrack) viewers++;
+    if (hasPublishedTrack) continue;
+    const baseUserId = (p.identity || "").split(":")[0] || p.identity;
+    if (baseUserId) viewerUserIds.add(baseUserId);
   }
-  return viewers;
+  return viewerUserIds.size;
 };
 
 const LiveWatch = () => {
