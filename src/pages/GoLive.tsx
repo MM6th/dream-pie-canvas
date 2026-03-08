@@ -57,6 +57,53 @@ const GoLive = () => {
     }
   }, []);
 
+  // Keep stream alive in DB
+  const startHeartbeat = useCallback((sid: string) => {
+    if (heartbeatIntervalRef.current) window.clearInterval(heartbeatIntervalRef.current);
+    const heartbeat = async () => {
+      await (supabase.from("live_streams") as any)
+        .update({ status: "live" })
+        .eq("id", sid)
+        .eq("merchant_id", user?.id);
+    };
+    heartbeat();
+    heartbeatIntervalRef.current = window.setInterval(heartbeat, 15000);
+  }, [user?.id]);
+
+  // Start recording from LiveKit room's local tracks
+  const startRecordingFromRoom = useCallback((room: Room) => {
+    const localParticipant = room.localParticipant;
+    const tracks: MediaStreamTrack[] = [];
+
+    for (const pub of localParticipant.trackPublications.values()) {
+      if (pub.track?.mediaStreamTrack) {
+        tracks.push(pub.track.mediaStreamTrack);
+      }
+    }
+
+    if (tracks.length === 0) {
+      console.warn("No local tracks available for recording");
+      return;
+    }
+
+    const stream = new MediaStream(tracks);
+    chunksRef.current = [];
+
+    const mimeTypes = ["video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm"];
+    let selectedMime = "";
+    for (const mime of mimeTypes) {
+      if (MediaRecorder.isTypeSupported(mime)) { selectedMime = mime; break; }
+    }
+    if (!selectedMime) { console.error("No supported MIME type"); return; }
+
+    const mr = new MediaRecorder(stream, { mimeType: selectedMime });
+    mr.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
+    mr.start(1000);
+    mediaRecorderRef.current = mr;
+    setIsRecording(true);
+    console.log("Recording started with MIME:", selectedMime);
+  }, []);
+
   // Reconnect to an existing live stream after page refresh
   const reconnectToStream = useCallback(async (existingStream: any) => {
     setReconnecting(true);
@@ -102,7 +149,6 @@ const GoLive = () => {
         camPub.track.attach(videoRef.current);
       }
 
-      // Restart recording
       setTimeout(() => {
         if (roomRef.current) {
           startRecordingFromRoom(roomRef.current);
@@ -121,7 +167,7 @@ const GoLive = () => {
     } finally {
       setReconnecting(false);
     }
-  }, [getToken, startPreview]);
+  }, [getToken, startPreview, startHeartbeat, startRecordingFromRoom]);
 
   // On mount: check for existing active stream, otherwise show preview
   useEffect(() => {
@@ -134,7 +180,6 @@ const GoLive = () => {
       }
       reconnectAttemptedRef.current = true;
 
-      // Check if this host already has an active live stream
       const { data: activeStream } = await (supabase
         .from("live_streams") as any)
         .select("*")
@@ -162,95 +207,6 @@ const GoLive = () => {
       if (heartbeatIntervalRef.current) window.clearInterval(heartbeatIntervalRef.current);
     };
   }, [user, startPreview, reconnectToStream]);
-
-  // Keep stream alive in DB
-  const startHeartbeat = useCallback((sid: string) => {
-    if (heartbeatIntervalRef.current) window.clearInterval(heartbeatIntervalRef.current);
-    const heartbeat = async () => {
-      await (supabase.from("live_streams") as any)
-        .update({ status: "live" })
-        .eq("id", sid)
-        .eq("merchant_id", user?.id);
-    };
-    heartbeat();
-    heartbeatIntervalRef.current = window.setInterval(heartbeat, 15000);
-  }, [user?.id]);
-
-  // Toggle camera
-  const toggleCamera = () => {
-    if (roomRef.current) {
-      const localParticipant = roomRef.current.localParticipant;
-      const camTrack = localParticipant.getTrackPublication(Track.Source.Camera);
-      if (camTrack?.track) {
-        if (cameraOn) {
-          localParticipant.setCameraEnabled(false);
-        } else {
-          localParticipant.setCameraEnabled(true);
-        }
-        setCameraOn(!cameraOn);
-      }
-    } else {
-      // Pre-live preview toggle
-      const videoTrack = localStreamRef.current?.getVideoTracks()[0];
-      if (videoTrack) {
-        videoTrack.enabled = !videoTrack.enabled;
-        setCameraOn(videoTrack.enabled);
-      }
-    }
-  };
-
-  // Toggle mic
-  const toggleMic = () => {
-    if (roomRef.current) {
-      const localParticipant = roomRef.current.localParticipant;
-      if (micOn) {
-        localParticipant.setMicrophoneEnabled(false);
-      } else {
-        localParticipant.setMicrophoneEnabled(true);
-      }
-      setMicOn(!micOn);
-    } else {
-      const audioTrack = localStreamRef.current?.getAudioTracks()[0];
-      if (audioTrack) {
-        audioTrack.enabled = !audioTrack.enabled;
-        setMicOn(audioTrack.enabled);
-      }
-    }
-  };
-
-  // Start recording from LiveKit room's local tracks
-  const startRecordingFromRoom = useCallback((room: Room) => {
-    const localParticipant = room.localParticipant;
-    const tracks: MediaStreamTrack[] = [];
-
-    for (const pub of localParticipant.trackPublications.values()) {
-      if (pub.track?.mediaStreamTrack) {
-        tracks.push(pub.track.mediaStreamTrack);
-      }
-    }
-
-    if (tracks.length === 0) {
-      console.warn("No local tracks available for recording");
-      return;
-    }
-
-    const stream = new MediaStream(tracks);
-    chunksRef.current = [];
-
-    const mimeTypes = ["video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm"];
-    let selectedMime = "";
-    for (const mime of mimeTypes) {
-      if (MediaRecorder.isTypeSupported(mime)) { selectedMime = mime; break; }
-    }
-    if (!selectedMime) { console.error("No supported MIME type"); return; }
-
-    const mr = new MediaRecorder(stream, { mimeType: selectedMime });
-    mr.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
-    mr.start(1000);
-    mediaRecorderRef.current = mr;
-    setIsRecording(true);
-    console.log("Recording started with MIME:", selectedMime);
-  }, []);
 
   // Go Live
   const handleGoLive = async () => {
