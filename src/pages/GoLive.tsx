@@ -22,6 +22,7 @@ const GoLive = () => {
   const chunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
   const peerConnectionsRef = useRef<Map<string, RTCPeerConnection>>(new Map());
+  const heartbeatIntervalRef = useRef<number | null>(null);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -52,35 +53,29 @@ const GoLive = () => {
     // Cleanup on unmount: end stream in DB if still live
     return () => {
       streamRef.current?.getTracks().forEach((t) => t.stop());
-      peerConnectionsRef.current.forEach((pc) => pc.close());
+      if (heartbeatIntervalRef.current) {
+        window.clearInterval(heartbeatIntervalRef.current);
+        heartbeatIntervalRef.current = null;
+      }
     };
   }, [startPreview]);
 
-  // End stream in DB when host navigates away or closes tab
-  useEffect(() => {
-    const endStreamOnUnload = () => {
-      if (streamId && isLive) {
-        // Use sendBeacon for reliable delivery on tab close
-        const url = `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/live_streams?id=eq.${streamId}`;
-        const body = JSON.stringify({ status: "ended", ended_at: new Date().toISOString() });
-        navigator.sendBeacon?.(url, new Blob([body], { type: "application/json" })) ||
-          fetch(url, {
-            method: "PATCH",
-            headers: {
-              "Content-Type": "application/json",
-              apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-              Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-              Prefer: "return=minimal",
-            },
-            body,
-            keepalive: true,
-          });
-      }
+  // Keep stream alive while broadcaster is connected
+  const startHeartbeat = useCallback((sid: string) => {
+    if (heartbeatIntervalRef.current) {
+      window.clearInterval(heartbeatIntervalRef.current);
+    }
+
+    const heartbeat = async () => {
+      await (supabase.from("live_streams") as any)
+        .update({ status: "live" })
+        .eq("id", sid)
+        .eq("merchant_id", user?.id);
     };
 
-    window.addEventListener("beforeunload", endStreamOnUnload);
-    return () => window.removeEventListener("beforeunload", endStreamOnUnload);
-  }, [streamId, isLive]);
+    heartbeat();
+    heartbeatIntervalRef.current = window.setInterval(heartbeat, 15000);
+  }, [user?.id]);
 
   // Toggle camera
   const toggleCamera = () => {
@@ -121,6 +116,7 @@ const GoLive = () => {
     setStreamId(data.id);
     setIsLive(true);
     setSetupPhase(false);
+    startHeartbeat(data.id);
 
     // Listen for incoming WebRTC signals (viewer answers and ICE candidates)
     supabase
@@ -258,6 +254,11 @@ const GoLive = () => {
   const endStream = async () => {
     if (isRecording) stopRecording();
 
+    if (heartbeatIntervalRef.current) {
+      window.clearInterval(heartbeatIntervalRef.current);
+      heartbeatIntervalRef.current = null;
+    }
+
     if (streamId) {
       await (supabase.from("live_streams") as any).update({ status: "ended", ended_at: new Date().toISOString() }).eq("id", streamId);
     }
@@ -266,6 +267,7 @@ const GoLive = () => {
     peerConnectionsRef.current.forEach((pc) => pc.close());
     peerConnectionsRef.current.clear();
     setIsLive(false);
+    setStreamId(null);
     toast({ title: "Stream ended" });
     navigate("/live");
   };
