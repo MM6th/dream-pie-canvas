@@ -255,8 +255,17 @@ const GoLive = () => {
           }
         }
       })
-      .subscribe((status) => {
+      .subscribe(async (status) => {
         console.log("Host: broadcast channel status:", status);
+        if (status === "SUBSCRIBED" && streamRef.current && pendingJoinRequestsRef.current.size > 0) {
+          const queuedViewerIds = Array.from(pendingJoinRequestsRef.current);
+          pendingJoinRequestsRef.current.clear();
+          for (const viewerId of queuedViewerIds) {
+            if (!peerConnectionsRef.current.has(viewerId)) {
+              await createPeerConnectionForViewer(viewerId, data.id);
+            }
+          }
+        }
       });
 
     // Auto-start recording AFTER signaling is set up (wrapped in try/catch)
