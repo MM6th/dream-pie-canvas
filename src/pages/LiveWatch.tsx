@@ -188,8 +188,9 @@ const LiveWatch = () => {
         event: "INSERT",
         schema: "public",
         table: "live_stream_signals",
-        filter: `stream_id=eq.${streamId}`,
       }, (payload: any) => {
+        // Filter in JS — UUID filters in Supabase Realtime are unreliable
+        if (payload.new.stream_id !== streamId) return;
         handleSignal(payload.new);
       })
       .subscribe(async (status) => {
