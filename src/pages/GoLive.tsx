@@ -43,6 +43,8 @@ const GoLive = () => {
   const [viewerCount, setViewerCount] = useState(0);
   const [saving, setSaving] = useState(false);
   const [setupPhase, setSetupPhase] = useState(true);
+  const [reconnecting, setReconnecting] = useState(false);
+  const reconnectAttemptedRef = useRef(false);
 
   // Start camera preview (before going live)
   const startPreview = useCallback(async () => {
@@ -54,14 +56,6 @@ const GoLive = () => {
       toast({ title: "Camera access denied", description: "Please allow camera and microphone access.", variant: "destructive" });
     }
   }, []);
-
-  useEffect(() => {
-    startPreview();
-    return () => {
-      localStreamRef.current?.getTracks().forEach((t) => t.stop());
-      if (heartbeatIntervalRef.current) window.clearInterval(heartbeatIntervalRef.current);
-    };
-  }, [startPreview]);
 
   // Keep stream alive in DB
   const startHeartbeat = useCallback((sid: string) => {
@@ -75,48 +69,6 @@ const GoLive = () => {
     heartbeat();
     heartbeatIntervalRef.current = window.setInterval(heartbeat, 15000);
   }, [user?.id]);
-
-  // Toggle camera
-  const toggleCamera = () => {
-    if (roomRef.current) {
-      const localParticipant = roomRef.current.localParticipant;
-      const camTrack = localParticipant.getTrackPublication(Track.Source.Camera);
-      if (camTrack?.track) {
-        if (cameraOn) {
-          localParticipant.setCameraEnabled(false);
-        } else {
-          localParticipant.setCameraEnabled(true);
-        }
-        setCameraOn(!cameraOn);
-      }
-    } else {
-      // Pre-live preview toggle
-      const videoTrack = localStreamRef.current?.getVideoTracks()[0];
-      if (videoTrack) {
-        videoTrack.enabled = !videoTrack.enabled;
-        setCameraOn(videoTrack.enabled);
-      }
-    }
-  };
-
-  // Toggle mic
-  const toggleMic = () => {
-    if (roomRef.current) {
-      const localParticipant = roomRef.current.localParticipant;
-      if (micOn) {
-        localParticipant.setMicrophoneEnabled(false);
-      } else {
-        localParticipant.setMicrophoneEnabled(true);
-      }
-      setMicOn(!micOn);
-    } else {
-      const audioTrack = localStreamRef.current?.getAudioTracks()[0];
-      if (audioTrack) {
-        audioTrack.enabled = !audioTrack.enabled;
-        setMicOn(audioTrack.enabled);
-      }
-    }
-  };
 
   // Start recording from LiveKit room's local tracks
   const startRecordingFromRoom = useCallback((room: Room) => {
@@ -151,6 +103,151 @@ const GoLive = () => {
     setIsRecording(true);
     console.log("Recording started with MIME:", selectedMime);
   }, []);
+
+  // Reconnect to an existing live stream after page refresh
+  const reconnectToStream = useCallback(async (existingStream: any) => {
+    setReconnecting(true);
+    const sid = existingStream.id;
+    setStreamId(sid);
+    setTitle(existingStream.title || "");
+    setDescription(existingStream.description || "");
+    setIsLive(true);
+    setSetupPhase(false);
+    startHeartbeat(sid);
+
+    // Stop any preview stream
+    localStreamRef.current?.getTracks().forEach((t) => t.stop());
+    localStreamRef.current = null;
+
+    try {
+      const { token, wsUrl } = await getToken(`stream-${sid}`, true);
+
+      const room = new Room({
+        adaptiveStream: true,
+        dynacast: true,
+        videoCaptureDefaults: {
+          resolution: VideoPresets.h720.resolution,
+        },
+      });
+      roomRef.current = room;
+
+      room.on(RoomEvent.ParticipantConnected, () => {
+        setViewerCount(room.remoteParticipants.size);
+      });
+      room.on(RoomEvent.ParticipantDisconnected, () => {
+        setViewerCount(room.remoteParticipants.size);
+      });
+
+      await room.connect(wsUrl, token);
+      console.log("LiveKit: reconnected to room as publisher");
+
+      await room.localParticipant.enableCameraAndMicrophone();
+      console.log("LiveKit: camera and mic re-published");
+
+      const camPub = room.localParticipant.getTrackPublication(Track.Source.Camera);
+      if (camPub?.track && videoRef.current) {
+        camPub.track.attach(videoRef.current);
+      }
+
+      setTimeout(() => {
+        if (roomRef.current) {
+          startRecordingFromRoom(roomRef.current);
+        }
+      }, 1000);
+
+      setViewerCount(room.remoteParticipants.size);
+      toast({ title: "Reconnected to your live stream!" });
+    } catch (err: any) {
+      console.error("LiveKit reconnect error:", err);
+      toast({ title: "Failed to reconnect", description: err.message, variant: "destructive" });
+      setIsLive(false);
+      setStreamId(null);
+      setSetupPhase(true);
+      startPreview();
+    } finally {
+      setReconnecting(false);
+    }
+  }, [getToken, startPreview, startHeartbeat, startRecordingFromRoom]);
+
+  // On mount: check for existing active stream, otherwise show preview
+  useEffect(() => {
+    let cancelled = false;
+
+    const init = async () => {
+      if (!user || reconnectAttemptedRef.current) {
+        if (!reconnectAttemptedRef.current) startPreview();
+        return;
+      }
+      reconnectAttemptedRef.current = true;
+
+      const { data: activeStream } = await (supabase
+        .from("live_streams") as any)
+        .select("*")
+        .eq("merchant_id", user.id)
+        .eq("status", "live")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (cancelled) return;
+
+      if (activeStream) {
+        console.log("Found active stream, reconnecting:", activeStream.id);
+        reconnectToStream(activeStream);
+      } else {
+        startPreview();
+      }
+    };
+
+    init();
+
+    return () => {
+      cancelled = true;
+      localStreamRef.current?.getTracks().forEach((t) => t.stop());
+      if (heartbeatIntervalRef.current) window.clearInterval(heartbeatIntervalRef.current);
+    };
+  }, [user, startPreview, reconnectToStream]);
+
+  // Toggle camera
+  const toggleCamera = () => {
+    if (roomRef.current) {
+      const localParticipant = roomRef.current.localParticipant;
+      const camTrack = localParticipant.getTrackPublication(Track.Source.Camera);
+      if (camTrack?.track) {
+        if (cameraOn) {
+          localParticipant.setCameraEnabled(false);
+        } else {
+          localParticipant.setCameraEnabled(true);
+        }
+        setCameraOn(!cameraOn);
+      }
+    } else {
+      const videoTrack = localStreamRef.current?.getVideoTracks()[0];
+      if (videoTrack) {
+        videoTrack.enabled = !videoTrack.enabled;
+        setCameraOn(videoTrack.enabled);
+      }
+    }
+  };
+
+  // Toggle mic
+  const toggleMic = () => {
+    if (roomRef.current) {
+      const localParticipant = roomRef.current.localParticipant;
+      if (micOn) {
+        localParticipant.setMicrophoneEnabled(false);
+      } else {
+        localParticipant.setMicrophoneEnabled(true);
+      }
+      setMicOn(!micOn);
+    } else {
+      const audioTrack = localStreamRef.current?.getAudioTracks()[0];
+      if (audioTrack) {
+        audioTrack.enabled = !audioTrack.enabled;
+        setMicOn(audioTrack.enabled);
+      }
+    }
+  };
 
   // Go Live
   const handleGoLive = async () => {
@@ -322,6 +419,14 @@ const GoLive = () => {
           <div className="lg:col-span-2 space-y-4">
             <div className="relative aspect-video bg-black rounded-xl overflow-hidden">
               <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover" />
+              {reconnecting && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/70">
+                  <div className="text-center text-white">
+                    <Radio className="w-8 h-8 mx-auto mb-2 animate-pulse" />
+                    <p className="text-lg font-semibold">Reconnecting to stream...</p>
+                  </div>
+                </div>
+              )}
               {isLive && (
                 <div className="absolute top-4 left-4 flex gap-2">
                   <Badge className="bg-red-600 text-white border-0 animate-pulse">
