@@ -188,7 +188,7 @@ const LiveWatch = () => {
             }
           }
 
-          setViewerCount(countViewers(room));
+          setViewerCount(countRemoteViewers(room) + 1); // +1 for self
           // Success — exit retry loop
           return;
         } catch (err: any) {
