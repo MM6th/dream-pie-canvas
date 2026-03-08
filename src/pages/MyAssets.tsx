@@ -84,9 +84,9 @@ const MyAssets = () => {
   const totalUsdValue = balance * spotPrice;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 text-white">
-      <div className="max-w-6xl mx-auto p-4 md:p-8 space-y-6">
-        <AppNavBar />
+    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 text-white overflow-x-hidden">
+      <AppNavBar />
+      <div className="max-w-6xl mx-auto px-3 sm:px-6 pb-8 space-y-6">
         <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-amber-400 to-amber-600 bg-clip-text text-transparent">
           My Assets
         </h1>
