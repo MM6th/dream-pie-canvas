@@ -48,11 +48,39 @@ const GoLive = () => {
 
   useEffect(() => {
     startPreview();
+
+    // Cleanup on unmount: end stream in DB if still live
     return () => {
       streamRef.current?.getTracks().forEach((t) => t.stop());
       peerConnectionsRef.current.forEach((pc) => pc.close());
     };
   }, [startPreview]);
+
+  // End stream in DB when host navigates away or closes tab
+  useEffect(() => {
+    const endStreamOnUnload = () => {
+      if (streamId && isLive) {
+        // Use sendBeacon for reliable delivery on tab close
+        const url = `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/live_streams?id=eq.${streamId}`;
+        const body = JSON.stringify({ status: "ended", ended_at: new Date().toISOString() });
+        navigator.sendBeacon?.(url, new Blob([body], { type: "application/json" })) ||
+          fetch(url, {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+              Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+              Prefer: "return=minimal",
+            },
+            body,
+            keepalive: true,
+          });
+      }
+    };
+
+    window.addEventListener("beforeunload", endStreamOnUnload);
+    return () => window.removeEventListener("beforeunload", endStreamOnUnload);
+  }, [streamId, isLive]);
 
   // Toggle camera
   const toggleCamera = () => {
