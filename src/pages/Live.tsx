@@ -52,7 +52,7 @@ const Live = () => {
     }
 
     const nowMs = Date.now();
-    const freshnessWindowMs = 90 * 1000;
+    const freshnessWindowMs = 5 * 60 * 1000; // 5 minutes
     const latestByMerchant = new Map<string, any>();
 
     for (const row of rows) {
