@@ -420,37 +420,18 @@ const GoLive = () => {
       streamRef.current?.getTracks().forEach((t) => t.stop());
     };
 
-    // Stop recording and auto-save
+    // Stop recording and auto-save using the ref flag pattern
     if (isRecording && mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
       setSaving(true);
-      mediaRecorderRef.current.onstop = async () => {
-        const blob = new Blob(chunksRef.current, { type: "video/webm" });
-        console.log("Recording blob size:", blob.size);
-        if (blob.size > 0 && user && currentStreamId) {
-          const fileName = `${user.id}/live-recordings/${currentStreamId}-${Date.now()}.webm`;
-          const { error: uploadError } = await supabase.storage
-            .from("user-media")
-            .upload(fileName, blob, { contentType: "video/webm" });
-
-          if (!uploadError) {
-            const { data: urlData } = supabase.storage.from("user-media").getPublicUrl(fileName);
-            await (supabase.from("live_streams") as any).update({ recording_url: urlData.publicUrl }).eq("id", currentStreamId);
-            toast({ title: "Stream ended & recording saved!" });
-          } else {
-            toast({ title: "Stream ended", description: "Recording upload failed: " + uploadError.message, variant: "destructive" });
-          }
-        } else {
-          toast({ title: "Stream ended" });
-        }
-        setSaving(false);
-        cleanup();
-        navigate("/live");
-      };
+      shouldUploadRef.current = true;
+      endStreamIdRef.current = currentStreamId;
+      console.log("endStream: stopping recorder, shouldUpload flag set, streamId:", currentStreamId);
       mediaRecorderRef.current.stop();
       setIsRecording(false);
+      // The onstop handler (set in autoStartRecording) will handle upload + navigation
     } else {
       toast({ title: "Stream ended" });
-      cleanup();
+      streamRef.current?.getTracks().forEach((t) => t.stop());
       navigate("/live");
     }
   };

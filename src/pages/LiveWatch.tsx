@@ -235,25 +235,61 @@ const LiveWatch = () => {
         }
       });
 
-    // Listen for stream ending
+    // Listen for stream ending — NO UUID filter (unreliable), filter in JS
     const streamChannel = supabase
       .channel(`stream-status-${streamId}`)
       .on("postgres_changes", {
         event: "UPDATE",
         schema: "public",
         table: "live_streams",
-        filter: `id=eq.${streamId}`,
       }, (payload: any) => {
-        if (payload.new.status === "ended") {
+        if (payload.new.id === streamId && payload.new.status === "ended") {
           toast({ title: "Stream ended", description: "The broadcaster has ended the stream." });
           navigate("/live");
         }
       })
       .subscribe();
 
+    // Polling fallback: check stream status every 5 seconds
+    const statusPollInterval = window.setInterval(async () => {
+      if (cancelled) return;
+      const { data: streamData } = await (supabase
+        .from("live_streams") as any)
+        .select("status")
+        .eq("id", streamId)
+        .maybeSingle();
+
+      if (streamData?.status === "ended") {
+        console.log("Viewer: stream ended detected via polling");
+        toast({ title: "Stream ended", description: "The broadcaster has ended the stream." });
+        navigate("/live");
+      }
+    }, 5000);
+
+    // Viewer-side polling for offer/ice-candidate signals (fallback for Realtime)
+    const offerPollInterval = window.setInterval(async () => {
+      if (cancelled || remoteDescriptionSet) return;
+      const { data: signals } = await (supabase
+        .from("live_stream_signals") as any)
+        .select("*")
+        .eq("stream_id", streamId)
+        .neq("sender_id", user.id)
+        .in("signal_type", ["offer", "ice-candidate"])
+        .order("created_at", { ascending: true });
+
+      if (signals) {
+        for (const signal of signals) {
+          if (signal.target_id && signal.target_id !== user.id) continue;
+          await handleSignal(signal);
+        }
+      }
+    }, 3000);
+
     return () => {
       cancelled = true;
       pc.close();
+      window.clearInterval(statusPollInterval);
+      window.clearInterval(offerPollInterval);
       supabase.removeChannel(channel);
       supabase.removeChannel(presenceChannel);
       supabase.removeChannel(streamChannel);
