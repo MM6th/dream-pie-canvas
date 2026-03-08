@@ -16,8 +16,6 @@ import LiveTipDisplay from "@/components/live/LiveTipDisplay";
 import {
   Room,
   RoomEvent,
-  LocalParticipant,
-  createLocalTracks,
   Track,
   VideoPresets,
 } from "livekit-client";
@@ -45,8 +43,6 @@ const GoLive = () => {
   const { getToken } = useLiveKitToken();
   const videoRef = useRef<HTMLVideoElement>(null);
   const roomRef = useRef<Room | null>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
   const localStreamRef = useRef<MediaStream | null>(null);
   const heartbeatIntervalRef = useRef<number | null>(null);
   const streamIdRef = useRef<string | null>(null);
@@ -55,11 +51,9 @@ const GoLive = () => {
   const [description, setDescription] = useState("");
   const [streamId, setStreamId] = useState<string | null>(null);
   const [isLive, setIsLive] = useState(false);
-  const [isRecording, setIsRecording] = useState(false);
   const [cameraOn, setCameraOn] = useState(true);
   const [micOn, setMicOn] = useState(true);
   const [viewerCount, setViewerCount] = useState(0);
-  const [saving, setSaving] = useState(false);
   const [setupPhase, setSetupPhase] = useState(true);
   const [reconnecting, setReconnecting] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -106,38 +100,8 @@ const GoLive = () => {
   }, [user?.id]);
 
   // Start recording from LiveKit room's local tracks
-  const startRecordingFromRoom = useCallback((room: Room) => {
-    const localParticipant = room.localParticipant;
-    const tracks: MediaStreamTrack[] = [];
 
-    for (const pub of localParticipant.trackPublications.values()) {
-      if (pub.track?.mediaStreamTrack) {
-        tracks.push(pub.track.mediaStreamTrack);
-      }
-    }
 
-    if (tracks.length === 0) {
-      console.warn("No local tracks available for recording");
-      return;
-    }
-
-    const stream = new MediaStream(tracks);
-    chunksRef.current = [];
-
-    const mimeTypes = ["video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm"];
-    let selectedMime = "";
-    for (const mime of mimeTypes) {
-      if (MediaRecorder.isTypeSupported(mime)) { selectedMime = mime; break; }
-    }
-    if (!selectedMime) { console.error("No supported MIME type"); return; }
-
-    const mr = new MediaRecorder(stream, { mimeType: selectedMime });
-    mr.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
-    mr.start(1000);
-    mediaRecorderRef.current = mr;
-    setIsRecording(true);
-    console.log("Recording started with MIME:", selectedMime);
-  }, []);
 
   // Reconnect to an existing live stream after page refresh
   const reconnectToStream = useCallback(async (existingStream: any) => {
@@ -184,11 +148,8 @@ const GoLive = () => {
         camPub.track.attach(videoRef.current);
       }
 
-      setTimeout(() => {
-        if (roomRef.current) {
-          startRecordingFromRoom(roomRef.current);
-        }
-      }, 1000);
+
+
 
       setViewerCount(countViewers(room));
       toast({ title: "Reconnected to your live stream!" });
@@ -202,7 +163,7 @@ const GoLive = () => {
     } finally {
       setReconnecting(false);
     }
-  }, [getToken, startPreview, startHeartbeat, startRecordingFromRoom]);
+  }, [getToken, startPreview, startHeartbeat]);
 
   // On mount: check for existing active stream, otherwise show preview
   useEffect(() => {
@@ -413,13 +374,8 @@ const GoLive = () => {
         camPub.track.attach(videoRef.current);
       }
 
-      // 7. Start recording
-      // Small delay to ensure tracks are fully published
-      setTimeout(() => {
-        if (roomRef.current) {
-          startRecordingFromRoom(roomRef.current);
-        }
-      }, 1000);
+
+
 
       toast({ title: "You're live!", description: "Viewers can now join your stream." });
     } catch (err: any) {
@@ -460,43 +416,8 @@ const GoLive = () => {
     setIsLive(false);
     setStreamId(null);
 
-    // Stop recording and auto-save
-    if (isRecording && mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
-      setSaving(true);
-      mediaRecorderRef.current.onstop = async () => {
-        const blob = new Blob(chunksRef.current, { type: "video/webm" });
-        if (blob.size > 0 && user && currentStreamId) {
-          try {
-            const fileName = `${user.id}/live-recordings/${currentStreamId}-${Date.now()}.webm`;
-            const { error: uploadError } = await supabase.storage
-              .from("user-media")
-              .upload(fileName, blob, { contentType: "video/webm" });
-
-            if (uploadError) {
-              toast({ title: "Recording upload failed", description: uploadError.message, variant: "destructive" });
-            } else {
-              const { data: urlData } = supabase.storage.from("user-media").getPublicUrl(fileName);
-              await (supabase.from("live_streams") as any)
-                .update({ recording_url: urlData.publicUrl })
-                .eq("id", currentStreamId);
-              toast({ title: "Stream ended & recording saved!" });
-            }
-          } catch (e) {
-            console.error("Recording save error:", e);
-            toast({ title: "Recording save error", variant: "destructive" });
-          }
-        } else {
-          toast({ title: "Stream ended" });
-        }
-        setSaving(false);
-        navigate("/live");
-      };
-      mediaRecorderRef.current.stop();
-      setIsRecording(false);
-    } else {
-      toast({ title: "Stream ended" });
-      navigate("/live");
-    }
+    toast({ title: "Stream ended" });
+    navigate("/live");
   };
 
   if (!user) {
@@ -543,14 +464,8 @@ const GoLive = () => {
                   </Badge>
                 </div>
               )}
-              {isRecording && (
-                <div className="absolute top-4 right-4">
-                  <Badge className="bg-red-800 text-white border-0 animate-pulse">
-                    <span className="w-2 h-2 bg-red-400 rounded-full mr-1.5 inline-block" />
-                    REC
-                  </Badge>
-                </div>
-              )}
+
+
             </div>
 
             <div className="flex flex-wrap gap-3 items-center">
@@ -563,8 +478,8 @@ const GoLive = () => {
                 {micOn ? "Mic" : "Muted"}
               </Button>
               {isLive && (
-                <Button onClick={endStream} variant="destructive" size="sm" className="ml-auto" disabled={saving}>
-                  {saving ? "Saving Recording..." : "End Stream & Save"}
+                <Button onClick={endStream} variant="destructive" size="sm" className="ml-auto">
+                  End Stream
                 </Button>
               )}
             </div>

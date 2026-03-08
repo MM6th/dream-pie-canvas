@@ -28,7 +28,7 @@ import TVGuideModal from "@/components/TVGuideModal";
 import { LivestreamSettingsCard } from "@/components/messaging/LivestreamSettingsCard";
 import { MessageSettingsCard } from "@/components/messaging/MessageSettingsCard";
 import { LiveStreamControlCenter } from "@/components/LiveStreamControlCenter";
-import { MyRecordingsSection } from "@/components/MyRecordingsSection";
+
 import UserTicketsTab from "@/components/support/UserTicketsTab";
 import { useApprovalStatus } from "@/hooks/useApprovalStatus";
 import ApprovalStatusBanner from "@/components/ApprovalStatusBanner";
@@ -251,7 +251,7 @@ const LiveStreamArtistDashboard = ({
       </div>
 
       <LiveStreamControlCenter />
-      <MyRecordingsSection />
+      
 
 
 
