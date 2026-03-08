@@ -39,7 +39,8 @@ const LiveWatch = () => {
         return;
       }
 
-      if (data.status === "ended") {
+      const isStale = !data.updated_at || (Date.now() - new Date(data.updated_at).getTime() > 60_000);
+      if (data.status === "ended" || isStale) {
         toast({ title: "This stream has ended" });
         navigate("/live");
         return;

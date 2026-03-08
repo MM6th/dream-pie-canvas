@@ -251,6 +251,11 @@ const GoLive = () => {
   const endStream = async () => {
     if (isRecording) stopRecording();
 
+    if (heartbeatIntervalRef.current) {
+      window.clearInterval(heartbeatIntervalRef.current);
+      heartbeatIntervalRef.current = null;
+    }
+
     if (streamId) {
       await (supabase.from("live_streams") as any).update({ status: "ended", ended_at: new Date().toISOString() }).eq("id", streamId);
     }
@@ -259,6 +264,7 @@ const GoLive = () => {
     peerConnectionsRef.current.forEach((pc) => pc.close());
     peerConnectionsRef.current.clear();
     setIsLive(false);
+    setStreamId(null);
     toast({ title: "Stream ended" });
     navigate("/live");
   };

@@ -64,7 +64,7 @@ const Live = () => {
   };
 
   useEffect(() => {
-    cleanupStaleStreams().then(() => fetchStreams());
+    fetchStreams();
 
     // Subscribe to live stream changes
     const channel = supabase
