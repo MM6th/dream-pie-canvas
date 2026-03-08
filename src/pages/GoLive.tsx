@@ -289,23 +289,26 @@ const GoLive = () => {
 
   // Toggle camera
   const toggleCamera = async () => {
-    if (roomRef.current) {
-      const newState = !cameraOn;
-      await roomRef.current.localParticipant.setCameraEnabled(newState);
-      setCameraOn(newState);
+    const newState = !cameraOn;
+    setCameraOn(newState);
 
-      // Re-attach local preview when re-enabling
-      if (newState) {
-        const camPub = roomRef.current.localParticipant.getTrackPublication(Track.Source.Camera);
-        if (camPub?.track && videoRef.current) {
-          camPub.track.attach(videoRef.current);
+    if (roomRef.current) {
+      try {
+        await roomRef.current.localParticipant.setCameraEnabled(newState);
+        // Re-attach local preview when re-enabling
+        if (newState) {
+          const camPub = roomRef.current.localParticipant.getTrackPublication(Track.Source.Camera);
+          if (camPub?.track && videoRef.current) {
+            camPub.track.attach(videoRef.current);
+          }
         }
+      } catch (err) {
+        console.error("Toggle camera error:", err);
       }
     } else {
       const videoTrack = localStreamRef.current?.getVideoTracks()[0];
       if (videoTrack) {
-        videoTrack.enabled = !videoTrack.enabled;
-        setCameraOn(videoTrack.enabled);
+        videoTrack.enabled = newState;
       }
     }
   };
