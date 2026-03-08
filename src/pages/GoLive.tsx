@@ -103,6 +103,7 @@ const GoLive = () => {
   // Ref flag: when true, onstop handler should upload the recording
   const shouldUploadRef = useRef(false);
   const endStreamIdRef = useRef<string | null>(null);
+  const broadcastChannelRef = useRef<any>(null);
 
   // Auto-start recording helper
   const autoStartRecording = useCallback(() => {
