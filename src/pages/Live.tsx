@@ -31,14 +31,12 @@ const Live = () => {
   const [loading, setLoading] = useState(true);
 
   const fetchStreams = async () => {
-    const heartbeatCutoff = new Date(Date.now() - 70000).toISOString();
-
     const { data, error } = await (supabase
       .from("live_streams") as any)
       .select("*")
       .eq("status", "live")
-      .gte("updated_at", heartbeatCutoff)
-      .order("started_at", { ascending: false });
+      .is("ended_at", null)
+      .order("updated_at", { ascending: false });
 
     if (error) {
       setStreams([]);
@@ -53,11 +51,25 @@ const Live = () => {
       return;
     }
 
-    // Show only the most recent live stream per host
-    const uniqueRows = rows.filter(
-      (row: any, index: number, arr: any[]) =>
-        index === arr.findIndex((candidate: any) => candidate.merchant_id === row.merchant_id)
-    );
+    const nowMs = Date.now();
+    const freshnessWindowMs = 90 * 1000;
+    const latestByMerchant = new Map<string, any>();
+
+    for (const row of rows) {
+      if (!row?.merchant_id || latestByMerchant.has(row.merchant_id)) continue;
+      const updatedAtMs = row?.updated_at ? new Date(row.updated_at).getTime() : 0;
+      if (!Number.isFinite(updatedAtMs)) continue;
+      if (nowMs - updatedAtMs > freshnessWindowMs) continue;
+      latestByMerchant.set(row.merchant_id, row);
+    }
+
+    const uniqueRows = Array.from(latestByMerchant.values());
+
+    if (uniqueRows.length === 0) {
+      setStreams([]);
+      setLoading(false);
+      return;
+    }
 
     const merchantIds = [...new Set(uniqueRows.map((s: any) => s.merchant_id))] as string[];
     const { data: profiles } = await supabase
