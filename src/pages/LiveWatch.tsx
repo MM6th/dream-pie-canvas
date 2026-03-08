@@ -282,11 +282,11 @@ const LiveWatch = () => {
                         }
                         setNeedsTapToPlay(false);
                       } catch {
-                        toast({ title: "Tap again to enable audio", variant: "destructive" });
+                        toast({ title: "Tap again to enable live audio", variant: "destructive" });
                       }
                     }}
                   >
-                    🔊 Tap to unmute
+                    🔴 LIVE video is on • Tap for audio
                   </Button>
                 </div>
               )}
