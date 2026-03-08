@@ -59,12 +59,21 @@ const LiveWatch = () => {
   useEffect(() => {
     if (!stream || !user || !streamId) return;
 
+    let cancelled = false;
+    const iceCandidateQueue: RTCIceCandidateInit[] = [];
+    let remoteDescriptionSet = false;
+
     const pc = new RTCPeerConnection({
-      iceServers: [{ urls: "stun:stun.l.google.com:19302" }, { urls: "stun:stun1.l.google.com:19302" }],
+      iceServers: [
+        { urls: "stun:stun.l.google.com:19302" },
+        { urls: "stun:stun1.l.google.com:19302" },
+        { urls: "stun:stun2.l.google.com:19302" },
+      ],
     });
     pcRef.current = pc;
 
     pc.ontrack = (event) => {
+      console.log("Viewer: ontrack fired, streams:", event.streams.length);
       if (videoRef.current && event.streams[0]) {
         videoRef.current.srcObject = event.streams[0];
         setConnected(true);
@@ -72,7 +81,7 @@ const LiveWatch = () => {
     };
 
     pc.onicecandidate = async (event) => {
-      if (event.candidate) {
+      if (event.candidate && !cancelled) {
         await (supabase.from("live_stream_signals") as any).insert({
           stream_id: streamId,
           sender_id: user.id,
@@ -83,21 +92,36 @@ const LiveWatch = () => {
       }
     };
 
-    // Listen for signals from broadcaster targeted at us
-    const channel = supabase
-      .channel(`viewer-signals-${streamId}-${user.id}`)
-      .on("postgres_changes", {
-        event: "INSERT",
-        schema: "public",
-        table: "live_stream_signals",
-        filter: `stream_id=eq.${streamId}`,
-      }, async (payload: any) => {
-        const signal = payload.new;
-        if (signal.sender_id === user.id) return;
-        if (signal.target_id && signal.target_id !== user.id) return;
+    pc.oniceconnectionstatechange = () => {
+      console.log("Viewer ICE state:", pc.iceConnectionState);
+      if (pc.iceConnectionState === "connected" || pc.iceConnectionState === "completed") {
+        setConnected(true);
+      }
+    };
 
-        if (signal.signal_type === "offer") {
+    // Process queued ICE candidates after remote description is set
+    const flushIceCandidateQueue = async () => {
+      while (iceCandidateQueue.length > 0) {
+        const candidate = iceCandidateQueue.shift()!;
+        try {
+          await pc.addIceCandidate(new RTCIceCandidate(candidate));
+        } catch (e) {
+          console.warn("Viewer: failed to add queued ICE candidate", e);
+        }
+      }
+    };
+
+    const handleSignal = async (signal: any) => {
+      if (cancelled) return;
+      if (signal.sender_id === user.id) return;
+      if (signal.target_id && signal.target_id !== user.id) return;
+
+      if (signal.signal_type === "offer") {
+        console.log("Viewer: received SDP offer from host");
+        try {
           await pc.setRemoteDescription(new RTCSessionDescription(signal.signal_data));
+          remoteDescriptionSet = true;
+          await flushIceCandidateQueue();
           const answer = await pc.createAnswer();
           await pc.setLocalDescription(answer);
           await (supabase.from("live_stream_signals") as any).insert({
@@ -107,24 +131,94 @@ const LiveWatch = () => {
             signal_data: answer,
             target_id: stream.merchant_id,
           });
-        } else if (signal.signal_type === "ice-candidate" && signal.signal_data) {
+          console.log("Viewer: sent SDP answer to host");
+        } catch (e) {
+          console.error("Viewer: error handling offer", e);
+        }
+      } else if (signal.signal_type === "ice-candidate" && signal.signal_data) {
+        if (remoteDescriptionSet) {
           try {
             await pc.addIceCandidate(new RTCIceCandidate(signal.signal_data));
           } catch (e) {
-            // ICE candidate error - can happen during setup
+            console.warn("Viewer: error adding ICE candidate", e);
           }
+        } else {
+          // Queue it until remote description is set
+          iceCandidateQueue.push(signal.signal_data);
         }
-      })
-      .subscribe();
+      }
+    };
 
-    // Send join signal to broadcaster (triggers offer)
-    (supabase.from("live_stream_signals") as any).insert({
-      stream_id: streamId,
-      sender_id: user.id,
-      signal_type: "offer",
-      signal_data: { type: "join-request" },
-      target_id: stream.merchant_id,
-    });
+    // Also poll for signals we might have missed via Realtime
+    const pollForSignals = async (afterTimestamp: string) => {
+      if (cancelled) return;
+      const { data } = await (supabase
+        .from("live_stream_signals") as any)
+        .select("*")
+        .eq("stream_id", streamId)
+        .neq("sender_id", user.id)
+        .gt("created_at", afterTimestamp)
+        .order("created_at", { ascending: true });
+
+      if (data) {
+        for (const signal of data) {
+          if (signal.target_id && signal.target_id !== user.id) continue;
+          await handleSignal(signal);
+        }
+      }
+    };
+
+    const sendJoinRequest = async () => {
+      console.log("Viewer: sending join request to host");
+      await (supabase.from("live_stream_signals") as any).insert({
+        stream_id: streamId,
+        sender_id: user.id,
+        signal_type: "offer",
+        signal_data: { type: "join-request" },
+        target_id: stream.merchant_id,
+      });
+    };
+
+    // Subscribe to signals, wait for confirmation, then send join request
+    const joinTimestamp = new Date().toISOString();
+    const channel = supabase
+      .channel(`viewer-signals-${streamId}-${user.id}`)
+      .on("postgres_changes", {
+        event: "INSERT",
+        schema: "public",
+        table: "live_stream_signals",
+        filter: `stream_id=eq.${streamId}`,
+      }, (payload: any) => {
+        handleSignal(payload.new);
+      })
+      .subscribe(async (status) => {
+        if (status === "SUBSCRIBED" && !cancelled) {
+          console.log("Viewer: signal subscription ready, sending join request");
+          await sendJoinRequest();
+
+          // Poll after a short delay in case we missed the host's offer
+          setTimeout(() => {
+            if (!remoteDescriptionSet && !cancelled) {
+              console.log("Viewer: polling for missed signals...");
+              pollForSignals(joinTimestamp);
+            }
+          }, 2000);
+
+          // Retry join request if still not connected after 5s
+          setTimeout(async () => {
+            if (!remoteDescriptionSet && !cancelled) {
+              console.log("Viewer: retrying join request...");
+              await sendJoinRequest();
+              // Poll again after retry
+              setTimeout(() => {
+                if (!remoteDescriptionSet && !cancelled) {
+                  pollForSignals(joinTimestamp);
+                }
+              }, 2000);
+            }
+          }, 5000);
+        }
+      });
 
     // Presence for viewer count
     const presenceChannel = supabase.channel(`presence-${streamId}`);
@@ -156,6 +250,7 @@ const LiveWatch = () => {
       .subscribe();
 
     return () => {
+      cancelled = true;
       pc.close();
       supabase.removeChannel(channel);
       supabase.removeChannel(presenceChannel);
