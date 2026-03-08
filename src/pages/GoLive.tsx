@@ -23,15 +23,19 @@ import {
 } from "livekit-client";
 
 const GoLive = () => {
-  /** Count only unique viewer users (exclude host/publishers and duplicate reconnect sessions) */
+  /** Count unique viewer users from remote participants (excludes self/host and other publishers) */
   const countViewers = (room: Room): number => {
     const viewerUserIds = new Set<string>();
+    const myIdentity = room.localParticipant?.identity || "";
+    const myBaseId = myIdentity.split(":")[0];
     for (const p of room.remoteParticipants.values()) {
       const hasPublishedTrack = Array.from(p.trackPublications.values()).some(
         (pub) => pub.source === Track.Source.Camera || pub.source === Track.Source.Microphone
       );
       if (hasPublishedTrack) continue;
       const baseUserId = (p.identity || "").split(":")[0] || p.identity;
+      // Skip if this is somehow the host's own ghost session
+      if (baseUserId === myBaseId) continue;
       if (baseUserId) viewerUserIds.add(baseUserId);
     }
     return viewerUserIds.size;
