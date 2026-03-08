@@ -193,11 +193,24 @@ const Live = () => {
                       className="w-full mt-3"
                       onClick={(e) => {
                         e.stopPropagation();
-                        navigate(`/live/${stream.id}`);
+                        if (user && stream.merchant_id === user.id) {
+                          navigate("/go-live");
+                        } else {
+                          navigate(`/live/${stream.id}`);
+                        }
                       }}
                     >
-                      <Eye className="w-4 h-4 mr-1.5" />
-                      Join Stream
+                      {user && stream.merchant_id === user.id ? (
+                        <>
+                          <Radio className="w-4 h-4 mr-1.5" />
+                          Back to Controls
+                        </>
+                      ) : (
+                        <>
+                          <Eye className="w-4 h-4 mr-1.5" />
+                          Join Stream
+                        </>
+                      )}
                     </Button>
                   </div>
                 </CardContent>
