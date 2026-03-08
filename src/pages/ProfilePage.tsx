@@ -276,10 +276,10 @@ const ProfilePage = () => {
   ].filter(link => link.url);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 overflow-x-hidden">
       {/* Header */}
       <div className="sticky top-0 z-50 bg-gray-900/95 backdrop-blur-sm border-b border-gray-700">
-        <div className="container mx-auto px-4 py-4">
+        <div className="max-w-6xl mx-auto px-3 sm:px-6 py-4">
           <Button
             onClick={() => navigate(-1)}
             variant="ghost"
@@ -291,7 +291,7 @@ const ProfilePage = () => {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="max-w-6xl mx-auto px-3 sm:px-6 py-8">
         <div className={`grid gap-8 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-3'}`}>
           {/* Profile Info Column */}
           <div className={`${isMobile ? 'w-full' : 'lg:col-span-1'} space-y-6`}>

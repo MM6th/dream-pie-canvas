@@ -11,10 +11,10 @@ const AboutAuthor = () => {
   const isMobile = useIsMobile();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black overflow-x-hidden">
       <AppNavBar />
 
-      <div className={`max-w-4xl mx-auto ${isMobile ? 'p-4' : 'p-6'}`}>
+      <div className="max-w-6xl mx-auto px-3 sm:px-6 pb-8">
         <Card className="bg-gray-800 border-gray-700">
           <CardContent className={isMobile ? 'p-4' : 'p-8'}>
             <div className="text-center mb-8">

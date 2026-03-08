@@ -231,11 +231,11 @@ const ProfilesDirectory = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 overflow-x-hidden">
       <AppNavBar />
 
       {/* Main Content */}
-      <div className="max-w-6xl mx-auto px-6">
+      <div className="max-w-6xl mx-auto px-3 sm:px-6">
         <div className="mb-8 text-center">
           <h1 className="text-4xl font-bold text-white mb-4 flex items-center justify-center gap-3">
             <Users className="w-8 h-8" />

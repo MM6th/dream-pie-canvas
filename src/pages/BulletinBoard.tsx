@@ -75,11 +75,11 @@ const BulletinBoard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800">
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800 overflow-x-hidden">
       <AppNavBar />
 
       {/* Main Content */}
-      <div className="relative z-10 w-full mx-auto p-6">
+      <div className="max-w-6xl mx-auto px-3 sm:px-6">
 
         {/* Desktop: Ad + Content + Ad Layout */}
         {isMobile ? (

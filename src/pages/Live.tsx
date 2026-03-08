@@ -114,7 +114,7 @@ const Live = () => {
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
       <AppNavBar />
-      <div className="max-w-6xl mx-auto px-4 py-6">
+      <div className="max-w-6xl mx-auto px-3 sm:px-6 py-6">
         <div className="flex items-center gap-3 mb-8">
           <Radio className="w-8 h-8 text-red-500 animate-pulse" />
           <h1 className="text-3xl font-bold">Live</h1>
