@@ -26,7 +26,7 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const LiveWatch = () => {
   const { streamId } = useParams<{ streamId: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { getToken } = useLiveKitToken();
   const isMobile = useIsMobile();
   const videoRef = useRef<HTMLVideoElement>(null);
