@@ -43,6 +43,8 @@ const GoLive = () => {
   const [viewerCount, setViewerCount] = useState(0);
   const [saving, setSaving] = useState(false);
   const [setupPhase, setSetupPhase] = useState(true);
+  const [reconnecting, setReconnecting] = useState(false);
+  const reconnectAttemptedRef = useRef(false);
 
   // Start camera preview (before going live)
   const startPreview = useCallback(async () => {
@@ -55,13 +57,111 @@ const GoLive = () => {
     }
   }, []);
 
+  // Reconnect to an existing live stream after page refresh
+  const reconnectToStream = useCallback(async (existingStream: any) => {
+    setReconnecting(true);
+    const sid = existingStream.id;
+    setStreamId(sid);
+    setTitle(existingStream.title || "");
+    setDescription(existingStream.description || "");
+    setIsLive(true);
+    setSetupPhase(false);
+    startHeartbeat(sid);
+
+    // Stop any preview stream
+    localStreamRef.current?.getTracks().forEach((t) => t.stop());
+    localStreamRef.current = null;
+
+    try {
+      const { token, wsUrl } = await getToken(`stream-${sid}`, true);
+
+      const room = new Room({
+        adaptiveStream: true,
+        dynacast: true,
+        videoCaptureDefaults: {
+          resolution: VideoPresets.h720.resolution,
+        },
+      });
+      roomRef.current = room;
+
+      room.on(RoomEvent.ParticipantConnected, () => {
+        setViewerCount(room.remoteParticipants.size);
+      });
+      room.on(RoomEvent.ParticipantDisconnected, () => {
+        setViewerCount(room.remoteParticipants.size);
+      });
+
+      await room.connect(wsUrl, token);
+      console.log("LiveKit: reconnected to room as publisher");
+
+      await room.localParticipant.enableCameraAndMicrophone();
+      console.log("LiveKit: camera and mic re-published");
+
+      const camPub = room.localParticipant.getTrackPublication(Track.Source.Camera);
+      if (camPub?.track && videoRef.current) {
+        camPub.track.attach(videoRef.current);
+      }
+
+      // Restart recording
+      setTimeout(() => {
+        if (roomRef.current) {
+          startRecordingFromRoom(roomRef.current);
+        }
+      }, 1000);
+
+      setViewerCount(room.remoteParticipants.size);
+      toast({ title: "Reconnected to your live stream!" });
+    } catch (err: any) {
+      console.error("LiveKit reconnect error:", err);
+      toast({ title: "Failed to reconnect", description: err.message, variant: "destructive" });
+      setIsLive(false);
+      setStreamId(null);
+      setSetupPhase(true);
+      startPreview();
+    } finally {
+      setReconnecting(false);
+    }
+  }, [getToken, startPreview]);
+
+  // On mount: check for existing active stream, otherwise show preview
   useEffect(() => {
-    startPreview();
+    let cancelled = false;
+
+    const init = async () => {
+      if (!user || reconnectAttemptedRef.current) {
+        if (!reconnectAttemptedRef.current) startPreview();
+        return;
+      }
+      reconnectAttemptedRef.current = true;
+
+      // Check if this host already has an active live stream
+      const { data: activeStream } = await (supabase
+        .from("live_streams") as any)
+        .select("*")
+        .eq("merchant_id", user.id)
+        .eq("status", "live")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (cancelled) return;
+
+      if (activeStream) {
+        console.log("Found active stream, reconnecting:", activeStream.id);
+        reconnectToStream(activeStream);
+      } else {
+        startPreview();
+      }
+    };
+
+    init();
+
     return () => {
+      cancelled = true;
       localStreamRef.current?.getTracks().forEach((t) => t.stop());
       if (heartbeatIntervalRef.current) window.clearInterval(heartbeatIntervalRef.current);
     };
-  }, [startPreview]);
+  }, [user, startPreview, reconnectToStream]);
 
   // Keep stream alive in DB
   const startHeartbeat = useCallback((sid: string) => {
