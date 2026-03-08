@@ -415,10 +415,6 @@ const GoLive = () => {
     setIsLive(false);
     setStreamId(null);
 
-    const cleanup = () => {
-      // Stop camera/mic tracks AFTER recording is saved
-      streamRef.current?.getTracks().forEach((t) => t.stop());
-    };
 
     // Stop recording and auto-save using the ref flag pattern
     if (isRecording && mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
