@@ -64,10 +64,15 @@ const LiveWatch = () => {
   }, [streamId, navigate]);
 
   // Attach a remote track to the video element
-  const attachTrack = (publication: RemoteTrackPublication) => {
+  const attachTrack = async (publication: RemoteTrackPublication) => {
     if (!publication.track || !videoRef.current) return;
     if (publication.source === Track.Source.Camera || publication.source === Track.Source.Microphone) {
       publication.track.attach(videoRef.current);
+      try {
+        await videoRef.current.play();
+      } catch {
+        setNeedsTapToPlay(true);
+      }
       if (publication.source === Track.Source.Camera) {
         setConnected(true);
       }
