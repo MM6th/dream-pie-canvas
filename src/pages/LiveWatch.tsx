@@ -26,7 +26,7 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const LiveWatch = () => {
   const { streamId } = useParams<{ streamId: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { getToken } = useLiveKitToken();
   const isMobile = useIsMobile();
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -86,7 +86,7 @@ const LiveWatch = () => {
 
   // Connect to LiveKit room as viewer with retry logic
   useEffect(() => {
-    if (!stream || !user || !streamId) return;
+    if (!stream || !streamId || authLoading) return;
 
     let cancelled = false;
 
@@ -220,7 +220,7 @@ const LiveWatch = () => {
       }
       supabase.removeChannel(streamChannel);
     };
-  }, [stream, user, streamId, navigate, getToken]);
+  }, [stream, user, streamId, navigate, getToken, authLoading]);
 
   if (loading) {
     return (
