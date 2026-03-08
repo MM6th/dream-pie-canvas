@@ -16,8 +16,6 @@ import LiveTipDisplay from "@/components/live/LiveTipDisplay";
 import {
   Room,
   RoomEvent,
-  LocalParticipant,
-  createLocalTracks,
   Track,
   VideoPresets,
 } from "livekit-client";
