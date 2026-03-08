@@ -22,6 +22,7 @@ const GoLive = () => {
   const chunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
   const peerConnectionsRef = useRef<Map<string, RTCPeerConnection>>(new Map());
+  const pollIntervalRef = useRef<number | null>(null);
   const heartbeatIntervalRef = useRef<number | null>(null);
 
   const [title, setTitle] = useState("");
@@ -56,6 +57,10 @@ const GoLive = () => {
       if (heartbeatIntervalRef.current) {
         window.clearInterval(heartbeatIntervalRef.current);
         heartbeatIntervalRef.current = null;
+      }
+      if (pollIntervalRef.current) {
+        window.clearInterval(pollIntervalRef.current);
+        pollIntervalRef.current = null;
       }
     };
   }, [startPreview]);
@@ -136,17 +141,18 @@ const GoLive = () => {
     // Auto-start recording
     autoStartRecording();
 
-    // Listen for incoming WebRTC signals (viewer answers and ICE candidates)
+    // Listen for incoming WebRTC signals — NO stream_id filter (UUID filters unreliable in Supabase Realtime)
     const signalChannel = supabase
       .channel(`signals-${data.id}`)
       .on("postgres_changes", {
         event: "INSERT",
         schema: "public",
         table: "live_stream_signals",
-        filter: `stream_id=eq.${data.id}`,
       }, async (payload: any) => {
         const signal = payload.new;
-        if (signal.sender_id === user.id) return; // Skip own signals
+        // Filter in JS: only process signals for THIS stream, not from self
+        if (signal.stream_id !== data.id) return;
+        if (signal.sender_id === user.id) return;
 
         console.log("Host: received signal", signal.signal_type, "from", signal.sender_id);
 
@@ -169,38 +175,47 @@ const GoLive = () => {
               console.warn("Host: error adding ICE candidate", e);
             }
           }
-        } else if (signal.signal_type === "join-request" || (signal.signal_type === "offer" && signal.signal_data?.type === "join-request")) {
-          // Viewer requesting stream - create peer connection and send offer
+        } else if (signal.signal_type === "join-request") {
           console.log("Host: viewer join request from", signal.sender_id);
           if (!peerConnectionsRef.current.has(signal.sender_id)) {
-            await createPeerConnectionForViewer(signal.sender_id, data.id);
+            try {
+              await createPeerConnectionForViewer(signal.sender_id, data.id);
+            } catch (e) {
+              console.error("Host: error creating peer connection for viewer", signal.sender_id, e);
+            }
           }
         }
       })
       .subscribe((status) => {
         console.log("Host: signal subscription status:", status);
-        if (status === "SUBSCRIBED") {
-          // Poll for any join requests that arrived before subscription was ready
-          (async () => {
-            const { data: pendingSignals } = await (supabase
-              .from("live_stream_signals") as any)
-              .select("*")
-              .eq("stream_id", data.id)
-              .in("signal_type", ["join-request", "offer"])
-              .neq("sender_id", user.id)
-              .order("created_at", { ascending: true });
-            
-            if (pendingSignals) {
-              for (const signal of pendingSignals) {
-                if (!peerConnectionsRef.current.has(signal.sender_id)) {
-                  console.log("Host: processing missed join request from", signal.sender_id);
-                  await createPeerConnectionForViewer(signal.sender_id, data.id);
-                }
-              }
-            }
-          })();
-        }
       });
+
+    // Periodic polling fallback for join requests (every 3s)
+    const processedViewers = new Set<string>();
+    const pollInterval = window.setInterval(async () => {
+      const { data: pendingSignals } = await (supabase
+        .from("live_stream_signals") as any)
+        .select("*")
+        .eq("stream_id", data.id)
+        .eq("signal_type", "join-request")
+        .neq("sender_id", user.id)
+        .order("created_at", { ascending: true });
+
+      if (pendingSignals) {
+        for (const signal of pendingSignals) {
+          if (!processedViewers.has(signal.sender_id) && !peerConnectionsRef.current.has(signal.sender_id)) {
+            console.log("Host poll: found join request from", signal.sender_id);
+            processedViewers.add(signal.sender_id);
+            try {
+              await createPeerConnectionForViewer(signal.sender_id, data.id);
+            } catch (e) {
+              console.error("Host poll: error creating peer connection", e);
+            }
+          }
+        }
+      }
+    }, 3000);
+    pollIntervalRef.current = pollInterval;
 
     // Track viewer count via realtime presence
     const presenceChannel = supabase.channel(`presence-${data.id}`);
@@ -315,6 +330,10 @@ const GoLive = () => {
     if (heartbeatIntervalRef.current) {
       window.clearInterval(heartbeatIntervalRef.current);
       heartbeatIntervalRef.current = null;
+    }
+    if (pollIntervalRef.current) {
+      window.clearInterval(pollIntervalRef.current);
+      pollIntervalRef.current = null;
     }
 
     const currentStreamId = streamId;

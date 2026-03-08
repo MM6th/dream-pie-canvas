@@ -1,45 +1,88 @@
 
 
-## Root Cause: Host Never Receives Viewer's Join Request
+## Plan: NFT Registry for Audio Products + Asset Ledger Page
 
-### Evidence from Database
-- Viewer's 2 `join-request` signals are present in `live_stream_signals`
-- **Zero** `offer`, `answer`, or `ice-candidate` signals from the host
-- This proves `createPeerConnectionForViewer` is never being called
+### Overview
+Three main deliverables: (1) make thumbnail mandatory in the audio upload modal, (2) register each audio product as an in-app NFT with SIXTH token valuation, and (3) build a dedicated "My Assets" ledger page for users to view their owned NFTs and token holdings.
 
-### Why the Host Misses Join Requests
+### To your question
+Yes -- virtually every Web3 platform has a dedicated asset/portfolio page. OpenSea has "My Collection," MetaMask has "NFTs," and exchanges like Coinbase Wallet show a full ledger. We should absolutely implement one. It will reinforce the financial literacy mission and give users a tangible view of what they own and its value in SIXTH tokens.
 
-The host has two mechanisms to detect join requests:
-1. **Realtime subscription** — listens for `INSERT` events with `filter: stream_id=eq.${data.id}`
-2. **One-time poll on SUBSCRIBED** — queries for existing join-request signals
+---
 
-Both are failing:
-- The **one-time poll** runs immediately when the host's subscription connects (before any viewer joins), finds nothing, and never runs again
-- The **Realtime listener** appears to not deliver events — likely due to Supabase Realtime's known limitations with UUID column filters in `postgres_changes`. The filter `stream_id=eq.<uuid>` may silently fail to match rows
+### 1. Make Thumbnail Mandatory in Audio Upload Modal
 
-### Fix Plan
+**File:** `src/components/AudioUploadModal.tsx`
 
-**Step 1: Remove the Realtime filter on the host side (GoLive.tsx)**
-Instead of filtering by `stream_id` in the Realtime subscription (which may not work reliably with UUIDs), subscribe to ALL inserts on `live_stream_signals` and filter in the JavaScript callback. This guarantees the host receives every signal.
+- Change the thumbnail label from "Thumbnail Image (Optional)" to "Thumbnail Image (Required) *" for all audio types (not just albums)
+- Add `required` attribute to the thumbnail input for single uploads
+- Add validation in `handleSubmit` for single uploads: if no thumbnail, show error toast and block submission
+- This ensures every audio product has artwork that can serve as its NFT visual
 
-```tsx
-// Before (unreliable):
-filter: `stream_id=eq.${data.id}`
+### 2. Database: Create `audio_nfts` Registry Table
 
-// After (reliable):
-// No filter — check stream_id in the callback
-```
+**Migration SQL:**
+- New table `audio_nfts` with columns:
+  - `id` (uuid, PK)
+  - `audio_product_id` (uuid, FK to audio_products, unique)
+  - `owner_id` (uuid, FK to profiles) -- current owner
+  - `minted_by` (uuid, FK to profiles) -- original creator
+  - `token_id` (serial, unique) -- sequential NFT token ID for display
+  - `minted_at` (timestamptz)
+  - `sixth_value_at_mint` (numeric) -- spot price when minted
+  - `metadata` (jsonb) -- title, artist, thumbnail_url snapshot
+  - `created_at`, `updated_at`
+- RLS: users can read all NFTs, only system (via trigger) can insert
+- Database trigger on `audio_products` INSERT: when `status = 'published'` and `thumbnail_url IS NOT NULL`, auto-create an `audio_nfts` record with the current SIXTH spot price
+- Also create a trigger for existing products that get a thumbnail added via UPDATE
 
-**Step 2: Add periodic polling as a fallback (GoLive.tsx)**
-Add an interval that polls for unprocessed join-request signals every 3 seconds while the stream is live. This ensures that even if Realtime drops an event, the host will still discover and connect to viewers.
+### 3. NFT Detail Modal Component
 
-**Step 3: Remove the Realtime filter on the viewer side too (LiveWatch.tsx)**
-Apply the same fix — subscribe without a `stream_id` filter and check in the callback. This ensures the viewer reliably receives the host's SDP offer.
+**New file:** `src/components/NFTDetailModal.tsx`
 
-**Step 4: Add error logging to `createPeerConnectionForViewer`**
-Wrap the function body in try/catch with `console.error` so that if the SDP offer creation or insertion fails, it's visible in the console.
+- Dialog modal showing:
+  - Large thumbnail image
+  - NFT token ID (e.g., "SIXTH-NFT #42")
+  - Title, artist name
+  - Current SIXTH value (calculated from spot price at mint vs. current spot price)
+  - Value at mint vs. current value comparison
+  - Owner info
+  - Minted date
 
-### Files to Edit
-- `src/pages/GoLive.tsx` — Remove Realtime filter, add polling interval, add error logging
-- `src/pages/LiveWatch.tsx` — Remove Realtime filter, check stream_id in callback
+### 4. Add NFT Link Under Thumbnails in Audio Players
+
+**Files:** `src/components/AudioPlayer.tsx`, `src/components/MusicPlayer.tsx`
+
+- Below the thumbnail in the track info section, add a small clickable link: "View NFT"
+- Clicking opens the `NFTDetailModal` with the current track's NFT data
+- Fetch NFT data from `audio_nfts` table by `audio_product_id`
+- Only show the link if an NFT record exists for that track
+
+### 5. "My Assets" Ledger Page
+
+**New file:** `src/pages/MyAssets.tsx`
+
+A dedicated page accessible from the dashboard with:
+- **Token Holdings Card**: SIXTH balance, current spot price, total USD value
+- **NFT Collection Table/Grid**: All audio NFTs owned by the user
+  - Thumbnail, title, artist, NFT ID, minted date
+  - Value at mint (SIXTH), current value (SIXTH), gain/loss indicator
+  - Click any row to open `NFTDetailModal`
+- **Transaction History Section**: Pull from `user_purchases` and `platform_revenue` to show buy/sell history
+
+**Route:** Add `/my-assets` route in `src/App.tsx`
+
+**Navigation:** Add a link to My Assets from the supporter/merchant dashboard (button or sidebar link)
+
+### 6. Backfill Existing Audio Products
+
+- Run a one-time migration to create `audio_nfts` records for all existing `audio_products` that have `thumbnail_url IS NOT NULL` and `status = 'published'`
+- Use the current spot price as their mint value
+
+---
+
+### Technical Notes
+- The NFT valuation uses the same bonding curve math from `useSpotPrice.tsx` -- value = (current spot price / spot price at mint) ratio applied to the original
+- No actual blockchain interaction yet -- this is the in-app NFT registry that prepares for future Web3 migration
+- The `audio_nfts` table structure mirrors what would map to an ERC-721 token when the platform transitions to on-chain
 
