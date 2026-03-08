@@ -31,10 +31,13 @@ const Live = () => {
   const [loading, setLoading] = useState(true);
 
   const fetchStreams = async () => {
+    const heartbeatCutoff = new Date(Date.now() - 70000).toISOString();
+
     const { data, error } = await (supabase
       .from("live_streams") as any)
       .select("*")
       .eq("status", "live")
+      .gte("updated_at", heartbeatCutoff)
       .order("started_at", { ascending: false });
 
     if (error) {
@@ -50,7 +53,13 @@ const Live = () => {
       return;
     }
 
-    const merchantIds = [...new Set(rows.map((s: any) => s.merchant_id))] as string[];
+    // Show only the most recent live stream per host
+    const uniqueRows = rows.filter(
+      (row: any, index: number, arr: any[]) =>
+        index === arr.findIndex((candidate: any) => candidate.merchant_id === row.merchant_id)
+    );
+
+    const merchantIds = [...new Set(uniqueRows.map((s: any) => s.merchant_id))] as string[];
     const { data: profiles } = await supabase
       .from("profiles")
       .select("id, display_name, avatar_url")
@@ -59,7 +68,7 @@ const Live = () => {
     const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
 
     setStreams(
-      rows.map((s: any) => ({
+      uniqueRows.map((s: any) => ({
         ...s,
         merchant_name: profileMap.get(s.merchant_id)?.display_name || "Streamer",
         merchant_avatar: profileMap.get(s.merchant_id)?.avatar_url,
