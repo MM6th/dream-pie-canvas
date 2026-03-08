@@ -32,6 +32,7 @@ const GoLive = () => {
   const chunksRef = useRef<Blob[]>([]);
   const localStreamRef = useRef<MediaStream | null>(null);
   const heartbeatIntervalRef = useRef<number | null>(null);
+  const streamIdRef = useRef<string | null>(null);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
