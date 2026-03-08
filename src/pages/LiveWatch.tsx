@@ -53,6 +53,7 @@ const LiveWatch = () => {
   const [viewerCount, setViewerCount] = useState(0);
   const [connected, setConnected] = useState(false);
   const [streamReady, setStreamReady] = useState(false);
+  const [muted, setMuted] = useState(false);
   const userRef = useRef(user);
   userRef.current = user;
 
