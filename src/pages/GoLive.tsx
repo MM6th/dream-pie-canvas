@@ -165,7 +165,7 @@ const GoLive = () => {
     } finally {
       setReconnecting(false);
     }
-  }, [getToken, startPreview, startHeartbeat, startRecordingFromRoom]);
+  }, [getToken, startPreview, startHeartbeat]);
 
   // On mount: check for existing active stream, otherwise show preview
   useEffect(() => {
