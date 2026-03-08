@@ -153,7 +153,7 @@ const LiveChat = ({ streamId }: LiveChatProps) => {
           </div>
         </ScrollArea>
 
-        {user && (
+        {user ? (
           <div className="flex gap-2 mt-3">
             <Input
               value={newMessage}
@@ -166,6 +166,8 @@ const LiveChat = ({ streamId }: LiveChatProps) => {
               <Send className="w-4 h-4" />
             </Button>
           </div>
+        ) : (
+          <p className="text-xs text-muted-foreground mt-3 text-center">Log in to chat</p>
         )}
       </CardContent>
     </Card>
