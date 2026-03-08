@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { LogOut, ShoppingBag, MessageSquare, User, Users, BookOpen, DollarSign, Film, Coins, ChevronDown } from "lucide-react";
+import { LogOut, ShoppingBag, MessageSquare, User, Users, BookOpen, DollarSign, Film, Coins, ChevronDown, Radio } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useNavigate } from "react-router-dom";
@@ -157,6 +157,14 @@ const DashboardHeader = ({
               >
                 <Film className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
                 Films
+              </Button>
+              <Button
+                onClick={() => navigate('/live')}
+                variant="outline"
+                className={`border-red-600/50 text-red-400 bg-transparent hover:bg-red-900/20 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
+              >
+                <Radio className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
+                Live
               </Button>
               <Button
                 onClick={() => navigate('/mint')}
