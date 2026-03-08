@@ -167,7 +167,7 @@ const GoLive = () => {
         }
       }, 1000);
 
-      setViewerCount(room.remoteParticipants.size);
+      setViewerCount(countViewers(room));
       toast({ title: "Reconnected to your live stream!" });
     } catch (err: any) {
       console.error("LiveKit reconnect error:", err);
