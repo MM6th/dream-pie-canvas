@@ -144,10 +144,10 @@ const GoLive = () => {
       roomRef.current = room;
 
       room.on(RoomEvent.ParticipantConnected, () => {
-        setViewerCount(room.remoteParticipants.size);
+        setViewerCount(countViewers(room));
       });
       room.on(RoomEvent.ParticipantDisconnected, () => {
-        setViewerCount(room.remoteParticipants.size);
+        setViewerCount(countViewers(room));
       });
 
       await room.connect(wsUrl, token);
