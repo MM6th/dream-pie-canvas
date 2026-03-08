@@ -168,7 +168,15 @@ const LiveWatch = () => {
           });
 
           room.on(RoomEvent.TrackUnsubscribed, (track) => {
+            if (track.source === Track.Source.Camera) setHostCameraOff(true);
             track.detach();
+          });
+
+          room.on(RoomEvent.TrackMuted, (publication) => {
+            if (publication.source === Track.Source.Camera) setHostCameraOff(true);
+          });
+          room.on(RoomEvent.TrackUnmuted, (publication) => {
+            if (publication.source === Track.Source.Camera) setHostCameraOff(false);
           });
 
           room.on(RoomEvent.ParticipantConnected, () => {
