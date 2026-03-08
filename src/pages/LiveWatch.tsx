@@ -118,9 +118,9 @@ const LiveWatch = () => {
     }
   };
 
-  // Connect to LiveKit room as viewer with retry logic
+  // Connect to LiveKit room as viewer — only runs once when streamReady flips to true
   useEffect(() => {
-    if (!stream || !streamId || authLoading) return;
+    if (!streamReady || !streamId || authLoading) return;
 
     let cancelled = false;
 
