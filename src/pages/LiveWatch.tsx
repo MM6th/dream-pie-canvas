@@ -173,21 +173,30 @@ const LiveWatch = () => {
       .subscribe((status) => {
         if (status === "SUBSCRIBED" && !cancelled) {
           console.log("Viewer: broadcast channel ready, sending join request");
-          rtcChannel.send({
-            type: "broadcast",
-            event: "signal",
-            payload: { type: "join-request", from: user.id },
-          });
+          setTimeout(async () => {
+            if (cancelled) return;
+            const sendStatus = await rtcChannel.send({
+              type: "broadcast",
+              event: "signal",
+              payload: { type: "join-request", from: user.id, to: stream.merchant_id },
+            });
+            if (sendStatus !== "ok") {
+              console.error("Viewer: failed to relay join request", sendStatus);
+            }
+          }, 1000);
 
           // Retry join request after 3s if not connected
-          setTimeout(() => {
+          setTimeout(async () => {
             if (!remoteDescriptionSet && !cancelled) {
               console.log("Viewer: retrying join request...");
-              rtcChannel.send({
+              const sendStatus = await rtcChannel.send({
                 type: "broadcast",
                 event: "signal",
-                payload: { type: "join-request", from: user.id },
+                payload: { type: "join-request", from: user.id, to: stream.merchant_id },
               });
+              if (sendStatus !== "ok") {
+                console.error("Viewer: failed to relay retry join request", sendStatus);
+              }
             }
           }, 3000);
 
