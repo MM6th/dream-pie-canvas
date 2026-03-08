@@ -61,6 +61,13 @@ const LiveWatch = () => {
         return;
       }
 
+      // If the current user is the host, redirect them to the Go Live controls
+      if (user && data.merchant_id === user.id) {
+        toast({ title: "Redirecting to your stream controls" });
+        navigate("/go-live", { replace: true });
+        return;
+      }
+
       setStream(data);
       setLoading(false);
     };
