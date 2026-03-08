@@ -22,6 +22,7 @@ const GoLive = () => {
   const chunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
   const peerConnectionsRef = useRef<Map<string, RTCPeerConnection>>(new Map());
+  const heartbeatIntervalRef = useRef<number | null>(null);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");

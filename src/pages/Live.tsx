@@ -31,10 +31,13 @@ const Live = () => {
   const [loading, setLoading] = useState(true);
 
   const fetchStreams = async () => {
+    const activeCutoff = new Date(Date.now() - 60_000).toISOString();
+
     const { data, error } = await (supabase
       .from("live_streams") as any)
       .select("*")
       .eq("status", "live")
+      .gte("updated_at", activeCutoff)
       .order("started_at", { ascending: false });
 
     if (!error && data) {
@@ -58,15 +61,6 @@ const Live = () => {
       );
     }
     setLoading(false);
-  };
-
-  // Auto-end stale streams (older than 12 hours) on page load
-  const cleanupStaleStreams = async () => {
-    const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString();
-    await (supabase.from("live_streams") as any)
-      .update({ status: "ended", ended_at: new Date().toISOString() })
-      .eq("status", "live")
-      .lt("started_at", twelveHoursAgo);
   };
 
   useEffect(() => {
