@@ -504,7 +504,18 @@ const GoLive = () => {
           {/* Video + Controls */}
           <div className="lg:col-span-2 space-y-4">
             <div className="relative aspect-video bg-black rounded-xl overflow-hidden">
-              <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover" />
+              <video ref={videoRef} autoPlay muted playsInline className={`w-full h-full object-cover ${!cameraOn ? 'invisible' : ''}`} />
+              {!cameraOn && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black">
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt="Host avatar" className="w-24 h-24 sm:w-32 sm:h-32 rounded-full object-cover border-2 border-muted" />
+                  ) : (
+                    <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-muted flex items-center justify-center">
+                      <VideoOff className="w-10 h-10 text-muted-foreground" />
+                    </div>
+                  )}
+                </div>
+              )}
               {reconnecting && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/70">
                   <div className="text-center text-white">
