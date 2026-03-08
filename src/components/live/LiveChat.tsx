@@ -133,19 +133,19 @@ const LiveChat = ({ streamId }: LiveChatProps) => {
         <ScrollArea className="flex-1 pr-2">
           <div className="space-y-3">
             {messages.map((msg) => (
-              <div key={msg.id} className="flex gap-2">
+              <div key={msg.id} className="flex gap-2.5">
                 {msg.avatar_url ? (
-                  <img src={msg.avatar_url} className="w-6 h-6 rounded-full object-cover flex-shrink-0 mt-0.5" alt="" />
+                  <img src={msg.avatar_url} className="w-9 h-9 rounded-full object-cover flex-shrink-0 mt-0.5" alt="" />
                 ) : (
-                  <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <span className="text-[10px] text-primary font-bold">
+                  <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-sm text-primary font-bold">
                       {(msg.display_name || "U")[0].toUpperCase()}
                     </span>
                   </div>
                 )}
                 <div className="min-w-0">
-                  <span className="text-xs font-semibold text-primary">{msg.display_name}</span>
-                  <p className="text-sm text-foreground break-words">{msg.message}</p>
+                  <span className="text-sm font-semibold text-primary">{msg.display_name}</span>
+                  <p className="text-base text-foreground break-words">{msg.message}</p>
                 </div>
               </div>
             ))}
