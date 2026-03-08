@@ -166,7 +166,6 @@ const DashboardHeader = ({
                 <Radio className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} mr-1`} />
                 Live
               </Button>
-              </Button>
               <Button
                 onClick={() => navigate('/mint')}
                 variant="outline"
