@@ -289,7 +289,7 @@ const LiveWatch = () => {
           <div className="lg:col-span-2 space-y-2">
             <div className={`relative bg-black rounded-xl overflow-hidden ${isMobile ? 'h-[25vh] min-h-[140px]' : 'aspect-video'}`}>
               <video ref={videoRef} playsInline muted autoPlay className="w-full h-full object-cover" />
-              <audio ref={audioRef} autoPlay className="hidden" />
+              <audio ref={audioRef} autoPlay muted={muted} className="hidden" />
               {!connected && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/80">
                   <div className="text-center">
