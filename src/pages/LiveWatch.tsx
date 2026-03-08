@@ -250,7 +250,7 @@ const LiveWatch = () => {
       supabase.removeChannel(streamChannel);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stream, streamId, navigate, getToken, authLoading]);
+  }, [streamReady, streamId, authLoading]);
 
   if (loading) {
     return (
