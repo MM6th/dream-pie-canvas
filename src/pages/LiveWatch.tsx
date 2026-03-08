@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useLiveKitToken } from "@/hooks/useLiveKitToken";
 import AppNavBar from "@/components/AppNavBar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,14 +11,22 @@ import { toast } from "@/hooks/use-toast";
 import LiveChat from "@/components/live/LiveChat";
 import LiveTipButton from "@/components/live/LiveTipButton";
 import { useIsMobile } from "@/hooks/use-mobile";
+import {
+  Room,
+  RoomEvent,
+  Track,
+  RemoteTrackPublication,
+  RemoteParticipant,
+} from "livekit-client";
 
 const LiveWatch = () => {
   const { streamId } = useParams<{ streamId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { getToken } = useLiveKitToken();
   const isMobile = useIsMobile();
   const videoRef = useRef<HTMLVideoElement>(null);
-  const pcRef = useRef<RTCPeerConnection | null>(null);
+  const roomRef = useRef<Room | null>(null);
 
   const [stream, setStream] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -36,7 +45,6 @@ const LiveWatch = () => {
         .single();
 
       if (error || !data) {
-        console.error("Stream fetch error:", error);
         toast({ title: "Stream not found", variant: "destructive" });
         navigate("/live");
         return;
@@ -55,182 +63,87 @@ const LiveWatch = () => {
     fetchStream();
   }, [streamId, navigate]);
 
-  // WebRTC connection to broadcaster via Supabase Broadcast
+  // Attach a remote track to the video element
+  const attachTrack = (publication: RemoteTrackPublication) => {
+    if (!publication.track || !videoRef.current) return;
+    if (publication.source === Track.Source.Camera || publication.source === Track.Source.Microphone) {
+      publication.track.attach(videoRef.current);
+      if (publication.source === Track.Source.Camera) {
+        setConnected(true);
+      }
+    }
+  };
+
+  // Connect to LiveKit room as viewer
   useEffect(() => {
     if (!stream || !user || !streamId) return;
 
     let cancelled = false;
-    const iceCandidateQueue: RTCIceCandidateInit[] = [];
-    let remoteDescriptionSet = false;
 
-    const pc = new RTCPeerConnection({
-      iceServers: [
-        { urls: "stun:stun.l.google.com:19302" },
-        { urls: "stun:stun1.l.google.com:19302" },
-        { urls: "stun:stun2.l.google.com:19302" },
-      ],
-    });
-    pcRef.current = pc;
+    const connectToRoom = async () => {
+      try {
+        const { token, wsUrl } = await getToken(`stream-${streamId}`, false);
 
-    pc.ontrack = (event) => {
-      console.log("Viewer: ontrack fired, streams:", event.streams.length);
-      if (videoRef.current && event.streams[0]) {
-        videoRef.current.srcObject = event.streams[0];
-        setConnected(true);
-      }
-    };
-
-    pc.oniceconnectionstatechange = () => {
-      console.log("Viewer ICE state:", pc.iceConnectionState);
-      if (pc.iceConnectionState === "connected" || pc.iceConnectionState === "completed") {
-        setConnected(true);
-      }
-      if (pc.iceConnectionState === "failed") {
-        console.error("Viewer: ICE connection FAILED - may need TURN server");
-      }
-    };
-
-    pc.onconnectionstatechange = () => {
-      console.log("Viewer connection state:", pc.connectionState);
-    };
-
-    pc.onsignalingstatechange = () => {
-      console.log("Viewer signaling state:", pc.signalingState);
-    };
-
-    // Flush queued ICE candidates after remote description is set
-    const flushIceCandidateQueue = async () => {
-      while (iceCandidateQueue.length > 0) {
-        const candidate = iceCandidateQueue.shift()!;
-        try {
-          await pc.addIceCandidate(new RTCIceCandidate(candidate));
-        } catch (e) {
-          console.warn("Viewer: failed to add queued ICE candidate", e);
-        }
-      }
-    };
-
-    // Broadcast channel for WebRTC signaling
-    const rtcChannel = supabase.channel(`rtc-${streamId}`, { config: { broadcast: { ack: true } } });
-
-    pc.onicecandidate = async (event) => {
-      if (event.candidate && !cancelled) {
-        console.log("Viewer: sending ICE candidate via broadcast");
-        const sendStatus = await rtcChannel.send({
-          type: "broadcast",
-          event: "signal",
-          payload: { type: "ice-candidate", from: user.id, to: stream.merchant_id, data: event.candidate.toJSON() },
+        const room = new Room({
+          adaptiveStream: true,
+          dynacast: true,
         });
-        if (sendStatus !== "ok") {
-          console.error("Viewer: failed to relay ICE candidate", sendStatus);
+        roomRef.current = room;
+
+        // When a new track is subscribed
+        room.on(RoomEvent.TrackSubscribed, (track, publication, participant) => {
+          if (cancelled) return;
+          console.log("LiveKit viewer: track subscribed", track.source);
+          if (videoRef.current) {
+            track.attach(videoRef.current);
+            if (track.source === Track.Source.Camera) {
+              setConnected(true);
+            }
+          }
+        });
+
+        room.on(RoomEvent.TrackUnsubscribed, (track) => {
+          track.detach();
+        });
+
+        // Participant count
+        room.on(RoomEvent.ParticipantConnected, () => {
+          setViewerCount(room.remoteParticipants.size);
+        });
+        room.on(RoomEvent.ParticipantDisconnected, () => {
+          setViewerCount(room.remoteParticipants.size);
+        });
+
+        room.on(RoomEvent.Disconnected, () => {
+          if (!cancelled) {
+            toast({ title: "Disconnected from stream" });
+          }
+        });
+
+        await room.connect(wsUrl, token);
+        console.log("LiveKit viewer: connected to room");
+
+        // Attach any already-published tracks from the broadcaster
+        for (const participant of room.remoteParticipants.values()) {
+          for (const pub of participant.trackPublications.values()) {
+            if (pub.isSubscribed && pub.track) {
+              attachTrack(pub as RemoteTrackPublication);
+            }
+          }
+        }
+
+        setViewerCount(room.remoteParticipants.size);
+      } catch (err: any) {
+        console.error("LiveKit viewer connection error:", err);
+        if (!cancelled) {
+          toast({ title: "Failed to connect", description: err.message, variant: "destructive" });
         }
       }
     };
 
-    const handleSignal = async (payload: any) => {
-      if (cancelled) return;
-      if (payload.from === user.id) return;
-      if (payload.type !== "join-request" && payload.to && payload.to !== user.id) return;
+    connectToRoom();
 
-      if (payload.type === "offer" && payload.data?.sdp) {
-        console.log("Viewer: received SDP offer from host via broadcast");
-        try {
-          await pc.setRemoteDescription(new RTCSessionDescription(payload.data));
-          remoteDescriptionSet = true;
-          await flushIceCandidateQueue();
-          const answer = await pc.createAnswer();
-          await pc.setLocalDescription(answer);
-          console.log("Viewer: sending SDP answer via broadcast");
-          const sendStatus = await rtcChannel.send({
-            type: "broadcast",
-            event: "signal",
-            payload: { type: "answer", from: user.id, to: stream.merchant_id, data: answer },
-          });
-          if (sendStatus !== "ok") {
-            console.error("Viewer: failed to relay SDP answer", sendStatus);
-          }
-          console.log("Viewer: sent SDP answer to host");
-        } catch (e) {
-          console.error("Viewer: error handling offer", e);
-        }
-      } else if (payload.type === "ice-candidate" && payload.data) {
-        if (remoteDescriptionSet) {
-          try {
-            await pc.addIceCandidate(new RTCIceCandidate(payload.data));
-          } catch (e) {
-            console.warn("Viewer: error adding ICE candidate", e);
-          }
-        } else {
-          iceCandidateQueue.push(payload.data);
-        }
-      }
-    };
-
-    rtcChannel
-      .on("broadcast", { event: "signal" }, ({ payload }: any) => {
-        handleSignal(payload);
-      })
-      .subscribe((status) => {
-        if (status === "SUBSCRIBED" && !cancelled) {
-          console.log("Viewer: broadcast channel ready, sending join request");
-          setTimeout(async () => {
-            if (cancelled) return;
-            const sendStatus = await rtcChannel.send({
-              type: "broadcast",
-              event: "signal",
-              payload: { type: "join-request", from: user.id, to: stream.merchant_id },
-            });
-            if (sendStatus !== "ok") {
-              console.error("Viewer: failed to relay join request", sendStatus);
-            }
-          }, 1000);
-
-          // Retry join request after 3s if not connected
-          setTimeout(async () => {
-            if (!remoteDescriptionSet && !cancelled) {
-              console.log("Viewer: retrying join request...");
-              const sendStatus = await rtcChannel.send({
-                type: "broadcast",
-                event: "signal",
-                payload: { type: "join-request", from: user.id, to: stream.merchant_id },
-              });
-              if (sendStatus !== "ok") {
-                console.error("Viewer: failed to relay retry join request", sendStatus);
-              }
-            }
-          }, 3000);
-
-          // Retry again after 7s
-          setTimeout(async () => {
-            if (!remoteDescriptionSet && !cancelled) {
-              console.log("Viewer: second retry join request...");
-              const sendStatus = await rtcChannel.send({
-                type: "broadcast",
-                event: "signal",
-                payload: { type: "join-request", from: user.id, to: stream.merchant_id },
-              });
-              if (sendStatus !== "ok") {
-                console.error("Viewer: failed to relay second retry join request", sendStatus);
-              }
-            }
-          }, 7000);
-        }
-      });
-
-    // Presence for viewer count
-    const presenceChannel = supabase.channel(`presence-${streamId}`);
-    presenceChannel
-      .on("presence", { event: "sync" }, () => {
-        const state = presenceChannel.presenceState();
-        setViewerCount(Object.keys(state).length - 1);
-      })
-      .subscribe(async (status) => {
-        if (status === "SUBSCRIBED") {
-          await presenceChannel.track({ user_id: user.id, role: "viewer" });
-        }
-      });
-
-    // Listen for stream ending via Realtime (no UUID filter, filter in JS)
+    // Listen for stream ending via DB
     const streamChannel = supabase
       .channel(`stream-status-${streamId}`)
       .on("postgres_changes", {
@@ -245,7 +158,7 @@ const LiveWatch = () => {
       })
       .subscribe();
 
-    // Polling fallback: check stream status every 5 seconds
+    // Polling fallback
     const statusPollInterval = window.setInterval(async () => {
       if (cancelled) return;
       const { data: streamData } = await (supabase
@@ -255,7 +168,6 @@ const LiveWatch = () => {
         .maybeSingle();
 
       if (streamData?.status === "ended") {
-        console.log("Viewer: stream ended detected via polling");
         toast({ title: "Stream ended", description: "The broadcaster has ended the stream." });
         navigate("/live");
       }
@@ -263,13 +175,14 @@ const LiveWatch = () => {
 
     return () => {
       cancelled = true;
-      pc.close();
       window.clearInterval(statusPollInterval);
-      supabase.removeChannel(rtcChannel);
-      supabase.removeChannel(presenceChannel);
+      if (roomRef.current) {
+        roomRef.current.disconnect();
+        roomRef.current = null;
+      }
       supabase.removeChannel(streamChannel);
     };
-  }, [stream, user, streamId, navigate]);
+  }, [stream, user, streamId, navigate, getToken]);
 
   if (loading) {
     return (
@@ -290,9 +203,7 @@ const LiveWatch = () => {
           <ArrowLeft className="w-4 h-4 mr-1" /> Back to Live
         </Button>
 
-        {/* Mobile: stacked column, both visible. Desktop: side-by-side grid */}
         <div className={`flex flex-col lg:grid lg:grid-cols-3 lg:gap-6 ${isMobile ? 'gap-2' : 'gap-4'}`}>
-          {/* Video section */}
           <div className="lg:col-span-2 space-y-2">
             <div className={`relative bg-black rounded-xl overflow-hidden ${isMobile ? 'h-[25vh] min-h-[140px]' : 'aspect-video'}`}>
               <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
@@ -328,7 +239,6 @@ const LiveWatch = () => {
             </div>
           </div>
 
-          {/* Chat section — always visible immediately */}
           <div className="w-full flex-1 min-h-0">
             {streamId && <LiveChat streamId={streamId} />}
           </div>
