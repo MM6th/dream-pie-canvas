@@ -70,7 +70,7 @@ Deno.serve(async (req) => {
     const at = new AccessToken(apiKey, apiSecret, {
       identity,
       ttl: "6h",
-      name: claimsData.claims.email as string | undefined,
+      name: userData.user.email ?? undefined,
     });
 
     at.addGrant({
