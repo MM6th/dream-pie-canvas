@@ -1777,7 +1777,6 @@ export type Database = {
           id: string
           is_paid: boolean
           merchant_id: string
-          recording_url: string | null
           started_at: string | null
           status: string
           thumbnail_url: string | null
@@ -1793,7 +1792,6 @@ export type Database = {
           id?: string
           is_paid?: boolean
           merchant_id: string
-          recording_url?: string | null
           started_at?: string | null
           status?: string
           thumbnail_url?: string | null
@@ -1809,7 +1807,6 @@ export type Database = {
           id?: string
           is_paid?: boolean
           merchant_id?: string
-          recording_url?: string | null
           started_at?: string | null
           status?: string
           thumbnail_url?: string | null
