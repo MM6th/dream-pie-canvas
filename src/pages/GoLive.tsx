@@ -288,17 +288,18 @@ const GoLive = () => {
   }, [user?.id]);
 
   // Toggle camera
-  const toggleCamera = () => {
+  const toggleCamera = async () => {
     if (roomRef.current) {
-      const localParticipant = roomRef.current.localParticipant;
-      const camTrack = localParticipant.getTrackPublication(Track.Source.Camera);
-      if (camTrack?.track) {
-        if (cameraOn) {
-          localParticipant.setCameraEnabled(false);
-        } else {
-          localParticipant.setCameraEnabled(true);
+      const newState = !cameraOn;
+      await roomRef.current.localParticipant.setCameraEnabled(newState);
+      setCameraOn(newState);
+
+      // Re-attach local preview when re-enabling
+      if (newState) {
+        const camPub = roomRef.current.localParticipant.getTrackPublication(Track.Source.Camera);
+        if (camPub?.track && videoRef.current) {
+          camPub.track.attach(videoRef.current);
         }
-        setCameraOn(!cameraOn);
       }
     } else {
       const videoTrack = localStreamRef.current?.getVideoTracks()[0];

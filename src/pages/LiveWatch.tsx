@@ -164,6 +164,7 @@ const LiveWatch = () => {
           room.on(RoomEvent.TrackSubscribed, async (track, publication) => {
             if (cancelled) return;
             console.log("LiveKit viewer: track subscribed", track.source);
+            if (track.source === Track.Source.Camera) setHostCameraOff(false);
             await attachTrack(publication as RemoteTrackPublication);
           });
 
