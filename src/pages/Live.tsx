@@ -191,6 +191,17 @@ const Live = () => {
                         Started {formatDistanceToNow(new Date(stream.started_at))} ago
                       </p>
                     )}
+                    <Button
+                      size="sm"
+                      className="w-full mt-3"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/live/${stream.id}`);
+                      }}
+                    >
+                      <Eye className="w-4 h-4 mr-1.5" />
+                      Join Stream
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
