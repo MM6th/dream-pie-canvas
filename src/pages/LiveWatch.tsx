@@ -30,6 +30,7 @@ const LiveWatch = () => {
   const { getToken } = useLiveKitToken();
   const isMobile = useIsMobile();
   const videoRef = useRef<HTMLVideoElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
   const roomRef = useRef<Room | null>(null);
 
   const [stream, setStream] = useState<any>(null);
