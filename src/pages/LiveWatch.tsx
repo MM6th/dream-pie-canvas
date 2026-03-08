@@ -167,7 +167,7 @@ const LiveWatch = () => {
     return (
       <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
         <AppNavBar />
-        <div className="max-w-7xl mx-auto px-4 py-6 text-center">
+        <div className="max-w-6xl mx-auto px-3 sm:px-6 py-6 text-center">
           <p className="text-muted-foreground">Connecting to stream...</p>
         </div>
       </div>
