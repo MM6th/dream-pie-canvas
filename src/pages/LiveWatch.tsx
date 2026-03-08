@@ -76,17 +76,21 @@ const LiveWatch = () => {
     fetchStream();
   }, [streamId, navigate]);
 
-  // Attach remote tracks separately: camera -> video, microphone -> audio
+  // Attach remote tracks separately: camera -> video, microphone -> hidden audio
   const attachTrack = async (publication: RemoteTrackPublication) => {
     if (!publication.track) return;
 
     if (publication.source === Track.Source.Camera && videoRef.current) {
-      publication.track.attach(videoRef.current);
+      // Ensure muted BEFORE attaching so browser allows autoplay
       videoRef.current.muted = true;
+      videoRef.current.playsInline = true;
+      videoRef.current.autoplay = true;
+      publication.track.attach(videoRef.current);
+      // Force play immediately after attach
       try {
         await videoRef.current.play();
-      } catch {
-        // Browser may still block; user gesture can recover
+      } catch (e) {
+        console.warn("Video play blocked:", e);
       }
       setConnected(true);
       setNeedsTapToPlay(true);
@@ -94,6 +98,8 @@ const LiveWatch = () => {
     }
 
     if (publication.source === Track.Source.Microphone && audioRef.current) {
+      // Audio stays muted until user taps
+      audioRef.current.muted = true;
       publication.track.attach(audioRef.current);
     }
   };
@@ -249,8 +255,8 @@ const LiveWatch = () => {
         <div className={`flex flex-col lg:grid lg:grid-cols-3 lg:gap-6 ${isMobile ? 'gap-2' : 'gap-4'}`}>
           <div className="lg:col-span-2 space-y-2">
             <div className={`relative bg-black rounded-xl overflow-hidden ${isMobile ? 'h-[25vh] min-h-[140px]' : 'aspect-video'}`}>
-              <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
-              <audio ref={audioRef} autoPlay playsInline muted className="hidden" />
+              <video ref={videoRef} playsInline muted className="w-full h-full object-cover" />
+              <audio ref={audioRef} playsInline muted className="hidden" />
               {!connected && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/80">
                   <div className="text-center">
