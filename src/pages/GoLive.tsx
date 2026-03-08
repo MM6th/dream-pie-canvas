@@ -282,14 +282,12 @@ const GoLive = () => {
 
       pc.onicecandidate = async (event) => {
         if (event.candidate) {
-          const { error: iceError } = await (supabase.from("live_stream_signals") as any).insert({
-            stream_id: sid,
-            sender_id: user.id,
-            signal_type: "ice-candidate",
-            signal_data: event.candidate.toJSON(),
-            target_id: viewerId,
+          console.log("Host: sending ICE candidate to viewer via broadcast");
+          broadcastChannelRef.current?.send({
+            type: "broadcast",
+            event: "signal",
+            payload: { type: "ice-candidate", from: user.id, to: viewerId, data: event.candidate.toJSON() },
           });
-          if (iceError) console.error("Host: failed to insert ICE candidate signal:", iceError);
         }
       };
 
@@ -297,26 +295,20 @@ const GoLive = () => {
         console.log("Host: ICE connection state for viewer", viewerId, ":", pc.iceConnectionState);
       };
 
-      // Create and send offer
+      // Create and send offer via broadcast
       console.log("Host: creating offer for viewer:", viewerId);
       const offer = await pc.createOffer();
       console.log("Host: offer created, setting local description");
       await pc.setLocalDescription(offer);
-      console.log("Host: local description set, inserting offer signal to DB");
+      console.log("Host: local description set, sending offer via broadcast");
       
-      const { error: offerError } = await (supabase.from("live_stream_signals") as any).insert({
-        stream_id: sid,
-        sender_id: user.id,
-        signal_type: "offer",
-        signal_data: offer,
-        target_id: viewerId,
+      broadcastChannelRef.current?.send({
+        type: "broadcast",
+        event: "signal",
+        payload: { type: "offer", from: user.id, to: viewerId, data: offer },
       });
       
-      if (offerError) {
-        console.error("Host: FAILED to insert offer signal:", offerError);
-      } else {
-        console.log("Host: offer signal inserted successfully for viewer:", viewerId);
-      }
+      console.log("Host: offer sent via broadcast for viewer:", viewerId);
     } catch (e) {
       console.error("Host: createPeerConnectionForViewer THREW for viewer:", viewerId, e);
     }
