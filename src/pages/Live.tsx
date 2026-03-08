@@ -26,7 +26,7 @@ interface LiveStream {
 
 const Live = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [streams, setStreams] = useState<LiveStream[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -71,7 +71,10 @@ const Live = () => {
     setLoading(false);
   };
 
+  // Wait for auth to be ready before fetching
   useEffect(() => {
+    if (authLoading) return;
+
     let isActive = true;
     let pollMs = 5000;
     let pollTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -106,7 +109,7 @@ const Live = () => {
       if (pollTimeout) clearTimeout(pollTimeout);
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [authLoading]);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
