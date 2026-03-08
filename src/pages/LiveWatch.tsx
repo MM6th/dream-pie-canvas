@@ -16,7 +16,6 @@ import {
   RoomEvent,
   Track,
   RemoteTrackPublication,
-  RemoteParticipant,
 } from "livekit-client";
 
 const LiveWatch = () => {
@@ -32,6 +31,7 @@ const LiveWatch = () => {
   const [loading, setLoading] = useState(true);
   const [viewerCount, setViewerCount] = useState(0);
   const [connected, setConnected] = useState(false);
+  const [needsTapToPlay, setNeedsTapToPlay] = useState(false);
 
   // Fetch stream data
   useEffect(() => {
@@ -64,10 +64,15 @@ const LiveWatch = () => {
   }, [streamId, navigate]);
 
   // Attach a remote track to the video element
-  const attachTrack = (publication: RemoteTrackPublication) => {
+  const attachTrack = async (publication: RemoteTrackPublication) => {
     if (!publication.track || !videoRef.current) return;
     if (publication.source === Track.Source.Camera || publication.source === Track.Source.Microphone) {
       publication.track.attach(videoRef.current);
+      try {
+        await videoRef.current.play();
+      } catch {
+        setNeedsTapToPlay(true);
+      }
       if (publication.source === Track.Source.Camera) {
         setConnected(true);
       }
@@ -91,11 +96,16 @@ const LiveWatch = () => {
         roomRef.current = room;
 
         // When a new track is subscribed
-        room.on(RoomEvent.TrackSubscribed, (track, publication, participant) => {
+        room.on(RoomEvent.TrackSubscribed, async (track) => {
           if (cancelled) return;
           console.log("LiveKit viewer: track subscribed", track.source);
           if (videoRef.current) {
             track.attach(videoRef.current);
+            try {
+              await videoRef.current.play();
+            } catch {
+              setNeedsTapToPlay(true);
+            }
             if (track.source === Track.Source.Camera) {
               setConnected(true);
             }
@@ -127,7 +137,7 @@ const LiveWatch = () => {
         for (const participant of room.remoteParticipants.values()) {
           for (const pub of participant.trackPublications.values()) {
             if (pub.isSubscribed && pub.track) {
-              attachTrack(pub as RemoteTrackPublication);
+              await attachTrack(pub as RemoteTrackPublication);
             }
           }
         }
@@ -213,6 +223,24 @@ const LiveWatch = () => {
                     <Radio className="w-8 h-8 sm:w-10 sm:h-10 text-red-500 animate-pulse mx-auto mb-2" />
                     <p className="text-white text-sm sm:text-base">Connecting to stream...</p>
                   </div>
+                </div>
+              )}
+              {needsTapToPlay && (
+                <div className="absolute inset-0 flex items-end justify-center p-4 pointer-events-none">
+                  <Button
+                    type="button"
+                    className="pointer-events-auto"
+                    onClick={async () => {
+                      try {
+                        await videoRef.current?.play();
+                        setNeedsTapToPlay(false);
+                      } catch {
+                        toast({ title: "Tap again to start playback", variant: "destructive" });
+                      }
+                    }}
+                  >
+                    Tap to start playback
+                  </Button>
                 </div>
               )}
               <div className="absolute top-2 sm:top-4 left-2 sm:left-4 flex gap-2">
