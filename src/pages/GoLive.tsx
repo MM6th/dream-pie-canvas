@@ -324,11 +324,14 @@ const GoLive = () => {
       pc.onicecandidate = async (event) => {
         if (event.candidate) {
           console.log("Host: sending ICE candidate to viewer via broadcast");
-          broadcastChannelRef.current?.send({
+          const sendStatus = await broadcastChannelRef.current?.send({
             type: "broadcast",
             event: "signal",
             payload: { type: "ice-candidate", from: user.id, to: viewerId, data: event.candidate.toJSON() },
           });
+          if (sendStatus && sendStatus !== "ok") {
+            console.error("Host: failed to relay ICE candidate", sendStatus);
+          }
         }
       };
 
