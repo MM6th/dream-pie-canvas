@@ -100,20 +100,60 @@ const GoLive = () => {
     }
   };
 
+  // Ref flag: when true, onstop handler should upload the recording
+  const shouldUploadRef = useRef(false);
+  const endStreamIdRef = useRef<string | null>(null);
+
   // Auto-start recording helper
   const autoStartRecording = useCallback(() => {
     if (!streamRef.current) return;
     chunksRef.current = [];
     const mr = new MediaRecorder(streamRef.current, { mimeType: "video/webm;codecs=vp9,opus" });
     mr.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
-    mr.onstop = () => {
+    mr.onstop = async () => {
       const blob = new Blob(chunksRef.current, { type: "video/webm" });
+      console.log("Recording onstop: blob size:", blob.size, "shouldUpload:", shouldUploadRef.current);
       setRecordedBlob(blob);
+
+      if (shouldUploadRef.current && blob.size > 0 && user) {
+        const sid = endStreamIdRef.current;
+        if (!sid) {
+          console.error("Recording onstop: no stream ID for upload");
+          setSaving(false);
+          return;
+        }
+        try {
+          const fileName = `${user.id}/live-recordings/${sid}-${Date.now()}.webm`;
+          console.log("Recording onstop: uploading to", fileName);
+          const { error: uploadError } = await supabase.storage
+            .from("user-media")
+            .upload(fileName, blob, { contentType: "video/webm" });
+
+          if (uploadError) {
+            console.error("Recording onstop: upload FAILED:", uploadError);
+            toast({ title: "Stream ended", description: "Recording upload failed: " + uploadError.message, variant: "destructive" });
+          } else {
+            const { data: urlData } = supabase.storage.from("user-media").getPublicUrl(fileName);
+            console.log("Recording onstop: upload success, updating stream with URL");
+            await (supabase.from("live_streams") as any).update({ recording_url: urlData.publicUrl }).eq("id", sid);
+            toast({ title: "Stream ended & recording saved!" });
+            setRecordedBlob(null);
+          }
+        } catch (e) {
+          console.error("Recording onstop: unexpected error during upload:", e);
+          toast({ title: "Stream ended", description: "Recording save error", variant: "destructive" });
+        }
+        setSaving(false);
+        shouldUploadRef.current = false;
+        // Stop camera/mic tracks after save
+        streamRef.current?.getTracks().forEach((t) => t.stop());
+        navigate("/live");
+      }
     };
     mr.start(1000);
     mediaRecorderRef.current = mr;
     setIsRecording(true);
-  }, []);
+  }, [user, navigate]);
 
   // Go Live
   const handleGoLive = async () => {
