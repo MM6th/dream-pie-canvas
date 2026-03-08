@@ -73,8 +73,12 @@ const LiveWatch = () => {
     if (!publication.track || !videoRef.current) return;
     if (publication.source === Track.Source.Camera || publication.source === Track.Source.Microphone) {
       publication.track.attach(videoRef.current);
+      // Start muted (browsers allow muted autoplay), then prompt user to unmute
+      videoRef.current.muted = true;
       try {
         await videoRef.current.play();
+        // Video is playing muted — show unmute prompt
+        setNeedsTapToPlay(true);
       } catch {
         setNeedsTapToPlay(true);
       }
