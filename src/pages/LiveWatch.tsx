@@ -130,22 +130,10 @@ const LiveWatch = () => {
           });
           roomRef.current = room;
 
-          room.on(RoomEvent.TrackSubscribed, async (track) => {
+          room.on(RoomEvent.TrackSubscribed, async (track, publication) => {
             if (cancelled) return;
             console.log("LiveKit viewer: track subscribed", track.source);
-            if (videoRef.current) {
-              track.attach(videoRef.current);
-              videoRef.current.muted = true;
-              try {
-                await videoRef.current.play();
-                setNeedsTapToPlay(true); // Playing muted, prompt to unmute
-              } catch {
-                setNeedsTapToPlay(true);
-              }
-              if (track.source === Track.Source.Camera) {
-                setConnected(true);
-              }
-            }
+            await attachTrack(publication as RemoteTrackPublication);
           });
 
           room.on(RoomEvent.TrackUnsubscribed, (track) => {
