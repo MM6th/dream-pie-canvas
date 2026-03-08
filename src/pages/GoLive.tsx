@@ -113,6 +113,7 @@ const GoLive = () => {
     setStreamId(data.id);
     setIsLive(true);
     setSetupPhase(false);
+    startHeartbeat(data.id);
 
     // Listen for incoming WebRTC signals (viewer answers and ICE candidates)
     supabase
