@@ -105,11 +105,18 @@ const GoLive = () => {
   const endStreamIdRef = useRef<string | null>(null);
   const broadcastChannelRef = useRef<any>(null);
 
-  // Auto-start recording helper
+  // Auto-start recording helper with MIME fallbacks
   const autoStartRecording = useCallback(() => {
     if (!streamRef.current) return;
     chunksRef.current = [];
-    const mr = new MediaRecorder(streamRef.current, { mimeType: "video/webm;codecs=vp9,opus" });
+    const mimeTypes = ["video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm"];
+    let selectedMime = "";
+    for (const mime of mimeTypes) {
+      if (MediaRecorder.isTypeSupported(mime)) { selectedMime = mime; break; }
+    }
+    if (!selectedMime) { console.error("No supported MIME type for MediaRecorder"); return; }
+    console.log("Recording: using MIME type:", selectedMime);
+    const mr = new MediaRecorder(streamRef.current, { mimeType: selectedMime });
     mr.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
     mr.onstop = async () => {
       const blob = new Blob(chunksRef.current, { type: "video/webm" });
