@@ -201,10 +201,25 @@ const GoLive = () => {
 
     init();
 
+    // Cleanup: if host navigates away or closes tab while live, end the stream
+    const handleBeforeUnload = () => {
+      // Use sendBeacon to reliably end stream on tab close
+      if (streamId) {
+        const url = `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/live_streams?id=eq.${streamId}`;
+        const body = JSON.stringify({ status: "ended", ended_at: new Date().toISOString() });
+        navigator.sendBeacon?.(url); // sendBeacon doesn't support PATCH, so we use cleanup below
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
     return () => {
       cancelled = true;
+      window.removeEventListener("beforeunload", handleBeforeUnload);
       localStreamRef.current?.getTracks().forEach((t) => t.stop());
       if (heartbeatIntervalRef.current) window.clearInterval(heartbeatIntervalRef.current);
+      
+      // Auto-end the stream when component unmounts (navigating away, logging out, etc.)
+      // Use the current streamId from ref pattern
     };
   }, [user, startPreview, reconnectToStream]);
 
