@@ -113,14 +113,17 @@ const LiveWatch = () => {
     // Broadcast channel for WebRTC signaling
     const rtcChannel = supabase.channel(`rtc-${streamId}`, { config: { broadcast: { ack: true } } });
 
-    pc.onicecandidate = (event) => {
+    pc.onicecandidate = async (event) => {
       if (event.candidate && !cancelled) {
         console.log("Viewer: sending ICE candidate via broadcast");
-        rtcChannel.send({
+        const sendStatus = await rtcChannel.send({
           type: "broadcast",
           event: "signal",
           payload: { type: "ice-candidate", from: user.id, to: stream.merchant_id, data: event.candidate.toJSON() },
         });
+        if (sendStatus !== "ok") {
+          console.error("Viewer: failed to relay ICE candidate", sendStatus);
+        }
       }
     };
 
