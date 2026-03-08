@@ -37,7 +37,6 @@ const LiveWatch = () => {
   const [loading, setLoading] = useState(true);
   const [viewerCount, setViewerCount] = useState(0);
   const [connected, setConnected] = useState(false);
-  const [needsTapToPlay, setNeedsTapToPlay] = useState(false);
 
   // Fetch stream data
   useEffect(() => {
