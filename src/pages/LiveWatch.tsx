@@ -73,8 +73,12 @@ const LiveWatch = () => {
     if (!publication.track || !videoRef.current) return;
     if (publication.source === Track.Source.Camera || publication.source === Track.Source.Microphone) {
       publication.track.attach(videoRef.current);
+      // Start muted (browsers allow muted autoplay), then prompt user to unmute
+      videoRef.current.muted = true;
       try {
         await videoRef.current.play();
+        // Video is playing muted — show unmute prompt
+        setNeedsTapToPlay(true);
       } catch {
         setNeedsTapToPlay(true);
       }
@@ -121,8 +125,10 @@ const LiveWatch = () => {
             console.log("LiveKit viewer: track subscribed", track.source);
             if (videoRef.current) {
               track.attach(videoRef.current);
+              videoRef.current.muted = true;
               try {
                 await videoRef.current.play();
+                setNeedsTapToPlay(true); // Playing muted, prompt to unmute
               } catch {
                 setNeedsTapToPlay(true);
               }
@@ -244,7 +250,7 @@ const LiveWatch = () => {
         <div className={`flex flex-col lg:grid lg:grid-cols-3 lg:gap-6 ${isMobile ? 'gap-2' : 'gap-4'}`}>
           <div className="lg:col-span-2 space-y-2">
             <div className={`relative bg-black rounded-xl overflow-hidden ${isMobile ? 'h-[25vh] min-h-[140px]' : 'aspect-video'}`}>
-              <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
+              <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
               {!connected && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/80">
                   <div className="text-center">
@@ -260,14 +266,17 @@ const LiveWatch = () => {
                     className="pointer-events-auto"
                     onClick={async () => {
                       try {
-                        await videoRef.current?.play();
+                        if (videoRef.current) {
+                          videoRef.current.muted = false;
+                          await videoRef.current.play();
+                        }
                         setNeedsTapToPlay(false);
                       } catch {
                         toast({ title: "Tap again to start playback", variant: "destructive" });
                       }
                     }}
                   >
-                    Tap to start playback
+                    🔊 Tap to unmute
                   </Button>
                 </div>
               )}
