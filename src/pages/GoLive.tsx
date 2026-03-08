@@ -196,8 +196,9 @@ const GoLive = () => {
     rtcChannel
       .on("broadcast", { event: "signal" }, async ({ payload }: any) => {
         if (!payload || payload.from === user.id) return;
+        if (payload.type !== "join-request" && payload.to && payload.to !== user.id) return;
 
-        console.log("Host: broadcast signal received:", payload.type, "from:", payload.from);
+        console.log("Host: broadcast signal received:", payload.type, "from:", payload.from, "to:", payload.to);
 
         if (payload.type === "join-request") {
           if (!peerConnectionsRef.current.has(payload.from)) {
