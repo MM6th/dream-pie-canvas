@@ -327,6 +327,10 @@ const GoLive = () => {
       window.clearInterval(heartbeatIntervalRef.current);
       heartbeatIntervalRef.current = null;
     }
+    if (pollIntervalRef.current) {
+      window.clearInterval(pollIntervalRef.current);
+      pollIntervalRef.current = null;
+    }
 
     const currentStreamId = streamId;
 
