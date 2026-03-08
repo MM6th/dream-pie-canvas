@@ -76,23 +76,25 @@ const LiveWatch = () => {
     fetchStream();
   }, [streamId, navigate]);
 
-  // Attach a remote track to the video element
+  // Attach remote tracks separately: camera -> video, microphone -> audio
   const attachTrack = async (publication: RemoteTrackPublication) => {
-    if (!publication.track || !videoRef.current) return;
-    if (publication.source === Track.Source.Camera || publication.source === Track.Source.Microphone) {
+    if (!publication.track) return;
+
+    if (publication.source === Track.Source.Camera && videoRef.current) {
       publication.track.attach(videoRef.current);
-      // Start muted (browsers allow muted autoplay), then prompt user to unmute
       videoRef.current.muted = true;
       try {
         await videoRef.current.play();
-        // Video is playing muted — show unmute prompt
-        setNeedsTapToPlay(true);
       } catch {
-        setNeedsTapToPlay(true);
+        // Browser may still block; user gesture can recover
       }
-      if (publication.source === Track.Source.Camera) {
-        setConnected(true);
-      }
+      setConnected(true);
+      setNeedsTapToPlay(true);
+      return;
+    }
+
+    if (publication.source === Track.Source.Microphone && audioRef.current) {
+      publication.track.attach(audioRef.current);
     }
   };
 
