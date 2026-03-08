@@ -130,7 +130,7 @@ const LiveWatch = () => {
     const handleSignal = async (payload: any) => {
       if (cancelled) return;
       if (payload.from === user.id) return;
-      if (payload.to && payload.to !== user.id) return;
+      if (payload.type !== "join-request" && payload.to && payload.to !== user.id) return;
 
       if (payload.type === "offer" && payload.data?.sdp) {
         console.log("Viewer: received SDP offer from host via broadcast");
