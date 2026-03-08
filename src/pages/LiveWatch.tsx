@@ -158,7 +158,8 @@ const LiveWatch = () => {
 
           room.on(RoomEvent.Disconnected, () => {
             if (!cancelled) {
-              toast({ title: "Disconnected from stream" });
+              toast({ title: "Stream ended", description: "The broadcaster has left." });
+              navigate("/live");
             }
           });
 

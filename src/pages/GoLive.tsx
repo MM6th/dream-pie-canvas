@@ -32,6 +32,7 @@ const GoLive = () => {
   const chunksRef = useRef<Blob[]>([]);
   const localStreamRef = useRef<MediaStream | null>(null);
   const heartbeatIntervalRef = useRef<number | null>(null);
+  const streamIdRef = useRef<string | null>(null);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -207,6 +208,54 @@ const GoLive = () => {
       if (heartbeatIntervalRef.current) window.clearInterval(heartbeatIntervalRef.current);
     };
   }, [user, startPreview, reconnectToStream]);
+
+  // Auto-end stream if host navigates away or logs out while live
+  streamIdRef.current = streamId;
+
+  useEffect(() => {
+    const autoEndStream = async () => {
+      const sid = streamIdRef.current;
+      if (!sid) return;
+      try {
+        await (supabase.from("live_streams") as any)
+          .update({ status: "ended", ended_at: new Date().toISOString() })
+          .eq("id", sid);
+        console.log("Auto-ended stream on unmount:", sid);
+      } catch (e) {
+        console.error("Failed to auto-end stream:", e);
+      }
+    };
+
+    // Handle tab close / browser close
+    const handleBeforeUnload = () => {
+      const sid = streamIdRef.current;
+      if (!sid || !user?.id) return;
+      // Use sendBeacon with Supabase REST API for tab-close reliability
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/live_streams?id=eq.${sid}&merchant_id=eq.${user.id}`;
+      const body = JSON.stringify({ status: "ended", ended_at: new Date().toISOString() });
+      const blob = new Blob([body], { type: "application/json" });
+      // sendBeacon only supports POST, but we can use fetch with keepalive as fallback
+      fetch(url, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          "Prefer": "return=minimal",
+        },
+        body,
+        keepalive: true,
+      }).catch(() => {});
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      // Component unmount (navigation, logout) — end the stream
+      autoEndStream();
+    };
+  }, [user?.id]);
 
   // Toggle camera
   const toggleCamera = () => {
