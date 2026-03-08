@@ -376,13 +376,8 @@ const GoLive = () => {
         camPub.track.attach(videoRef.current);
       }
 
-      // 7. Start recording
-      // Small delay to ensure tracks are fully published
-      setTimeout(() => {
-        if (roomRef.current) {
-          startRecordingFromRoom(roomRef.current);
-        }
-      }, 1000);
+
+
 
       toast({ title: "You're live!", description: "Viewers can now join your stream." });
     } catch (err: any) {
