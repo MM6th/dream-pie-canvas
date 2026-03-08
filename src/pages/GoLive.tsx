@@ -480,8 +480,8 @@ const GoLive = () => {
                 {micOn ? "Mic" : "Muted"}
               </Button>
               {isLive && (
-                <Button onClick={endStream} variant="destructive" size="sm" className="ml-auto" disabled={saving}>
-                  {saving ? "Saving Recording..." : "End Stream & Save"}
+                <Button onClick={endStream} variant="destructive" size="sm" className="ml-auto">
+                  End Stream
                 </Button>
               )}
             </div>
