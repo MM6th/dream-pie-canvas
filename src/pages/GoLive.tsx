@@ -366,28 +366,9 @@ const GoLive = () => {
                 {micOn ? "Mic" : "Muted"}
               </Button>
 
-              {isLive && !isRecording && (
-                <Button onClick={startRecording} variant="outline" size="sm" className="border-red-600 text-red-400 hover:bg-red-600/10">
-                  <span className="w-3 h-3 bg-red-500 rounded-full mr-2" />
-                  Record
-                </Button>
-              )}
-              {isRecording && (
-                <Button onClick={stopRecording} variant="outline" size="sm" className="border-red-600 text-red-400">
-                  <Square className="w-3 h-3 mr-2 fill-red-500" />
-                  Stop Recording
-                </Button>
-              )}
-              {recordedBlob && (
-                <Button onClick={saveRecording} disabled={saving} size="sm" className="bg-primary text-primary-foreground">
-                  <Save className="w-4 h-4 mr-1" />
-                  {saving ? "Saving..." : "Save Recording"}
-                </Button>
-              )}
-
               {isLive && (
-                <Button onClick={endStream} variant="destructive" size="sm" className="ml-auto">
-                  End Stream
+                <Button onClick={endStream} variant="destructive" size="sm" className="ml-auto" disabled={saving}>
+                  {saving ? "Saving Recording..." : "End Stream & Save"}
                 </Button>
               )}
             </div>
