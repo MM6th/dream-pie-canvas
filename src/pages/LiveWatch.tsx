@@ -220,7 +220,7 @@ const LiveWatch = () => {
       }
       supabase.removeChannel(streamChannel);
     };
-  }, [stream, user, streamId, navigate, getToken]);
+  }, [stream, user, streamId, navigate, getToken, authLoading]);
 
   if (loading) {
     return (
