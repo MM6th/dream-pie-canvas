@@ -22,6 +22,8 @@ const GoLive = () => {
   const chunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
   const peerConnectionsRef = useRef<Map<string, RTCPeerConnection>>(new Map());
+  const viewerIceQueuesRef = useRef<Map<string, RTCIceCandidateInit[]>>(new Map());
+  const viewerRemoteDescSetRef = useRef<Map<string, boolean>>(new Map());
   const pollIntervalRef = useRef<number | null>(null);
   const heartbeatIntervalRef = useRef<number | null>(null);
 
@@ -209,7 +211,18 @@ const GoLive = () => {
           if (pc) {
             try {
               await pc.setRemoteDescription(new RTCSessionDescription(payload.data));
-              console.log("Host: set remote description from viewer answer");
+              viewerRemoteDescSetRef.current.set(payload.from, true);
+              console.log("Host: set remote description from viewer answer, flushing ICE queue");
+              // Flush queued ICE candidates from this viewer
+              const queue = viewerIceQueuesRef.current.get(payload.from) || [];
+              for (const candidate of queue) {
+                try {
+                  await pc.addIceCandidate(new RTCIceCandidate(candidate));
+                } catch (e) {
+                  console.warn("Host: error adding queued ICE candidate", e);
+                }
+              }
+              viewerIceQueuesRef.current.set(payload.from, []);
             } catch (e) {
               console.error("Host: error setting remote description", e);
             }
@@ -217,10 +230,18 @@ const GoLive = () => {
         } else if (payload.type === "ice-candidate") {
           const pc = peerConnectionsRef.current.get(payload.from);
           if (pc && payload.data) {
-            try {
-              await pc.addIceCandidate(new RTCIceCandidate(payload.data));
-            } catch (e) {
-              console.warn("Host: error adding ICE candidate", e);
+            if (viewerRemoteDescSetRef.current.get(payload.from)) {
+              try {
+                await pc.addIceCandidate(new RTCIceCandidate(payload.data));
+                console.log("Host: added ICE candidate from viewer", payload.from);
+              } catch (e) {
+                console.warn("Host: error adding ICE candidate", e);
+              }
+            } else {
+              console.log("Host: queuing ICE candidate from viewer", payload.from, "(remote desc not set yet)");
+              const queue = viewerIceQueuesRef.current.get(payload.from) || [];
+              queue.push(payload.data);
+              viewerIceQueuesRef.current.set(payload.from, queue);
             }
           }
         }
@@ -271,6 +292,8 @@ const GoLive = () => {
       });
 
       peerConnectionsRef.current.set(viewerId, pc);
+      viewerIceQueuesRef.current.set(viewerId, []);
+      viewerRemoteDescSetRef.current.set(viewerId, false);
       console.log("Host: RTCPeerConnection created for viewer:", viewerId);
 
       // Add local tracks
@@ -293,6 +316,17 @@ const GoLive = () => {
 
       pc.oniceconnectionstatechange = () => {
         console.log("Host: ICE connection state for viewer", viewerId, ":", pc.iceConnectionState);
+        if (pc.iceConnectionState === "failed") {
+          console.error("Host: ICE connection FAILED for viewer", viewerId, "- may need TURN server");
+        }
+      };
+
+      pc.onconnectionstatechange = () => {
+        console.log("Host: connection state for viewer", viewerId, ":", pc.connectionState);
+      };
+
+      pc.onsignalingstatechange = () => {
+        console.log("Host: signaling state for viewer", viewerId, ":", pc.signalingState);
       };
 
       // Create and send offer via broadcast
@@ -383,6 +417,8 @@ const GoLive = () => {
     // Close peer connections and broadcast channel
     peerConnectionsRef.current.forEach((pc) => pc.close());
     peerConnectionsRef.current.clear();
+    viewerIceQueuesRef.current.clear();
+    viewerRemoteDescSetRef.current.clear();
     if (broadcastChannelRef.current) {
       supabase.removeChannel(broadcastChannelRef.current);
       broadcastChannelRef.current = null;
