@@ -67,15 +67,19 @@ const GoLive = () => {
 
   // Fetch host avatar
   useEffect(() => {
-    if (!user) return;
-    (supabase.from("profiles") as any)
-      .select("avatar_url")
-      .eq("id", user.id)
-      .single()
-      .then(({ data }: any) => {
-        if (data?.avatar_url) setAvatarUrl(data.avatar_url);
-      });
-  }, [user]);
+    if (!user?.id) return;
+    const fetchAvatar = async () => {
+      const { data, error } = await (supabase.from("profiles") as any)
+        .select("avatar_url")
+        .eq("id", user.id)
+        .single();
+      console.log("GoLive avatar fetch:", { data, error, userId: user.id });
+      if (data?.avatar_url) {
+        setAvatarUrl(data.avatar_url);
+      }
+    };
+    fetchAvatar();
+  }, [user?.id]);
 
   // Start camera preview (before going live)
   const startPreview = useCallback(async () => {
