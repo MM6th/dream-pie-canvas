@@ -211,6 +211,7 @@ const GoLive = () => {
         }
       }
     }, 3000);
+    pollIntervalRef.current = pollInterval;
 
     // Track viewer count via realtime presence
     const presenceChannel = supabase.channel(`presence-${data.id}`);
