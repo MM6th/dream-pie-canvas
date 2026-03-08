@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { LogOut, ShoppingBag, MessageSquare, User, Users, BookOpen, DollarSign, Film, Coins, ChevronDown } from "lucide-react";
+import { LogOut, ShoppingBag, MessageSquare, User, Users, BookOpen, DollarSign, Film, Coins, ChevronDown, Radio } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useNavigate } from "react-router-dom";
