@@ -95,6 +95,21 @@ const GoLive = () => {
     }
   };
 
+  // Auto-start recording helper
+  const autoStartRecording = useCallback(() => {
+    if (!streamRef.current) return;
+    chunksRef.current = [];
+    const mr = new MediaRecorder(streamRef.current, { mimeType: "video/webm;codecs=vp9,opus" });
+    mr.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
+    mr.onstop = () => {
+      const blob = new Blob(chunksRef.current, { type: "video/webm" });
+      setRecordedBlob(blob);
+    };
+    mr.start(1000);
+    mediaRecorderRef.current = mr;
+    setIsRecording(true);
+  }, []);
+
   // Go Live
   const handleGoLive = async () => {
     if (!user || !title.trim()) {
@@ -117,6 +132,9 @@ const GoLive = () => {
     setIsLive(true);
     setSetupPhase(false);
     startHeartbeat(data.id);
+
+    // Auto-start recording
+    autoStartRecording();
 
     // Listen for incoming WebRTC signals (viewer answers and ICE candidates)
     supabase
@@ -160,7 +178,7 @@ const GoLive = () => {
         }
       });
 
-    toast({ title: "You're live!", description: "Your stream has started." });
+    toast({ title: "You're live!", description: "Your stream is being recorded automatically." });
   };
 
   // Create peer connection for a viewer
