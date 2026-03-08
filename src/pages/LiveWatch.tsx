@@ -85,6 +85,17 @@ const LiveWatch = () => {
       if (pc.iceConnectionState === "connected" || pc.iceConnectionState === "completed") {
         setConnected(true);
       }
+      if (pc.iceConnectionState === "failed") {
+        console.error("Viewer: ICE connection FAILED - may need TURN server");
+      }
+    };
+
+    pc.onconnectionstatechange = () => {
+      console.log("Viewer connection state:", pc.connectionState);
+    };
+
+    pc.onsignalingstatechange = () => {
+      console.log("Viewer signaling state:", pc.signalingState);
     };
 
     // Flush queued ICE candidates after remote description is set

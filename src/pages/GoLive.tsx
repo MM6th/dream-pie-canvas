@@ -417,6 +417,8 @@ const GoLive = () => {
     // Close peer connections and broadcast channel
     peerConnectionsRef.current.forEach((pc) => pc.close());
     peerConnectionsRef.current.clear();
+    viewerIceQueuesRef.current.clear();
+    viewerRemoteDescSetRef.current.clear();
     if (broadcastChannelRef.current) {
       supabase.removeChannel(broadcastChannelRef.current);
       broadcastChannelRef.current = null;
