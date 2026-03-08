@@ -116,7 +116,7 @@ const LiveWatch = () => {
       if (signal.sender_id === user.id) return;
       if (signal.target_id && signal.target_id !== user.id) return;
 
-      if (signal.signal_type === "offer") {
+      if (signal.signal_type === "offer" && signal.signal_data?.sdp) {
         console.log("Viewer: received SDP offer from host");
         try {
           await pc.setRemoteDescription(new RTCSessionDescription(signal.signal_data));
