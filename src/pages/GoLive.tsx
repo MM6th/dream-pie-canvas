@@ -201,11 +201,18 @@ const GoLive = () => {
         console.log("Host: broadcast signal received:", payload.type, "from:", payload.from, "to:", payload.to);
 
         if (payload.type === "join-request") {
-          if (!peerConnectionsRef.current.has(payload.from)) {
+          const viewerId = payload.from;
+          if (!streamRef.current) {
+            pendingJoinRequestsRef.current.add(viewerId);
+            console.warn("Host: stream not ready, queued join request from", viewerId);
+            return;
+          }
+
+          if (!peerConnectionsRef.current.has(viewerId)) {
             try {
-              await createPeerConnectionForViewer(payload.from, data.id);
+              await createPeerConnectionForViewer(viewerId, data.id);
             } catch (e) {
-              console.error("Host: error creating peer connection for viewer", payload.from, e);
+              console.error("Host: error creating peer connection for viewer", viewerId, e);
             }
           }
         } else if (payload.type === "answer") {
