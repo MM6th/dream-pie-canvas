@@ -37,7 +37,6 @@ const LiveWatch = () => {
   const [loading, setLoading] = useState(true);
   const [viewerCount, setViewerCount] = useState(0);
   const [connected, setConnected] = useState(false);
-  const [needsTapToPlay, setNeedsTapToPlay] = useState(false);
 
   // Fetch stream data
   useEffect(() => {
@@ -93,17 +92,15 @@ const LiveWatch = () => {
         console.warn("Video play blocked:", e);
       }
       setConnected(true);
-      setNeedsTapToPlay(true);
       return;
     }
 
     if (publication.source === Track.Source.Microphone && audioRef.current) {
-      // Detach any auto-created elements first to prevent unmuted playback
       publication.track.detach();
-      // Now attach only to our controlled, muted audio element
-      audioRef.current.muted = true;
-      audioRef.current.autoplay = false;
+      audioRef.current.muted = false;
+      audioRef.current.autoplay = true;
       publication.track.attach(audioRef.current);
+      try { await audioRef.current.play(); } catch (e) { console.warn("Audio autoplay blocked:", e); }
     }
   };
 
@@ -266,33 +263,6 @@ const LiveWatch = () => {
                     <Radio className="w-8 h-8 sm:w-10 sm:h-10 text-red-500 animate-pulse mx-auto mb-2" />
                     <p className="text-white text-sm sm:text-base">Connecting to stream...</p>
                   </div>
-                </div>
-              )}
-              {needsTapToPlay && connected && (
-                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="secondary"
-                    className="bg-black/70 hover:bg-black/90 text-white border-0 backdrop-blur-sm shadow-lg gap-1.5 px-4"
-                    onClick={async () => {
-                      try {
-                        if (videoRef.current) {
-                          videoRef.current.muted = true;
-                          await videoRef.current.play();
-                        }
-                        if (audioRef.current) {
-                          audioRef.current.muted = false;
-                          await audioRef.current.play();
-                        }
-                        setNeedsTapToPlay(false);
-                      } catch {
-                        toast({ title: "Tap again to enable live audio", variant: "destructive" });
-                      }
-                    }}
-                  >
-                    🔴 LIVE video is on • Tap for audio
-                  </Button>
                 </div>
               )}
               <div className="absolute top-2 sm:top-4 left-2 sm:left-4 flex gap-2">
