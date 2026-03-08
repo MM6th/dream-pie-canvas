@@ -357,11 +357,14 @@ const GoLive = () => {
       await pc.setLocalDescription(offer);
       console.log("Host: local description set, sending offer via broadcast");
       
-      broadcastChannelRef.current?.send({
+      const sendStatus = await broadcastChannelRef.current?.send({
         type: "broadcast",
         event: "signal",
         payload: { type: "offer", from: user.id, to: viewerId, data: offer },
       });
+      if (sendStatus && sendStatus !== "ok") {
+        console.error("Host: failed to relay offer", sendStatus);
+      }
       
       console.log("Host: offer sent via broadcast for viewer:", viewerId);
     } catch (e) {
