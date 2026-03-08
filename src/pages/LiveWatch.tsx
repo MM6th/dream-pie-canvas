@@ -80,27 +80,23 @@ const LiveWatch = () => {
     if (!publication.track) return;
 
     if (publication.source === Track.Source.Camera && videoRef.current) {
-      // Ensure muted BEFORE attaching so browser allows autoplay
+      // Keep video autoplay muted and inline to avoid browser playback overlays
       videoRef.current.muted = true;
       videoRef.current.playsInline = true;
       videoRef.current.autoplay = true;
+      publication.track.detach();
       publication.track.attach(videoRef.current);
-      // Force play immediately after attach
-      try {
-        await videoRef.current.play();
-      } catch (e) {
-        console.warn("Video play blocked:", e);
-      }
       setConnected(true);
       return;
     }
 
     if (publication.source === Track.Source.Microphone && audioRef.current) {
+      // Attach only to controlled audio element; rely on element autoplay behavior
       publication.track.detach();
       audioRef.current.muted = false;
+      audioRef.current.playsInline = true;
       audioRef.current.autoplay = true;
       publication.track.attach(audioRef.current);
-      try { await audioRef.current.play(); } catch (e) { console.warn("Audio autoplay blocked:", e); }
     }
   };
 
