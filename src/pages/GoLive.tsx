@@ -67,15 +67,19 @@ const GoLive = () => {
 
   // Fetch host avatar
   useEffect(() => {
-    if (!user) return;
-    (supabase.from("profiles") as any)
-      .select("avatar_url")
-      .eq("id", user.id)
-      .single()
-      .then(({ data }: any) => {
-        if (data?.avatar_url) setAvatarUrl(data.avatar_url);
-      });
-  }, [user]);
+    if (!user?.id) return;
+    const fetchAvatar = async () => {
+      const { data, error } = await (supabase.from("profiles") as any)
+        .select("avatar_url")
+        .eq("id", user.id)
+        .single();
+      console.log("GoLive avatar fetch:", { data, error, userId: user.id });
+      if (data?.avatar_url) {
+        setAvatarUrl(data.avatar_url);
+      }
+    };
+    fetchAvatar();
+  }, [user?.id]);
 
   // Start camera preview (before going live)
   const startPreview = useCallback(async () => {
@@ -508,9 +512,9 @@ const GoLive = () => {
           {/* Video + Controls */}
           <div className="lg:col-span-2 space-y-4">
             <div className="relative aspect-video bg-black rounded-xl overflow-hidden">
-              <video ref={videoRef} autoPlay muted playsInline className={`w-full h-full object-cover ${!cameraOn ? 'invisible' : ''}`} />
+              <video ref={videoRef} autoPlay muted playsInline className={`w-full h-full object-cover ${!cameraOn ? 'hidden' : ''}`} />
               {!cameraOn && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black">
+                <div className="absolute inset-0 z-10 flex items-center justify-center bg-black">
                   {avatarUrl ? (
                     <img src={avatarUrl} alt="Host avatar" className="w-24 h-24 sm:w-32 sm:h-32 rounded-full object-cover border-2 border-muted" />
                   ) : (
