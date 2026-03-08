@@ -211,7 +211,18 @@ const GoLive = () => {
           if (pc) {
             try {
               await pc.setRemoteDescription(new RTCSessionDescription(payload.data));
-              console.log("Host: set remote description from viewer answer");
+              viewerRemoteDescSetRef.current.set(payload.from, true);
+              console.log("Host: set remote description from viewer answer, flushing ICE queue");
+              // Flush queued ICE candidates from this viewer
+              const queue = viewerIceQueuesRef.current.get(payload.from) || [];
+              for (const candidate of queue) {
+                try {
+                  await pc.addIceCandidate(new RTCIceCandidate(candidate));
+                } catch (e) {
+                  console.warn("Host: error adding queued ICE candidate", e);
+                }
+              }
+              viewerIceQueuesRef.current.set(payload.from, []);
             } catch (e) {
               console.error("Host: error setting remote description", e);
             }
@@ -219,10 +230,18 @@ const GoLive = () => {
         } else if (payload.type === "ice-candidate") {
           const pc = peerConnectionsRef.current.get(payload.from);
           if (pc && payload.data) {
-            try {
-              await pc.addIceCandidate(new RTCIceCandidate(payload.data));
-            } catch (e) {
-              console.warn("Host: error adding ICE candidate", e);
+            if (viewerRemoteDescSetRef.current.get(payload.from)) {
+              try {
+                await pc.addIceCandidate(new RTCIceCandidate(payload.data));
+                console.log("Host: added ICE candidate from viewer", payload.from);
+              } catch (e) {
+                console.warn("Host: error adding ICE candidate", e);
+              }
+            } else {
+              console.log("Host: queuing ICE candidate from viewer", payload.from, "(remote desc not set yet)");
+              const queue = viewerIceQueuesRef.current.get(payload.from) || [];
+              queue.push(payload.data);
+              viewerIceQueuesRef.current.set(payload.from, queue);
             }
           }
         }
