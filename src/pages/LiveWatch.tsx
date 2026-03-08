@@ -262,9 +262,21 @@ const LiveWatch = () => {
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
       <AppNavBar />
       <div className="max-w-6xl mx-auto px-3 sm:px-6 py-2 sm:py-6">
-        <Button variant="ghost" size="sm" onClick={() => navigate("/live")} className="mb-2">
-          <ArrowLeft className="w-4 h-4 mr-1" /> Back to Live
-        </Button>
+        <div className="flex items-center gap-2 mb-2">
+          <Button variant="ghost" size="sm" onClick={() => {
+            if (roomRef.current) { roomRef.current.disconnect(); roomRef.current = null; }
+            navigate("/live");
+          }}>
+            <ArrowLeft className="w-4 h-4 mr-1" /> Back to Live
+          </Button>
+          <Button variant="destructive" size="sm" onClick={() => {
+            if (roomRef.current) { roomRef.current.disconnect(); roomRef.current = null; }
+            toast({ title: "You left the stream" });
+            navigate("/live");
+          }}>
+            <LogOut className="w-4 h-4 mr-1" /> Leave Stream
+          </Button>
+        </div>
 
         <div className={`flex flex-col lg:grid lg:grid-cols-3 lg:gap-6 ${isMobile ? 'gap-2' : 'gap-4'}`}>
           <div className="lg:col-span-2 space-y-2">
