@@ -268,10 +268,12 @@ const LiveWatch = () => {
                 </div>
               )}
               {needsTapToPlay && connected && (
-                <div className="absolute inset-0 flex items-end justify-center p-4 pointer-events-none">
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 animate-in fade-in slide-in-from-bottom-2 duration-300">
                   <Button
                     type="button"
-                    className="pointer-events-auto"
+                    size="sm"
+                    variant="secondary"
+                    className="bg-black/70 hover:bg-black/90 text-white border-0 backdrop-blur-sm shadow-lg gap-1.5 px-4"
                     onClick={async () => {
                       try {
                         if (videoRef.current) {
@@ -284,7 +286,7 @@ const LiveWatch = () => {
                       }
                     }}
                   >
-                    🔊 Tap to unmute live audio
+                    🔊 Tap to unmute
                   </Button>
                 </div>
               )}
