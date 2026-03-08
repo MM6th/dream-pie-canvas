@@ -18,6 +18,11 @@ import {
   RemoteTrackPublication,
 } from "livekit-client";
 
+const MAX_TOKEN_RETRIES = 3;
+const RETRY_DELAY_MS = 2000;
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
 const LiveWatch = () => {
   const { streamId } = useParams<{ streamId: string }>();
   const navigate = useNavigate();
@@ -79,75 +84,98 @@ const LiveWatch = () => {
     }
   };
 
-  // Connect to LiveKit room as viewer
+  // Connect to LiveKit room as viewer with retry logic
   useEffect(() => {
     if (!stream || !user || !streamId) return;
 
     let cancelled = false;
 
     const connectToRoom = async () => {
-      try {
-        const { token, wsUrl } = await getToken(`stream-${streamId}`, false);
+      let lastError: any = null;
 
-        const room = new Room({
-          adaptiveStream: true,
-          dynacast: true,
-        });
-        roomRef.current = room;
+      for (let attempt = 1; attempt <= MAX_TOKEN_RETRIES; attempt++) {
+        if (cancelled) return;
 
-        // When a new track is subscribed
-        room.on(RoomEvent.TrackSubscribed, async (track) => {
-          if (cancelled) return;
-          console.log("LiveKit viewer: track subscribed", track.source);
-          if (videoRef.current) {
-            track.attach(videoRef.current);
-            try {
-              await videoRef.current.play();
-            } catch {
-              setNeedsTapToPlay(true);
+        try {
+          console.log(`LiveKit viewer: token attempt ${attempt}/${MAX_TOKEN_RETRIES}`);
+
+          // Wait for a valid auth session before requesting token
+          const { data: sessionData } = await supabase.auth.getSession();
+          if (!sessionData?.session) {
+            console.warn("LiveKit viewer: no session yet, waiting...");
+            await sleep(RETRY_DELAY_MS);
+            continue;
+          }
+
+          const { token, wsUrl } = await getToken(`stream-${streamId}`, false);
+          console.log("LiveKit viewer: token obtained, connecting to room");
+
+          const room = new Room({
+            adaptiveStream: true,
+            dynacast: true,
+          });
+          roomRef.current = room;
+
+          room.on(RoomEvent.TrackSubscribed, async (track) => {
+            if (cancelled) return;
+            console.log("LiveKit viewer: track subscribed", track.source);
+            if (videoRef.current) {
+              track.attach(videoRef.current);
+              try {
+                await videoRef.current.play();
+              } catch {
+                setNeedsTapToPlay(true);
+              }
+              if (track.source === Track.Source.Camera) {
+                setConnected(true);
+              }
             }
-            if (track.source === Track.Source.Camera) {
-              setConnected(true);
+          });
+
+          room.on(RoomEvent.TrackUnsubscribed, (track) => {
+            track.detach();
+          });
+
+          room.on(RoomEvent.ParticipantConnected, () => {
+            setViewerCount(room.remoteParticipants.size);
+          });
+          room.on(RoomEvent.ParticipantDisconnected, () => {
+            setViewerCount(room.remoteParticipants.size);
+          });
+
+          room.on(RoomEvent.Disconnected, () => {
+            if (!cancelled) {
+              toast({ title: "Disconnected from stream" });
+            }
+          });
+
+          await room.connect(wsUrl, token);
+          console.log("LiveKit viewer: connected to room");
+
+          // Attach any already-published tracks from the broadcaster
+          for (const participant of room.remoteParticipants.values()) {
+            for (const pub of participant.trackPublications.values()) {
+              if (pub.isSubscribed && pub.track) {
+                await attachTrack(pub as RemoteTrackPublication);
+              }
             }
           }
-        });
 
-        room.on(RoomEvent.TrackUnsubscribed, (track) => {
-          track.detach();
-        });
-
-        // Participant count
-        room.on(RoomEvent.ParticipantConnected, () => {
           setViewerCount(room.remoteParticipants.size);
-        });
-        room.on(RoomEvent.ParticipantDisconnected, () => {
-          setViewerCount(room.remoteParticipants.size);
-        });
-
-        room.on(RoomEvent.Disconnected, () => {
-          if (!cancelled) {
-            toast({ title: "Disconnected from stream" });
-          }
-        });
-
-        await room.connect(wsUrl, token);
-        console.log("LiveKit viewer: connected to room");
-
-        // Attach any already-published tracks from the broadcaster
-        for (const participant of room.remoteParticipants.values()) {
-          for (const pub of participant.trackPublications.values()) {
-            if (pub.isSubscribed && pub.track) {
-              await attachTrack(pub as RemoteTrackPublication);
-            }
+          // Success — exit retry loop
+          return;
+        } catch (err: any) {
+          lastError = err;
+          console.error(`LiveKit viewer: attempt ${attempt} failed:`, err);
+          if (attempt < MAX_TOKEN_RETRIES) {
+            await sleep(RETRY_DELAY_MS);
           }
         }
+      }
 
-        setViewerCount(room.remoteParticipants.size);
-      } catch (err: any) {
-        console.error("LiveKit viewer connection error:", err);
-        if (!cancelled) {
-          toast({ title: "Failed to connect", description: err.message, variant: "destructive" });
-        }
+      // All retries exhausted
+      if (!cancelled && lastError) {
+        toast({ title: "Failed to connect", description: lastError.message, variant: "destructive" });
       }
     };
 

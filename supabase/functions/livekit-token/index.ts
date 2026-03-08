@@ -28,16 +28,16 @@ Deno.serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } }
     );
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    if (userError || !userData?.user) {
+      console.error("livekit-token auth failed:", userError?.message || "no user");
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const userId = claimsData.claims.sub as string;
+    const userId = userData.user.id;
 
     // Parse request
     const { roomName, canPublish } = await req.json();
@@ -70,7 +70,7 @@ Deno.serve(async (req) => {
     const at = new AccessToken(apiKey, apiSecret, {
       identity,
       ttl: "6h",
-      name: claimsData.claims.email as string | undefined,
+      name: userData.user.email ?? undefined,
     });
 
     at.addGrant({

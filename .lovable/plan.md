@@ -1,38 +1,88 @@
 
 
-## Diagnosis
+## Plan: NFT Registry for Audio Products + Asset Ledger Page
 
-From the edge function logs, the **host token was issued** for the current stream (`e9bdfce0`), but **no viewer token was ever issued** for this stream. The viewer's page loaded successfully (stream data fetched, title "See" displayed), but the `livekit-token` edge function was never successfully invoked by the viewer for this stream.
+### Overview
+Three main deliverables: (1) make thumbnail mandatory in the audio upload modal, (2) register each audio product as an in-app NFT with SIXTH token valuation, and (3) build a dedicated "My Assets" ledger page for users to view their owned NFTs and token holdings.
 
-The auth logs show a `session_not_found` error for the viewer at 21:24:33, followed by a re-login. This suggests the viewer's auth token may have been in a transitional state when the LiveWatch `useEffect` fired, causing `supabase.functions.invoke` to silently fail (no valid auth header sent, edge function rejects with 401, but the frontend error handling may swallow it).
+### To your question
+Yes -- virtually every Web3 platform has a dedicated asset/portfolio page. OpenSea has "My Collection," MetaMask has "NFTs," and exchanges like Coinbase Wallet show a full ledger. We should absolutely implement one. It will reinforce the financial literacy mission and give users a tangible view of what they own and its value in SIXTH tokens.
 
-### Root Causes
+---
 
-1. **Auth race condition in LiveWatch**: The `useEffect` fires when `stream` and `user` are set, but `supabase.functions.invoke` uses the *current Supabase session token* (not the `user` object). If the session is being refreshed, the invoke call fails with 401 and the viewer gets stuck on "Connecting."
+### 1. Make Thumbnail Mandatory in Audio Upload Modal
 
-2. **No retry logic**: If the token fetch fails once, the viewer is permanently stuck. There's no retry mechanism.
+**File:** `src/components/AudioUploadModal.tsx`
 
-3. **Silent error swallowing**: The `connectToRoom` catch block shows a toast, but if `supabase.functions.invoke` returns an error object (not a thrown exception), it may not be caught properly.
+- Change the thumbnail label from "Thumbnail Image (Optional)" to "Thumbnail Image (Required) *" for all audio types (not just albums)
+- Add `required` attribute to the thumbnail input for single uploads
+- Add validation in `handleSubmit` for single uploads: if no thumbnail, show error toast and block submission
+- This ensures every audio product has artwork that can serve as its NFT visual
 
-## Plan
+### 2. Database: Create `audio_nfts` Registry Table
 
-### 1. Fix LiveWatch viewer connection (LiveWatch.tsx)
+**Migration SQL:**
+- New table `audio_nfts` with columns:
+  - `id` (uuid, PK)
+  - `audio_product_id` (uuid, FK to audio_products, unique)
+  - `owner_id` (uuid, FK to profiles) -- current owner
+  - `minted_by` (uuid, FK to profiles) -- original creator
+  - `token_id` (serial, unique) -- sequential NFT token ID for display
+  - `minted_at` (timestamptz)
+  - `sixth_value_at_mint` (numeric) -- spot price when minted
+  - `metadata` (jsonb) -- title, artist, thumbnail_url snapshot
+  - `created_at`, `updated_at`
+- RLS: users can read all NFTs, only system (via trigger) can insert
+- Database trigger on `audio_products` INSERT: when `status = 'published'` and `thumbnail_url IS NOT NULL`, auto-create an `audio_nfts` record with the current SIXTH spot price
+- Also create a trigger for existing products that get a thumbnail added via UPDATE
 
-- **Wait for active session**: Before calling `getToken`, explicitly call `supabase.auth.getSession()` and verify a valid session exists. If not, wait/retry.
-- **Add retry logic**: Retry the token fetch up to 3 times with 2-second delays if it fails.
-- **Improve error handling**: Check `data` and `error` from `supabase.functions.invoke` explicitly, and log the full response for debugging.
-- **Add console.log statements** at key points: before token fetch, after token fetch, on room connect, on track subscribe.
+### 3. NFT Detail Modal Component
 
-### 2. Fix useLiveKitToken hook (useLiveKitToken.tsx)
+**New file:** `src/components/NFTDetailModal.tsx`
 
-- Before invoking the edge function, call `supabase.auth.getSession()` to ensure a fresh session exists.
-- If no session, throw a descriptive error instead of making a doomed request.
-- Log the edge function response for debugging.
+- Dialog modal showing:
+  - Large thumbnail image
+  - NFT token ID (e.g., "SIXTH-NFT #42")
+  - Title, artist name
+  - Current SIXTH value (calculated from spot price at mint vs. current spot price)
+  - Value at mint vs. current value comparison
+  - Owner info
+  - Minted date
 
-### 3. Edge function hardening (livekit-token/index.ts)
+### 4. Add NFT Link Under Thumbnails in Audio Players
 
-- Add `console.error` logging when auth fails so it appears in edge function logs (currently only returns 401 silently).
-- Keep `getClaims` (it works when auth is valid) but add a log line on failure.
+**Files:** `src/components/AudioPlayer.tsx`, `src/components/MusicPlayer.tsx`
 
-These changes ensure the viewer waits for a valid auth session before attempting the LiveKit connection, retries on transient failures, and provides visible debugging output.
+- Below the thumbnail in the track info section, add a small clickable link: "View NFT"
+- Clicking opens the `NFTDetailModal` with the current track's NFT data
+- Fetch NFT data from `audio_nfts` table by `audio_product_id`
+- Only show the link if an NFT record exists for that track
+
+### 5. "My Assets" Ledger Page
+
+**New file:** `src/pages/MyAssets.tsx`
+
+A dedicated page accessible from the dashboard with:
+- **Token Holdings Card**: SIXTH balance, current spot price, total USD value
+- **NFT Collection Table/Grid**: All audio NFTs owned by the user
+  - Thumbnail, title, artist, NFT ID, minted date
+  - Value at mint (SIXTH), current value (SIXTH), gain/loss indicator
+  - Click any row to open `NFTDetailModal`
+- **Transaction History Section**: Pull from `user_purchases` and `platform_revenue` to show buy/sell history
+
+**Route:** Add `/my-assets` route in `src/App.tsx`
+
+**Navigation:** Add a link to My Assets from the supporter/merchant dashboard (button or sidebar link)
+
+### 6. Backfill Existing Audio Products
+
+- Run a one-time migration to create `audio_nfts` records for all existing `audio_products` that have `thumbnail_url IS NOT NULL` and `status = 'published'`
+- Use the current spot price as their mint value
+
+---
+
+### Technical Notes
+- The NFT valuation uses the same bonding curve math from `useSpotPrice.tsx` -- value = (current spot price / spot price at mint) ratio applied to the original
+- No actual blockchain interaction yet -- this is the in-app NFT registry that prepares for future Web3 migration
+- The `audio_nfts` table structure mirrors what would map to an ERC-721 token when the platform transitions to on-chain
 
