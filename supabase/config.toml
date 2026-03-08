@@ -118,6 +118,3 @@ verify_jwt = false
 
 [functions.livekit-token]
 verify_jwt = false
-
-[functions.purge-live-recordings]
-verify_jwt = false
