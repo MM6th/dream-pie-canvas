@@ -24,7 +24,8 @@ const RETRY_DELAY_MS = 2000;
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 /** Count only unique viewer users (exclude host/publishers and duplicate reconnect sessions) */
-const countViewers = (room: Room): number => {
+/** Count unique viewer users from remote participants (excludes host/publishers) */
+const countRemoteViewers = (room: Room): number => {
   const viewerUserIds = new Set<string>();
   for (const p of room.remoteParticipants.values()) {
     const hasPublishedTrack = Array.from(p.trackPublications.values()).some(
