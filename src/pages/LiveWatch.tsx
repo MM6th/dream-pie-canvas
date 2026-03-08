@@ -9,11 +9,13 @@ import { Eye, Radio, ArrowLeft } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import LiveChat from "@/components/live/LiveChat";
 import LiveTipButton from "@/components/live/LiveTipButton";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const LiveWatch = () => {
   const { streamId } = useParams<{ streamId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const videoRef = useRef<HTMLVideoElement>(null);
   const pcRef = useRef<RTCPeerConnection | null>(null);
 
@@ -163,7 +165,7 @@ const LiveWatch = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background text-foreground">
+      <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
         <AppNavBar />
         <div className="max-w-7xl mx-auto px-4 py-6 text-center">
           <p className="text-muted-foreground">Connecting to stream...</p>
@@ -173,41 +175,45 @@ const LiveWatch = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
       <AppNavBar />
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        <Button variant="ghost" size="sm" onClick={() => navigate("/live")} className="mb-4">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
+        <Button variant="ghost" size="sm" onClick={() => navigate("/live")} className="mb-3">
           <ArrowLeft className="w-4 h-4 mr-1" /> Back to Live
         </Button>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
-          {/* Video */}
-          <div className="lg:col-span-2 space-y-4">
-            <div className="relative aspect-video bg-black rounded-xl overflow-hidden">
+        {/* Mobile: stacked column layout. Desktop: side-by-side grid */}
+        <div className="flex flex-col lg:grid lg:grid-cols-3 lg:gap-6 gap-4">
+          {/* Video section */}
+          <div className="lg:col-span-2 space-y-3">
+            {/* On mobile, use a smaller fixed height instead of aspect-video to leave room for chat */}
+            <div className={`relative bg-black rounded-xl overflow-hidden ${isMobile ? 'h-[30vh] min-h-[180px]' : 'aspect-video'}`}>
               <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
               {!connected && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/80">
                   <div className="text-center">
-                    <Radio className="w-10 h-10 text-red-500 animate-pulse mx-auto mb-2" />
-                    <p className="text-white">Connecting to stream...</p>
+                    <Radio className="w-8 h-8 sm:w-10 sm:h-10 text-red-500 animate-pulse mx-auto mb-2" />
+                    <p className="text-white text-sm sm:text-base">Connecting to stream...</p>
                   </div>
                 </div>
               )}
-              <div className="absolute top-4 left-4 flex gap-2">
-                <Badge className="bg-red-600 text-white border-0 animate-pulse">
-                  <span className="w-2 h-2 bg-white rounded-full mr-1.5 inline-block" />
+              <div className="absolute top-2 sm:top-4 left-2 sm:left-4 flex gap-2">
+                <Badge className="bg-red-600 text-white border-0 animate-pulse text-xs">
+                  <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-white rounded-full mr-1 sm:mr-1.5 inline-block" />
                   LIVE
                 </Badge>
-                <Badge variant="secondary" className="bg-black/60 text-white border-0">
+                <Badge variant="secondary" className="bg-black/60 text-white border-0 text-xs">
                   <Eye className="w-3 h-3 mr-1" /> {viewerCount}
                 </Badge>
               </div>
             </div>
 
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center justify-between gap-2">
               <div className="min-w-0">
-                <h1 className="text-xl font-bold truncate">{stream?.title}</h1>
-                {stream?.description && <p className="text-muted-foreground text-sm mt-1">{stream.description}</p>}
+                <h1 className={`font-bold truncate ${isMobile ? 'text-base' : 'text-xl'}`}>{stream?.title}</h1>
+                {stream?.description && (
+                  <p className="text-muted-foreground text-xs sm:text-sm mt-0.5 line-clamp-1">{stream.description}</p>
+                )}
               </div>
               {user && stream && user.id !== stream.merchant_id && (
                 <LiveTipButton streamId={stream.id} recipientId={stream.merchant_id} />
@@ -215,8 +221,8 @@ const LiveWatch = () => {
             </div>
           </div>
 
-          {/* Chat - keep visible on mobile */}
-          <div className="w-full">
+          {/* Chat section — always visible, takes remaining space on mobile */}
+          <div className="w-full flex-1 min-h-0">
             {streamId && <LiveChat streamId={streamId} />}
           </div>
         </div>
