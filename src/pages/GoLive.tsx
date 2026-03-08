@@ -320,11 +320,23 @@ const GoLive = () => {
       await (supabase.from("live_streams") as any).update({ status: "ended", ended_at: new Date().toISOString() }).eq("id", currentStreamId);
     }
 
+    // Close peer connections immediately (doesn't affect local recording)
+    peerConnectionsRef.current.forEach((pc) => pc.close());
+    peerConnectionsRef.current.clear();
+    setIsLive(false);
+    setStreamId(null);
+
+    const cleanup = () => {
+      // Stop camera/mic tracks AFTER recording is saved
+      streamRef.current?.getTracks().forEach((t) => t.stop());
+    };
+
     // Stop recording and auto-save
     if (isRecording && mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
       setSaving(true);
       mediaRecorderRef.current.onstop = async () => {
         const blob = new Blob(chunksRef.current, { type: "video/webm" });
+        console.log("Recording blob size:", blob.size);
         if (blob.size > 0 && user && currentStreamId) {
           const fileName = `live-recordings/${user.id}/${currentStreamId}-${Date.now()}.webm`;
           const { error: uploadError } = await supabase.storage
@@ -342,20 +354,16 @@ const GoLive = () => {
           toast({ title: "Stream ended" });
         }
         setSaving(false);
+        cleanup();
         navigate("/live");
       };
       mediaRecorderRef.current.stop();
       setIsRecording(false);
     } else {
       toast({ title: "Stream ended" });
+      cleanup();
       navigate("/live");
     }
-
-    streamRef.current?.getTracks().forEach((t) => t.stop());
-    peerConnectionsRef.current.forEach((pc) => pc.close());
-    peerConnectionsRef.current.clear();
-    setIsLive(false);
-    setStreamId(null);
   };
 
   if (!user) {
