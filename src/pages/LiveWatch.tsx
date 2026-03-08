@@ -154,10 +154,10 @@ const LiveWatch = () => {
           });
 
           room.on(RoomEvent.ParticipantConnected, () => {
-            setViewerCount(room.remoteParticipants.size);
+            setViewerCount(countViewers(room));
           });
           room.on(RoomEvent.ParticipantDisconnected, () => {
-            setViewerCount(room.remoteParticipants.size);
+            setViewerCount(countViewers(room));
           });
 
           room.on(RoomEvent.Disconnected, () => {
