@@ -95,6 +95,21 @@ const GoLive = () => {
     }
   };
 
+  // Auto-start recording helper
+  const autoStartRecording = useCallback(() => {
+    if (!streamRef.current) return;
+    chunksRef.current = [];
+    const mr = new MediaRecorder(streamRef.current, { mimeType: "video/webm;codecs=vp9,opus" });
+    mr.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
+    mr.onstop = () => {
+      const blob = new Blob(chunksRef.current, { type: "video/webm" });
+      setRecordedBlob(blob);
+    };
+    mr.start(1000);
+    mediaRecorderRef.current = mr;
+    setIsRecording(true);
+  }, []);
+
   // Go Live
   const handleGoLive = async () => {
     if (!user || !title.trim()) {
@@ -117,6 +132,9 @@ const GoLive = () => {
     setIsLive(true);
     setSetupPhase(false);
     startHeartbeat(data.id);
+
+    // Auto-start recording
+    autoStartRecording();
 
     // Listen for incoming WebRTC signals (viewer answers and ICE candidates)
     supabase
@@ -160,7 +178,7 @@ const GoLive = () => {
         }
       });
 
-    toast({ title: "You're live!", description: "Your stream has started." });
+    toast({ title: "You're live!", description: "Your stream is being recorded automatically." });
   };
 
   // Create peer connection for a viewer
@@ -250,17 +268,48 @@ const GoLive = () => {
     setSaving(false);
   };
 
-  // End stream
+  // End stream - auto-save recording
   const endStream = async () => {
-    if (isRecording) stopRecording();
-
     if (heartbeatIntervalRef.current) {
       window.clearInterval(heartbeatIntervalRef.current);
       heartbeatIntervalRef.current = null;
     }
 
-    if (streamId) {
-      await (supabase.from("live_streams") as any).update({ status: "ended", ended_at: new Date().toISOString() }).eq("id", streamId);
+    const currentStreamId = streamId;
+
+    if (currentStreamId) {
+      await (supabase.from("live_streams") as any).update({ status: "ended", ended_at: new Date().toISOString() }).eq("id", currentStreamId);
+    }
+
+    // Stop recording and auto-save
+    if (isRecording && mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+      setSaving(true);
+      mediaRecorderRef.current.onstop = async () => {
+        const blob = new Blob(chunksRef.current, { type: "video/webm" });
+        if (blob.size > 0 && user && currentStreamId) {
+          const fileName = `live-recordings/${user.id}/${currentStreamId}-${Date.now()}.webm`;
+          const { error: uploadError } = await supabase.storage
+            .from("user-media")
+            .upload(fileName, blob, { contentType: "video/webm" });
+
+          if (!uploadError) {
+            const { data: urlData } = supabase.storage.from("user-media").getPublicUrl(fileName);
+            await (supabase.from("live_streams") as any).update({ recording_url: urlData.publicUrl }).eq("id", currentStreamId);
+            toast({ title: "Stream ended & recording saved!" });
+          } else {
+            toast({ title: "Stream ended", description: "Recording upload failed: " + uploadError.message, variant: "destructive" });
+          }
+        } else {
+          toast({ title: "Stream ended" });
+        }
+        setSaving(false);
+        navigate("/live");
+      };
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    } else {
+      toast({ title: "Stream ended" });
+      navigate("/live");
     }
 
     streamRef.current?.getTracks().forEach((t) => t.stop());
@@ -268,8 +317,6 @@ const GoLive = () => {
     peerConnectionsRef.current.clear();
     setIsLive(false);
     setStreamId(null);
-    toast({ title: "Stream ended" });
-    navigate("/live");
   };
 
   if (!user) {
@@ -319,28 +366,9 @@ const GoLive = () => {
                 {micOn ? "Mic" : "Muted"}
               </Button>
 
-              {isLive && !isRecording && (
-                <Button onClick={startRecording} variant="outline" size="sm" className="border-red-600 text-red-400 hover:bg-red-600/10">
-                  <span className="w-3 h-3 bg-red-500 rounded-full mr-2" />
-                  Record
-                </Button>
-              )}
-              {isRecording && (
-                <Button onClick={stopRecording} variant="outline" size="sm" className="border-red-600 text-red-400">
-                  <Square className="w-3 h-3 mr-2 fill-red-500" />
-                  Stop Recording
-                </Button>
-              )}
-              {recordedBlob && (
-                <Button onClick={saveRecording} disabled={saving} size="sm" className="bg-primary text-primary-foreground">
-                  <Save className="w-4 h-4 mr-1" />
-                  {saving ? "Saving..." : "Save Recording"}
-                </Button>
-              )}
-
               {isLive && (
-                <Button onClick={endStream} variant="destructive" size="sm" className="ml-auto">
-                  End Stream
+                <Button onClick={endStream} variant="destructive" size="sm" className="ml-auto" disabled={saving}>
+                  {saving ? "Saving Recording..." : "End Stream & Save"}
                 </Button>
               )}
             </div>
