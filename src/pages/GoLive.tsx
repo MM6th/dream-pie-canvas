@@ -208,6 +208,47 @@ const GoLive = () => {
     };
   }, [user, startPreview, reconnectToStream]);
 
+  // Toggle camera
+  const toggleCamera = () => {
+    if (roomRef.current) {
+      const localParticipant = roomRef.current.localParticipant;
+      const camTrack = localParticipant.getTrackPublication(Track.Source.Camera);
+      if (camTrack?.track) {
+        if (cameraOn) {
+          localParticipant.setCameraEnabled(false);
+        } else {
+          localParticipant.setCameraEnabled(true);
+        }
+        setCameraOn(!cameraOn);
+      }
+    } else {
+      const videoTrack = localStreamRef.current?.getVideoTracks()[0];
+      if (videoTrack) {
+        videoTrack.enabled = !videoTrack.enabled;
+        setCameraOn(videoTrack.enabled);
+      }
+    }
+  };
+
+  // Toggle mic
+  const toggleMic = () => {
+    if (roomRef.current) {
+      const localParticipant = roomRef.current.localParticipant;
+      if (micOn) {
+        localParticipant.setMicrophoneEnabled(false);
+      } else {
+        localParticipant.setMicrophoneEnabled(true);
+      }
+      setMicOn(!micOn);
+    } else {
+      const audioTrack = localStreamRef.current?.getAudioTracks()[0];
+      if (audioTrack) {
+        audioTrack.enabled = !audioTrack.enabled;
+        setMicOn(audioTrack.enabled);
+      }
+    }
+  };
+
   // Go Live
   const handleGoLive = async () => {
     if (!user || !title.trim()) {
