@@ -103,12 +103,20 @@ const GoLive = () => {
   // Ref flag: when true, onstop handler should upload the recording
   const shouldUploadRef = useRef(false);
   const endStreamIdRef = useRef<string | null>(null);
+  const broadcastChannelRef = useRef<any>(null);
 
-  // Auto-start recording helper
+  // Auto-start recording helper with MIME fallbacks
   const autoStartRecording = useCallback(() => {
     if (!streamRef.current) return;
     chunksRef.current = [];
-    const mr = new MediaRecorder(streamRef.current, { mimeType: "video/webm;codecs=vp9,opus" });
+    const mimeTypes = ["video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm"];
+    let selectedMime = "";
+    for (const mime of mimeTypes) {
+      if (MediaRecorder.isTypeSupported(mime)) { selectedMime = mime; break; }
+    }
+    if (!selectedMime) { console.error("No supported MIME type for MediaRecorder"); return; }
+    console.log("Recording: using MIME type:", selectedMime);
+    const mr = new MediaRecorder(streamRef.current, { mimeType: selectedMime });
     mr.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
     mr.onstop = async () => {
       const blob = new Blob(chunksRef.current, { type: "video/webm" });
@@ -178,84 +186,55 @@ const GoLive = () => {
     setSetupPhase(false);
     startHeartbeat(data.id);
 
-    // Auto-start recording
-    autoStartRecording();
+    // Set up Broadcast channel for WebRTC signaling FIRST (before recording)
+    const rtcChannel = supabase.channel(`rtc-${data.id}`);
+    broadcastChannelRef.current = rtcChannel;
 
-    // Listen for incoming WebRTC signals — NO stream_id filter (UUID filters unreliable in Supabase Realtime)
-    const signalChannel = supabase
-      .channel(`signals-${data.id}`)
-      .on("postgres_changes", {
-        event: "INSERT",
-        schema: "public",
-        table: "live_stream_signals",
-      }, async (payload: any) => {
-        const signal = payload.new;
-        // Filter in JS: only process signals for THIS stream, not from self
-        if (signal.stream_id !== data.id) return;
-        if (signal.sender_id === user.id) return;
+    rtcChannel
+      .on("broadcast", { event: "signal" }, async ({ payload }: any) => {
+        if (!payload || payload.from === user.id) return;
 
-        console.log("Host: received signal", signal.signal_type, "from", signal.sender_id);
+        console.log("Host: broadcast signal received:", payload.type, "from:", payload.from);
 
-        if (signal.signal_type === "answer") {
-          const pc = peerConnectionsRef.current.get(signal.sender_id);
+        if (payload.type === "join-request") {
+          if (!peerConnectionsRef.current.has(payload.from)) {
+            try {
+              await createPeerConnectionForViewer(payload.from, data.id);
+            } catch (e) {
+              console.error("Host: error creating peer connection for viewer", payload.from, e);
+            }
+          }
+        } else if (payload.type === "answer") {
+          const pc = peerConnectionsRef.current.get(payload.from);
           if (pc) {
             try {
-              await pc.setRemoteDescription(new RTCSessionDescription(signal.signal_data));
+              await pc.setRemoteDescription(new RTCSessionDescription(payload.data));
               console.log("Host: set remote description from viewer answer");
             } catch (e) {
               console.error("Host: error setting remote description", e);
             }
           }
-        } else if (signal.signal_type === "ice-candidate") {
-          const pc = peerConnectionsRef.current.get(signal.sender_id);
-          if (pc && signal.signal_data) {
+        } else if (payload.type === "ice-candidate") {
+          const pc = peerConnectionsRef.current.get(payload.from);
+          if (pc && payload.data) {
             try {
-              await pc.addIceCandidate(new RTCIceCandidate(signal.signal_data));
+              await pc.addIceCandidate(new RTCIceCandidate(payload.data));
             } catch (e) {
               console.warn("Host: error adding ICE candidate", e);
-            }
-          }
-        } else if (signal.signal_type === "join-request") {
-          console.log("Host: viewer join request from", signal.sender_id);
-          if (!peerConnectionsRef.current.has(signal.sender_id)) {
-            try {
-              await createPeerConnectionForViewer(signal.sender_id, data.id);
-            } catch (e) {
-              console.error("Host: error creating peer connection for viewer", signal.sender_id, e);
             }
           }
         }
       })
       .subscribe((status) => {
-        console.log("Host: signal subscription status:", status);
+        console.log("Host: broadcast channel status:", status);
       });
 
-    // Periodic polling fallback for join requests (every 3s)
-    const processedViewers = new Set<string>();
-    const pollInterval = window.setInterval(async () => {
-      const { data: pendingSignals } = await (supabase
-        .from("live_stream_signals") as any)
-        .select("*")
-        .eq("stream_id", data.id)
-        .eq("signal_type", "join-request")
-        .neq("sender_id", user.id)
-        .order("created_at", { ascending: true });
-
-      if (pendingSignals) {
-        for (const signal of pendingSignals) {
-          if (!processedViewers.has(signal.sender_id) && !peerConnectionsRef.current.has(signal.sender_id)) {
-            console.log("Host poll: found join request from", signal.sender_id);
-            processedViewers.add(signal.sender_id);
-            try {
-              await createPeerConnectionForViewer(signal.sender_id, data.id);
-            } catch (e) {
-              console.error("Host poll: error creating peer connection", e);
-            }
-          }
-        }
-      }
-    }, 3000);
-    pollIntervalRef.current = pollInterval;
+    // Auto-start recording AFTER signaling is set up (wrapped in try/catch)
+    try {
+      autoStartRecording();
+    } catch (e) {
+      console.error("Host: autoStartRecording failed, stream will continue without recording:", e);
+    }
 
     // Track viewer count via realtime presence
     const presenceChannel = supabase.channel(`presence-${data.id}`);
@@ -303,14 +282,12 @@ const GoLive = () => {
 
       pc.onicecandidate = async (event) => {
         if (event.candidate) {
-          const { error: iceError } = await (supabase.from("live_stream_signals") as any).insert({
-            stream_id: sid,
-            sender_id: user.id,
-            signal_type: "ice-candidate",
-            signal_data: event.candidate.toJSON(),
-            target_id: viewerId,
+          console.log("Host: sending ICE candidate to viewer via broadcast");
+          broadcastChannelRef.current?.send({
+            type: "broadcast",
+            event: "signal",
+            payload: { type: "ice-candidate", from: user.id, to: viewerId, data: event.candidate.toJSON() },
           });
-          if (iceError) console.error("Host: failed to insert ICE candidate signal:", iceError);
         }
       };
 
@@ -318,26 +295,20 @@ const GoLive = () => {
         console.log("Host: ICE connection state for viewer", viewerId, ":", pc.iceConnectionState);
       };
 
-      // Create and send offer
+      // Create and send offer via broadcast
       console.log("Host: creating offer for viewer:", viewerId);
       const offer = await pc.createOffer();
       console.log("Host: offer created, setting local description");
       await pc.setLocalDescription(offer);
-      console.log("Host: local description set, inserting offer signal to DB");
+      console.log("Host: local description set, sending offer via broadcast");
       
-      const { error: offerError } = await (supabase.from("live_stream_signals") as any).insert({
-        stream_id: sid,
-        sender_id: user.id,
-        signal_type: "offer",
-        signal_data: offer,
-        target_id: viewerId,
+      broadcastChannelRef.current?.send({
+        type: "broadcast",
+        event: "signal",
+        payload: { type: "offer", from: user.id, to: viewerId, data: offer },
       });
       
-      if (offerError) {
-        console.error("Host: FAILED to insert offer signal:", offerError);
-      } else {
-        console.log("Host: offer signal inserted successfully for viewer:", viewerId);
-      }
+      console.log("Host: offer sent via broadcast for viewer:", viewerId);
     } catch (e) {
       console.error("Host: createPeerConnectionForViewer THREW for viewer:", viewerId, e);
     }
@@ -409,9 +380,13 @@ const GoLive = () => {
       await (supabase.from("live_streams") as any).update({ status: "ended", ended_at: new Date().toISOString() }).eq("id", currentStreamId);
     }
 
-    // Close peer connections immediately (doesn't affect local recording)
+    // Close peer connections and broadcast channel
     peerConnectionsRef.current.forEach((pc) => pc.close());
     peerConnectionsRef.current.clear();
+    if (broadcastChannelRef.current) {
+      supabase.removeChannel(broadcastChannelRef.current);
+      broadcastChannelRef.current = null;
+    }
     setIsLive(false);
     setStreamId(null);
 
