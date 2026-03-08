@@ -265,33 +265,6 @@ const LiveWatch = () => {
                   </div>
                 </div>
               )}
-              {needsTapToPlay && connected && (
-                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="secondary"
-                    className="bg-black/70 hover:bg-black/90 text-white border-0 backdrop-blur-sm shadow-lg gap-1.5 px-4"
-                    onClick={async () => {
-                      try {
-                        if (videoRef.current) {
-                          videoRef.current.muted = true;
-                          await videoRef.current.play();
-                        }
-                        if (audioRef.current) {
-                          audioRef.current.muted = false;
-                          await audioRef.current.play();
-                        }
-                        setNeedsTapToPlay(false);
-                      } catch {
-                        toast({ title: "Tap again to enable live audio", variant: "destructive" });
-                      }
-                    }}
-                  >
-                    🔴 LIVE video is on • Tap for audio
-                  </Button>
-                </div>
-              )}
               <div className="absolute top-2 sm:top-4 left-2 sm:left-4 flex gap-2">
                 <Badge className="bg-red-600 text-white border-0 animate-pulse text-xs">
                   <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-white rounded-full mr-1 sm:mr-1.5 inline-block" />
