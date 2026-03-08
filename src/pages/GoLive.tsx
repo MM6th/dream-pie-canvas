@@ -190,7 +190,7 @@ const GoLive = () => {
     startHeartbeat(data.id);
 
     // Set up Broadcast channel for WebRTC signaling FIRST (before recording)
-    const rtcChannel = supabase.channel(`rtc-${data.id}`);
+    const rtcChannel = supabase.channel(`rtc-${data.id}`, { config: { broadcast: { ack: true } } });
     broadcastChannelRef.current = rtcChannel;
 
     rtcChannel
