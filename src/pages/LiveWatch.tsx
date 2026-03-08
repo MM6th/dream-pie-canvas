@@ -244,7 +244,8 @@ const LiveWatch = () => {
       }
       supabase.removeChannel(streamChannel);
     };
-  }, [stream, user, streamId, navigate, getToken, authLoading]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stream, streamId, navigate, getToken, authLoading]);
 
   if (loading) {
     return (
