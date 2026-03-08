@@ -307,6 +307,16 @@ const LiveWatch = () => {
                   <Eye className="w-3 h-3 mr-1" /> {connected ? Math.max(viewerCount, 1) : viewerCount}
                 </Badge>
               </div>
+              <div className="absolute top-2 sm:top-4 right-2 sm:right-4">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="bg-black/60 hover:bg-black/80 text-white rounded-full w-8 h-8 sm:w-9 sm:h-9"
+                  onClick={() => setMuted((prev) => !prev)}
+                >
+                  {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                </Button>
+              </div>
             </div>
 
             <div className="flex items-center justify-between gap-2">
