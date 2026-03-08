@@ -201,15 +201,17 @@ const LiveWatch = () => {
 
     connectToRoom();
 
-    // Listen for stream ending via DB
+    // Listen for THIS stream ending via DB (filtered to this specific row)
     const streamChannel = supabase
       .channel(`stream-status-${streamId}`)
       .on("postgres_changes", {
         event: "UPDATE",
         schema: "public",
         table: "live_streams",
+        filter: `id=eq.${streamId}`,
       }, (payload: any) => {
-        if (payload.new.id === streamId && payload.new.status === "ended") {
+        if (cancelled) return;
+        if (payload.new.status === "ended") {
           toast({ title: "Stream ended", description: "The broadcaster has ended the stream." });
           navigate("/live");
         }
@@ -225,6 +227,7 @@ const LiveWatch = () => {
         .eq("id", streamId)
         .maybeSingle();
 
+      if (cancelled) return;
       if (streamData?.status === "ended") {
         toast({ title: "Stream ended", description: "The broadcaster has ended the stream." });
         navigate("/live");
