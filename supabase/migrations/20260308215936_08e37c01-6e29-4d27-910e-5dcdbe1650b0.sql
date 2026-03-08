@@ -1,0 +1,2 @@
+-- This is a data fix, not a schema change. Using UPDATE to end the stale stream.
+UPDATE live_streams SET status = 'ended', ended_at = now() WHERE id = 'ac1d78b4-c851-4287-b8f5-39fea6fc61fd' AND status = 'live';
