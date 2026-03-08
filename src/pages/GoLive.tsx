@@ -201,27 +201,61 @@ const GoLive = () => {
 
     init();
 
-    // Cleanup: if host navigates away or closes tab while live, end the stream
-    const handleBeforeUnload = () => {
-      // Use sendBeacon to reliably end stream on tab close
-      if (streamId) {
-        const url = `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/live_streams?id=eq.${streamId}`;
-        const body = JSON.stringify({ status: "ended", ended_at: new Date().toISOString() });
-        navigator.sendBeacon?.(url); // sendBeacon doesn't support PATCH, so we use cleanup below
+    return () => {
+      cancelled = true;
+      localStreamRef.current?.getTracks().forEach((t) => t.stop());
+      if (heartbeatIntervalRef.current) window.clearInterval(heartbeatIntervalRef.current);
+    };
+  }, [user, startPreview, reconnectToStream]);
+
+  // Auto-end stream if host navigates away or logs out while live
+  const streamIdRef = useRef<string | null>(null);
+  streamIdRef.current = streamId;
+
+  useEffect(() => {
+    const autoEndStream = async () => {
+      const sid = streamIdRef.current;
+      if (!sid) return;
+      try {
+        await (supabase.from("live_streams") as any)
+          .update({ status: "ended", ended_at: new Date().toISOString() })
+          .eq("id", sid);
+        console.log("Auto-ended stream on unmount:", sid);
+      } catch (e) {
+        console.error("Failed to auto-end stream:", e);
       }
     };
+
+    // Handle tab close / browser close
+    const handleBeforeUnload = () => {
+      const sid = streamIdRef.current;
+      if (!sid || !user?.id) return;
+      // Use sendBeacon with Supabase REST API for tab-close reliability
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/live_streams?id=eq.${sid}&merchant_id=eq.${user.id}`;
+      const body = JSON.stringify({ status: "ended", ended_at: new Date().toISOString() });
+      const blob = new Blob([body], { type: "application/json" });
+      // sendBeacon only supports POST, but we can use fetch with keepalive as fallback
+      fetch(url, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          "Prefer": "return=minimal",
+        },
+        body,
+        keepalive: true,
+      }).catch(() => {});
+    };
+
     window.addEventListener("beforeunload", handleBeforeUnload);
 
     return () => {
-      cancelled = true;
       window.removeEventListener("beforeunload", handleBeforeUnload);
-      localStreamRef.current?.getTracks().forEach((t) => t.stop());
-      if (heartbeatIntervalRef.current) window.clearInterval(heartbeatIntervalRef.current);
-      
-      // Auto-end the stream when component unmounts (navigating away, logging out, etc.)
-      // Use the current streamId from ref pattern
+      // Component unmount (navigation, logout) — end the stream
+      autoEndStream();
     };
-  }, [user, startPreview, reconnectToStream]);
+  }, [user?.id]);
 
   // Toggle camera
   const toggleCamera = () => {
