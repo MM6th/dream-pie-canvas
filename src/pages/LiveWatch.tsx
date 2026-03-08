@@ -16,7 +16,6 @@ import {
   RoomEvent,
   Track,
   RemoteTrackPublication,
-  RemoteParticipant,
 } from "livekit-client";
 
 const LiveWatch = () => {
