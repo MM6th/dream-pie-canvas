@@ -74,7 +74,7 @@ const LiveWatch = () => {
     };
 
     fetchStream();
-  }, [streamId, navigate]);
+  }, [streamId, navigate, user]);
 
   // Attach remote tracks separately: camera -> video, microphone -> hidden audio
   const attachTrack = async (publication: RemoteTrackPublication) => {
