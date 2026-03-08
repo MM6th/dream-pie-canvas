@@ -53,7 +53,10 @@ const GoLive = () => {
     // Cleanup on unmount: end stream in DB if still live
     return () => {
       streamRef.current?.getTracks().forEach((t) => t.stop());
-      peerConnectionsRef.current.forEach((pc) => pc.close());
+      if (heartbeatIntervalRef.current) {
+        window.clearInterval(heartbeatIntervalRef.current);
+        heartbeatIntervalRef.current = null;
+      }
     };
   }, [startPreview]);
 
