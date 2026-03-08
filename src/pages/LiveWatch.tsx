@@ -30,6 +30,7 @@ const LiveWatch = () => {
   const { getToken } = useLiveKitToken();
   const isMobile = useIsMobile();
   const videoRef = useRef<HTMLVideoElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
   const roomRef = useRef<Room | null>(null);
 
   const [stream, setStream] = useState<any>(null);
@@ -75,23 +76,25 @@ const LiveWatch = () => {
     fetchStream();
   }, [streamId, navigate]);
 
-  // Attach a remote track to the video element
+  // Attach remote tracks separately: camera -> video, microphone -> audio
   const attachTrack = async (publication: RemoteTrackPublication) => {
-    if (!publication.track || !videoRef.current) return;
-    if (publication.source === Track.Source.Camera || publication.source === Track.Source.Microphone) {
+    if (!publication.track) return;
+
+    if (publication.source === Track.Source.Camera && videoRef.current) {
       publication.track.attach(videoRef.current);
-      // Start muted (browsers allow muted autoplay), then prompt user to unmute
       videoRef.current.muted = true;
       try {
         await videoRef.current.play();
-        // Video is playing muted — show unmute prompt
-        setNeedsTapToPlay(true);
       } catch {
-        setNeedsTapToPlay(true);
+        // Browser may still block; user gesture can recover
       }
-      if (publication.source === Track.Source.Camera) {
-        setConnected(true);
-      }
+      setConnected(true);
+      setNeedsTapToPlay(true);
+      return;
+    }
+
+    if (publication.source === Track.Source.Microphone && audioRef.current) {
+      publication.track.attach(audioRef.current);
     }
   };
 
@@ -127,22 +130,10 @@ const LiveWatch = () => {
           });
           roomRef.current = room;
 
-          room.on(RoomEvent.TrackSubscribed, async (track) => {
+          room.on(RoomEvent.TrackSubscribed, async (track, publication) => {
             if (cancelled) return;
             console.log("LiveKit viewer: track subscribed", track.source);
-            if (videoRef.current) {
-              track.attach(videoRef.current);
-              videoRef.current.muted = true;
-              try {
-                await videoRef.current.play();
-                setNeedsTapToPlay(true); // Playing muted, prompt to unmute
-              } catch {
-                setNeedsTapToPlay(true);
-              }
-              if (track.source === Track.Source.Camera) {
-                setConnected(true);
-              }
-            }
+            await attachTrack(publication as RemoteTrackPublication);
           });
 
           room.on(RoomEvent.TrackUnsubscribed, (track) => {
@@ -259,6 +250,7 @@ const LiveWatch = () => {
           <div className="lg:col-span-2 space-y-2">
             <div className={`relative bg-black rounded-xl overflow-hidden ${isMobile ? 'h-[25vh] min-h-[140px]' : 'aspect-video'}`}>
               <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
+              <audio ref={audioRef} autoPlay playsInline muted className="hidden" />
               {!connected && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/80">
                   <div className="text-center">
@@ -277,8 +269,12 @@ const LiveWatch = () => {
                     onClick={async () => {
                       try {
                         if (videoRef.current) {
-                          videoRef.current.muted = false;
+                          videoRef.current.muted = true;
                           await videoRef.current.play();
+                        }
+                        if (audioRef.current) {
+                          audioRef.current.muted = false;
+                          await audioRef.current.play();
                         }
                         setNeedsTapToPlay(false);
                       } catch {
