@@ -495,8 +495,8 @@ const ProfilePage = () => {
               />
             ) : (
               <>
-                {/* Most Recent Post */}
-                {userPosts.length > 0 && (
+                {/* Most Recent Post - shown standalone only when no portfolio exists */}
+                {userPosts.length > 0 && !(portfolios.length > 0 && (portfoliosVisible || isOwnProfile)) && (
                   <>
                     <div className="flex items-center gap-2 mb-6">
                       <MessageSquare className="w-6 h-6 text-white" />
