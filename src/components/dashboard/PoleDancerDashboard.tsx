@@ -19,7 +19,7 @@ import { supabase } from "@/integrations/supabase/client";
 import SupporterCurrentAffirmationsModal from "@/components/SupporterCurrentAffirmationsModal";
 import { BuyerAstrologyLibrary } from "@/components/astrology/BuyerAstrologyLibrary";
 import AstrologyAudioPlayer from "@/components/AstrologyAudioPlayer";
-import TVGuideModal from "@/components/TVGuideModal";
+
 import UserTicketsTab from "@/components/support/UserTicketsTab";
 import { useApprovalStatus } from "@/hooks/useApprovalStatus";
 import ApprovalStatusBanner from "@/components/ApprovalStatusBanner";
