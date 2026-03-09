@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { CreditPurchaseModal } from "./CreditPurchaseModal";
 import { supabase } from "@/integrations/supabase/client";
+import { useSpotPrice } from "@/hooks/useSpotPrice";
 import sixthCoinLogo from "@/assets/sixth-coin-logo.jpg";
 
 interface MessageCreditsIconProps {
