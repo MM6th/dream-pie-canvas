@@ -183,10 +183,6 @@ const FilmMakerDashboard = ({
       {/* Approval Status Banner */}
       <ApprovalStatusBanner approvalStatus={approvalStatus} isAdmin={isAdmin} />
       
-      {/* Share Affirmations Button */}
-      <div className="flex flex-col gap-3 mb-6">
-        <SupporterCurrentAffirmationsModal />
-      </div>
 
       {/* Follow Requests Card - shows when profile is private and has pending requests */}
       {isPrivate && pendingRequestsCount > 0 && (
