@@ -287,7 +287,7 @@ const LivestreamRoom = () => {
               You need to pay credits to access this livestream.
             </p>
             <Button onClick={() => navigate("/bulletin")} className="bg-purple-600 hover:bg-purple-700">
-              Go to TV Guide
+              Go to Bulletin Board
             </Button>
           </CardContent>
         </Card>
@@ -304,7 +304,7 @@ const LivestreamRoom = () => {
             <h2 className="text-xl font-semibold text-white mb-2">Stream Ended</h2>
             <p className="text-gray-400 mb-4">This livestream session has ended.</p>
             <Button onClick={() => navigate("/bulletin")} className="bg-purple-600 hover:bg-purple-700">
-              Back to TV Guide
+              Back to Bulletin Board
             </Button>
           </CardContent>
         </Card>
@@ -323,7 +323,7 @@ const LivestreamRoom = () => {
             className="text-gray-300 hover:text-white"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to TV Guide
+            Back to Bulletin Board
           </Button>
           <div className="flex items-center gap-4">
             {/* Connection status indicator */}

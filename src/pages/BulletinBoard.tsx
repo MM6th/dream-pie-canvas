@@ -7,7 +7,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import AppNavBar from "@/components/AppNavBar";
 import { supabase } from "@/integrations/supabase/client";
 import CurrentThoughtsSection from "@/components/CurrentThoughtsSection";
-import TVGuideSection from "@/components/TVGuideSection";
+
 import { toast } from "sonner";
 
 const BulletinBoard = () => {
@@ -54,7 +54,7 @@ const BulletinBoard = () => {
     post.post_type === 'announcement' ||
     post.post_type === 'current_thoughts'
   );
-  const tvGuidePosts = posts.filter((post) => post.post_type === 'tv_guide');
+  
 
 
   if (!user) {
@@ -86,7 +86,6 @@ const BulletinBoard = () => {
           // Mobile: Vertical stack, no ads
           <div className="space-y-8 max-w-2xl mx-auto">
             <CurrentThoughtsSection posts={currentThoughtsPosts} useCarousel={false} />
-            <TVGuideSection posts={tvGuidePosts} useCarousel={false} />
           </div>
         ) : (
           // Desktop: Left Ad + 2 Carousels + Right Ad
@@ -104,13 +103,8 @@ const BulletinBoard = () => {
             </div>
 
             {/* Main Content - 2 Carousels */}
-            <div className="flex gap-2 max-w-3xl">
-              <div className="flex-1">
-                <CurrentThoughtsSection posts={currentThoughtsPosts} useCarousel={false} />
-              </div>
-              <div className="flex-1">
-                <TVGuideSection posts={tvGuidePosts} useCarousel={false} />
-              </div>
+            <div className="flex-1 max-w-3xl">
+              <CurrentThoughtsSection posts={currentThoughtsPosts} useCarousel={false} />
             </div>
 
             {/* Right Ad Space */}

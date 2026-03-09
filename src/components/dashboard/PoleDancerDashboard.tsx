@@ -19,7 +19,7 @@ import { supabase } from "@/integrations/supabase/client";
 import SupporterCurrentAffirmationsModal from "@/components/SupporterCurrentAffirmationsModal";
 import { BuyerAstrologyLibrary } from "@/components/astrology/BuyerAstrologyLibrary";
 import AstrologyAudioPlayer from "@/components/AstrologyAudioPlayer";
-import TVGuideModal from "@/components/TVGuideModal";
+
 import UserTicketsTab from "@/components/support/UserTicketsTab";
 import { useApprovalStatus } from "@/hooks/useApprovalStatus";
 import ApprovalStatusBanner from "@/components/ApprovalStatusBanner";
@@ -176,10 +176,9 @@ const PoleDancerDashboard = ({
       {/* Approval Status Banner */}
       <ApprovalStatusBanner approvalStatus={approvalStatus} isAdmin={isAdmin} />
       
-      {/* Share Affirmations & TV Guide Buttons */}
+      {/* Share Affirmations Button */}
       <div className="flex flex-col gap-3 mb-6">
         <SupporterCurrentAffirmationsModal />
-        <TVGuideModal />
       </div>
 
       {/* Follow Requests Card - shows when profile is private and has pending requests */}
@@ -316,7 +315,6 @@ const PoleDancerDashboard = ({
                     <CardContent className="space-y-4">
                       <div className="flex flex-col gap-3">
                         <SupporterCurrentAffirmationsModal />
-                        <TVGuideModal />
                       </div>
                       <BulletinPostManager hideHeader />
                     </CardContent>

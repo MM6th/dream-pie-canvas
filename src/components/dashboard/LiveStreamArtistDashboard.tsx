@@ -24,7 +24,7 @@ import { TutorialTooltip } from "@/components/TutorialTooltip";
 import { TutorialSpotlight } from "@/components/TutorialSpotlight";
 import SupporterCurrentAffirmationsModal from "@/components/SupporterCurrentAffirmationsModal";
 import { BuyerAstrologyLibrary } from "@/components/astrology/BuyerAstrologyLibrary";
-import TVGuideModal from "@/components/TVGuideModal";
+
 import { LivestreamSettingsCard } from "@/components/messaging/LivestreamSettingsCard";
 import { MessageSettingsCard } from "@/components/messaging/MessageSettingsCard";
 import { LiveStreamControlCenter } from "@/components/LiveStreamControlCenter";
@@ -244,10 +244,9 @@ const LiveStreamArtistDashboard = ({
         </>
       )}
 
-      {/* Share Affirmations & TV Guide Buttons - Stacked for Mobile */}
+      {/* Share Affirmations Button */}
       <div className="flex flex-col gap-3 mb-6">
         <SupporterCurrentAffirmationsModal />
-        <TVGuideModal />
       </div>
 
       <LiveStreamControlCenter />
@@ -348,7 +347,6 @@ const LiveStreamArtistDashboard = ({
                     <CardContent className="space-y-4">
                       <div className="flex flex-col gap-3">
                         <SupporterCurrentAffirmationsModal />
-                        <TVGuideModal />
                       </div>
                       <BulletinPostManager hideHeader />
                     </CardContent>

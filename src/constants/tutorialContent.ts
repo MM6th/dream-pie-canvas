@@ -527,7 +527,7 @@ export const liveStreamArtistTutorialSteps: TutorialStep[] = [
   {
     id: 'schedule-stream',
     title: 'Schedule Streams',
-    description: 'Create and schedule upcoming livestream sessions. Your audience will see them on the TV Guide.',
+    description: 'Create and schedule upcoming livestream sessions. Your audience can find them on the Live tab.',
     duration: 10000,
     target: '[data-tutorial="schedule-stream"]',
     placement: 'bottom',
@@ -622,7 +622,7 @@ export const adminTutorialSteps: TutorialStep[] = [
   {
     id: 'bulletin-tab',
     title: 'Bulletin Posts',
-    description: 'Manage bulletin board posts, announcements, and TV Guide entries created by merchants.',
+    description: 'Manage bulletin board posts, announcements, and entries created by merchants.',
     duration: 10000,
     target: '[data-tutorial="bulletin-tab"]',
     placement: 'bottom',

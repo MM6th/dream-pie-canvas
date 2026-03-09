@@ -23,7 +23,7 @@ import { TutorialSpotlight } from "@/components/TutorialSpotlight";
 import SupporterCurrentAffirmationsModal from "@/components/SupporterCurrentAffirmationsModal";
 import { BuyerAstrologyLibrary } from "@/components/astrology/BuyerAstrologyLibrary";
 import AstrologyAudioPlayer from "@/components/AstrologyAudioPlayer";
-import TVGuideModal from "@/components/TVGuideModal";
+
 import { MessageSettingsCard } from "@/components/messaging/MessageSettingsCard";
 import UserTicketsTab from "@/components/support/UserTicketsTab";
 import { PodcastRecordingStudio } from "@/components/podcast/PodcastRecordingStudio";
@@ -269,10 +269,9 @@ const AudioPodcasterDashboard = ({
         </>
       )}
 
-      {/* Share Affirmations & TV Guide Buttons */}
+      {/* Share Affirmations Button */}
       <div className="flex flex-col gap-3 mb-6">
         <SupporterCurrentAffirmationsModal />
-        <TVGuideModal />
       </div>
 
       {/* Podcast Recording Studios */}
@@ -377,7 +376,6 @@ const AudioPodcasterDashboard = ({
                     <CardContent className="space-y-4">
                       <div className="flex flex-col gap-3">
                         <SupporterCurrentAffirmationsModal />
-                        <TVGuideModal />
                       </div>
                       <BulletinPostManager hideHeader />
                     </CardContent>

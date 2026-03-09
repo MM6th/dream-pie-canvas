@@ -10,7 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/components/ui/use-toast";
 import BulletinPostModal from "./BulletinPostModal";
 import CurrentThoughtsModal from "./CurrentThoughtsModal";
-import TVGuideModal from "./TVGuideModal";
+
 import BulletinPostImage from "./BulletinPostImage";
 import {
   AlertDialog,
@@ -141,7 +141,6 @@ const BulletinPostManager = ({ hideHeader = false }: BulletinPostManagerProps) =
           <h3 className="text-xl font-bold text-white">Manage Your Posts</h3>
           <div className="flex gap-2">
             <CurrentThoughtsModal onSuccess={fetchPosts} />
-            <TVGuideModal onSuccess={fetchPosts} />
           </div>
         </div>
       )}
@@ -149,7 +148,7 @@ const BulletinPostManager = ({ hideHeader = false }: BulletinPostManagerProps) =
       {posts.length === 0 ? (
         <Card className="bg-gray-700/50 border-gray-600">
           <CardContent className="p-6 text-center">
-            <p className="text-gray-400">No posts created yet. Share your thoughts or create a TV guide entry!</p>
+            <p className="text-gray-400">No posts created yet. Share your thoughts!</p>
           </CardContent>
         </Card>
       ) : (
