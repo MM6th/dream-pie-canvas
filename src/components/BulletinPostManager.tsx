@@ -10,7 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/components/ui/use-toast";
 import BulletinPostModal from "./BulletinPostModal";
 import CurrentThoughtsModal from "./CurrentThoughtsModal";
-import TVGuideModal from "./TVGuideModal";
+
 import BulletinPostImage from "./BulletinPostImage";
 import {
   AlertDialog,
