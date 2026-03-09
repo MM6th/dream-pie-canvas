@@ -59,6 +59,8 @@ export const MessageCreditsIcon = ({ userId, userType = 'supporter' }: MessageCr
   };
 
   const fmt = (n: number) => n.toLocaleString();
+  const balance = tokenBalance ?? 0;
+  const usdValue = balance * spotPrice;
 
   return (
     <>
@@ -70,7 +72,10 @@ export const MessageCreditsIcon = ({ userId, userType = 'supporter' }: MessageCr
       >
         <img src={sixthCoinLogo} alt="SIXTH" className="w-4 h-4 rounded-full object-cover" />
         <span className="text-sm font-medium">
-          {loading ? "..." : fmt(tokenBalance ?? 0)}
+          {loading ? "..." : fmt(balance)}
+        </span>
+        <span className="text-xs text-gray-400">
+          {loading || priceLoading ? "" : `≈ $${usdValue < 0.01 && usdValue > 0 ? usdValue.toFixed(4) : usdValue.toFixed(2)}`}
         </span>
       </Button>
 
