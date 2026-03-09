@@ -188,6 +188,7 @@ const ProfilePage = () => {
         .from('bulletin_posts')
         .select('*')
         .eq('merchant_id', userId)
+        .neq('post_type', 'announcement')
         .order('created_at', { ascending: false })
         .limit(1);
 

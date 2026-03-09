@@ -76,10 +76,12 @@ const BulletinPostManager = ({ hideHeader = false }: BulletinPostManagerProps) =
     if (!user) return;
 
     try {
+      // Filter out announcements - they only appear in community feed
       const { data, error } = await supabase
         .from('bulletin_posts')
         .select('*')
         .eq('merchant_id', user.id)
+        .neq('post_type', 'announcement')
         .order('created_at', { ascending: false });
 
       if (error) {
