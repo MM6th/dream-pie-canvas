@@ -167,14 +167,6 @@ const DashboardHeader = ({
                 Live
               </Button>
               <Button
-                onClick={() => navigate('/mint')}
-                variant="outline"
-                className={`border-gray-600 text-white bg-transparent hover:bg-gray-700 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
-              >
-                <img src={sixthCoinLogo} alt="SIXTH" className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} rounded-full object-cover mr-1`} />
-                Mint
-              </Button>
-              <Button
                 onClick={() => navigate('/my-assets')}
                 variant="outline"
                 className={`border-amber-600/50 text-amber-400 bg-transparent hover:bg-amber-900/20 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
