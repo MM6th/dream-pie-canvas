@@ -22,7 +22,7 @@ import { useDashboardTutorial } from "@/hooks/useDashboardTutorial";
 import { supporterTutorialSteps } from "@/constants/tutorialContent";
 import { TutorialTooltip } from "@/components/TutorialTooltip";
 import { TutorialSpotlight } from "@/components/TutorialSpotlight";
-import SupporterCurrentAffirmationsModal from "@/components/SupporterCurrentAffirmationsModal";
+
 import { BuyerAstrologyLibrary } from "@/components/astrology/BuyerAstrologyLibrary";
 
 import { LivestreamSettingsCard } from "@/components/messaging/LivestreamSettingsCard";
