@@ -565,15 +565,15 @@ const PortfolioEditModal = ({
                       {isVideo && ownedTracks.length > 0 && (
                         <div className="mt-1">
                           <Select
-                            value={image.background_music_url || ""}
-                            onValueChange={(value) => handleBackgroundMusicChange(image.id, value)}
+                            value={image.background_music_url || "none"}
+                            onValueChange={(value) => handleBackgroundMusicChange(image.id, value === "none" ? "" : value)}
                           >
                             <SelectTrigger className="h-7 text-xs bg-gray-700 border-gray-600">
                               <Music className="w-3 h-3 mr-1" />
                               <SelectValue placeholder="Add music" />
                             </SelectTrigger>
                             <SelectContent className="bg-gray-700 border-gray-600">
-                              <SelectItem value="" className="text-white text-xs">No music</SelectItem>
+                              <SelectItem value="none" className="text-white text-xs">No music</SelectItem>
                               {ownedTracks.map((track) => (
                                 <SelectItem key={track.id} value={track.audio_file_url} className="text-white text-xs">
                                   {track.title}

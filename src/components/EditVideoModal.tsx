@@ -243,12 +243,12 @@ const EditVideoModal = ({ isOpen, onClose, onSuccess, product }: EditVideoModalP
                 <Music className="w-4 h-4" />
                 Background Music (Optional)
               </Label>
-              <Select value={formData.backgroundMusicId} onValueChange={(value) => setFormData({ ...formData, backgroundMusicId: value })}>
+              <Select value={formData.backgroundMusicId || "none"} onValueChange={(value) => setFormData({ ...formData, backgroundMusicId: value === "none" ? "" : value })}>
                 <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
                   <SelectValue placeholder="Select from your owned music" />
                 </SelectTrigger>
                 <SelectContent className="bg-gray-700 border-gray-600">
-                  <SelectItem value="" className="text-white hover:bg-gray-600">
+                  <SelectItem value="none" className="text-white hover:bg-gray-600">
                     No background music
                   </SelectItem>
                   {ownedTracks.map((track) => (
