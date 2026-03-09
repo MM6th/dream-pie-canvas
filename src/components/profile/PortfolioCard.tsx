@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { DollarSign, CheckCircle, Music, ShoppingCart, Play, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -284,139 +284,124 @@ const PortfolioCard = ({ portfolio }: PortfolioCardProps) => {
         
         <CardContent>
           {sortedMedia.length > 0 && (
-            <Carousel className="w-full mb-4">
-              <CarouselContent>
-                {sortedMedia.map((media) => {
-                  const shouldBlur = media.is_blurred && !canView;
-                  const audioProduct = media.background_music_url ? audioProducts[media.background_music_url] : null;
-                  const alreadyOwnsMusic = audioProduct ? ownedMusic.has(audioProduct.id) : false;
-                  // Preview mode: video is for sale, not purchased, not owner, and not blurred
-                  const isPreviewMode = portfolio.is_for_sale && !isPurchased && !isOwner && media.media_type === 'video' && !media.is_blurred;
-                  const previewEnded = previewEndedVideos.has(media.id);
-                  
-                  return (
-                    <CarouselItem key={media.id}>
-                      <div className="aspect-video relative rounded-lg overflow-hidden bg-muted">
-                        {media.media_type === 'video' && media.video_url ? (
-                          <>
-                            <video
-                              ref={(el) => { videoRefs.current[media.id] = el; }}
-                              src={getMediaUrl(media.video_url)}
-                              controls={canView || isPreviewMode}
-                              muted={media.is_video_muted || false}
-                              className={`w-full h-full object-contain ${shouldBlur ? 'blur-xl' : ''}`}
-                              style={shouldBlur ? { filter: 'blur(20px)' } : {}}
-                              onPlay={() => handleVideoPlay(media.id, media.background_music_url)}
-                              onPause={() => handleVideoPause(media.id)}
-                              onEnded={() => handleVideoEnded(media.id)}
-                              onTimeUpdate={() => handleVideoTimeUpdate(media.id, isPreviewMode)}
-                            />
-                            
-                            {/* Preview mode badge */}
-                            {isPreviewMode && !previewEnded && (
-                              <div className="absolute top-2 left-2 flex items-center gap-1 px-2 py-1 bg-orange-500/90 rounded text-white text-xs">
-                                <Play className="w-3 h-3" />
-                                <span>{VIDEO_PREVIEW_DURATION}s Preview</span>
-                              </div>
-                            )}
-                            
-                            {/* Preview ended overlay */}
-                            {isPreviewMode && previewEnded && (
-                              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 gap-3">
-                                <Lock className="w-8 h-8 text-white" />
-                                <p className="text-white text-sm font-medium">Preview ended</p>
-                                <div className="flex gap-2">
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="text-white border-white hover:bg-white/20"
-                                    onClick={() => handleReplayPreview(media.id)}
-                                  >
-                                    <Play className="w-3 h-3 mr-1" />
-                                    Replay Preview
-                                  </Button>
-                                </div>
-                                <p className="text-white/70 text-xs mt-2">Purchase to watch full video</p>
-                              </div>
-                            )}
-                            
-                            {media.background_music_url && (
-                              <>
-                                <audio
-                                  ref={(el) => { audioRefs.current[media.id] = el; }}
-                                  src={media.background_music_url}
-                                  loop
-                                />
-                                {/* Music info badge */}
-                                <div className={`absolute ${isPreviewMode ? 'top-10' : 'top-2'} right-2 flex items-center gap-1 px-2 py-1 bg-black/70 rounded text-white text-xs`}>
-                                  <Music className="w-3 h-3" />
-                                  <span>{audioProduct?.title || 'Has music'}</span>
-                                </div>
-                                {/* Purchase music button */}
-                                {audioProduct && !isOwner && !previewEnded && (
-                                  <div className="absolute bottom-2 right-2">
-                                    {alreadyOwnsMusic ? (
-                                      <Badge className="bg-green-600/90 text-white text-xs">
-                                        <CheckCircle className="w-3 h-3 mr-1" />
-                                        Owned
-                                      </Badge>
-                                    ) : audioProduct.is_free ? (
-                                      <Button
-                                        size="sm"
-                                        className="bg-green-600/90 hover:bg-green-700 text-white text-xs h-7 px-2"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleBuyMusic(audioProduct);
-                                        }}
-                                      >
-                                        <Music className="w-3 h-3 mr-1" />
-                                        Get Free
-                                      </Button>
-                                    ) : (
-                                      <Button
-                                        size="sm"
-                                        className="bg-blue-600/90 hover:bg-blue-700 text-white text-xs h-7 px-2"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleBuyMusic(audioProduct);
-                                        }}
-                                      >
-                                        <ShoppingCart className="w-3 h-3 mr-1" />
-                                        Buy ${audioProduct.price?.toFixed(2)}
-                                      </Button>
-                                    )}
-                                  </div>
-                                )}
-                              </>
-                            )}
-                          </>
-                        ) : (
-                          <img
-                            src={getMediaUrl(media.image_path)}
-                            alt={`Portfolio media ${media.display_order}`}
-                            className={`w-full h-full object-contain ${shouldBlur ? 'blur-xl' : ''}`}
-                            style={shouldBlur ? { filter: 'blur(20px)' } : {}}
-                          />
-                        )}
-                        {shouldBlur && (
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                            <Badge variant="secondary" className="bg-black/70 text-white">
-                              Purchase to view
-                            </Badge>
+            <div className="h-[400px] overflow-y-auto space-y-3 pr-2 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent touch-pan-y mb-4">
+              {sortedMedia.map((media) => {
+                const shouldBlur = media.is_blurred && !canView;
+                const audioProduct = media.background_music_url ? audioProducts[media.background_music_url] : null;
+                const alreadyOwnsMusic = audioProduct ? ownedMusic.has(audioProduct.id) : false;
+                const isPreviewMode = portfolio.is_for_sale && !isPurchased && !isOwner && media.media_type === 'video' && !media.is_blurred;
+                const previewEnded = previewEndedVideos.has(media.id);
+                
+                return (
+                  <div key={media.id} className="aspect-video relative rounded-lg overflow-hidden bg-muted">
+                    {media.media_type === 'video' && media.video_url ? (
+                      <>
+                        <video
+                          ref={(el) => { videoRefs.current[media.id] = el; }}
+                          src={getMediaUrl(media.video_url)}
+                          controls={canView || isPreviewMode}
+                          muted={media.is_video_muted || false}
+                          className={`w-full h-full object-contain ${shouldBlur ? 'blur-xl' : ''}`}
+                          style={shouldBlur ? { filter: 'blur(20px)' } : {}}
+                          onPlay={() => handleVideoPlay(media.id, media.background_music_url)}
+                          onPause={() => handleVideoPause(media.id)}
+                          onEnded={() => handleVideoEnded(media.id)}
+                          onTimeUpdate={() => handleVideoTimeUpdate(media.id, isPreviewMode)}
+                        />
+                        
+                        {isPreviewMode && !previewEnded && (
+                          <div className="absolute top-2 left-2 flex items-center gap-1 px-2 py-1 bg-orange-500/90 rounded text-white text-xs">
+                            <Play className="w-3 h-3" />
+                            <span>{VIDEO_PREVIEW_DURATION}s Preview</span>
                           </div>
                         )}
+                        
+                        {isPreviewMode && previewEnded && (
+                          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 gap-3">
+                            <Lock className="w-8 h-8 text-white" />
+                            <p className="text-white text-sm font-medium">Preview ended</p>
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-white border-white hover:bg-white/20"
+                                onClick={() => handleReplayPreview(media.id)}
+                              >
+                                <Play className="w-3 h-3 mr-1" />
+                                Replay Preview
+                              </Button>
+                            </div>
+                            <p className="text-white/70 text-xs mt-2">Purchase to watch full video</p>
+                          </div>
+                        )}
+                        
+                        {media.background_music_url && (
+                          <>
+                            <audio
+                              ref={(el) => { audioRefs.current[media.id] = el; }}
+                              src={media.background_music_url}
+                              loop
+                            />
+                            <div className={`absolute ${isPreviewMode ? 'top-10' : 'top-2'} right-2 flex items-center gap-1 px-2 py-1 bg-black/70 rounded text-white text-xs`}>
+                              <Music className="w-3 h-3" />
+                              <span>{audioProduct?.title || 'Has music'}</span>
+                            </div>
+                            {audioProduct && !isOwner && !previewEnded && (
+                              <div className="absolute bottom-2 right-2">
+                                {alreadyOwnsMusic ? (
+                                  <Badge className="bg-green-600/90 text-white text-xs">
+                                    <CheckCircle className="w-3 h-3 mr-1" />
+                                    Owned
+                                  </Badge>
+                                ) : audioProduct.is_free ? (
+                                  <Button
+                                    size="sm"
+                                    className="bg-green-600/90 hover:bg-green-700 text-white text-xs h-7 px-2"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleBuyMusic(audioProduct);
+                                    }}
+                                  >
+                                    <Music className="w-3 h-3 mr-1" />
+                                    Get Free
+                                  </Button>
+                                ) : (
+                                  <Button
+                                    size="sm"
+                                    className="bg-blue-600/90 hover:bg-blue-700 text-white text-xs h-7 px-2"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleBuyMusic(audioProduct);
+                                    }}
+                                  >
+                                    <ShoppingCart className="w-3 h-3 mr-1" />
+                                    Buy ${audioProduct.price?.toFixed(2)}
+                                  </Button>
+                                )}
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </>
+                    ) : (
+                      <img
+                        src={getMediaUrl(media.image_path)}
+                        alt={`Portfolio media ${media.display_order}`}
+                        className={`w-full h-full object-contain ${shouldBlur ? 'blur-xl' : ''}`}
+                        style={shouldBlur ? { filter: 'blur(20px)' } : {}}
+                      />
+                    )}
+                    {shouldBlur && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                        <Badge variant="secondary" className="bg-black/70 text-white">
+                          Purchase to view
+                        </Badge>
                       </div>
-                    </CarouselItem>
-                  );
-                })}
-              </CarouselContent>
-              {sortedMedia.length > 1 && (
-                <>
-                  <CarouselPrevious className="bg-secondary hover:bg-secondary/80" />
-                  <CarouselNext className="bg-secondary hover:bg-secondary/80" />
-                </>
-              )}
-            </Carousel>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           )}
 
           {portfolio.is_for_sale && !isPurchased && !isOwner && (
