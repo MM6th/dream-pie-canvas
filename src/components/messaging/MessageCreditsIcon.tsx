@@ -14,6 +14,7 @@ export const MessageCreditsIcon = ({ userId, userType = 'supporter' }: MessageCr
   const [tokenBalance, setTokenBalance] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
+  const { spotPrice, isLoading: priceLoading } = useSpotPrice();
 
   const fetchBalance = useCallback(async () => {
     try {
