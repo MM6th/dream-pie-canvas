@@ -237,10 +237,6 @@ const MusicArtistDashboard = ({
         </>
       )}
 
-      {/* Share Affirmations Button */}
-      <div className="flex flex-col gap-3 mb-6">
-        <SupporterCurrentAffirmationsModal />
-      </div>
 
       {/* Music Upload & Management - Main Feature */}
       <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm mb-6" data-tutorial="music-upload">
