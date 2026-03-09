@@ -284,7 +284,7 @@ const PortfolioCard = ({ portfolio }: PortfolioCardProps) => {
         
         <CardContent>
           {sortedMedia.length > 0 && (
-            <div className="h-[400px] overflow-y-auto space-y-3 pr-2 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent touch-pan-y mb-4">
+            <div className="h-[600px] overflow-y-auto space-y-3 pr-2 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent touch-pan-y mb-4">
               {sortedMedia.map((media) => {
                 const shouldBlur = media.is_blurred && !canView;
                 const audioProduct = media.background_music_url ? audioProducts[media.background_music_url] : null;
