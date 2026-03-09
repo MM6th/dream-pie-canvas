@@ -189,8 +189,7 @@ const ProfilePage = () => {
         .select('*')
         .eq('merchant_id', userId)
         .neq('post_type', 'announcement')
-        .order('created_at', { ascending: false })
-        .limit(1);
+        .order('created_at', { ascending: false });
 
       if (error) {
         console.error('Error fetching posts:', error);
