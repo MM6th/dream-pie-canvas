@@ -522,11 +522,6 @@ const ProfilePage = () => {
                             <CardContent className="p-4">
                               <div className="flex items-center justify-between mb-2">
                                 <CardTitle className="text-white text-lg">{post.title}</CardTitle>
-                                {post.post_type && (
-                                  <Badge variant="secondary" className="text-xs">
-                                    {post.post_type.replace('_', ' ').toUpperCase()}
-                                  </Badge>
-                                )}
                               </div>
                               <p className="text-gray-300 text-sm mb-3 leading-relaxed">{post.content}</p>
                               <div className="flex items-center gap-4 text-xs text-gray-400 mb-3">
@@ -591,11 +586,6 @@ const ProfilePage = () => {
                                 <CardContent className="p-4">
                                   <div className="flex items-center justify-between mb-2">
                                     <CardTitle className="text-white text-lg">{post.title}</CardTitle>
-                                    {post.post_type && (
-                                      <Badge variant="secondary" className="text-xs">
-                                        {post.post_type.replace('_', ' ').toUpperCase()}
-                                      </Badge>
-                                    )}
                                   </div>
                                   <p className="text-gray-300 text-sm mb-3 leading-relaxed">{post.content}</p>
                                   <div className="flex items-center gap-4 text-xs text-gray-400 mb-3">
