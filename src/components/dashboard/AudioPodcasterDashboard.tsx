@@ -269,10 +269,6 @@ const AudioPodcasterDashboard = ({
         </>
       )}
 
-      {/* Share Affirmations Button */}
-      <div className="flex flex-col gap-3 mb-6">
-        <SupporterCurrentAffirmationsModal />
-      </div>
 
       {/* Podcast Recording Studios */}
       <div className="space-y-6 mb-6">
