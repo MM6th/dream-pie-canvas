@@ -495,8 +495,8 @@ const ProfilePage = () => {
               />
             ) : (
               <>
-                {/* Most Recent Post */}
-                {userPosts.length > 0 && (
+                {/* Most Recent Post - shown standalone only when no portfolio exists */}
+                {userPosts.length > 0 && !(portfolios.length > 0 && (portfoliosVisible || isOwnProfile)) && (
                   <>
                     <div className="flex items-center gap-2 mb-6">
                       <MessageSquare className="w-6 h-6 text-white" />
@@ -561,16 +561,80 @@ const ProfilePage = () => {
                   </>
                 )}
 
-                {/* Portfolio Section - conditional visibility */}
+                {/* Portfolio & Posts Side by Side on Desktop */}
                 {portfolios.length > 0 && (portfoliosVisible || isOwnProfile) && (
-                  <div className="mt-8">
-                    <div className="flex items-center gap-2 mb-6">
-                      <FolderOpen className="w-6 h-6 text-white" />
-                      <h2 className="text-2xl font-bold text-white">Portfolio</h2>
+                  <div className={`mt-8 ${!isMobile ? 'flex gap-6' : ''}`}>
+                    <div className={!isMobile ? 'w-1/2' : 'w-full'}>
+                      <div className="flex items-center gap-2 mb-6">
+                        <FolderOpen className="w-6 h-6 text-white" />
+                        <h2 className="text-2xl font-bold text-white">Portfolio</h2>
+                      </div>
+                      {portfolios.map((portfolio) => (
+                        <PortfolioCard key={portfolio.id} portfolio={portfolio} />
+                      ))}
                     </div>
-                    {portfolios.map((portfolio) => (
-                      <PortfolioCard key={portfolio.id} portfolio={portfolio} />
-                    ))}
+
+                    {/* Most Recent Post - moved beside portfolio on desktop */}
+                    {userPosts.length > 0 && postsVisible && (
+                      <div className={!isMobile ? 'w-1/2' : 'w-full mt-8'}>
+                        <div className="flex items-center gap-2 mb-6">
+                          <MessageSquare className="w-6 h-6 text-white" />
+                          <h2 className="text-2xl font-bold text-white">Most Recent Post</h2>
+                        </div>
+                        <div className="space-y-6">
+                          {userPosts.map((post) => (
+                            <Card key={post.id} className="bg-gray-800 border-gray-700">
+                              {((post.image_url || post.uploaded_image_url) && post.media_type !== 'video') && (
+                                <CardHeader className="p-0">
+                                  <img
+                                    src={post.uploaded_image_url || post.image_url}
+                                    alt={post.title}
+                                    className="w-full h-64 object-cover rounded-t-lg"
+                                  />
+                                </CardHeader>
+                              )}
+                              {post.video_url && post.media_type === 'video' && (
+                                <CardHeader className="p-0">
+                                  <video
+                                    src={post.video_url}
+                                    controls
+                                    className="w-full h-64 object-cover rounded-t-lg"
+                                    preload="metadata"
+                                  />
+                                </CardHeader>
+                              )}
+                              <CardContent className="p-6">
+                                <div className="flex items-center justify-between mb-2">
+                                  <CardTitle className="text-white text-xl">{post.title}</CardTitle>
+                                  {post.post_type && (
+                                    <Badge variant="secondary" className="text-xs">
+                                      {post.post_type.replace('_', ' ').toUpperCase()}
+                                    </Badge>
+                                  )}
+                                </div>
+                                <p className="text-gray-300 text-sm mb-4 leading-relaxed">{post.content}</p>
+                                <div className="flex items-center gap-4 text-xs text-gray-400 mb-4">
+                                  <div className="flex items-center gap-1">
+                                    <Calendar className="w-3 h-3" />
+                                    {new Date(post.created_at).toLocaleDateString()}
+                                  </div>
+                                </div>
+                                {post.link_url && (
+                                  <Button
+                                    onClick={() => handleLinkClick(post.link_url!)}
+                                    variant="outline"
+                                    size="sm"
+                                  >
+                                    <ExternalLink className="w-4 h-4 mr-2" />
+                                    View Link
+                                  </Button>
+                                )}
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
