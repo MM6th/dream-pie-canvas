@@ -82,14 +82,6 @@ const AppNavBar = ({ showBackToDashboard, onBackToDashboard }: AppNavBarProps = 
             <img src={sixthCoinLogo} alt="SIXTH" className={`${iconClass} rounded-full object-cover mr-1`} />
             Mint
           </Button>
-          <Button
-            onClick={() => navigate('/my-assets')}
-            variant="outline"
-            className={`border ${isActivePage('/my-assets') ? 'bg-primary border-primary' : 'border-amber-600/50 bg-transparent'} text-amber-400 hover:bg-amber-900/20 ${isMobile ? 'text-xs px-3 py-2 h-8' : ''}`}
-          >
-            <img src={sixthCoinLogo} alt="SIXTH" className={`${iconClass} rounded-full mr-1`} />
-            {isMobile ? 'Assets' : 'My Assets'}
-          </Button>
         </div>
 
         <Button
