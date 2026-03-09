@@ -134,7 +134,7 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
       setImageUrl(post.image_url || '');
       setLinkUrl(post.link_url || '');
       setIsAdultContent(post.is_adult_content || false);
-      setPostType(post.post_type || 'tv_guide');
+      setPostType(post.post_type || 'regular');
       setContractType(post.contract_type || '');
       setYoutubeContractorShare(post.youtube_contractor_share?.toString() || '');
       setPieContractorShare(post.pie_contractor_share?.toString() || '');
