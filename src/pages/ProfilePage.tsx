@@ -85,6 +85,7 @@ const ProfilePage = () => {
   const [userPosts, setUserPosts] = useState<BulletinPost[]>([]);
   const [portfolios, setPortfolios] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [postsLoaded, setPostsLoaded] = useState(false);
   const [followStatus, setFollowStatus] = useState<FollowStatus>('none');
   const [followStatusLoading, setFollowStatusLoading] = useState(true);
   const [messagingPrice, setMessagingPrice] = useState<number | null>(null);
