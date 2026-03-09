@@ -301,7 +301,7 @@ const PortfolioCard = ({ portfolio }: PortfolioCardProps) => {
                           src={getMediaUrl(media.video_url)}
                           controls={canView || isPreviewMode}
                           muted={media.is_video_muted || false}
-                          className={`w-full h-full object-contain ${shouldBlur ? 'blur-xl' : ''}`}
+                          className={`w-full h-full object-cover ${shouldBlur ? 'blur-xl' : ''}`}
                           style={shouldBlur ? { filter: 'blur(20px)' } : {}}
                           onPlay={() => handleVideoPlay(media.id, media.background_music_url)}
                           onPause={() => handleVideoPause(media.id)}
