@@ -2,7 +2,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MessageSquare, User, Calendar, Shield } from "lucide-react";
+import { Waves, User, Calendar, Shield } from "lucide-react";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { BulletinPost } from "@/types/bulletin";
 import PostInteractions from "./PostInteractions";
@@ -96,8 +96,8 @@ const CurrentThoughtsSection = ({ posts, useCarousel = true }: CurrentThoughtsSe
   return (
     <div className="mb-12">
       <h2 className="text-2xl lg:text-3xl font-bold text-white mb-16 flex items-center gap-2">
-        <MessageSquare className="w-6 h-6 lg:w-8 lg:h-8 text-white" />
-        Current Affirmations
+        <Waves className="w-6 h-6 lg:w-8 lg:h-8 text-white" />
+        Current
       </h2>
       
       {useCarousel ? (
