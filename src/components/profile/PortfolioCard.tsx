@@ -293,7 +293,7 @@ const PortfolioCard = ({ portfolio }: PortfolioCardProps) => {
                 const previewEnded = previewEndedVideos.has(media.id);
                 
                 return (
-                  <div key={media.id} className="aspect-video relative rounded-lg overflow-hidden bg-muted">
+                  <div key={media.id} className="w-full h-[220px] relative rounded-lg overflow-hidden bg-muted flex-shrink-0">
                     {media.media_type === 'video' && media.video_url ? (
                       <>
                         <video
@@ -301,7 +301,7 @@ const PortfolioCard = ({ portfolio }: PortfolioCardProps) => {
                           src={getMediaUrl(media.video_url)}
                           controls={canView || isPreviewMode}
                           muted={media.is_video_muted || false}
-                          className={`w-full h-full object-contain ${shouldBlur ? 'blur-xl' : ''}`}
+                          className={`w-full h-full object-cover ${shouldBlur ? 'blur-xl' : ''}`}
                           style={shouldBlur ? { filter: 'blur(20px)' } : {}}
                           onPlay={() => handleVideoPlay(media.id, media.background_music_url)}
                           onPause={() => handleVideoPause(media.id)}
@@ -387,7 +387,7 @@ const PortfolioCard = ({ portfolio }: PortfolioCardProps) => {
                       <img
                         src={getMediaUrl(media.image_path)}
                         alt={`Portfolio media ${media.display_order}`}
-                        className={`w-full h-full object-contain ${shouldBlur ? 'blur-xl' : ''}`}
+                        className={`w-full h-full object-cover ${shouldBlur ? 'blur-xl' : ''}`}
                         style={shouldBlur ? { filter: 'blur(20px)' } : {}}
                       />
                     )}
