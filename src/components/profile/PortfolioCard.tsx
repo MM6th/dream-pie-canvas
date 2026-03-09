@@ -293,7 +293,7 @@ const PortfolioCard = ({ portfolio }: PortfolioCardProps) => {
                 const previewEnded = previewEndedVideos.has(media.id);
                 
                 return (
-                  <div key={media.id} className="w-full aspect-[4/5] relative rounded-lg overflow-hidden bg-black flex-shrink-0">
+                  <div key={media.id} className="w-full aspect-square relative rounded-lg overflow-hidden bg-black flex-shrink-0">
                     {media.media_type === 'video' && media.video_url ? (
                       <>
                         <video
