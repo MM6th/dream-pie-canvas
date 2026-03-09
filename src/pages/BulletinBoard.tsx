@@ -48,12 +48,8 @@ const BulletinBoard = () => {
     }
   };
 
-  // Merge announcements with current affirmations
-  const currentThoughtsPosts = posts.filter((post) => 
-    post.post_type === 'current_affirmations' || 
-    post.post_type === 'announcement' ||
-    post.post_type === 'current_thoughts'
-  );
+  // Show all posts in the community feed
+  const currentThoughtsPosts = posts;
   
 
 
