@@ -387,7 +387,7 @@ const PortfolioCard = ({ portfolio }: PortfolioCardProps) => {
                       <img
                         src={getMediaUrl(media.image_path)}
                         alt={`Portfolio media ${media.display_order}`}
-                        className={`w-full h-full object-cover ${shouldBlur ? 'blur-xl' : ''}`}
+                        className={`w-full h-full object-contain ${shouldBlur ? 'blur-xl' : ''}`}
                         style={shouldBlur ? { filter: 'blur(20px)' } : {}}
                       />
                     )}
