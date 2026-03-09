@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/components/ui/use-toast";
 import BulletinPostModal from "./BulletinPostModal";
-import CurrentThoughtsModal from "./CurrentThoughtsModal";
+
 
 import BulletinPostImage from "./BulletinPostImage";
 import {
@@ -140,7 +140,6 @@ const BulletinPostManager = ({ hideHeader = false }: BulletinPostManagerProps) =
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-xl font-bold text-white">Manage Your Posts</h3>
           <div className="flex gap-2">
-            <CurrentThoughtsModal onSuccess={fetchPosts} />
           </div>
         </div>
       )}

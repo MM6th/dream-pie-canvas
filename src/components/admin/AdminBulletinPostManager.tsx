@@ -201,8 +201,6 @@ const AdminBulletinPostManager = () => {
                 className="bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2"
               >
                 <option value="all">All Types</option>
-                <option value="tv_guide">TV Guide</option>
-                <option value="current_affirmations">Current Affirmations</option>
                 <option value="announcement">Announcements</option>
                 <option value="regular">Regular</option>
               </select>

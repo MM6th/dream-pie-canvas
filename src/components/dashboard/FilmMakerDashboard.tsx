@@ -16,7 +16,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import SupporterCurrentAffirmationsModal from "@/components/SupporterCurrentAffirmationsModal";
+
 import { BuyerAstrologyLibrary } from "@/components/astrology/BuyerAstrologyLibrary";
 import AstrologyAudioPlayer from "@/components/AstrologyAudioPlayer";
 
@@ -183,10 +183,6 @@ const FilmMakerDashboard = ({
       {/* Approval Status Banner */}
       <ApprovalStatusBanner approvalStatus={approvalStatus} isAdmin={isAdmin} />
       
-      {/* Share Affirmations Button */}
-      <div className="flex flex-col gap-3 mb-6">
-        <SupporterCurrentAffirmationsModal />
-      </div>
 
       {/* Follow Requests Card - shows when profile is private and has pending requests */}
       {isPrivate && pendingRequestsCount > 0 && (
@@ -385,7 +381,6 @@ const FilmMakerDashboard = ({
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="flex flex-col gap-3">
-                        <SupporterCurrentAffirmationsModal />
                       </div>
                       <BulletinPostManager hideHeader />
                     </CardContent>

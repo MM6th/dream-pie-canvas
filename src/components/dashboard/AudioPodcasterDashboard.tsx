@@ -20,7 +20,7 @@ import { useDashboardTutorial } from "@/hooks/useDashboardTutorial";
 import { supporterTutorialSteps } from "@/constants/tutorialContent";
 import { TutorialTooltip } from "@/components/TutorialTooltip";
 import { TutorialSpotlight } from "@/components/TutorialSpotlight";
-import SupporterCurrentAffirmationsModal from "@/components/SupporterCurrentAffirmationsModal";
+
 import { BuyerAstrologyLibrary } from "@/components/astrology/BuyerAstrologyLibrary";
 import AstrologyAudioPlayer from "@/components/AstrologyAudioPlayer";
 
@@ -269,10 +269,6 @@ const AudioPodcasterDashboard = ({
         </>
       )}
 
-      {/* Share Affirmations Button */}
-      <div className="flex flex-col gap-3 mb-6">
-        <SupporterCurrentAffirmationsModal />
-      </div>
 
       {/* Podcast Recording Studios */}
       <div className="space-y-6 mb-6">
@@ -375,7 +371,6 @@ const AudioPodcasterDashboard = ({
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="flex flex-col gap-3">
-                        <SupporterCurrentAffirmationsModal />
                       </div>
                       <BulletinPostManager hideHeader />
                     </CardContent>

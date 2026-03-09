@@ -27,7 +27,7 @@ import { supporterTutorialSteps } from "@/constants/tutorialContent";
 import { TutorialTooltip } from "@/components/TutorialTooltip";
 import { TutorialSpotlight } from "@/components/TutorialSpotlight";
 import { TutorialHelpButton } from "@/components/TutorialHelpButton";
-import SupporterCurrentAffirmationsModal from "@/components/SupporterCurrentAffirmationsModal";
+
 // Messaging components now accessed via MessageCreditsIcon in header
 import { BuyerAstrologyLibrary } from "@/components/astrology/BuyerAstrologyLibrary";
 import AstrologyAudioPlayer from "@/components/AstrologyAudioPlayer";
@@ -257,10 +257,6 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
         </Button>
       </PieWelcomeModal>
 
-      {/* Current Affirmations Section */}
-      <div className="mb-6">
-        <SupporterCurrentAffirmationsModal />
-      </div>
 
       <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm mb-6">
         <CardHeader>
@@ -354,7 +350,6 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="flex flex-col gap-3">
-                        <SupporterCurrentAffirmationsModal />
                       </div>
                       <BulletinPostManager hideHeader />
                     </CardContent>

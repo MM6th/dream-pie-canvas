@@ -47,7 +47,7 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
   const [isAdultContent, setIsAdultContent] = useState(post?.is_adult_content || false);
   
   // New fields
-  const [postType, setPostType] = useState(post?.post_type || initialPostType || 'tv_guide');
+  const [postType, setPostType] = useState(post?.post_type || initialPostType || 'regular');
   const [contractType, setContractType] = useState(post?.contract_type || '');
   const [youtubeContractorShare, setYoutubeContractorShare] = useState(post?.youtube_contractor_share?.toString() || '');
   const [pieContractorShare, setPieContractorShare] = useState(post?.pie_contractor_share?.toString() || '');
@@ -115,7 +115,7 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
     setImageUrl('');
     setLinkUrl('');
     setIsAdultContent(false);
-    setPostType(initialPostType || 'tv_guide');
+    setPostType(initialPostType || 'regular');
     setContractType('');
     setYoutubeContractorShare('');
     setPieContractorShare('');
@@ -134,7 +134,7 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
       setImageUrl(post.image_url || '');
       setLinkUrl(post.link_url || '');
       setIsAdultContent(post.is_adult_content || false);
-      setPostType(post.post_type || 'tv_guide');
+      setPostType(post.post_type || 'regular');
       setContractType(post.contract_type || '');
       setYoutubeContractorShare(post.youtube_contractor_share?.toString() || '');
       setPieContractorShare(post.pie_contractor_share?.toString() || '');
@@ -274,8 +274,6 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
                 <SelectValue placeholder="Select post type" />
               </SelectTrigger>
               <SelectContent className="bg-gray-700 border-gray-600">
-                <SelectItem value="tv_guide">TV Guide</SelectItem>
-                <SelectItem value="current_affirmations">Current Affirmations</SelectItem>
                 <SelectItem value="announcement">Announcement</SelectItem>
                 <SelectItem value="regular">Regular</SelectItem>
               </SelectContent>

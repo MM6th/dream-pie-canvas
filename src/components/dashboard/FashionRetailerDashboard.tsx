@@ -22,7 +22,7 @@ import { useDashboardTutorial } from "@/hooks/useDashboardTutorial";
 import { fashionRetailerTutorialSteps } from "@/constants/tutorialContent";
 import { TutorialTooltip } from "@/components/TutorialTooltip";
 import { TutorialSpotlight } from "@/components/TutorialSpotlight";
-import SupporterCurrentAffirmationsModal from "@/components/SupporterCurrentAffirmationsModal";
+
 import { BuyerAstrologyLibrary } from "@/components/astrology/BuyerAstrologyLibrary";
 import AstrologyAudioPlayer from "@/components/AstrologyAudioPlayer";
 
@@ -245,10 +245,6 @@ const FashionRetailerDashboard = ({
         </>
       )}
 
-      {/* Share Affirmations Button */}
-      <div className="flex flex-col gap-3 mb-6">
-        <SupporterCurrentAffirmationsModal />
-      </div>
 
       {/* Fashion Product Upload & Management - Main Feature */}
       <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm mb-6" data-tutorial="fashion-upload">
@@ -364,7 +360,6 @@ const FashionRetailerDashboard = ({
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="flex flex-col gap-3">
-                        <SupporterCurrentAffirmationsModal />
                       </div>
                       <BulletinPostManager hideHeader />
                     </CardContent>
