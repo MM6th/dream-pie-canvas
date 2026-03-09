@@ -304,7 +304,7 @@ const LivestreamRoom = () => {
             <h2 className="text-xl font-semibold text-white mb-2">Stream Ended</h2>
             <p className="text-gray-400 mb-4">This livestream session has ended.</p>
             <Button onClick={() => navigate("/bulletin")} className="bg-purple-600 hover:bg-purple-700">
-              Back to TV Guide
+              Back to Bulletin Board
             </Button>
           </CardContent>
         </Card>
