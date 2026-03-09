@@ -47,7 +47,7 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
   const [isAdultContent, setIsAdultContent] = useState(post?.is_adult_content || false);
   
   // New fields
-  const [postType, setPostType] = useState(post?.post_type || initialPostType || 'tv_guide');
+  const [postType, setPostType] = useState(post?.post_type || initialPostType || 'regular');
   const [contractType, setContractType] = useState(post?.contract_type || '');
   const [youtubeContractorShare, setYoutubeContractorShare] = useState(post?.youtube_contractor_share?.toString() || '');
   const [pieContractorShare, setPieContractorShare] = useState(post?.pie_contractor_share?.toString() || '');
