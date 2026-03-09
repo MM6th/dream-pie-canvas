@@ -199,6 +199,8 @@ const ProfilePage = () => {
       setUserPosts(data || []);
     } catch (error) {
       console.error('Error fetching posts:', error);
+    } finally {
+      setPostsLoaded(true);
     }
   };
 
