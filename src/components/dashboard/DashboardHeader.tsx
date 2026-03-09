@@ -206,9 +206,6 @@ const DashboardHeader = ({
             {user && (
               <NotificationBellButton userId={user.id} userType={userType || ''} />
             )}
-            {user && (
-              <MessageCreditsIcon userId={user.id} userType={userType === 'merchant' ? 'merchant' : 'supporter'} />
-            )}
             {tutorialHelpButton}
           </div>
           <Button
