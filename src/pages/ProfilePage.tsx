@@ -85,6 +85,7 @@ const ProfilePage = () => {
   const [userPosts, setUserPosts] = useState<BulletinPost[]>([]);
   const [portfolios, setPortfolios] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [postsLoaded, setPostsLoaded] = useState(false);
   const [followStatus, setFollowStatus] = useState<FollowStatus>('none');
   const [followStatusLoading, setFollowStatusLoading] = useState(true);
   const [messagingPrice, setMessagingPrice] = useState<number | null>(null);
@@ -100,11 +101,18 @@ const ProfilePage = () => {
   } = useVisibilityCheck(userId || '');
   const { checkFollowStatus } = useFollowRequest();
 
+  // Fetch posts immediately without waiting for auth
+  useEffect(() => {
+    if (userId) {
+      fetchUserPosts();
+      fetchPortfolios();
+    }
+  }, [userId]);
+
+  // Fetch auth-dependent data after auth resolves
   useEffect(() => {
     if (userId && !authLoading) {
       fetchProfileData();
-      fetchUserPosts();
-      fetchPortfolios();
       updateFollowStatus();
       fetchMessagingPrice();
     }
@@ -191,6 +199,8 @@ const ProfilePage = () => {
       setUserPosts(data || []);
     } catch (error) {
       console.error('Error fetching posts:', error);
+    } finally {
+      setPostsLoaded(true);
     }
   };
 
@@ -469,18 +479,6 @@ const ProfilePage = () => {
               </Card>
             )}
 
-            {/* Stats */}
-            <Card className="bg-gray-800 border-gray-700">
-              <CardHeader>
-                <CardTitle className="text-white">Statistics</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center gap-2 text-gray-300">
-                  <MessageSquare className="w-4 h-4" />
-                  <span>Recent Post</span>
-                </div>
-              </CardContent>
-            </Card>
           </div>
 
           {/* Posts & Portfolio Column */}
