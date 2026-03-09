@@ -633,14 +633,6 @@ const ProfilePage = () => {
                   </div>
                 )}
 
-                {/* Podcast Section */}
-                {userId && (
-                  <ProfilePodcastSection 
-                    userId={userId}
-                    isVisible={postsVisible}
-                    isOwnProfile={isOwnProfile}
-                  />
-                )}
 
                 {/* Portfolio locked message */}
                 {portfolios.length > 0 && !portfoliosVisible && !isOwnProfile && (
