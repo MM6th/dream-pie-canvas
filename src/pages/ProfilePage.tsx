@@ -479,18 +479,6 @@ const ProfilePage = () => {
               </Card>
             )}
 
-            {/* Stats */}
-            <Card className="bg-gray-800 border-gray-700">
-              <CardHeader>
-                <CardTitle className="text-white">Statistics</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center gap-2 text-gray-300">
-                  <MessageSquare className="w-4 h-4" />
-                  <span>Recent Post</span>
-                </div>
-              </CardContent>
-            </Card>
           </div>
 
           {/* Posts & Portfolio Column */}
