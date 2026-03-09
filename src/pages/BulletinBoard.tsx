@@ -86,7 +86,6 @@ const BulletinBoard = () => {
           // Mobile: Vertical stack, no ads
           <div className="space-y-8 max-w-2xl mx-auto">
             <CurrentThoughtsSection posts={currentThoughtsPosts} useCarousel={false} />
-            <TVGuideSection posts={tvGuidePosts} useCarousel={false} />
           </div>
         ) : (
           // Desktop: Left Ad + 2 Carousels + Right Ad
