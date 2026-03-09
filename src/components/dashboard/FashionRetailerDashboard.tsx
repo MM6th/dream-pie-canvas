@@ -360,7 +360,6 @@ const FashionRetailerDashboard = ({
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="flex flex-col gap-3">
-                        <SupporterCurrentAffirmationsModal />
                       </div>
                       <BulletinPostManager hideHeader />
                     </CardContent>
