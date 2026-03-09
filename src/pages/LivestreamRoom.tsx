@@ -323,7 +323,7 @@ const LivestreamRoom = () => {
             className="text-gray-300 hover:text-white"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to TV Guide
+            Back to Bulletin Board
           </Button>
           <div className="flex items-center gap-4">
             {/* Connection status indicator */}

@@ -376,7 +376,6 @@ const AudioPodcasterDashboard = ({
                     <CardContent className="space-y-4">
                       <div className="flex flex-col gap-3">
                         <SupporterCurrentAffirmationsModal />
-                        <TVGuideModal />
                       </div>
                       <BulletinPostManager hideHeader />
                     </CardContent>
