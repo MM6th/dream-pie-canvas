@@ -501,7 +501,7 @@ const FullMerchantProfileModal = ({
   // Original controlled pattern
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-      <DialogContent className="sm:max-w-[600px] bg-gray-800 border-gray-700 max-h-[80vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[600px] bg-gray-800 border-gray-700 max-h-[80vh] overflow-y-auto z-[100]">
         <DialogHeader>
           <DialogTitle className="text-white">Update Merchant Profile</DialogTitle>
         </DialogHeader>
