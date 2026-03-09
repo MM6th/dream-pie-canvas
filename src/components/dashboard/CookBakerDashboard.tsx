@@ -211,10 +211,6 @@ const CookBakerDashboard = ({
         }} 
       />
       
-      {/* Share Affirmations Button */}
-      <div className="flex flex-col gap-3 mb-6">
-        <SupporterCurrentAffirmationsModal />
-      </div>
 
       {/* Food Product Manager */}
       <div className="mb-6">
