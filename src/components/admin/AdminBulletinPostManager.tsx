@@ -128,7 +128,7 @@ const AdminBulletinPostManager = () => {
 
   const getPostTypeColor = (type: string | null) => {
     switch (type) {
-      case 'tv_guide': return 'bg-blue-600';
+      case 'tv_guide': return 'bg-blue-600'; // legacy
       case 'current_thoughts': return 'bg-purple-600';
       case 'announcement': return 'bg-green-600';
       default: return 'bg-gray-600';

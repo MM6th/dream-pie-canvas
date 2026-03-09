@@ -622,7 +622,7 @@ export const adminTutorialSteps: TutorialStep[] = [
   {
     id: 'bulletin-tab',
     title: 'Bulletin Posts',
-    description: 'Manage bulletin board posts, announcements, and TV Guide entries created by merchants.',
+    description: 'Manage bulletin board posts, announcements, and entries created by merchants.',
     duration: 10000,
     target: '[data-tutorial="bulletin-tab"]',
     placement: 'bottom',
