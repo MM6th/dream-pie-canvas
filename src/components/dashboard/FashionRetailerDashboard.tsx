@@ -245,10 +245,9 @@ const FashionRetailerDashboard = ({
         </>
       )}
 
-      {/* Share Affirmations & TV Guide Buttons */}
+      {/* Share Affirmations Button */}
       <div className="flex flex-col gap-3 mb-6">
         <SupporterCurrentAffirmationsModal />
-        <TVGuideModal />
       </div>
 
       {/* Fashion Product Upload & Management - Main Feature */}
