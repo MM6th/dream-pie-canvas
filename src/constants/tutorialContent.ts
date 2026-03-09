@@ -527,7 +527,7 @@ export const liveStreamArtistTutorialSteps: TutorialStep[] = [
   {
     id: 'schedule-stream',
     title: 'Schedule Streams',
-    description: 'Create and schedule upcoming livestream sessions. Your audience will see them on the TV Guide.',
+    description: 'Create and schedule upcoming livestream sessions. Your audience can find them on the Live tab.',
     duration: 10000,
     target: '[data-tutorial="schedule-stream"]',
     placement: 'bottom',
