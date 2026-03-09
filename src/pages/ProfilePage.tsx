@@ -101,11 +101,18 @@ const ProfilePage = () => {
   } = useVisibilityCheck(userId || '');
   const { checkFollowStatus } = useFollowRequest();
 
+  // Fetch posts immediately without waiting for auth
+  useEffect(() => {
+    if (userId) {
+      fetchUserPosts();
+      fetchPortfolios();
+    }
+  }, [userId]);
+
+  // Fetch auth-dependent data after auth resolves
   useEffect(() => {
     if (userId && !authLoading) {
       fetchProfileData();
-      fetchUserPosts();
-      fetchPortfolios();
       updateFollowStatus();
       fetchMessagingPrice();
     }
