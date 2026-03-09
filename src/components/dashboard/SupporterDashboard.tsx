@@ -257,10 +257,6 @@ const SupporterDashboard = ({ onBackgroundUpload, purchasedTracks, purchasedPodc
         </Button>
       </PieWelcomeModal>
 
-      {/* Current Affirmations Section */}
-      <div className="mb-6">
-        <SupporterCurrentAffirmationsModal />
-      </div>
 
       <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm mb-6">
         <CardHeader>
