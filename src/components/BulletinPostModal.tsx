@@ -115,7 +115,7 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
     setImageUrl('');
     setLinkUrl('');
     setIsAdultContent(false);
-    setPostType(initialPostType || 'tv_guide');
+    setPostType(initialPostType || 'regular');
     setContractType('');
     setYoutubeContractorShare('');
     setPieContractorShare('');
