@@ -148,7 +148,7 @@ const BulletinPostManager = ({ hideHeader = false }: BulletinPostManagerProps) =
       {posts.length === 0 ? (
         <Card className="bg-gray-700/50 border-gray-600">
           <CardContent className="p-6 text-center">
-            <p className="text-gray-400">No posts created yet. Share your thoughts or create a TV guide entry!</p>
+            <p className="text-gray-400">No posts created yet. Share your thoughts!</p>
           </CardContent>
         </Card>
       ) : (

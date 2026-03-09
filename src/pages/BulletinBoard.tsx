@@ -103,13 +103,8 @@ const BulletinBoard = () => {
             </div>
 
             {/* Main Content - 2 Carousels */}
-            <div className="flex gap-2 max-w-3xl">
-              <div className="flex-1">
-                <CurrentThoughtsSection posts={currentThoughtsPosts} useCarousel={false} />
-              </div>
-              <div className="flex-1">
-                <TVGuideSection posts={tvGuidePosts} useCarousel={false} />
-              </div>
+            <div className="flex-1 max-w-3xl">
+              <CurrentThoughtsSection posts={currentThoughtsPosts} useCarousel={false} />
             </div>
 
             {/* Right Ad Space */}
