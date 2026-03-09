@@ -7,7 +7,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import AppNavBar from "@/components/AppNavBar";
 import { supabase } from "@/integrations/supabase/client";
 import CurrentThoughtsSection from "@/components/CurrentThoughtsSection";
-import TVGuideSection from "@/components/TVGuideSection";
+
 import { toast } from "sonner";
 
 const BulletinBoard = () => {
