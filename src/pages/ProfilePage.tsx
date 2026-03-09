@@ -563,8 +563,8 @@ const ProfilePage = () => {
 
                 {/* Portfolio & Posts Side by Side on Desktop */}
                 {portfolios.length > 0 && (portfoliosVisible || isOwnProfile) && (
-                  <div className={`mt-8 ${!isMobile ? 'flex gap-6' : ''}`}>
-                    <div className={!isMobile ? 'w-1/2' : 'w-full'}>
+                  <div className={`mt-8 grid gap-6 ${!isMobile ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                    <div className="overflow-hidden">
                       <div className="flex items-center gap-2 mb-6">
                         <FolderOpen className="w-6 h-6 text-white" />
                         <h2 className="text-2xl font-bold text-white">Portfolio</h2>
@@ -576,7 +576,7 @@ const ProfilePage = () => {
 
                     {/* Most Recent Post - moved beside portfolio on desktop */}
                     {userPosts.length > 0 && postsVisible && (
-                      <div className={!isMobile ? 'w-1/2' : 'w-full mt-8'}>
+                      <div className="overflow-hidden">
                         <div className="flex items-center gap-2 mb-6">
                           <MessageSquare className="w-6 h-6 text-white" />
                           <h2 className="text-2xl font-bold text-white">Most Recent Post</h2>
