@@ -244,10 +244,6 @@ const LiveStreamArtistDashboard = ({
         </>
       )}
 
-      {/* Share Affirmations Button */}
-      <div className="flex flex-col gap-3 mb-6">
-        <SupporterCurrentAffirmationsModal />
-      </div>
 
       <LiveStreamControlCenter />
       
