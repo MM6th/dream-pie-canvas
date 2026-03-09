@@ -224,6 +224,8 @@ const FullMerchantProfileModal = ({
     (open: boolean) => { if (!open) onClose(); } : 
     setInternalOpen;
 
+  console.log('FullMerchantProfileModal render - dialogOpen:', dialogOpen, 'fetchingProfile:', fetchingProfile, 'user:', !!user);
+
   // If children are provided, use trigger pattern
   if (children) {
     return (
@@ -231,7 +233,7 @@ const FullMerchantProfileModal = ({
         <DialogTrigger asChild>
           {children}
         </DialogTrigger>
-        <DialogContent className="sm:max-w-[600px] bg-gray-800 border-gray-700 max-h-[80vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[600px] bg-gray-800 border-gray-700 max-h-[80vh] overflow-y-auto z-[100]">
           <DialogHeader>
             <DialogTitle className="text-white">Update Merchant Profile</DialogTitle>
           </DialogHeader>
@@ -499,7 +501,7 @@ const FullMerchantProfileModal = ({
   // Original controlled pattern
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-      <DialogContent className="sm:max-w-[600px] bg-gray-800 border-gray-700 max-h-[80vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[600px] bg-gray-800 border-gray-700 max-h-[80vh] overflow-y-auto z-[100]">
         <DialogHeader>
           <DialogTitle className="text-white">Update Merchant Profile</DialogTitle>
         </DialogHeader>
