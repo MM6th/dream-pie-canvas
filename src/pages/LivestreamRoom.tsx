@@ -287,7 +287,7 @@ const LivestreamRoom = () => {
               You need to pay credits to access this livestream.
             </p>
             <Button onClick={() => navigate("/bulletin")} className="bg-purple-600 hover:bg-purple-700">
-              Go to TV Guide
+              Go to Bulletin Board
             </Button>
           </CardContent>
         </Card>
