@@ -217,6 +217,22 @@ const DashboardHeader = ({
           </Button>
         </div>
       </div>
+
+      {/* Token Balance + Mint row */}
+      {(isApproved || isAdmin) && user && (
+        <div className="mt-3 flex items-center gap-2 px-1">
+          <MessageCreditsIcon userId={user.id} userType={userType === 'merchant' ? 'merchant' : 'supporter'} />
+          <Button
+            onClick={() => navigate('/mint')}
+            variant="outline"
+            size="sm"
+            className={`border-amber-600/50 text-amber-400 bg-transparent hover:bg-amber-900/20 ${isMobile ? 'text-xs px-3 h-8' : 'h-8'}`}
+          >
+            <img src={sixthCoinLogo} alt="SIXTH" className="w-4 h-4 rounded-full object-cover mr-1" />
+            Buy Tokens
+          </Button>
+        </div>
+      )}
     </div>
   );
 };
