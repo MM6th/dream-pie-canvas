@@ -54,7 +54,7 @@ const BulletinBoard = () => {
     post.post_type === 'announcement' ||
     post.post_type === 'current_thoughts'
   );
-  const tvGuidePosts = posts.filter((post) => post.post_type === 'tv_guide');
+  
 
 
   if (!user) {
