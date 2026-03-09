@@ -27,7 +27,7 @@ import { supporterTutorialSteps } from "@/constants/tutorialContent";
 import { TutorialTooltip } from "@/components/TutorialTooltip";
 import { TutorialSpotlight } from "@/components/TutorialSpotlight";
 import { TutorialHelpButton } from "@/components/TutorialHelpButton";
-import SupporterCurrentAffirmationsModal from "@/components/SupporterCurrentAffirmationsModal";
+
 // Messaging components now accessed via MessageCreditsIcon in header
 import { BuyerAstrologyLibrary } from "@/components/astrology/BuyerAstrologyLibrary";
 import AstrologyAudioPlayer from "@/components/AstrologyAudioPlayer";
