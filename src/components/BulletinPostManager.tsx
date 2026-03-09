@@ -141,7 +141,6 @@ const BulletinPostManager = ({ hideHeader = false }: BulletinPostManagerProps) =
           <h3 className="text-xl font-bold text-white">Manage Your Posts</h3>
           <div className="flex gap-2">
             <CurrentThoughtsModal onSuccess={fetchPosts} />
-            <TVGuideModal onSuccess={fetchPosts} />
           </div>
         </div>
       )}
