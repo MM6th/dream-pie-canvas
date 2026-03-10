@@ -15,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, CreditCard, Image as ImageIcon, X } from 'lucide-react';
 import { CreditPurchaseModal } from './CreditPurchaseModal';
 import ImagePicker from '@/components/ImagePicker';
+import { MessageAudioRecorder } from './MessageAudioRecorder';
 
 interface MessageComposerProps {
   open: boolean;
