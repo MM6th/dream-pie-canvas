@@ -290,6 +290,7 @@ Deno.serve(async (req) => {
       is_free: isFree,
       is_reply: !!parentMessageId,
       has_attachment: !!attachmentUrl,
+      has_audio: !!audioAttachmentUrl,
     });
 
     return new Response(
