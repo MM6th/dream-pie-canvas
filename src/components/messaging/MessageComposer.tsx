@@ -116,6 +116,7 @@ export const MessageComposer = ({
           body,
           parentMessageId: replyToMessageId,
           attachmentUrl: attachmentUrl || null,
+          audioAttachmentUrl: audioAttachmentUrl || null,
         },
       });
 
