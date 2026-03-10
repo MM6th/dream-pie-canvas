@@ -64,6 +64,7 @@ const PortfolioCard = ({ portfolio }: PortfolioCardProps) => {
   const [songModalOpen, setSongModalOpen] = useState(false);
   const [ownedMusic, setOwnedMusic] = useState<Set<string>>(new Set());
   const [previewEndedVideos, setPreviewEndedVideos] = useState<Set<string>>(new Set());
+  const [expandedImage, setExpandedImage] = useState<string | null>(null);
 
   useEffect(() => {
     const checkPurchaseStatus = async () => {
