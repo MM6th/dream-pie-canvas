@@ -21,6 +21,7 @@ interface Message {
   read_at: string | null;
   created_at: string;
   attachment_url: string | null;
+  audio_attachment_url: string | null;
   sender?: { display_name: string; avatar_url: string | null; user_type?: string };
   recipient?: { display_name: string; avatar_url: string | null };
 }
