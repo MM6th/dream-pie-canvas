@@ -438,6 +438,19 @@ const PortfolioCard = ({ portfolio }: PortfolioCardProps) => {
         </CardContent>
       </Card>
 
+      {/* Fullscreen Image Viewer */}
+      <Dialog open={!!expandedImage} onOpenChange={() => setExpandedImage(null)}>
+        <DialogContent className="max-w-[90vw] max-h-[90vh] p-2 bg-black/95 border-border">
+          {expandedImage && (
+            <img
+              src={expandedImage}
+              alt="Portfolio photo full view"
+              className="w-full h-full max-h-[85vh] object-contain rounded"
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* Song Detail Modal for purchasing background music */}
       <SongDetailModal
         audioProduct={selectedAudioProduct}
