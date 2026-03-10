@@ -130,6 +130,7 @@ export const MessageComposer = ({
       setSubject('');
       setBody('');
       setAttachmentUrl('');
+      setAudioAttachmentUrl('');
       onMessageSent?.();
       onOpenChange(false);
     } catch (error: any) {
