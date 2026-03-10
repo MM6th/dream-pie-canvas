@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { DollarSign, CheckCircle, Music, ShoppingCart, Play, Lock } from "lucide-react";
+import { DollarSign, CheckCircle, Music, ShoppingCart, Play, Lock, Expand } from "lucide-react";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
@@ -63,6 +64,7 @@ const PortfolioCard = ({ portfolio }: PortfolioCardProps) => {
   const [songModalOpen, setSongModalOpen] = useState(false);
   const [ownedMusic, setOwnedMusic] = useState<Set<string>>(new Set());
   const [previewEndedVideos, setPreviewEndedVideos] = useState<Set<string>>(new Set());
+  const [expandedImage, setExpandedImage] = useState<string | null>(null);
 
   useEffect(() => {
     const checkPurchaseStatus = async () => {
@@ -384,12 +386,21 @@ const PortfolioCard = ({ portfolio }: PortfolioCardProps) => {
                         )}
                       </>
                     ) : (
-                      <img
-                        src={getMediaUrl(media.image_path)}
-                        alt={`Portfolio media ${media.display_order}`}
-                        className={`w-full h-full object-cover ${shouldBlur ? 'blur-xl' : ''}`}
-                        style={shouldBlur ? { filter: 'blur(20px)' } : {}}
-                      />
+                      <div className="relative group cursor-pointer" onClick={() => !shouldBlur && setExpandedImage(getMediaUrl(media.image_path))}>
+                        <img
+                          src={getMediaUrl(media.image_path)}
+                          alt={`Portfolio media ${media.display_order}`}
+                          className={`w-full h-full object-cover ${shouldBlur ? 'blur-xl' : ''}`}
+                          style={shouldBlur ? { filter: 'blur(20px)' } : {}}
+                        />
+                        {!shouldBlur && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/30 transition-all duration-200">
+                            <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-black/60 rounded-full p-2">
+                              <Expand className="w-5 h-5 text-white" />
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     )}
                     {shouldBlur && (
                       <div className="absolute inset-0 flex items-center justify-center bg-black/30">
@@ -426,6 +437,19 @@ const PortfolioCard = ({ portfolio }: PortfolioCardProps) => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Fullscreen Image Viewer */}
+      <Dialog open={!!expandedImage} onOpenChange={() => setExpandedImage(null)}>
+        <DialogContent className="max-w-[90vw] max-h-[90vh] p-2 bg-black/95 border-border">
+          {expandedImage && (
+            <img
+              src={expandedImage}
+              alt="Portfolio photo full view"
+              className="w-full h-full max-h-[85vh] object-contain rounded"
+            />
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Song Detail Modal for purchasing background music */}
       <SongDetailModal
