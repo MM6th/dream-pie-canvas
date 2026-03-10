@@ -2006,6 +2006,7 @@ export type Database = {
       messages: {
         Row: {
           attachment_url: string | null
+          audio_attachment_url: string | null
           body: string
           created_at: string
           id: string
@@ -2017,6 +2018,7 @@ export type Database = {
         }
         Insert: {
           attachment_url?: string | null
+          audio_attachment_url?: string | null
           body: string
           created_at?: string
           id?: string
@@ -2028,6 +2030,7 @@ export type Database = {
         }
         Update: {
           attachment_url?: string | null
+          audio_attachment_url?: string | null
           body?: string
           created_at?: string
           id?: string

@@ -15,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, CreditCard, Image as ImageIcon, X } from 'lucide-react';
 import { CreditPurchaseModal } from './CreditPurchaseModal';
 import ImagePicker from '@/components/ImagePicker';
+import { MessageAudioRecorder } from './MessageAudioRecorder';
 
 interface MessageComposerProps {
   open: boolean;
@@ -45,6 +46,7 @@ export const MessageComposer = ({
   const [loading, setLoading] = useState(false);
   const [showCreditPurchase, setShowCreditPurchase] = useState(false);
   const [attachmentUrl, setAttachmentUrl] = useState<string>('');
+  const [audioAttachmentUrl, setAudioAttachmentUrl] = useState<string>('');
   const { toast } = useToast();
 
   const creditsRequired = 10; // All messages cost 10 credits
@@ -114,6 +116,7 @@ export const MessageComposer = ({
           body,
           parentMessageId: replyToMessageId,
           attachmentUrl: attachmentUrl || null,
+          audioAttachmentUrl: audioAttachmentUrl || null,
         },
       });
 
@@ -127,6 +130,7 @@ export const MessageComposer = ({
       setSubject('');
       setBody('');
       setAttachmentUrl('');
+      setAudioAttachmentUrl('');
       onMessageSent?.();
       onOpenChange(false);
     } catch (error: any) {
@@ -244,6 +248,16 @@ export const MessageComposer = ({
                 }
               />
             )}
+          </div>
+
+          <div className="space-y-2">
+            <Label>Voice Message (Optional)</Label>
+            <MessageAudioRecorder
+              onAudioRecorded={setAudioAttachmentUrl}
+              audioUrl={audioAttachmentUrl}
+              onAudioRemoved={() => setAudioAttachmentUrl('')}
+              disabled={loading}
+            />
           </div>
         </div>
 

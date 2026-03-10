@@ -21,6 +21,7 @@ interface Message {
   read_at: string | null;
   created_at: string;
   attachment_url: string | null;
+  audio_attachment_url: string | null;
   sender?: { display_name: string; avatar_url: string | null; user_type?: string };
   recipient?: { display_name: string; avatar_url: string | null };
 }
@@ -328,6 +329,14 @@ export const MessagingInbox = () => {
                       alt="Message attachment" 
                       className="max-w-full h-auto rounded-lg border border-border"
                     />
+                  </div>
+                )}
+                {selectedMessage.audio_attachment_url && (
+                  <div className="mt-2">
+                    <p className="text-xs text-muted-foreground mb-1">Voice Message:</p>
+                    <audio controls className="w-full" src={selectedMessage.audio_attachment_url}>
+                      Your browser does not support audio playback.
+                    </audio>
                   </div>
                 )}
                 <div className="flex justify-end pt-2 border-t">
