@@ -331,6 +331,14 @@ export const MessagingInbox = () => {
                     />
                   </div>
                 )}
+                {selectedMessage.audio_attachment_url && (
+                  <div className="mt-2">
+                    <p className="text-xs text-muted-foreground mb-1">Voice Message:</p>
+                    <audio controls className="w-full" src={selectedMessage.audio_attachment_url}>
+                      Your browser does not support audio playback.
+                    </audio>
+                  </div>
+                )}
                 <div className="flex justify-end pt-2 border-t">
                   <Button onClick={handleReply} size="sm">
                     <Reply className="w-4 h-4 mr-2" />
