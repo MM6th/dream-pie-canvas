@@ -249,6 +249,16 @@ export const MessageComposer = ({
               />
             )}
           </div>
+
+          <div className="space-y-2">
+            <Label>Voice Message (Optional)</Label>
+            <MessageAudioRecorder
+              onAudioRecorded={setAudioAttachmentUrl}
+              audioUrl={audioAttachmentUrl}
+              onAudioRemoved={() => setAudioAttachmentUrl('')}
+              disabled={loading}
+            />
+          </div>
         </div>
 
         <div className="flex gap-2">
