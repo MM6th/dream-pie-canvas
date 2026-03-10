@@ -386,12 +386,21 @@ const PortfolioCard = ({ portfolio }: PortfolioCardProps) => {
                         )}
                       </>
                     ) : (
-                      <img
-                        src={getMediaUrl(media.image_path)}
-                        alt={`Portfolio media ${media.display_order}`}
-                        className={`w-full h-full object-cover ${shouldBlur ? 'blur-xl' : ''}`}
-                        style={shouldBlur ? { filter: 'blur(20px)' } : {}}
-                      />
+                      <div className="relative group cursor-pointer" onClick={() => !shouldBlur && setExpandedImage(getMediaUrl(media.image_path))}>
+                        <img
+                          src={getMediaUrl(media.image_path)}
+                          alt={`Portfolio media ${media.display_order}`}
+                          className={`w-full h-full object-cover ${shouldBlur ? 'blur-xl' : ''}`}
+                          style={shouldBlur ? { filter: 'blur(20px)' } : {}}
+                        />
+                        {!shouldBlur && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/30 transition-all duration-200">
+                            <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-black/60 rounded-full p-2">
+                              <Expand className="w-5 h-5 text-white" />
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     )}
                     {shouldBlur && (
                       <div className="absolute inset-0 flex items-center justify-center bg-black/30">
