@@ -1,0 +1,1 @@
+UPDATE storage.buckets SET allowed_mime_types = array_cat(allowed_mime_types, ARRAY['audio/webm', 'audio/webm;codecs=opus']) WHERE id = 'user-media' AND NOT ('audio/webm' = ANY(allowed_mime_types));
