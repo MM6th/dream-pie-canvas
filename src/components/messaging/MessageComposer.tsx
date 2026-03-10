@@ -46,6 +46,7 @@ export const MessageComposer = ({
   const [loading, setLoading] = useState(false);
   const [showCreditPurchase, setShowCreditPurchase] = useState(false);
   const [attachmentUrl, setAttachmentUrl] = useState<string>('');
+  const [audioAttachmentUrl, setAudioAttachmentUrl] = useState<string>('');
   const { toast } = useToast();
 
   const creditsRequired = 10; // All messages cost 10 credits
