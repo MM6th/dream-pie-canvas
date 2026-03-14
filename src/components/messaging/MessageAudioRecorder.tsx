@@ -74,7 +74,7 @@ export const MessageAudioRecorder = ({
 
         try {
           const ext = mimeType.includes('webm') ? 'webm' : 'm4a';
-          const fileName = `message-audio/${user.id}/${Date.now()}.${ext}`;
+          const fileName = `${user.id}/message-audio/${Date.now()}.${ext}`;
 
           const { error: uploadError } = await supabase.storage
             .from('user-media')
