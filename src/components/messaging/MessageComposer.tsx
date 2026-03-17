@@ -42,7 +42,6 @@ export const MessageComposer = ({
   originalBody,
 }: MessageComposerProps) => {
   const isReply = !!replyToMessageId;
-  const [subject, setSubject] = useState(isReply && originalSubject ? `Re: ${originalSubject.replace(/^Re:\s*/, '')}` : '');
   const [body, setBody] = useState('');
   const [loading, setLoading] = useState(false);
   const [showCreditPurchase, setShowCreditPurchase] = useState(false);
