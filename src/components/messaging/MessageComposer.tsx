@@ -72,8 +72,8 @@ export const MessageComposer = ({
   };
 
   const handleSend = async () => {
-    if (body.length < 20) {
-      toast({ title: 'Invalid Message', description: 'Message must be at least 20 characters', variant: 'destructive' });
+    if (!body.trim() && !attachmentUrl && !audioAttachmentUrl && !videoAttachmentUrl) {
+      toast({ title: 'Empty Message', description: 'Please enter a message or attach media.', variant: 'destructive' });
       return;
     }
     if (body.length > 1000) {
@@ -82,6 +82,7 @@ export const MessageComposer = ({
     }
     if (currentBalance < creditsRequired) {
       toast({ title: 'Insufficient Credits', description: `You need ${creditsRequired} credit(s) but have ${currentBalance}. Please purchase more credits.`, variant: 'destructive' });
+      setShowCreditPurchase(true);
       return;
     }
 
