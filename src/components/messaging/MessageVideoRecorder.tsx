@@ -34,6 +34,14 @@ export const MessageVideoRecorder = ({
 
   const MAX_DURATION = 60; // 1 minute max
 
+  // Attach stream to live preview element once it mounts during recording
+  useEffect(() => {
+    if (isRecording && livePreviewRef.current && streamRef.current) {
+      livePreviewRef.current.srcObject = streamRef.current;
+      livePreviewRef.current.play().catch(() => {});
+    }
+  }, [isRecording]);
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
