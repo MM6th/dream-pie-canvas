@@ -103,7 +103,6 @@ export const MessageComposer = ({
       if (error) throw error;
 
       toast({ title: 'Message Sent!', description: `Your message has been sent. ${data.remainingBalance} credits remaining.` });
-      setSubject('');
       setBody('');
       setAttachmentUrl('');
       setAudioAttachmentUrl('');
