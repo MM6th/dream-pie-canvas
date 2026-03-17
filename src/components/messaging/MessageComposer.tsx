@@ -42,7 +42,6 @@ export const MessageComposer = ({
   originalBody,
 }: MessageComposerProps) => {
   const isReply = !!replyToMessageId;
-  const [subject, setSubject] = useState(isReply && originalSubject ? `Re: ${originalSubject.replace(/^Re:\s*/, '')}` : '');
   const [body, setBody] = useState('');
   const [loading, setLoading] = useState(false);
   const [showCreditPurchase, setShowCreditPurchase] = useState(false);
@@ -73,10 +72,6 @@ export const MessageComposer = ({
   };
 
   const handleSend = async () => {
-    if (subject.length < 5) {
-      toast({ title: 'Invalid Subject', description: 'Subject must be at least 5 characters', variant: 'destructive' });
-      return;
-    }
     if (body.length < 20) {
       toast({ title: 'Invalid Message', description: 'Message must be at least 20 characters', variant: 'destructive' });
       return;
@@ -92,6 +87,7 @@ export const MessageComposer = ({
 
     try {
       setLoading(true);
+      const subject = isReply && originalSubject ? `Re: ${originalSubject.replace(/^Re:\s*/, '')}` : 'Message';
       const { data, error } = await supabase.functions.invoke('send-message', {
         body: {
           recipientId,
@@ -107,7 +103,6 @@ export const MessageComposer = ({
       if (error) throw error;
 
       toast({ title: 'Message Sent!', description: `Your message has been sent. ${data.remainingBalance} credits remaining.` });
-      setSubject('');
       setBody('');
       setAttachmentUrl('');
       setAudioAttachmentUrl('');
@@ -170,11 +165,6 @@ export const MessageComposer = ({
                 Click to purchase
               </span>
             )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="subject">Subject</Label>
-            <Input id="subject" placeholder="Enter message subject" value={subject} onChange={(e) => setSubject(e.target.value)} disabled={loading} />
           </div>
 
           <div className="space-y-2">
@@ -308,7 +298,7 @@ export const MessageComposer = ({
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading} className="flex-1">
             Cancel
           </Button>
-          <Button onClick={handleSend} disabled={loading || currentBalance < creditsRequired} className="flex-1">
+          <Button onClick={handleSend} disabled={loading} className="flex-1">
             {loading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
