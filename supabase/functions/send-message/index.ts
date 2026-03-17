@@ -167,6 +167,7 @@ Deno.serve(async (req) => {
         parent_message_id: parentMessageId || null,
         attachment_url: attachmentUrl || null,
         audio_attachment_url: audioAttachmentUrl || null,
+        video_attachment_url: videoAttachmentUrl || null,
       })
       .select()
       .single();
