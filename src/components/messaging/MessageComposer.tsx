@@ -87,6 +87,7 @@ export const MessageComposer = ({
 
     try {
       setLoading(true);
+      const subject = isReply && originalSubject ? `Re: ${originalSubject.replace(/^Re:\s*/, '')}` : 'Message';
       const { data, error } = await supabase.functions.invoke('send-message', {
         body: {
           recipientId,
