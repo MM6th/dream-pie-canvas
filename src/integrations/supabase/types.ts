@@ -2015,6 +2015,7 @@ export type Database = {
           recipient_id: string
           sender_id: string
           subject: string
+          video_attachment_url: string | null
         }
         Insert: {
           attachment_url?: string | null
@@ -2027,6 +2028,7 @@ export type Database = {
           recipient_id: string
           sender_id: string
           subject: string
+          video_attachment_url?: string | null
         }
         Update: {
           attachment_url?: string | null
@@ -2039,6 +2041,7 @@ export type Database = {
           recipient_id?: string
           sender_id?: string
           subject?: string
+          video_attachment_url?: string | null
         }
         Relationships: [
           {
