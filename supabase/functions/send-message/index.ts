@@ -27,7 +27,7 @@ Deno.serve(async (req) => {
       throw new Error('Unauthorized');
     }
 
-    const { recipientId, subject, body, parentMessageId, attachmentUrl, audioAttachmentUrl } = await req.json();
+    const { recipientId, subject, body, parentMessageId, attachmentUrl, audioAttachmentUrl, videoAttachmentUrl } = await req.json();
 
     // Validate input
     if (!recipientId || !subject || !body) {
