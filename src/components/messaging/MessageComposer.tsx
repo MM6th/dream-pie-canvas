@@ -72,10 +72,6 @@ export const MessageComposer = ({
   };
 
   const handleSend = async () => {
-    if (subject.length < 5) {
-      toast({ title: 'Invalid Subject', description: 'Subject must be at least 5 characters', variant: 'destructive' });
-      return;
-    }
     if (body.length < 20) {
       toast({ title: 'Invalid Message', description: 'Message must be at least 20 characters', variant: 'destructive' });
       return;
