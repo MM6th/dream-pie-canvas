@@ -292,6 +292,7 @@ Deno.serve(async (req) => {
       is_reply: !!parentMessageId,
       has_attachment: !!attachmentUrl,
       has_audio: !!audioAttachmentUrl,
+      has_video: !!videoAttachmentUrl,
     });
 
     return new Response(
