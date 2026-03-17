@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Video, Square, Play, Pause, Trash2, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -34,6 +34,14 @@ export const MessageVideoRecorder = ({
 
   const MAX_DURATION = 60; // 1 minute max
 
+  // Attach stream to live preview element once it mounts during recording
+  useEffect(() => {
+    if (isRecording && livePreviewRef.current && streamRef.current) {
+      livePreviewRef.current.srcObject = streamRef.current;
+      livePreviewRef.current.play().catch(() => {});
+    }
+  }, [isRecording]);
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -49,11 +57,6 @@ export const MessageVideoRecorder = ({
       });
 
       streamRef.current = mediaStream;
-
-      if (livePreviewRef.current) {
-        livePreviewRef.current.srcObject = mediaStream;
-        livePreviewRef.current.play();
-      }
 
       const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')
         ? 'video/webm;codecs=vp9,opus'
