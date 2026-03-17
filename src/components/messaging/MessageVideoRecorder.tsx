@@ -50,11 +50,6 @@ export const MessageVideoRecorder = ({
 
       streamRef.current = mediaStream;
 
-      if (livePreviewRef.current) {
-        livePreviewRef.current.srcObject = mediaStream;
-        livePreviewRef.current.play();
-      }
-
       const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')
         ? 'video/webm;codecs=vp9,opus'
         : MediaRecorder.isTypeSupported('video/webm')
