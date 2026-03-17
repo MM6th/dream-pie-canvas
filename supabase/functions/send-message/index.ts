@@ -27,7 +27,7 @@ Deno.serve(async (req) => {
       throw new Error('Unauthorized');
     }
 
-    const { recipientId, subject, body, parentMessageId, attachmentUrl, audioAttachmentUrl } = await req.json();
+    const { recipientId, subject, body, parentMessageId, attachmentUrl, audioAttachmentUrl, videoAttachmentUrl } = await req.json();
 
     // Validate input
     if (!recipientId || !subject || !body) {
@@ -167,6 +167,7 @@ Deno.serve(async (req) => {
         parent_message_id: parentMessageId || null,
         attachment_url: attachmentUrl || null,
         audio_attachment_url: audioAttachmentUrl || null,
+        video_attachment_url: videoAttachmentUrl || null,
       })
       .select()
       .single();
@@ -291,6 +292,7 @@ Deno.serve(async (req) => {
       is_reply: !!parentMessageId,
       has_attachment: !!attachmentUrl,
       has_audio: !!audioAttachmentUrl,
+      has_video: !!videoAttachmentUrl,
     });
 
     return new Response(

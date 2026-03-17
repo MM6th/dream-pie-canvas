@@ -12,10 +12,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, CreditCard, Image as ImageIcon, X } from 'lucide-react';
+import { Loader2, CreditCard, Image as ImageIcon, Mic, Video, X } from 'lucide-react';
 import { CreditPurchaseModal } from './CreditPurchaseModal';
 import ImagePicker from '@/components/ImagePicker';
 import { MessageAudioRecorder } from './MessageAudioRecorder';
+import { MessageVideoRecorder } from './MessageVideoRecorder';
 
 interface MessageComposerProps {
   open: boolean;
@@ -47,9 +48,11 @@ export const MessageComposer = ({
   const [showCreditPurchase, setShowCreditPurchase] = useState(false);
   const [attachmentUrl, setAttachmentUrl] = useState<string>('');
   const [audioAttachmentUrl, setAudioAttachmentUrl] = useState<string>('');
+  const [videoAttachmentUrl, setVideoAttachmentUrl] = useState<string>('');
+  const [activeAttachment, setActiveAttachment] = useState<'photo' | 'voice' | 'video' | null>(null);
   const { toast } = useToast();
 
-  const creditsRequired = 10; // All messages cost 10 credits
+  const creditsRequired = 10;
 
   const handleCreditSectionClick = () => {
     if (currentBalance < creditsRequired) {
@@ -62,7 +65,7 @@ export const MessageComposer = ({
   };
 
   const handlePurchaseComplete = () => {
-    onMessageSent?.(); // This will trigger balance refresh
+    onMessageSent?.();
     toast({
       title: 'Credits Added!',
       description: 'Your credits have been added. You can now send your message.',
@@ -71,44 +74,24 @@ export const MessageComposer = ({
 
   const handleSend = async () => {
     if (subject.length < 5) {
-      toast({
-        title: 'Invalid Subject',
-        description: 'Subject must be at least 5 characters',
-        variant: 'destructive',
-      });
+      toast({ title: 'Invalid Subject', description: 'Subject must be at least 5 characters', variant: 'destructive' });
       return;
     }
-
     if (body.length < 20) {
-      toast({
-        title: 'Invalid Message',
-        description: 'Message must be at least 20 characters',
-        variant: 'destructive',
-      });
+      toast({ title: 'Invalid Message', description: 'Message must be at least 20 characters', variant: 'destructive' });
       return;
     }
-
     if (body.length > 1000) {
-      toast({
-        title: 'Message Too Long',
-        description: 'Message must be less than 1000 characters',
-        variant: 'destructive',
-      });
+      toast({ title: 'Message Too Long', description: 'Message must be less than 1000 characters', variant: 'destructive' });
       return;
     }
-
     if (currentBalance < creditsRequired) {
-      toast({
-        title: 'Insufficient Credits',
-        description: `You need ${creditsRequired} credit(s) but have ${currentBalance}. Please purchase more credits.`,
-        variant: 'destructive',
-      });
+      toast({ title: 'Insufficient Credits', description: `You need ${creditsRequired} credit(s) but have ${currentBalance}. Please purchase more credits.`, variant: 'destructive' });
       return;
     }
 
     try {
       setLoading(true);
-
       const { data, error } = await supabase.functions.invoke('send-message', {
         body: {
           recipientId,
@@ -117,29 +100,24 @@ export const MessageComposer = ({
           parentMessageId: replyToMessageId,
           attachmentUrl: attachmentUrl || null,
           audioAttachmentUrl: audioAttachmentUrl || null,
+          videoAttachmentUrl: videoAttachmentUrl || null,
         },
       });
 
       if (error) throw error;
 
-      toast({
-        title: 'Message Sent!',
-        description: `Your message has been sent. ${data.remainingBalance} credits remaining.`,
-      });
-
+      toast({ title: 'Message Sent!', description: `Your message has been sent. ${data.remainingBalance} credits remaining.` });
       setSubject('');
       setBody('');
       setAttachmentUrl('');
       setAudioAttachmentUrl('');
+      setVideoAttachmentUrl('');
+      setActiveAttachment(null);
       onMessageSent?.();
       onOpenChange(false);
     } catch (error: any) {
       console.error('Error sending message:', error);
-      toast({
-        title: 'Send Failed',
-        description: error.message || 'Failed to send message. Please try again.',
-        variant: 'destructive',
-      });
+      toast({ title: 'Send Failed', description: error.message || 'Failed to send message. Please try again.', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -147,6 +125,13 @@ export const MessageComposer = ({
 
   const characterCount = body.length;
   const characterLimit = 1000;
+
+  const clearAttachment = (type: 'photo' | 'voice' | 'video') => {
+    if (type === 'photo') setAttachmentUrl('');
+    if (type === 'voice') setAudioAttachmentUrl('');
+    if (type === 'video') setVideoAttachmentUrl('');
+    setActiveAttachment(null);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -165,11 +150,12 @@ export const MessageComposer = ({
               <p className="text-sm line-clamp-3 whitespace-pre-wrap">{originalBody}</p>
             </div>
           )}
-          <div 
+
+          <div
             onClick={handleCreditSectionClick}
             className={`flex items-center justify-between p-3 rounded-lg transition-all cursor-pointer ${
-              currentBalance < creditsRequired 
-                ? 'bg-amber-500/10 border-2 border-amber-500/50 hover:bg-amber-500/20 animate-pulse' 
+              currentBalance < creditsRequired
+                ? 'bg-amber-500/10 border-2 border-amber-500/50 hover:bg-amber-500/20 animate-pulse'
                 : 'bg-muted hover:bg-muted/80'
             }`}
           >
@@ -188,93 +174,141 @@ export const MessageComposer = ({
 
           <div className="space-y-2">
             <Label htmlFor="subject">Subject</Label>
-            <Input
-              id="subject"
-              placeholder="Enter message subject"
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              disabled={loading}
-            />
+            <Input id="subject" placeholder="Enter message subject" value={subject} onChange={(e) => setSubject(e.target.value)} disabled={loading} />
           </div>
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="body">Message</Label>
-              <span className={`text-xs ${
-                characterCount > characterLimit ? 'text-destructive' : 'text-muted-foreground'
-              }`}>
+              <span className={`text-xs ${characterCount > characterLimit ? 'text-destructive' : 'text-muted-foreground'}`}>
                 {characterCount} / {characterLimit}
               </span>
             </div>
-            <Textarea
-              id="body"
-              placeholder="Enter your message (minimum 20 characters)"
-              value={body}
-              onChange={(e) => setBody(e.target.value)}
-              disabled={loading}
-              rows={6}
-              className="resize-none"
-            />
+            <Textarea id="body" placeholder="Enter your message (minimum 20 characters)" value={body} onChange={(e) => setBody(e.target.value)} disabled={loading} rows={6} className="resize-none" />
           </div>
 
+          {/* Compact Attachment Row */}
           <div className="space-y-2">
-            <Label>Photo Attachment (Optional)</Label>
-            {attachmentUrl ? (
-              <div className="relative">
-                <img 
-                  src={attachmentUrl} 
-                  alt="Attachment" 
-                  className="w-full h-32 object-cover rounded-lg border"
-                />
-                <Button
-                  type="button"
-                  size="icon"
-                  variant="destructive"
-                  className="absolute top-2 right-2"
-                  onClick={() => setAttachmentUrl('')}
-                >
-                  <X className="w-4 h-4" />
-                </Button>
-              </div>
-            ) : (
+            <Label>Attachments (Optional)</Label>
+            <div className="flex items-center gap-1 p-2 bg-muted rounded-lg">
+              {/* Photo Button */}
               <ImagePicker
-                onImageSelect={setAttachmentUrl}
+                onImageSelect={(url) => {
+                  setAttachmentUrl(url);
+                  setActiveAttachment('photo');
+                }}
                 currentImageUrl={attachmentUrl}
                 trigger={
-                  <Button type="button" variant="outline" className="w-full">
-                    <ImageIcon className="w-4 h-4 mr-2" />
-                    Attach Photo
+                  <Button
+                    type="button"
+                    variant={attachmentUrl ? 'default' : 'ghost'}
+                    size="icon"
+                    className="h-9 w-9"
+                    title="Attach Photo"
+                  >
+                    <ImageIcon className="w-5 h-5" />
                   </Button>
                 }
               />
-            )}
+
+              {/* Voice Button / Recorder */}
+              {!audioAttachmentUrl && activeAttachment !== 'voice' ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9"
+                  title="Record Voice Message"
+                  disabled={loading}
+                  onClick={() => setActiveAttachment('voice')}
+                >
+                  <Mic className="w-5 h-5" />
+                </Button>
+              ) : null}
+
+              {/* Video Button / Recorder */}
+              {!videoAttachmentUrl && activeAttachment !== 'video' ? (
+                <MessageVideoRecorder
+                  onVideoRecorded={(url) => {
+                    setVideoAttachmentUrl(url);
+                    setActiveAttachment('video');
+                  }}
+                  videoUrl={videoAttachmentUrl}
+                  onVideoRemoved={() => clearAttachment('video')}
+                  disabled={loading}
+                />
+              ) : null}
+
+              {/* Status indicators */}
+              <div className="flex-1 flex items-center gap-2 justify-end">
+                {attachmentUrl && (
+                  <span className="text-xs text-primary flex items-center gap-1">
+                    <ImageIcon className="w-3 h-3" /> Photo
+                    <button onClick={() => clearAttachment('photo')} className="ml-1">
+                      <X className="w-3 h-3 text-muted-foreground hover:text-destructive" />
+                    </button>
+                  </span>
+                )}
+                {audioAttachmentUrl && (
+                  <span className="text-xs text-primary flex items-center gap-1">
+                    <Mic className="w-3 h-3" /> Voice
+                    <button onClick={() => clearAttachment('voice')} className="ml-1">
+                      <X className="w-3 h-3 text-muted-foreground hover:text-destructive" />
+                    </button>
+                  </span>
+                )}
+                {videoAttachmentUrl && (
+                  <span className="text-xs text-primary flex items-center gap-1">
+                    <Video className="w-3 h-3" /> Video
+                    <button onClick={() => clearAttachment('video')} className="ml-1">
+                      <X className="w-3 h-3 text-muted-foreground hover:text-destructive" />
+                    </button>
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <Label>Voice Message (Optional)</Label>
+          {/* Expanded attachment area */}
+          {activeAttachment === 'photo' && attachmentUrl && (
+            <div className="relative">
+              <img src={attachmentUrl} alt="Attachment" className="w-full h-32 object-cover rounded-lg border" />
+              <Button type="button" size="icon" variant="destructive" className="absolute top-2 right-2" onClick={() => clearAttachment('photo')}>
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+          )}
+
+          {(activeAttachment === 'voice' || audioAttachmentUrl) && (
             <MessageAudioRecorder
-              onAudioRecorded={setAudioAttachmentUrl}
+              onAudioRecorded={(url) => {
+                setAudioAttachmentUrl(url);
+                setActiveAttachment('voice');
+              }}
               audioUrl={audioAttachmentUrl}
-              onAudioRemoved={() => setAudioAttachmentUrl('')}
+              onAudioRemoved={() => clearAttachment('voice')}
               disabled={loading}
             />
-          </div>
+          )}
+
+          {activeAttachment === 'video' && videoAttachmentUrl && (
+            <div className="space-y-2 p-3 bg-muted rounded-lg">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Video Message Preview</span>
+                <Button type="button" size="icon" variant="destructive" onClick={() => clearAttachment('video')} className="h-8 w-8">
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+              <video src={videoAttachmentUrl} className="w-full rounded-lg max-h-40 object-cover" controls />
+            </div>
+          )}
         </div>
 
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={loading}
-            className="flex-1"
-          >
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading} className="flex-1">
             Cancel
           </Button>
-          <Button
-            onClick={handleSend}
-            disabled={loading || currentBalance < creditsRequired}
-            className="flex-1"
-          >
+          <Button onClick={handleSend} disabled={loading || currentBalance < creditsRequired} className="flex-1">
             {loading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
