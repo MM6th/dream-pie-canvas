@@ -168,11 +168,6 @@ export const MessageComposer = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="subject">Subject</Label>
-            <Input id="subject" placeholder="Enter message subject" value={subject} onChange={(e) => setSubject(e.target.value)} disabled={loading} />
-          </div>
-
-          <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="body">Message</Label>
               <span className={`text-xs ${characterCount > characterLimit ? 'text-destructive' : 'text-muted-foreground'}`}>
