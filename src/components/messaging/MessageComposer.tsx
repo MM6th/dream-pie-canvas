@@ -298,7 +298,7 @@ export const MessageComposer = ({
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading} className="flex-1">
             Cancel
           </Button>
-          <Button onClick={handleSend} disabled={loading || currentBalance < creditsRequired} className="flex-1">
+          <Button onClick={handleSend} disabled={loading} className="flex-1">
             {loading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
