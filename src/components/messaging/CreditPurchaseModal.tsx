@@ -42,6 +42,7 @@ export const CreditPurchaseModal = ({
   const [selectedPackage, setSelectedPackage] = useState(50);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const { usdToSixth, spotPrice, isLoading: spotLoading } = useSpotPrice();
 
   // Message settings state (for all users)
   const [settingsEnabled, setSettingsEnabled] = useState(true);
