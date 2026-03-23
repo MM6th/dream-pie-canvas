@@ -270,8 +270,8 @@ export const MessageComposer = ({
 
           {/* Expanded attachment area */}
           {activeAttachment === 'photo' && attachmentUrl && (
-            <div className="relative">
-              <img src={attachmentUrl} alt="Attachment" className="w-full h-32 object-cover rounded-lg border" />
+            <div className="relative flex justify-center bg-black rounded-lg border overflow-hidden" style={{ maxHeight: '280px' }}>
+              <img src={attachmentUrl} alt="Attachment" className="max-h-[280px] object-contain" />
               <Button type="button" size="icon" variant="destructive" className="absolute top-2 right-2" onClick={() => clearAttachment('photo')}>
                 <X className="w-4 h-4" />
               </Button>
