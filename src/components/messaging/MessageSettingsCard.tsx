@@ -8,6 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { Settings, DollarSign } from 'lucide-react';
 import SixthPriceTag from '@/components/SixthPriceTag';
+import { useSpotPrice } from '@/hooks/useSpotPrice';
 
 export const MessageSettingsCard = () => {
   const [enabled, setEnabled] = useState(true);
@@ -16,6 +17,7 @@ export const MessageSettingsCard = () => {
   const [saving, setSaving] = useState(false);
   const [hasSettings, setHasSettings] = useState(false);
   const { toast } = useToast();
+  const { usdToSixth, isLoading: spotLoading } = useSpotPrice();
 
   useEffect(() => {
     fetchSettings();
@@ -197,6 +199,27 @@ export const MessageSettingsCard = () => {
               </div>
               <p className="text-sm text-muted-foreground">
                 Default is 10 credits per message
+              </p>
+            </div>
+
+            {/* USD / SIXTH Conversion Breakdown */}
+            <div className="rounded-lg bg-muted/60 border p-4 space-y-2">
+              <p className="text-sm font-medium text-muted-foreground">Price Conversion</p>
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="flex flex-col">
+                  <span className="text-xs text-muted-foreground">USD per message</span>
+                  <span className="font-semibold text-foreground text-lg">${revenuePerMessage}</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-xs text-muted-foreground">SIXTH per message</span>
+                  <span className="font-semibold text-foreground text-lg">
+                    <SixthPriceTag usdPrice={parseFloat(revenuePerMessage)} size="md" showUsd={false} />
+                  </span>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                1 credit = $0.10 = {spotLoading ? '...' : `${usdToSixth(0.10).toLocaleString()} SIXTH`}
+                {' '}• Set to 1 credit for the lowest possible price
               </p>
             </div>
 

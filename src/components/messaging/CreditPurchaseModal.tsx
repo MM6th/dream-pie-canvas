@@ -18,6 +18,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, MessageCircle, CreditCard, Info, Settings, DollarSign, Video, Clock } from 'lucide-react';
 import SixthPriceTag from '@/components/SixthPriceTag';
+import { useSpotPrice } from '@/hooks/useSpotPrice';
 
 interface CreditPurchaseModalProps {
   open: boolean;
@@ -41,6 +42,7 @@ export const CreditPurchaseModal = ({
   const [selectedPackage, setSelectedPackage] = useState(50);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const { usdToSixth, spotPrice, isLoading: spotLoading } = useSpotPrice();
 
   // Message settings state (for all users)
   const [settingsEnabled, setSettingsEnabled] = useState(true);
@@ -529,6 +531,27 @@ export const CreditPurchaseModal = ({
                         </div>
                       </div>
 
+                      {/* USD / SIXTH Conversion Breakdown */}
+                      <div className="rounded-lg bg-muted/60 border p-3 space-y-2">
+                        <p className="text-xs font-medium text-muted-foreground">Price Conversion</p>
+                        <div className="grid grid-cols-2 gap-2 text-sm">
+                          <div className="flex flex-col">
+                            <span className="text-xs text-muted-foreground">USD per message</span>
+                            <span className="font-semibold text-foreground">${revenuePerMessage}</span>
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-xs text-muted-foreground">SIXTH per message</span>
+                            <span className="font-semibold text-foreground">
+                              <SixthPriceTag usdPrice={parseFloat(revenuePerMessage)} size="sm" showUsd={false} />
+                            </span>
+                          </div>
+                        </div>
+                        <div className="text-[10px] text-muted-foreground">
+                          1 credit = $0.10 = {spotLoading ? '...' : `${usdToSixth(0.10).toLocaleString()} SIXTH`}
+                          {' '}• Minimum: 1 credit (${(0.10).toFixed(2)})
+                        </div>
+                      </div>
+
                       <div className="rounded-lg bg-primary/10 p-3 space-y-1">
                         <div className="flex items-center gap-2 text-xs font-medium">
                           <DollarSign className="w-3 h-3" />
@@ -539,7 +562,7 @@ export const CreditPurchaseModal = ({
                           <SixthPriceTag usdPrice={parseFloat(revenuePerMessage)} size="sm" showUsd={false} />
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          You earn $0.10 per credit.
+                          You earn $0.10 per credit. Set to 1 credit for the lowest possible message price.
                         </p>
                       </div>
                     </>
