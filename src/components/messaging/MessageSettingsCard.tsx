@@ -17,6 +17,7 @@ export const MessageSettingsCard = () => {
   const [saving, setSaving] = useState(false);
   const [hasSettings, setHasSettings] = useState(false);
   const { toast } = useToast();
+  const { usdToSixth, isLoading: spotLoading } = useSpotPrice();
 
   useEffect(() => {
     fetchSettings();
