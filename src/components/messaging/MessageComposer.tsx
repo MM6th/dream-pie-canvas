@@ -12,11 +12,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, CreditCard, Image as ImageIcon, Mic, Video, X } from 'lucide-react';
+import { Loader2, CreditCard, Image as ImageIcon, Mic, Video, Camera, X } from 'lucide-react';
 import { CreditPurchaseModal } from './CreditPurchaseModal';
 import ImagePicker from '@/components/ImagePicker';
 import { MessageAudioRecorder } from './MessageAudioRecorder';
 import { MessageVideoRecorder } from './MessageVideoRecorder';
+import { MessageCameraCapture } from './MessageCameraCapture';
 
 interface MessageComposerProps {
   open: boolean;
@@ -202,7 +203,14 @@ export const MessageComposer = ({
                 }
               />
 
-              {/* Voice Button / Recorder */}
+              {/* Camera Snap Button */}
+              <MessageCameraCapture
+                onPhotoCaptured={(url) => {
+                  setAttachmentUrl(url);
+                  setActiveAttachment('photo');
+                }}
+                disabled={loading}
+              />
               {!audioAttachmentUrl && activeAttachment !== 'voice' ? (
                 <Button
                   type="button"
