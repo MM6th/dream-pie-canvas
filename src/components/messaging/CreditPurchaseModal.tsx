@@ -18,6 +18,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, MessageCircle, CreditCard, Info, Settings, DollarSign, Video, Clock } from 'lucide-react';
 import SixthPriceTag from '@/components/SixthPriceTag';
+import { useSpotPrice } from '@/hooks/useSpotPrice';
 
 interface CreditPurchaseModalProps {
   open: boolean;
