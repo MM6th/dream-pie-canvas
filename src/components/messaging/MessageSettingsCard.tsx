@@ -8,6 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { Settings, DollarSign } from 'lucide-react';
 import SixthPriceTag from '@/components/SixthPriceTag';
+import { useSpotPrice } from '@/hooks/useSpotPrice';
 
 export const MessageSettingsCard = () => {
   const [enabled, setEnabled] = useState(true);
