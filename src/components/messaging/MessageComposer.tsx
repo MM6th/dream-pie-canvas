@@ -203,7 +203,14 @@ export const MessageComposer = ({
                 }
               />
 
-              {/* Voice Button / Recorder */}
+              {/* Camera Snap Button */}
+              <MessageCameraCapture
+                onPhotoCaptured={(url) => {
+                  setAttachmentUrl(url);
+                  setActiveAttachment('photo');
+                }}
+                disabled={loading}
+              />
               {!audioAttachmentUrl && activeAttachment !== 'voice' ? (
                 <Button
                   type="button"
