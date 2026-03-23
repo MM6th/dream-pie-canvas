@@ -202,6 +202,27 @@ export const MessageSettingsCard = () => {
               </p>
             </div>
 
+            {/* USD / SIXTH Conversion Breakdown */}
+            <div className="rounded-lg bg-muted/60 border p-4 space-y-2">
+              <p className="text-sm font-medium text-muted-foreground">Price Conversion</p>
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="flex flex-col">
+                  <span className="text-xs text-muted-foreground">USD per message</span>
+                  <span className="font-semibold text-foreground text-lg">${revenuePerMessage}</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-xs text-muted-foreground">SIXTH per message</span>
+                  <span className="font-semibold text-foreground text-lg">
+                    <SixthPriceTag usdPrice={parseFloat(revenuePerMessage)} size="md" showUsd={false} />
+                  </span>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                1 credit = $0.10 = {spotLoading ? '...' : `${usdToSixth(0.10).toLocaleString()} SIXTH`}
+                {' '}• Set to 1 credit for the lowest possible price
+              </p>
+            </div>
+
             <div className="rounded-lg bg-primary/10 p-4 space-y-2">
               <div className="flex items-center gap-2 text-sm font-medium">
                 <DollarSign className="w-4 h-4" />
