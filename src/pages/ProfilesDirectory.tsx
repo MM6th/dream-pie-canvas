@@ -392,10 +392,16 @@ const ProfilesDirectory = () => {
 
                       {/* Messaging Price */}
                       {messagingPrices[profile.id] && (
-                        <div className="flex items-center justify-center gap-1 text-xs text-green-400 mb-1 flex-wrap">
-                          <DollarSign className="w-3 h-3" />
-                          <span>{messagingPrices[profile.id]} credits/msg</span>
-                          <SixthPriceTag usdPrice={messagingPrices[profile.id] * 0.10} size="sm" showUsd={false} />
+                        <div className="flex flex-col items-center gap-0.5 text-xs text-green-400 mb-1">
+                          <div className="flex items-center gap-1">
+                            <DollarSign className="w-3 h-3" />
+                            <span>{messagingPrices[profile.id]} credits/msg</span>
+                          </div>
+                          <div className="flex items-center gap-1 text-[10px] text-green-300/80 flex-wrap justify-center">
+                            <span>${(messagingPrices[profile.id] * 0.10).toFixed(2)}</span>
+                            <span>•</span>
+                            <SixthPriceTag usdPrice={messagingPrices[profile.id] * 0.10} size="sm" showUsd={false} />
+                          </div>
                         </div>
                       )}
 
