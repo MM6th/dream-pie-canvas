@@ -407,10 +407,23 @@ const GoLive = () => {
         .eq("id", currentStreamId);
     }
 
-    // Disconnect from LiveKit
+    // Disconnect from LiveKit and stop all local media tracks
     if (roomRef.current) {
+      // Stop all local tracks to release camera/mic hardware
+      for (const pub of roomRef.current.localParticipant.trackPublications.values()) {
+        if (pub.track) {
+          pub.track.stop();
+          pub.track.detach();
+        }
+      }
       roomRef.current.disconnect();
       roomRef.current = null;
+    }
+
+    // Also stop any lingering preview media stream
+    if (localStreamRef.current) {
+      localStreamRef.current.getTracks().forEach((t) => t.stop());
+      localStreamRef.current = null;
     }
 
     setIsLive(false);

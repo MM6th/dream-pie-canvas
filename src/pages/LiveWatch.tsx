@@ -357,7 +357,10 @@ const LiveWatch = () => {
                 )}
               </div>
               {user && stream && user.id !== stream.merchant_id && (
-                <LiveTipButton streamId={stream.id} recipientId={stream.merchant_id} />
+                <div className="flex items-center gap-2">
+                  <LiveOneOnOneButton hostId={stream.merchant_id} />
+                  <LiveTipButton streamId={stream.id} recipientId={stream.merchant_id} />
+                </div>
               )}
             </div>
           </div>
