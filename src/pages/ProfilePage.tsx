@@ -382,12 +382,9 @@ const ProfilePage = () => {
                   {/* Messaging Price */}
                    {messagingPrice !== null && (
                     <div className="flex flex-col items-center gap-1 text-sm text-green-400 bg-green-900/20 border border-green-600/30 rounded-lg px-3 py-2 w-full">
-                      <div className="flex items-center gap-2 justify-center flex-wrap">
-                        <DollarSign className="w-4 h-4" />
-                        <span>{messagingPrice} credits/msg</span>
-                      </div>
+                      <span className="text-green-300 font-medium">${(messagingPrice * 0.10).toFixed(2)} per message</span>
                       <div className="flex items-center gap-2 text-xs text-green-300/80 justify-center flex-wrap">
-                        <span>${(messagingPrice * 0.10).toFixed(2)} USD</span>
+                        <span>{messagingPrice} {messagingPrice === 1 ? 'credit' : 'credits'}</span>
                         <span>•</span>
                         <SixthPriceTag usdPrice={messagingPrice * 0.10} size="sm" showUsd={false} />
                       </div>
