@@ -10,6 +10,7 @@ import { Eye, Radio, ArrowLeft, LogOut, Volume2, VolumeX, VideoOff } from "lucid
 import { toast } from "@/hooks/use-toast";
 import LiveChat from "@/components/live/LiveChat";
 import LiveTipButton from "@/components/live/LiveTipButton";
+import LiveOneOnOneButton from "@/components/live/LiveOneOnOneButton";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
   Room,
