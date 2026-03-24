@@ -10,6 +10,7 @@ import { Eye, Radio, ArrowLeft, LogOut, Volume2, VolumeX, VideoOff } from "lucid
 import { toast } from "@/hooks/use-toast";
 import LiveChat from "@/components/live/LiveChat";
 import LiveTipButton from "@/components/live/LiveTipButton";
+import LiveOneOnOneButton from "@/components/live/LiveOneOnOneButton";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
   Room,
@@ -356,7 +357,10 @@ const LiveWatch = () => {
                 )}
               </div>
               {user && stream && user.id !== stream.merchant_id && (
-                <LiveTipButton streamId={stream.id} recipientId={stream.merchant_id} />
+                <div className="flex items-center gap-2">
+                  <LiveOneOnOneButton hostId={stream.merchant_id} />
+                  <LiveTipButton streamId={stream.id} recipientId={stream.merchant_id} />
+                </div>
               )}
             </div>
           </div>
