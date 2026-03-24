@@ -68,7 +68,10 @@ export const CreditPurchaseModal = ({
   const fetchSettings = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        setSettingsLoading(false);
+        return;
+      }
 
       // Fetch message settings
       const { data, error } = await supabase
