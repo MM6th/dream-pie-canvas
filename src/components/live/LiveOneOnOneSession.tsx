@@ -109,7 +109,11 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false }: Live
           return;
         }
 
-        attachLocalCamera(room);
+        if (!attachLocalCamera(room)) {
+          window.setTimeout(() => {
+            if (!cancelled) attachLocalCamera(room);
+          }, 300);
+        }
 
         // Attach already-published remote tracks
         for (const p of room.remoteParticipants.values()) {
