@@ -13,6 +13,8 @@ import { toast } from "@/hooks/use-toast";
 import { Video, VideoOff, Mic, MicOff, Radio, Eye, MessageSquare } from "lucide-react";
 import LiveChat from "@/components/live/LiveChat";
 import LiveTipDisplay from "@/components/live/LiveTipDisplay";
+import LiveOneOnOneRequests from "@/components/live/LiveOneOnOneRequests";
+import LiveTipDisplay from "@/components/live/LiveTipDisplay";
 import {
   Room,
   RoomEvent,
