@@ -10,9 +10,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Video, Check, X } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import LiveOneOnOneSession from "@/components/live/LiveOneOnOneSession";
 
 interface OneOnOneRequest {
   id: string;
@@ -21,6 +22,7 @@ interface OneOnOneRequest {
   credits_charged: number;
   created_at: string;
   viewer_name?: string;
+  viewer_avatar?: string | null;
 }
 
 interface LiveOneOnOneRequestsProps {
@@ -31,6 +33,22 @@ const LiveOneOnOneRequests = ({ streamId }: LiveOneOnOneRequestsProps) => {
   const { user } = useAuth();
   const [requests, setRequests] = useState<OneOnOneRequest[]>([]);
   const [respondingId, setRespondingId] = useState<string | null>(null);
+  const [hostRate, setHostRate] = useState<number>(0);
+  const [activeSessionRoom, setActiveSessionRoom] = useState<string | null>(null);
+
+  // Fetch host rate
+  useEffect(() => {
+    if (!user) return;
+    const fetchRate = async () => {
+      const { data } = await supabase
+        .from("message_settings")
+        .select("credits_per_message")
+        .eq("merchant_id", user.id)
+        .single();
+      if (data) setHostRate(data.credits_per_message ?? 0);
+    };
+    fetchRate();
+  }, [user]);
 
   const fetchRequests = async () => {
     if (!user) return;
@@ -42,28 +60,26 @@ const LiveOneOnOneRequests = ({ streamId }: LiveOneOnOneRequestsProps) => {
       .eq("status", "pending")
       .order("created_at", { ascending: true });
 
-    if (error) {
-      console.error("Error fetching 1-on-1 requests:", error);
-      return;
-    }
-
-    if (!data?.length) {
+    if (error || !data?.length) {
       setRequests([]);
       return;
     }
 
-    const viewerIds = data.map((request: OneOnOneRequest) => request.viewer_id);
+    const viewerIds = data.map((r: any) => r.viewer_id);
     const { data: profiles } = await supabase
       .from("profiles")
-      .select("id, display_name")
+      .select("id, display_name, avatar_url")
       .in("id", viewerIds);
 
-    const profileMap = new Map((profiles ?? []).map((profile) => [profile.id, profile.display_name]));
+    const profileMap = new Map(
+      (profiles ?? []).map((p) => [p.id, { name: p.display_name, avatar: p.avatar_url }])
+    );
 
     setRequests(
-      data.map((request: OneOnOneRequest) => ({
-        ...request,
-        viewer_name: profileMap.get(request.viewer_id) || "Viewer",
+      data.map((r: any) => ({
+        ...r,
+        viewer_name: profileMap.get(r.viewer_id)?.name || "Viewer",
+        viewer_avatar: profileMap.get(r.viewer_id)?.avatar || null,
       }))
     );
   };
@@ -73,7 +89,7 @@ const LiveOneOnOneRequests = ({ streamId }: LiveOneOnOneRequestsProps) => {
     if (!user) return;
 
     const channel = supabase
-      .channel(`host_one_on_one_${streamId}_${user.id}`)
+      .channel(`host_1on1_${streamId}_${user.id}`)
       .on(
         "postgres_changes",
         {
@@ -82,14 +98,7 @@ const LiveOneOnOneRequests = ({ streamId }: LiveOneOnOneRequestsProps) => {
           table: "one_on_one_requests",
           filter: `host_id=eq.${user.id}`,
         },
-        () => {
-          fetchRequests();
-          toast({
-            title: "Incoming 1-on-1 request",
-            description: "A viewer is requesting a private session.",
-            duration: 8000,
-          });
-        }
+        () => fetchRequests()
       )
       .on(
         "postgres_changes",
@@ -99,7 +108,7 @@ const LiveOneOnOneRequests = ({ streamId }: LiveOneOnOneRequestsProps) => {
           table: "one_on_one_requests",
           filter: `host_id=eq.${user.id}`,
         },
-        fetchRequests
+        () => fetchRequests()
       )
       .subscribe();
 
@@ -113,31 +122,39 @@ const LiveOneOnOneRequests = ({ streamId }: LiveOneOnOneRequestsProps) => {
 
   const activeRequest = useMemo(() => requests[0] ?? null, [requests]);
 
+  const usdCost = (hostRate * 0.1).toFixed(2);
+
   const handleRespond = async (requestId: string, action: "accepted" | "declined") => {
     setRespondingId(requestId);
     try {
+      const roomName = `1on1_${requestId}`;
       const { error } = await (supabase.from("one_on_one_requests" as any) as any)
         .update({
           status: action,
           responded_at: new Date().toISOString(),
-          ...(action === "accepted" ? { room_name: `1on1_${requestId}` } : {}),
+          ...(action === "accepted" ? { room_name: roomName } : {}),
         })
         .eq("id", requestId)
         .eq("host_id", user?.id);
 
       if (error) throw error;
 
-      setRequests((previous) => previous.filter((request) => request.id !== requestId));
-      toast({
-        title: action === "accepted" ? "Request accepted" : "Request declined",
-        description: action === "accepted" ? "The viewer has been notified." : "The request was declined.",
-        duration: 6000,
-      });
+      setRequests((prev) => prev.filter((r) => r.id !== requestId));
+
+      if (action === "accepted") {
+        setActiveSessionRoom(roomName);
+      } else {
+        toast({
+          title: "Request declined",
+          description: "The viewer has been notified.",
+          duration: 5000,
+        });
+      }
     } catch (err: any) {
       console.error("Error responding to request:", err);
       toast({
         title: "Response failed",
-        description: err.message || "Unable to respond to the request.",
+        description: err.message || "Unable to respond.",
         variant: "destructive",
         duration: 7000,
       });
@@ -147,53 +164,68 @@ const LiveOneOnOneRequests = ({ streamId }: LiveOneOnOneRequestsProps) => {
   };
 
   return (
-    <Dialog open={!!activeRequest}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Video className="h-5 w-5 text-primary" />
-            New 1-on-1 request
-          </DialogTitle>
-          <DialogDescription>
-            {activeRequest
-              ? `${activeRequest.viewer_name} wants to start a private 1-on-1 session.`
-              : "Waiting for requests."}
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      {/* Host incoming request modal */}
+      <Dialog open={!!activeRequest && !activeSessionRoom}>
+        <DialogContent className="sm:max-w-md" onPointerDownOutside={(e) => e.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Video className="h-5 w-5 text-primary" />
+              1-on-1 Request
+            </DialogTitle>
+            <DialogDescription>
+              A viewer wants to go live with you
+            </DialogDescription>
+          </DialogHeader>
 
-        {activeRequest && (
-          <div className="space-y-4 rounded-lg border border-border bg-card p-4">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="font-medium text-foreground">{activeRequest.viewer_name}</p>
-                <p className="text-sm text-muted-foreground">Requested just now during your live.</p>
+          {activeRequest && (
+            <div className="flex flex-col items-center gap-4 py-4">
+              <Avatar className="h-20 w-20">
+                <AvatarImage src={activeRequest.viewer_avatar || undefined} />
+                <AvatarFallback className="text-lg">
+                  {(activeRequest.viewer_name || "V").charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div className="text-center space-y-1">
+                <p className="font-semibold text-lg text-foreground">{activeRequest.viewer_name}</p>
+                <p className="text-sm text-muted-foreground">
+                  Wants a private 1-on-1 session for <span className="font-semibold text-foreground">${usdCost}</span>
+                </p>
               </div>
-              <Badge variant="outline">
-                {activeRequest.credits_charged > 0 ? `${activeRequest.credits_charged} credits` : "Test mode"}
-              </Badge>
             </div>
-          </div>
-        )}
+          )}
 
-        <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => activeRequest && handleRespond(activeRequest.id, "declined")}
-            disabled={!activeRequest || respondingId === activeRequest?.id}
-          >
-            <X className="mr-2 h-4 w-4" />
-            Decline
-          </Button>
-          <Button
-            onClick={() => activeRequest && handleRespond(activeRequest.id, "accepted")}
-            disabled={!activeRequest || respondingId === activeRequest?.id}
-          >
-            <Check className="mr-2 h-4 w-4" />
-            Accept
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          <DialogFooter className="flex gap-2 sm:gap-2">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => activeRequest && handleRespond(activeRequest.id, "declined")}
+              disabled={!activeRequest || respondingId === activeRequest?.id}
+            >
+              <X className="mr-2 h-4 w-4" />
+              Decline
+            </Button>
+            <Button
+              className="flex-1"
+              onClick={() => activeRequest && handleRespond(activeRequest.id, "accepted")}
+              disabled={!activeRequest || respondingId === activeRequest?.id}
+            >
+              <Check className="mr-2 h-4 w-4" />
+              Accept
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Side-by-side session for host */}
+      {activeSessionRoom && (
+        <LiveOneOnOneSession
+          roomName={activeSessionRoom}
+          isHost={true}
+          onClose={() => setActiveSessionRoom(null)}
+        />
+      )}
+    </>
   );
 };
 
