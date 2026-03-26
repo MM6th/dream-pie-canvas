@@ -1,8 +1,15 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Video, Check, X } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
@@ -23,48 +30,50 @@ interface LiveOneOnOneRequestsProps {
 const LiveOneOnOneRequests = ({ streamId }: LiveOneOnOneRequestsProps) => {
   const { user } = useAuth();
   const [requests, setRequests] = useState<OneOnOneRequest[]>([]);
+  const [respondingId, setRespondingId] = useState<string | null>(null);
 
-  // Fetch pending requests
   const fetchRequests = async () => {
     if (!user) return;
 
-    const { data } = await supabase
-      .from("one_on_one_requests" as any)
-      .select("*")
+    const { data, error } = await (supabase.from("one_on_one_requests" as any) as any)
+      .select("id, viewer_id, status, credits_charged, created_at")
       .eq("stream_id", streamId)
       .eq("host_id", user.id)
       .eq("status", "pending")
       .order("created_at", { ascending: true });
 
-    if (data) {
-      // Fetch viewer names
-      const viewerIds = (data as any[]).map((r) => r.viewer_id);
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id, display_name")
-        .in("id", viewerIds);
-
-      const profileMap = new Map(profiles?.map((p) => [p.id, p.display_name]) || []);
-
-      setRequests(
-        (data as any[]).map((r) => ({
-          ...r,
-          viewer_name: profileMap.get(r.viewer_id) || "Viewer",
-        }))
-      );
+    if (error) {
+      console.error("Error fetching 1-on-1 requests:", error);
+      return;
     }
+
+    if (!data?.length) {
+      setRequests([]);
+      return;
+    }
+
+    const viewerIds = data.map((request: OneOnOneRequest) => request.viewer_id);
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, display_name")
+      .in("id", viewerIds);
+
+    const profileMap = new Map((profiles ?? []).map((profile) => [profile.id, profile.display_name]));
+
+    setRequests(
+      data.map((request: OneOnOneRequest) => ({
+        ...request,
+        viewer_name: profileMap.get(request.viewer_id) || "Viewer",
+      }))
+    );
   };
 
   useEffect(() => {
     fetchRequests();
-  }, [user, streamId]);
-
-  // Subscribe to new requests via realtime
-  useEffect(() => {
     if (!user) return;
 
     const channel = supabase
-      .channel(`host_one_on_one_${streamId}`)
+      .channel(`host_one_on_one_${streamId}_${user.id}`)
       .on(
         "postgres_changes",
         {
@@ -73,81 +82,118 @@ const LiveOneOnOneRequests = ({ streamId }: LiveOneOnOneRequestsProps) => {
           table: "one_on_one_requests",
           filter: `host_id=eq.${user.id}`,
         },
-        (payload: any) => {
-          console.log("Host received 1-on-1 request via realtime:", payload);
+        () => {
           fetchRequests();
-          toast({ title: "🎥 New 1-on-1 Request!", description: "A viewer wants a private session with you.", duration: 10000 });
+          toast({
+            title: "Incoming 1-on-1 request",
+            description: "A viewer is requesting a private session.",
+            duration: 8000,
+          });
         }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "one_on_one_requests",
+          filter: `host_id=eq.${user.id}`,
+        },
+        fetchRequests
       )
       .subscribe();
 
+    const interval = window.setInterval(fetchRequests, 3000);
+
     return () => {
+      window.clearInterval(interval);
       supabase.removeChannel(channel);
     };
-  }, [user, streamId]);
+  }, [streamId, user?.id]);
+
+  const activeRequest = useMemo(() => requests[0] ?? null, [requests]);
 
   const handleRespond = async (requestId: string, action: "accepted" | "declined") => {
+    setRespondingId(requestId);
     try {
-      const { error } = await supabase
-        .from("one_on_one_requests" as any)
+      const { error } = await (supabase.from("one_on_one_requests" as any) as any)
         .update({
           status: action,
           responded_at: new Date().toISOString(),
           ...(action === "accepted" ? { room_name: `1on1_${requestId}` } : {}),
-        } as any)
-        .eq("id", requestId);
+        })
+        .eq("id", requestId)
+        .eq("host_id", user?.id);
 
       if (error) throw error;
 
-      setRequests((prev) => prev.filter((r) => r.id !== requestId));
+      setRequests((previous) => previous.filter((request) => request.id !== requestId));
       toast({
-        title: action === "accepted" ? "Request Accepted" : "Request Declined",
-        description: action === "accepted" ? "Private session starting..." : "Request has been declined.",
+        title: action === "accepted" ? "Request accepted" : "Request declined",
+        description: action === "accepted" ? "The viewer has been notified." : "The request was declined.",
+        duration: 6000,
       });
     } catch (err: any) {
       console.error("Error responding to request:", err);
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      toast({
+        title: "Response failed",
+        description: err.message || "Unable to respond to the request.",
+        variant: "destructive",
+        duration: 7000,
+      });
+    } finally {
+      setRespondingId(null);
     }
   };
 
-  if (requests.length === 0) return null;
-
   return (
-    <div className="space-y-2">
-      {requests.map((req) => (
-        <Card key={req.id} className="p-3 border-primary/30 bg-primary/5 animate-pulse-slow">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 min-w-0">
-              <Video className="w-4 h-4 text-primary shrink-0" />
-              <div className="min-w-0">
-                <p className="text-sm font-medium truncate">{req.viewer_name}</p>
-                <p className="text-xs text-muted-foreground">
-                  1-on-1 request • {req.credits_charged} credit{req.credits_charged !== 1 ? "s" : ""}
-                </p>
+    <Dialog open={!!activeRequest}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Video className="h-5 w-5 text-primary" />
+            New 1-on-1 request
+          </DialogTitle>
+          <DialogDescription>
+            {activeRequest
+              ? `${activeRequest.viewer_name} wants to start a private 1-on-1 session.`
+              : "Waiting for requests."}
+          </DialogDescription>
+        </DialogHeader>
+
+        {activeRequest && (
+          <div className="space-y-4 rounded-lg border border-border bg-card p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="font-medium text-foreground">{activeRequest.viewer_name}</p>
+                <p className="text-sm text-muted-foreground">Requested just now during your live.</p>
               </div>
-            </div>
-            <div className="flex items-center gap-1 shrink-0">
-              <Button
-                size="sm"
-                variant="default"
-                className="h-7 px-2 bg-green-600 hover:bg-green-700"
-                onClick={() => handleRespond(req.id, "accepted")}
-              >
-                <Check className="w-3 h-3 mr-1" /> Accept
-              </Button>
-              <Button
-                size="sm"
-                variant="destructive"
-                className="h-7 px-2"
-                onClick={() => handleRespond(req.id, "declined")}
-              >
-                <X className="w-3 h-3 mr-1" /> Decline
-              </Button>
+              <Badge variant="outline">
+                {activeRequest.credits_charged > 0 ? `${activeRequest.credits_charged} credits` : "Test mode"}
+              </Badge>
             </div>
           </div>
-        </Card>
-      ))}
-    </div>
+        )}
+
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={() => activeRequest && handleRespond(activeRequest.id, "declined")}
+            disabled={!activeRequest || respondingId === activeRequest?.id}
+          >
+            <X className="mr-2 h-4 w-4" />
+            Decline
+          </Button>
+          <Button
+            onClick={() => activeRequest && handleRespond(activeRequest.id, "accepted")}
+            disabled={!activeRequest || respondingId === activeRequest?.id}
+          >
+            <Check className="mr-2 h-4 w-4" />
+            Accept
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
 
