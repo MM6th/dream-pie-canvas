@@ -109,11 +109,14 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false }: Live
           return;
         }
 
-        if (!attachLocalCamera(room)) {
-          window.setTimeout(() => {
-            if (!cancelled) attachLocalCamera(room);
-          }, 300);
-        }
+        // Retry attaching local camera with increasing delays to handle Dialog portal timing
+        const tryAttach = (retriesLeft: number) => {
+          if (cancelled || retriesLeft <= 0) return;
+          if (!attachLocalCamera(room)) {
+            window.setTimeout(() => tryAttach(retriesLeft - 1), 200);
+          }
+        };
+        tryAttach(10);
 
         // Attach already-published remote tracks
         for (const p of room.remoteParticipants.values()) {
