@@ -27,7 +27,7 @@ interface OneOnOneRequest {
 
 interface LiveOneOnOneRequestsProps {
   streamId: string;
-  onSessionStart?: () => Promise<void> | void;
+  onSessionStart?: (roomName: string) => Promise<void> | void;
   onSessionEnd?: () => Promise<void> | void;
 }
 
