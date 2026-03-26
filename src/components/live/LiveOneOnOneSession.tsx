@@ -45,8 +45,11 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false }: Live
     const attachLocalCamera = (room: Room) => {
       const camPub = room.localParticipant.getTrackPublication(Track.Source.Camera);
       if (camPub?.track && localVideoRef.current) {
+        camPub.track.detach();
         camPub.track.attach(localVideoRef.current);
+        return true;
       }
+      return false;
     };
 
     const connect = async () => {
