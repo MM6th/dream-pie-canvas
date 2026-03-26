@@ -22,6 +22,7 @@ interface LiveOneOnOneSessionProps {
   roomName: string;
   isHost: boolean;
   onClose: () => void;
+  inline?: boolean;
 }
 
 const LiveOneOnOneSession = ({ roomName, isHost, onClose }: LiveOneOnOneSessionProps) => {
