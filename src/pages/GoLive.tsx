@@ -58,6 +58,7 @@ const GoLive = () => {
   const [setupPhase, setSetupPhase] = useState(true);
   const [reconnecting, setReconnecting] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [privateSessionActive, setPrivateSessionActive] = useState(false);
   const reconnectAttemptedRef = useRef(false);
 
   // Fetch host avatar
@@ -165,6 +166,40 @@ const GoLive = () => {
       setReconnecting(false);
     }
   }, [getToken, startPreview, startHeartbeat]);
+
+  const pauseLiveBroadcastForSession = useCallback(async () => {
+    setPrivateSessionActive(true);
+
+    if (roomRef.current) {
+      for (const pub of roomRef.current.localParticipant.trackPublications.values()) {
+        if (pub.track) {
+          pub.track.stop();
+          pub.track.detach();
+        }
+      }
+
+      roomRef.current.disconnect();
+      roomRef.current = null;
+    }
+
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+
+    setViewerCount(0);
+  }, []);
+
+  const resumeLiveBroadcastAfterSession = useCallback(async () => {
+    setPrivateSessionActive(false);
+
+    if (!streamIdRef.current || roomRef.current) return;
+
+    await reconnectToStream({
+      id: streamIdRef.current,
+      title,
+      description,
+    });
+  }, [description, reconnectToStream, title]);
 
   // On mount: check for existing active stream, otherwise show preview
   useEffect(() => {
@@ -447,8 +482,8 @@ const GoLive = () => {
           {/* Video + Controls */}
           <div className="lg:col-span-2 space-y-4">
             <div className="relative aspect-video bg-black rounded-xl overflow-hidden">
-              <video ref={videoRef} autoPlay muted playsInline className={`w-full h-full object-cover ${!cameraOn ? 'hidden' : ''}`} />
-              {!cameraOn && (
+              <video ref={videoRef} autoPlay muted playsInline className={`w-full h-full object-cover ${!cameraOn || privateSessionActive ? 'hidden' : ''}`} />
+              {!cameraOn && !privateSessionActive && (
                 <div className="absolute inset-0 z-10 flex items-center justify-center bg-black">
                   {avatarUrl ? (
                     <img src={avatarUrl} alt="Host avatar" className="w-24 h-24 sm:w-32 sm:h-32 rounded-full object-cover border-2 border-muted" />
@@ -457,6 +492,15 @@ const GoLive = () => {
                       <VideoOff className="w-10 h-10 text-muted-foreground" />
                     </div>
                   )}
+                </div>
+              )}
+              {privateSessionActive && (
+                <div className="absolute inset-0 z-20 flex items-center justify-center bg-background">
+                  <div className="text-center space-y-3 px-6">
+                    <Video className="w-10 h-10 text-primary mx-auto" />
+                    <p className="text-lg font-semibold text-foreground">Private 1-on-1 session in progress</p>
+                    <p className="text-sm text-muted-foreground">Your live stream view is temporarily replaced while the private session is active.</p>
+                  </div>
                 </div>
               )}
               {reconnecting && (
@@ -525,7 +569,11 @@ const GoLive = () => {
           <div className="space-y-4">
             {isLive && streamId ? (
               <>
-                <LiveOneOnOneRequests streamId={streamId} />
+                <LiveOneOnOneRequests
+                  streamId={streamId}
+                  onSessionStart={pauseLiveBroadcastForSession}
+                  onSessionEnd={resumeLiveBroadcastAfterSession}
+                />
                 <LiveChat streamId={streamId} />
                 <LiveTipDisplay streamId={streamId} merchantId={user.id} />
               </>
