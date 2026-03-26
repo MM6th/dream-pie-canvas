@@ -25,7 +25,7 @@ interface LiveOneOnOneSessionProps {
   inline?: boolean;
 }
 
-const LiveOneOnOneSession = ({ roomName, isHost, onClose }: LiveOneOnOneSessionProps) => {
+const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false }: LiveOneOnOneSessionProps) => {
   const { user } = useAuth();
   const { getToken } = useLiveKitToken();
   const localVideoRef = useRef<HTMLVideoElement>(null);
