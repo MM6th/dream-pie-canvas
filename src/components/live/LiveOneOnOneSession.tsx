@@ -51,10 +51,8 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false }: Live
 
     const connect = async () => {
       try {
-        // Small delay for host to let viewer connect first
-        if (isHost) {
-          await new Promise((r) => setTimeout(r, 1500));
-        }
+        // Delay to allow camera hardware to be released from the previous stream
+        await new Promise((r) => setTimeout(r, isHost ? 2000 : 500));
         if (cancelled) return;
 
         const { token, wsUrl } = await getToken(roomName, true);
