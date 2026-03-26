@@ -132,7 +132,7 @@ const LiveOneOnOneRequests = ({ streamId, onSessionStart, onSessionEnd }: LiveOn
       const roomName = `1on1_${requestId}`;
 
       if (action === "accepted") {
-        await onSessionStart?.();
+        await onSessionStart?.(roomName);
       }
 
       const { error } = await (supabase.from("one_on_one_requests" as any) as any)
