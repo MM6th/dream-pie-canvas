@@ -494,12 +494,22 @@ const GoLive = () => {
                   )}
                 </div>
               )}
-              {privateSessionActive && (
+              {privateSessionActive && activeSessionRoom && (
+                <LiveOneOnOneSessionInline
+                  roomName={activeSessionRoom}
+                  isHost={true}
+                  inline={true}
+                  onClose={async () => {
+                    setActiveSessionRoom(null);
+                    await resumeLiveBroadcastAfterSession();
+                  }}
+                />
+              )}
+              {privateSessionActive && !activeSessionRoom && (
                 <div className="absolute inset-0 z-20 flex items-center justify-center bg-background">
                   <div className="text-center space-y-3 px-6">
                     <Video className="w-10 h-10 text-primary mx-auto" />
-                    <p className="text-lg font-semibold text-foreground">Private 1-on-1 session in progress</p>
-                    <p className="text-sm text-muted-foreground">Your live stream view is temporarily replaced while the private session is active.</p>
+                    <p className="text-lg font-semibold text-foreground">Setting up private session...</p>
                   </div>
                 </div>
               )}
@@ -522,8 +532,6 @@ const GoLive = () => {
                   </Badge>
                 </div>
               )}
-
-
             </div>
 
             <div className="flex flex-wrap gap-3 items-center">
