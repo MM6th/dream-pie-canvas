@@ -368,6 +368,7 @@ const LiveWatch = () => {
 
           <div className="w-full flex-1 min-h-0">
             {streamId && <LiveChat streamId={streamId} />}
+            <TestCreditsGranter />
           </div>
         </div>
       </div>
