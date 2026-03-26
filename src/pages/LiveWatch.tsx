@@ -11,7 +11,7 @@ import { toast } from "@/hooks/use-toast";
 import LiveChat from "@/components/live/LiveChat";
 import LiveTipButton from "@/components/live/LiveTipButton";
 import LiveOneOnOneButton from "@/components/live/LiveOneOnOneButton";
-import TestCreditsGranter from "@/components/live/TestCreditsGranter";
+
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
   Room,
