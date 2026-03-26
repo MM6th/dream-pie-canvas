@@ -167,8 +167,8 @@ const LiveOneOnOneButton = ({ hostId, streamId }: LiveOneOnOneButtonProps) => {
         duration: 5000,
       });
     } catch (err: any) {
-      console.error("Error sending request:", err);
-      toast({ title: "Error", description: err.message || "Failed to send request", variant: "destructive" });
+      console.error("Error sending 1-on-1 request:", err);
+      toast({ title: "Error", description: err.message || "Failed to send request", variant: "destructive", duration: 5000 });
     } finally {
       setRequesting(false);
     }
