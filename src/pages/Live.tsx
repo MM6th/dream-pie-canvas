@@ -52,7 +52,7 @@ const Live = () => {
     }
 
     const nowMs = Date.now();
-    const freshnessWindowMs = 5 * 60 * 1000; // 5 minutes
+    const freshnessWindowMs = 45 * 1000; // 45 seconds — stale streams disappear quickly
     const latestByMerchant = new Map<string, any>();
 
     for (const row of rows) {
