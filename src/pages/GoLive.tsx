@@ -169,8 +169,9 @@ const GoLive = () => {
     }
   }, [getToken, startPreview, startHeartbeat]);
 
-  const pauseLiveBroadcastForSession = useCallback(async () => {
+  const pauseLiveBroadcastForSession = useCallback(async (roomName: string) => {
     setPrivateSessionActive(true);
+    setActiveSessionRoom(roomName);
 
     if (roomRef.current) {
       for (const pub of roomRef.current.localParticipant.trackPublications.values()) {
