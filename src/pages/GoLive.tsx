@@ -525,6 +525,7 @@ const GoLive = () => {
           <div className="space-y-4">
             {isLive && streamId ? (
               <>
+                <LiveOneOnOneRequests streamId={streamId} />
                 <LiveChat streamId={streamId} />
                 <LiveTipDisplay streamId={streamId} merchantId={user.id} />
               </>
