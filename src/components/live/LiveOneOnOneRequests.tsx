@@ -73,9 +73,10 @@ const LiveOneOnOneRequests = ({ streamId }: LiveOneOnOneRequestsProps) => {
           table: "one_on_one_requests",
           filter: `host_id=eq.${user.id}`,
         },
-        () => {
+        (payload: any) => {
+          console.log("Host received 1-on-1 request via realtime:", payload);
           fetchRequests();
-          toast({ title: "New 1-on-1 Request!", description: "A viewer wants a private session." });
+          toast({ title: "🎥 New 1-on-1 Request!", description: "A viewer wants a private session with you.", duration: 10000 });
         }
       )
       .subscribe();
