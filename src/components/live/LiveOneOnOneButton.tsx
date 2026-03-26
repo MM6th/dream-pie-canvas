@@ -81,6 +81,30 @@ const LiveOneOnOneButton = ({ hostId, streamId }: LiveOneOnOneButtonProps) => {
   useEffect(() => {
     if (!pendingRequestId) return;
 
+    let handled = false;
+
+    const handleAccepted = (room_name: string) => {
+      if (handled) return;
+      handled = true;
+      setShowWaitingModal(false);
+      setRoomName(room_name || `1on1_${pendingRequestId}`);
+      toast({
+        title: "Host accepted!",
+        description: "Connecting to your private session...",
+        duration: 5000,
+      });
+      setShowSession(true);
+      setRequestStatus("accepted");
+    };
+
+    const handleRejected = () => {
+      if (handled) return;
+      handled = true;
+      setShowWaitingModal(false);
+      setPendingRequestId(null);
+      setRequestStatus(null);
+    };
+
     const channel = supabase
       .channel(`viewer_1on1_${pendingRequestId}`)
       .on(
@@ -93,27 +117,16 @@ const LiveOneOnOneButton = ({ hostId, streamId }: LiveOneOnOneButtonProps) => {
         },
         (payload: any) => {
           const newStatus = payload.new.status;
-          setRequestStatus(newStatus);
-
           if (newStatus === "accepted") {
-            setShowWaitingModal(false);
-            setRoomName(payload.new.room_name || `1on1_${pendingRequestId}`);
-            toast({
-              title: "Host accepted!",
-              description: "Connecting to your private session...",
-              duration: 5000,
-            });
-            setShowSession(true);
+            handleAccepted(payload.new.room_name);
           } else if (newStatus === "declined") {
-            setShowWaitingModal(false);
             toast({
               title: "Request declined",
               description: "The host declined your 1-on-1 request.",
               variant: "destructive",
               duration: 6000,
             });
-            setPendingRequestId(null);
-            setRequestStatus(null);
+            handleRejected();
           }
         }
       )
@@ -121,27 +134,16 @@ const LiveOneOnOneButton = ({ hostId, streamId }: LiveOneOnOneButtonProps) => {
 
     // Polling fallback
     const interval = window.setInterval(async () => {
+      if (handled) return;
       const { data } = await (supabase.from("one_on_one_requests" as any) as any)
         .select("status, room_name")
         .eq("id", pendingRequestId)
         .single();
 
-      if (data && data.status !== requestStatus) {
-        setRequestStatus(data.status);
-        if (data.status === "accepted") {
-          setShowWaitingModal(false);
-          setRoomName(data.room_name || `1on1_${pendingRequestId}`);
-          toast({
-            title: "Host accepted!",
-            description: "Connecting to your private session...",
-            duration: 5000,
-          });
-          setShowSession(true);
-        } else if (data.status === "declined" || data.status === "expired") {
-          setShowWaitingModal(false);
-          setPendingRequestId(null);
-          setRequestStatus(null);
-        }
+      if (data?.status === "accepted") {
+        handleAccepted(data.room_name);
+      } else if (data?.status === "declined" || data?.status === "expired") {
+        handleRejected();
       }
     }, 3000);
 
