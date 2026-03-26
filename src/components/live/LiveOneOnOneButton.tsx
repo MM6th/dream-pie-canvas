@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,8 @@ interface LiveOneOnOneButtonProps {
   streamId: string;
 }
 
+const TEST_MODE_ENABLED = true;
+
 const LiveOneOnOneButton = ({ hostId, streamId }: LiveOneOnOneButtonProps) => {
   const { user } = useAuth();
   const [creditsPerMessage, setCreditsPerMessage] = useState<number | null>(null);
@@ -19,7 +21,6 @@ const LiveOneOnOneButton = ({ hostId, streamId }: LiveOneOnOneButtonProps) => {
   const [pendingRequest, setPendingRequest] = useState<string | null>(null);
   const [requestStatus, setRequestStatus] = useState<string | null>(null);
 
-  // Fetch host's message rate
   useEffect(() => {
     const fetchRate = async () => {
       try {
@@ -42,13 +43,11 @@ const LiveOneOnOneButton = ({ hostId, streamId }: LiveOneOnOneButtonProps) => {
     fetchRate();
   }, [hostId]);
 
-  // Check for existing pending request
   useEffect(() => {
     if (!user) return;
 
     const checkExisting = async () => {
-      const { data } = await supabase
-        .from("one_on_one_requests" as any)
+      const { data, error } = await (supabase.from("one_on_one_requests" as any) as any)
         .select("id, status")
         .eq("viewer_id", user.id)
         .eq("stream_id", streamId)
@@ -56,16 +55,25 @@ const LiveOneOnOneButton = ({ hostId, streamId }: LiveOneOnOneButtonProps) => {
         .order("created_at", { ascending: false })
         .limit(1);
 
-      if (data && data.length > 0) {
-        setPendingRequest((data[0] as any).id);
-        setRequestStatus((data[0] as any).status);
+      if (error) {
+        console.error("Error checking existing 1-on-1 request:", error);
+        return;
+      }
+
+      if (data?.length) {
+        setPendingRequest(data[0].id);
+        setRequestStatus(data[0].status);
+      } else {
+        setPendingRequest(null);
+        setRequestStatus(null);
       }
     };
 
     checkExisting();
+    const interval = window.setInterval(checkExisting, 3000);
+    return () => window.clearInterval(interval);
   }, [user, streamId]);
 
-  // Subscribe to request status changes via realtime
   useEffect(() => {
     if (!pendingRequest) return;
 
@@ -85,22 +93,24 @@ const LiveOneOnOneButton = ({ hostId, streamId }: LiveOneOnOneButtonProps) => {
 
           if (newStatus === "accepted") {
             toast({
-              title: "Request Accepted!",
-              description: "The host accepted your 1-on-1 request. Connecting...",
+              title: "Request accepted",
+              description: "The host accepted your 1-on-1 request.",
+              duration: 6000,
             });
-            // TODO: Navigate to private room
           } else if (newStatus === "declined") {
             toast({
-              title: "Request Declined",
+              title: "Request declined",
               description: "The host declined your 1-on-1 request.",
               variant: "destructive",
+              duration: 6000,
             });
             setPendingRequest(null);
             setRequestStatus(null);
           } else if (newStatus === "expired") {
             toast({
-              title: "Request Expired",
-              description: "Your 1-on-1 request has expired.",
+              title: "Request expired",
+              description: "Your 1-on-1 request expired.",
+              duration: 6000,
             });
             setPendingRequest(null);
             setRequestStatus(null);
@@ -116,69 +126,80 @@ const LiveOneOnOneButton = ({ hostId, streamId }: LiveOneOnOneButtonProps) => {
 
   const handleRequest = async () => {
     if (!user) {
-      toast({ title: "Please sign in", description: "You must be signed in to request a 1-on-1 session.", variant: "destructive", duration: 5000 });
+      toast({
+        title: "Please sign in",
+        description: "You must be signed in to request a 1-on-1 session.",
+        variant: "destructive",
+        duration: 5000,
+      });
       return;
     }
 
     if (!creditsPerMessage) return;
-
-    // Check credits
-    const { data: credits, error: creditsError } = await supabase
-      .from("messaging_credits")
-      .select("balance")
-      .eq("user_id", user.id)
-      .single();
-
-    console.log("1-on-1 credit check:", { credits, creditsError, creditsPerMessage });
-
-    if (!credits || credits.balance < creditsPerMessage) {
-      toast({
-        title: "Insufficient Credits",
-        description: `You need ${creditsPerMessage} credit(s) ($${(creditsPerMessage * 0.10).toFixed(2)}) to request a 1-on-1 session. Use the "Grant Test Credits" button below the chat first.`,
-        variant: "destructive",
-        duration: 8000,
-      });
-      return;
-    }
+    if (pendingRequest && requestStatus === "pending") return;
 
     setRequesting(true);
     try {
-      const { data, error } = await (supabase
-        .from("one_on_one_requests" as any) as any)
+      const creditsCharged = TEST_MODE_ENABLED ? 0 : creditsPerMessage;
+
+      if (!TEST_MODE_ENABLED) {
+        const { data: credits, error: creditsError } = await supabase
+          .from("messaging_credits")
+          .select("balance")
+          .eq("user_id", user.id)
+          .single();
+
+        if (creditsError || !credits || credits.balance < creditsPerMessage) {
+          toast({
+            title: "Insufficient credits",
+            description: `You need ${creditsPerMessage} credit(s) to request a 1-on-1 session.`,
+            variant: "destructive",
+            duration: 7000,
+          });
+          return;
+        }
+      }
+
+      const { data, error } = await (supabase.from("one_on_one_requests" as any) as any)
         .insert({
           stream_id: streamId,
           viewer_id: user.id,
           host_id: hostId,
-          credits_charged: creditsPerMessage,
+          credits_charged: creditsCharged,
           status: "pending",
         })
-        .select()
+        .select("id, status")
         .single();
-
-      console.log("1-on-1 request insert result:", { data, error });
 
       if (error) throw error;
 
       setPendingRequest(data.id);
-      setRequestStatus("pending");
+      setRequestStatus(data.status);
       toast({
-        title: "Request Sent!",
-        description: "Waiting for the host to accept your 1-on-1 request...",
-        duration: 5000,
+        title: "Request sent",
+        description: TEST_MODE_ENABLED
+          ? "Test mode is on — the host will receive your 1-on-1 request now."
+          : "Waiting for the host to accept your 1-on-1 request...",
+        duration: 6000,
       });
     } catch (err: any) {
       console.error("Error sending 1-on-1 request:", err);
-      toast({ title: "Error", description: err.message || "Failed to send request", variant: "destructive", duration: 5000 });
+      toast({
+        title: "Request failed",
+        description: err.message || "Failed to send request.",
+        variant: "destructive",
+        duration: 7000,
+      });
     } finally {
       setRequesting(false);
     }
   };
 
-  if (loading || creditsPerMessage === null) return null;
-
-  const usdCost = (creditsPerMessage * 0.10).toFixed(2);
+  const usdCost = useMemo(() => ((creditsPerMessage ?? 0) * 0.1).toFixed(2), [creditsPerMessage]);
   const isPending = requestStatus === "pending";
   const isAccepted = requestStatus === "accepted";
+
+  if (loading || creditsPerMessage === null) return null;
 
   return (
     <Tooltip>
@@ -187,32 +208,34 @@ const LiveOneOnOneButton = ({ hostId, streamId }: LiveOneOnOneButtonProps) => {
           variant="outline"
           className={`border-primary/50 gap-2 ${
             isPending
-              ? "text-yellow-500 border-yellow-500/50"
+              ? "border-primary/50 text-primary"
               : isAccepted
-              ? "text-green-500 border-green-500/50"
-              : "text-primary hover:bg-primary/10"
+                ? "border-primary/50 text-primary"
+                : "text-primary hover:bg-primary/10"
           }`}
           onClick={handleRequest}
           disabled={requesting || isPending || isAccepted}
         >
           {requesting ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
+            <Loader2 className="h-4 w-4 animate-spin" />
           ) : isAccepted ? (
-            <Check className="w-4 h-4" />
+            <Check className="h-4 w-4" />
           ) : (
-            <Video className="w-4 h-4" />
+            <Video className="h-4 w-4" />
           )}
           {isPending ? "Pending..." : isAccepted ? "Accepted" : "1 on 1"}
           {!isPending && !isAccepted && (
-            <span className="text-xs opacity-80">${usdCost}</span>
+            <span className="text-xs opacity-80">{TEST_MODE_ENABLED ? "Test mode" : `$${usdCost}`}</span>
           )}
         </Button>
       </TooltipTrigger>
       <TooltipContent>
         {isPending ? (
-          <p>Waiting for host to accept...</p>
+          <p>Waiting for the host to respond.</p>
         ) : isAccepted ? (
-          <p>Connecting to private session...</p>
+          <p>Your request was accepted.</p>
+        ) : TEST_MODE_ENABLED ? (
+          <p>Testing mode is active — send a 1-on-1 request without credits.</p>
         ) : (
           <p>Request a private 1-on-1 session — {creditsPerMessage} credit{creditsPerMessage !== 1 ? "s" : ""} (${usdCost})</p>
         )}
