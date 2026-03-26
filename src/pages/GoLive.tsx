@@ -60,6 +60,7 @@ const GoLive = () => {
   const [reconnecting, setReconnecting] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [privateSessionActive, setPrivateSessionActive] = useState(false);
+  const [activeSessionRoom, setActiveSessionRoom] = useState<string | null>(null);
   const reconnectAttemptedRef = useRef(false);
 
   // Fetch host avatar
