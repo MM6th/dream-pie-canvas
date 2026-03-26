@@ -13,7 +13,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Video, Check, X } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import LiveOneOnOneSession from "@/components/live/LiveOneOnOneSession";
+
 
 interface OneOnOneRequest {
   id: string;
