@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { MessageSquareText } from "lucide-react";
+import { Video } from "lucide-react";
 
 interface LiveOneOnOneButtonProps {
   hostId: string;
@@ -45,7 +45,7 @@ const LiveOneOnOneButton = ({ hostId }: LiveOneOnOneButtonProps) => {
           variant="outline"
           className="border-primary/50 text-primary hover:bg-primary/10 gap-2"
         >
-          <MessageSquareText className="w-4 h-4" />
+          <Video className="w-4 h-4" />
           1 on 1
           <span className="text-xs opacity-80">${usdCost}</span>
         </Button>
