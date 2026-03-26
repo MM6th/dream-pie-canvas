@@ -224,17 +224,6 @@ const LiveOneOnOneRequests = ({ streamId, onSessionStart, onSessionEnd }: LiveOn
         </DialogContent>
       </Dialog>
 
-      {/* Side-by-side session for host */}
-      {activeSessionRoom && (
-        <LiveOneOnOneSession
-          roomName={activeSessionRoom}
-          isHost={true}
-          onClose={async () => {
-            setActiveSessionRoom(null);
-            await onSessionEnd?.();
-          }}
-        />
-      )}
     </>
   );
 };
