@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { MessageSquareText } from "lucide-react";
+import { Video } from "lucide-react";
 
 interface LiveOneOnOneButtonProps {
   hostId: string;
