@@ -116,49 +116,55 @@ const LiveOneOnOneButton = ({ hostId, streamId }: LiveOneOnOneButtonProps) => {
 
   const handleRequest = async () => {
     if (!user) {
-      toast({ title: "Please sign in", description: "You must be signed in to request a 1-on-1 session.", variant: "destructive" });
+      toast({ title: "Please sign in", description: "You must be signed in to request a 1-on-1 session.", variant: "destructive", duration: 5000 });
       return;
     }
 
     if (!creditsPerMessage) return;
 
     // Check credits
-    const { data: credits } = await supabase
+    const { data: credits, error: creditsError } = await supabase
       .from("messaging_credits")
       .select("balance")
       .eq("user_id", user.id)
       .single();
 
+    console.log("1-on-1 credit check:", { credits, creditsError, creditsPerMessage });
+
     if (!credits || credits.balance < creditsPerMessage) {
       toast({
         title: "Insufficient Credits",
-        description: `You need ${creditsPerMessage} credit(s) ($${(creditsPerMessage * 0.10).toFixed(2)}) to request a 1-on-1 session. Please purchase credits first.`,
+        description: `You need ${creditsPerMessage} credit(s) ($${(creditsPerMessage * 0.10).toFixed(2)}) to request a 1-on-1 session. Use the "Grant Test Credits" button below the chat first.`,
         variant: "destructive",
+        duration: 8000,
       });
       return;
     }
 
     setRequesting(true);
     try {
-      const { data, error } = await supabase
-        .from("one_on_one_requests" as any)
+      const { data, error } = await (supabase
+        .from("one_on_one_requests" as any) as any)
         .insert({
           stream_id: streamId,
           viewer_id: user.id,
           host_id: hostId,
           credits_charged: creditsPerMessage,
           status: "pending",
-        } as any)
+        })
         .select()
         .single();
 
+      console.log("1-on-1 request insert result:", { data, error });
+
       if (error) throw error;
 
-      setPendingRequest((data as any).id);
+      setPendingRequest(data.id);
       setRequestStatus("pending");
       toast({
         title: "Request Sent!",
         description: "Waiting for the host to accept your 1-on-1 request...",
+        duration: 5000,
       });
     } catch (err: any) {
       console.error("Error sending request:", err);
