@@ -36,7 +36,7 @@ const LiveOneOnOneRequests = ({ streamId, onSessionStart, onSessionEnd }: LiveOn
   const [requests, setRequests] = useState<OneOnOneRequest[]>([]);
   const [respondingId, setRespondingId] = useState<string | null>(null);
   const [hostRate, setHostRate] = useState<number>(0);
-  const [activeSessionRoom, setActiveSessionRoom] = useState<string | null>(null);
+  const [activeSessionRoom, setActiveSessionRoom] = useState<string | null>(null); // kept for modal close logic
 
   // Fetch host rate
   useEffect(() => {
