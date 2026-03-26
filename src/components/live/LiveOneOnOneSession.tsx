@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useLiveKitToken } from "@/hooks/useLiveKitToken";
 import {
@@ -41,6 +41,13 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose }: LiveOneOnOneSessionP
 
     let cancelled = false;
 
+    const attachLocalCamera = (room: Room) => {
+      const camPub = room.localParticipant.getTrackPublication(Track.Source.Camera);
+      if (camPub?.track && localVideoRef.current) {
+        camPub.track.attach(localVideoRef.current);
+      }
+    };
+
     const connect = async () => {
       try {
         // Small delay for host to let viewer connect first
@@ -71,6 +78,11 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose }: LiveOneOnOneSessionP
           }
         });
 
+        room.on(RoomEvent.LocalTrackPublished, () => {
+          if (cancelled) return;
+          attachLocalCamera(room);
+        });
+
         room.on(RoomEvent.TrackUnsubscribed, (track) => {
           track.detach();
           if (track.source === Track.Source.Camera) setRemoteConnected(false);
@@ -95,11 +107,7 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose }: LiveOneOnOneSessionP
           return;
         }
 
-        // Attach local video
-        const camPub = room.localParticipant.getTrackPublication(Track.Source.Camera);
-        if (camPub?.track && localVideoRef.current) {
-          camPub.track.attach(localVideoRef.current);
-        }
+        attachLocalCamera(room);
 
         // Attach already-published remote tracks
         for (const p of room.remoteParticipants.values()) {
@@ -144,6 +152,7 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose }: LiveOneOnOneSessionP
         roomRef.current.disconnect();
         roomRef.current = null;
       }
+      connectingRef.current = false;
     };
   }, [roomName, user?.id]);
 

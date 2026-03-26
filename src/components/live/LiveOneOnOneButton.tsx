@@ -65,11 +65,17 @@ const LiveOneOnOneButton = ({ hostId, streamId }: LiveOneOnOneButtonProps) => {
         .limit(1);
 
       if (data?.length) {
-        setPendingRequestId(data[0].id);
-        setRequestStatus(data[0].status);
-        if (data[0].status === "pending") setShowWaitingModal(true);
-        if (data[0].status === "accepted") {
-          setRoomName(data[0].room_name || `1on1_${data[0].id}`);
+        const existingRequest = data[0];
+        setRequestStatus(existingRequest.status);
+
+        if (existingRequest.status === "pending") {
+          setPendingRequestId(existingRequest.id);
+          setShowWaitingModal(true);
+        }
+
+        if (existingRequest.status === "accepted") {
+          setPendingRequestId(null);
+          setRoomName(existingRequest.room_name || `1on1_${existingRequest.id}`);
           setShowSession(true);
         }
       }
@@ -79,7 +85,7 @@ const LiveOneOnOneButton = ({ hostId, streamId }: LiveOneOnOneButtonProps) => {
 
   // Listen for status updates on pending request
   useEffect(() => {
-    if (!pendingRequestId) return;
+    if (!pendingRequestId || requestStatus === "accepted" || showSession) return;
 
     let handled = false;
 
@@ -88,6 +94,7 @@ const LiveOneOnOneButton = ({ hostId, streamId }: LiveOneOnOneButtonProps) => {
       handled = true;
       setShowWaitingModal(false);
       setRoomName(room_name || `1on1_${pendingRequestId}`);
+      setPendingRequestId(null);
       toast({
         title: "Host accepted!",
         description: "Connecting to your private session...",
@@ -151,7 +158,7 @@ const LiveOneOnOneButton = ({ hostId, streamId }: LiveOneOnOneButtonProps) => {
       window.clearInterval(interval);
       supabase.removeChannel(channel);
     };
-  }, [pendingRequestId]);
+  }, [pendingRequestId, requestStatus, showSession]);
 
   const handleRequest = async () => {
     if (!user) {

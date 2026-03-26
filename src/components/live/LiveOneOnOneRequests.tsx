@@ -27,9 +27,11 @@ interface OneOnOneRequest {
 
 interface LiveOneOnOneRequestsProps {
   streamId: string;
+  onSessionStart?: () => Promise<void> | void;
+  onSessionEnd?: () => Promise<void> | void;
 }
 
-const LiveOneOnOneRequests = ({ streamId }: LiveOneOnOneRequestsProps) => {
+const LiveOneOnOneRequests = ({ streamId, onSessionStart, onSessionEnd }: LiveOneOnOneRequestsProps) => {
   const { user } = useAuth();
   const [requests, setRequests] = useState<OneOnOneRequest[]>([]);
   const [respondingId, setRespondingId] = useState<string | null>(null);
@@ -128,6 +130,11 @@ const LiveOneOnOneRequests = ({ streamId }: LiveOneOnOneRequestsProps) => {
     setRespondingId(requestId);
     try {
       const roomName = `1on1_${requestId}`;
+
+      if (action === "accepted") {
+        await onSessionStart?.();
+      }
+
       const { error } = await (supabase.from("one_on_one_requests" as any) as any)
         .update({
           status: action,
@@ -222,7 +229,10 @@ const LiveOneOnOneRequests = ({ streamId }: LiveOneOnOneRequestsProps) => {
         <LiveOneOnOneSession
           roomName={activeSessionRoom}
           isHost={true}
-          onClose={() => setActiveSessionRoom(null)}
+          onClose={async () => {
+            setActiveSessionRoom(null);
+            await onSessionEnd?.();
+          }}
         />
       )}
     </>
