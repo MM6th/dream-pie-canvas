@@ -22,9 +22,10 @@ interface LiveOneOnOneSessionProps {
   roomName: string;
   isHost: boolean;
   onClose: () => void;
+  inline?: boolean;
 }
 
-const LiveOneOnOneSession = ({ roomName, isHost, onClose }: LiveOneOnOneSessionProps) => {
+const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false }: LiveOneOnOneSessionProps) => {
   const { user } = useAuth();
   const { getToken } = useLiveKitToken();
   const localVideoRef = useRef<HTMLVideoElement>(null);
@@ -171,6 +172,72 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose }: LiveOneOnOneSessionP
     onClose();
   };
 
+  const sessionContent = (
+    <>
+      {connecting ? (
+        <div className="flex items-center justify-center h-full min-h-[300px]">
+          <div className="text-center space-y-3">
+            <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto" />
+            <p className="text-white text-sm">Connecting to session...</p>
+          </div>
+        </div>
+      ) : (
+        <div className="flex flex-col h-full">
+          <div className="flex-1 flex gap-1 p-1">
+            <div className="flex-1 relative rounded-lg overflow-hidden bg-muted/20">
+              <video
+                ref={localVideoRef}
+                autoPlay
+                muted
+                playsInline
+                className="w-full h-full object-cover"
+                style={{ aspectRatio: "9/16" }}
+              />
+              <div className="absolute bottom-2 left-2">
+                <span className="bg-black/60 text-white text-xs px-2 py-1 rounded">You</span>
+              </div>
+            </div>
+            <div className="flex-1 relative rounded-lg overflow-hidden bg-muted/20">
+              <video
+                ref={remoteVideoRef}
+                autoPlay
+                playsInline
+                className="w-full h-full object-cover"
+                style={{ aspectRatio: "9/16" }}
+              />
+              <audio ref={remoteAudioRef} autoPlay className="hidden" />
+              {!remoteConnected && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <p className="text-white/60 text-sm">Waiting for the other person...</p>
+                </div>
+              )}
+              <div className="absolute bottom-2 left-2">
+                <span className="bg-black/60 text-white text-xs px-2 py-1 rounded">
+                  {isHost ? "Viewer" : "Host"}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div className="flex justify-center py-3">
+            <Button
+              variant="destructive"
+              size="lg"
+              onClick={handleEndSession}
+              className="rounded-full px-8"
+            >
+              <PhoneOff className="h-5 w-5 mr-2" />
+              End Session
+            </Button>
+          </div>
+        </div>
+      )}
+    </>
+  );
+
+  if (inline) {
+    return <div className="absolute inset-0 z-30 bg-black rounded-xl overflow-hidden">{sessionContent}</div>;
+  }
+
   return (
     <Dialog open onOpenChange={() => handleEndSession()}>
       <DialogContent className="max-w-4xl w-[95vw] p-0 gap-0 overflow-hidden bg-black border-border">
@@ -178,63 +245,7 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose }: LiveOneOnOneSessionP
           <DialogTitle>1-on-1 Session</DialogTitle>
           <DialogDescription>Private video session</DialogDescription>
         </DialogHeader>
-        {connecting ? (
-          <div className="flex items-center justify-center h-[70vh]">
-            <div className="text-center space-y-3">
-              <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto" />
-              <p className="text-white text-sm">Connecting to session...</p>
-            </div>
-          </div>
-        ) : (
-          <div className="flex flex-col h-[80vh]">
-            <div className="flex-1 flex gap-1 p-1">
-              <div className="flex-1 relative rounded-lg overflow-hidden bg-muted/20">
-                <video
-                  ref={localVideoRef}
-                  autoPlay
-                  muted
-                  playsInline
-                  className="w-full h-full object-cover"
-                  style={{ aspectRatio: "9/16" }}
-                />
-                <div className="absolute bottom-2 left-2">
-                  <span className="bg-black/60 text-white text-xs px-2 py-1 rounded">You</span>
-                </div>
-              </div>
-              <div className="flex-1 relative rounded-lg overflow-hidden bg-muted/20">
-                <video
-                  ref={remoteVideoRef}
-                  autoPlay
-                  playsInline
-                  className="w-full h-full object-cover"
-                  style={{ aspectRatio: "9/16" }}
-                />
-                <audio ref={remoteAudioRef} autoPlay className="hidden" />
-                {!remoteConnected && (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <p className="text-white/60 text-sm">Waiting for the other person...</p>
-                  </div>
-                )}
-                <div className="absolute bottom-2 left-2">
-                  <span className="bg-black/60 text-white text-xs px-2 py-1 rounded">
-                    {isHost ? "Viewer" : "Host"}
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div className="flex justify-center py-3">
-              <Button
-                variant="destructive"
-                size="lg"
-                onClick={handleEndSession}
-                className="rounded-full px-8"
-              >
-                <PhoneOff className="h-5 w-5 mr-2" />
-                End Session
-              </Button>
-            </div>
-          </div>
-        )}
+        {sessionContent}
       </DialogContent>
     </Dialog>
   );

@@ -13,7 +13,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Video, Check, X } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import LiveOneOnOneSession from "@/components/live/LiveOneOnOneSession";
+
 
 interface OneOnOneRequest {
   id: string;
@@ -27,7 +27,7 @@ interface OneOnOneRequest {
 
 interface LiveOneOnOneRequestsProps {
   streamId: string;
-  onSessionStart?: () => Promise<void> | void;
+  onSessionStart?: (roomName: string) => Promise<void> | void;
   onSessionEnd?: () => Promise<void> | void;
 }
 
@@ -36,7 +36,7 @@ const LiveOneOnOneRequests = ({ streamId, onSessionStart, onSessionEnd }: LiveOn
   const [requests, setRequests] = useState<OneOnOneRequest[]>([]);
   const [respondingId, setRespondingId] = useState<string | null>(null);
   const [hostRate, setHostRate] = useState<number>(0);
-  const [activeSessionRoom, setActiveSessionRoom] = useState<string | null>(null);
+  const [activeSessionRoom, setActiveSessionRoom] = useState<string | null>(null); // kept for modal close logic
 
   // Fetch host rate
   useEffect(() => {
@@ -132,7 +132,7 @@ const LiveOneOnOneRequests = ({ streamId, onSessionStart, onSessionEnd }: LiveOn
       const roomName = `1on1_${requestId}`;
 
       if (action === "accepted") {
-        await onSessionStart?.();
+        await onSessionStart?.(roomName);
       }
 
       const { error } = await (supabase.from("one_on_one_requests" as any) as any)
@@ -224,17 +224,6 @@ const LiveOneOnOneRequests = ({ streamId, onSessionStart, onSessionEnd }: LiveOn
         </DialogContent>
       </Dialog>
 
-      {/* Side-by-side session for host */}
-      {activeSessionRoom && (
-        <LiveOneOnOneSession
-          roomName={activeSessionRoom}
-          isHost={true}
-          onClose={async () => {
-            setActiveSessionRoom(null);
-            await onSessionEnd?.();
-          }}
-        />
-      )}
     </>
   );
 };
