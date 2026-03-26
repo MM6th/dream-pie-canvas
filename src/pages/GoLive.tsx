@@ -13,6 +13,7 @@ import { toast } from "@/hooks/use-toast";
 import { Video, VideoOff, Mic, MicOff, Radio, Eye, MessageSquare } from "lucide-react";
 import LiveChat from "@/components/live/LiveChat";
 import LiveTipDisplay from "@/components/live/LiveTipDisplay";
+import LiveOneOnOneRequests from "@/components/live/LiveOneOnOneRequests";
 import {
   Room,
   RoomEvent,
@@ -524,6 +525,7 @@ const GoLive = () => {
           <div className="space-y-4">
             {isLive && streamId ? (
               <>
+                <LiveOneOnOneRequests streamId={streamId} />
                 <LiveChat streamId={streamId} />
                 <LiveTipDisplay streamId={streamId} merchantId={user.id} />
               </>

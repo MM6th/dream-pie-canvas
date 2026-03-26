@@ -2253,6 +2253,48 @@ export type Database = {
         }
         Relationships: []
       }
+      one_on_one_requests: {
+        Row: {
+          created_at: string
+          credits_charged: number
+          expires_at: string
+          host_id: string
+          id: string
+          responded_at: string | null
+          room_name: string | null
+          status: string
+          stream_id: string
+          updated_at: string
+          viewer_id: string
+        }
+        Insert: {
+          created_at?: string
+          credits_charged?: number
+          expires_at?: string
+          host_id: string
+          id?: string
+          responded_at?: string | null
+          room_name?: string | null
+          status?: string
+          stream_id: string
+          updated_at?: string
+          viewer_id: string
+        }
+        Update: {
+          created_at?: string
+          credits_charged?: number
+          expires_at?: string
+          host_id?: string
+          id?: string
+          responded_at?: string | null
+          room_name?: string | null
+          status?: string
+          stream_id?: string
+          updated_at?: string
+          viewer_id?: string
+        }
+        Relationships: []
+      }
       platform_revenue: {
         Row: {
           amount: number

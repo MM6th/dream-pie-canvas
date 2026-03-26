@@ -11,6 +11,7 @@ import { toast } from "@/hooks/use-toast";
 import LiveChat from "@/components/live/LiveChat";
 import LiveTipButton from "@/components/live/LiveTipButton";
 import LiveOneOnOneButton from "@/components/live/LiveOneOnOneButton";
+import TestCreditsGranter from "@/components/live/TestCreditsGranter";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
   Room,
@@ -358,7 +359,7 @@ const LiveWatch = () => {
               </div>
               {user && stream && user.id !== stream.merchant_id && (
                 <div className="flex items-center gap-2">
-                  <LiveOneOnOneButton hostId={stream.merchant_id} />
+                  <LiveOneOnOneButton hostId={stream.merchant_id} streamId={stream.id} />
                   <LiveTipButton streamId={stream.id} recipientId={stream.merchant_id} />
                 </div>
               )}
@@ -367,6 +368,7 @@ const LiveWatch = () => {
 
           <div className="w-full flex-1 min-h-0">
             {streamId && <LiveChat streamId={streamId} />}
+            <TestCreditsGranter />
           </div>
         </div>
       </div>
