@@ -497,7 +497,7 @@ const GoLive = () => {
                 </div>
               )}
               {privateSessionActive && activeSessionRoom && (
-                <LiveOneOnOneSessionInline
+                <LiveOneOnOneSession
                   roomName={activeSessionRoom}
                   isHost={true}
                   inline={true}
