@@ -103,6 +103,8 @@ const GoLive = () => {
   const startHeartbeat = useCallback((sid: string) => {
     if (heartbeatIntervalRef.current) window.clearInterval(heartbeatIntervalRef.current);
     const heartbeat = async () => {
+      // Don't send heartbeat during private session — it would override "in_session" status
+      if (privateSessionActive) return;
       await (supabase.from("live_streams") as any)
         .update({ status: "live", updated_at: new Date().toISOString() })
         .eq("id", sid)
@@ -110,7 +112,7 @@ const GoLive = () => {
     };
     heartbeat();
     heartbeatIntervalRef.current = window.setInterval(heartbeat, 15000);
-  }, [user?.id]);
+  }, [user?.id, privateSessionActive]);
 
   // Start recording from LiveKit room's local tracks
 
