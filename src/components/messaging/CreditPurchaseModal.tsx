@@ -652,7 +652,7 @@ export const CreditPurchaseModal = ({
                           <span className="text-sm font-medium">{sessionDuration} minutes</span>
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          Standard session length is 20 minutes
+                          Your session length is set to {sessionDuration} minutes
                         </p>
                       </div>
 
