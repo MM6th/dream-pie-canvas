@@ -55,7 +55,7 @@ export const CreditPurchaseModal = ({
   const [isLiveStreamArtist, setIsLiveStreamArtist] = useState(false);
   const [livestreamEnabled, setLivestreamEnabled] = useState(true);
   const [creditsPerMinute, setCreditsPerMinute] = useState<string>('');
-  const [sessionDuration] = useState(20);
+  const [sessionDuration, setSessionDuration] = useState(20);
   const [hasLivestreamSettings, setHasLivestreamSettings] = useState(false);
   const [livestreamSaving, setLivestreamSaving] = useState(false);
 
@@ -110,6 +110,9 @@ export const CreditPurchaseModal = ({
         if (livestreamData) {
           setLivestreamEnabled(livestreamData.enabled);
           setCreditsPerMinute(livestreamData.credits_per_minute > 0 ? String(livestreamData.credits_per_minute) : '');
+          if (livestreamData.session_duration_minutes) {
+            setSessionDuration(livestreamData.session_duration_minutes);
+          }
           setHasLivestreamSettings(true);
         }
       }
