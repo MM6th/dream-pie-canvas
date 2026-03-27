@@ -46,35 +46,42 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false }: Live
   const [connecting, setConnecting] = useState(true);
   const [remoteConnected, setRemoteConnected] = useState(false);
 
+  const attachLocalCamera = useCallback((room: Room | null, element: HTMLVideoElement | null = localVideoRef.current) => {
+    if (!room || !element) return false;
+
+    const camPub = room.localParticipant.getTrackPublication(Track.Source.Camera);
+    if (!camPub?.track) return false;
+
+    const mediaTrack = (camPub.track as { mediaStreamTrack?: MediaStreamTrack }).mediaStreamTrack;
+
+    if (mediaTrack) {
+      camPub.track.detach();
+      element.srcObject = new MediaStream([mediaTrack]);
+    } else {
+      camPub.track.detach();
+      camPub.track.attach(element);
+    }
+
+    element.muted = true;
+    element.autoplay = true;
+    element.playsInline = true;
+    safePlay(element);
+    return true;
+  }, []);
+
   const setLocalVideoElement = useCallback((node: HTMLVideoElement | null) => {
     localVideoRef.current = node;
 
     if (!node || !roomRef.current) return;
 
-    const camPub = roomRef.current.localParticipant.getTrackPublication(Track.Source.Camera);
-    if (camPub?.track) {
-      camPub.track.detach();
-      camPub.track.attach(node);
-      safePlay(node);
-    }
-  }, []);
+    attachLocalCamera(roomRef.current, node);
+  }, [attachLocalCamera]);
 
   useEffect(() => {
     if (!user || connectingRef.current) return;
     connectingRef.current = true;
 
     let cancelled = false;
-
-    const attachLocalCamera = (room: Room) => {
-      const camPub = room.localParticipant.getTrackPublication(Track.Source.Camera);
-      if (camPub?.track && localVideoRef.current) {
-        camPub.track.detach();
-        camPub.track.attach(localVideoRef.current);
-        safePlay(localVideoRef.current);
-        return true;
-      }
-      return false;
-    };
 
     const connect = async () => {
       try {
@@ -189,9 +196,12 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false }: Live
         roomRef.current.disconnect();
         roomRef.current = null;
       }
+      if (localVideoRef.current) localVideoRef.current.srcObject = null;
+      if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
+      if (remoteAudioRef.current) remoteAudioRef.current.srcObject = null;
       connectingRef.current = false;
     };
-  }, [roomName, user?.id]);
+  }, [attachLocalCamera, roomName, user?.id]);
 
   const handleEndSession = () => {
     if (roomRef.current) {
@@ -204,6 +214,9 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false }: Live
       roomRef.current.disconnect();
       roomRef.current = null;
     }
+    if (localVideoRef.current) localVideoRef.current.srcObject = null;
+    if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
+    if (remoteAudioRef.current) remoteAudioRef.current.srcObject = null;
     toast({ title: "Session ended", duration: 4000 });
     onClose();
   };
