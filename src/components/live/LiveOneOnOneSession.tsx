@@ -9,7 +9,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { PhoneOff, Loader2 } from "lucide-react";
+import { PhoneOff, Loader2, Clock } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import {
   Room,
@@ -23,6 +23,7 @@ interface LiveOneOnOneSessionProps {
   isHost: boolean;
   onClose: () => void;
   inline?: boolean;
+  durationMinutes?: number;
 }
 
 const safePlay = (element: HTMLMediaElement | null) => {
@@ -35,7 +36,7 @@ const safePlay = (element: HTMLMediaElement | null) => {
   }
 };
 
-const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false }: LiveOneOnOneSessionProps) => {
+const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durationMinutes = 15 }: LiveOneOnOneSessionProps) => {
   const { user } = useAuth();
   const { getToken } = useLiveKitToken();
   const localVideoRef = useRef<HTMLVideoElement>(null);
@@ -45,6 +46,40 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false }: Live
   const connectingRef = useRef(false);
   const [connecting, setConnecting] = useState(true);
   const [remoteConnected, setRemoteConnected] = useState(false);
+  const [secondsLeft, setSecondsLeft] = useState(durationMinutes * 60);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Start countdown once connected
+  useEffect(() => {
+    if (connecting) return;
+
+    timerRef.current = setInterval(() => {
+      setSecondsLeft((prev) => {
+        if (prev <= 1) {
+          // Time's up — end session
+          clearInterval(timerRef.current!);
+          toast({ title: "Session time is up", duration: 5000 });
+          handleEndSession();
+          return 0;
+        }
+        if (prev === 60) {
+          toast({ title: "1 minute remaining", duration: 4000 });
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [connecting]);
+
+  const formatTime = (secs: number) => {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m}:${s.toString().padStart(2, "0")}`;
+  };
 
   const attachLocalCamera = useCallback((room: Room | null, element: HTMLVideoElement | null = localVideoRef.current) => {
     if (!room || !element) return false;
@@ -223,6 +258,13 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false }: Live
 
   const sessionContent = (
     <div className="flex flex-col h-full bg-black relative">
+      {/* Countdown timer */}
+      <div className="flex justify-center py-2">
+        <div className={`flex items-center gap-2 px-4 py-1.5 rounded-full ${secondsLeft <= 60 ? 'bg-destructive/80' : 'bg-black/60'} text-white text-sm font-mono`}>
+          <Clock className="h-4 w-4" />
+          {formatTime(secondsLeft)}
+        </div>
+      </div>
       <div className="flex-1 flex gap-1 p-1 min-h-[300px]">
         <div className="flex-1 relative rounded-lg overflow-hidden bg-muted/20">
           <video

@@ -61,6 +61,7 @@ const GoLive = () => {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [privateSessionActive, setPrivateSessionActive] = useState(false);
   const [activeSessionRoom, setActiveSessionRoom] = useState<string | null>(null);
+  const [hostSessionDuration, setHostSessionDuration] = useState<number>(15);
   const reconnectAttemptedRef = useRef(false);
 
   // Fetch host avatar
@@ -72,8 +73,16 @@ const GoLive = () => {
         .eq("id", user.id)
         .single();
       console.log("GoLive avatar fetch:", { data, error, userId: user.id });
-      if (data?.avatar_url) {
-        setAvatarUrl(data.avatar_url);
+      if (data?.avatar_url) setAvatarUrl(data.avatar_url);
+
+      // Also fetch session duration
+      const { data: lsData } = await (supabase as any)
+        .from("livestream_settings")
+        .select("session_duration_minutes")
+        .eq("merchant_id", user.id)
+        .single();
+      if (lsData?.session_duration_minutes) {
+        setHostSessionDuration(lsData.session_duration_minutes);
       }
     };
     fetchAvatar();
@@ -502,6 +511,7 @@ const GoLive = () => {
                   roomName={activeSessionRoom}
                   isHost={true}
                   inline={true}
+                  durationMinutes={hostSessionDuration}
                   onClose={async () => {
                     setActiveSessionRoom(null);
                     await resumeLiveBroadcastAfterSession();
