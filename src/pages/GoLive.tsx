@@ -87,16 +87,6 @@ const GoLive = () => {
     };
     fetchAvatar();
   }, [user?.id]);
-        .select("avatar_url")
-        .eq("id", user.id)
-        .single();
-      console.log("GoLive avatar fetch:", { data, error, userId: user.id });
-      if (data?.avatar_url) {
-        setAvatarUrl(data.avatar_url);
-      }
-    };
-    fetchAvatar();
-  }, [user?.id]);
 
   // Start camera preview (before going live)
   const startPreview = useCallback(async () => {
