@@ -207,11 +207,24 @@ export const LivestreamSettingsCard = () => {
               <Label htmlFor="session-duration">Session Duration</Label>
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-muted-foreground" />
-                <span className="text-sm font-medium">{sessionDuration} minutes</span>
+                <Input
+                  id="session-duration"
+                  type="text"
+                  inputMode="numeric"
+                  value={sessionDuration}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value.replace(/[^0-9]/g, ''), 10);
+                    if (!isNaN(val) && val >= 1 && val <= 60) {
+                      setSessionDuration(val);
+                    } else if (e.target.value === '') {
+                      setSessionDuration(1);
+                    }
+                  }}
+                  className="max-w-[80px]"
+                  placeholder="20"
+                />
+                <span className="text-sm text-muted-foreground">minutes (1-60)</span>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Standard session length is 20 minutes
-              </p>
             </div>
 
             <div className="rounded-lg bg-primary/10 p-4 space-y-3">
