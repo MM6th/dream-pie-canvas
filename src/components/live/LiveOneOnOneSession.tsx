@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useLiveKitToken } from "@/hooks/useLiveKitToken";
 import {
@@ -25,6 +25,16 @@ interface LiveOneOnOneSessionProps {
   inline?: boolean;
 }
 
+const safePlay = (element: HTMLMediaElement | null) => {
+  if (!element) return;
+  const playPromise = element.play();
+  if (playPromise && typeof playPromise.catch === "function") {
+    playPromise.catch((err) => {
+      console.warn("Media autoplay deferred:", err);
+    });
+  }
+};
+
 const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false }: LiveOneOnOneSessionProps) => {
   const { user } = useAuth();
   const { getToken } = useLiveKitToken();
@@ -35,6 +45,19 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false }: Live
   const connectingRef = useRef(false);
   const [connecting, setConnecting] = useState(true);
   const [remoteConnected, setRemoteConnected] = useState(false);
+
+  const setLocalVideoElement = useCallback((node: HTMLVideoElement | null) => {
+    localVideoRef.current = node;
+
+    if (!node || !roomRef.current) return;
+
+    const camPub = roomRef.current.localParticipant.getTrackPublication(Track.Source.Camera);
+    if (camPub?.track) {
+      camPub.track.detach();
+      camPub.track.attach(node);
+      safePlay(node);
+    }
+  }, []);
 
   useEffect(() => {
     if (!user || connectingRef.current) return;
@@ -47,6 +70,7 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false }: Live
       if (camPub?.track && localVideoRef.current) {
         camPub.track.detach();
         camPub.track.attach(localVideoRef.current);
+        safePlay(localVideoRef.current);
         return true;
       }
       return false;
@@ -73,10 +97,12 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false }: Live
           if (cancelled) return;
           if (track.source === Track.Source.Camera && remoteVideoRef.current) {
             track.attach(remoteVideoRef.current);
+            safePlay(remoteVideoRef.current);
             setRemoteConnected(true);
           }
           if (track.source === Track.Source.Microphone && remoteAudioRef.current) {
             track.attach(remoteAudioRef.current);
+            safePlay(remoteAudioRef.current);
           }
         });
 
@@ -124,10 +150,12 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false }: Live
             if (pub.isSubscribed && pub.track) {
               if (pub.source === Track.Source.Camera && remoteVideoRef.current) {
                 pub.track.attach(remoteVideoRef.current);
+                safePlay(remoteVideoRef.current);
                 setRemoteConnected(true);
               }
               if (pub.source === Track.Source.Microphone && remoteAudioRef.current) {
                 pub.track.attach(remoteAudioRef.current);
+                safePlay(remoteAudioRef.current);
               }
             }
           }
@@ -185,7 +213,7 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false }: Live
       <div className="flex-1 flex gap-1 p-1 min-h-[300px]">
         <div className="flex-1 relative rounded-lg overflow-hidden bg-muted/20">
           <video
-            ref={localVideoRef}
+            ref={setLocalVideoElement}
             autoPlay
             muted
             playsInline
