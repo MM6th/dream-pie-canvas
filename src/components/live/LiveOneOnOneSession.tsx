@@ -9,7 +9,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { PhoneOff, Loader2, Clock } from "lucide-react";
+import { PhoneOff, Loader2, Clock, Video, VideoOff, Mic, MicOff } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import {
   Room,
@@ -48,6 +48,37 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
   const [remoteConnected, setRemoteConnected] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(durationMinutes * 60);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [cameraOn, setCameraOn] = useState(true);
+  const [micOn, setMicOn] = useState(true);
+
+  const toggleCamera = async () => {
+    const room = roomRef.current;
+    if (!room) return;
+    try {
+      if (cameraOn) {
+        await room.localParticipant.setCameraEnabled(false);
+        if (localVideoRef.current) localVideoRef.current.srcObject = null;
+      } else {
+        await room.localParticipant.setCameraEnabled(true);
+        // Re-attach after enabling
+        setTimeout(() => attachLocalCamera(room), 300);
+      }
+      setCameraOn(!cameraOn);
+    } catch (err) {
+      console.error("Toggle camera error:", err);
+    }
+  };
+
+  const toggleMic = async () => {
+    const room = roomRef.current;
+    if (!room) return;
+    try {
+      await room.localParticipant.setMicrophoneEnabled(!micOn);
+      setMicOn(!micOn);
+    } catch (err) {
+      console.error("Toggle mic error:", err);
+    }
+  };
 
   // Start countdown once connected
   useEffect(() => {
@@ -272,9 +303,14 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
             autoPlay
             muted
             playsInline
-            className="w-full h-full object-cover"
+            className={`w-full h-full object-cover ${!cameraOn ? 'hidden' : ''}`}
             style={{ aspectRatio: "9/16" }}
           />
+          {!cameraOn && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black">
+              <VideoOff className="w-10 h-10 text-muted-foreground" />
+            </div>
+          )}
           <div className="absolute bottom-2 left-2">
             <span className="bg-black/60 text-white text-xs px-2 py-1 rounded">You</span>
           </div>
@@ -310,7 +346,23 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
         </div>
       )}
 
-      <div className="flex justify-center py-3">
+      <div className="flex justify-center items-center gap-3 py-3">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={toggleCamera}
+          className={`rounded-full ${!cameraOn ? 'border-destructive text-destructive' : 'border-white/30 text-white'} bg-black/40 hover:bg-black/60`}
+        >
+          {cameraOn ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={toggleMic}
+          className={`rounded-full ${!micOn ? 'border-destructive text-destructive' : 'border-white/30 text-white'} bg-black/40 hover:bg-black/60`}
+        >
+          {micOn ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
+        </Button>
         <Button
           variant="destructive"
           size="lg"
