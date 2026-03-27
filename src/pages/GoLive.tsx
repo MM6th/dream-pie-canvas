@@ -63,6 +63,7 @@ const GoLive = () => {
   const [activeSessionRoom, setActiveSessionRoom] = useState<string | null>(null);
   const [hostSessionDuration, setHostSessionDuration] = useState<number>(15);
   const reconnectAttemptedRef = useRef(false);
+  const privateSessionRef = useRef(false);
 
   // Fetch host avatar
   useEffect(() => {
@@ -103,8 +104,7 @@ const GoLive = () => {
   const startHeartbeat = useCallback((sid: string) => {
     if (heartbeatIntervalRef.current) window.clearInterval(heartbeatIntervalRef.current);
     const heartbeat = async () => {
-      // Don't send heartbeat during private session — it would override "in_session" status
-      if (privateSessionActive) return;
+      if (privateSessionRef.current) return;
       await (supabase.from("live_streams") as any)
         .update({ status: "live", updated_at: new Date().toISOString() })
         .eq("id", sid)
@@ -112,7 +112,7 @@ const GoLive = () => {
     };
     heartbeat();
     heartbeatIntervalRef.current = window.setInterval(heartbeat, 15000);
-  }, [user?.id, privateSessionActive]);
+  }, [user?.id]);
 
   // Start recording from LiveKit room's local tracks
 
@@ -182,6 +182,7 @@ const GoLive = () => {
 
   const pauseLiveBroadcastForSession = useCallback(async (roomName: string) => {
     setPrivateSessionActive(true);
+    privateSessionRef.current = true;
     setActiveSessionRoom(roomName);
 
     // Mark stream as in private session so viewers can't join
