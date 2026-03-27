@@ -182,6 +182,13 @@ const GoLive = () => {
     setPrivateSessionActive(true);
     setActiveSessionRoom(roomName);
 
+    // Mark stream as in private session so viewers can't join
+    if (streamIdRef.current) {
+      await (supabase.from("live_streams") as any)
+        .update({ status: "in_session" })
+        .eq("id", streamIdRef.current);
+    }
+
     if (roomRef.current) {
       for (const pub of roomRef.current.localParticipant.trackPublications.values()) {
         if (pub.track) {

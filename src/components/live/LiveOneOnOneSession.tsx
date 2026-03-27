@@ -370,7 +370,7 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
           className="rounded-full px-8"
         >
           <PhoneOff className="h-5 w-5 mr-2" />
-          End Session
+          End Stream
         </Button>
       </div>
     </div>
