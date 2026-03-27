@@ -649,7 +649,22 @@ export const CreditPurchaseModal = ({
                         <Label className="text-sm">Session Duration</Label>
                         <div className="flex items-center gap-2">
                           <Clock className="w-4 h-4 text-muted-foreground" />
-                          <span className="text-sm font-medium">{sessionDuration} minutes</span>
+                          <Input
+                            type="text"
+                            inputMode="numeric"
+                            value={sessionDuration}
+                            onChange={(e) => {
+                              const val = parseInt(e.target.value.replace(/[^0-9]/g, ''), 10);
+                              if (!isNaN(val) && val >= 1 && val <= 60) {
+                                setSessionDuration(val);
+                              } else if (e.target.value === '') {
+                                setSessionDuration(1);
+                              }
+                            }}
+                            className="max-w-[80px]"
+                            placeholder="20"
+                          />
+                          <span className="text-sm text-muted-foreground">minutes (1-60)</span>
                         </div>
                         <p className="text-xs text-muted-foreground">
                           Your session length is set to {sessionDuration} minutes
