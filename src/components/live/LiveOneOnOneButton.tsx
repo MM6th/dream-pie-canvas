@@ -22,6 +22,7 @@ interface LiveOneOnOneButtonProps {
 const LiveOneOnOneButton = ({ hostId, streamId }: LiveOneOnOneButtonProps) => {
   const { user } = useAuth();
   const [creditsPerMessage, setCreditsPerMessage] = useState<number | null>(null);
+  const [sessionDurationMinutes, setSessionDurationMinutes] = useState<number>(15);
   const [loading, setLoading] = useState(true);
   const [requesting, setRequesting] = useState(false);
   const [showWaitingModal, setShowWaitingModal] = useState(false);
@@ -42,6 +43,15 @@ const LiveOneOnOneButton = ({ hostId, streamId }: LiveOneOnOneButtonProps) => {
 
         if (data?.enabled && data.credits_per_message > 0) {
           setCreditsPerMessage(data.credits_per_message);
+        }
+
+        const { data: lsData } = await (supabase as any)
+          .from("livestream_settings")
+          .select("session_duration_minutes")
+          .eq("merchant_id", hostId)
+          .single();
+        if (lsData?.session_duration_minutes) {
+          setSessionDurationMinutes(lsData.session_duration_minutes);
         }
       } catch (err) {
         console.error("Error fetching host message rate:", err);
@@ -254,6 +264,9 @@ const LiveOneOnOneButton = ({ hostId, streamId }: LiveOneOnOneButtonProps) => {
             <DialogDescription>
               Your session rate: <span className="font-semibold text-foreground">${usdCost}</span> per session
             </DialogDescription>
+            <p className="text-xs text-muted-foreground mt-1">
+              Session duration: <span className="font-semibold text-foreground">{sessionDurationMinutes} min</span>
+            </p>
           </DialogHeader>
 
           <div className="flex flex-col items-center gap-4 py-6">
@@ -277,6 +290,7 @@ const LiveOneOnOneButton = ({ hostId, streamId }: LiveOneOnOneButtonProps) => {
         <LiveOneOnOneSession
           roomName={roomName}
           isHost={false}
+          durationMinutes={sessionDurationMinutes}
           onClose={() => {
             setShowSession(false);
             setPendingRequestId(null);
