@@ -36,6 +36,7 @@ const LiveOneOnOneRequests = ({ streamId, onSessionStart, onSessionEnd }: LiveOn
   const [requests, setRequests] = useState<OneOnOneRequest[]>([]);
   const [respondingId, setRespondingId] = useState<string | null>(null);
   const [hostRate, setHostRate] = useState<number>(0);
+  const [sessionDurationMinutes, setSessionDurationMinutes] = useState<number>(15);
   const [activeSessionRoom, setActiveSessionRoom] = useState<string | null>(null); // kept for modal close logic
 
   // Fetch host rate
@@ -48,6 +49,15 @@ const LiveOneOnOneRequests = ({ streamId, onSessionStart, onSessionEnd }: LiveOn
         .eq("merchant_id", user.id)
         .single();
       if (data) setHostRate(data.credits_per_message ?? 0);
+
+      const { data: lsData } = await (supabase as any)
+        .from("livestream_settings")
+        .select("session_duration_minutes")
+        .eq("merchant_id", user.id)
+        .single();
+      if (lsData?.session_duration_minutes) {
+        setSessionDurationMinutes(lsData.session_duration_minutes);
+      }
     };
     fetchRate();
   }, [user]);
@@ -197,6 +207,9 @@ const LiveOneOnOneRequests = ({ streamId, onSessionStart, onSessionEnd }: LiveOn
                 <p className="font-semibold text-lg text-foreground">{activeRequest.viewer_name}</p>
                 <p className="text-sm text-muted-foreground">
                   Wants a private 1-on-1 session for <span className="font-semibold text-foreground">${usdCost}</span>
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Session duration: <span className="font-semibold text-foreground">{sessionDurationMinutes} minutes</span>
                 </p>
               </div>
             </div>
