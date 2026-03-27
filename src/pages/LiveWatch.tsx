@@ -243,6 +243,10 @@ const LiveWatch = () => {
           toast({ title: "Stream ended", description: "The broadcaster has ended the stream." });
           navigate("/live");
         }
+        if (payload.new.status === "in_session") {
+          toast({ title: "Host is in a private session", description: "The stream will resume after the session ends." });
+          navigate("/live");
+        }
       })
       .subscribe();
 
@@ -258,6 +262,10 @@ const LiveWatch = () => {
       if (cancelled) return;
       if (streamData?.status === "ended") {
         toast({ title: "Stream ended", description: "The broadcaster has ended the stream." });
+        navigate("/live");
+      }
+      if (streamData?.status === "in_session") {
+        toast({ title: "Host is in a private session", description: "The stream will resume after the session ends." });
         navigate("/live");
       }
     }, 5000);
