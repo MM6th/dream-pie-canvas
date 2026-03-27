@@ -514,7 +514,8 @@ const GoLive = () => {
                   durationMinutes={hostSessionDuration}
                   onClose={async () => {
                     setActiveSessionRoom(null);
-                    await resumeLiveBroadcastAfterSession();
+                    // End the entire stream when 1-on-1 session ends
+                    await endStream();
                   }}
                 />
               )}
@@ -547,21 +548,23 @@ const GoLive = () => {
               )}
             </div>
 
-            <div className="flex flex-wrap gap-3 items-center">
-              <Button variant="outline" size="sm" onClick={toggleCamera} className={!cameraOn ? "border-destructive text-destructive" : ""}>
-                {cameraOn ? <Video className="w-4 h-4 mr-1" /> : <VideoOff className="w-4 h-4 mr-1" />}
-                {cameraOn ? "Camera" : "Camera Off"}
-              </Button>
-              <Button variant="outline" size="sm" onClick={toggleMic} className={!micOn ? "border-destructive text-destructive" : ""}>
-                {micOn ? <Mic className="w-4 h-4 mr-1" /> : <MicOff className="w-4 h-4 mr-1" />}
-                {micOn ? "Mic" : "Muted"}
-              </Button>
-              {isLive && (
-                <Button onClick={endStream} variant="destructive" size="sm" className="ml-auto">
-                  End Stream
+            {!privateSessionActive && (
+              <div className="flex flex-wrap gap-3 items-center">
+                <Button variant="outline" size="sm" onClick={toggleCamera} className={!cameraOn ? "border-destructive text-destructive" : ""}>
+                  {cameraOn ? <Video className="w-4 h-4 mr-1" /> : <VideoOff className="w-4 h-4 mr-1" />}
+                  {cameraOn ? "Camera" : "Camera Off"}
                 </Button>
-              )}
-            </div>
+                <Button variant="outline" size="sm" onClick={toggleMic} className={!micOn ? "border-destructive text-destructive" : ""}>
+                  {micOn ? <Mic className="w-4 h-4 mr-1" /> : <MicOff className="w-4 h-4 mr-1" />}
+                  {micOn ? "Mic" : "Muted"}
+                </Button>
+                {isLive && (
+                  <Button onClick={endStream} variant="destructive" size="sm" className="ml-auto">
+                    End Stream
+                  </Button>
+                )}
+              </div>
+            )}
 
             {setupPhase && (
               <Card className="bg-card border-border">
