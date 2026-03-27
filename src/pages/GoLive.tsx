@@ -511,6 +511,7 @@ const GoLive = () => {
                   roomName={activeSessionRoom}
                   isHost={true}
                   inline={true}
+                  durationMinutes={hostSessionDuration}
                   onClose={async () => {
                     setActiveSessionRoom(null);
                     await resumeLiveBroadcastAfterSession();
