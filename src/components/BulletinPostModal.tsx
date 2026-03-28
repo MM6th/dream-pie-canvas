@@ -543,9 +543,85 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
                       </div>
                     </div>
                     {titleOnTheLine && (
-                      <p className="text-xs text-yellow-400">
-                        🏆 The champion's title will be at stake in this challenge!
-                      </p>
+                      <div className="space-y-2">
+                        <p className="text-xs text-yellow-400">
+                          🏆 The champion's title will be at stake in this challenge!
+                        </p>
+                        
+                        {/* Champion Selector */}
+                        <div className="space-y-2">
+                          <Label className="text-white text-sm flex items-center gap-2">
+                            <Crown className="w-4 h-4 text-yellow-400" />
+                            Select Champion
+                          </Label>
+                          
+                          {selectedChampion ? (
+                            <div className="flex items-center gap-3 bg-gray-600/50 p-3 rounded-lg border border-yellow-600/30">
+                              <Avatar className="h-10 w-10 border-2 border-yellow-500">
+                                <AvatarImage src={selectedChampion.avatar_url || ''} />
+                                <AvatarFallback className="bg-yellow-600 text-white text-sm">
+                                  {(selectedChampion.display_name || selectedChampion.business_name || '?')[0]}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="flex-1">
+                                <p className="text-white font-medium text-sm">{selectedChampion.display_name || selectedChampion.business_name}</p>
+                                <p className="text-yellow-400 text-xs">Current Champion</p>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => { setSelectedChampion(null); setChampionUserId(''); }}
+                                className="text-gray-400 hover:text-white"
+                              >
+                                Change
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="space-y-2">
+                              <div className="relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                <Input
+                                  placeholder="Search merchants..."
+                                  value={championSearch}
+                                  onChange={(e) => setChampionSearch(e.target.value)}
+                                  className="pl-9 bg-gray-600 border-gray-500 text-white"
+                                />
+                              </div>
+                              <ScrollArea className="h-40 border border-gray-600 rounded-lg">
+                                {loadingMerchants ? (
+                                  <p className="text-gray-400 text-sm text-center py-4">Loading...</p>
+                                ) : filteredMerchants.length === 0 ? (
+                                  <p className="text-gray-400 text-sm text-center py-4">No merchants found</p>
+                                ) : (
+                                  <div className="p-1">
+                                    {filteredMerchants.map((merchant) => (
+                                      <button
+                                        key={merchant.id}
+                                        type="button"
+                                        onClick={() => {
+                                          setSelectedChampion(merchant);
+                                          setChampionUserId(merchant.id);
+                                          setChampionSearch('');
+                                        }}
+                                        className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-gray-600 transition-colors text-left"
+                                      >
+                                        <Avatar className="h-8 w-8">
+                                          <AvatarImage src={merchant.avatar_url || ''} />
+                                          <AvatarFallback className="bg-gray-500 text-white text-xs">
+                                            {(merchant.display_name || merchant.business_name || '?')[0]}
+                                          </AvatarFallback>
+                                        </Avatar>
+                                        <span className="text-white text-sm">{merchant.display_name || merchant.business_name || 'Unknown'}</span>
+                                      </button>
+                                    ))}
+                                  </div>
+                                )}
+                              </ScrollArea>
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     )}
 
                     {/* Purse Amounts Section */}
