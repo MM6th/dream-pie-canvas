@@ -23,6 +23,11 @@ export interface BulletinPost {
   challenger1_purse?: number;
   challenger2_purse?: number;
   champion_purse?: number;
+  champion_user_id?: string;
+  champion_profile?: {
+    display_name: string;
+    avatar_url: string;
+  };
   profiles: {
     display_name: string;
     avatar_url: string;

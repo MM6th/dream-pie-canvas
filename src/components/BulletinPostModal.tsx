@@ -45,9 +45,17 @@ interface BulletinPostModalProps {
     challenger1_purse?: number;
     challenger2_purse?: number;
     champion_purse?: number;
+    champion_user_id?: string;
   };
   mode?: 'create' | 'edit';
   initialPostType?: string;
+}
+
+interface MerchantProfile {
+  id: string;
+  display_name: string | null;
+  business_name: string | null;
+  avatar_url: string | null;
 }
 
 const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }: BulletinPostModalProps) => {
