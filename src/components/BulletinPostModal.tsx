@@ -253,6 +253,41 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
     e.preventDefault();
     if (!user) return;
 
+    // Validate Live Challenges required fields
+    if (postType === 'announcement' && contractType === 'live_challenges') {
+      if (!scheduledDate || !scheduledTime) {
+        toast({ title: "Required", description: "Please set a schedule date and time.", variant: "destructive" });
+        return;
+      }
+      if (!challengeType) {
+        toast({ title: "Required", description: "Please select a challenge type.", variant: "destructive" });
+        return;
+      }
+      if (titleOnTheLine) {
+        if (!championUserId) {
+          toast({ title: "Required", description: "Please select a champion.", variant: "destructive" });
+          return;
+        }
+        if (!challenger1Purse || parseFloat(challenger1Purse) <= 0) {
+          toast({ title: "Required", description: "Please enter a challenger purse amount.", variant: "destructive" });
+          return;
+        }
+        if (!championPurse || parseFloat(championPurse) <= 0) {
+          toast({ title: "Required", description: "Please enter a champion purse amount.", variant: "destructive" });
+          return;
+        }
+      } else {
+        if (!challenger1Purse || parseFloat(challenger1Purse) <= 0) {
+          toast({ title: "Required", description: "Please enter Challenger 1 purse amount.", variant: "destructive" });
+          return;
+        }
+        if (!challenger2Purse || parseFloat(challenger2Purse) <= 0) {
+          toast({ title: "Required", description: "Please enter Challenger 2 purse amount.", variant: "destructive" });
+          return;
+        }
+      }
+    }
+
     setLoading(true);
     
     try {
@@ -446,7 +481,7 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
               {/* Schedule Date/Time for Live Challenges */}
               {contractType === 'live_challenges' && (
                 <div className="space-y-3">
-                  <Label className="text-white">Schedule Date & Time</Label>
+                  <Label className="text-white">Schedule Date & Time <span className="text-red-400">*</span></Label>
                   <div className="flex gap-3">
                     <Popover>
                       <PopoverTrigger asChild>
@@ -506,7 +541,7 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
               {contractType === 'live_challenges' && (
                 <Card className="bg-gray-700/50 border-gray-600">
                   <CardContent className="p-4 space-y-4">
-                    <Label className="text-white font-medium">Type of Challenge</Label>
+                    <Label className="text-white font-medium">Type of Challenge <span className="text-red-400">*</span></Label>
                     <RadioGroup value={challengeType} onValueChange={setChallengeType} className="grid grid-cols-2 gap-3">
                       {[
                         { value: 'cook_off', label: 'Cook-off' },
@@ -552,7 +587,7 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
                         <div className="space-y-2">
                           <Label className="text-white text-sm flex items-center gap-2">
                             <Crown className="w-4 h-4 text-yellow-400" />
-                            Select Champion
+                            Select Champion <span className="text-red-400">*</span>
                           </Label>
                           
                           {selectedChampion ? (
@@ -626,7 +661,7 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
 
                     {/* Purse Amounts Section */}
                     <div className="pt-3 border-t border-gray-600 space-y-3">
-                      <Label className="text-white font-medium">💰 Purse Amounts (USD)</Label>
+                      <Label className="text-white font-medium">💰 Purse Amounts (USD) <span className="text-red-400">*</span></Label>
                       
                       {titleOnTheLine ? (
                         /* Title on the line: Challenger vs Champion */

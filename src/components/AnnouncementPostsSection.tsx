@@ -53,6 +53,7 @@ const AnnouncementPostsSection = ({ posts }: AnnouncementPostsSectionProps) => {
                       alt={post.title}
                       className="w-full h-48 object-cover rounded-t-lg"
                     />
+                    <p className="text-xs text-muted-foreground italic text-center px-4 py-1">Image for illustration only — actual event may differ</p>
                   </CardHeader>
                 )}
                 {post.video_url && post.media_type === 'video' && (
