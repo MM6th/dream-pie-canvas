@@ -70,6 +70,8 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
   const [scheduledDate, setScheduledDate] = useState<Date | undefined>(post?.scheduled_at ? new Date(post.scheduled_at) : undefined);
   const [scheduledTime, setScheduledTime] = useState(post?.scheduled_at ? format(new Date(post.scheduled_at), 'HH:mm') : '');
   const [selectedTimezone, setSelectedTimezone] = useState(post?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone);
+  const [challengeType, setChallengeType] = useState(post?.challenge_type || '');
+  const [titleOnTheLine, setTitleOnTheLine] = useState(post?.title_on_the_line || false);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
