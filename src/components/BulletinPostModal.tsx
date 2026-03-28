@@ -181,6 +181,17 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
         }
       }
 
+      // Build scheduled_at datetime
+      let scheduledAtISO: string | null = null;
+      if (contractType === 'live_challenges' && scheduledDate) {
+        const dt = new Date(scheduledDate);
+        if (scheduledTime) {
+          const [hours, minutes] = scheduledTime.split(':').map(Number);
+          dt.setHours(hours, minutes, 0, 0);
+        }
+        scheduledAtISO = dt.toISOString();
+      }
+
       const postData = {
         title,
         content,
@@ -195,6 +206,8 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
         pie_episode_cost: postType === 'announcement' && pieEpisodeCost ? parseFloat(pieEpisodeCost) : null,
         number_of_opportunities: postType === 'announcement' && numberOfOpportunities ? parseInt(numberOfOpportunities) : null,
         uploaded_image_url: finalUploadedImageUrl || null,
+        scheduled_at: scheduledAtISO,
+        timezone: scheduledAtISO ? Intl.DateTimeFormat().resolvedOptions().timeZone : null,
         updated_at: new Date().toISOString()
       };
 
