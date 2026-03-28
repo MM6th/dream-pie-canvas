@@ -132,6 +132,8 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
     setUploadedImageUrl('');
     setSelectedFile(null);
     setImagePreview(null);
+    setScheduledDate(undefined);
+    setScheduledTime('');
   };
 
   // Update form fields when post prop changes or when opening in edit mode
