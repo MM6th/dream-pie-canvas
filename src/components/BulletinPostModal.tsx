@@ -352,6 +352,48 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
                 </Select>
               </div>
 
+              {/* Schedule Date/Time for Live Challenges */}
+              {contractType === 'live_challenges' && (
+                <div className="space-y-3">
+                  <Label className="text-white">Schedule Date & Time</Label>
+                  <div className="flex gap-3">
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "flex-1 justify-start text-left font-normal bg-gray-700 border-gray-600 text-white hover:bg-gray-600",
+                            !scheduledDate && "text-gray-400"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {scheduledDate ? format(scheduledDate, "PPP") : "Pick a date"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0 bg-gray-800 border-gray-600" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={scheduledDate}
+                          onSelect={setScheduledDate}
+                          disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                          initialFocus
+                          className={cn("p-3 pointer-events-auto")}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <Input
+                      type="time"
+                      value={scheduledTime}
+                      onChange={(e) => setScheduledTime(e.target.value)}
+                      className="w-36 bg-gray-700 border-gray-600 text-white"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-400">
+                    Set when this live challenge will take place
+                  </p>
+                </div>
+              )}
+
               <div>
                 <Label htmlFor="opportunities" className="text-white">Number of Opportunities - Optional</Label>
                 <Input
