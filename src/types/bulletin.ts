@@ -18,6 +18,8 @@ export interface BulletinPost {
   room_id?: string;
   session_ended_at?: string;
   contract_type?: string;
+  challenge_type?: string;
+  title_on_the_line?: boolean;
   profiles: {
     display_name: string;
     avatar_url: string;
