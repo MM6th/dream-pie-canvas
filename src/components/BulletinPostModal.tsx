@@ -321,6 +321,7 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
                     <SelectItem value="podcast">Podcast</SelectItem>
                     <SelectItem value="film">Film</SelectItem>
                     <SelectItem value="video">Video</SelectItem>
+                    <SelectItem value="live_challenges">Live Challenges</SelectItem>
                     <SelectItem value="regular">Regular</SelectItem>
                   </SelectContent>
                 </Select>
