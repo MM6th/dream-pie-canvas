@@ -106,6 +106,15 @@ const AnnouncementPostsSection = ({ posts }: AnnouncementPostsSectionProps) => {
                         <Calendar className="w-3 h-3" />
                         {new Date(post.created_at).toLocaleDateString()}
                       </div>
+                      {post.scheduled_at && (
+                        <div className="flex items-center gap-1 text-yellow-400">
+                          <Calendar className="w-3 h-3" />
+                          <span>Scheduled: {new Date(post.scheduled_at).toLocaleDateString()} at {new Date(post.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                        </div>
+                      )}
+                      {post.contract_type === 'live_challenges' && (
+                        <Badge className="bg-purple-600 text-white text-xs">Live Challenge</Badge>
+                      )}
                   </div>
                   
                   {post.link_url && (

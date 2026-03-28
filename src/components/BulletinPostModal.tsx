@@ -7,7 +7,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Shield, Upload, Image as ImageIcon } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { Plus, Shield, Upload, Image as ImageIcon, CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/components/ui/use-toast";
@@ -28,6 +32,8 @@ interface BulletinPostModalProps {
     pie_episode_cost?: number;
     number_of_opportunities?: number;
     uploaded_image_url?: string;
+    scheduled_at?: string;
+    timezone?: string;
   };
   mode?: 'create' | 'edit';
   initialPostType?: string;
@@ -56,6 +62,8 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
   const [uploadedImageUrl, setUploadedImageUrl] = useState(post?.uploaded_image_url || '');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(post?.uploaded_image_url || null);
+  const [scheduledDate, setScheduledDate] = useState<Date | undefined>(post?.scheduled_at ? new Date(post.scheduled_at) : undefined);
+  const [scheduledTime, setScheduledTime] = useState(post?.scheduled_at ? format(new Date(post.scheduled_at), 'HH:mm') : '');
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -124,6 +132,8 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
     setUploadedImageUrl('');
     setSelectedFile(null);
     setImagePreview(null);
+    setScheduledDate(undefined);
+    setScheduledTime('');
   };
 
   // Update form fields when post prop changes or when opening in edit mode
@@ -142,6 +152,8 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
       setNumberOfOpportunities(post.number_of_opportunities?.toString() || '');
       setUploadedImageUrl(post.uploaded_image_url || '');
       setImagePreview(post.uploaded_image_url || null);
+      setScheduledDate(post.scheduled_at ? new Date(post.scheduled_at) : undefined);
+      setScheduledTime(post.scheduled_at ? format(new Date(post.scheduled_at), 'HH:mm') : '');
     }
   }, [post, mode]);
 
@@ -169,6 +181,17 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
         }
       }
 
+      // Build scheduled_at datetime
+      let scheduledAtISO: string | null = null;
+      if (contractType === 'live_challenges' && scheduledDate) {
+        const dt = new Date(scheduledDate);
+        if (scheduledTime) {
+          const [hours, minutes] = scheduledTime.split(':').map(Number);
+          dt.setHours(hours, minutes, 0, 0);
+        }
+        scheduledAtISO = dt.toISOString();
+      }
+
       const postData = {
         title,
         content,
@@ -183,6 +206,8 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
         pie_episode_cost: postType === 'announcement' && pieEpisodeCost ? parseFloat(pieEpisodeCost) : null,
         number_of_opportunities: postType === 'announcement' && numberOfOpportunities ? parseInt(numberOfOpportunities) : null,
         uploaded_image_url: finalUploadedImageUrl || null,
+        scheduled_at: scheduledAtISO,
+        timezone: scheduledAtISO ? Intl.DateTimeFormat().resolvedOptions().timeZone : null,
         updated_at: new Date().toISOString()
       };
 
@@ -326,6 +351,48 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Schedule Date/Time for Live Challenges */}
+              {contractType === 'live_challenges' && (
+                <div className="space-y-3">
+                  <Label className="text-white">Schedule Date & Time</Label>
+                  <div className="flex gap-3">
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "flex-1 justify-start text-left font-normal bg-gray-700 border-gray-600 text-white hover:bg-gray-600",
+                            !scheduledDate && "text-gray-400"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {scheduledDate ? format(scheduledDate, "PPP") : "Pick a date"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0 bg-gray-800 border-gray-600" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={scheduledDate}
+                          onSelect={setScheduledDate}
+                          disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                          initialFocus
+                          className={cn("p-3 pointer-events-auto")}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <Input
+                      type="time"
+                      value={scheduledTime}
+                      onChange={(e) => setScheduledTime(e.target.value)}
+                      className="w-36 bg-gray-700 border-gray-600 text-white"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-400">
+                    Set when this live challenge will take place
+                  </p>
+                </div>
+              )}
 
               <div>
                 <Label htmlFor="opportunities" className="text-white">Number of Opportunities - Optional</Label>

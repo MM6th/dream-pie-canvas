@@ -17,6 +17,7 @@ export interface BulletinPost {
   timezone?: string;
   room_id?: string;
   session_ended_at?: string;
+  contract_type?: string;
   profiles: {
     display_name: string;
     avatar_url: string;
