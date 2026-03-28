@@ -326,65 +326,17 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
                 </Select>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="youtubeShare" className="text-white">YouTube Revenue Share (%) - Optional</Label>
-                  <Input
-                    id="youtubeShare"
-                    type="number"
-                    min="0"
-                    max="100"
-                    step="0.1"
-                    value={youtubeContractorShare}
-                    onChange={(e) => setYoutubeContractorShare(e.target.value)}
-                    placeholder="70"
-                    className="bg-gray-700 border-gray-600 text-white"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="pieShare" className="text-white">PIE Revenue Share (%) - Optional</Label>
-                  <Input
-                    id="pieShare"
-                    type="number"
-                    min="0"
-                    max="100"
-                    step="0.1"
-                    value={pieContractorShare}
-                    onChange={(e) => setPieContractorShare(e.target.value)}
-                    placeholder="70"
-                    className="bg-gray-700 border-gray-600 text-white"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="episodeCost" className="text-white">Episode Cost ($) - Optional</Label>
-                  <Input
-                    id="episodeCost"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={pieEpisodeCost}
-                    onChange={(e) => setPieEpisodeCost(e.target.value)}
-                    placeholder="100.00"
-                    className="bg-gray-700 border-gray-600 text-white"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="opportunities" className="text-white">Number of Opportunities - Optional</Label>
-                  <Input
-                    id="opportunities"
-                    type="number"
-                    min="1"
-                    value={numberOfOpportunities}
-                    onChange={(e) => setNumberOfOpportunities(e.target.value)}
-                    placeholder="1"
-                    className="bg-gray-700 border-gray-600 text-white"
-                  />
-                </div>
+              <div>
+                <Label htmlFor="opportunities" className="text-white">Number of Opportunities - Optional</Label>
+                <Input
+                  id="opportunities"
+                  type="number"
+                  min="1"
+                  value={numberOfOpportunities}
+                  onChange={(e) => setNumberOfOpportunities(e.target.value)}
+                  placeholder="1"
+                  className="bg-gray-700 border-gray-600 text-white"
+                />
               </div>
             </>
           )}
