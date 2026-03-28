@@ -481,7 +481,7 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
               {/* Schedule Date/Time for Live Challenges */}
               {contractType === 'live_challenges' && (
                 <div className="space-y-3">
-                  <Label className="text-white">Schedule Date & Time</Label>
+                  <Label className="text-white">Schedule Date & Time <span className="text-red-400">*</span></Label>
                   <div className="flex gap-3">
                     <Popover>
                       <PopoverTrigger asChild>
