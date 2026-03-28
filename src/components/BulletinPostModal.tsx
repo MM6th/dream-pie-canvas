@@ -210,7 +210,7 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
         number_of_opportunities: postType === 'announcement' && numberOfOpportunities ? parseInt(numberOfOpportunities) : null,
         uploaded_image_url: finalUploadedImageUrl || null,
         scheduled_at: scheduledAtISO,
-        timezone: scheduledAtISO ? Intl.DateTimeFormat().resolvedOptions().timeZone : null,
+        timezone: scheduledAtISO ? selectedTimezone : null,
         updated_at: new Date().toISOString()
       };
 
