@@ -541,7 +541,7 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
               {contractType === 'live_challenges' && (
                 <Card className="bg-gray-700/50 border-gray-600">
                   <CardContent className="p-4 space-y-4">
-                    <Label className="text-white font-medium">Type of Challenge</Label>
+                    <Label className="text-white font-medium">Type of Challenge <span className="text-red-400">*</span></Label>
                     <RadioGroup value={challengeType} onValueChange={setChallengeType} className="grid grid-cols-2 gap-3">
                       {[
                         { value: 'cook_off', label: 'Cook-off' },
