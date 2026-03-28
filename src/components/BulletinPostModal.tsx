@@ -89,6 +89,50 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
   const [challenger1Purse, setChallenger1Purse] = useState(post?.challenger1_purse?.toString() || '');
   const [challenger2Purse, setChallenger2Purse] = useState(post?.challenger2_purse?.toString() || '');
   const [championPurse, setChampionPurse] = useState(post?.champion_purse?.toString() || '');
+  const [championUserId, setChampionUserId] = useState(post?.champion_user_id || '');
+  const [championSearch, setChampionSearch] = useState('');
+  const [merchantList, setMerchantList] = useState<MerchantProfile[]>([]);
+  const [loadingMerchants, setLoadingMerchants] = useState(false);
+  const [selectedChampion, setSelectedChampion] = useState<MerchantProfile | null>(null);
+
+  // Fetch merchants for champion selection
+  useEffect(() => {
+    if (titleOnTheLine && contractType === 'live_challenges') {
+      fetchMerchants();
+    }
+  }, [titleOnTheLine, contractType]);
+
+  // Load selected champion profile on edit
+  useEffect(() => {
+    if (post?.champion_user_id && mode === 'edit') {
+      loadChampionProfile(post.champion_user_id);
+    }
+  }, [post?.champion_user_id, mode]);
+
+  const loadChampionProfile = async (userId: string) => {
+    const { data } = await supabase
+      .from('profiles')
+      .select('id, display_name, business_name, avatar_url')
+      .eq('id', userId)
+      .single();
+    if (data) setSelectedChampion(data);
+  };
+
+  const fetchMerchants = async () => {
+    setLoadingMerchants(true);
+    const { data } = await supabase
+      .from('profiles')
+      .select('id, display_name, business_name, avatar_url')
+      .eq('user_type', 'merchant')
+      .order('display_name');
+    setMerchantList(data || []);
+    setLoadingMerchants(false);
+  };
+
+  const filteredMerchants = merchantList.filter(m => {
+    const search = championSearch.toLowerCase();
+    return (m.display_name?.toLowerCase().includes(search) || m.business_name?.toLowerCase().includes(search));
+  });
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
