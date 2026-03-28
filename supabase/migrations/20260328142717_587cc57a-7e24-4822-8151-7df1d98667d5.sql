@@ -1,0 +1,2 @@
+ALTER TABLE public.contracts DROP CONSTRAINT contracts_contract_type_check;
+ALTER TABLE public.contracts ADD CONSTRAINT contracts_contract_type_check CHECK (contract_type = ANY (ARRAY['cover_submission','modeling_application','audio','asmr','modeling','podcast','film','video','regular','podcast_opportunity','video_ad_download','video_ad_opportunity','asmr_opportunity','asmr_submission','live_challenges']));
