@@ -236,6 +236,9 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
         timezone: scheduledAtISO ? selectedTimezone : null,
         challenge_type: contractType === 'live_challenges' && challengeType ? challengeType : null,
         title_on_the_line: contractType === 'live_challenges' ? titleOnTheLine : false,
+        challenger1_purse: contractType === 'live_challenges' && challenger1Purse ? parseFloat(challenger1Purse) : null,
+        challenger2_purse: contractType === 'live_challenges' && !titleOnTheLine && challenger2Purse ? parseFloat(challenger2Purse) : null,
+        champion_purse: contractType === 'live_challenges' && titleOnTheLine && championPurse ? parseFloat(championPurse) : null,
         updated_at: new Date().toISOString()
       };
 
