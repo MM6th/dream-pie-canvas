@@ -75,6 +75,9 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
   const [selectedTimezone, setSelectedTimezone] = useState(post?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone);
   const [challengeType, setChallengeType] = useState(post?.challenge_type || '');
   const [titleOnTheLine, setTitleOnTheLine] = useState(post?.title_on_the_line || false);
+  const [challenger1Purse, setChallenger1Purse] = useState(post?.challenger1_purse?.toString() || '');
+  const [challenger2Purse, setChallenger2Purse] = useState(post?.challenger2_purse?.toString() || '');
+  const [championPurse, setChampionPurse] = useState(post?.champion_purse?.toString() || '');
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
