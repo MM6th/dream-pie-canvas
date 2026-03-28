@@ -238,6 +238,7 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
       setChallenger1Purse(post.challenger1_purse?.toString() || '');
       setChallenger2Purse(post.challenger2_purse?.toString() || '');
       setChampionPurse(post.champion_purse?.toString() || '');
+      setChampionUserId(post.champion_user_id || '');
     }
   }, [post, mode]);
 
