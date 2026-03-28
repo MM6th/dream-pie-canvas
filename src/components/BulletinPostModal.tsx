@@ -222,6 +222,8 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
         uploaded_image_url: finalUploadedImageUrl || null,
         scheduled_at: scheduledAtISO,
         timezone: scheduledAtISO ? selectedTimezone : null,
+        challenge_type: contractType === 'live_challenges' && challengeType ? challengeType : null,
+        title_on_the_line: contractType === 'live_challenges' ? titleOnTheLine : false,
         updated_at: new Date().toISOString()
       };
 
