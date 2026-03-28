@@ -94,6 +94,8 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
   const [merchantList, setMerchantList] = useState<MerchantProfile[]>([]);
   const [loadingMerchants, setLoadingMerchants] = useState(false);
   const [selectedChampion, setSelectedChampion] = useState<MerchantProfile | null>(null);
+  const [timeLimitHours, setTimeLimitHours] = useState(post?.challenge_time_limit_minutes ? Math.floor(post.challenge_time_limit_minutes / 60).toString() : '');
+  const [timeLimitMinutes, setTimeLimitMinutes] = useState(post?.challenge_time_limit_minutes ? (post.challenge_time_limit_minutes % 60).toString() : '');
 
   // Fetch merchants for champion selection
   useEffect(() => {
