@@ -223,6 +223,16 @@ const AnnouncementPostsSection = ({ posts }: AnnouncementPostsSectionProps) => {
                       )}
                     </div>
                   )}
+
+                  {/* Time Limit Display */}
+                  {post.contract_type === 'live_challenges' && (post as any).challenge_time_limit_minutes > 0 && (
+                    <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground my-2">
+                      <span>⏱️</span>
+                      <span className="font-medium">
+                        Time Limit: {Math.floor((post as any).challenge_time_limit_minutes / 60) > 0 ? `${Math.floor((post as any).challenge_time_limit_minutes / 60)}h ` : ''}{(post as any).challenge_time_limit_minutes % 60 > 0 ? `${(post as any).challenge_time_limit_minutes % 60}m` : ''}
+                      </span>
+                    </div>
+                  )}
                   
                   {post.link_url && (
                     <button

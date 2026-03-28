@@ -295,6 +295,11 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
           return;
         }
       }
+      const totalMinutes = (parseInt(timeLimitHours || '0') * 60) + parseInt(timeLimitMinutes || '0');
+      if (totalMinutes <= 0) {
+        toast({ title: "Required", description: "Please set a time limit for the challenge.", variant: "destructive" });
+        return;
+      }
     }
 
     setLoading(true);
