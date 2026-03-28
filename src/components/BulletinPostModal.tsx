@@ -661,7 +661,7 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
 
                     {/* Purse Amounts Section */}
                     <div className="pt-3 border-t border-gray-600 space-y-3">
-                      <Label className="text-white font-medium">💰 Purse Amounts (USD)</Label>
+                      <Label className="text-white font-medium">💰 Purse Amounts (USD) <span className="text-red-400">*</span></Label>
                       
                       {titleOnTheLine ? (
                         /* Title on the line: Challenger vs Champion */
