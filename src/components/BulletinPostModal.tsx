@@ -152,6 +152,8 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
       setNumberOfOpportunities(post.number_of_opportunities?.toString() || '');
       setUploadedImageUrl(post.uploaded_image_url || '');
       setImagePreview(post.uploaded_image_url || null);
+      setScheduledDate(post.scheduled_at ? new Date(post.scheduled_at) : undefined);
+      setScheduledTime(post.scheduled_at ? format(new Date(post.scheduled_at), 'HH:mm') : '');
     }
   }, [post, mode]);
 
