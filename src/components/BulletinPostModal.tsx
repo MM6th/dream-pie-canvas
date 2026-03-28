@@ -755,6 +755,37 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
                         </div>
                       )}
                     </div>
+
+                    {/* Time Limit */}
+                    <div className="pt-3 border-t border-gray-600">
+                      <Label className="text-white font-medium">⏱️ Time Limit <span className="text-red-400">*</span></Label>
+                      <div className="flex items-center gap-2 mt-2">
+                        <div className="flex items-center gap-1">
+                          <Input
+                            type="number"
+                            min="0"
+                            max="23"
+                            value={timeLimitHours}
+                            onChange={(e) => setTimeLimitHours(e.target.value)}
+                            placeholder="0"
+                            className="w-20 bg-gray-600 border-gray-500 text-white text-center"
+                          />
+                          <span className="text-gray-300 text-sm">hrs</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Input
+                            type="number"
+                            min="0"
+                            max="59"
+                            value={timeLimitMinutes}
+                            onChange={(e) => setTimeLimitMinutes(e.target.value)}
+                            placeholder="0"
+                            className="w-20 bg-gray-600 border-gray-500 text-white text-center"
+                          />
+                          <span className="text-gray-300 text-sm">min</span>
+                        </div>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
               )}
