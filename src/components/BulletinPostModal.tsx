@@ -343,6 +343,7 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
         challenger2_purse: contractType === 'live_challenges' && !titleOnTheLine && challenger2Purse ? parseFloat(challenger2Purse) : null,
         champion_purse: contractType === 'live_challenges' && titleOnTheLine && championPurse ? parseFloat(championPurse) : null,
         champion_user_id: contractType === 'live_challenges' && titleOnTheLine && championUserId ? championUserId : null,
+        challenge_time_limit_minutes: contractType === 'live_challenges' && (timeLimitHours || timeLimitMinutes) ? (parseInt(timeLimitHours || '0') * 60) + parseInt(timeLimitMinutes || '0') : null,
         updated_at: new Date().toISOString()
       };
 
