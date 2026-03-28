@@ -37,6 +37,8 @@ interface BulletinPostModalProps {
     uploaded_image_url?: string;
     scheduled_at?: string;
     timezone?: string;
+    challenge_type?: string;
+    title_on_the_line?: boolean;
   };
   mode?: 'create' | 'edit';
   initialPostType?: string;
