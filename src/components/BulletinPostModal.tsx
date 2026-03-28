@@ -253,6 +253,41 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
     e.preventDefault();
     if (!user) return;
 
+    // Validate Live Challenges required fields
+    if (postType === 'announcement' && contractType === 'live_challenges') {
+      if (!scheduledDate || !scheduledTime) {
+        toast({ title: "Required", description: "Please set a schedule date and time.", variant: "destructive" });
+        return;
+      }
+      if (!challengeType) {
+        toast({ title: "Required", description: "Please select a challenge type.", variant: "destructive" });
+        return;
+      }
+      if (titleOnTheLine) {
+        if (!championUserId) {
+          toast({ title: "Required", description: "Please select a champion.", variant: "destructive" });
+          return;
+        }
+        if (!challenger1Purse || parseFloat(challenger1Purse) <= 0) {
+          toast({ title: "Required", description: "Please enter a challenger purse amount.", variant: "destructive" });
+          return;
+        }
+        if (!championPurse || parseFloat(championPurse) <= 0) {
+          toast({ title: "Required", description: "Please enter a champion purse amount.", variant: "destructive" });
+          return;
+        }
+      } else {
+        if (!challenger1Purse || parseFloat(challenger1Purse) <= 0) {
+          toast({ title: "Required", description: "Please enter Challenger 1 purse amount.", variant: "destructive" });
+          return;
+        }
+        if (!challenger2Purse || parseFloat(challenger2Purse) <= 0) {
+          toast({ title: "Required", description: "Please enter Challenger 2 purse amount.", variant: "destructive" });
+          return;
+        }
+      }
+    }
+
     setLoading(true);
     
     try {
