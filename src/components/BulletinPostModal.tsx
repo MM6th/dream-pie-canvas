@@ -9,7 +9,10 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { Plus, Shield, Upload, Image as ImageIcon, CalendarIcon } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Card, CardContent } from "@/components/ui/card";
+import { Plus, Shield, Upload, Image as ImageIcon, CalendarIcon, Trophy } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,6 +37,8 @@ interface BulletinPostModalProps {
     uploaded_image_url?: string;
     scheduled_at?: string;
     timezone?: string;
+    challenge_type?: string;
+    title_on_the_line?: boolean;
   };
   mode?: 'create' | 'edit';
   initialPostType?: string;
@@ -65,6 +70,8 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
   const [scheduledDate, setScheduledDate] = useState<Date | undefined>(post?.scheduled_at ? new Date(post.scheduled_at) : undefined);
   const [scheduledTime, setScheduledTime] = useState(post?.scheduled_at ? format(new Date(post.scheduled_at), 'HH:mm') : '');
   const [selectedTimezone, setSelectedTimezone] = useState(post?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone);
+  const [challengeType, setChallengeType] = useState(post?.challenge_type || '');
+  const [titleOnTheLine, setTitleOnTheLine] = useState(post?.title_on_the_line || false);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -136,6 +143,8 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
     setScheduledDate(undefined);
     setScheduledTime('');
     setSelectedTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone);
+    setChallengeType('');
+    setTitleOnTheLine(false);
   };
 
   // Update form fields when post prop changes or when opening in edit mode
@@ -157,6 +166,8 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
       setScheduledDate(post.scheduled_at ? new Date(post.scheduled_at) : undefined);
       setScheduledTime(post.scheduled_at ? format(new Date(post.scheduled_at), 'HH:mm') : '');
       setSelectedTimezone(post.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone);
+      setChallengeType(post.challenge_type || '');
+      setTitleOnTheLine(post.title_on_the_line || false);
     }
   }, [post, mode]);
 
@@ -211,6 +222,8 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
         uploaded_image_url: finalUploadedImageUrl || null,
         scheduled_at: scheduledAtISO,
         timezone: scheduledAtISO ? selectedTimezone : null,
+        challenge_type: contractType === 'live_challenges' && challengeType ? challengeType : null,
+        title_on_the_line: contractType === 'live_challenges' ? titleOnTheLine : false,
         updated_at: new Date().toISOString()
       };
 
@@ -412,6 +425,49 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
                     Set when this live challenge will take place
                   </p>
                 </div>
+              )}
+
+              {/* Challenge Type Selection for Live Challenges */}
+              {contractType === 'live_challenges' && (
+                <Card className="bg-gray-700/50 border-gray-600">
+                  <CardContent className="p-4 space-y-4">
+                    <Label className="text-white font-medium">Type of Challenge</Label>
+                    <RadioGroup value={challengeType} onValueChange={setChallengeType} className="grid grid-cols-2 gap-3">
+                      {[
+                        { value: 'cook_off', label: 'Cook-off' },
+                        { value: 'bake_off', label: 'Bake-off' },
+                        { value: 'twerk_off', label: 'Twerk-off' },
+                        { value: 'pole_dance', label: 'Pole Dance' },
+                        { value: 'trivia', label: 'Trivia' },
+                      ].map((challenge) => (
+                        <div key={challenge.value} className="flex items-center space-x-2">
+                          <RadioGroupItem value={challenge.value} id={challenge.value} className="border-gray-400 text-white" />
+                          <Label htmlFor={challenge.value} className="text-gray-200 cursor-pointer text-sm">{challenge.label}</Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+
+                    {/* Title on the Line */}
+                    <div className="flex items-center space-x-3 pt-2 border-t border-gray-600">
+                      <Checkbox
+                        id="titleOnTheLine"
+                        checked={titleOnTheLine}
+                        onCheckedChange={(checked) => setTitleOnTheLine(checked === true)}
+                      />
+                      <div className="flex items-center gap-2">
+                        <Trophy className="w-5 h-5 text-yellow-400" />
+                        <Label htmlFor="titleOnTheLine" className="text-white cursor-pointer font-medium">
+                          Title is on the line
+                        </Label>
+                      </div>
+                    </div>
+                    {titleOnTheLine && (
+                      <p className="text-xs text-yellow-400">
+                        🏆 The champion's title will be at stake in this challenge!
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
               )}
 
               <div>
