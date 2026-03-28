@@ -71,7 +71,7 @@ const AdminBulletinPostManager = () => {
         .from('bulletin_posts')
         .select(`
           *,
-          profiles (
+          profiles!bulletin_posts_merchant_id_fkey (
             display_name,
             business_name
           )

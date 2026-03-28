@@ -12,7 +12,9 @@ import { Calendar } from "@/components/ui/calendar";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Shield, Upload, Image as ImageIcon, CalendarIcon } from "lucide-react";
+import { Plus, Shield, Upload, Image as ImageIcon, CalendarIcon, Search, Crown } from "lucide-react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import SixthPriceTag from "./SixthPriceTag";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -43,9 +45,17 @@ interface BulletinPostModalProps {
     challenger1_purse?: number;
     challenger2_purse?: number;
     champion_purse?: number;
+    champion_user_id?: string;
   };
   mode?: 'create' | 'edit';
   initialPostType?: string;
+}
+
+interface MerchantProfile {
+  id: string;
+  display_name: string | null;
+  business_name: string | null;
+  avatar_url: string | null;
 }
 
 const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }: BulletinPostModalProps) => {
@@ -79,6 +89,50 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
   const [challenger1Purse, setChallenger1Purse] = useState(post?.challenger1_purse?.toString() || '');
   const [challenger2Purse, setChallenger2Purse] = useState(post?.challenger2_purse?.toString() || '');
   const [championPurse, setChampionPurse] = useState(post?.champion_purse?.toString() || '');
+  const [championUserId, setChampionUserId] = useState(post?.champion_user_id || '');
+  const [championSearch, setChampionSearch] = useState('');
+  const [merchantList, setMerchantList] = useState<MerchantProfile[]>([]);
+  const [loadingMerchants, setLoadingMerchants] = useState(false);
+  const [selectedChampion, setSelectedChampion] = useState<MerchantProfile | null>(null);
+
+  // Fetch merchants for champion selection
+  useEffect(() => {
+    if (titleOnTheLine && contractType === 'live_challenges') {
+      fetchMerchants();
+    }
+  }, [titleOnTheLine, contractType]);
+
+  // Load selected champion profile on edit
+  useEffect(() => {
+    if (post?.champion_user_id && mode === 'edit') {
+      loadChampionProfile(post.champion_user_id);
+    }
+  }, [post?.champion_user_id, mode]);
+
+  const loadChampionProfile = async (userId: string) => {
+    const { data } = await supabase
+      .from('profiles')
+      .select('id, display_name, business_name, avatar_url')
+      .eq('id', userId)
+      .single();
+    if (data) setSelectedChampion(data);
+  };
+
+  const fetchMerchants = async () => {
+    setLoadingMerchants(true);
+    const { data } = await supabase
+      .from('profiles')
+      .select('id, display_name, business_name, avatar_url')
+      .eq('user_type', 'merchant')
+      .order('display_name');
+    setMerchantList(data || []);
+    setLoadingMerchants(false);
+  };
+
+  const filteredMerchants = merchantList.filter(m => {
+    const search = championSearch.toLowerCase();
+    return (m.display_name?.toLowerCase().includes(search) || m.business_name?.toLowerCase().includes(search));
+  });
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -155,6 +209,9 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
     setChallenger1Purse('');
     setChallenger2Purse('');
     setChampionPurse('');
+    setChampionUserId('');
+    setChampionSearch('');
+    setSelectedChampion(null);
   };
 
   // Update form fields when post prop changes or when opening in edit mode
@@ -181,6 +238,7 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
       setChallenger1Purse(post.challenger1_purse?.toString() || '');
       setChallenger2Purse(post.challenger2_purse?.toString() || '');
       setChampionPurse(post.champion_purse?.toString() || '');
+      setChampionUserId(post.champion_user_id || '');
     }
   }, [post, mode]);
 
@@ -240,6 +298,7 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
         challenger1_purse: contractType === 'live_challenges' && challenger1Purse ? parseFloat(challenger1Purse) : null,
         challenger2_purse: contractType === 'live_challenges' && !titleOnTheLine && challenger2Purse ? parseFloat(challenger2Purse) : null,
         champion_purse: contractType === 'live_challenges' && titleOnTheLine && championPurse ? parseFloat(championPurse) : null,
+        champion_user_id: contractType === 'live_challenges' && titleOnTheLine && championUserId ? championUserId : null,
         updated_at: new Date().toISOString()
       };
 
@@ -484,9 +543,85 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
                       </div>
                     </div>
                     {titleOnTheLine && (
-                      <p className="text-xs text-yellow-400">
-                        🏆 The champion's title will be at stake in this challenge!
-                      </p>
+                      <div className="space-y-2">
+                        <p className="text-xs text-yellow-400">
+                          🏆 The champion's title will be at stake in this challenge!
+                        </p>
+                        
+                        {/* Champion Selector */}
+                        <div className="space-y-2">
+                          <Label className="text-white text-sm flex items-center gap-2">
+                            <Crown className="w-4 h-4 text-yellow-400" />
+                            Select Champion
+                          </Label>
+                          
+                          {selectedChampion ? (
+                            <div className="flex items-center gap-3 bg-gray-600/50 p-3 rounded-lg border border-yellow-600/30">
+                              <Avatar className="h-10 w-10 border-2 border-yellow-500">
+                                <AvatarImage src={selectedChampion.avatar_url || ''} />
+                                <AvatarFallback className="bg-yellow-600 text-white text-sm">
+                                  {(selectedChampion.display_name || selectedChampion.business_name || '?')[0]}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="flex-1">
+                                <p className="text-white font-medium text-sm">{selectedChampion.display_name || selectedChampion.business_name}</p>
+                                <p className="text-yellow-400 text-xs">Current Champion</p>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => { setSelectedChampion(null); setChampionUserId(''); }}
+                                className="text-gray-400 hover:text-white"
+                              >
+                                Change
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="space-y-2">
+                              <div className="relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                <Input
+                                  placeholder="Search merchants..."
+                                  value={championSearch}
+                                  onChange={(e) => setChampionSearch(e.target.value)}
+                                  className="pl-9 bg-gray-600 border-gray-500 text-white"
+                                />
+                              </div>
+                              <ScrollArea className="h-40 border border-gray-600 rounded-lg">
+                                {loadingMerchants ? (
+                                  <p className="text-gray-400 text-sm text-center py-4">Loading...</p>
+                                ) : filteredMerchants.length === 0 ? (
+                                  <p className="text-gray-400 text-sm text-center py-4">No merchants found</p>
+                                ) : (
+                                  <div className="p-1">
+                                    {filteredMerchants.map((merchant) => (
+                                      <button
+                                        key={merchant.id}
+                                        type="button"
+                                        onClick={() => {
+                                          setSelectedChampion(merchant);
+                                          setChampionUserId(merchant.id);
+                                          setChampionSearch('');
+                                        }}
+                                        className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-gray-600 transition-colors text-left"
+                                      >
+                                        <Avatar className="h-8 w-8">
+                                          <AvatarImage src={merchant.avatar_url || ''} />
+                                          <AvatarFallback className="bg-gray-500 text-white text-xs">
+                                            {(merchant.display_name || merchant.business_name || '?')[0]}
+                                          </AvatarFallback>
+                                        </Avatar>
+                                        <span className="text-white text-sm">{merchant.display_name || merchant.business_name || 'Unknown'}</span>
+                                      </button>
+                                    ))}
+                                  </div>
+                                )}
+                              </ScrollArea>
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     )}
 
                     {/* Purse Amounts Section */}

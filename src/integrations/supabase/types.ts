@@ -731,6 +731,7 @@ export type Database = {
           challenger1_purse: number | null
           challenger2_purse: number | null
           champion_purse: number | null
+          champion_user_id: string | null
           content: string
           contract_generated: boolean | null
           contract_type: string | null
@@ -763,6 +764,7 @@ export type Database = {
           challenger1_purse?: number | null
           challenger2_purse?: number | null
           champion_purse?: number | null
+          champion_user_id?: string | null
           content: string
           contract_generated?: boolean | null
           contract_type?: string | null
@@ -795,6 +797,7 @@ export type Database = {
           challenger1_purse?: number | null
           challenger2_purse?: number | null
           champion_purse?: number | null
+          champion_user_id?: string | null
           content?: string
           contract_generated?: boolean | null
           contract_type?: string | null
@@ -823,6 +826,20 @@ export type Database = {
           youtube_contractor_share?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "bulletin_posts_champion_user_id_fkey"
+            columns: ["champion_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bulletin_posts_champion_user_id_fkey"
+            columns: ["champion_user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profile_data"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "bulletin_posts_merchant_id_fkey"
             columns: ["merchant_id"]
