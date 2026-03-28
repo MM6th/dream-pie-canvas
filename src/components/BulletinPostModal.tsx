@@ -156,6 +156,7 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
       setImagePreview(post.uploaded_image_url || null);
       setScheduledDate(post.scheduled_at ? new Date(post.scheduled_at) : undefined);
       setScheduledTime(post.scheduled_at ? format(new Date(post.scheduled_at), 'HH:mm') : '');
+      setSelectedTimezone(post.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone);
     }
   }, [post, mode]);
 
