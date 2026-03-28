@@ -46,6 +46,7 @@ interface BulletinPostModalProps {
     challenger2_purse?: number;
     champion_purse?: number;
     champion_user_id?: string;
+    challenge_time_limit_minutes?: number;
   };
   mode?: 'create' | 'edit';
   initialPostType?: string;
@@ -94,6 +95,8 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
   const [merchantList, setMerchantList] = useState<MerchantProfile[]>([]);
   const [loadingMerchants, setLoadingMerchants] = useState(false);
   const [selectedChampion, setSelectedChampion] = useState<MerchantProfile | null>(null);
+  const [timeLimitHours, setTimeLimitHours] = useState(post?.challenge_time_limit_minutes ? Math.floor(post.challenge_time_limit_minutes / 60).toString() : '');
+  const [timeLimitMinutes, setTimeLimitMinutes] = useState(post?.challenge_time_limit_minutes ? (post.challenge_time_limit_minutes % 60).toString() : '');
 
   // Fetch merchants for champion selection
   useEffect(() => {
@@ -212,6 +215,8 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
     setChampionUserId('');
     setChampionSearch('');
     setSelectedChampion(null);
+    setTimeLimitHours('');
+    setTimeLimitMinutes('');
   };
 
   // Update form fields when post prop changes or when opening in edit mode
@@ -239,6 +244,10 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
       setChallenger2Purse(post.challenger2_purse?.toString() || '');
       setChampionPurse(post.champion_purse?.toString() || '');
       setChampionUserId(post.champion_user_id || '');
+      if (post.challenge_time_limit_minutes) {
+        setTimeLimitHours(Math.floor(post.challenge_time_limit_minutes / 60).toString());
+        setTimeLimitMinutes((post.challenge_time_limit_minutes % 60).toString());
+      }
     }
   }, [post, mode]);
 
@@ -285,6 +294,11 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
           toast({ title: "Required", description: "Please enter Challenger 2 purse amount.", variant: "destructive" });
           return;
         }
+      }
+      const totalMinutes = (parseInt(timeLimitHours || '0') * 60) + parseInt(timeLimitMinutes || '0');
+      if (totalMinutes <= 0) {
+        toast({ title: "Required", description: "Please set a time limit for the challenge.", variant: "destructive" });
+        return;
       }
     }
 
@@ -334,6 +348,7 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
         challenger2_purse: contractType === 'live_challenges' && !titleOnTheLine && challenger2Purse ? parseFloat(challenger2Purse) : null,
         champion_purse: contractType === 'live_challenges' && titleOnTheLine && championPurse ? parseFloat(championPurse) : null,
         champion_user_id: contractType === 'live_challenges' && titleOnTheLine && championUserId ? championUserId : null,
+        challenge_time_limit_minutes: contractType === 'live_challenges' && (timeLimitHours || timeLimitMinutes) ? (parseInt(timeLimitHours || '0') * 60) + parseInt(timeLimitMinutes || '0') : null,
         updated_at: new Date().toISOString()
       };
 
@@ -744,6 +759,37 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
                           </div>
                         </div>
                       )}
+                    </div>
+
+                    {/* Time Limit */}
+                    <div className="pt-3 border-t border-gray-600">
+                      <Label className="text-white font-medium">⏱️ Time Limit <span className="text-red-400">*</span></Label>
+                      <div className="flex items-center gap-2 mt-2">
+                        <div className="flex items-center gap-1">
+                          <Input
+                            type="number"
+                            min="0"
+                            max="23"
+                            value={timeLimitHours}
+                            onChange={(e) => setTimeLimitHours(e.target.value)}
+                            placeholder="0"
+                            className="w-20 bg-gray-600 border-gray-500 text-white text-center"
+                          />
+                          <span className="text-gray-300 text-sm">hrs</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Input
+                            type="number"
+                            min="0"
+                            max="59"
+                            value={timeLimitMinutes}
+                            onChange={(e) => setTimeLimitMinutes(e.target.value)}
+                            placeholder="0"
+                            className="w-20 bg-gray-600 border-gray-500 text-white text-center"
+                          />
+                          <span className="text-gray-300 text-sm">min</span>
+                        </div>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>

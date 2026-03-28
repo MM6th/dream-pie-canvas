@@ -1,0 +1,1 @@
+ALTER TABLE public.bulletin_posts ADD COLUMN challenge_time_limit_minutes integer DEFAULT NULL;
