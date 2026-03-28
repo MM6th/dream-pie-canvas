@@ -487,6 +487,93 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
                         🏆 The champion's title will be at stake in this challenge!
                       </p>
                     )}
+
+                    {/* Purse Amounts Section */}
+                    <div className="pt-3 border-t border-gray-600 space-y-3">
+                      <Label className="text-white font-medium">💰 Purse Amounts (USD)</Label>
+                      
+                      {titleOnTheLine ? (
+                        /* Title on the line: Challenger vs Champion */
+                        <div className="space-y-3">
+                          <div>
+                            <Label className="text-gray-300 text-sm">Challenger Purse</Label>
+                            <div className="flex items-center gap-2">
+                              <span className="text-gray-400">$</span>
+                              <Input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={challenger1Purse}
+                                onChange={(e) => setChallenger1Purse(e.target.value)}
+                                placeholder="0.00"
+                                className="bg-gray-600 border-gray-500 text-white"
+                              />
+                              {challenger1Purse && parseFloat(challenger1Purse) > 0 && (
+                                <SixthPriceTag usdPrice={parseFloat(challenger1Purse)} size="md" />
+                              )}
+                            </div>
+                          </div>
+                          <div>
+                            <Label className="text-gray-300 text-sm">Champion Purse</Label>
+                            <div className="flex items-center gap-2">
+                              <span className="text-gray-400">$</span>
+                              <Input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={championPurse}
+                                onChange={(e) => setChampionPurse(e.target.value)}
+                                placeholder="0.00"
+                                className="bg-gray-600 border-gray-500 text-white"
+                              />
+                              {championPurse && parseFloat(championPurse) > 0 && (
+                                <SixthPriceTag usdPrice={parseFloat(championPurse)} size="md" />
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        /* No title: Challenger vs Challenger */
+                        <div className="space-y-3">
+                          <div>
+                            <Label className="text-gray-300 text-sm">Challenger 1 Purse</Label>
+                            <div className="flex items-center gap-2">
+                              <span className="text-gray-400">$</span>
+                              <Input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={challenger1Purse}
+                                onChange={(e) => setChallenger1Purse(e.target.value)}
+                                placeholder="0.00"
+                                className="bg-gray-600 border-gray-500 text-white"
+                              />
+                              {challenger1Purse && parseFloat(challenger1Purse) > 0 && (
+                                <SixthPriceTag usdPrice={parseFloat(challenger1Purse)} size="md" />
+                              )}
+                            </div>
+                          </div>
+                          <div>
+                            <Label className="text-gray-300 text-sm">Challenger 2 Purse</Label>
+                            <div className="flex items-center gap-2">
+                              <span className="text-gray-400">$</span>
+                              <Input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={challenger2Purse}
+                                onChange={(e) => setChallenger2Purse(e.target.value)}
+                                placeholder="0.00"
+                                className="bg-gray-600 border-gray-500 text-white"
+                              />
+                              {challenger2Purse && parseFloat(challenger2Purse) > 0 && (
+                                <SixthPriceTag usdPrice={parseFloat(challenger2Purse)} size="md" />
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
               )}
