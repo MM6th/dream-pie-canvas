@@ -32,6 +32,8 @@ interface BulletinPostModalProps {
     pie_episode_cost?: number;
     number_of_opportunities?: number;
     uploaded_image_url?: string;
+    scheduled_at?: string;
+    timezone?: string;
   };
   mode?: 'create' | 'edit';
   initialPostType?: string;
