@@ -727,6 +727,7 @@ export type Database = {
       }
       bulletin_posts: {
         Row: {
+          challenge_type: string | null
           content: string
           contract_generated: boolean | null
           contract_type: string | null
@@ -748,12 +749,14 @@ export type Database = {
           session_ended_at: string | null
           timezone: string | null
           title: string
+          title_on_the_line: boolean | null
           updated_at: string
           uploaded_image_url: string | null
           video_url: string | null
           youtube_contractor_share: number | null
         }
         Insert: {
+          challenge_type?: string | null
           content: string
           contract_generated?: boolean | null
           contract_type?: string | null
@@ -775,12 +778,14 @@ export type Database = {
           session_ended_at?: string | null
           timezone?: string | null
           title: string
+          title_on_the_line?: boolean | null
           updated_at?: string
           uploaded_image_url?: string | null
           video_url?: string | null
           youtube_contractor_share?: number | null
         }
         Update: {
+          challenge_type?: string | null
           content?: string
           contract_generated?: boolean | null
           contract_type?: string | null
@@ -802,6 +807,7 @@ export type Database = {
           session_ended_at?: string | null
           timezone?: string | null
           title?: string
+          title_on_the_line?: boolean | null
           updated_at?: string
           uploaded_image_url?: string | null
           video_url?: string | null
