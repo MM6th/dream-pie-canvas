@@ -446,17 +446,19 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
             </Select>
           </div>
 
-          <div>
-            <Label htmlFor="title" className="text-white">Title</Label>
-            <Input
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Enter post title"
-              required
-              className="bg-gray-700 border-gray-600 text-white"
-            />
-          </div>
+          {contractType !== 'live_challenges' && (
+            <div>
+              <Label htmlFor="title" className="text-white">Title</Label>
+              <Input
+                id="title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Enter post title"
+                required
+                className="bg-gray-700 border-gray-600 text-white"
+              />
+            </div>
+          )}
           
           <div>
             <Label htmlFor="content" className="text-white">Content</Label>
