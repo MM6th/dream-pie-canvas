@@ -6,6 +6,7 @@ import { Megaphone, User, Calendar, ExternalLink, Shield } from "lucide-react";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { BulletinPost } from "@/types/bulletin";
 import ExpandableDescription from "./ui/ExpandableDescription";
+import SixthPriceTag from "./SixthPriceTag";
 
 interface AnnouncementPostsSectionProps {
   posts: BulletinPost[];
