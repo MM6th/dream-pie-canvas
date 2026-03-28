@@ -587,7 +587,7 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
                         <div className="space-y-2">
                           <Label className="text-white text-sm flex items-center gap-2">
                             <Crown className="w-4 h-4 text-yellow-400" />
-                            Select Champion
+                            Select Champion <span className="text-red-400">*</span>
                           </Label>
                           
                           {selectedChampion ? (
