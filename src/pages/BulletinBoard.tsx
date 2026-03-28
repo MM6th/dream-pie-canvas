@@ -27,11 +27,15 @@ const BulletinBoard = () => {
         .from('bulletin_posts')
         .select(`
           *,
-          profiles (
+          profiles!bulletin_posts_merchant_id_fkey (
             display_name,
             avatar_url,
             user_type,
             is_admin
+          ),
+          champion_profile:profiles!bulletin_posts_champion_user_id_fkey (
+            display_name,
+            avatar_url
           )
         `)
         .order('created_at', { ascending: false });

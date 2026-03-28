@@ -127,7 +127,21 @@ const AnnouncementPostsSection = ({ posts }: AnnouncementPostsSectionProps) => {
                   {/* Championship Belt for Title on the Line */}
                   {(post as any).title_on_the_line && (
                     <div className="flex justify-center my-4">
-                      <div className="relative">
+                      <div className="relative flex flex-col items-center">
+                        {/* Champion Avatar above belt */}
+                        {(post as any).champion_profile && (
+                          <div className="mb-2 flex flex-col items-center">
+                            <Avatar className="h-16 w-16 border-3 border-yellow-500 shadow-lg shadow-yellow-500/30">
+                              <AvatarImage src={(post as any).champion_profile.avatar_url || ''} />
+                              <AvatarFallback className="bg-yellow-600 text-white text-lg font-bold">
+                                {((post as any).champion_profile.display_name || '?')[0]}
+                              </AvatarFallback>
+                            </Avatar>
+                            <p className="text-yellow-400 text-xs font-semibold mt-1">
+                              {(post as any).champion_profile.display_name}
+                            </p>
+                          </div>
+                        )}
                         {/* Belt SVG */}
                         <svg width="200" height="80" viewBox="0 0 200 80" className="drop-shadow-lg">
                           <rect x="0" y="28" width="40" height="24" rx="4" fill="#8B4513" stroke="#DAA520" strokeWidth="2"/>
