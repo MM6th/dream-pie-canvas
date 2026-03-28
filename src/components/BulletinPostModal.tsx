@@ -135,6 +135,7 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
     setImagePreview(null);
     setScheduledDate(undefined);
     setScheduledTime('');
+    setSelectedTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone);
   };
 
   // Update form fields when post prop changes or when opening in edit mode
