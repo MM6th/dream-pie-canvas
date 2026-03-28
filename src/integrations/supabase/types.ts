@@ -727,6 +727,7 @@ export type Database = {
       }
       bulletin_posts: {
         Row: {
+          challenge_time_limit_minutes: number | null
           challenge_type: string | null
           challenger1_purse: number | null
           challenger2_purse: number | null
@@ -760,6 +761,7 @@ export type Database = {
           youtube_contractor_share: number | null
         }
         Insert: {
+          challenge_time_limit_minutes?: number | null
           challenge_type?: string | null
           challenger1_purse?: number | null
           challenger2_purse?: number | null
@@ -793,6 +795,7 @@ export type Database = {
           youtube_contractor_share?: number | null
         }
         Update: {
+          challenge_time_limit_minutes?: number | null
           challenge_type?: string | null
           challenger1_purse?: number | null
           challenger2_purse?: number | null

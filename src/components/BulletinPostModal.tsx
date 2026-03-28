@@ -214,6 +214,8 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
     setChampionUserId('');
     setChampionSearch('');
     setSelectedChampion(null);
+    setTimeLimitHours('');
+    setTimeLimitMinutes('');
   };
 
   // Update form fields when post prop changes or when opening in edit mode
