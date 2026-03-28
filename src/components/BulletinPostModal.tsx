@@ -143,6 +143,8 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
     setScheduledDate(undefined);
     setScheduledTime('');
     setSelectedTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone);
+    setChallengeType('');
+    setTitleOnTheLine(false);
   };
 
   // Update form fields when post prop changes or when opening in edit mode
