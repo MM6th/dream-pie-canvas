@@ -39,6 +39,9 @@ interface BulletinPostModalProps {
     timezone?: string;
     challenge_type?: string;
     title_on_the_line?: boolean;
+    challenger1_purse?: number;
+    challenger2_purse?: number;
+    champion_purse?: number;
   };
   mode?: 'create' | 'edit';
   initialPostType?: string;
