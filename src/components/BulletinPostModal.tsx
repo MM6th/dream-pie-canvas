@@ -177,6 +177,9 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
       setSelectedTimezone(post.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone);
       setChallengeType(post.challenge_type || '');
       setTitleOnTheLine(post.title_on_the_line || false);
+      setChallenger1Purse(post.challenger1_purse?.toString() || '');
+      setChallenger2Purse(post.challenger2_purse?.toString() || '');
+      setChampionPurse(post.champion_purse?.toString() || '');
     }
   }, [post, mode]);
 
