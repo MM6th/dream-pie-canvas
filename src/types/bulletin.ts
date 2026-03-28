@@ -20,6 +20,9 @@ export interface BulletinPost {
   contract_type?: string;
   challenge_type?: string;
   title_on_the_line?: boolean;
+  challenger1_purse?: number;
+  challenger2_purse?: number;
+  champion_purse?: number;
   profiles: {
     display_name: string;
     avatar_url: string;
