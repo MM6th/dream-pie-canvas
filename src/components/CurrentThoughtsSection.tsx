@@ -2,11 +2,14 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Waves, User, Calendar, Shield } from "lucide-react";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { BulletinPost } from "@/types/bulletin";
 import PostInteractions from "./PostInteractions";
 import ExpandableDescription from "./ui/ExpandableDescription";
+import SixthPriceTag from "./SixthPriceTag";
 
 interface CurrentThoughtsSectionProps {
   posts: BulletinPost[];
