@@ -244,6 +244,10 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
       setChallenger2Purse(post.challenger2_purse?.toString() || '');
       setChampionPurse(post.champion_purse?.toString() || '');
       setChampionUserId(post.champion_user_id || '');
+      if (post.challenge_time_limit_minutes) {
+        setTimeLimitHours(Math.floor(post.challenge_time_limit_minutes / 60).toString());
+        setTimeLimitMinutes((post.challenge_time_limit_minutes % 60).toString());
+      }
     }
   }, [post, mode]);
 
