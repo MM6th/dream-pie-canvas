@@ -64,6 +64,7 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
   const [imagePreview, setImagePreview] = useState<string | null>(post?.uploaded_image_url || null);
   const [scheduledDate, setScheduledDate] = useState<Date | undefined>(post?.scheduled_at ? new Date(post.scheduled_at) : undefined);
   const [scheduledTime, setScheduledTime] = useState(post?.scheduled_at ? format(new Date(post.scheduled_at), 'HH:mm') : '');
+  const [selectedTimezone, setSelectedTimezone] = useState(post?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -134,6 +135,7 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
     setImagePreview(null);
     setScheduledDate(undefined);
     setScheduledTime('');
+    setSelectedTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone);
   };
 
   // Update form fields when post prop changes or when opening in edit mode
@@ -154,6 +156,7 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
       setImagePreview(post.uploaded_image_url || null);
       setScheduledDate(post.scheduled_at ? new Date(post.scheduled_at) : undefined);
       setScheduledTime(post.scheduled_at ? format(new Date(post.scheduled_at), 'HH:mm') : '');
+      setSelectedTimezone(post.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone);
     }
   }, [post, mode]);
 
@@ -207,7 +210,7 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
         number_of_opportunities: postType === 'announcement' && numberOfOpportunities ? parseInt(numberOfOpportunities) : null,
         uploaded_image_url: finalUploadedImageUrl || null,
         scheduled_at: scheduledAtISO,
-        timezone: scheduledAtISO ? Intl.DateTimeFormat().resolvedOptions().timeZone : null,
+        timezone: scheduledAtISO ? selectedTimezone : null,
         updated_at: new Date().toISOString()
       };
 
@@ -385,8 +388,25 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
                       type="time"
                       value={scheduledTime}
                       onChange={(e) => setScheduledTime(e.target.value)}
-                      className="w-36 bg-gray-700 border-gray-600 text-white"
+                      className="w-32 bg-gray-700 border-gray-600 text-white"
                     />
+                    <Select value={selectedTimezone} onValueChange={setSelectedTimezone}>
+                      <SelectTrigger className="w-44 bg-gray-700 border-gray-600 text-white text-xs">
+                        <SelectValue placeholder="Timezone" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-gray-700 border-gray-600 max-h-60">
+                        <SelectItem value="America/New_York">Eastern (ET)</SelectItem>
+                        <SelectItem value="America/Chicago">Central (CT)</SelectItem>
+                        <SelectItem value="America/Denver">Mountain (MT)</SelectItem>
+                        <SelectItem value="America/Los_Angeles">Pacific (PT)</SelectItem>
+                        <SelectItem value="America/Anchorage">Alaska (AKT)</SelectItem>
+                        <SelectItem value="Pacific/Honolulu">Hawaii (HT)</SelectItem>
+                        <SelectItem value="Europe/London">GMT/BST</SelectItem>
+                        <SelectItem value="Europe/Paris">CET/CEST</SelectItem>
+                        <SelectItem value="Asia/Tokyo">JST</SelectItem>
+                        <SelectItem value="Australia/Sydney">AEST</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                   <p className="text-xs text-gray-400">
                     Set when this live challenge will take place
