@@ -6,6 +6,7 @@ import { Megaphone, User, Calendar, ExternalLink, Shield } from "lucide-react";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { BulletinPost } from "@/types/bulletin";
 import ExpandableDescription from "./ui/ExpandableDescription";
+import SixthPriceTag from "./SixthPriceTag";
 
 interface AnnouncementPostsSectionProps {
   posts: BulletinPost[];
@@ -128,19 +129,13 @@ const AnnouncementPostsSection = ({ posts }: AnnouncementPostsSectionProps) => {
                       <div className="relative">
                         {/* Belt SVG */}
                         <svg width="200" height="80" viewBox="0 0 200 80" className="drop-shadow-lg">
-                          {/* Belt straps */}
                           <rect x="0" y="28" width="40" height="24" rx="4" fill="#8B4513" stroke="#DAA520" strokeWidth="2"/>
                           <rect x="160" y="28" width="40" height="24" rx="4" fill="#8B4513" stroke="#DAA520" strokeWidth="2"/>
-                          {/* Center plate */}
                           <rect x="35" y="10" width="130" height="60" rx="8" fill="url(#goldGradient)" stroke="#B8860B" strokeWidth="3"/>
-                          {/* Inner plate detail */}
                           <rect x="50" y="22" width="100" height="36" rx="4" fill="url(#innerGold)" stroke="#DAA520" strokeWidth="1.5"/>
-                          {/* Star */}
                           <polygon points="100,28 104,38 115,38 106,44 110,55 100,48 90,55 94,44 85,38 96,38" fill="#FFD700" stroke="#B8860B" strokeWidth="1"/>
-                          {/* Side gems */}
                           <circle cx="60" cy="40" r="5" fill="#FF4444" stroke="#DAA520" strokeWidth="1.5"/>
                           <circle cx="140" cy="40" r="5" fill="#FF4444" stroke="#DAA520" strokeWidth="1.5"/>
-                          {/* Belt holes */}
                           <circle cx="10" cy="40" r="3" fill="#2a1506"/>
                           <circle cx="22" cy="40" r="3" fill="#2a1506"/>
                           <circle cx="178" cy="40" r="3" fill="#2a1506"/>
@@ -160,6 +155,56 @@ const AnnouncementPostsSection = ({ posts }: AnnouncementPostsSectionProps) => {
                         </svg>
                         <p className="text-center text-yellow-400 font-bold text-sm mt-1">🏆 TITLE ON THE LINE 🏆</p>
                       </div>
+                    </div>
+                  )}
+
+                  {/* Purse Amounts Display */}
+                  {post.contract_type === 'live_challenges' && ((post as any).challenger1_purse || (post as any).challenger2_purse || (post as any).champion_purse) && (
+                    <div className="bg-gray-800/60 rounded-lg p-3 my-3 border border-gray-600">
+                      <p className="text-white font-semibold text-sm mb-2">💰 Purse</p>
+                      {(post as any).title_on_the_line ? (
+                        <div className="space-y-1">
+                          {(post as any).challenger1_purse > 0 && (
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-gray-300">Challenger:</span>
+                              <span className="text-green-400 font-medium flex items-center gap-2">
+                                ${(post as any).challenger1_purse.toLocaleString()}
+                                <SixthPriceTag usdPrice={(post as any).challenger1_purse} size="sm" />
+                              </span>
+                            </div>
+                          )}
+                          {(post as any).champion_purse > 0 && (
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-yellow-300">Champion:</span>
+                              <span className="text-green-400 font-medium flex items-center gap-2">
+                                ${(post as any).champion_purse.toLocaleString()}
+                                <SixthPriceTag usdPrice={(post as any).champion_purse} size="sm" />
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="space-y-1">
+                          {(post as any).challenger1_purse > 0 && (
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-gray-300">Challenger 1:</span>
+                              <span className="text-green-400 font-medium flex items-center gap-2">
+                                ${(post as any).challenger1_purse.toLocaleString()}
+                                <SixthPriceTag usdPrice={(post as any).challenger1_purse} size="sm" />
+                              </span>
+                            </div>
+                          )}
+                          {(post as any).challenger2_purse > 0 && (
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-gray-300">Challenger 2:</span>
+                              <span className="text-green-400 font-medium flex items-center gap-2">
+                                ${(post as any).challenger2_purse.toLocaleString()}
+                                <SixthPriceTag usdPrice={(post as any).challenger2_purse} size="sm" />
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   )}
                   

@@ -13,6 +13,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent } from "@/components/ui/card";
 import { Plus, Shield, Upload, Image as ImageIcon, CalendarIcon } from "lucide-react";
+import SixthPriceTag from "./SixthPriceTag";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,6 +40,9 @@ interface BulletinPostModalProps {
     timezone?: string;
     challenge_type?: string;
     title_on_the_line?: boolean;
+    challenger1_purse?: number;
+    challenger2_purse?: number;
+    champion_purse?: number;
   };
   mode?: 'create' | 'edit';
   initialPostType?: string;
@@ -72,6 +76,9 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
   const [selectedTimezone, setSelectedTimezone] = useState(post?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone);
   const [challengeType, setChallengeType] = useState(post?.challenge_type || '');
   const [titleOnTheLine, setTitleOnTheLine] = useState(post?.title_on_the_line || false);
+  const [challenger1Purse, setChallenger1Purse] = useState(post?.challenger1_purse?.toString() || '');
+  const [challenger2Purse, setChallenger2Purse] = useState(post?.challenger2_purse?.toString() || '');
+  const [championPurse, setChampionPurse] = useState(post?.champion_purse?.toString() || '');
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -145,6 +152,9 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
     setSelectedTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone);
     setChallengeType('');
     setTitleOnTheLine(false);
+    setChallenger1Purse('');
+    setChallenger2Purse('');
+    setChampionPurse('');
   };
 
   // Update form fields when post prop changes or when opening in edit mode
@@ -168,6 +178,9 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
       setSelectedTimezone(post.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone);
       setChallengeType(post.challenge_type || '');
       setTitleOnTheLine(post.title_on_the_line || false);
+      setChallenger1Purse(post.challenger1_purse?.toString() || '');
+      setChallenger2Purse(post.challenger2_purse?.toString() || '');
+      setChampionPurse(post.champion_purse?.toString() || '');
     }
   }, [post, mode]);
 
@@ -224,6 +237,9 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
         timezone: scheduledAtISO ? selectedTimezone : null,
         challenge_type: contractType === 'live_challenges' && challengeType ? challengeType : null,
         title_on_the_line: contractType === 'live_challenges' ? titleOnTheLine : false,
+        challenger1_purse: contractType === 'live_challenges' && challenger1Purse ? parseFloat(challenger1Purse) : null,
+        challenger2_purse: contractType === 'live_challenges' && !titleOnTheLine && challenger2Purse ? parseFloat(challenger2Purse) : null,
+        champion_purse: contractType === 'live_challenges' && titleOnTheLine && championPurse ? parseFloat(championPurse) : null,
         updated_at: new Date().toISOString()
       };
 
@@ -472,6 +488,93 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
                         🏆 The champion's title will be at stake in this challenge!
                       </p>
                     )}
+
+                    {/* Purse Amounts Section */}
+                    <div className="pt-3 border-t border-gray-600 space-y-3">
+                      <Label className="text-white font-medium">💰 Purse Amounts (USD)</Label>
+                      
+                      {titleOnTheLine ? (
+                        /* Title on the line: Challenger vs Champion */
+                        <div className="space-y-3">
+                          <div>
+                            <Label className="text-gray-300 text-sm">Challenger Purse</Label>
+                            <div className="flex items-center gap-2">
+                              <span className="text-gray-400">$</span>
+                              <Input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={challenger1Purse}
+                                onChange={(e) => setChallenger1Purse(e.target.value)}
+                                placeholder="0.00"
+                                className="bg-gray-600 border-gray-500 text-white"
+                              />
+                              {challenger1Purse && parseFloat(challenger1Purse) > 0 && (
+                                <SixthPriceTag usdPrice={parseFloat(challenger1Purse)} size="md" />
+                              )}
+                            </div>
+                          </div>
+                          <div>
+                            <Label className="text-gray-300 text-sm">Champion Purse</Label>
+                            <div className="flex items-center gap-2">
+                              <span className="text-gray-400">$</span>
+                              <Input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={championPurse}
+                                onChange={(e) => setChampionPurse(e.target.value)}
+                                placeholder="0.00"
+                                className="bg-gray-600 border-gray-500 text-white"
+                              />
+                              {championPurse && parseFloat(championPurse) > 0 && (
+                                <SixthPriceTag usdPrice={parseFloat(championPurse)} size="md" />
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        /* No title: Challenger vs Challenger */
+                        <div className="space-y-3">
+                          <div>
+                            <Label className="text-gray-300 text-sm">Challenger 1 Purse</Label>
+                            <div className="flex items-center gap-2">
+                              <span className="text-gray-400">$</span>
+                              <Input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={challenger1Purse}
+                                onChange={(e) => setChallenger1Purse(e.target.value)}
+                                placeholder="0.00"
+                                className="bg-gray-600 border-gray-500 text-white"
+                              />
+                              {challenger1Purse && parseFloat(challenger1Purse) > 0 && (
+                                <SixthPriceTag usdPrice={parseFloat(challenger1Purse)} size="md" />
+                              )}
+                            </div>
+                          </div>
+                          <div>
+                            <Label className="text-gray-300 text-sm">Challenger 2 Purse</Label>
+                            <div className="flex items-center gap-2">
+                              <span className="text-gray-400">$</span>
+                              <Input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={challenger2Purse}
+                                onChange={(e) => setChallenger2Purse(e.target.value)}
+                                placeholder="0.00"
+                                className="bg-gray-600 border-gray-500 text-white"
+                              />
+                              {challenger2Purse && parseFloat(challenger2Purse) > 0 && (
+                                <SixthPriceTag usdPrice={parseFloat(challenger2Purse)} size="md" />
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
               )}
