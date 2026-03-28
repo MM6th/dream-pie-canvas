@@ -166,6 +166,8 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
       setScheduledDate(post.scheduled_at ? new Date(post.scheduled_at) : undefined);
       setScheduledTime(post.scheduled_at ? format(new Date(post.scheduled_at), 'HH:mm') : '');
       setSelectedTimezone(post.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone);
+      setChallengeType(post.challenge_type || '');
+      setTitleOnTheLine(post.title_on_the_line || false);
     }
   }, [post, mode]);
 
