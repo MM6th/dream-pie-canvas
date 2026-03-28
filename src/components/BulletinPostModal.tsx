@@ -46,6 +46,7 @@ interface BulletinPostModalProps {
     challenger2_purse?: number;
     champion_purse?: number;
     champion_user_id?: string;
+    challenge_time_limit_minutes?: number;
   };
   mode?: 'create' | 'edit';
   initialPostType?: string;
