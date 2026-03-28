@@ -388,8 +388,25 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
                       type="time"
                       value={scheduledTime}
                       onChange={(e) => setScheduledTime(e.target.value)}
-                      className="w-36 bg-gray-700 border-gray-600 text-white"
+                      className="w-32 bg-gray-700 border-gray-600 text-white"
                     />
+                    <Select value={selectedTimezone} onValueChange={setSelectedTimezone}>
+                      <SelectTrigger className="w-44 bg-gray-700 border-gray-600 text-white text-xs">
+                        <SelectValue placeholder="Timezone" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-gray-700 border-gray-600 max-h-60">
+                        <SelectItem value="America/New_York">Eastern (ET)</SelectItem>
+                        <SelectItem value="America/Chicago">Central (CT)</SelectItem>
+                        <SelectItem value="America/Denver">Mountain (MT)</SelectItem>
+                        <SelectItem value="America/Los_Angeles">Pacific (PT)</SelectItem>
+                        <SelectItem value="America/Anchorage">Alaska (AKT)</SelectItem>
+                        <SelectItem value="Pacific/Honolulu">Hawaii (HT)</SelectItem>
+                        <SelectItem value="Europe/London">GMT/BST</SelectItem>
+                        <SelectItem value="Europe/Paris">CET/CEST</SelectItem>
+                        <SelectItem value="Asia/Tokyo">JST</SelectItem>
+                        <SelectItem value="Australia/Sydney">AEST</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                   <p className="text-xs text-gray-400">
                     Set when this live challenge will take place
