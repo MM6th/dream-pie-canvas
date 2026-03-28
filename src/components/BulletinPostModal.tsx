@@ -62,6 +62,8 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
   const [uploadedImageUrl, setUploadedImageUrl] = useState(post?.uploaded_image_url || '');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(post?.uploaded_image_url || null);
+  const [scheduledDate, setScheduledDate] = useState<Date | undefined>(post?.scheduled_at ? new Date(post.scheduled_at) : undefined);
+  const [scheduledTime, setScheduledTime] = useState(post?.scheduled_at ? format(new Date(post.scheduled_at), 'HH:mm') : '');
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
