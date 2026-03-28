@@ -557,7 +557,17 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
                 <Card className="bg-gray-700/50 border-gray-600">
                   <CardContent className="p-4 space-y-4">
                     <Label className="text-white font-medium">Type of Challenge <span className="text-red-400">*</span></Label>
-                    <RadioGroup value={challengeType} onValueChange={setChallengeType} className="grid grid-cols-2 gap-3">
+                    <RadioGroup value={challengeType} onValueChange={(val) => {
+                      setChallengeType(val);
+                      const label = [
+                        { value: 'cook_off', label: 'Cook-off' },
+                        { value: 'bake_off', label: 'Bake-off' },
+                        { value: 'twerk_off', label: 'Twerk-off' },
+                        { value: 'pole_dance', label: 'Pole Dance' },
+                        { value: 'trivia', label: 'Trivia' },
+                      ].find(c => c.value === val)?.label || '';
+                      setTitle(`Live Challenge: ${label}`);
+                    }} className="grid grid-cols-2 gap-3">
                       {[
                         { value: 'cook_off', label: 'Cook-off' },
                         { value: 'bake_off', label: 'Bake-off' },
