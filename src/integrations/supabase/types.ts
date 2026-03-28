@@ -728,6 +728,9 @@ export type Database = {
       bulletin_posts: {
         Row: {
           challenge_type: string | null
+          challenger1_purse: number | null
+          challenger2_purse: number | null
+          champion_purse: number | null
           content: string
           contract_generated: boolean | null
           contract_type: string | null
@@ -757,6 +760,9 @@ export type Database = {
         }
         Insert: {
           challenge_type?: string | null
+          challenger1_purse?: number | null
+          challenger2_purse?: number | null
+          champion_purse?: number | null
           content: string
           contract_generated?: boolean | null
           contract_type?: string | null
@@ -786,6 +792,9 @@ export type Database = {
         }
         Update: {
           challenge_type?: string | null
+          challenger1_purse?: number | null
+          challenger2_purse?: number | null
+          champion_purse?: number | null
           content?: string
           contract_generated?: boolean | null
           contract_type?: string | null
