@@ -250,7 +250,7 @@ const CurrentThoughtsSection = ({ posts, useCarousel = true }: CurrentThoughtsSe
           <CarouselNext className="text-white bg-gray-800 hover:bg-gray-700 border-gray-600" />
         </Carousel>
       ) : (
-        <div className="h-[500px] overflow-y-auto space-y-3 pr-2 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent touch-pan-y">
+        <div className="h-[calc(100vh-120px)] overflow-y-auto space-y-3 pr-2 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent touch-pan-y">
           {posts.map((post) => renderCard(post))}
         </div>
       )}
