@@ -608,7 +608,7 @@ const AudioUploadModal = ({ onSuccess }: AudioUploadModalProps) => {
                 <SelectValue placeholder="Select audio type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="music">Music</SelectItem>
+                
                 <SelectItem value="podcast">Podcast</SelectItem>
                 <SelectItem value="asmr">ASMR</SelectItem>
               </SelectContent>

@@ -8,7 +8,7 @@ import ContractDashboard from "./ContractDashboard";
 import BulletinPostManager from "@/components/BulletinPostManager";
 import ContentGallery from "@/components/ContentGallery";
 import SECalculatorModal from "@/components/SECalculatorModal";
-import MerchantAudioManager from "@/components/MerchantAudioManager";
+
 import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
@@ -51,15 +51,6 @@ const ContentManagement = () => {
 
   return (
     <div className="space-y-8">
-      {/* Music Management Section */}
-      <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
-        <CardHeader>
-          <CardTitle className="text-white">Music Management</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <MerchantAudioManager />
-        </CardContent>
-      </Card>
 
       {/* SE Tax Calculator Section */}
       <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
