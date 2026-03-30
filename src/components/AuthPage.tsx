@@ -40,6 +40,7 @@ const AuthPage = () => {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [userType, setUserType] = useState<"supporter" | "merchant">("supporter");
   const [selectedIndustry, setSelectedIndustry] = useState<string>("");
+  const [dateOfBirth, setDateOfBirth] = useState<string>("");
 
   const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
