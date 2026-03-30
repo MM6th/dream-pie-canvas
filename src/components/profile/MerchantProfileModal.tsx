@@ -45,6 +45,9 @@ const MerchantProfileModal = ({
   const [isAdultCreator, setIsAdultCreator] = useState(profile?.is_adult_creator || false);
   const [isPrivate, setIsPrivate] = useState(profile?.is_private || false);
   const [skills, setSkills] = useState<string[]>(profile?.skills || []);
+  const [dateOfBirth, setDateOfBirth] = useState(profile?.date_of_birth || '');
+  const [showAge, setShowAge] = useState(profile?.show_age || false);
+  const [showZodiacSign, setShowZodiacSign] = useState(profile?.show_zodiac_sign || false);
   const [internalOpen, setInternalOpen] = useState(false);
 
   useEffect(() => {
