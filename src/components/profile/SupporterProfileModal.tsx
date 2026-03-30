@@ -143,6 +143,9 @@ const SupporterProfileModal = ({ children, profile: initialProfile, onProfileUpd
           playlist_public: profile.playlist_public,
           portfolios_public: profile.portfolios_public,
           social_links_public: profile.social_links_public,
+          date_of_birth: profile.date_of_birth || null,
+          show_age: profile.show_age,
+          show_zodiac_sign: profile.show_zodiac_sign,
           updated_at: new Date().toISOString(),
         })
         .eq('id', user.id);
