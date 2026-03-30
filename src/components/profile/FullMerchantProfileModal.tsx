@@ -269,16 +269,6 @@ const FullMerchantProfileModal = ({
                 />
               </div>
               
-              <div>
-                <Label htmlFor="businessName" className="text-white">Business Name</Label>
-                <Input
-                  id="businessName"
-                  value={businessName}
-                  onChange={(e) => setBusinessName(e.target.value)}
-                  placeholder="Enter your business name"
-                  className="bg-gray-700 border-gray-600 text-white"
-                />
-              </div>
               
               
               {/* Skills Input */}
