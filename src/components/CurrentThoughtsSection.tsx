@@ -226,7 +226,7 @@ const CurrentThoughtsSection = ({ posts, useCarousel = true }: CurrentThoughtsSe
 
   return (
     <div className="mb-12">
-      <h2 className="text-2xl lg:text-3xl font-bold text-white mb-16 flex items-center gap-2">
+      <h2 className="text-2xl lg:text-3xl font-bold text-white mb-3 flex items-center gap-2">
         <Waves className="w-6 h-6 lg:w-8 lg:h-8 text-white" />
         Current
       </h2>
