@@ -105,6 +105,9 @@ const ProfileCompletionModal = ({ isOpen, onComplete }: ProfileCompletionModalPr
           snapchat_url: snapchatUrl.trim() || null,
           pinterest_url: pinterestUrl.trim() || null,
           onlyfans_url: onlyfansUrl.trim() || null,
+          date_of_birth: dateOfBirth,
+          show_age: showAge,
+          show_zodiac_sign: showZodiacSign,
           profile_complete: true 
         })
         .eq('id', user?.id);
