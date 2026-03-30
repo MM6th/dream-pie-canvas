@@ -82,7 +82,7 @@ const MerchantProfileModal = ({
         .update({
           display_name: displayName,
           business_name: businessName,
-          business_description: businessDescription,
+          
           website: website,
           youtube_url: youtubeUrl,
           instagram_url: instagramUrl,
