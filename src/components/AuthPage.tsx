@@ -121,7 +121,8 @@ const AuthPage = () => {
             is_adult_creator: false,
             display_name: displayName.trim(),
             industry: userType === "merchant" ? selectedIndustry : null,
-            skills: userType === "merchant" && selectedIndustry ? [selectedIndustry] : []
+            skills: userType === "merchant" && selectedIndustry ? [selectedIndustry] : [],
+            date_of_birth: dateOfBirth
           }
         }
       });
