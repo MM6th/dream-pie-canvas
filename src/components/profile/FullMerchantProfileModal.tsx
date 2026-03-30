@@ -126,7 +126,7 @@ const FullMerchantProfileModal = ({
     if (!user) return;
 
     console.log('Submitting merchant profile update:', {
-      displayName, businessName, paypalEmail
+      displayName, paypalEmail
     });
 
     setLoading(true);
