@@ -62,6 +62,25 @@ const ProfileCompletionModal = ({ isOpen, onComplete }: ProfileCompletionModalPr
       return;
     }
 
+    // Validate DOB and age
+    if (!dateOfBirth) {
+      toast({
+        title: "Date of Birth Required",
+        description: "Please enter your date of birth to continue.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (calculateAge(dateOfBirth) < 21) {
+      toast({
+        title: "Age Requirement",
+        description: "You must be at least 21 years old to use this platform.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     // Only require social links for merchants
     if (isMerchant && !hasAtLeastOneSocialLink()) {
       toast({
