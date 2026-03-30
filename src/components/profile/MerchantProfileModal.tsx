@@ -52,7 +52,6 @@ const MerchantProfileModal = ({
   useEffect(() => {
     if (profile) {
       setDisplayName(profile.display_name || '');
-      setBusinessName(profile.business_name || '');
       
       setWebsite(profile.website || '');
       setYoutubeUrl(profile.youtube_url || '');
