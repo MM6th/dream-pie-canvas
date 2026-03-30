@@ -33,7 +33,9 @@ const ProfileCompletionModal = ({ isOpen, onComplete }: ProfileCompletionModalPr
   const [snapchatUrl, setSnapchatUrl] = useState("");
   const [pinterestUrl, setPinterestUrl] = useState("");
   const [onlyfansUrl, setOnlyfansUrl] = useState("");
-
+  const [dateOfBirth, setDateOfBirth] = useState("");
+  const [showAge, setShowAge] = useState(false);
+  const [showZodiacSign, setShowZodiacSign] = useState(false);
   const handleAvatarChange = (url: string) => {
     setAvatarUrl(url);
   };
