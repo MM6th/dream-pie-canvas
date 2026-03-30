@@ -46,7 +46,7 @@ const CurrentThoughtsSection = ({ posts, useCarousel = true }: CurrentThoughtsSe
           />
         </CardHeader>
       )}
-      <CardContent className="p-4 flex flex-col">
+      <CardContent className="p-4 flex flex-col flex-1">
         {/* Only show title if not an announcement post */}
         {post.post_type !== 'announcement' && (
           <CardTitle className="text-white text-lg mb-2">{post.title}</CardTitle>
