@@ -37,7 +37,7 @@ const FullMerchantProfileModal = ({
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [fetchingProfile, setFetchingProfile] = useState(false);
   const [displayName, setDisplayName] = useState('');
-  const [businessName, setBusinessName] = useState('');
+  
   const [businessDescription, setBusinessDescription] = useState('');
   const [website, setWebsite] = useState('');
   const [contactEmail, setContactEmail] = useState('');
