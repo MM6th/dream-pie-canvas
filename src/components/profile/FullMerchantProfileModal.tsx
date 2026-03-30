@@ -135,7 +135,6 @@ const FullMerchantProfileModal = ({
         .from('profiles')
         .update({
           display_name: displayName,
-          business_name: businessName,
           business_description: businessDescription,
           website: website,
           contact_email: contactEmail,
