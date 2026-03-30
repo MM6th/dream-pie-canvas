@@ -54,7 +54,7 @@ const MerchantProfileModal = ({
     if (profile) {
       setDisplayName(profile.display_name || '');
       setBusinessName(profile.business_name || '');
-      setBusinessDescription(profile.business_description || '');
+      
       setWebsite(profile.website || '');
       setYoutubeUrl(profile.youtube_url || '');
       setInstagramUrl(profile.instagram_url || '');
