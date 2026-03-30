@@ -30,6 +30,7 @@ interface Profile {
   date_of_birth?: string;
   show_age?: boolean;
   show_zodiac_sign?: boolean;
+  industry?: string;
 }
 
 const ProfilesDirectory = () => {
@@ -87,7 +88,8 @@ const ProfilesDirectory = () => {
           skills,
           date_of_birth,
           show_age,
-          show_zodiac_sign
+          show_zodiac_sign,
+          industry
         `)
         .order('created_at', { ascending: false });
 
@@ -364,9 +366,11 @@ const ProfilesDirectory = () => {
 
                       {/* Badges */}
                       <div className="flex flex-wrap justify-center gap-1 mb-2">
-                        <Badge variant="secondary" className="bg-blue-600 text-white text-xs">
-                          {profile.user_type === 'merchant' ? 'Merchant' : 'Supporter'}
-                        </Badge>
+                        {profile.user_type === 'merchant' && profile.industry && (
+                          <Badge variant="secondary" className="bg-blue-600 text-white text-xs">
+                            {profile.industry}
+                          </Badge>
+                        )}
                         {profile.is_admin && profile.id !== 'cedd3262-be80-4af4-9675-c081107cecb5' && (
                           <Badge variant="secondary" className="bg-orange-600 text-white text-xs flex items-center gap-1">
                             <Shield className="w-2 h-2" />
@@ -559,9 +563,11 @@ const ProfilesDirectory = () => {
                         )}
 
                         <div className="flex flex-wrap justify-center gap-1 mb-2">
-                          <Badge variant="secondary" className="bg-blue-600 text-white text-xs">
-                            {profile.user_type === 'merchant' ? 'Merchant' : 'Supporter'}
-                          </Badge>
+                          {profile.user_type === 'merchant' && profile.industry && (
+                            <Badge variant="secondary" className="bg-blue-600 text-white text-xs">
+                              {profile.industry}
+                            </Badge>
+                          )}
                           {profile.is_admin && profile.id !== 'cedd3262-be80-4af4-9675-c081107cecb5' && (
                             <Badge variant="secondary" className="bg-orange-600 text-white text-xs flex items-center gap-1">
                               <Shield className="w-2 h-2" />
