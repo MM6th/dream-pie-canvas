@@ -8,7 +8,7 @@ import ContractDashboard from "./ContractDashboard";
 import BulletinPostManager from "@/components/BulletinPostManager";
 import ContentGallery from "@/components/ContentGallery";
 import SECalculatorModal from "@/components/SECalculatorModal";
-import MerchantAudioManager from "@/components/MerchantAudioManager";
+
 import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
