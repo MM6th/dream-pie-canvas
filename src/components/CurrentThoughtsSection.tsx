@@ -26,7 +26,7 @@ const CurrentThoughtsSection = ({ posts, useCarousel = true }: CurrentThoughtsSe
   };
 
   const renderCard = (post: BulletinPost) => (
-    <Card key={post.id} className="bg-gray-800 border-gray-700 flex flex-col">
+    <Card key={post.id} className="bg-gray-800 border-gray-700 flex flex-col min-h-[85vh]">
       {((post.image_url || post.uploaded_image_url) && post.media_type !== 'video') && (
         <CardHeader className="p-0">
           <img
