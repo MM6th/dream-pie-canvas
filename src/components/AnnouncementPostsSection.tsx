@@ -51,7 +51,7 @@ const AnnouncementPostsSection = ({ posts }: AnnouncementPostsSectionProps) => {
                     <img
                       src={post.uploaded_image_url || post.image_url}
                       alt={post.title}
-                      className="w-full h-48 object-cover rounded-t-lg"
+                      className="w-full max-h-96 object-contain rounded-t-lg"
                     />
                     <p className="text-xs text-muted-foreground italic text-center px-4 py-1">Image for illustration only — actual event may differ</p>
                   </CardHeader>

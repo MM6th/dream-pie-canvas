@@ -32,7 +32,7 @@ const CurrentThoughtsSection = ({ posts, useCarousel = true }: CurrentThoughtsSe
           <img
             src={post.uploaded_image_url || post.image_url}
             alt={post.title}
-            className="w-full max-h-64 object-cover rounded-t-lg"
+            className="w-full max-h-96 object-contain rounded-t-lg"
           />
         </CardHeader>
       )}
