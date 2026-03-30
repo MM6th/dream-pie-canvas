@@ -33,7 +33,6 @@ const MerchantProfileModal = ({
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [displayName, setDisplayName] = useState(profile?.display_name || '');
-  const [businessName, setBusinessName] = useState(profile?.business_name || '');
   
   const [website, setWebsite] = useState(profile?.website || '');
   const [youtubeUrl, setYoutubeUrl] = useState(profile?.youtube_url || '');
