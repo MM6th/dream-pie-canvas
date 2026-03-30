@@ -1,0 +1,4 @@
+ALTER TABLE public.profiles 
+ADD COLUMN IF NOT EXISTS date_of_birth DATE,
+ADD COLUMN IF NOT EXISTS show_age BOOLEAN DEFAULT false,
+ADD COLUMN IF NOT EXISTS show_zodiac_sign BOOLEAN DEFAULT false;

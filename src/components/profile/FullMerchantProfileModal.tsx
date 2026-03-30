@@ -9,10 +9,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import AvatarUpload from "./AvatarUpload";
-import { Trash2, Shield } from "lucide-react";
+import { Trash2, Shield, Cake, Star } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { SkillsInput } from "@/components/profile/SkillsInput";
 import { VisibilityToggleWithHelp } from "./VisibilityToggleWithHelp";
+import { getZodiacSign } from "@/utils/zodiacUtils";
 
 interface FullMerchantProfileModalProps {
   isOpen?: boolean;
@@ -53,6 +54,9 @@ const FullMerchantProfileModal = ({
   const [playlistPublic, setPlaylistPublic] = useState(false);
   const [portfoliosPublic, setPortfoliosPublic] = useState(false);
   const [socialLinksPublic, setSocialLinksPublic] = useState(false);
+  const [dateOfBirth, setDateOfBirth] = useState('');
+  const [showAge, setShowAge] = useState(false);
+  const [showZodiacSign, setShowZodiacSign] = useState(false);
   const [internalOpen, setInternalOpen] = useState(false);
   const [currentProfile, setCurrentProfile] = useState(profile);
 
@@ -86,6 +90,9 @@ const FullMerchantProfileModal = ({
       setPlaylistPublic(profileToUse.playlist_public || false);
       setPortfoliosPublic(profileToUse.portfolios_public || false);
       setSocialLinksPublic(profileToUse.social_links_public || false);
+      setDateOfBirth(profileToUse.date_of_birth || '');
+      setShowAge(profileToUse.show_age || false);
+      setShowZodiacSign(profileToUse.show_zodiac_sign || false);
     }
   }, [profile, currentProfile]);
 
@@ -145,6 +152,9 @@ const FullMerchantProfileModal = ({
           playlist_public: playlistPublic,
           portfolios_public: portfoliosPublic,
           social_links_public: socialLinksPublic,
+          date_of_birth: dateOfBirth || null,
+          show_age: showAge,
+          show_zodiac_sign: showZodiacSign,
           updated_at: new Date().toISOString()
         })
         .eq('id', user.id);
@@ -398,6 +408,55 @@ const FullMerchantProfileModal = ({
                 </div>
               </div>
               
+              {/* Date of Birth */}
+              <div>
+                <Label htmlFor="dob" className="text-white flex items-center gap-2">
+                  <Cake className="w-4 h-4" />
+                  Date of Birth
+                </Label>
+                <Input
+                  id="dob"
+                  type="date"
+                  value={dateOfBirth}
+                  onChange={(e) => setDateOfBirth(e.target.value)}
+                  className="bg-gray-700 border-gray-600 text-white"
+                  max={new Date().toISOString().split('T')[0]}
+                />
+                {dateOfBirth && (
+                  <p className="text-xs text-gray-400 mt-1">
+                    {getZodiacSign(dateOfBirth)}
+                  </p>
+                )}
+              </div>
+
+              {/* Show Age Toggle */}
+              <div className="flex items-center justify-between p-3 bg-gray-700/50 rounded-lg border border-gray-600">
+                <div className="flex items-center gap-3">
+                  <Cake className="w-4 h-4 text-blue-400" />
+                  <Label htmlFor="showAge" className="text-white text-sm">Show Age on Profile</Label>
+                </div>
+                <Switch
+                  id="showAge"
+                  checked={showAge}
+                  onCheckedChange={setShowAge}
+                  disabled={!dateOfBirth}
+                />
+              </div>
+
+              {/* Show Zodiac Sign Toggle */}
+              <div className="flex items-center justify-between p-3 bg-gray-700/50 rounded-lg border border-gray-600">
+                <div className="flex items-center gap-3">
+                  <Star className="w-4 h-4 text-purple-400" />
+                  <Label htmlFor="showZodiac" className="text-white text-sm">Show Zodiac Sign on Profile</Label>
+                </div>
+                <Switch
+                  id="showZodiac"
+                  checked={showZodiacSign}
+                  onCheckedChange={setShowZodiacSign}
+                  disabled={!dateOfBirth}
+                />
+              </div>
+
               {/* Adult Creator Toggle */}
               <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg border border-gray-600">
                 <div className="flex items-center gap-3">
@@ -660,6 +719,55 @@ const FullMerchantProfileModal = ({
               </div>
             </div>
             
+            {/* Date of Birth */}
+            <div>
+              <Label htmlFor="dob2" className="text-white flex items-center gap-2">
+                <Cake className="w-4 h-4" />
+                Date of Birth
+              </Label>
+              <Input
+                id="dob2"
+                type="date"
+                value={dateOfBirth}
+                onChange={(e) => setDateOfBirth(e.target.value)}
+                className="bg-gray-700 border-gray-600 text-white"
+                max={new Date().toISOString().split('T')[0]}
+              />
+              {dateOfBirth && (
+                <p className="text-xs text-gray-400 mt-1">
+                  {getZodiacSign(dateOfBirth)}
+                </p>
+              )}
+            </div>
+
+            {/* Show Age Toggle */}
+            <div className="flex items-center justify-between p-3 bg-gray-700/50 rounded-lg border border-gray-600">
+              <div className="flex items-center gap-3">
+                <Cake className="w-4 h-4 text-blue-400" />
+                <Label htmlFor="showAge2" className="text-white text-sm">Show Age on Profile</Label>
+              </div>
+              <Switch
+                id="showAge2"
+                checked={showAge}
+                onCheckedChange={setShowAge}
+                disabled={!dateOfBirth}
+              />
+            </div>
+
+            {/* Show Zodiac Sign Toggle */}
+            <div className="flex items-center justify-between p-3 bg-gray-700/50 rounded-lg border border-gray-600">
+              <div className="flex items-center gap-3">
+                <Star className="w-4 h-4 text-purple-400" />
+                <Label htmlFor="showZodiac2" className="text-white text-sm">Show Zodiac Sign on Profile</Label>
+              </div>
+              <Switch
+                id="showZodiac2"
+                checked={showZodiacSign}
+                onCheckedChange={setShowZodiacSign}
+                disabled={!dateOfBirth}
+              />
+            </div>
+
             {/* Adult Creator Toggle */}
             <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg border border-gray-600">
               <div className="flex items-center gap-3">

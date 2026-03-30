@@ -10,8 +10,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Settings, Trash2, Shield } from "lucide-react";
+import { Settings, Trash2, Shield, Cake, Star } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { getZodiacSign } from "@/utils/zodiacUtils";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/components/ui/use-toast";
 import ContentPicker from "@/components/ContentPicker";
@@ -50,6 +51,9 @@ const SupporterProfileModal = ({ children, profile: initialProfile, onProfileUpd
     playlist_public: false,
     portfolios_public: false,
     social_links_public: false,
+    date_of_birth: "",
+    show_age: false,
+    show_zodiac_sign: false,
   });
 
   useEffect(() => {
@@ -62,6 +66,9 @@ const SupporterProfileModal = ({ children, profile: initialProfile, onProfileUpd
         playlist_public: initialProfile.playlist_public || false,
         portfolios_public: initialProfile.portfolios_public || false,
         social_links_public: initialProfile.social_links_public || false,
+        date_of_birth: initialProfile.date_of_birth || "",
+        show_age: initialProfile.show_age || false,
+        show_zodiac_sign: initialProfile.show_zodiac_sign || false,
       });
     } else if (user && isOpen) {
       fetchProfile();
@@ -92,6 +99,9 @@ const SupporterProfileModal = ({ children, profile: initialProfile, onProfileUpd
           playlist_public: data.playlist_public || false,
           portfolios_public: data.portfolios_public || false,
           social_links_public: data.social_links_public || false,
+          date_of_birth: data.date_of_birth || "",
+          show_age: data.show_age || false,
+          show_zodiac_sign: data.show_zodiac_sign || false,
         });
       }
     } catch (error) {
@@ -133,6 +143,9 @@ const SupporterProfileModal = ({ children, profile: initialProfile, onProfileUpd
           playlist_public: profile.playlist_public,
           portfolios_public: profile.portfolios_public,
           social_links_public: profile.social_links_public,
+          date_of_birth: profile.date_of_birth || null,
+          show_age: profile.show_age,
+          show_zodiac_sign: profile.show_zodiac_sign,
           updated_at: new Date().toISOString(),
         })
         .eq('id', user.id);
@@ -267,6 +280,55 @@ const SupporterProfileModal = ({ children, profile: initialProfile, onProfileUpd
             skills={profile.skills}
             onSkillsChange={(skills) => setProfile({...profile, skills})}
           />
+
+          {/* Date of Birth */}
+          <div>
+            <Label htmlFor="date_of_birth" className="text-white flex items-center gap-2">
+              <Cake className="w-4 h-4" />
+              Date of Birth
+            </Label>
+            <Input
+              id="date_of_birth"
+              type="date"
+              value={profile.date_of_birth}
+              onChange={(e) => setProfile({...profile, date_of_birth: e.target.value})}
+              className="bg-gray-700 border-gray-600 text-white"
+              max={new Date().toISOString().split('T')[0]}
+            />
+            {profile.date_of_birth && (
+              <p className="text-xs text-gray-400 mt-1">
+                {getZodiacSign(profile.date_of_birth)}
+              </p>
+            )}
+          </div>
+
+          {/* Show Age Toggle */}
+          <div className="flex items-center justify-between p-3 bg-gray-700/50 rounded-lg border border-gray-600">
+            <div className="flex items-center gap-3">
+              <Cake className="w-4 h-4 text-blue-400" />
+              <Label htmlFor="show_age" className="text-white text-sm">Show Age on Profile</Label>
+            </div>
+            <Switch
+              id="show_age"
+              checked={profile.show_age}
+              onCheckedChange={(checked) => setProfile({...profile, show_age: checked})}
+              disabled={!profile.date_of_birth}
+            />
+          </div>
+
+          {/* Show Zodiac Sign Toggle */}
+          <div className="flex items-center justify-between p-3 bg-gray-700/50 rounded-lg border border-gray-600">
+            <div className="flex items-center gap-3">
+              <Star className="w-4 h-4 text-purple-400" />
+              <Label htmlFor="show_zodiac" className="text-white text-sm">Show Zodiac Sign on Profile</Label>
+            </div>
+            <Switch
+              id="show_zodiac"
+              checked={profile.show_zodiac_sign}
+              onCheckedChange={(checked) => setProfile({...profile, show_zodiac_sign: checked})}
+              disabled={!profile.date_of_birth}
+            />
+          </div>
 
           {/* Adult Content Restriction Toggle */}
           <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg border border-gray-600">

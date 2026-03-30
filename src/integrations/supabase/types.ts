@@ -3252,6 +3252,7 @@ export type Database = {
           contact_email: string | null
           created_at: string | null
           current_film_sales: number | null
+          date_of_birth: string | null
           disable_film_publish_lock: boolean | null
           display_name: string | null
           email: string
@@ -3273,6 +3274,8 @@ export type Database = {
           playlist_public: boolean | null
           portfolios_public: boolean | null
           profile_complete: boolean | null
+          show_age: boolean | null
+          show_zodiac_sign: boolean | null
           skills: string[] | null
           snapchat_url: string | null
           social_links_public: boolean | null
@@ -3293,6 +3296,7 @@ export type Database = {
           contact_email?: string | null
           created_at?: string | null
           current_film_sales?: number | null
+          date_of_birth?: string | null
           disable_film_publish_lock?: boolean | null
           display_name?: string | null
           email: string
@@ -3314,6 +3318,8 @@ export type Database = {
           playlist_public?: boolean | null
           portfolios_public?: boolean | null
           profile_complete?: boolean | null
+          show_age?: boolean | null
+          show_zodiac_sign?: boolean | null
           skills?: string[] | null
           snapchat_url?: string | null
           social_links_public?: boolean | null
@@ -3334,6 +3340,7 @@ export type Database = {
           contact_email?: string | null
           created_at?: string | null
           current_film_sales?: number | null
+          date_of_birth?: string | null
           disable_film_publish_lock?: boolean | null
           display_name?: string | null
           email?: string
@@ -3355,6 +3362,8 @@ export type Database = {
           playlist_public?: boolean | null
           portfolios_public?: boolean | null
           profile_complete?: boolean | null
+          show_age?: boolean | null
+          show_zodiac_sign?: boolean | null
           skills?: string[] | null
           snapchat_url?: string | null
           social_links_public?: boolean | null

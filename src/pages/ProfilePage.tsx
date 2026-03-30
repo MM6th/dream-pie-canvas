@@ -4,8 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DollarSign } from "lucide-react";
-import { ArrowLeft, User, Calendar, MapPin, Globe, Shield, Building, MessageSquare, ExternalLink, FolderOpen, Lock } from "lucide-react";
+import { ArrowLeft, User, Calendar, MapPin, Globe, Shield, Building, MessageSquare, ExternalLink, FolderOpen, Lock, Cake, Star } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { getZodiacSign, calculateAge } from "@/utils/zodiacUtils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import PostInteractions from "@/components/PostInteractions";
@@ -40,6 +41,9 @@ interface Profile {
   onlyfans_url?: string;
   created_at: string;
   skills?: string[];
+  date_of_birth?: string;
+  show_age?: boolean;
+  show_zodiac_sign?: boolean;
 }
 
 interface BulletinPost {
@@ -363,10 +367,28 @@ const ProfilePage = () => {
                     </div>
                   )}
 
-                  <div className="flex items-center gap-2 text-sm text-gray-400 mb-4">
+                  <div className="flex items-center gap-2 text-sm text-gray-400 mb-2">
                     <Calendar className="w-4 h-4" />
                     Joined {new Date(profile.created_at).toLocaleDateString()}
                   </div>
+
+                  {/* Age & Zodiac Sign */}
+                  {profile.date_of_birth && (profile.show_age || profile.show_zodiac_sign) && (
+                    <div className="flex flex-wrap items-center justify-center gap-2 mb-4">
+                      {profile.show_age && (
+                        <Badge variant="outline" className="bg-blue-500/10 text-blue-400 border-blue-500/30 flex items-center gap-1">
+                          <Cake className="w-3 h-3" />
+                          {calculateAge(profile.date_of_birth)} years old
+                        </Badge>
+                      )}
+                      {profile.show_zodiac_sign && (
+                        <Badge variant="outline" className="bg-purple-500/10 text-purple-400 border-purple-500/30 flex items-center gap-1">
+                          <Star className="w-3 h-3" />
+                          {getZodiacSign(profile.date_of_birth)}
+                        </Badge>
+                      )}
+                    </div>
+                  )}
 
                   {/* Follow Button - show for non-own profiles */}
                   {!isOwnProfile && user && (
