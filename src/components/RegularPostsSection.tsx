@@ -34,7 +34,7 @@ const RegularPostsSection = ({ posts, useCarousel = true }: RegularPostsSectionP
           <img
             src={post.uploaded_image_url || post.image_url}
             alt={post.title}
-            className="w-full max-h-96 object-contain rounded-t-lg"
+            className="w-full rounded-t-lg"
           />
         </CardHeader>
       )}
