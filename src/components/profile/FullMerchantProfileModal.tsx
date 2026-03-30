@@ -281,17 +281,6 @@ const FullMerchantProfileModal = ({
                 />
               </div>
               
-              <div>
-                <Label htmlFor="businessDescription" className="text-white">Business Description</Label>
-                <Textarea
-                  id="businessDescription"
-                  value={businessDescription}
-                  onChange={(e) => setBusinessDescription(e.target.value)}
-                  placeholder="Describe your business..."
-                  rows={4}
-                  className="bg-gray-700 border-gray-600 text-white"
-                />
-              </div>
               
               {/* Skills Input */}
               <SkillsInput
@@ -598,17 +587,6 @@ const FullMerchantProfileModal = ({
               />
             </div>
             
-            <div>
-              <Label htmlFor="businessDescription" className="text-white">Business Description</Label>
-              <Textarea
-                id="businessDescription"
-                value={businessDescription}
-                onChange={(e) => setBusinessDescription(e.target.value)}
-                placeholder="Describe your business..."
-                rows={4}
-                className="bg-gray-700 border-gray-600 text-white"
-              />
-            </div>
             
             <div>
               <Label htmlFor="website" className="text-white">Website</Label>

@@ -5,7 +5,7 @@ import { Switch } from "@/components/ui/switch";
 import { Shield, Lock, Cake, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -34,7 +34,7 @@ const MerchantProfileModal = ({
   const [loading, setLoading] = useState(false);
   const [displayName, setDisplayName] = useState(profile?.display_name || '');
   const [businessName, setBusinessName] = useState(profile?.business_name || '');
-  const [businessDescription, setBusinessDescription] = useState(profile?.business_description || '');
+  
   const [website, setWebsite] = useState(profile?.website || '');
   const [youtubeUrl, setYoutubeUrl] = useState(profile?.youtube_url || '');
   const [instagramUrl, setInstagramUrl] = useState(profile?.instagram_url || '');
@@ -54,7 +54,7 @@ const MerchantProfileModal = ({
     if (profile) {
       setDisplayName(profile.display_name || '');
       setBusinessName(profile.business_name || '');
-      setBusinessDescription(profile.business_description || '');
+      
       setWebsite(profile.website || '');
       setYoutubeUrl(profile.youtube_url || '');
       setInstagramUrl(profile.instagram_url || '');
@@ -82,7 +82,7 @@ const MerchantProfileModal = ({
         .update({
           display_name: displayName,
           business_name: businessName,
-          business_description: businessDescription,
+          
           website: website,
           youtube_url: youtubeUrl,
           instagram_url: instagramUrl,
@@ -164,17 +164,6 @@ const MerchantProfileModal = ({
               />
             </div>
             
-            <div>
-              <Label htmlFor="businessDescription" className="text-white">Business Description</Label>
-              <Textarea
-                id="businessDescription"
-                value={businessDescription}
-                onChange={(e) => setBusinessDescription(e.target.value)}
-                placeholder="Describe your business..."
-                rows={4}
-                className="bg-gray-700 border-gray-600 text-white"
-              />
-            </div>
             
             {/* Skills Input */}
             <SkillsInput
@@ -408,17 +397,6 @@ const MerchantProfileModal = ({
             />
           </div>
           
-          <div>
-            <Label htmlFor="businessDescription" className="text-white">Business Description</Label>
-            <Textarea
-              id="businessDescription"
-              value={businessDescription}
-              onChange={(e) => setBusinessDescription(e.target.value)}
-              placeholder="Describe your business..."
-              rows={4}
-              className="bg-gray-700 border-gray-600 text-white"
-            />
-          </div>
           
           <div>
             <Label htmlFor="website" className="text-white">Website</Label>

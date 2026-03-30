@@ -3,10 +3,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import AvatarUpload from "@/components/profile/AvatarUpload";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { calculateAge, getZodiacSign } from "@/utils/zodiacUtils";
+import { Cake, Star } from "lucide-react";
 
 interface ProfileCompletionModalProps {
   isOpen: boolean;
@@ -30,7 +33,9 @@ const ProfileCompletionModal = ({ isOpen, onComplete }: ProfileCompletionModalPr
   const [snapchatUrl, setSnapchatUrl] = useState("");
   const [pinterestUrl, setPinterestUrl] = useState("");
   const [onlyfansUrl, setOnlyfansUrl] = useState("");
-
+  const [dateOfBirth, setDateOfBirth] = useState("");
+  const [showAge, setShowAge] = useState(false);
+  const [showZodiacSign, setShowZodiacSign] = useState(false);
   const handleAvatarChange = (url: string) => {
     setAvatarUrl(url);
   };
@@ -52,6 +57,25 @@ const ProfileCompletionModal = ({ isOpen, onComplete }: ProfileCompletionModalPr
       toast({
         title: "Avatar Required",
         description: "Please upload a profile picture to continue.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Validate DOB and age
+    if (!dateOfBirth) {
+      toast({
+        title: "Date of Birth Required",
+        description: "Please enter your date of birth to continue.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (calculateAge(dateOfBirth) < 21) {
+      toast({
+        title: "Age Requirement",
+        description: "You must be at least 21 years old to use this platform.",
         variant: "destructive"
       });
       return;
@@ -81,6 +105,9 @@ const ProfileCompletionModal = ({ isOpen, onComplete }: ProfileCompletionModalPr
           snapchat_url: snapchatUrl.trim() || null,
           pinterest_url: pinterestUrl.trim() || null,
           onlyfans_url: onlyfansUrl.trim() || null,
+          date_of_birth: dateOfBirth,
+          show_age: showAge,
+          show_zodiac_sign: showZodiacSign,
           profile_complete: true 
         })
         .eq('id', user?.id);
@@ -217,9 +244,62 @@ const ProfileCompletionModal = ({ isOpen, onComplete }: ProfileCompletionModalPr
           </div>
         )}
 
+        {/* Date of Birth Section */}
+        <div className="space-y-3">
+          <div>
+            <Label htmlFor="completion-dob" className="text-xs flex items-center gap-1">
+              <Cake className="w-3 h-3" />
+              Date of Birth <span className="text-red-400">*</span>
+            </Label>
+            <Input
+              id="completion-dob"
+              type="date"
+              value={dateOfBirth}
+              onChange={(e) => setDateOfBirth(e.target.value)}
+              className="h-8 text-sm"
+              max={new Date().toISOString().split('T')[0]}
+              required
+            />
+            {dateOfBirth && (
+              <p className="text-xs text-muted-foreground mt-1">
+                {getZodiacSign(dateOfBirth)} · Age: {calculateAge(dateOfBirth)}
+                {calculateAge(dateOfBirth) < 21 && (
+                  <span className="text-red-400 ml-2">Must be 21+</span>
+                )}
+              </p>
+            )}
+          </div>
+
+          <div className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
+            <div className="flex items-center gap-2">
+              <Cake className="w-3 h-3 text-blue-400" />
+              <Label htmlFor="completion-showAge" className="text-xs">Show Age on Profile</Label>
+            </div>
+            <Switch
+              id="completion-showAge"
+              checked={showAge}
+              onCheckedChange={setShowAge}
+              disabled={!dateOfBirth}
+            />
+          </div>
+
+          <div className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
+            <div className="flex items-center gap-2">
+              <Star className="w-3 h-3 text-purple-400" />
+              <Label htmlFor="completion-showZodiac" className="text-xs">Show Zodiac Sign on Profile</Label>
+            </div>
+            <Switch
+              id="completion-showZodiac"
+              checked={showZodiacSign}
+              onCheckedChange={setShowZodiacSign}
+              disabled={!dateOfBirth}
+            />
+          </div>
+        </div>
+
         <Button 
           onClick={handleComplete} 
-          disabled={!avatarUrl || (isMerchant && !hasAtLeastOneSocialLink()) || isSubmitting}
+          disabled={!avatarUrl || !dateOfBirth || calculateAge(dateOfBirth) < 21 || (isMerchant && !hasAtLeastOneSocialLink()) || isSubmitting}
           className="w-full h-8 text-sm mt-2"
         >
           {isSubmitting ? "Saving..." : "Complete Profile"}

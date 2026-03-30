@@ -10,6 +10,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import UserStatsDisplay from "./UserStatsDisplay";
+import { calculateAge, getZodiacSign } from "@/utils/zodiacUtils";
+import { Cake } from "lucide-react";
 
 // Industries available for signup
 const INDUSTRY_OPTIONS = [
@@ -38,6 +40,7 @@ const AuthPage = () => {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [userType, setUserType] = useState<"supporter" | "merchant">("supporter");
   const [selectedIndustry, setSelectedIndustry] = useState<string>("");
+  const [dateOfBirth, setDateOfBirth] = useState<string>("");
 
   const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -70,6 +73,29 @@ const AuthPage = () => {
       return;
     }
 
+    // Validate date of birth
+    if (!dateOfBirth) {
+      toast({
+        title: "Error",
+        description: "Date of birth is required",
+        variant: "destructive"
+      });
+      setIsLoading(false);
+      return;
+    }
+
+    // Enforce 21+ age requirement
+    const age = calculateAge(dateOfBirth);
+    if (age < 21) {
+      toast({
+        title: "Age Requirement",
+        description: "You must be at least 21 years old to create an account.",
+        variant: "destructive"
+      });
+      setIsLoading(false);
+      return;
+    }
+
     // Block under construction industries
     if (userType === "merchant" && UNDER_CONSTRUCTION_INDUSTRIES.includes(selectedIndustry)) {
       toast({
@@ -95,7 +121,8 @@ const AuthPage = () => {
             is_adult_creator: false,
             display_name: displayName.trim(),
             industry: userType === "merchant" ? selectedIndustry : null,
-            skills: userType === "merchant" && selectedIndustry ? [selectedIndustry] : []
+            skills: userType === "merchant" && selectedIndustry ? [selectedIndustry] : [],
+            date_of_birth: dateOfBirth
           }
         }
       });
@@ -425,6 +452,31 @@ const AuthPage = () => {
                       </>
                     )}
                     
+                    {/* Date of Birth - required for all users */}
+                    <div>
+                      <Label htmlFor="dob" className="text-white flex items-center gap-2">
+                        <Cake className="w-4 h-4" />
+                        Date of Birth <span className="text-red-400">*</span>
+                      </Label>
+                      <Input
+                        id="dob"
+                        type="date"
+                        value={dateOfBirth}
+                        onChange={(e) => setDateOfBirth(e.target.value)}
+                        required
+                        className="bg-gray-700 border-gray-600 text-white focus:border-blue-500"
+                        max={new Date().toISOString().split('T')[0]}
+                      />
+                      {dateOfBirth && (
+                        <p className="text-xs text-gray-400 mt-1">
+                          {getZodiacSign(dateOfBirth)} · Age: {calculateAge(dateOfBirth)}
+                          {calculateAge(dateOfBirth) < 21 && (
+                            <span className="text-red-400 ml-2">Must be 21+</span>
+                          )}
+                        </p>
+                      )}
+                    </div>
+
                     <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/30">
                       <p className="text-xs text-blue-300 text-center">
                         After confirming your email, you'll be prompted to upload your profile picture.
@@ -432,7 +484,7 @@ const AuthPage = () => {
                     </div>
                     
                     <p className="text-xs text-gray-400 text-center">
-                      The content on this website is not made for children.
+                      You must be at least 21 years old to use this platform.
                     </p>
                     <Button type="submit" className="w-full bg-white text-black hover:bg-gray-100" disabled={isLoading}>
                       {isLoading ? "Creating Account..." : "Create Account"}
