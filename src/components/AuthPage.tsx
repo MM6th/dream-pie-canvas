@@ -73,6 +73,29 @@ const AuthPage = () => {
       return;
     }
 
+    // Validate date of birth
+    if (!dateOfBirth) {
+      toast({
+        title: "Error",
+        description: "Date of birth is required",
+        variant: "destructive"
+      });
+      setIsLoading(false);
+      return;
+    }
+
+    // Enforce 21+ age requirement
+    const age = calculateAge(dateOfBirth);
+    if (age < 21) {
+      toast({
+        title: "Age Requirement",
+        description: "You must be at least 21 years old to create an account.",
+        variant: "destructive"
+      });
+      setIsLoading(false);
+      return;
+    }
+
     // Block under construction industries
     if (userType === "merchant" && UNDER_CONSTRUCTION_INDUSTRIES.includes(selectedIndustry)) {
       toast({
