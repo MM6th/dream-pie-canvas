@@ -554,9 +554,6 @@ const ProfilesDirectory = () => {
                           {profile.display_name || 'Anonymous User'}
                         </h3>
 
-                        {profile.business_name && (
-                          <p className="text-gray-400 text-xs mb-2 line-clamp-1">{profile.business_name}</p>
-                        )}
 
                         <div className="flex flex-wrap justify-center gap-1 mb-2">
                           {profile.user_type === 'merchant' && profile.industry && (
