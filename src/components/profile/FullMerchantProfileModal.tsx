@@ -90,6 +90,9 @@ const FullMerchantProfileModal = ({
       setPlaylistPublic(profileToUse.playlist_public || false);
       setPortfoliosPublic(profileToUse.portfolios_public || false);
       setSocialLinksPublic(profileToUse.social_links_public || false);
+      setDateOfBirth(profileToUse.date_of_birth || '');
+      setShowAge(profileToUse.show_age || false);
+      setShowZodiacSign(profileToUse.show_zodiac_sign || false);
     }
   }, [profile, currentProfile]);
 
