@@ -40,6 +40,9 @@ interface Profile {
   onlyfans_url?: string;
   created_at: string;
   skills?: string[];
+  date_of_birth?: string;
+  show_age?: boolean;
+  show_zodiac_sign?: boolean;
 }
 
 interface BulletinPost {
