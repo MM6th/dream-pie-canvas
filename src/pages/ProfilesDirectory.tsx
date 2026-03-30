@@ -88,7 +88,8 @@ const ProfilesDirectory = () => {
           skills,
           date_of_birth,
           show_age,
-          show_zodiac_sign
+          show_zodiac_sign,
+          industry
         `)
         .order('created_at', { ascending: false });
 
