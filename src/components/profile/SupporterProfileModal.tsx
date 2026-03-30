@@ -51,6 +51,9 @@ const SupporterProfileModal = ({ children, profile: initialProfile, onProfileUpd
     playlist_public: false,
     portfolios_public: false,
     social_links_public: false,
+    date_of_birth: "",
+    show_age: false,
+    show_zodiac_sign: false,
   });
 
   useEffect(() => {
