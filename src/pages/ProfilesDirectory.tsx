@@ -394,6 +394,23 @@ const ProfilesDirectory = () => {
                         </div>
                       )}
 
+                      {/* Age & Zodiac */}
+                      {profile.date_of_birth && (profile.show_age || profile.show_zodiac_sign) && (
+                        <div className="flex flex-wrap justify-center gap-1 mb-1">
+                          {profile.show_age && (
+                            <Badge variant="outline" className="bg-blue-500/10 text-blue-400 border-blue-500/30 text-[10px] px-2 py-0 flex items-center gap-0.5">
+                              <Cake className="w-2.5 h-2.5" />
+                              {calculateAge(profile.date_of_birth)}
+                            </Badge>
+                          )}
+                          {profile.show_zodiac_sign && (
+                            <Badge variant="outline" className="bg-purple-500/10 text-purple-400 border-purple-500/30 text-[10px] px-2 py-0">
+                              {getZodiacSign(profile.date_of_birth).split(' ')[1]}
+                            </Badge>
+                          )}
+                        </div>
+                      )}
+
                       {/* Messaging Price */}
                       {messagingPrices[profile.id] && (
                         <div className="flex flex-col items-center gap-0.5 text-xs text-green-400 mb-1">
