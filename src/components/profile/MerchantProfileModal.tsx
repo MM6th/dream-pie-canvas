@@ -93,6 +93,9 @@ const MerchantProfileModal = ({
           is_adult_creator: isAdultCreator,
           is_private: isPrivate,
           skills: skills,
+          date_of_birth: dateOfBirth || null,
+          show_age: showAge,
+          show_zodiac_sign: showZodiacSign,
           updated_at: new Date().toISOString()
         })
         .eq('id', user.id);
