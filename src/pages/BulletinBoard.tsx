@@ -79,7 +79,7 @@ const BulletinBoard = () => {
       <AppNavBar />
 
       {/* Main Content */}
-      <div className="max-w-6xl mx-auto px-3 sm:px-6">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6">
 
         {/* Desktop: Ad + Content + Ad Layout */}
         {isMobile ? (
@@ -103,7 +103,7 @@ const BulletinBoard = () => {
             </div>
 
             {/* Main Content - 2 Carousels */}
-            <div className="flex-1 max-w-3xl">
+            <div className="flex-1 max-w-4xl">
               <CurrentThoughtsSection posts={currentThoughtsPosts} useCarousel={false} />
             </div>
 
