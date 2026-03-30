@@ -152,6 +152,9 @@ const FullMerchantProfileModal = ({
           playlist_public: playlistPublic,
           portfolios_public: portfoliosPublic,
           social_links_public: socialLinksPublic,
+          date_of_birth: dateOfBirth || null,
+          show_age: showAge,
+          show_zodiac_sign: showZodiacSign,
           updated_at: new Date().toISOString()
         })
         .eq('id', user.id);
