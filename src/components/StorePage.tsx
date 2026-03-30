@@ -1168,116 +1168,13 @@ const StorePage = () => {
             <AudioLines className="w-5 h-5 sm:w-6 sm:h-6" />
             Music
           </h2>
-          
-          {audioProducts.filter(p => p.audio_type === 'music').length === 0 ? (
-            <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
-              <CardContent className="p-8 text-center">
-                <AudioLines className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-white mb-2">No Music Available</h3>
-                <p className="text-gray-400">Music will appear here when published.</p>
-              </CardContent>
-            </Card>
-          ) : (
-            <Carousel
-              className="w-full"
-              opts={{
-                align: "start",
-                loop: true,
-              }}
-            >
-              <CarouselContent className="-ml-2 md:-ml-4">
-                {audioProducts.filter(p => p.audio_type === 'music').map((product) => (
-                  <CarouselItem key={product.id} className="pl-2 md:pl-4 basis-full sm:basis-1/2 lg:basis-1/3 xl:basis-1/4">
-                    <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm hover:bg-gray-800/70 transition-colors h-full">
-                      <CardHeader className="p-4">
-                        {product.thumbnail_url ? (
-                          <img
-                            src={product.thumbnail_url}
-                            alt={product.title}
-                            className="w-full h-40 object-cover rounded-lg mb-3"
-                          />
-                        ) : (
-                          <div className="w-full h-40 bg-gray-700 rounded-lg mb-3 flex items-center justify-center">
-                            <AudioLines className="w-12 h-12 text-gray-400" />
-                          </div>
-                        )}
-                        <CardTitle className="text-white text-lg line-clamp-2">{product.title}</CardTitle>
-                        {product.artist_name && (
-                          <p className="text-gray-400 text-sm">by {product.artist_name}</p>
-                        )}
-                        <ProductInstructionalText 
-                          productType={product.access_level === 'merchant_only' ? 'cover_submission' : 'cover_submission'} 
-                          isForSale={product.access_level === 'paid'}
-                          isFree={product.is_free}
-                          isMerchantOnly={product.access_level === 'merchant_only'}
-                        />
-                        {product.description && (
-                          <ExpandableDescription 
-                            description={product.description} 
-                            maxLength={80}
-                            className="mt-2"
-                          />
-                        )}
-                      </CardHeader>
-                      <CardContent className="p-4 pt-0">
-                        <div className="space-y-4">
-                          {/* Music Preview Player */}
-                          {product.preview_start_time !== null && (
-                            <AudioPreviewPlayer
-                              audioUrl={product.audio_file_url}
-                              previewStartTime={product.preview_start_time || 0}
-                              previewDuration={product.preview_duration || 30}
-                              thumbnailUrl={product.thumbnail_url}
-                              productId={product.id}
-                              currentlyPlayingId={currentlyPlayingId}
-                              onPlayStart={() => setCurrentlyPlayingId(product.id)}
-                              onPlayStop={() => setCurrentlyPlayingId(null)}
-                            />
-                          )}
-
-                          <div className="flex items-center justify-between flex-wrap gap-2">
-                            <Badge variant="secondary" className="capitalize text-xs px-2 py-1">
-                              Music
-                            </Badge>
-                            {(product as any).isAlbum && (product as any).albumId && (
-                              <AlbumTracklistHover 
-                                albumId={(product as any).albumId} 
-                                albumName={product.title}
-                              />
-                            )}
-                          </div>
-                          
-                          <div className="flex items-center justify-between flex-wrap gap-2">
-                            {getAccessLevelBadgeForAudio(product)}
-                          </div>
-                          
-                          <div className="flex items-center justify-end gap-2 flex-wrap">
-                            <Button
-                              size="sm"
-                              onClick={() => handleAudioPurchase(product)}
-                              disabled={purchasingId === product.id || (!canDownloadAudio(product) && (product.access_level === "merchant_only"))}
-                              className="bg-primary hover:bg-primary/90 text-xs h-7 px-3"
-                            >
-                              {purchasingId === product.id ? (
-                                "Processing..."
-                              ) : (
-                                <>
-                                  {(product.access_level === "paid") ? <DollarSign className="w-3 h-3 mr-1" /> : <Download className="w-3 h-3 mr-1" />}
-                                  {getDownloadButtonText(product)}
-                                </>
-                              )}
-                            </Button>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-              <CarouselPrevious className="flex -left-4 bg-gray-800 border-gray-600 text-white hover:bg-gray-700" />
-              <CarouselNext className="flex -right-4 bg-gray-800 border-gray-600 text-white hover:bg-gray-700" />
-            </Carousel>
-          )}
+          <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+            <CardContent className="p-8 text-center">
+              <AudioLines className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-white mb-2">Coming Soon</h3>
+              <p className="text-gray-400">The music section is being revamped. Stay tuned!</p>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Video Ad Opportunities Section */}

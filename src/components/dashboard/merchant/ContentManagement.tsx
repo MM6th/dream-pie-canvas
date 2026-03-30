@@ -51,15 +51,6 @@ const ContentManagement = () => {
 
   return (
     <div className="space-y-8">
-      {/* Music Management Section */}
-      <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
-        <CardHeader>
-          <CardTitle className="text-white">Music Management</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <MerchantAudioManager />
-        </CardContent>
-      </Card>
 
       {/* SE Tax Calculator Section */}
       <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
