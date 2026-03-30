@@ -65,6 +65,9 @@ const MerchantProfileModal = ({
       setIsAdultCreator(profile.is_adult_creator || false);
       setIsPrivate(profile.is_private || false);
       setSkills(profile.skills || []);
+      setDateOfBirth(profile.date_of_birth || '');
+      setShowAge(profile.show_age || false);
+      setShowZodiacSign(profile.show_zodiac_sign || false);
     }
   }, [profile]);
 
