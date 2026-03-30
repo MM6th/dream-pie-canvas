@@ -34,7 +34,7 @@ const MerchantProfileModal = ({
   const [loading, setLoading] = useState(false);
   const [displayName, setDisplayName] = useState(profile?.display_name || '');
   const [businessName, setBusinessName] = useState(profile?.business_name || '');
-  const [businessDescription, setBusinessDescription] = useState(profile?.business_description || '');
+  
   const [website, setWebsite] = useState(profile?.website || '');
   const [youtubeUrl, setYoutubeUrl] = useState(profile?.youtube_url || '');
   const [instagramUrl, setInstagramUrl] = useState(profile?.instagram_url || '');
