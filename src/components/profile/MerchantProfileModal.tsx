@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import { SkillsInput } from "@/components/profile/SkillsInput";
+import { getZodiacSign } from "@/utils/zodiacUtils";
 
 interface MerchantProfileModalProps {
   isOpen?: boolean;
