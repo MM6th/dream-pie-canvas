@@ -99,6 +99,9 @@ const SupporterProfileModal = ({ children, profile: initialProfile, onProfileUpd
           playlist_public: data.playlist_public || false,
           portfolios_public: data.portfolios_public || false,
           social_links_public: data.social_links_public || false,
+          date_of_birth: data.date_of_birth || "",
+          show_age: data.show_age || false,
+          show_zodiac_sign: data.show_zodiac_sign || false,
         });
       }
     } catch (error) {
