@@ -30,6 +30,7 @@ interface Profile {
   date_of_birth?: string;
   show_age?: boolean;
   show_zodiac_sign?: boolean;
+  industry?: string;
 }
 
 const ProfilesDirectory = () => {
