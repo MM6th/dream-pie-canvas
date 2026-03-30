@@ -3,10 +3,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import AvatarUpload from "@/components/profile/AvatarUpload";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { calculateAge, getZodiacSign } from "@/utils/zodiacUtils";
+import { Cake, Star } from "lucide-react";
 
 interface ProfileCompletionModalProps {
   isOpen: boolean;
