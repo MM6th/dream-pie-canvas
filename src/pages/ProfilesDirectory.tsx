@@ -27,6 +27,9 @@ interface Profile {
   business_name?: string;
   created_at: string;
   skills?: string[];
+  date_of_birth?: string;
+  show_age?: boolean;
+  show_zodiac_sign?: boolean;
 }
 
 const ProfilesDirectory = () => {
