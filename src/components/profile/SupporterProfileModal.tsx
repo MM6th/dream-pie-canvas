@@ -281,6 +281,55 @@ const SupporterProfileModal = ({ children, profile: initialProfile, onProfileUpd
             onSkillsChange={(skills) => setProfile({...profile, skills})}
           />
 
+          {/* Date of Birth */}
+          <div>
+            <Label htmlFor="date_of_birth" className="text-white flex items-center gap-2">
+              <Cake className="w-4 h-4" />
+              Date of Birth
+            </Label>
+            <Input
+              id="date_of_birth"
+              type="date"
+              value={profile.date_of_birth}
+              onChange={(e) => setProfile({...profile, date_of_birth: e.target.value})}
+              className="bg-gray-700 border-gray-600 text-white"
+              max={new Date().toISOString().split('T')[0]}
+            />
+            {profile.date_of_birth && (
+              <p className="text-xs text-gray-400 mt-1">
+                {getZodiacSign(profile.date_of_birth)}
+              </p>
+            )}
+          </div>
+
+          {/* Show Age Toggle */}
+          <div className="flex items-center justify-between p-3 bg-gray-700/50 rounded-lg border border-gray-600">
+            <div className="flex items-center gap-3">
+              <Cake className="w-4 h-4 text-blue-400" />
+              <Label htmlFor="show_age" className="text-white text-sm">Show Age on Profile</Label>
+            </div>
+            <Switch
+              id="show_age"
+              checked={profile.show_age}
+              onCheckedChange={(checked) => setProfile({...profile, show_age: checked})}
+              disabled={!profile.date_of_birth}
+            />
+          </div>
+
+          {/* Show Zodiac Sign Toggle */}
+          <div className="flex items-center justify-between p-3 bg-gray-700/50 rounded-lg border border-gray-600">
+            <div className="flex items-center gap-3">
+              <Star className="w-4 h-4 text-purple-400" />
+              <Label htmlFor="show_zodiac" className="text-white text-sm">Show Zodiac Sign on Profile</Label>
+            </div>
+            <Switch
+              id="show_zodiac"
+              checked={profile.show_zodiac_sign}
+              onCheckedChange={(checked) => setProfile({...profile, show_zodiac_sign: checked})}
+              disabled={!profile.date_of_birth}
+            />
+          </div>
+
           {/* Adult Content Restriction Toggle */}
           <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg border border-gray-600">
             <div className="flex items-center gap-3">
