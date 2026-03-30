@@ -103,7 +103,7 @@ const BulletinBoard = () => {
             </div>
 
             {/* Main Content - 2 Carousels */}
-            <div className="flex-1 max-w-3xl">
+            <div className="flex-1 max-w-4xl">
               <CurrentThoughtsSection posts={currentThoughtsPosts} useCarousel={false} />
             </div>
 
