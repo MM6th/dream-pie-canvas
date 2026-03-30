@@ -84,7 +84,10 @@ const ProfilesDirectory = () => {
           onlyfans_url,
           background_image_url,
           created_at,
-          skills
+          skills,
+          date_of_birth,
+          show_age,
+          show_zodiac_sign
         `)
         .order('created_at', { ascending: false });
 
