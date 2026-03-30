@@ -54,6 +54,9 @@ const FullMerchantProfileModal = ({
   const [playlistPublic, setPlaylistPublic] = useState(false);
   const [portfoliosPublic, setPortfoliosPublic] = useState(false);
   const [socialLinksPublic, setSocialLinksPublic] = useState(false);
+  const [dateOfBirth, setDateOfBirth] = useState('');
+  const [showAge, setShowAge] = useState(false);
+  const [showZodiacSign, setShowZodiacSign] = useState(false);
   const [internalOpen, setInternalOpen] = useState(false);
   const [currentProfile, setCurrentProfile] = useState(profile);
 
