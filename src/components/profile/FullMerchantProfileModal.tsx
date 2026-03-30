@@ -9,10 +9,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import AvatarUpload from "./AvatarUpload";
-import { Trash2, Shield } from "lucide-react";
+import { Trash2, Shield, Cake, Star } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { SkillsInput } from "@/components/profile/SkillsInput";
 import { VisibilityToggleWithHelp } from "./VisibilityToggleWithHelp";
+import { getZodiacSign } from "@/utils/zodiacUtils";
 
 interface FullMerchantProfileModalProps {
   isOpen?: boolean;
