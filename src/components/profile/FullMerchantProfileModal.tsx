@@ -73,7 +73,7 @@ const FullMerchantProfileModal = ({
     if (profileToUse) {
       console.log('Setting merchant profile form data:', profileToUse);
       setDisplayName(profileToUse.display_name || '');
-      setBusinessName(profileToUse.business_name || '');
+      
       setBusinessDescription(profileToUse.business_description || '');
       setWebsite(profileToUse.website || '');
       setContactEmail(profileToUse.contact_email || '');
