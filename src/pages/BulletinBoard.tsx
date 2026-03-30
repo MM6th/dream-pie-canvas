@@ -79,7 +79,7 @@ const BulletinBoard = () => {
       <AppNavBar />
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-3 sm:px-6">
+      <div className="max-w-5xl mx-auto px-3 sm:px-6">
 
         {/* Desktop: Ad + Content + Ad Layout */}
         {isMobile ? (
