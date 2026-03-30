@@ -33,7 +33,6 @@ const MerchantProfileModal = ({
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [displayName, setDisplayName] = useState(profile?.display_name || '');
-  const [businessName, setBusinessName] = useState(profile?.business_name || '');
   
   const [website, setWebsite] = useState(profile?.website || '');
   const [youtubeUrl, setYoutubeUrl] = useState(profile?.youtube_url || '');
@@ -53,7 +52,6 @@ const MerchantProfileModal = ({
   useEffect(() => {
     if (profile) {
       setDisplayName(profile.display_name || '');
-      setBusinessName(profile.business_name || '');
       
       setWebsite(profile.website || '');
       setYoutubeUrl(profile.youtube_url || '');
@@ -81,7 +79,6 @@ const MerchantProfileModal = ({
         .from('profiles')
         .update({
           display_name: displayName,
-          business_name: businessName,
           
           website: website,
           youtube_url: youtubeUrl,
@@ -153,16 +150,6 @@ const MerchantProfileModal = ({
               />
             </div>
             
-            <div>
-              <Label htmlFor="businessName" className="text-white">Business Name</Label>
-              <Input
-                id="businessName"
-                value={businessName}
-                onChange={(e) => setBusinessName(e.target.value)}
-                placeholder="Enter your business name"
-                className="bg-gray-700 border-gray-600 text-white"
-              />
-            </div>
             
             
             {/* Skills Input */}
@@ -386,16 +373,6 @@ const MerchantProfileModal = ({
             />
           </div>
           
-          <div>
-            <Label htmlFor="businessName" className="text-white">Business Name</Label>
-            <Input
-              id="businessName"
-              value={businessName}
-              onChange={(e) => setBusinessName(e.target.value)}
-              placeholder="Enter your business name"
-              className="bg-gray-700 border-gray-600 text-white"
-            />
-          </div>
           
           
           <div>

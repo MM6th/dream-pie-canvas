@@ -417,7 +417,7 @@ const ProfilePage = () => {
             </Card>
 
             {/* Business Info (for merchants) - visible based on social_links setting */}
-            {profile.user_type === 'merchant' && (profile.business_name || profile.business_description) && (
+            {profile.user_type === 'merchant' && profile.business_description && (
               <Card className="bg-gray-800 border-gray-700">
                 <CardHeader>
                   <CardTitle className="text-white flex items-center gap-2">
@@ -426,11 +426,6 @@ const ProfilePage = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {profile.business_name && (
-                    <div>
-                      <h3 className="text-lg font-semibold text-white">{profile.business_name}</h3>
-                    </div>
-                  )}
                   {profile.business_description && (
                     <p className="text-gray-300 text-sm">{profile.business_description}</p>
                   )}
