@@ -66,6 +66,9 @@ const SupporterProfileModal = ({ children, profile: initialProfile, onProfileUpd
         playlist_public: initialProfile.playlist_public || false,
         portfolios_public: initialProfile.portfolios_public || false,
         social_links_public: initialProfile.social_links_public || false,
+        date_of_birth: initialProfile.date_of_birth || "",
+        show_age: initialProfile.show_age || false,
+        show_zodiac_sign: initialProfile.show_zodiac_sign || false,
       });
     } else if (user && isOpen) {
       fetchProfile();
