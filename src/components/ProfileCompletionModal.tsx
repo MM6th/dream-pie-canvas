@@ -244,9 +244,62 @@ const ProfileCompletionModal = ({ isOpen, onComplete }: ProfileCompletionModalPr
           </div>
         )}
 
+        {/* Date of Birth Section */}
+        <div className="space-y-3">
+          <div>
+            <Label htmlFor="completion-dob" className="text-xs flex items-center gap-1">
+              <Cake className="w-3 h-3" />
+              Date of Birth <span className="text-red-400">*</span>
+            </Label>
+            <Input
+              id="completion-dob"
+              type="date"
+              value={dateOfBirth}
+              onChange={(e) => setDateOfBirth(e.target.value)}
+              className="h-8 text-sm"
+              max={new Date().toISOString().split('T')[0]}
+              required
+            />
+            {dateOfBirth && (
+              <p className="text-xs text-muted-foreground mt-1">
+                {getZodiacSign(dateOfBirth)} · Age: {calculateAge(dateOfBirth)}
+                {calculateAge(dateOfBirth) < 21 && (
+                  <span className="text-red-400 ml-2">Must be 21+</span>
+                )}
+              </p>
+            )}
+          </div>
+
+          <div className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
+            <div className="flex items-center gap-2">
+              <Cake className="w-3 h-3 text-blue-400" />
+              <Label htmlFor="completion-showAge" className="text-xs">Show Age on Profile</Label>
+            </div>
+            <Switch
+              id="completion-showAge"
+              checked={showAge}
+              onCheckedChange={setShowAge}
+              disabled={!dateOfBirth}
+            />
+          </div>
+
+          <div className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
+            <div className="flex items-center gap-2">
+              <Star className="w-3 h-3 text-purple-400" />
+              <Label htmlFor="completion-showZodiac" className="text-xs">Show Zodiac Sign on Profile</Label>
+            </div>
+            <Switch
+              id="completion-showZodiac"
+              checked={showZodiacSign}
+              onCheckedChange={setShowZodiacSign}
+              disabled={!dateOfBirth}
+            />
+          </div>
+        </div>
+
         <Button 
           onClick={handleComplete} 
-          disabled={!avatarUrl || (isMerchant && !hasAtLeastOneSocialLink()) || isSubmitting}
+          disabled={!avatarUrl || !dateOfBirth || calculateAge(dateOfBirth) < 21 || (isMerchant && !hasAtLeastOneSocialLink()) || isSubmitting}
           className="w-full h-8 text-sm mt-2"
         >
           {isSubmitting ? "Saving..." : "Complete Profile"}
