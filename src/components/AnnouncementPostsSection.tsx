@@ -146,7 +146,7 @@ const AnnouncementPostsSection = ({ posts }: AnnouncementPostsSectionProps) => {
                           </div>
                         )}
                         {/* Belt Image */}
-                        <img src={(post as any).challenge_type === 'twerk_off' ? pieTitleTwerk : pieTitleBelt} alt="Championship belt" className="w-[200px] h-[80px] object-contain drop-shadow-lg" loading="lazy" />
+                        <img src={(post as any).challenge_type === 'twerk_off' ? pieTitleTwerk : pieTitleBelt} alt="Championship belt" className="w-[320px] h-[130px] object-contain drop-shadow-lg" loading="lazy" />
                         <p className="text-center text-yellow-400 font-bold text-sm mt-1">🏆 TITLE ON THE LINE 🏆</p>
                       </div>
                     </div>
