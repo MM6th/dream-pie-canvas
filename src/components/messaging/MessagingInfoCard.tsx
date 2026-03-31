@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Info, MessageSquare, CreditCard, DollarSign, Users } from 'lucide-react';
+import { Info, CreditCard, DollarSign, Users } from 'lucide-react';
+import beeperIcon from '@/assets/beeper-message.png';
 
 interface MessagingInfoCardProps {
   userType?: 'merchant' | 'supporter';
