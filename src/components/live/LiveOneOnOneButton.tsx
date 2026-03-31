@@ -10,7 +10,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Video, Loader2, Check } from "lucide-react";
+import { Loader2, Check } from "lucide-react";
+import payPhoneIcon from "@/assets/pay-phone-1-on-1.png";
 import { toast } from "@/hooks/use-toast";
 import LiveOneOnOneSession from "@/components/live/LiveOneOnOneSession";
 
@@ -243,7 +244,7 @@ const LiveOneOnOneButton = ({ hostId, streamId }: LiveOneOnOneButtonProps) => {
             ) : isAccepted ? (
               <Check className="h-4 w-4" />
             ) : (
-              <Video className="h-4 w-4" />
+              <img src={payPhoneIcon} alt="1-on-1" className="h-5 w-5 object-contain" />
             )}
             1 on 1
           </Button>
@@ -258,7 +259,7 @@ const LiveOneOnOneButton = ({ hostId, streamId }: LiveOneOnOneButtonProps) => {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Video className="h-5 w-5 text-primary" />
+              <img src={payPhoneIcon} alt="1-on-1" className="h-5 w-5 object-contain" />
               1-on-1 Request Sent
             </DialogTitle>
             <DialogDescription>
