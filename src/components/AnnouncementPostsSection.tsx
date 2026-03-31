@@ -9,6 +9,7 @@ import { BulletinPost } from "@/types/bulletin";
 import ExpandableDescription from "./ui/ExpandableDescription";
 import SixthPriceTag from "./SixthPriceTag";
 import pieTitleBelt from "@/assets/pie-title-belt.png";
+import pieTitleTwerk from "@/assets/pie-title-twerk.png";
 
 interface AnnouncementPostsSectionProps {
   posts: BulletinPost[];
@@ -145,7 +146,7 @@ const AnnouncementPostsSection = ({ posts }: AnnouncementPostsSectionProps) => {
                           </div>
                         )}
                         {/* Belt Image */}
-                        <img src={pieTitleBelt} alt="Championship belt" className="w-[200px] h-[80px] object-contain drop-shadow-lg" loading="lazy" />
+                        <img src={(post as any).challenge_type === 'twerk_off' ? pieTitleTwerk : pieTitleBelt} alt="Championship belt" className="w-[200px] h-[80px] object-contain drop-shadow-lg" loading="lazy" />
                         <p className="text-center text-yellow-400 font-bold text-sm mt-1">🏆 TITLE ON THE LINE 🏆</p>
                       </div>
                     </div>

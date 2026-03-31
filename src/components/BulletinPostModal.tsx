@@ -14,6 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent } from "@/components/ui/card";
 import { Plus, Shield, Upload, Image as ImageIcon, CalendarIcon, Search, Crown } from "lucide-react";
 import pieTitleBelt from "@/assets/pie-title-belt.png";
+import pieTitleTwerk from "@/assets/pie-title-twerk.png";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import SixthPriceTag from "./SixthPriceTag";
@@ -593,7 +594,7 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
                         onCheckedChange={(checked) => setTitleOnTheLine(checked === true)}
                       />
                       <div className="flex items-center gap-2">
-                        <img src={pieTitleBelt} alt="Championship belt" className="w-[44px] h-[28px] flex-shrink-0 object-contain" />
+                        <img src={challengeType === 'twerk_off' ? pieTitleTwerk : pieTitleBelt} alt="Championship belt" className="w-[44px] h-[28px] flex-shrink-0 object-contain" />
                         <Label htmlFor="titleOnTheLine" className="text-white cursor-pointer font-medium">
                           Title is on the line
                         </Label>
