@@ -594,7 +594,7 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
                         onCheckedChange={(checked) => setTitleOnTheLine(checked === true)}
                       />
                       <div className="flex items-center gap-2">
-                        <img src={challengeType === 'twerk_off' ? pieTitleTwerk : pieTitleBelt} alt="Championship belt" className="w-[44px] h-[28px] flex-shrink-0 object-contain" />
+                        <img src={challengeType === 'twerk_off' ? pieTitleTwerk : pieTitleBelt} alt="Championship belt" className={`flex-shrink-0 object-contain ${challengeType === 'twerk_off' ? 'w-[56px] h-[28px]' : 'w-[44px] h-[28px]'}`} />
                         <Label htmlFor="titleOnTheLine" className="text-white cursor-pointer font-medium">
                           Title is on the line
                         </Label>
