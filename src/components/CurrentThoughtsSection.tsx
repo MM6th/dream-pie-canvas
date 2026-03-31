@@ -10,6 +10,8 @@ import { BulletinPost } from "@/types/bulletin";
 import PostInteractions from "./PostInteractions";
 import ExpandableDescription from "./ui/ExpandableDescription";
 import SixthPriceTag from "./SixthPriceTag";
+import pieTitleBelt from "@/assets/pie-title-belt.png";
+import pieTitleTwerk from "@/assets/pie-title-twerk.png";
 
 interface CurrentThoughtsSectionProps {
   posts: BulletinPost[];
