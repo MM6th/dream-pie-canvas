@@ -8,6 +8,7 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import { BulletinPost } from "@/types/bulletin";
 import ExpandableDescription from "./ui/ExpandableDescription";
 import SixthPriceTag from "./SixthPriceTag";
+import pieTitleBelt from "@/assets/pie-title-belt.png";
 
 interface AnnouncementPostsSectionProps {
   posts: BulletinPost[];
@@ -143,32 +144,8 @@ const AnnouncementPostsSection = ({ posts }: AnnouncementPostsSectionProps) => {
                             </p>
                           </div>
                         )}
-                        {/* Belt SVG */}
-                        <svg width="200" height="80" viewBox="0 0 200 80" className="drop-shadow-lg">
-                          <rect x="0" y="28" width="40" height="24" rx="4" fill="#8B4513" stroke="#DAA520" strokeWidth="2"/>
-                          <rect x="160" y="28" width="40" height="24" rx="4" fill="#8B4513" stroke="#DAA520" strokeWidth="2"/>
-                          <rect x="35" y="10" width="130" height="60" rx="8" fill="url(#goldGradient)" stroke="#B8860B" strokeWidth="3"/>
-                          <rect x="50" y="22" width="100" height="36" rx="4" fill="url(#innerGold)" stroke="#DAA520" strokeWidth="1.5"/>
-                          <polygon points="100,28 104,38 115,38 106,44 110,55 100,48 90,55 94,44 85,38 96,38" fill="#FFD700" stroke="#B8860B" strokeWidth="1"/>
-                          <circle cx="60" cy="40" r="5" fill="#FF4444" stroke="#DAA520" strokeWidth="1.5"/>
-                          <circle cx="140" cy="40" r="5" fill="#FF4444" stroke="#DAA520" strokeWidth="1.5"/>
-                          <circle cx="10" cy="40" r="3" fill="#2a1506"/>
-                          <circle cx="22" cy="40" r="3" fill="#2a1506"/>
-                          <circle cx="178" cy="40" r="3" fill="#2a1506"/>
-                          <circle cx="190" cy="40" r="3" fill="#2a1506"/>
-                          <defs>
-                            <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                              <stop offset="0%" stopColor="#FFD700"/>
-                              <stop offset="50%" stopColor="#FFA500"/>
-                              <stop offset="100%" stopColor="#FFD700"/>
-                            </linearGradient>
-                            <linearGradient id="innerGold" x1="0%" y1="0%" x2="0%" y2="100%">
-                              <stop offset="0%" stopColor="#FFF8DC"/>
-                              <stop offset="50%" stopColor="#FFD700"/>
-                              <stop offset="100%" stopColor="#B8860B"/>
-                            </linearGradient>
-                          </defs>
-                        </svg>
+                        {/* Belt Image */}
+                        <img src={pieTitleBelt} alt="Championship belt" className="w-[200px] h-[80px] object-contain drop-shadow-lg" loading="lazy" />
                         <p className="text-center text-yellow-400 font-bold text-sm mt-1">🏆 TITLE ON THE LINE 🏆</p>
                       </div>
                     </div>

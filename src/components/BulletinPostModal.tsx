@@ -13,6 +13,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent } from "@/components/ui/card";
 import { Plus, Shield, Upload, Image as ImageIcon, CalendarIcon, Search, Crown } from "lucide-react";
+import pieTitleBelt from "@/assets/pie-title-belt.png";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import SixthPriceTag from "./SixthPriceTag";
@@ -592,13 +593,7 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
                         onCheckedChange={(checked) => setTitleOnTheLine(checked === true)}
                       />
                       <div className="flex items-center gap-2">
-                        <svg width="22" height="14" viewBox="0 0 22 14" className="flex-shrink-0">
-                          <rect x="0" y="4" width="5" height="6" rx="1" fill="#8B4513" stroke="#DAA520" strokeWidth="0.5"/>
-                          <rect x="17" y="4" width="5" height="6" rx="1" fill="#8B4513" stroke="#DAA520" strokeWidth="0.5"/>
-                          <rect x="4" y="1" width="14" height="12" rx="2" fill="#FFD700" stroke="#B8860B" strokeWidth="0.8"/>
-                          <rect x="6" y="3" width="10" height="8" rx="1" fill="#FFF8DC" stroke="#DAA520" strokeWidth="0.5"/>
-                          <polygon points="11,4.5 12,6.5 14,6.5 12.5,8 13,10 11,8.8 9,10 9.5,8 8,6.5 10,6.5" fill="#FFD700" stroke="#B8860B" strokeWidth="0.3"/>
-                        </svg>
+                        <img src={pieTitleBelt} alt="Championship belt" className="w-[22px] h-[14px] flex-shrink-0 object-contain" />
                         <Label htmlFor="titleOnTheLine" className="text-white cursor-pointer font-medium">
                           Title is on the line
                         </Label>
