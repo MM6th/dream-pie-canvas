@@ -258,6 +258,35 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
     if (!newOpen && mode === 'create') {
       resetForm();
     }
+    // Re-populate fields when opening in edit mode
+    if (newOpen && mode === 'edit' && post) {
+      setTitle(post.title || '');
+      setContent(post.content || '');
+      setImageUrl(post.image_url || '');
+      setLinkUrl(post.link_url || '');
+      setIsAdultContent(post.is_adult_content || false);
+      setPostType(post.post_type || 'regular');
+      setContractType(post.contract_type || '');
+      setYoutubeContractorShare(post.youtube_contractor_share?.toString() || '');
+      setPieContractorShare(post.pie_contractor_share?.toString() || '');
+      setPieEpisodeCost(post.pie_episode_cost?.toString() || '');
+      setNumberOfOpportunities(post.number_of_opportunities?.toString() || '');
+      setUploadedImageUrl(post.uploaded_image_url || '');
+      setImagePreview(post.uploaded_image_url || null);
+      setScheduledDate(post.scheduled_at ? new Date(post.scheduled_at) : undefined);
+      setScheduledTime(post.scheduled_at ? format(new Date(post.scheduled_at), 'HH:mm') : '');
+      setSelectedTimezone(post.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone);
+      setChallengeType(post.challenge_type || '');
+      setTitleOnTheLine(post.title_on_the_line || false);
+      setChallenger1Purse(post.challenger1_purse?.toString() || '');
+      setChallenger2Purse(post.challenger2_purse?.toString() || '');
+      setChampionPurse(post.champion_purse?.toString() || '');
+      setChampionUserId(post.champion_user_id || '');
+      if (post.challenge_time_limit_minutes) {
+        setTimeLimitHours(Math.floor(post.challenge_time_limit_minutes / 60).toString());
+        setTimeLimitMinutes((post.challenge_time_limit_minutes % 60).toString());
+      }
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -835,12 +864,23 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
                 />
               </div>
               {imagePreview && (
-                <div className="mt-2">
+                <div className="mt-2 relative inline-block">
                   <img 
                     src={imagePreview} 
                     alt="Preview" 
                     className="w-32 h-32 object-cover rounded-lg border border-gray-600"
                   />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setImagePreview(null);
+                      setSelectedFile(null);
+                      setUploadedImageUrl('');
+                    }}
+                    className="absolute -top-2 -right-2 bg-red-600 hover:bg-red-700 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold shadow-lg"
+                  >
+                    ✕
+                  </button>
                 </div>
               )}
             </div>
