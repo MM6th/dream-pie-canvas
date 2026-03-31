@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { MessageSquare } from 'lucide-react';
+import beeperIcon from '@/assets/beeper-message.png';
 import { MessageComposer } from '@/components/messaging/MessageComposer';
 import { useMessagingCredits } from '@/hooks/useMessagingCredits';
 import { useAuth } from '@/hooks/useAuth';
