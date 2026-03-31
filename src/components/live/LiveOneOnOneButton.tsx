@@ -10,7 +10,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Video, Loader2, Check } from "lucide-react";
+import { Loader2, Check } from "lucide-react";
+import payPhoneIcon from "@/assets/pay-phone-1-on-1.png";
 import { toast } from "@/hooks/use-toast";
 import LiveOneOnOneSession from "@/components/live/LiveOneOnOneSession";
 
