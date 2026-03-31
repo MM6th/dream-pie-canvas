@@ -348,21 +348,7 @@ const AdminBulletinPostManager = () => {
                         <BulletinPostModal
                           onSuccess={fetchPosts}
                           mode="edit"
-                          post={{
-                            id: post.id,
-                            title: post.title,
-                            content: post.content,
-                            image_url: post.image_url || undefined,
-                            link_url: post.link_url || undefined,
-                            is_adult_content: post.is_adult_content || false,
-                            post_type: post.post_type || undefined,
-                            contract_type: post.contract_type || undefined,
-                            youtube_contractor_share: post.youtube_contractor_share || undefined,
-                            pie_contractor_share: post.pie_contractor_share || undefined,
-                            pie_episode_cost: post.pie_episode_cost || undefined,
-                            number_of_opportunities: post.number_of_opportunities || undefined,
-                            uploaded_image_url: post.uploaded_image_url || undefined
-                          }}
+                          post={post as any}
                         />
                         <Button
                           size="sm"
