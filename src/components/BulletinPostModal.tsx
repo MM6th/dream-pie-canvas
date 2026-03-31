@@ -835,12 +835,23 @@ const BulletinPostModal = ({ onSuccess, post, mode = 'create', initialPostType }
                 />
               </div>
               {imagePreview && (
-                <div className="mt-2">
+                <div className="mt-2 relative inline-block">
                   <img 
                     src={imagePreview} 
                     alt="Preview" 
                     className="w-32 h-32 object-cover rounded-lg border border-gray-600"
                   />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setImagePreview(null);
+                      setSelectedFile(null);
+                      setUploadedImageUrl('');
+                    }}
+                    className="absolute -top-2 -right-2 bg-red-600 hover:bg-red-700 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold shadow-lg"
+                  >
+                    ✕
+                  </button>
                 </div>
               )}
             </div>
