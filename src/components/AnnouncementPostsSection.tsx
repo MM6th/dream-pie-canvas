@@ -9,6 +9,7 @@ import { BulletinPost } from "@/types/bulletin";
 import ExpandableDescription from "./ui/ExpandableDescription";
 import SixthPriceTag from "./SixthPriceTag";
 import pieTitleBelt from "@/assets/pie-title-belt.png";
+import pieTitleTwerk from "@/assets/pie-title-twerk.png";
 
 interface AnnouncementPostsSectionProps {
   posts: BulletinPost[];
