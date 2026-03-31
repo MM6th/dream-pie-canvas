@@ -47,7 +47,7 @@ export const MessageButton = ({ recipientId, recipientName, recipientType }: Mes
         onClick={() => setComposerOpen(true)}
         className="w-full bg-blue-600 hover:bg-blue-700 text-white"
       >
-        <MessageSquare className="w-4 h-4 mr-2" />
+        <img src={beeperIcon} alt="Message" className="w-5 h-5 mr-2 object-contain" />
         Send Message
       </Button>
 

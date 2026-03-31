@@ -234,11 +234,7 @@ export const MessagingInbox = () => {
                             {formatDistanceToNow(new Date(message.created_at), { addSuffix: true })}
                           </div>
                         </div>
-                        {!message.read_at ? (
-                          <Mail className="w-4 h-4 text-primary flex-shrink-0" />
-                        ) : (
-                          <MailOpen className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                        )}
+                        <img src={beeperIcon} alt="Message" className={`w-5 h-5 object-contain flex-shrink-0 ${message.read_at ? 'opacity-50' : ''}`} />
                       </div>
                     </CardContent>
                   </Card>
