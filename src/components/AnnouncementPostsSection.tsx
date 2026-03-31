@@ -8,6 +8,7 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import { BulletinPost } from "@/types/bulletin";
 import ExpandableDescription from "./ui/ExpandableDescription";
 import SixthPriceTag from "./SixthPriceTag";
+import pieTitleBelt from "@/assets/pie-title-belt.png";
 
 interface AnnouncementPostsSectionProps {
   posts: BulletinPost[];

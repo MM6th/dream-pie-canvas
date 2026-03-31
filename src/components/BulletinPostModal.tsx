@@ -13,6 +13,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent } from "@/components/ui/card";
 import { Plus, Shield, Upload, Image as ImageIcon, CalendarIcon, Search, Crown } from "lucide-react";
+import pieTitleBelt from "@/assets/pie-title-belt.png";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import SixthPriceTag from "./SixthPriceTag";
