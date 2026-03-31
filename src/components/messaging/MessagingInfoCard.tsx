@@ -33,7 +33,7 @@ export const MessagingInfoCard = ({ userType }: MessagingInfoCardProps) => {
         </Alert>
 
         <Alert>
-          <img src={beeperIcon} alt="Message" className="h-5 w-5 object-contain" />
+          <img src={beeperIcon} alt="Message" className="h-7 w-7 object-contain" />
           <AlertDescription>
             <strong>Message Costs:</strong>
             <ul className="mt-2 space-y-1 text-sm">
