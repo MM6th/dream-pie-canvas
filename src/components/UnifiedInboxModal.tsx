@@ -420,7 +420,7 @@ export const UnifiedInboxModal = ({ open, onOpenChange, userId, userType }: Unif
                         >
                           <CardContent className="py-3 px-4">
                             <div className="flex items-start gap-3">
-                              <img src={beeperIcon} alt="Message" className={`w-7 h-7 object-contain flex-shrink-0 mt-0.5 ${message.read_at ? 'opacity-50' : ''}`} />
+                              <img src={beeperIcon} alt="Message" className={`w-8 h-8 object-contain flex-shrink-0 mt-0.5 ${message.read_at ? 'opacity-50' : ''}`} />
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center justify-between gap-2">
                                   <h4 className="font-medium text-sm truncate">{message.subject}</h4>
@@ -433,7 +433,7 @@ export const UnifiedInboxModal = ({ open, onOpenChange, userId, userType }: Unif
                                 <p className="text-xs text-muted-foreground">
                                   From: {message.sender?.display_name || 'Unknown'} • {formatDistanceToNow(new Date(message.created_at), { addSuffix: true })}
                                 </p>
-                                
+
                                 {expandedMessageId === message.id && (
                                   <div className="mt-3 space-y-3">
                                     <div className="text-sm whitespace-pre-wrap">
@@ -468,23 +468,25 @@ export const UnifiedInboxModal = ({ open, onOpenChange, userId, userType }: Unif
                                       })}
                                     </div>
                                     {message.attachment_url && (
-                                      <img 
-                                        src={message.attachment_url} 
-                                        alt="Attachment" 
+                                      <img
+                                        src={message.attachment_url}
+                                        alt="Attachment"
                                         className="max-w-full h-auto rounded-lg border"
                                       />
                                     )}
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleReply(message);
-                                      }}
-                                    >
-                                      <Reply className="w-4 h-4 mr-2" />
-                                      Reply
-                                    </Button>
+                                    <div className="pt-2 border-t">
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleReply(message);
+                                        }}
+                                      >
+                                        <Reply className="w-4 h-4 mr-2" />
+                                        Reply
+                                      </Button>
+                                    </div>
                                   </div>
                                 )}
                               </div>
@@ -493,80 +495,80 @@ export const UnifiedInboxModal = ({ open, onOpenChange, userId, userType }: Unif
                         </Card>
                       ))
                     )
+                  ) : sentMessages.length === 0 ? (
+                    <p className="text-center text-muted-foreground py-8">No sent messages</p>
                   ) : (
-                    sentMessages.length === 0 ? (
-                      <p className="text-center text-muted-foreground py-8">No sent messages</p>
-                    ) : (
-                      sentMessages.map((message) => (
-                        <Card
-                          key={message.id}
-                          className="cursor-pointer transition-colors"
-                          onClick={() => setExpandedMessageId(expandedMessageId === message.id ? null : message.id)}
-                        >
-                          <CardContent className="py-3 px-4">
-                            <div className="flex items-start gap-3">
-                              <img src={beeperIcon} alt="Read" className="w-7 h-7 object-contain flex-shrink-0 mt-0.5 opacity-50" />
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center justify-between gap-2">
-                                  <h4 className="font-medium text-sm truncate">{message.subject}</h4>
-                                  {expandedMessageId === message.id ? (
-                                    <ChevronUp className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
-                                  ) : (
-                                    <ChevronDown className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
+                    sentMessages.map((message) => (
+                      <Card
+                        key={message.id}
+                        className="cursor-pointer transition-colors"
+                        onClick={() => {
+                          setExpandedMessageId(expandedMessageId === message.id ? null : message.id);
+                        }}
+                      >
+                        <CardContent className="py-3 px-4">
+                          <div className="flex items-start gap-3">
+                            <img src={beeperIcon} alt="Read" className="w-8 h-8 object-contain flex-shrink-0 mt-0.5 opacity-50" />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between gap-2">
+                                <h4 className="font-medium text-sm truncate">{message.subject}</h4>
+                                {expandedMessageId === message.id ? (
+                                  <ChevronUp className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
+                                ) : (
+                                  <ChevronDown className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
+                                )}
+                              </div>
+                              <p className="text-xs text-muted-foreground">
+                                To: {message.recipient?.display_name || 'Unknown'} • {formatDistanceToNow(new Date(message.created_at), { addSuffix: true })}
+                              </p>
+
+                              {expandedMessageId === message.id && (
+                                <div className="mt-3 space-y-3">
+                                  <div className="text-sm whitespace-pre-wrap">
+                                    {message.body.split(/(https?:\/\/[^\s]+|tel:[^\s]+)/g).map((part, index) => {
+                                      if (part.match(/^https?:\/\/[^\s]+$/)) {
+                                        return (
+                                          <a
+                                            key={index}
+                                            href={part}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="!text-blue-500 underline hover:!text-blue-400 break-all"
+                                            onClick={(e) => e.stopPropagation()}
+                                          >
+                                            {part}
+                                          </a>
+                                        );
+                                      }
+                                      if (part.match(/^tel:[^\s]+$/)) {
+                                        return (
+                                          <a
+                                            key={index}
+                                            href={part}
+                                            className="!text-blue-500 underline hover:!text-blue-400"
+                                            onClick={(e) => e.stopPropagation()}
+                                          >
+                                            Click to Call
+                                          </a>
+                                        );
+                                      }
+                                      return <span key={index}>{part}</span>;
+                                    })}
+                                  </div>
+                                  {message.attachment_url && (
+                                    <img
+                                      src={message.attachment_url}
+                                      alt="Attachment"
+                                      className="max-w-full h-auto rounded-lg border"
+                                    />
                                   )}
                                 </div>
-                                <p className="text-xs text-muted-foreground">
-                                  To: {message.recipient?.display_name || 'Unknown'} • {formatDistanceToNow(new Date(message.created_at), { addSuffix: true })}
-                                </p>
-                                
-                                {expandedMessageId === message.id && (
-                                  <div className="mt-3 space-y-3">
-                                    <div className="text-sm whitespace-pre-wrap">
-                                      {message.body.split(/(https?:\/\/[^\s]+|tel:[^\s]+)/g).map((part, index) => {
-                                        if (part.match(/^https?:\/\/[^\s]+$/)) {
-                                          return (
-                                            <a
-                                              key={index}
-                                              href={part}
-                                              target="_blank"
-                                              rel="noopener noreferrer"
-                                              className="!text-blue-500 underline hover:!text-blue-400 break-all"
-                                              onClick={(e) => e.stopPropagation()}
-                                            >
-                                              {part}
-                                            </a>
-                                          );
-                                        }
-                                        if (part.match(/^tel:[^\s]+$/)) {
-                                          return (
-                                            <a
-                                              key={index}
-                                              href={part}
-                                              className="!text-blue-500 underline hover:!text-blue-400"
-                                              onClick={(e) => e.stopPropagation()}
-                                            >
-                                              Click to Call
-                                            </a>
-                                          );
-                                        }
-                                        return <span key={index}>{part}</span>;
-                                      })}
-                                    </div>
-                                    {message.attachment_url && (
-                                      <img 
-                                        src={message.attachment_url} 
-                                        alt="Attachment" 
-                                        className="max-w-full h-auto rounded-lg border"
-                                      />
-                                    )}
-                                  </div>
-                                )}
-                              </div>
+                              )}
                             </div>
-                          </CardContent>
-                        </Card>
-                      ))
-                    )
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))
                   )}
                 </div>
               </ScrollArea>

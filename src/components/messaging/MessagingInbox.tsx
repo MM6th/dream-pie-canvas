@@ -195,46 +195,9 @@ export const MessagingInbox = () => {
                             {formatDistanceToNow(new Date(message.created_at), { addSuffix: true })}
                           </div>
                         </div>
-                        <img src={beeperIcon} alt="Read" className="w-7 h-7 object-contain flex-shrink-0 opacity-50" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))
-              )}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="received" className="mt-4">
-            <div className="space-y-2">
-              {receivedMessages.length === 0 ? (
-                <Card>
-                  <CardContent className="py-8 text-center text-muted-foreground">
-                    No received messages
-                  </CardContent>
-                </Card>
-              ) : (
-                receivedMessages.map((message) => (
-                  <Card
-                    key={message.id}
-                    onClick={() => handleMessageClick(message)}
-                    className={`cursor-pointer hover:bg-accent transition-colors ${
-                      !message.read_at ? 'border-primary' : ''
-                    } ${
-                      selectedMessage?.id === message.id ? 'border-primary' : ''
-                    }`}
-                  >
-                    <CardContent className="py-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                          <div className="font-medium text-sm truncate">
-                            From: {message.sender?.display_name || 'Unknown'}
-                          </div>
-                          <div className="text-sm truncate">{message.subject}</div>
-                          <div className="text-xs text-muted-foreground mt-1">
-                            {formatDistanceToNow(new Date(message.created_at), { addSuffix: true })}
-                          </div>
-                        </div>
-                        <img src={beeperIcon} alt="Message" className={`w-7 h-7 object-contain flex-shrink-0 ${message.read_at ? 'opacity-50' : ''}`} />
+                        <img src={beeperIcon} alt="Read" className="w-8 h-8 object-contain flex-shrink-0 opacity-50" />
+...
+                        <img src={beeperIcon} alt="Message" className={`w-8 h-8 object-contain flex-shrink-0 ${message.read_at ? 'opacity-50' : ''}`} />
                       </div>
                     </CardContent>
                   </Card>
