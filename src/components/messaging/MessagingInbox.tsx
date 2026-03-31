@@ -195,7 +195,7 @@ export const MessagingInbox = () => {
                             {formatDistanceToNow(new Date(message.created_at), { addSuffix: true })}
                           </div>
                         </div>
-                        <img src={beeperIcon} alt="Read" className="w-5 h-5 object-contain flex-shrink-0 opacity-50" />
+                        <img src={beeperIcon} alt="Read" className="w-7 h-7 object-contain flex-shrink-0 opacity-50" />
                       </div>
                     </CardContent>
                   </Card>
