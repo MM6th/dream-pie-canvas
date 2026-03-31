@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
-import { Mail, MailOpen, Reply } from 'lucide-react';
+import { Reply } from 'lucide-react';
+import beeperIcon from '@/assets/beeper-message.png';
 import { MessageComposer } from './MessageComposer';
 import { useMessagingCredits } from '@/hooks/useMessagingCredits';
 import { PodcastDealAcceptButton } from '@/components/podcast/PodcastDealAcceptButton';
@@ -194,7 +195,7 @@ export const MessagingInbox = () => {
                             {formatDistanceToNow(new Date(message.created_at), { addSuffix: true })}
                           </div>
                         </div>
-                        <MailOpen className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                        <img src={beeperIcon} alt="Read" className="w-5 h-5 object-contain flex-shrink-0 opacity-50" />
                       </div>
                     </CardContent>
                   </Card>
@@ -233,11 +234,7 @@ export const MessagingInbox = () => {
                             {formatDistanceToNow(new Date(message.created_at), { addSuffix: true })}
                           </div>
                         </div>
-                        {!message.read_at ? (
-                          <Mail className="w-4 h-4 text-primary flex-shrink-0" />
-                        ) : (
-                          <MailOpen className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                        )}
+                        <img src={beeperIcon} alt="Message" className={`w-5 h-5 object-contain flex-shrink-0 ${message.read_at ? 'opacity-50' : ''}`} />
                       </div>
                     </CardContent>
                   </Card>

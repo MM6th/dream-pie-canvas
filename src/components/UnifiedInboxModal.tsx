@@ -11,7 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent } from "@/components/ui/card";
-import { Check, Bell, Mail, MailOpen, Calendar, Eye, Reply, ChevronDown, ChevronUp } from "lucide-react";
+import { Check, Bell, Calendar, Eye, Reply, ChevronDown, ChevronUp } from "lucide-react";
+import beeperIcon from '@/assets/beeper-message.png';
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { AstrologyBirthInfoModal } from "./AstrologyBirthInfoModal";
@@ -419,11 +420,7 @@ export const UnifiedInboxModal = ({ open, onOpenChange, userId, userType }: Unif
                         >
                           <CardContent className="py-3 px-4">
                             <div className="flex items-start gap-3">
-                              {!message.read_at ? (
-                                <Mail className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
-                              ) : (
-                                <MailOpen className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
-                              )}
+                              <img src={beeperIcon} alt="Message" className={`w-5 h-5 object-contain flex-shrink-0 mt-0.5 ${message.read_at ? 'opacity-50' : ''}`} />
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center justify-between gap-2">
                                   <h4 className="font-medium text-sm truncate">{message.subject}</h4>
@@ -508,7 +505,7 @@ export const UnifiedInboxModal = ({ open, onOpenChange, userId, userType }: Unif
                         >
                           <CardContent className="py-3 px-4">
                             <div className="flex items-start gap-3">
-                              <MailOpen className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+                              <img src={beeperIcon} alt="Read" className="w-5 h-5 object-contain flex-shrink-0 mt-0.5 opacity-50" />
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center justify-between gap-2">
                                   <h4 className="font-medium text-sm truncate">{message.subject}</h4>
