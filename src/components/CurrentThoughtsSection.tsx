@@ -12,6 +12,7 @@ import ExpandableDescription from "./ui/ExpandableDescription";
 import SixthPriceTag from "./SixthPriceTag";
 import pieTitleBelt from "@/assets/pie-title-belt.png";
 import pieTitleTwerk from "@/assets/pie-title-twerk.png";
+import ChallengeAcceptanceButtons from "./ChallengeAcceptanceButtons";
 
 interface CurrentThoughtsSectionProps {
   posts: BulletinPost[];
@@ -156,6 +157,16 @@ const CurrentThoughtsSection = ({ posts, useCarousel = true }: CurrentThoughtsSe
               Time Limit: {Math.floor(post.challenge_time_limit_minutes! / 60) > 0 ? `${Math.floor(post.challenge_time_limit_minutes! / 60)}h ` : ''}{post.challenge_time_limit_minutes! % 60 > 0 ? `${post.challenge_time_limit_minutes! % 60}m` : ''}
             </span>
           </div>
+        )}
+
+        {/* Challenge Acceptance Buttons */}
+        {post.contract_type === 'live_challenges' && (
+          <ChallengeAcceptanceButtons
+            postId={post.id}
+            hasTitleOnTheLine={!!post.title_on_the_line}
+            championUserId={post.champion_user_id}
+            merchantId={post.merchant_id}
+          />
         )}
 
         {/* Image disclaimer for live challenges */}

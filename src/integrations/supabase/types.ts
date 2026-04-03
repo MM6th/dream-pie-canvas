@@ -859,6 +859,41 @@ export type Database = {
           },
         ]
       }
+      challenge_acceptances: {
+        Row: {
+          accepted_at: string
+          bulletin_post_id: string
+          created_at: string
+          id: string
+          slot: string
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string
+          bulletin_post_id: string
+          created_at?: string
+          id?: string
+          slot: string
+          user_id: string
+        }
+        Update: {
+          accepted_at?: string
+          bulletin_post_id?: string
+          created_at?: string
+          id?: string
+          slot?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenge_acceptances_bulletin_post_id_fkey"
+            columns: ["bulletin_post_id"]
+            isOneToOne: false
+            referencedRelation: "bulletin_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contracts: {
         Row: {
           admin_signature: string | null
