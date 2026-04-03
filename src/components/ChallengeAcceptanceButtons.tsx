@@ -146,12 +146,26 @@ const ChallengeAcceptanceButtons = ({ postId, hasTitleOnTheLine, championUserId,
       return;
     }
 
+    // Fetch post details for contextual notification
+    const { data: post } = await supabase
+      .from('bulletin_posts')
+      .select('title, scheduled_at, timezone')
+      .eq('id', postId)
+      .single();
+
+    const challengeName = post?.title || 'Live Challenge';
+    let scheduleText = '';
+    if (post?.scheduled_at) {
+      const scheduledDate = new Date(post.scheduled_at);
+      scheduleText = ` that was scheduled at ${scheduledDate.toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}${post.timezone ? ` (${post.timezone})` : ''}`;
+    }
+
     // Send notification about withdrawal
     await supabase.from('notifications').insert({
       user_id: user.id,
       type: 'challenge_withdrawn',
       title: 'Challenge Withdrawal',
-      message: 'You have withdrawn from a live challenge.'
+      message: `You have withdrawn from the "${challengeName}"${scheduleText}.`
     });
 
     toast.success("You withdrew from the challenge");
