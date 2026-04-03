@@ -131,6 +131,15 @@ const ChallengeAcceptanceButtons = ({ postId, hasTitleOnTheLine, championUserId,
       toast.error("Failed to withdraw");
       return;
     }
+
+    // Send notification about withdrawal
+    await supabase.from('notifications').insert({
+      user_id: user.id,
+      type: 'challenge_withdrawn',
+      title: 'Challenge Withdrawal',
+      message: 'You have withdrawn from a live challenge.'
+    });
+
     toast.success("You withdrew from the challenge");
     fetchAcceptances();
   };
