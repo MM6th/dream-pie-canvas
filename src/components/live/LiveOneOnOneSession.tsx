@@ -202,20 +202,32 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
 
         roomRef.current = room;
 
+        console.log(`1-on-1 session: room.state=${room.state}, isHost=${isHost}, roomName=${roomName}`);
+
         await room.localParticipant.enableCameraAndMicrophone();
         if (cancelled) {
           room.disconnect();
           return;
         }
 
+        console.log(`1-on-1 session: camera+mic enabled, localParticipant tracks:`,
+          Array.from(room.localParticipant.trackPublications.values()).map(p => `${p.source}:${p.track?.sid}`));
+
         // Retry attaching local camera with increasing delays to handle Dialog portal timing
         const tryAttach = (retriesLeft: number) => {
-          if (cancelled || retriesLeft <= 0) return;
-          if (!attachLocalCamera(room)) {
-            window.setTimeout(() => tryAttach(retriesLeft - 1), 200);
+          if (cancelled || retriesLeft <= 0) {
+            if (retriesLeft <= 0) {
+              console.warn("1-on-1 session: exhausted retries attaching local camera");
+            }
+            return;
+          }
+          const attached = attachLocalCamera(room);
+          console.log(`1-on-1 session: tryAttach attempt, attached=${attached}, retriesLeft=${retriesLeft}`);
+          if (!attached) {
+            window.setTimeout(() => tryAttach(retriesLeft - 1), 300);
           }
         };
-        tryAttach(10);
+        tryAttach(15);
 
         // Attach already-published remote tracks
         for (const p of room.remoteParticipants.values()) {
