@@ -12,6 +12,7 @@ import ExpandableDescription from "./ui/ExpandableDescription";
 import SixthPriceTag from "./SixthPriceTag";
 import pieTitleBelt from "@/assets/pie-title-belt.png";
 import pieTitleTwerk from "@/assets/pie-title-twerk.png";
+import ChallengeAcceptanceButtons from "./ChallengeAcceptanceButtons";
 
 interface CurrentThoughtsSectionProps {
   posts: BulletinPost[];
