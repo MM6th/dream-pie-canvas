@@ -100,11 +100,34 @@ const LiveOneOnOneButton = ({ hostId, streamId }: LiveOneOnOneButtonProps) => {
 
     let handled = false;
 
-    const handleAccepted = (room_name: string) => {
+    const handleAccepted = async (room_name: string | null | undefined) => {
       if (handled) return;
+      
+      // Guard: If room_name is missing, poll the DB until it's available
+      let resolvedRoom = room_name;
+      if (!resolvedRoom) {
+        console.warn("1-on-1: accepted but room_name missing, polling DB...");
+        for (let i = 0; i < 10; i++) {
+          await new Promise((r) => setTimeout(r, 500));
+          const { data: freshData } = await (supabase.from("one_on_one_requests" as any) as any)
+            .select("room_name")
+            .eq("id", pendingRequestId)
+            .single();
+          if (freshData?.room_name) {
+            resolvedRoom = freshData.room_name;
+            break;
+          }
+        }
+      }
+      
+      if (!resolvedRoom) {
+        resolvedRoom = `1on1_${pendingRequestId}`;
+        console.warn("1-on-1: room_name never appeared, using fallback:", resolvedRoom);
+      }
+
       handled = true;
       setShowWaitingModal(false);
-      setRoomName(room_name || `1on1_${pendingRequestId}`);
+      setRoomName(resolvedRoom);
       setPendingRequestId(null);
       toast({
         title: "Host accepted!",
