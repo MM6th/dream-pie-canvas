@@ -210,9 +210,11 @@ const CurrentThoughtsSection = ({ posts, useCarousel = true }: CurrentThoughtsSe
               {new Date(post.created_at).toLocaleDateString()}
             </div>
         </div>
-        <div className="mt-2">
-          <PostInteractions postId={post.id} recipientId={post.merchant_id} />
-        </div>
+        {post.post_type !== 'announcement' && (
+          <div className="mt-2">
+            <PostInteractions postId={post.id} recipientId={post.merchant_id} />
+          </div>
+        )}
       </CardContent>
     </Card>
   );
