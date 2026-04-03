@@ -12,7 +12,7 @@ import { toast } from "sonner";
 
 const BulletinBoard = () => {
   const navigate = useNavigate();
-  const { signOut, user } = useAuth();
+  const { signOut, user, loading } = useAuth();
   const isMobile = useIsMobile();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
