@@ -193,13 +193,24 @@ export const UnifiedInboxModal = ({ open, onOpenChange, userId, userType }: Unif
 
   const markAllNotificationsAsRead = async () => {
     try {
-      const { error } = await supabase
+      // Mark notifications where read is false
+      const { error: error1 } = await supabase
         .from("notifications")
         .update({ read: true })
         .eq("user_id", userId)
         .eq("read", false);
 
-      if (error) throw error;
+      if (error1) throw error1;
+
+      // Also mark notifications where read is null
+      const { error: error2 } = await supabase
+        .from("notifications")
+        .update({ read: true })
+        .eq("user_id", userId)
+        .is("read", null);
+
+      if (error2) throw error2;
+
       fetchNotifications();
       toast.success("All notifications marked as read");
     } catch (error) {
