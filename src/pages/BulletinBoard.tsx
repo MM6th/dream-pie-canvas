@@ -43,7 +43,15 @@ const BulletinBoard = () => {
       if (error) {
         console.error('Error fetching posts:', error);
       } else {
-        setPosts(data || []);
+        // Filter out expired live challenge posts (scheduled_at has passed)
+        const now = new Date();
+        const filtered = (data || []).filter(post => {
+          if (post.post_type === 'announcement' && post.contract_type === 'live_challenges' && post.scheduled_at) {
+            return new Date(post.scheduled_at) > now;
+          }
+          return true;
+        });
+        setPosts(filtered);
       }
     } catch (error) {
       console.error('Error fetching posts:', error);
