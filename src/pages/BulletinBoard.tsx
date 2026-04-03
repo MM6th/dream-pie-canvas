@@ -12,7 +12,7 @@ import { toast } from "sonner";
 
 const BulletinBoard = () => {
   const navigate = useNavigate();
-  const { signOut, user } = useAuth();
+  const { signOut, user, loading: authLoading } = useAuth();
   const isMobile = useIsMobile();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -56,6 +56,14 @@ const BulletinBoard = () => {
   const currentThoughtsPosts = posts;
   
 
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800 flex items-center justify-center">
+        <p className="text-gray-400">Loading...</p>
+      </div>
+    );
+  }
 
   if (!user) {
     return (
