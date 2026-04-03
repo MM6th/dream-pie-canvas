@@ -66,6 +66,18 @@ const ChallengeAcceptanceButtons = ({ postId, hasTitleOnTheLine, championUserId,
       return;
     }
 
+    // Only approved merchants can participate
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('user_type, approval_status')
+      .eq('id', user.id)
+      .single();
+
+    if (!profile || profile.user_type !== 'merchant' || profile.approval_status !== 'approved') {
+      toast.error("Only approved merchants can participate in live challenges");
+      return;
+    }
+
     if (user.id === merchantId) {
       toast.error("You cannot accept your own challenge");
       return;
@@ -92,6 +104,14 @@ const ChallengeAcceptanceButtons = ({ postId, hasTitleOnTheLine, championUserId,
       }
       return;
     }
+
+    // Send notification to the user who accepted
+    await supabase.from('notifications').insert({
+      user_id: user.id,
+      type: 'challenge_accepted',
+      title: 'Challenge Accepted!',
+      message: 'You have successfully accepted a live challenge. Get ready! 🥊'
+    });
 
     toast.success("Challenge accepted! 🥊");
     fetchAcceptances();
