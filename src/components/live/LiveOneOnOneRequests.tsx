@@ -142,25 +142,35 @@ const LiveOneOnOneRequests = ({ streamId, onSessionStart, onSessionEnd }: LiveOn
       const roomName = `1on1_${requestId}`;
 
       if (action === "accepted") {
+        // CRITICAL: Write room_name to DB FIRST so the viewer's realtime
+        // subscription receives it in the same payload as status=accepted.
+        const { error } = await (supabase.from("one_on_one_requests" as any) as any)
+          .update({
+            status: "accepted",
+            responded_at: new Date().toISOString(),
+            room_name: roomName,
+          })
+          .eq("id", requestId)
+          .eq("host_id", user?.id);
+
+        if (error) throw error;
+
+        // Now start the host session after the DB is updated
         await onSessionStart?.(roomName);
-      }
-
-      const { error } = await (supabase.from("one_on_one_requests" as any) as any)
-        .update({
-          status: action,
-          responded_at: new Date().toISOString(),
-          ...(action === "accepted" ? { room_name: roomName } : {}),
-        })
-        .eq("id", requestId)
-        .eq("host_id", user?.id);
-
-      if (error) throw error;
-
-      setRequests((prev) => prev.filter((r) => r.id !== requestId));
-
-      if (action === "accepted") {
+        setRequests((prev) => prev.filter((r) => r.id !== requestId));
         setActiveSessionRoom(roomName);
       } else {
+        const { error } = await (supabase.from("one_on_one_requests" as any) as any)
+          .update({
+            status: "declined",
+            responded_at: new Date().toISOString(),
+          })
+          .eq("id", requestId)
+          .eq("host_id", user?.id);
+
+        if (error) throw error;
+
+        setRequests((prev) => prev.filter((r) => r.id !== requestId));
         toast({
           title: "Request declined",
           description: "The viewer has been notified.",
