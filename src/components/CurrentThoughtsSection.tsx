@@ -159,6 +159,16 @@ const CurrentThoughtsSection = ({ posts, useCarousel = true }: CurrentThoughtsSe
           </div>
         )}
 
+        {/* Challenge Acceptance Buttons */}
+        {post.contract_type === 'live_challenges' && (
+          <ChallengeAcceptanceButtons
+            postId={post.id}
+            hasTitleOnTheLine={!!post.title_on_the_line}
+            championUserId={post.champion_user_id}
+            merchantId={post.merchant_id}
+          />
+        )}
+
         {/* Image disclaimer for live challenges */}
         {post.contract_type === 'live_challenges' && (post.image_url || post.uploaded_image_url) && (
           <p className="text-xs text-muted-foreground italic text-center my-1">Image for illustration only — actual event may differ</p>
