@@ -167,7 +167,15 @@ const ChallengeAcceptanceButtons = ({ postId, hasTitleOnTheLine, championUserId,
     <div className="bg-gray-900/50 rounded-lg p-2 my-2 border border-gray-600">
       <p className="text-white font-semibold text-xs mb-2 flex items-center gap-1">
         <UserCheck className="w-3 h-3" />
-        {hasTitleOnTheLine ? 'Challenger Needed' : 'Challengers Needed'}
+        {hasTitleOnTheLine
+          ? (getSlotAcceptance('challenger_1') ? 'Challenger Confirmed ✅' : 'Challenger Needed')
+          : (getSlotAcceptance('challenger_1') && getSlotAcceptance('challenger_2')
+              ? 'Challengers Confirmed ✅'
+              : getSlotAcceptance('challenger_1') || getSlotAcceptance('challenger_2')
+                ? '1 Challenger Confirmed ✅ — 1 More Needed'
+                : 'Challengers Needed'
+            )
+        }
       </p>
       <div className={`${slotsNeeded === 2 ? 'space-y-2' : ''}`}>
         {renderSlot('challenger_1', hasTitleOnTheLine ? 'Challenger' : 'Challenger 1')}
