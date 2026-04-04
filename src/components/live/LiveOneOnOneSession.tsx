@@ -154,6 +154,8 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
       console.log(`[1on1-session] useEffect: EARLY RETURN - user=${!!user}, connectingRef=${connectingRef.current}`);
       return;
     }
+    connectingRef.current = true;
+    console.log(`[1on1-session] Starting connection to room: ${roomName}`);
 
     let cancelled = false;
 
