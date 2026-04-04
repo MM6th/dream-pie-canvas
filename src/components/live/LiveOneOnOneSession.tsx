@@ -17,6 +17,8 @@ import {
   Track,
   VideoPresets,
 } from "livekit-client";
+import { useIsMobile } from "@/hooks/use-mobile";
+import LiveChat from "@/components/live/LiveChat";
 
 interface LiveOneOnOneSessionProps {
   roomName: string;
@@ -24,6 +26,7 @@ interface LiveOneOnOneSessionProps {
   onClose: () => void;
   inline?: boolean;
   durationMinutes?: number;
+  streamId?: string;
 }
 
 const safePlay = (element: HTMLMediaElement | null) => {
