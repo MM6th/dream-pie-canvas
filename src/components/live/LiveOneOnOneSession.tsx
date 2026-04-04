@@ -149,8 +149,11 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
   }, [attachLocalCamera]);
 
   useEffect(() => {
-    if (!user || connectingRef.current) return;
-    connectingRef.current = true;
+    console.log(`[1on1-session] useEffect: user=${user?.id}, connectingRef=${connectingRef.current}, roomName=${roomName}`);
+    if (!user || connectingRef.current) {
+      console.log(`[1on1-session] useEffect: EARLY RETURN - user=${!!user}, connectingRef=${connectingRef.current}`);
+      return;
+    }
 
     let cancelled = false;
 
