@@ -129,6 +129,7 @@ const LiveOneOnOneButton = ({ hostId, streamId }: LiveOneOnOneButtonProps) => {
       setShowWaitingModal(false);
       setRoomName(resolvedRoom);
       setPendingRequestId(null);
+      console.log(`[1on1-button] handleAccepted: roomName=${resolvedRoom}, setting showSession=true`);
       toast({
         title: "Host accepted!",
         description: "Connecting to your private session...",
