@@ -304,7 +304,7 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
   };
 
   const sessionContent = (
-    <div className="flex flex-col h-full bg-black relative">
+    <div className={`flex flex-col bg-black relative ${isMobile ? 'min-h-full' : 'h-full'}`}>
       {/* Countdown timer */}
       <div className="flex justify-center py-2">
         <div className={`flex items-center gap-2 px-4 py-1.5 rounded-full ${secondsLeft <= 60 ? 'bg-destructive/80' : 'bg-black/60'} text-white text-sm font-mono`}>
@@ -312,7 +312,7 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
           {formatTime(secondsLeft)}
         </div>
       </div>
-      <div className="flex-1 flex flex-col sm:flex-row gap-1 p-1 min-h-[200px] sm:min-h-[300px]">
+      <div className={`flex flex-col sm:flex-row gap-1 p-1 ${isMobile ? 'h-[35vh] min-h-[180px]' : 'flex-1 min-h-[300px]'}`}>
         <div className="flex-1 relative rounded-lg overflow-hidden bg-muted/20">
           <video
             ref={setLocalVideoElement}
@@ -389,6 +389,13 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
           End Stream
         </Button>
       </div>
+
+      {/* Chat inside session on mobile */}
+      {isMobile && streamId && (
+        <div className="px-2 pb-2">
+          <LiveChat streamId={streamId} />
+        </div>
+      )}
     </div>
   );
 
@@ -398,7 +405,7 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
 
   return (
     <Dialog open onOpenChange={() => handleEndSession()}>
-      <DialogContent className="max-w-4xl w-[95vw] p-0 gap-0 overflow-hidden bg-black border-border">
+      <DialogContent className={`max-w-4xl w-[95vw] p-0 gap-0 bg-black border-border ${isMobile ? 'max-h-[95vh] overflow-y-auto' : 'overflow-hidden'}`}>
         <DialogHeader className="sr-only">
           <DialogTitle>1-on-1 Session</DialogTitle>
           <DialogDescription>Private video session</DialogDescription>
