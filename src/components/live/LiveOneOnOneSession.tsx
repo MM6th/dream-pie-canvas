@@ -39,7 +39,7 @@ const safePlay = (element: HTMLMediaElement | null) => {
   }
 };
 
-const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durationMinutes = 15 }: LiveOneOnOneSessionProps) => {
+const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durationMinutes = 15, streamId }: LiveOneOnOneSessionProps) => {
   const { user } = useAuth();
   const { getToken } = useLiveKitToken();
   const localVideoRef = useRef<HTMLVideoElement>(null);
