@@ -310,7 +310,7 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
   };
 
   const sessionContent = (
-    <div className={`flex flex-col bg-black relative ${isMobile ? 'min-h-full' : 'h-full'}`}>
+    <div className="flex flex-col bg-black relative" style={{ minHeight: isMobile ? '100%' : '500px' }}>
       {/* Countdown timer */}
       <div className="flex justify-center py-2">
         <div className={`flex items-center gap-2 px-4 py-1.5 rounded-full ${secondsLeft <= 60 ? 'bg-destructive/80' : 'bg-black/60'} text-white text-sm font-mono`}>
