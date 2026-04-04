@@ -129,7 +129,6 @@ const LiveOneOnOneButton = ({ hostId, streamId }: LiveOneOnOneButtonProps) => {
       setShowWaitingModal(false);
       setRoomName(resolvedRoom);
       setPendingRequestId(null);
-      console.log(`[1on1-button] handleAccepted: roomName=${resolvedRoom}, setting showSession=true`);
       toast({
         title: "Host accepted!",
         description: "Connecting to your private session...",
@@ -313,13 +312,10 @@ const LiveOneOnOneButton = ({ hostId, streamId }: LiveOneOnOneButtonProps) => {
       {/* Side-by-side session */}
       {showSession && roomName && (
         <LiveOneOnOneSession
-          key={`session-${roomName}`}
           roomName={roomName}
           isHost={false}
           durationMinutes={sessionDurationMinutes}
-          streamId={streamId}
           onClose={() => {
-            console.log("[1on1-button] Session closed, resetting state");
             setShowSession(false);
             setPendingRequestId(null);
             setRequestStatus(null);

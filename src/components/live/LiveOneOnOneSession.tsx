@@ -17,8 +17,6 @@ import {
   Track,
   VideoPresets,
 } from "livekit-client";
-import { useIsMobile } from "@/hooks/use-mobile";
-import LiveChat from "@/components/live/LiveChat";
 
 interface LiveOneOnOneSessionProps {
   roomName: string;
@@ -26,7 +24,6 @@ interface LiveOneOnOneSessionProps {
   onClose: () => void;
   inline?: boolean;
   durationMinutes?: number;
-  streamId?: string;
 }
 
 const safePlay = (element: HTMLMediaElement | null) => {
@@ -39,9 +36,7 @@ const safePlay = (element: HTMLMediaElement | null) => {
   }
 };
 
-const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durationMinutes = 15, streamId }: LiveOneOnOneSessionProps) => {
-  console.log(`[1on1-session] MOUNT: roomName=${roomName}, isHost=${isHost}, inline=${inline}, streamId=${streamId}`);
-  const isMobile = useIsMobile();
+const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durationMinutes = 15 }: LiveOneOnOneSessionProps) => {
   const { user } = useAuth();
   const { getToken } = useLiveKitToken();
   const localVideoRef = useRef<HTMLVideoElement>(null);
@@ -149,13 +144,8 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
   }, [attachLocalCamera]);
 
   useEffect(() => {
-    console.log(`[1on1-session] useEffect: user=${user?.id}, connectingRef=${connectingRef.current}, roomName=${roomName}`);
-    if (!user || connectingRef.current) {
-      console.log(`[1on1-session] useEffect: EARLY RETURN - user=${!!user}, connectingRef=${connectingRef.current}`);
-      return;
-    }
+    if (!user || connectingRef.current) return;
     connectingRef.current = true;
-    console.log(`[1on1-session] Starting connection to room: ${roomName}`);
 
     let cancelled = false;
 
@@ -310,7 +300,7 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
   };
 
   const sessionContent = (
-    <div className="flex flex-col bg-black relative" style={{ minHeight: isMobile ? '100%' : '500px' }}>
+    <div className="flex flex-col h-full bg-black relative">
       {/* Countdown timer */}
       <div className="flex justify-center py-2">
         <div className={`flex items-center gap-2 px-4 py-1.5 rounded-full ${secondsLeft <= 60 ? 'bg-destructive/80' : 'bg-black/60'} text-white text-sm font-mono`}>
@@ -318,7 +308,7 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
           {formatTime(secondsLeft)}
         </div>
       </div>
-      <div className={`flex flex-col sm:flex-row gap-1 p-1 ${isMobile ? 'h-[35vh] min-h-[180px]' : 'flex-1 min-h-[300px]'}`}>
+      <div className="flex-1 flex gap-1 p-1 min-h-[300px]">
         <div className="flex-1 relative rounded-lg overflow-hidden bg-muted/20">
           <video
             ref={setLocalVideoElement}
@@ -395,23 +385,16 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
           End Stream
         </Button>
       </div>
-
-      {/* Chat inside session on mobile */}
-      {isMobile && streamId && (
-        <div className="px-2 pb-2">
-          <LiveChat streamId={streamId} />
-        </div>
-      )}
     </div>
   );
 
   if (inline) {
-    return <div className={`absolute inset-0 z-30 bg-black rounded-xl ${isMobile ? 'overflow-y-auto' : 'overflow-hidden'}`}>{sessionContent}</div>;
+    return <div className="absolute inset-0 z-30 bg-black rounded-xl overflow-hidden">{sessionContent}</div>;
   }
 
   return (
     <Dialog open onOpenChange={() => handleEndSession()}>
-      <DialogContent className={`max-w-4xl w-[95vw] p-0 gap-0 bg-black border-border ${isMobile ? 'max-h-[95vh] overflow-y-auto' : 'h-[80vh] overflow-hidden'}`}>
+      <DialogContent className="max-w-4xl w-[95vw] p-0 gap-0 overflow-hidden bg-black border-border">
         <DialogHeader className="sr-only">
           <DialogTitle>1-on-1 Session</DialogTitle>
           <DialogDescription>Private video session</DialogDescription>
