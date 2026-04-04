@@ -313,11 +313,13 @@ const LiveOneOnOneButton = ({ hostId, streamId }: LiveOneOnOneButtonProps) => {
       {/* Side-by-side session */}
       {showSession && roomName && (
         <LiveOneOnOneSession
+          key={`session-${roomName}`}
           roomName={roomName}
           isHost={false}
           durationMinutes={sessionDurationMinutes}
           streamId={streamId}
           onClose={() => {
+            console.log("[1on1-button] Session closed, resetting state");
             setShowSession(false);
             setPendingRequestId(null);
             setRequestStatus(null);
