@@ -40,6 +40,7 @@ const safePlay = (element: HTMLMediaElement | null) => {
 };
 
 const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durationMinutes = 15, streamId }: LiveOneOnOneSessionProps) => {
+  console.log(`[1on1-session] MOUNT: roomName=${roomName}, isHost=${isHost}, inline=${inline}, streamId=${streamId}`);
   const isMobile = useIsMobile();
   const { user } = useAuth();
   const { getToken } = useLiveKitToken();
@@ -148,8 +149,13 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
   }, [attachLocalCamera]);
 
   useEffect(() => {
-    if (!user || connectingRef.current) return;
+    console.log(`[1on1-session] useEffect: user=${user?.id}, connectingRef=${connectingRef.current}, roomName=${roomName}`);
+    if (!user || connectingRef.current) {
+      console.log(`[1on1-session] useEffect: EARLY RETURN - user=${!!user}, connectingRef=${connectingRef.current}`);
+      return;
+    }
     connectingRef.current = true;
+    console.log(`[1on1-session] Starting connection to room: ${roomName}`);
 
     let cancelled = false;
 
@@ -304,7 +310,7 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
   };
 
   const sessionContent = (
-    <div className={`flex flex-col bg-black relative ${isMobile ? 'min-h-full' : 'h-full'}`}>
+    <div className="flex flex-col bg-black relative" style={{ minHeight: isMobile ? '100%' : '500px' }}>
       {/* Countdown timer */}
       <div className="flex justify-center py-2">
         <div className={`flex items-center gap-2 px-4 py-1.5 rounded-full ${secondsLeft <= 60 ? 'bg-destructive/80' : 'bg-black/60'} text-white text-sm font-mono`}>
@@ -405,7 +411,7 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
 
   return (
     <Dialog open onOpenChange={() => handleEndSession()}>
-      <DialogContent className={`max-w-4xl w-[95vw] p-0 gap-0 bg-black border-border ${isMobile ? 'max-h-[95vh] overflow-y-auto' : 'overflow-hidden'}`}>
+      <DialogContent className={`max-w-4xl w-[95vw] p-0 gap-0 bg-black border-border ${isMobile ? 'max-h-[95vh] overflow-y-auto' : 'h-[80vh] overflow-hidden'}`}>
         <DialogHeader className="sr-only">
           <DialogTitle>1-on-1 Session</DialogTitle>
           <DialogDescription>Private video session</DialogDescription>
