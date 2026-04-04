@@ -411,7 +411,7 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
 
   return (
     <Dialog open onOpenChange={() => handleEndSession()}>
-      <DialogContent className={`max-w-4xl w-[95vw] p-0 gap-0 bg-black border-border ${isMobile ? 'max-h-[95vh] overflow-y-auto' : 'overflow-hidden'}`}>
+      <DialogContent className={`max-w-4xl w-[95vw] p-0 gap-0 bg-black border-border ${isMobile ? 'max-h-[95vh] overflow-y-auto' : 'h-[80vh] overflow-hidden'}`}>
         <DialogHeader className="sr-only">
           <DialogTitle>1-on-1 Session</DialogTitle>
           <DialogDescription>Private video session</DialogDescription>
