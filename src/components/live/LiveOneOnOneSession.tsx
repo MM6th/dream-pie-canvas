@@ -357,8 +357,8 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
               <span className="bg-black/60 text-white text-xs px-2 py-1 rounded">You</span>
               {isHost && <div className="mt-6"><OneOnOneTipMeter roomName={roomName} /></div>}
             </div>
-            {/* Bottom Section (Chat & Controls) - desktop only overlay */}
-            <div className="mt-auto w-full max-w-full hidden sm:block">
+            {/* Bottom Section (Chat & Controls) */}
+            <div className="mt-auto w-full max-w-full">
               <div className="bg-black/40 backdrop-blur-md rounded-lg p-2 overflow-y-auto max-h-[30vh]">
                 <OneOnOneChat roomName={roomName} />
               </div>
@@ -421,43 +421,6 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
               </div>
             )}
           </div>
-        </div>
-      </div>
-
-      {/* Mobile-only: Chat & Controls below both video feeds */}
-      <div className="sm:hidden w-full bg-black/80 backdrop-blur-md p-3 space-y-2 overflow-y-auto max-h-[35vh]">
-        <div className="bg-black/40 rounded-lg p-2 overflow-y-auto max-h-[20vh]">
-          <OneOnOneChat roomName={roomName} />
-        </div>
-        <div className="flex flex-wrap items-center justify-center gap-2">
-          {!isHost && otherPartyId && (
-            <OneOnOneTipButton roomName={roomName} recipientId={otherPartyId} />
-          )}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={toggleCamera}
-            className={`rounded-full ${!cameraOn ? 'border-destructive text-destructive' : 'border-white/30 text-white'} bg-black/40 hover:bg-black/60`}
-          >
-            {cameraOn ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={toggleMic}
-            className={`rounded-full ${!micOn ? 'border-destructive text-destructive' : 'border-white/30 text-white'} bg-black/40 hover:bg-black/60`}
-          >
-            {micOn ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
-          </Button>
-          {isHost && <Button
-            variant="destructive"
-            size="sm"
-            onClick={handleEndSession}
-            className="rounded-full px-4"
-          >
-            <PhoneOff className="h-4 w-4 mr-1" />
-            End
-          </Button>}
         </div>
       </div>
 

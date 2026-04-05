@@ -18,10 +18,9 @@ import LiveOneOnOneSession from "@/components/live/LiveOneOnOneSession";
 interface LiveOneOnOneButtonProps {
   hostId: string;
   streamId: string;
-  onSessionActive?: (active: boolean) => void;
 }
 
-const LiveOneOnOneButton = ({ hostId, streamId, onSessionActive }: LiveOneOnOneButtonProps) => {
+const LiveOneOnOneButton = ({ hostId, streamId }: LiveOneOnOneButtonProps) => {
   const { user } = useAuth();
   const [creditsPerMessage, setCreditsPerMessage] = useState<number | null>(null);
   const [sessionDurationMinutes, setSessionDurationMinutes] = useState<number>(15);
@@ -89,7 +88,6 @@ const LiveOneOnOneButton = ({ hostId, streamId, onSessionActive }: LiveOneOnOneB
           setPendingRequestId(null);
           setRoomName(existingRequest.room_name || `1on1_${existingRequest.id}`);
           setShowSession(true);
-          onSessionActive?.(true);
         }
       }
     };
@@ -138,7 +136,6 @@ const LiveOneOnOneButton = ({ hostId, streamId, onSessionActive }: LiveOneOnOneB
       });
       setShowSession(true);
       setRequestStatus("accepted");
-      onSessionActive?.(true);
     };
 
     const handleRejected = () => {
@@ -324,7 +321,6 @@ const LiveOneOnOneButton = ({ hostId, streamId, onSessionActive }: LiveOneOnOneB
             setPendingRequestId(null);
             setRequestStatus(null);
             setRoomName(null);
-            onSessionActive?.(false);
           }}
         />
       )}
