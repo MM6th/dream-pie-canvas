@@ -397,9 +397,9 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
         </Button>
       </div>
 
-      {/* Mobile-only chat section */}
-      <div className="block sm:hidden border-t border-white/10">
-        <div className="h-[200px]">
+      {/* Chat section — compact on mobile, taller on desktop */}
+      <div className="border-t border-white/10">
+        <div className="h-[200px] sm:h-[250px]">
           <OneOnOneChat roomName={roomName} />
         </div>
       </div>
