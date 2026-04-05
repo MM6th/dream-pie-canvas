@@ -314,6 +314,7 @@ const LiveOneOnOneButton = ({ hostId, streamId }: LiveOneOnOneButtonProps) => {
         <LiveOneOnOneSession
           roomName={roomName}
           isHost={false}
+          otherPartyId={hostId}
           durationMinutes={sessionDurationMinutes}
           onClose={() => {
             setShowSession(false);

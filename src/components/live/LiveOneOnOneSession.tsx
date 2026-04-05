@@ -11,6 +11,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { PhoneOff, Loader2, Clock, Video, VideoOff, Mic, MicOff } from "lucide-react";
 import OneOnOneChat from "@/components/live/OneOnOneChat";
+import OneOnOneTipButton from "@/components/live/OneOnOneTipButton";
+import OneOnOneTipMeter from "@/components/live/OneOnOneTipMeter";
 import { toast } from "@/hooks/use-toast";
 import {
   Room,
@@ -25,6 +27,7 @@ interface LiveOneOnOneSessionProps {
   onClose: () => void;
   inline?: boolean;
   durationMinutes?: number;
+  otherPartyId?: string;
 }
 
 const safePlay = (element: HTMLMediaElement | null) => {
@@ -37,7 +40,7 @@ const safePlay = (element: HTMLMediaElement | null) => {
   }
 };
 
-const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durationMinutes = 15 }: LiveOneOnOneSessionProps) => {
+const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durationMinutes = 15, otherPartyId }: LiveOneOnOneSessionProps) => {
   const { user } = useAuth();
   const { getToken } = useLiveKitToken();
   const localVideoRef = useRef<HTMLVideoElement>(null);
@@ -359,7 +362,14 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
         </div>
       )}
 
-      <div className="flex justify-center items-center gap-3 py-3">
+      <div className="flex justify-center items-center gap-3 py-3 flex-wrap">
+        {/* Viewer sees tip button, host sees tip meter */}
+        {!isHost && otherPartyId && (
+          <OneOnOneTipButton roomName={roomName} recipientId={otherPartyId} />
+        )}
+        {isHost && (
+          <OneOnOneTipMeter roomName={roomName} />
+        )}
         <Button
           variant="outline"
           size="sm"

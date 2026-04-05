@@ -27,7 +27,7 @@ interface OneOnOneRequest {
 
 interface LiveOneOnOneRequestsProps {
   streamId: string;
-  onSessionStart?: (roomName: string) => Promise<void> | void;
+  onSessionStart?: (roomName: string, viewerId: string) => Promise<void> | void;
   onSessionEnd?: () => Promise<void> | void;
 }
 
@@ -156,7 +156,8 @@ const LiveOneOnOneRequests = ({ streamId, onSessionStart, onSessionEnd }: LiveOn
         if (error) throw error;
 
         // Now start the host session after the DB is updated
-        await onSessionStart?.(roomName);
+        const request = requests.find((r) => r.id === requestId);
+        await onSessionStart?.(roomName, request?.viewer_id || "");
         setRequests((prev) => prev.filter((r) => r.id !== requestId));
         setActiveSessionRoom(roomName);
       } else {

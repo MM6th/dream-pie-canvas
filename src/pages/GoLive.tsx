@@ -61,6 +61,7 @@ const GoLive = () => {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [privateSessionActive, setPrivateSessionActive] = useState(false);
   const [activeSessionRoom, setActiveSessionRoom] = useState<string | null>(null);
+  const [activeSessionViewerId, setActiveSessionViewerId] = useState<string | null>(null);
   const [hostSessionDuration, setHostSessionDuration] = useState<number>(15);
   const reconnectAttemptedRef = useRef(false);
   const privateSessionRef = useRef(false);
@@ -180,10 +181,11 @@ const GoLive = () => {
     }
   }, [getToken, startPreview, startHeartbeat]);
 
-  const pauseLiveBroadcastForSession = useCallback(async (roomName: string) => {
+  const pauseLiveBroadcastForSession = useCallback(async (roomName: string, viewerId?: string) => {
     setPrivateSessionActive(true);
     privateSessionRef.current = true;
     setActiveSessionRoom(roomName);
+    setActiveSessionViewerId(viewerId || null);
 
     // Mark stream as in private session so viewers can't join
     if (streamIdRef.current) {
@@ -522,6 +524,7 @@ const GoLive = () => {
                   isHost={true}
                   inline={true}
                   durationMinutes={hostSessionDuration}
+                  otherPartyId={activeSessionViewerId || undefined}
                   onClose={async () => {
                     setActiveSessionRoom(null);
                     // End the entire stream when 1-on-1 session ends
