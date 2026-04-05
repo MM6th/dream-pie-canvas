@@ -58,6 +58,7 @@ const LiveWatch = () => {
   const [muted, setMuted] = useState(false);
   const [hostCameraOff, setHostCameraOff] = useState(false);
   const [hostAvatarUrl, setHostAvatarUrl] = useState<string | null>(null);
+  const inOneOnOneRef = useRef(false);
   const userRef = useRef(user);
   userRef.current = user;
 
@@ -243,7 +244,7 @@ const LiveWatch = () => {
           toast({ title: "Stream ended", description: "The broadcaster has ended the stream." });
           navigate("/live");
         }
-        if (payload.new.status === "in_session") {
+        if (payload.new.status === "in_session" && !inOneOnOneRef.current) {
           toast({ title: "Host is in a private session", description: "The stream will resume after the session ends." });
           navigate("/live");
         }
@@ -264,7 +265,7 @@ const LiveWatch = () => {
         toast({ title: "Stream ended", description: "The broadcaster has ended the stream." });
         navigate("/live");
       }
-      if (streamData?.status === "in_session") {
+      if (streamData?.status === "in_session" && !inOneOnOneRef.current) {
         toast({ title: "Host is in a private session", description: "The stream will resume after the session ends." });
         navigate("/live");
       }
@@ -367,7 +368,7 @@ const LiveWatch = () => {
               </div>
               {user && stream && user.id !== stream.merchant_id && (
                 <div className="flex items-center gap-2">
-                  <LiveOneOnOneButton hostId={stream.merchant_id} streamId={stream.id} />
+                  <LiveOneOnOneButton hostId={stream.merchant_id} streamId={stream.id} onSessionActive={(active) => { inOneOnOneRef.current = active; }} />
                   <LiveTipButton streamId={stream.id} recipientId={stream.merchant_id} />
                 </div>
               )}
