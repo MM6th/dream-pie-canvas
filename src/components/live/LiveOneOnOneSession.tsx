@@ -357,8 +357,8 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
               <span className="bg-black/60 text-white text-xs px-2 py-1 rounded">You</span>
               {isHost && <div className="mt-6"><OneOnOneTipMeter roomName={roomName} /></div>}
             </div>
-            {/* Bottom Section (Chat & Controls) */}
-            <div className="mt-auto w-full max-w-full">
+            {/* Bottom Section (Chat & Controls) - desktop only overlay */}
+            <div className="mt-auto w-full max-w-full hidden sm:block">
               <div className="bg-black/40 backdrop-blur-md rounded-lg p-2 overflow-y-auto max-h-[30vh]">
                 <OneOnOneChat roomName={roomName} />
               </div>
