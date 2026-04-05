@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
+import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -505,7 +506,10 @@ const GoLive = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Video + Controls */}
           <div className="lg:col-span-2 space-y-4">
-            <div className="relative aspect-video bg-black rounded-xl overflow-hidden">
+            <div className={cn(
+              "relative bg-black rounded-xl overflow-hidden transition-all duration-300",
+              !activeSessionRoom ? "aspect-video" : "min-h-[600px] h-auto"
+            )}>
               <video ref={videoRef} autoPlay muted playsInline className={`w-full h-full object-cover ${!cameraOn || privateSessionActive ? 'hidden' : ''}`} />
               {!cameraOn && !privateSessionActive && (
                 <div className="absolute inset-0 z-10 flex items-center justify-center bg-black">
