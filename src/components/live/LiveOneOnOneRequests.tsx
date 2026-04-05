@@ -156,7 +156,8 @@ const LiveOneOnOneRequests = ({ streamId, onSessionStart, onSessionEnd }: LiveOn
         if (error) throw error;
 
         // Now start the host session after the DB is updated
-        await onSessionStart?.(roomName);
+        const request = requests.find((r) => r.id === requestId);
+        await onSessionStart?.(roomName, request?.viewer_id || "");
         setRequests((prev) => prev.filter((r) => r.id !== requestId));
         setActiveSessionRoom(roomName);
       } else {
