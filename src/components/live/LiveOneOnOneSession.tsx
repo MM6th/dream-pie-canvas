@@ -316,7 +316,7 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
       {/* Split screen container - takes all available space */}
       <div className="flex flex-col sm:flex-row w-full flex-1 min-h-0 items-stretch">
         {/* LEFT SIDE: You */}
-        <div className="relative flex-1 border-b sm:border-b-0 sm:border-r border-white/10 overflow-hidden min-h-0">
+        <div className="relative flex-1 border-b sm:border-b-0 sm:border-r border-white/10 overflow-hidden">
           {/* Video background layer */}
           <div className="absolute inset-0 z-0">
             <video
@@ -332,19 +332,19 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
               </div>
             )}
           </div>
-          {/* UI foreground layer - floating */}
-          <div className="relative z-10 h-full flex flex-col justify-between p-2 pointer-events-none">
-            {/* Top: Label + Tip meter (host) */}
-            <div className="flex items-start justify-between pointer-events-auto">
+          {/* UI wrapper - constrained to this div only */}
+          <div className="relative z-10 w-full h-full flex flex-col justify-between p-4">
+            {/* Top Section */}
+            <div className="w-full flex items-start justify-between">
               <span className="bg-black/60 text-white text-xs px-2 py-1 rounded">You</span>
               {isHost && <OneOnOneTipMeter roomName={roomName} />}
             </div>
-            {/* Bottom: Chat & Controls */}
-            <div className="mt-auto space-y-2 pointer-events-auto">
-              <div className="h-[120px] sm:h-[160px] bg-black/40 rounded-lg overflow-hidden">
+            {/* Bottom Section (Chat & Controls) */}
+            <div className="mt-auto w-full max-w-full">
+              <div className="bg-black/40 backdrop-blur-md rounded-lg p-2 overflow-y-auto max-h-[30vh]">
                 <OneOnOneChat roomName={roomName} />
               </div>
-              <div className="flex items-center justify-center gap-2 pb-1">
+              <div className="flex flex-wrap items-center justify-center gap-2 mt-2">
                 {!isHost && otherPartyId && (
                   <OneOnOneTipButton roomName={roomName} recipientId={otherPartyId} />
                 )}
