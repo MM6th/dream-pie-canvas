@@ -305,102 +305,115 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
 
   const sessionContent = (
     <div className="flex flex-col h-full bg-black relative">
-      {/* Countdown timer */}
-      <div className="flex justify-center py-2">
+      {/* Countdown timer - floating on top */}
+      <div className="absolute top-2 left-1/2 -translate-x-1/2 z-20">
         <div className={`flex items-center gap-2 px-4 py-1.5 rounded-full ${secondsLeft <= 60 ? 'bg-destructive/80' : 'bg-black/60'} text-white text-sm font-mono`}>
           <Clock className="h-4 w-4" />
           {formatTime(secondsLeft)}
         </div>
       </div>
-      <div className="flex flex-col sm:flex-row gap-1 p-1 flex-1 min-h-0">
-        <div className="relative rounded-lg overflow-hidden bg-muted/20 h-[30vh] sm:h-full sm:flex-1">
-          <video
-            ref={setLocalVideoElement}
-            autoPlay
-            muted
-            playsInline
-            className={`w-full h-full object-cover ${!cameraOn ? 'hidden' : ''}`}
-          />
-          {!cameraOn && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black">
-              <VideoOff className="w-10 h-10 text-muted-foreground" />
+
+      {/* Split screen container - takes all available space */}
+      <div className="flex flex-col sm:flex-row w-full flex-1 min-h-0 items-stretch">
+        {/* LEFT SIDE: You */}
+        <div className="relative flex-1 border-b sm:border-b-0 sm:border-r border-white/10 overflow-hidden min-h-0">
+          {/* Video background layer */}
+          <div className="absolute inset-0 z-0">
+            <video
+              ref={setLocalVideoElement}
+              autoPlay
+              muted
+              playsInline
+              className={`w-full h-full object-cover ${!cameraOn ? 'hidden' : ''}`}
+            />
+            {!cameraOn && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black">
+                <VideoOff className="w-10 h-10 text-muted-foreground" />
+              </div>
+            )}
+          </div>
+          {/* UI foreground layer - floating */}
+          <div className="relative z-10 h-full flex flex-col justify-between p-2 pointer-events-none">
+            {/* Top: Label + Tip meter (host) */}
+            <div className="flex items-start justify-between pointer-events-auto">
+              <span className="bg-black/60 text-white text-xs px-2 py-1 rounded">You</span>
+              {isHost && <OneOnOneTipMeter roomName={roomName} />}
             </div>
-          )}
-          <div className="absolute bottom-2 left-2">
-            <span className="bg-black/60 text-white text-xs px-2 py-1 rounded">You</span>
+            {/* Bottom: Chat & Controls */}
+            <div className="mt-auto space-y-2 pointer-events-auto">
+              <div className="h-[120px] sm:h-[160px] bg-black/40 rounded-lg overflow-hidden">
+                <OneOnOneChat roomName={roomName} />
+              </div>
+              <div className="flex items-center justify-center gap-2 pb-1">
+                {!isHost && otherPartyId && (
+                  <OneOnOneTipButton roomName={roomName} recipientId={otherPartyId} />
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={toggleCamera}
+                  className={`rounded-full ${!cameraOn ? 'border-destructive text-destructive' : 'border-white/30 text-white'} bg-black/40 hover:bg-black/60`}
+                >
+                  {cameraOn ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={toggleMic}
+                  className={`rounded-full ${!micOn ? 'border-destructive text-destructive' : 'border-white/30 text-white'} bg-black/40 hover:bg-black/60`}
+                >
+                  {micOn ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleEndSession}
+                  className="rounded-full px-4"
+                >
+                  <PhoneOff className="h-4 w-4 mr-1" />
+                  End
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
-        <div className="relative rounded-lg overflow-hidden bg-muted/20 h-[30vh] sm:h-full sm:flex-1">
-          <video
-            ref={remoteVideoRef}
-            autoPlay
-            playsInline
-            className="w-full h-full object-cover"
-          />
-          <audio ref={remoteAudioRef} autoPlay className="hidden" />
-          {!remoteConnected && !connecting && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <p className="text-white/60 text-sm">Waiting for the other person...</p>
+
+        {/* RIGHT SIDE: Remote */}
+        <div className="relative flex-1 overflow-hidden min-h-0">
+          {/* Video background layer */}
+          <div className="absolute inset-0 z-0">
+            <video
+              ref={remoteVideoRef}
+              autoPlay
+              playsInline
+              className="w-full h-full object-cover"
+            />
+            <audio ref={remoteAudioRef} autoPlay className="hidden" />
+          </div>
+          {/* UI foreground layer */}
+          <div className="relative z-10 h-full flex flex-col justify-between p-2 pointer-events-none">
+            <div className="pointer-events-auto">
+              <span className="bg-black/60 text-white text-xs px-2 py-1 rounded">
+                {isHost ? "Viewer" : "Host"}
+              </span>
             </div>
-          )}
-          <div className="absolute bottom-2 left-2">
-            <span className="bg-black/60 text-white text-xs px-2 py-1 rounded">
-              {isHost ? "Viewer" : "Host"}
-            </span>
+            {!remoteConnected && !connecting && (
+              <div className="absolute inset-0 flex items-center justify-center z-0">
+                <p className="text-white/60 text-sm">Waiting for the other person...</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
       {connecting && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/70">
+        <div className="absolute inset-0 flex items-center justify-center bg-black/70 z-30">
           <div className="text-center space-y-3">
             <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto" />
             <p className="text-white text-sm">Connecting to session...</p>
           </div>
         </div>
       )}
-
-      <div className="flex justify-center items-center gap-3 py-3 flex-wrap">
-        {/* Viewer sees tip button, host sees tip meter */}
-        {!isHost && otherPartyId && (
-          <OneOnOneTipButton roomName={roomName} recipientId={otherPartyId} />
-        )}
-        {isHost && (
-          <OneOnOneTipMeter roomName={roomName} />
-        )}
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={toggleCamera}
-          className={`rounded-full ${!cameraOn ? 'border-destructive text-destructive' : 'border-white/30 text-white'} bg-black/40 hover:bg-black/60`}
-        >
-          {cameraOn ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={toggleMic}
-          className={`rounded-full ${!micOn ? 'border-destructive text-destructive' : 'border-white/30 text-white'} bg-black/40 hover:bg-black/60`}
-        >
-          {micOn ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
-        </Button>
-        <Button
-          variant="destructive"
-          size="lg"
-          onClick={handleEndSession}
-          className="rounded-full px-8"
-        >
-          <PhoneOff className="h-5 w-5 mr-2" />
-          End Stream
-        </Button>
-      </div>
-
-      {/* Chat section — compact on mobile, taller on desktop */}
-      <div className="border-t border-white/10">
-        <div className="h-[200px] sm:h-[250px]">
-          <OneOnOneChat roomName={roomName} />
-        </div>
-      </div>
     </div>
   );
 
