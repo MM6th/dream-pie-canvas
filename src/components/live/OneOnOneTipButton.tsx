@@ -6,6 +6,9 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import sixthCoinLogo from "@/assets/sixth-coin-logo.jpg";
 
+// Test mode: bypasses token balance checks, inserts tip record directly
+const TEST_MODE_ENABLED = true;
+
 interface OneOnOneTipButtonProps {
   roomName: string;
   recipientId: string;
@@ -22,20 +25,37 @@ const OneOnOneTipButton = ({ roomName, recipientId }: OneOnOneTipButtonProps) =>
     if (!user) return;
 
     setSending(true);
-    const { error } = await supabase.rpc("tip_one_on_one" as any, {
-      p_room_name: roomName,
-      p_recipient_id: recipientId,
-      p_amount: amount,
-    });
 
-    if (error) {
-      if (error.message.includes("Insufficient")) {
-        toast({ title: "Insufficient SIXTH tokens", variant: "destructive" });
-      } else {
+    if (TEST_MODE_ENABLED) {
+      // Insert tip record directly without deducting tokens
+      const { error } = await (supabase.from("one_on_one_tips") as any).insert({
+        room_name: roomName,
+        tipper_id: user.id,
+        recipient_id: recipientId,
+        amount,
+      });
+
+      if (error) {
         toast({ title: "Tip failed", description: error.message, variant: "destructive" });
+      } else {
+        toast({ title: `Tipped ${amount} SIXTH!` });
       }
     } else {
-      toast({ title: `Tipped ${amount} SIXTH!` });
+      const { error } = await supabase.rpc("tip_one_on_one" as any, {
+        p_room_name: roomName,
+        p_recipient_id: recipientId,
+        p_amount: amount,
+      });
+
+      if (error) {
+        if (error.message.includes("Insufficient")) {
+          toast({ title: "Insufficient SIXTH tokens", variant: "destructive" });
+        } else {
+          toast({ title: "Tip failed", description: error.message, variant: "destructive" });
+        }
+      } else {
+        toast({ title: `Tipped ${amount} SIXTH!` });
+      }
     }
 
     setSending(false);
