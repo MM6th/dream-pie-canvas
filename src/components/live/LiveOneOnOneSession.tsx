@@ -362,7 +362,14 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
         </div>
       )}
 
-      <div className="flex justify-center items-center gap-3 py-3">
+      <div className="flex justify-center items-center gap-3 py-3 flex-wrap">
+        {/* Viewer sees tip button, host sees tip meter */}
+        {!isHost && otherPartyId && (
+          <OneOnOneTipButton roomName={roomName} recipientId={otherPartyId} />
+        )}
+        {isHost && (
+          <OneOnOneTipMeter roomName={roomName} />
+        )}
         <Button
           variant="outline"
           size="sm"
