@@ -89,6 +89,7 @@ const LiveOneOnOneButton = ({ hostId, streamId, onSessionActive }: LiveOneOnOneB
           setPendingRequestId(null);
           setRoomName(existingRequest.room_name || `1on1_${existingRequest.id}`);
           setShowSession(true);
+          onSessionActive?.(true);
         }
       }
     };
