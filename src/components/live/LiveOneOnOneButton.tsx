@@ -21,7 +21,7 @@ interface LiveOneOnOneButtonProps {
   onSessionActive?: (active: boolean) => void;
 }
 
-const LiveOneOnOneButton = ({ hostId, streamId }: LiveOneOnOneButtonProps) => {
+const LiveOneOnOneButton = ({ hostId, streamId, onSessionActive }: LiveOneOnOneButtonProps) => {
   const { user } = useAuth();
   const [creditsPerMessage, setCreditsPerMessage] = useState<number | null>(null);
   const [sessionDurationMinutes, setSessionDurationMinutes] = useState<number>(15);
