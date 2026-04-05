@@ -11,7 +11,6 @@ import { toast } from "@/hooks/use-toast";
 import LiveChat from "@/components/live/LiveChat";
 import LiveTipButton from "@/components/live/LiveTipButton";
 import LiveOneOnOneButton from "@/components/live/LiveOneOnOneButton";
-import { useRef as useRefState } from "react";
 
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
