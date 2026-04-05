@@ -386,6 +386,13 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
           End Stream
         </Button>
       </div>
+
+      {/* Mobile-only chat section */}
+      <div className="block sm:hidden border-t border-white/10">
+        <div className="h-[200px]">
+          <LiveChat streamId={roomName} />
+        </div>
+      </div>
     </div>
   );
 
