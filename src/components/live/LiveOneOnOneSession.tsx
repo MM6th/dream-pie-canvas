@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { useLiveKitToken } from "@/hooks/useLiveKitToken";
 import {
   Dialog,
@@ -9,7 +10,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { PhoneOff, Loader2, Clock, Video, VideoOff, Mic, MicOff } from "lucide-react";
+import { PhoneOff, Loader2, Clock, Video, VideoOff, Mic, MicOff, User } from "lucide-react";
 import OneOnOneChat from "@/components/live/OneOnOneChat";
 import OneOnOneTipButton from "@/components/live/OneOnOneTipButton";
 import OneOnOneTipMeter from "@/components/live/OneOnOneTipMeter";
@@ -54,6 +55,19 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [cameraOn, setCameraOn] = useState(true);
   const [micOn, setMicOn] = useState(true);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    supabase
+      .from("profiles")
+      .select("avatar_url")
+      .eq("id", user.id)
+      .single()
+      .then(({ data }) => {
+        if (data?.avatar_url) setAvatarUrl(data.avatar_url);
+      });
+  }, [user?.id]);
 
   const toggleCamera = async () => {
     const room = roomRef.current;
@@ -328,7 +342,11 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
             />
             {!cameraOn && (
               <div className="absolute inset-0 flex items-center justify-center bg-black">
-                <VideoOff className="w-10 h-10 text-muted-foreground" />
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt="Your avatar" className="w-24 h-24 rounded-full object-cover border-2 border-white/20" />
+                ) : (
+                  <User className="w-16 h-16 text-muted-foreground" />
+                )}
               </div>
             )}
           </div>
@@ -364,7 +382,7 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
                 >
                   {micOn ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
                 </Button>
-                <Button
+                {isHost && <Button
                   variant="destructive"
                   size="sm"
                   onClick={handleEndSession}
@@ -372,7 +390,7 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
                 >
                   <PhoneOff className="h-4 w-4 mr-1" />
                   End
-                </Button>
+                </Button>}
               </div>
             </div>
           </div>
