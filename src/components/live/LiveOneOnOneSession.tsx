@@ -335,9 +335,9 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
           {/* UI wrapper - constrained to this div only */}
           <div className="relative z-10 w-full h-full flex flex-col justify-between p-4">
             {/* Top Section */}
-            <div className="w-full flex items-start justify-between">
-              {isHost && <OneOnOneTipMeter roomName={roomName} />}
+            <div className="w-full flex flex-col items-start gap-1">
               <span className="bg-black/60 text-white text-xs px-2 py-1 rounded">You</span>
+              {isHost && <div className="mt-6"><OneOnOneTipMeter roomName={roomName} /></div>}
             </div>
             {/* Bottom Section (Chat & Controls) */}
             <div className="mt-auto w-full max-w-full">
