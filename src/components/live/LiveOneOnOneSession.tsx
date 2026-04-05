@@ -312,8 +312,8 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
           {formatTime(secondsLeft)}
         </div>
       </div>
-      <div className="flex flex-col sm:flex-row gap-1 p-1 sm:flex-1 sm:min-h-[300px]">
-        <div className="relative rounded-lg overflow-hidden bg-muted/20 h-[30vh] sm:h-auto sm:flex-1">
+      <div className="flex flex-col sm:flex-row gap-1 p-1 flex-1 min-h-0">
+        <div className="relative rounded-lg overflow-hidden bg-muted/20 h-[25vh] sm:h-auto sm:flex-1">
           <video
             ref={setLocalVideoElement}
             autoPlay
