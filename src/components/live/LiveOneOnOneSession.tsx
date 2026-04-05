@@ -424,6 +424,43 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
         </div>
       </div>
 
+      {/* Mobile-only: Chat & Controls below both video feeds */}
+      <div className="sm:hidden w-full bg-black/80 backdrop-blur-md p-3 space-y-2 overflow-y-auto max-h-[35vh]">
+        <div className="bg-black/40 rounded-lg p-2 overflow-y-auto max-h-[20vh]">
+          <OneOnOneChat roomName={roomName} />
+        </div>
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          {!isHost && otherPartyId && (
+            <OneOnOneTipButton roomName={roomName} recipientId={otherPartyId} />
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={toggleCamera}
+            className={`rounded-full ${!cameraOn ? 'border-destructive text-destructive' : 'border-white/30 text-white'} bg-black/40 hover:bg-black/60`}
+          >
+            {cameraOn ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={toggleMic}
+            className={`rounded-full ${!micOn ? 'border-destructive text-destructive' : 'border-white/30 text-white'} bg-black/40 hover:bg-black/60`}
+          >
+            {micOn ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
+          </Button>
+          {isHost && <Button
+            variant="destructive"
+            size="sm"
+            onClick={handleEndSession}
+            className="rounded-full px-4"
+          >
+            <PhoneOff className="h-4 w-4 mr-1" />
+            End
+          </Button>}
+        </div>
+      </div>
+
       {connecting && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/70 z-30">
           <div className="text-center space-y-3">
