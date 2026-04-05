@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { PhoneOff, Loader2, Clock, Video, VideoOff, Mic, MicOff } from "lucide-react";
-import LiveChat from "@/components/live/LiveChat";
+import OneOnOneChat from "@/components/live/OneOnOneChat";
 import { toast } from "@/hooks/use-toast";
 import {
   Room,
@@ -390,7 +390,7 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
       {/* Mobile-only chat section */}
       <div className="block sm:hidden border-t border-white/10">
         <div className="h-[200px]">
-          <LiveChat streamId={roomName} />
+          <OneOnOneChat roomName={roomName} />
         </div>
       </div>
     </div>
