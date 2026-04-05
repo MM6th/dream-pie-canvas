@@ -2323,6 +2323,30 @@ export type Database = {
         }
         Relationships: []
       }
+      one_on_one_chat_messages: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          room_name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          room_name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          room_name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       one_on_one_requests: {
         Row: {
           created_at: string
