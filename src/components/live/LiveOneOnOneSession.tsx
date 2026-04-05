@@ -162,13 +162,24 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
   }, [attachLocalCamera]);
 
   useEffect(() => {
-    if (!user || connectingRef.current) return;
+    console.log("1-on-1 session effect: user=", user?.id, "roomName=", roomName, "connectingRef=", connectingRef.current);
+    if (!user) {
+      console.warn("1-on-1 session: no user, skipping connect");
+      return;
+    }
+    if (!roomName) {
+      console.warn("1-on-1 session: no roomName, skipping connect");
+      return;
+    }
+    // Safety reset: allow reconnection if dependencies changed
+    connectingRef.current = false;
     connectingRef.current = true;
 
     let cancelled = false;
 
     const connect = async () => {
       try {
+        console.log("1-on-1 session: starting connect for room", roomName);
         // Delay to allow camera hardware to be released from the previous stream
         await new Promise((r) => setTimeout(r, isHost ? 2000 : 500));
         if (cancelled) return;
