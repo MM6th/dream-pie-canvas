@@ -2389,6 +2389,33 @@ export type Database = {
         }
         Relationships: []
       }
+      one_on_one_tips: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          recipient_id: string
+          room_name: string
+          tipper_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          id?: string
+          recipient_id: string
+          room_name: string
+          tipper_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          recipient_id?: string
+          room_name?: string
+          tipper_id?: string
+        }
+        Relationships: []
+      }
       platform_revenue: {
         Row: {
           amount: number
@@ -4494,6 +4521,10 @@ export type Database = {
       is_approved_merchant: { Args: { user_id: string }; Returns: boolean }
       tip_live_stream: {
         Args: { p_amount?: number; p_recipient_id: string; p_stream_id: string }
+        Returns: boolean
+      }
+      tip_one_on_one: {
+        Args: { p_amount?: number; p_recipient_id: string; p_room_name: string }
         Returns: boolean
       }
       tip_post: {
