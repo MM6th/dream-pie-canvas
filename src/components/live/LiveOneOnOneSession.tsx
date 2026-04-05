@@ -316,7 +316,7 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
       {/* Split screen container - takes all available space */}
       <div className="flex flex-col sm:flex-row w-full flex-1 min-h-0 items-stretch">
         {/* LEFT SIDE: You */}
-        <div className="relative flex-1 border-b sm:border-b-0 sm:border-r border-white/10 overflow-hidden">
+        <div className="isolate relative flex-1 border-b sm:border-b-0 sm:border-r border-white/10 overflow-hidden">
           {/* Video background layer */}
           <div className="absolute inset-0 z-0">
             <video
