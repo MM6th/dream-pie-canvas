@@ -184,7 +184,9 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
         await new Promise((r) => setTimeout(r, isHost ? 2000 : 500));
         if (cancelled) return;
 
+        console.log("1-on-1 session: requesting LiveKit token for room", roomName);
         const { token, wsUrl } = await getToken(roomName, true);
+        console.log("1-on-1 session: got token, wsUrl=", wsUrl?.substring(0, 30));
         if (cancelled) return;
 
         const room = new Room({
