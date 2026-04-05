@@ -301,7 +301,7 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
   };
 
   const sessionContent = (
-    <div className="flex flex-col h-full bg-black relative overflow-y-auto">
+    <div className="flex flex-col h-full bg-black relative">
       {/* Countdown timer */}
       <div className="flex justify-center py-2">
         <div className={`flex items-center gap-2 px-4 py-1.5 rounded-full ${secondsLeft <= 60 ? 'bg-destructive/80' : 'bg-black/60'} text-white text-sm font-mono`}>
@@ -309,8 +309,8 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
           {formatTime(secondsLeft)}
         </div>
       </div>
-      <div className="flex-1 flex flex-col sm:flex-row gap-1 p-1 min-h-[300px]">
-        <div className="flex-1 relative rounded-lg overflow-hidden bg-muted/20">
+      <div className="flex flex-col sm:flex-row gap-1 p-1 sm:flex-1 sm:min-h-[300px]">
+        <div className="relative rounded-lg overflow-hidden bg-muted/20 h-[30vh] sm:h-auto sm:flex-1">
           <video
             ref={setLocalVideoElement}
             autoPlay
@@ -328,7 +328,7 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
             <span className="bg-black/60 text-white text-xs px-2 py-1 rounded">You</span>
           </div>
         </div>
-        <div className="flex-1 relative rounded-lg overflow-hidden bg-muted/20">
+        <div className="relative rounded-lg overflow-hidden bg-muted/20 h-[30vh] sm:h-auto sm:flex-1">
           <video
             ref={remoteVideoRef}
             autoPlay
