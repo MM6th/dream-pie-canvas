@@ -323,6 +323,7 @@ const LiveOneOnOneButton = ({ hostId, streamId, onSessionActive }: LiveOneOnOneB
             setPendingRequestId(null);
             setRequestStatus(null);
             setRoomName(null);
+            onSessionActive?.(false);
           }}
         />
       )}
