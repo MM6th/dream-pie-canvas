@@ -27,6 +27,7 @@ interface LiveOneOnOneSessionProps {
   onClose: () => void;
   inline?: boolean;
   durationMinutes?: number;
+  otherPartyId?: string;
 }
 
 const safePlay = (element: HTMLMediaElement | null) => {
