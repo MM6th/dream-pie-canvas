@@ -524,6 +524,7 @@ const GoLive = () => {
                   isHost={true}
                   inline={true}
                   durationMinutes={hostSessionDuration}
+                  otherPartyId={activeSessionViewerId || undefined}
                   onClose={async () => {
                     setActiveSessionRoom(null);
                     // End the entire stream when 1-on-1 session ends
