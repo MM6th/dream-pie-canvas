@@ -405,7 +405,11 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
   );
 
   if (inline) {
-    return <div className="absolute inset-0 z-30 bg-black rounded-xl overflow-hidden">{sessionContent}</div>;
+    return (
+      <div className="relative w-full z-30 bg-black rounded-xl flex flex-col">
+        {sessionContent}
+      </div>
+    );
   }
 
   return (
