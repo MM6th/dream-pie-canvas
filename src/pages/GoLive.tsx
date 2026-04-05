@@ -604,7 +604,7 @@ const GoLive = () => {
 
           {/* Chat sidebar */}
           <div className="space-y-4">
-            {isLive && streamId ? (
+            {isLive && streamId && !privateSessionActive ? (
               <>
                 <LiveOneOnOneRequests
                   streamId={streamId}
@@ -614,6 +614,13 @@ const GoLive = () => {
                 <LiveChat streamId={streamId} />
                 <LiveTipDisplay streamId={streamId} merchantId={user.id} />
               </>
+            ) : isLive && streamId && privateSessionActive ? (
+              <Card className="bg-card border-border">
+                <CardContent className="p-6 text-center">
+                  <MessageSquare className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+                  <p className="text-muted-foreground text-sm">1-on-1 session active — chat & tips are inside the session above</p>
+                </CardContent>
+              </Card>
             ) : (
               <Card className="bg-card border-border">
                 <CardContent className="p-6 text-center">
