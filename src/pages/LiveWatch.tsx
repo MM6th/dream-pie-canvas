@@ -58,6 +58,7 @@ const LiveWatch = () => {
   const [muted, setMuted] = useState(false);
   const [hostCameraOff, setHostCameraOff] = useState(false);
   const [hostAvatarUrl, setHostAvatarUrl] = useState<string | null>(null);
+  const inOneOnOneRef = useRef(false);
   const userRef = useRef(user);
   userRef.current = user;
 
