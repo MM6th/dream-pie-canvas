@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { PhoneOff, Loader2, Clock, Video, VideoOff, Mic, MicOff } from "lucide-react";
+import LiveChat from "@/components/live/LiveChat";
 import { toast } from "@/hooks/use-toast";
 import {
   Room,
