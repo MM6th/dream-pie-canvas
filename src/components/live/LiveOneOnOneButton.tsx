@@ -18,6 +18,7 @@ import LiveOneOnOneSession from "@/components/live/LiveOneOnOneSession";
 interface LiveOneOnOneButtonProps {
   hostId: string;
   streamId: string;
+  onSessionActive?: (active: boolean) => void;
 }
 
 const LiveOneOnOneButton = ({ hostId, streamId }: LiveOneOnOneButtonProps) => {
