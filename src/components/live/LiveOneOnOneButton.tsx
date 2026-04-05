@@ -137,6 +137,7 @@ const LiveOneOnOneButton = ({ hostId, streamId, onSessionActive }: LiveOneOnOneB
       });
       setShowSession(true);
       setRequestStatus("accepted");
+      onSessionActive?.(true);
     };
 
     const handleRejected = () => {
