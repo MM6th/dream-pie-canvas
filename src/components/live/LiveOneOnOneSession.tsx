@@ -331,7 +331,7 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
   };
 
   const sessionContent = (
-    <div className="flex flex-col h-full bg-black relative">
+    <div className="flex flex-col h-full bg-black relative overflow-y-auto sm:overflow-hidden">
       {/* Countdown timer - floating on top */}
       <div className="absolute top-2 left-1/2 -translate-x-1/2 z-20">
         <div className={`flex items-center gap-2 px-4 py-1.5 rounded-full ${secondsLeft <= 60 ? 'bg-destructive/80' : 'bg-black/60'} text-white text-sm font-mono`}>
@@ -340,10 +340,10 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
         </div>
       </div>
 
-      {/* Split screen container - takes all available space */}
+      {/* Split screen container */}
       <div className="flex flex-col sm:flex-row w-full flex-1 min-h-0 items-stretch">
         {/* LEFT SIDE: You */}
-        <div className="isolate relative flex-1 border-b sm:border-b-0 sm:border-r border-white/10 overflow-hidden">
+        <div className="isolate relative flex-1 border-b sm:border-b-0 sm:border-r border-white/10 overflow-hidden min-h-[35vh] sm:min-h-0">
           {/* Video background layer */}
           <div className="absolute inset-0 z-0">
             <video
@@ -363,15 +363,15 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
               </div>
             )}
           </div>
-          {/* UI wrapper - constrained to this div only */}
+          {/* UI wrapper - labels + tip meter only; on desktop also shows chat & controls */}
           <div className="relative z-10 w-full h-full flex flex-col justify-between p-4">
             {/* Top Section */}
             <div className="w-full flex flex-col items-start gap-1">
               <span className="bg-black/60 text-white text-xs px-2 py-1 rounded">You</span>
               {isHost && <div className="mt-6"><OneOnOneTipMeter roomName={roomName} /></div>}
             </div>
-            {/* Bottom Section (Chat & Controls) */}
-            <div className="mt-auto w-full max-w-full">
+            {/* Desktop-only: Chat & Controls overlaid on video */}
+            <div className="hidden sm:block mt-auto w-full max-w-full">
               <div className="bg-black/40 backdrop-blur-md rounded-lg p-2 overflow-y-auto max-h-[30vh]">
                 <OneOnOneChat roomName={roomName} />
               </div>
@@ -379,30 +379,16 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
                 {!isHost && otherPartyId && (
                   <OneOnOneTipButton roomName={roomName} recipientId={otherPartyId} />
                 )}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={toggleCamera}
-                  className={`rounded-full ${!cameraOn ? 'border-destructive text-destructive' : 'border-white/30 text-white'} bg-black/40 hover:bg-black/60`}
-                >
+                <Button variant="outline" size="sm" onClick={toggleCamera}
+                  className={`rounded-full ${!cameraOn ? 'border-destructive text-destructive' : 'border-white/30 text-white'} bg-black/40 hover:bg-black/60`}>
                   {cameraOn ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={toggleMic}
-                  className={`rounded-full ${!micOn ? 'border-destructive text-destructive' : 'border-white/30 text-white'} bg-black/40 hover:bg-black/60`}
-                >
+                <Button variant="outline" size="sm" onClick={toggleMic}
+                  className={`rounded-full ${!micOn ? 'border-destructive text-destructive' : 'border-white/30 text-white'} bg-black/40 hover:bg-black/60`}>
                   {micOn ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
                 </Button>
-                {isHost && <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={handleEndSession}
-                  className="rounded-full px-4"
-                >
-                  <PhoneOff className="h-4 w-4 mr-1" />
-                  End
+                {isHost && <Button variant="destructive" size="sm" onClick={handleEndSession} className="rounded-full px-4">
+                  <PhoneOff className="h-4 w-4 mr-1" /> End
                 </Button>}
               </div>
             </div>
@@ -410,15 +396,10 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
         </div>
 
         {/* RIGHT SIDE: Remote */}
-        <div className="relative flex-1 overflow-hidden min-h-0">
+        <div className="relative flex-1 overflow-hidden min-h-[35vh] sm:min-h-0">
           {/* Video background layer */}
           <div className="absolute inset-0 z-0">
-            <video
-              ref={remoteVideoRef}
-              autoPlay
-              playsInline
-              className="w-full h-full object-cover"
-            />
+            <video ref={remoteVideoRef} autoPlay playsInline className="w-full h-full object-cover" />
             <audio ref={remoteAudioRef} autoPlay className="hidden" />
           </div>
           {/* UI foreground layer */}
@@ -434,6 +415,29 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
               </div>
             )}
           </div>
+        </div>
+      </div>
+
+      {/* Mobile-only: Chat & Controls below both video feeds */}
+      <div className="sm:hidden w-full p-3 bg-black/90 border-t border-white/10">
+        <div className="bg-black/40 backdrop-blur-md rounded-lg p-2 overflow-y-auto max-h-[25vh]">
+          <OneOnOneChat roomName={roomName} />
+        </div>
+        <div className="flex flex-wrap items-center justify-center gap-2 mt-2">
+          {!isHost && otherPartyId && (
+            <OneOnOneTipButton roomName={roomName} recipientId={otherPartyId} />
+          )}
+          <Button variant="outline" size="sm" onClick={toggleCamera}
+            className={`rounded-full ${!cameraOn ? 'border-destructive text-destructive' : 'border-white/30 text-white'} bg-black/40 hover:bg-black/60`}>
+            {cameraOn ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
+          </Button>
+          <Button variant="outline" size="sm" onClick={toggleMic}
+            className={`rounded-full ${!micOn ? 'border-destructive text-destructive' : 'border-white/30 text-white'} bg-black/40 hover:bg-black/60`}>
+            {micOn ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
+          </Button>
+          {isHost && <Button variant="destructive" size="sm" onClick={handleEndSession} className="rounded-full px-4">
+            <PhoneOff className="h-4 w-4 mr-1" /> End
+          </Button>}
         </div>
       </div>
 
