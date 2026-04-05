@@ -10,8 +10,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { PhoneOff, Loader2, Clock, Video, VideoOff, Mic, MicOff } from "lucide-react";
-import { User } from "lucide-react";
+import { PhoneOff, Loader2, Clock, Video, VideoOff, Mic, MicOff, User } from "lucide-react";
 import OneOnOneChat from "@/components/live/OneOnOneChat";
 import OneOnOneTipButton from "@/components/live/OneOnOneTipButton";
 import OneOnOneTipMeter from "@/components/live/OneOnOneTipMeter";
