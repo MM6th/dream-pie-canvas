@@ -313,14 +313,13 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
         </div>
       </div>
       <div className="flex flex-col sm:flex-row gap-1 p-1 flex-1 min-h-0">
-        <div className="relative rounded-lg overflow-hidden bg-muted/20 h-[25vh] sm:h-auto sm:flex-1">
+        <div className="relative rounded-lg overflow-hidden bg-muted/20 h-[30vh] sm:h-full sm:flex-1">
           <video
             ref={setLocalVideoElement}
             autoPlay
             muted
             playsInline
             className={`w-full h-full object-cover ${!cameraOn ? 'hidden' : ''}`}
-            style={{ aspectRatio: "9/16" }}
           />
           {!cameraOn && (
             <div className="absolute inset-0 flex items-center justify-center bg-black">
@@ -331,13 +330,12 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
             <span className="bg-black/60 text-white text-xs px-2 py-1 rounded">You</span>
           </div>
         </div>
-        <div className="relative rounded-lg overflow-hidden bg-muted/20 h-[25vh] sm:h-auto sm:flex-1">
+        <div className="relative rounded-lg overflow-hidden bg-muted/20 h-[30vh] sm:h-full sm:flex-1">
           <video
             ref={remoteVideoRef}
             autoPlay
             playsInline
             className="w-full h-full object-cover"
-            style={{ aspectRatio: "9/16" }}
           />
           <audio ref={remoteAudioRef} autoPlay className="hidden" />
           {!remoteConnected && !connecting && (
