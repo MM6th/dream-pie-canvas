@@ -181,10 +181,11 @@ const GoLive = () => {
     }
   }, [getToken, startPreview, startHeartbeat]);
 
-  const pauseLiveBroadcastForSession = useCallback(async (roomName: string) => {
+  const pauseLiveBroadcastForSession = useCallback(async (roomName: string, viewerId?: string) => {
     setPrivateSessionActive(true);
     privateSessionRef.current = true;
     setActiveSessionRoom(roomName);
+    setActiveSessionViewerId(viewerId || null);
 
     // Mark stream as in private session so viewers can't join
     if (streamIdRef.current) {
