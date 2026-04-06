@@ -162,7 +162,7 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
   }, [attachLocalCamera]);
 
   useEffect(() => {
-    console.log("1-on-1 session effect: user=", user?.id, "roomName=", roomName, "connectingRef=", connectingRef.current);
+    console.log("1-on-1 session effect: user=", user?.id, "roomName=", roomName);
     if (!user) {
       console.warn("1-on-1 session: no user, skipping connect");
       return;
@@ -171,22 +171,43 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
       console.warn("1-on-1 session: no roomName, skipping connect");
       return;
     }
-    // Safety reset: allow reconnection if dependencies changed
-    connectingRef.current = false;
-    connectingRef.current = true;
 
     let cancelled = false;
+    connectingRef.current = false;
+
+    const getTokenWithRetry = async (retries = 3, delayMs = 1500): Promise<{ token: string; wsUrl: string }> => {
+      for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+          console.log(`1-on-1 session: token attempt ${attempt}/${retries} for room`, roomName);
+          const result = await getToken(roomName, true);
+          console.log("1-on-1 session: got token, wsUrl=", result.wsUrl?.substring(0, 30));
+          return result;
+        } catch (err: any) {
+          console.warn(`1-on-1 session: token attempt ${attempt} failed:`, err.message);
+          if (attempt === retries) throw err;
+          await new Promise((r) => setTimeout(r, delayMs));
+          if (cancelled) throw new Error("Cancelled");
+        }
+      }
+      throw new Error("Failed to get token");
+    };
 
     const connect = async () => {
+      if (connectingRef.current) {
+        console.warn("1-on-1 session: already connecting, skipping");
+        return;
+      }
+      connectingRef.current = true;
+
       try {
-        console.log("1-on-1 session: starting connect for room", roomName);
+        console.log("1-on-1 session: starting connect for room", roomName, "isHost=", isHost);
         // Delay to allow camera hardware to be released from the previous stream
-        await new Promise((r) => setTimeout(r, isHost ? 2000 : 500));
+        const delay = isHost ? 2500 : 800;
+        console.log(`1-on-1 session: waiting ${delay}ms for hardware release`);
+        await new Promise((r) => setTimeout(r, delay));
         if (cancelled) return;
 
-        console.log("1-on-1 session: requesting LiveKit token for room", roomName);
-        const { token, wsUrl } = await getToken(roomName, true);
-        console.log("1-on-1 session: got token, wsUrl=", wsUrl?.substring(0, 30));
+        const { token, wsUrl } = await getTokenWithRetry();
         if (cancelled) return;
 
         const room = new Room({
@@ -279,6 +300,7 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
 
         setConnecting(false);
       } catch (err: any) {
+        connectingRef.current = false;
         if (cancelled) return;
         console.error("1-on-1 session connect error:", err);
         toast({
@@ -287,7 +309,11 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
           variant: "destructive",
           duration: 7000,
         });
-        onClose();
+        // Don't call onClose immediately — give user a chance to see the error
+        // The session will show the "Connecting..." overlay
+        setTimeout(() => {
+          if (!cancelled) onClose();
+        }, 3000);
       }
     };
 
