@@ -8,9 +8,23 @@ export const useLiveKitToken = () => {
     setLoading(true);
     try {
       // Ensure we have a valid session before invoking the edge function
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      let sessionData: any;
+      let sessionError: any;
+      
+      // Retry getSession up to 2 times in case of a brief auth refresh
+      for (let i = 0; i < 2; i++) {
+        const result = await supabase.auth.getSession();
+        sessionData = result.data;
+        sessionError = result.error;
+        if (!sessionError && sessionData?.session) break;
+        if (i === 0) {
+          console.warn("LiveKit token: session not ready, retrying in 1s...");
+          await new Promise((r) => setTimeout(r, 1000));
+        }
+      }
+      
       if (sessionError || !sessionData?.session) {
-        console.error("LiveKit token: No valid session", sessionError);
+        console.error("LiveKit token: No valid session after retries", sessionError);
         throw new Error("No valid auth session. Please log in again.");
       }
       console.log("LiveKit token: session valid, invoking edge function for room", roomName);
