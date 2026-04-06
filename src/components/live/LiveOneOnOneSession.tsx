@@ -396,12 +396,9 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
               <span className="bg-black/60 text-white text-xs px-2 py-1 rounded">You</span>
               {isHost && <div className="mt-6"><OneOnOneTipMeter roomName={roomName} /></div>}
             </div>
-            {/* Bottom Section (Chat & Controls) */}
+            {/* Bottom Section (Controls only - chat moved to sidebar) */}
             <div className="mt-auto w-full max-w-full">
-              <div className="bg-black/40 backdrop-blur-md rounded-lg p-2 overflow-y-auto max-h-[30vh]">
-                <OneOnOneChat roomName={roomName} />
-              </div>
-              <div className="flex flex-wrap items-center justify-center gap-2 mt-2">
+              <div className="flex flex-wrap items-center justify-center gap-2">
                 {!isHost && otherPartyId && (
                   <OneOnOneTipButton roomName={roomName} recipientId={otherPartyId} />
                 )}
