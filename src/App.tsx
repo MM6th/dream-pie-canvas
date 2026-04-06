@@ -21,6 +21,7 @@ import GoLive from "./pages/GoLive";
 import LiveWatch from "./pages/LiveWatch";
 import LegacyLivestreamRedirect from "./pages/LegacyLivestreamRedirect";
 import NotFound from "./pages/NotFound";
+import ContestLive from "./pages/ContestLive";
 
 const queryClient = new QueryClient();
 
@@ -46,6 +47,7 @@ const App = () => (
           <Route path="/live" element={<Live />} />
           <Route path="/go-live" element={<GoLive />} />
           <Route path="/live/:streamId" element={<LiveWatch />} />
+          <Route path="/contest/:postId" element={<ContestLive />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

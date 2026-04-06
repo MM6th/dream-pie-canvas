@@ -894,6 +894,154 @@ export type Database = {
           },
         ]
       }
+      contest_invitations: {
+        Row: {
+          bulletin_post_id: string
+          contest_session_id: string | null
+          created_at: string
+          id: string
+          invitee_id: string
+          inviter_id: string
+          status: string
+        }
+        Insert: {
+          bulletin_post_id: string
+          contest_session_id?: string | null
+          created_at?: string
+          id?: string
+          invitee_id: string
+          inviter_id: string
+          status?: string
+        }
+        Update: {
+          bulletin_post_id?: string
+          contest_session_id?: string | null
+          created_at?: string
+          id?: string
+          invitee_id?: string
+          inviter_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contest_invitations_bulletin_post_id_fkey"
+            columns: ["bulletin_post_id"]
+            isOneToOne: false
+            referencedRelation: "bulletin_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contest_invitations_contest_session_id_fkey"
+            columns: ["contest_session_id"]
+            isOneToOne: false
+            referencedRelation: "contest_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contest_invitations_invitee_id_fkey"
+            columns: ["invitee_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contest_invitations_invitee_id_fkey"
+            columns: ["invitee_id"]
+            isOneToOne: false
+            referencedRelation: "public_profile_data"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contest_invitations_inviter_id_fkey"
+            columns: ["inviter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contest_invitations_inviter_id_fkey"
+            columns: ["inviter_id"]
+            isOneToOne: false
+            referencedRelation: "public_profile_data"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contest_sessions: {
+        Row: {
+          bulletin_post_id: string
+          challenger_id: string
+          champion_id: string
+          created_at: string
+          ended_at: string | null
+          id: string
+          room_name: string
+          started_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          bulletin_post_id: string
+          challenger_id: string
+          champion_id: string
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          room_name: string
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          bulletin_post_id?: string
+          challenger_id?: string
+          champion_id?: string
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          room_name?: string
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contest_sessions_bulletin_post_id_fkey"
+            columns: ["bulletin_post_id"]
+            isOneToOne: false
+            referencedRelation: "bulletin_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contest_sessions_challenger_id_fkey"
+            columns: ["challenger_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contest_sessions_challenger_id_fkey"
+            columns: ["challenger_id"]
+            isOneToOne: false
+            referencedRelation: "public_profile_data"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contest_sessions_champion_id_fkey"
+            columns: ["champion_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contest_sessions_champion_id_fkey"
+            columns: ["champion_id"]
+            isOneToOne: false
+            referencedRelation: "public_profile_data"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contracts: {
         Row: {
           admin_signature: string | null

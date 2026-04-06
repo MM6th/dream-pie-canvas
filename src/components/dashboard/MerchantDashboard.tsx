@@ -33,6 +33,7 @@ import AstrologyAudioPlayer from "@/components/AstrologyAudioPlayer";
 import { FreeAstrologyResourceModal } from "@/components/FreeAstrologyResourceModal";
 import { useFreeAstrologyResource } from "@/hooks/useFreeAstrologyResource";
 import SupportCenterCard from "@/components/support/SupportCenterCard";
+import ContestInviteCard from "@/components/contest/ContestInviteCard";
 
 interface MerchantDashboardProps {
   onSuccess: () => void;
@@ -229,7 +230,13 @@ const MerchantDashboard = ({
             isAdmin={isAdmin}
           />
           
-          
+          {/* Contest Invitations Card */}
+          {(isApproved || isAdmin) && (
+            <div className="mb-6">
+              <ContestInviteCard />
+            </div>
+          )}
+
           {/* Only show modeling applications for approved merchants (not admins) */}
           {isApproved && !isAdmin && (
             <div className="mb-8" data-tutorial="modeling">
