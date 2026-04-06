@@ -1,39 +1,38 @@
+## Live Challenge Contest Stream
 
+### Overview
+When a scheduled live challenge time arrives, the champion and challenger are automatically redirected into a split-screen contest livestream (reusing the 1-on-1 session layout). Spectators can only watch if privately invited by either participant.
 
-## Diagnosis: 1-on-1 Session Black Screen
+### Phase 1: Database Setup
+- **`contest_invitations` table** — stores invites from champion/challenger to spectators (inviter_id, invitee_id, bulletin_post_id, status)
+- **`contest_sessions` table** — tracks active contest streams (bulletin_post_id, room_name, champion_id, challenger_id, started_at, ended_at, status)
 
-### What I Found
+### Phase 2: Invite System
+- Add a **"Contest Invites" card** to the merchant dashboard for champions and challengers
+- Dropdown selection to pick users (followers/connections) to invite as spectators
+- Invitees receive a notification with a link to watch the contest
 
-**Critical evidence from edge function logs:** There are **zero** LiveKit token requests for any `1on1_` room in the recent logs. Every token issued is for the main `stream-*` rooms. This means the `LiveOneOnOneSession` component is failing **before** it even requests a LiveKit token — the connect function on line 170 of `LiveOneOnOneSession.tsx` is either:
+### Phase 3: Auto-Redirect System
+- A polling hook (`useContestRedirect`) checks if the current user is a champion or challenger in a contest whose `scheduled_at` time has arrived
+- When triggered, auto-navigates to a new `/contest/:postId` route
+- Creates the LiveKit room and contest session record automatically
 
-1. Exiting early (e.g., `connectingRef.current` stuck at `true`)
-2. Throwing an error in the `getToken` call that triggers `onClose()` immediately
-3. The component is not mounting at all because `showSession` or `roomName` is never set correctly
+### Phase 4: Contest Livestream Page
+- Reuses the split-screen layout from `LiveOneOnOneSession`
+- Timer uses `challenge_time_limit_minutes` with auto-end
+- Spectators see both feeds in view-only mode (no camera/mic)
+- Champion and challenger each have camera/mic controls
+- No end button for the challenger (similar to 1-on-1 viewer restriction)
 
-### Root Cause Analysis
+### Phase 5: Spectator View
+- Invited spectators get a notification + can join from `/contest/:postId`
+- View-only: two video feeds side-by-side, no controls
+- Chat available for spectators to comment
 
-After the revert, the most likely issue is a **mismatch between reverted frontend code and the current database schema**. During our session, we added columns like `room_name` to the `one_on_one_requests` table. The reverted code may:
-
-- Not include `room_name` in the select/update queries in `LiveOneOnOneRequests.tsx`
-- Use a different room naming convention
-- Have the viewer's `LiveOneOnOneButton` expecting a different flow to set `showSession = true`
-
-### Proposed Fix (3 steps)
-
-1. **Add console logging to the 1-on-1 connect flow** in `LiveOneOnOneSession.tsx` — right before `getToken` is called and in the catch block — so we can see exactly where it fails in the browser console.
-
-2. **Verify `room_name` column** exists in the `one_on_one_requests` table and that both `LiveOneOnOneRequests.tsx` (host accept) and `LiveOneOnOneButton.tsx` (viewer receive) correctly read/write it.
-
-3. **Check for stale `connectingRef`** — Add a safety reset at the top of the effect to ensure `connectingRef.current` can't get stuck from a previous failed attempt. The current code sets it `false` in cleanup, but if cleanup doesn't run (e.g., component stays mounted across state changes), it blocks all reconnection attempts.
-
-### Is This a Lovable Platform Issue?
-
-**No.** The LiveKit edge function is responding correctly (tokens issued for main streams), the Supabase realtime is working (requests are flowing), and the database is accessible. This is a **code-level** issue — specifically the 1-on-1 session flow not reaching the token request stage after the revert.
-
-### Technical Details
-
-**Files to modify:**
-- `src/components/live/LiveOneOnOneSession.tsx` — Add diagnostic logging + fix `connectingRef` guard
-- `src/components/live/LiveOneOnOneRequests.tsx` — Verify `room_name` is included in the accept update
-- `src/components/live/LiveOneOnOneButton.tsx` — Verify `room_name` is read from the accepted payload
-
+### Files to create/modify
+- New migration for `contest_invitations` and `contest_sessions` tables
+- `src/pages/ContestLive.tsx` — contest stream page
+- `src/components/contest/ContestSession.tsx` — split-screen contest component
+- `src/components/contest/ContestInviteCard.tsx` — dashboard invite card
+- `src/hooks/useContestRedirect.tsx` — auto-redirect polling hook
+- `src/App.tsx` — add `/contest/:postId` route
