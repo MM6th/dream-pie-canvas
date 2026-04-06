@@ -21,6 +21,7 @@ import GoLive from "./pages/GoLive";
 import LiveWatch from "./pages/LiveWatch";
 import LegacyLivestreamRedirect from "./pages/LegacyLivestreamRedirect";
 import NotFound from "./pages/NotFound";
+import ContestLive from "./pages/ContestLive";
 
 const queryClient = new QueryClient();
 
