@@ -194,7 +194,7 @@ const ContestLive = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black flex flex-col">
+    <div className="h-screen bg-black flex flex-col overflow-hidden">
       <div className="flex-1 min-h-0">
         <ContestSession
           roomName={contestData.roomName}
