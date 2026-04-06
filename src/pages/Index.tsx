@@ -42,7 +42,10 @@ const Index = () => {
   const [purchasedPodcasts, setPurchasedPodcasts] = useState<AudioTrack[]>([]);
   const [purchasedVideos, setPurchasedVideos] = useState<VideoTrack[]>([]);
 
-  useEffect(() => {
+  // Auto-redirect to contest if scheduled time arrives
+  useContestRedirect();
+  useContestInviteRedirect();
+
     console.log('Index component mounted, user:', user, 'loading:', loading);
     if (user && !loading) {
       fetchUserProfile();
