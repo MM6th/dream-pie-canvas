@@ -284,7 +284,9 @@ const LiveOneOnOneButton = ({ hostId, streamId }: LiveOneOnOneButtonProps) => {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <img src={payPhoneIcon} alt="1-on-1" className="h-5 w-5 object-contain" />
+              <span className="flex h-5 w-5 items-center justify-center rounded-sm bg-black overflow-hidden">
+                <img src={payPhoneIcon} alt="1-on-1" className="h-5 w-5 object-contain" />
+              </span>
               1-on-1 Request Sent
             </DialogTitle>
             <DialogDescription>
