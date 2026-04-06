@@ -56,6 +56,7 @@ const OneOnOneTipButton = ({ roomName, recipientId }: OneOnOneTipButtonProps) =>
           toast({ title: "Tip failed", description: error.message, variant: "destructive" });
         }
       } else {
+        playCoinSound();
         toast({ title: `Tipped ${amount} SIXTH!` });
       }
     }

@@ -37,6 +37,7 @@ const OneOnOneTipMeter = ({ roomName }: OneOnOneTipMeterProps) => {
         filter: `room_name=eq.${roomName}`,
       }, (payload: any) => {
         console.log("Tip meter realtime event:", payload);
+        playCoinSound();
         setTotalTips((prev) => prev + (payload.new?.amount || 0));
       })
       .subscribe((status: string) => {
