@@ -8,6 +8,8 @@ import { useApprovalStatus } from "@/hooks/useApprovalStatus";
 import { toast } from "@/hooks/use-toast";
 import StoreView from "@/pages/views/StoreView";
 import DashboardView from "@/pages/views/DashboardView";
+import { useContestRedirect } from "@/hooks/useContestRedirect";
+import { useContestInviteRedirect } from "@/hooks/useContestInviteRedirect";
 
 interface AudioTrack {
   id: string;

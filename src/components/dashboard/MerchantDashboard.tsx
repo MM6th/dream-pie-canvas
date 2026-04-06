@@ -230,7 +230,13 @@ const MerchantDashboard = ({
             isAdmin={isAdmin}
           />
           
-          
+          {/* Contest Invitations Card */}
+          {(isApproved || isAdmin) && (
+            <div className="mb-6">
+              <ContestInviteCard />
+            </div>
+          )}
+
           {/* Only show modeling applications for approved merchants (not admins) */}
           {isApproved && !isAdmin && (
             <div className="mb-8" data-tutorial="modeling">
