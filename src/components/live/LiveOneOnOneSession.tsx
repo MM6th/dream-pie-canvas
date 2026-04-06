@@ -300,6 +300,7 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
 
         setConnecting(false);
       } catch (err: any) {
+        connectingRef.current = false;
         if (cancelled) return;
         console.error("1-on-1 session connect error:", err);
         toast({
@@ -308,7 +309,11 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
           variant: "destructive",
           duration: 7000,
         });
-        onClose();
+        // Don't call onClose immediately — give user a chance to see the error
+        // The session will show the "Connecting..." overlay
+        setTimeout(() => {
+          if (!cancelled) onClose();
+        }, 3000);
       }
     };
 
