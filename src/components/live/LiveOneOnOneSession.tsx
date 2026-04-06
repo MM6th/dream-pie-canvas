@@ -481,12 +481,18 @@ const LiveOneOnOneSession = ({ roomName, isHost, onClose, inline = false, durati
 
   return (
     <Dialog open onOpenChange={() => handleEndSession()}>
-      <DialogContent className="max-w-4xl w-[95vw] h-[90vh] p-0 gap-0 overflow-hidden bg-black border-border">
+      <DialogContent className="max-w-4xl w-[95vw] h-[90vh] p-0 gap-0 overflow-hidden bg-black border-border flex flex-col">
         <DialogHeader className="sr-only">
           <DialogTitle>1-on-1 Session</DialogTitle>
           <DialogDescription>Private video session</DialogDescription>
         </DialogHeader>
-        {sessionContent}
+        <div className="flex-1 min-h-0">
+          {sessionContent}
+        </div>
+        {/* Chat below the video feeds for viewer (Dialog mode) */}
+        <div className="w-full border-t border-white/10 bg-card max-h-[30vh] overflow-hidden">
+          <OneOnOneChat roomName={roomName} />
+        </div>
       </DialogContent>
     </Dialog>
   );
