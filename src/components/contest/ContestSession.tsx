@@ -286,28 +286,23 @@ const ContestSession = ({
 
   return (
     <div className="flex flex-col h-full bg-black relative">
-      {/* Header bar */}
-      <div className="flex items-center justify-between px-4 py-2 bg-black/80 border-b border-white/10 z-20">
-        <div className="flex items-center gap-2">
-          <Trophy className="h-5 w-5 text-yellow-400" />
-          <span className="text-white font-bold text-sm">{challengeLabel}</span>
+      {/* Floating header - same pattern as 1-on-1 timer */}
+      <div className="absolute top-2 left-1/2 -translate-x-1/2 z-20 flex items-center gap-3">
+        <div className="flex items-center gap-1 bg-black/60 text-yellow-400 text-xs px-2 py-1 rounded">
+          <Trophy className="h-3.5 w-3.5" />
+          <span className="text-white font-bold">{challengeLabel}</span>
         </div>
         <div className={`flex items-center gap-2 px-4 py-1.5 rounded-full ${secondsLeft <= 60 ? "bg-destructive/80" : "bg-black/60"} text-white text-sm font-mono`}>
           <Clock className="h-4 w-4" />
           {formatTime(secondsLeft)}
         </div>
-        {role === "champion" && (
-          <Button variant="destructive" size="sm" onClick={onEnd} className="rounded-full px-4">
-            End Contest
-          </Button>
-        )}
-        {role !== "champion" && <div />}
       </div>
 
-      {/* Split screen */}
+      {/* Split screen container - identical structure to LiveOneOnOneSession */}
       <div className="flex flex-col sm:flex-row w-full flex-1 min-h-0 items-stretch">
-        {/* LEFT: Your feed */}
-        <div className="isolate relative flex-1 min-h-[30vh] sm:min-h-0 border-b sm:border-b-0 sm:border-r border-white/10 overflow-hidden">
+        {/* LEFT SIDE: You */}
+        <div className="isolate relative flex-1 border-b sm:border-b-0 sm:border-r border-white/10 overflow-hidden">
+          {/* Video background layer */}
           <div className="absolute inset-0 z-0">
             <video
               ref={isParticipant ? setLocalVideoElement : undefined}
@@ -326,48 +321,60 @@ const ContestSession = ({
               </div>
             )}
           </div>
-          <div className="relative z-10 w-full h-full flex flex-col justify-between p-4 pointer-events-none">
-            <div className="pointer-events-auto flex items-start justify-between">
+          {/* UI wrapper */}
+          <div className="relative z-10 w-full h-full flex flex-col justify-between p-4">
+            {/* Top Section */}
+            <div className="w-full flex flex-col items-start gap-1">
               <span className={`${role === "champion" ? "bg-yellow-600/80" : "bg-red-600/80"} text-white text-xs px-2 py-1 rounded flex items-center gap-1`}>
                 {role === "champion" && <Trophy className="h-3 w-3" />} {myLabel}
               </span>
-              {role === "champion" && <OneOnOneTipMeter roomName={roomName} />}
+              {role === "champion" && <div className="mt-6"><OneOnOneTipMeter roomName={roomName} /></div>}
             </div>
+            {/* Bottom Section */}
             {isParticipant && (
-              <div className="mt-auto pointer-events-auto flex flex-wrap items-center justify-center gap-2">
-                {role === "challenger" && championId && (
-                  <OneOnOneTipButton roomName={roomName} recipientId={championId} />
-                )}
-                <Button variant="outline" size="sm" onClick={toggleCamera}
-                  className={`rounded-full ${!cameraOn ? "border-destructive text-destructive" : "border-white/30 text-white"} bg-black/40 hover:bg-black/60`}>
-                  {cameraOn ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
-                </Button>
-                <Button variant="outline" size="sm" onClick={toggleMic}
-                  className={`rounded-full ${!micOn ? "border-destructive text-destructive" : "border-white/30 text-white"} bg-black/40 hover:bg-black/60`}>
-                  {micOn ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
-                </Button>
+              <div className="mt-auto w-full max-w-full">
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                  {role === "challenger" && championId && (
+                    <OneOnOneTipButton roomName={roomName} recipientId={championId} />
+                  )}
+                  <Button variant="outline" size="sm" onClick={toggleCamera}
+                    className={`rounded-full ${!cameraOn ? "border-destructive text-destructive" : "border-white/30 text-white"} bg-black/40 hover:bg-black/60`}>
+                    {cameraOn ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={toggleMic}
+                    className={`rounded-full ${!micOn ? "border-destructive text-destructive" : "border-white/30 text-white"} bg-black/40 hover:bg-black/60`}>
+                    {micOn ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
+                  </Button>
+                  {role === "champion" && (
+                    <Button variant="destructive" size="sm" onClick={onEnd} className="rounded-full px-4">
+                      End Contest
+                    </Button>
+                  )}
+                </div>
               </div>
             )}
           </div>
         </div>
 
-        {/* RIGHT: Remote feed */}
-        <div className="isolate relative flex-1 min-h-[30vh] sm:min-h-0 overflow-hidden">
+        {/* RIGHT SIDE: Remote */}
+        <div className="relative flex-1 overflow-hidden min-h-0">
+          {/* Video background layer */}
           <div className="absolute inset-0 z-0">
             <video ref={remoteVideoRef} autoPlay playsInline className="w-full h-full object-cover" />
             <audio ref={remoteAudioRef} autoPlay className="hidden" />
           </div>
-          {!remoteConnected && !connecting && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black z-[5]">
-              <p className="text-white/60 text-sm">Waiting for {remoteLabel}...</p>
-            </div>
-          )}
+          {/* UI foreground layer */}
           <div className="relative z-10 h-full flex flex-col justify-between p-2 pointer-events-none">
             <div className="pointer-events-auto flex justify-end">
               <span className={`${role === "champion" ? "bg-red-600/80" : "bg-yellow-600/80"} text-white text-xs px-2 py-1 rounded flex items-center gap-1`}>
                 {role !== "champion" && <Trophy className="h-3 w-3" />} {remoteLabel}
               </span>
             </div>
+            {!remoteConnected && !connecting && (
+              <div className="absolute inset-0 flex items-center justify-center z-0">
+                <p className="text-white/60 text-sm">Waiting for {remoteLabel}...</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
