@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
+import { playCoinSound } from "@/utils/coinSound";
 import sixthCoinLogo from "@/assets/sixth-coin-logo.jpg";
 
 // Test mode: bypasses token balance checks, inserts tip record directly
