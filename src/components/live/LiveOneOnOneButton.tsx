@@ -267,7 +267,9 @@ const LiveOneOnOneButton = ({ hostId, streamId }: LiveOneOnOneButtonProps) => {
             ) : isAccepted ? (
               <Check className="h-4 w-4" />
             ) : (
-              <img src={payPhoneIcon} alt="1-on-1" className="h-5 w-5 object-contain" />
+              <span className="flex h-5 w-5 items-center justify-center rounded-sm bg-black overflow-hidden">
+                <img src={payPhoneIcon} alt="1-on-1" className="h-5 w-5 object-contain" />
+              </span>
             )}
             1 on 1
           </Button>
