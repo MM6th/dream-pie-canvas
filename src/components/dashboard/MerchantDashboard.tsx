@@ -33,6 +33,7 @@ import AstrologyAudioPlayer from "@/components/AstrologyAudioPlayer";
 import { FreeAstrologyResourceModal } from "@/components/FreeAstrologyResourceModal";
 import { useFreeAstrologyResource } from "@/hooks/useFreeAstrologyResource";
 import SupportCenterCard from "@/components/support/SupportCenterCard";
+import ContestInviteCard from "@/components/contest/ContestInviteCard";
 
 interface MerchantDashboardProps {
   onSuccess: () => void;
