@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
+import { playCoinSound } from "@/utils/coinSound";
 import sixthCoinLogo from "@/assets/sixth-coin-logo.jpg";
 
 // Test mode: bypasses token balance checks, inserts tip record directly
@@ -38,6 +39,7 @@ const OneOnOneTipButton = ({ roomName, recipientId }: OneOnOneTipButtonProps) =>
       if (error) {
         toast({ title: "Tip failed", description: error.message, variant: "destructive" });
       } else {
+        playCoinSound();
         toast({ title: `Tipped ${amount} SIXTH!` });
       }
     } else {
@@ -54,6 +56,7 @@ const OneOnOneTipButton = ({ roomName, recipientId }: OneOnOneTipButtonProps) =>
           toast({ title: "Tip failed", description: error.message, variant: "destructive" });
         }
       } else {
+        playCoinSound();
         toast({ title: `Tipped ${amount} SIXTH!` });
       }
     }
