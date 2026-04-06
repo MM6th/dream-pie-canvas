@@ -46,6 +46,7 @@ const Index = () => {
   useContestRedirect();
   useContestInviteRedirect();
 
+  useEffect(() => {
     console.log('Index component mounted, user:', user, 'loading:', loading);
     if (user && !loading) {
       fetchUserProfile();
