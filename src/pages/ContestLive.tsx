@@ -3,9 +3,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import ContestSession from "@/components/contest/ContestSession";
-import { Loader2, Trophy } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import AppNavBar from "@/components/AppNavBar";
 
 const ContestLive = () => {
   const { postId } = useParams<{ postId: string }>();
@@ -27,7 +26,6 @@ const ContestLive = () => {
 
     const initContest = async () => {
       try {
-        // Fetch the bulletin post
         const { data: post, error: postError } = await supabase
           .from("bulletin_posts")
           .select("id, title, challenge_type, challenge_time_limit_minutes, champion_user_id, merchant_id, scheduled_at, session_ended_at")
@@ -46,7 +44,6 @@ const ContestLive = () => {
           return;
         }
 
-        // Determine the challenger (first accepted user who is not the champion)
         const { data: acceptances } = await supabase
           .from("challenge_acceptances")
           .select("user_id")
@@ -61,14 +58,12 @@ const ContestLive = () => {
           return;
         }
 
-        // Determine user's role
         let role: "champion" | "challenger" | "spectator";
         if (user.id === championId) {
           role = "champion";
         } else if (user.id === challengerId) {
           role = "challenger";
         } else {
-          // Check if user has an accepted invitation
           const { data: invite } = await supabase
             .from("contest_invitations")
             .select("id, status")
@@ -88,46 +83,53 @@ const ContestLive = () => {
         const roomName = `contest_${postId}`;
         const durationMinutes = post.challenge_time_limit_minutes || 15;
 
-        // Create or get contest session
-        let { data: session } = await supabase
-          .from("contest_sessions")
-          .select("id, status")
-          .eq("bulletin_post_id", postId)
-          .maybeSingle();
+        // Session creation with retry loop to handle race conditions
+        let session: { id: string; status: string } | null = null;
+        const maxRetries = 5;
 
-        if (!session && (role === "champion" || role === "challenger")) {
-          const { data: newSession, error: sessError } = await supabase
+        for (let attempt = 0; attempt < maxRetries; attempt++) {
+          // Try to fetch existing session first
+          const { data: existing } = await supabase
             .from("contest_sessions")
-            .insert({
-              bulletin_post_id: postId,
-              room_name: roomName,
-              champion_id: championId,
-              challenger_id: challengerId,
-              status: "live",
-              started_at: new Date().toISOString(),
-            })
             .select("id, status")
-            .single();
+            .eq("bulletin_post_id", postId)
+            .maybeSingle();
 
-          if (sessError) {
-            // Might be a race condition—try fetching again
-            const { data: existing } = await supabase
-              .from("contest_sessions")
-              .select("id, status")
-              .eq("bulletin_post_id", postId)
-              .maybeSingle();
+          if (existing) {
             session = existing;
-          } else {
-            session = newSession;
+            break;
           }
 
-          // Link any pending invitations to this session
-          if (session) {
-            await supabase
-              .from("contest_invitations")
-              .update({ contest_session_id: session.id })
-              .eq("bulletin_post_id", postId)
-              .is("contest_session_id", null);
+          // Only participants can create sessions
+          if (role === "champion" || role === "challenger") {
+            const { data: newSession, error: sessError } = await supabase
+              .from("contest_sessions")
+              .insert({
+                bulletin_post_id: postId,
+                room_name: roomName,
+                champion_id: championId,
+                challenger_id: challengerId,
+                status: "live",
+                started_at: new Date().toISOString(),
+              })
+              .select("id, status")
+              .single();
+
+            if (!sessError && newSession) {
+              session = newSession;
+              // Link pending invitations
+              await supabase
+                .from("contest_invitations")
+                .update({ contest_session_id: newSession.id })
+                .eq("bulletin_post_id", postId)
+                .is("contest_session_id", null);
+              break;
+            }
+          }
+
+          // Wait and retry
+          if (attempt < maxRetries - 1) {
+            await new Promise((r) => setTimeout(r, 2000));
           }
         }
 
@@ -160,19 +162,14 @@ const ContestLive = () => {
 
   const handleEndContest = async () => {
     if (!contestData || !postId) return;
-
-    // Update contest session
     await supabase
       .from("contest_sessions")
       .update({ status: "ended", ended_at: new Date().toISOString() })
       .eq("id", contestData.sessionId);
-
-    // Mark bulletin post as ended
     await supabase
       .from("bulletin_posts")
       .update({ session_ended_at: new Date().toISOString() })
       .eq("id", postId);
-
     toast({ title: "Contest ended", duration: 4000 });
     navigate("/bulletin");
   };

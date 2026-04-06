@@ -8,8 +8,6 @@ import { useApprovalStatus } from "@/hooks/useApprovalStatus";
 import { toast } from "@/hooks/use-toast";
 import StoreView from "@/pages/views/StoreView";
 import DashboardView from "@/pages/views/DashboardView";
-import { useContestRedirect } from "@/hooks/useContestRedirect";
-import { useContestInviteRedirect } from "@/hooks/useContestInviteRedirect";
 
 interface AudioTrack {
   id: string;
@@ -41,10 +39,6 @@ const Index = () => {
   const [purchasedTracks, setPurchasedTracks] = useState<AudioTrack[]>([]);
   const [purchasedPodcasts, setPurchasedPodcasts] = useState<AudioTrack[]>([]);
   const [purchasedVideos, setPurchasedVideos] = useState<VideoTrack[]>([]);
-
-  // Auto-redirect to contest if scheduled time arrives
-  useContestRedirect();
-  useContestInviteRedirect();
 
   useEffect(() => {
     console.log('Index component mounted, user:', user, 'loading:', loading);

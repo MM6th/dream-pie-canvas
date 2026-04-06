@@ -35,22 +35,22 @@ const ContestSession = ({
 }: ContestSessionProps) => {
   const { user } = useAuth();
   const { getToken } = useLiveKitToken();
-  const championVideoRef = useRef<HTMLVideoElement>(null);
-  const challengerVideoRef = useRef<HTMLVideoElement>(null);
-  const remoteAudioRefs = useRef<Map<string, HTMLAudioElement>>(new Map());
+  const localVideoRef = useRef<HTMLVideoElement>(null);
+  const remoteVideoRef = useRef<HTMLVideoElement>(null);
+  const remoteAudioRef = useRef<HTMLAudioElement>(null);
   const roomRef = useRef<Room | null>(null);
+  const connectingRef = useRef(false);
   const [connecting, setConnecting] = useState(true);
+  const [remoteConnected, setRemoteConnected] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(durationMinutes * 60);
   const [cameraOn, setCameraOn] = useState(role !== "spectator");
   const [micOn, setMicOn] = useState(role !== "spectator");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [championConnected, setChampionConnected] = useState(false);
-  const [challengerConnected, setChallengerConnected] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const isParticipant = role === "champion" || role === "challenger";
-  const myPartnerId = role === "champion" ? challengerId : championId;
 
+  // Fetch avatar
   useEffect(() => {
     if (!user?.id) return;
     supabase
@@ -79,6 +79,7 @@ const ContestSession = ({
       });
     }, 1000);
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [connecting]);
 
   const formatTime = (secs: number) => {
@@ -87,23 +88,98 @@ const ContestSession = ({
     return `${m}:${s.toString().padStart(2, "0")}`;
   };
 
-  const getVideoRefForIdentity = (identity: string) => {
-    if (identity === championId) return championVideoRef;
-    if (identity === challengerId) return challengerVideoRef;
-    return null;
+  // --- Proven patterns from LiveOneOnOneSession ---
+
+  const attachLocalCamera = useCallback((room: Room | null, element: HTMLVideoElement | null = localVideoRef.current) => {
+    if (!room || !element) return false;
+    const camPub = room.localParticipant.getTrackPublication(Track.Source.Camera);
+    if (!camPub?.track) return false;
+
+    const mediaTrack = (camPub.track as { mediaStreamTrack?: MediaStreamTrack }).mediaStreamTrack;
+    if (mediaTrack) {
+      camPub.track.detach();
+      element.srcObject = new MediaStream([mediaTrack]);
+    } else {
+      camPub.track.detach();
+      camPub.track.attach(element);
+    }
+    element.muted = true;
+    element.autoplay = true;
+    element.playsInline = true;
+    safePlay(element);
+    return true;
+  }, []);
+
+  const setLocalVideoElement = useCallback((node: HTMLVideoElement | null) => {
+    localVideoRef.current = node;
+    if (!node || !roomRef.current) return;
+    attachLocalCamera(roomRef.current, node);
+  }, [attachLocalCamera]);
+
+  const toggleCamera = async () => {
+    const room = roomRef.current;
+    if (!room || !isParticipant) return;
+    try {
+      if (cameraOn) {
+        await room.localParticipant.setCameraEnabled(false);
+        if (localVideoRef.current) localVideoRef.current.srcObject = null;
+      } else {
+        await room.localParticipant.setCameraEnabled(true);
+        setTimeout(() => attachLocalCamera(room), 300);
+      }
+      setCameraOn(!cameraOn);
+    } catch (err) { console.error("Toggle camera error:", err); }
   };
 
-  // Connect to LiveKit
+  const toggleMic = async () => {
+    const room = roomRef.current;
+    if (!room || !isParticipant) return;
+    try {
+      await room.localParticipant.setMicrophoneEnabled(!micOn);
+      setMicOn(!micOn);
+    } catch (err) { console.error("Toggle mic error:", err); }
+  };
+
+  // Connect to LiveKit — mirrors LiveOneOnOneSession exactly
   useEffect(() => {
+    console.log("Contest session effect: user=", user?.id, "roomName=", roomName);
     if (!user || !roomName) return;
+
     let cancelled = false;
+    connectingRef.current = false;
+
+    const getTokenWithRetry = async (retries = 3, delayMs = 1500): Promise<{ token: string; wsUrl: string }> => {
+      for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+          console.log(`Contest session: token attempt ${attempt}/${retries} for room`, roomName);
+          const result = await getToken(roomName, isParticipant);
+          console.log("Contest session: got token, wsUrl=", result.wsUrl?.substring(0, 30));
+          return result;
+        } catch (err: any) {
+          console.warn(`Contest session: token attempt ${attempt} failed:`, err.message);
+          if (attempt === retries) throw err;
+          await new Promise((r) => setTimeout(r, delayMs));
+          if (cancelled) throw new Error("Cancelled");
+        }
+      }
+      throw new Error("Failed to get token");
+    };
 
     const connect = async () => {
+      if (connectingRef.current) {
+        console.warn("Contest session: already connecting, skipping");
+        return;
+      }
+      connectingRef.current = true;
+
       try {
-        await new Promise((r) => setTimeout(r, 1000));
+        // Hardware release delay — same as 1-on-1
+        const delay = role === "champion" ? 2500 : 800;
+        console.log(`Contest session: waiting ${delay}ms for hardware release`);
+        await new Promise((r) => setTimeout(r, delay));
         if (cancelled) return;
 
-        const { token, wsUrl } = await getToken(roomName, isParticipant);
+        const { token, wsUrl } = await getTokenWithRetry();
         if (cancelled) return;
 
         const room = new Room({
@@ -112,39 +188,31 @@ const ContestSession = ({
           videoCaptureDefaults: { resolution: VideoPresets.h720.resolution },
         });
 
-        room.on(RoomEvent.TrackSubscribed, (track, _pub, participant) => {
+        room.on(RoomEvent.TrackSubscribed, (track) => {
           if (cancelled) return;
-          const pid = participant.identity;
-          if (track.source === Track.Source.Camera) {
-            const ref = getVideoRefForIdentity(pid);
-            if (ref?.current) {
-              track.attach(ref.current);
-              safePlay(ref.current);
-            }
-            if (pid === championId) setChampionConnected(true);
-            if (pid === challengerId) setChallengerConnected(true);
+          if (track.source === Track.Source.Camera && remoteVideoRef.current) {
+            track.attach(remoteVideoRef.current);
+            safePlay(remoteVideoRef.current);
+            setRemoteConnected(true);
           }
-          if (track.source === Track.Source.Microphone) {
-            let audioEl = remoteAudioRefs.current.get(pid);
-            if (!audioEl) {
-              audioEl = document.createElement("audio");
-              audioEl.autoplay = true;
-              document.body.appendChild(audioEl);
-              remoteAudioRefs.current.set(pid, audioEl);
-            }
-            track.attach(audioEl);
+          if (track.source === Track.Source.Microphone && remoteAudioRef.current) {
+            track.attach(remoteAudioRef.current);
+            safePlay(remoteAudioRef.current);
           }
         });
 
-        room.on(RoomEvent.TrackUnsubscribed, (track, _pub, participant) => {
+        room.on(RoomEvent.LocalTrackPublished, () => {
+          if (cancelled) return;
+          attachLocalCamera(room);
+        });
+
+        room.on(RoomEvent.TrackUnsubscribed, (track) => {
           track.detach();
-          if (participant.identity === championId) setChampionConnected(false);
-          if (participant.identity === challengerId) setChallengerConnected(false);
+          if (track.source === Track.Source.Camera) setRemoteConnected(false);
         });
 
-        room.on(RoomEvent.ParticipantDisconnected, (participant) => {
-          if (participant.identity === championId) setChampionConnected(false);
-          if (participant.identity === challengerId) setChallengerConnected(false);
+        room.on(RoomEvent.ParticipantDisconnected, () => {
+          setRemoteConnected(false);
         });
 
         await room.connect(wsUrl, token);
@@ -155,36 +223,29 @@ const ContestSession = ({
           await room.localParticipant.enableCameraAndMicrophone();
           if (cancelled) { room.disconnect(); return; }
 
-          // Attach local video to correct ref
-          const localRef = role === "champion" ? championVideoRef : challengerVideoRef;
-          const tryAttach = (retries: number) => {
-            if (cancelled || retries <= 0) return;
-            const camPub = room.localParticipant.getTrackPublication(Track.Source.Camera);
-            if (camPub?.track && localRef.current) {
-              camPub.track.attach(localRef.current);
-              localRef.current.muted = true;
-              safePlay(localRef.current);
-              if (role === "champion") setChampionConnected(true);
-              else setChallengerConnected(true);
-            } else {
-              setTimeout(() => tryAttach(retries - 1), 300);
+          // Retry attaching local camera
+          const tryAttach = (retriesLeft: number) => {
+            if (cancelled || retriesLeft <= 0) return;
+            const attached = attachLocalCamera(room);
+            if (!attached) {
+              window.setTimeout(() => tryAttach(retriesLeft - 1), 300);
             }
           };
           tryAttach(15);
         }
 
-        // Attach existing remote tracks
+        // Attach already-published remote tracks
         for (const p of room.remoteParticipants.values()) {
           for (const pub of p.trackPublications.values()) {
             if (pub.isSubscribed && pub.track) {
-              if (pub.source === Track.Source.Camera) {
-                const ref = getVideoRefForIdentity(p.identity);
-                if (ref?.current) {
-                  pub.track.attach(ref.current);
-                  safePlay(ref.current);
-                }
-                if (p.identity === championId) setChampionConnected(true);
-                if (p.identity === challengerId) setChallengerConnected(true);
+              if (pub.source === Track.Source.Camera && remoteVideoRef.current) {
+                pub.track.attach(remoteVideoRef.current);
+                safePlay(remoteVideoRef.current);
+                setRemoteConnected(true);
+              }
+              if (pub.source === Track.Source.Microphone && remoteAudioRef.current) {
+                pub.track.attach(remoteAudioRef.current);
+                safePlay(remoteAudioRef.current);
               }
             }
           }
@@ -192,6 +253,7 @@ const ContestSession = ({
 
         setConnecting(false);
       } catch (err: any) {
+        connectingRef.current = false;
         if (cancelled) return;
         console.error("Contest connect error:", err);
         toast({ title: "Failed to connect", description: err.message, variant: "destructive" });
@@ -210,33 +272,17 @@ const ContestSession = ({
         roomRef.current.disconnect();
         roomRef.current = null;
       }
-      for (const el of remoteAudioRefs.current.values()) {
-        el.srcObject = null;
-        el.remove();
-      }
-      remoteAudioRefs.current.clear();
+      if (localVideoRef.current) localVideoRef.current.srcObject = null;
+      if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
+      if (remoteAudioRef.current) remoteAudioRef.current.srcObject = null;
+      connectingRef.current = false;
     };
-  }, [roomName, user?.id]);
-
-  const toggleCamera = async () => {
-    const room = roomRef.current;
-    if (!room || !isParticipant) return;
-    try {
-      await room.localParticipant.setCameraEnabled(!cameraOn);
-      setCameraOn(!cameraOn);
-    } catch (err) { console.error("Toggle camera error:", err); }
-  };
-
-  const toggleMic = async () => {
-    const room = roomRef.current;
-    if (!room || !isParticipant) return;
-    try {
-      await room.localParticipant.setMicrophoneEnabled(!micOn);
-      setMicOn(!micOn);
-    } catch (err) { console.error("Toggle mic error:", err); }
-  };
+  }, [attachLocalCamera, roomName, user?.id]);
 
   const challengeLabel = challengeType?.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) || "Contest";
+
+  const myLabel = role === "champion" ? "Champion" : role === "challenger" ? "Challenger" : "Spectator";
+  const remoteLabel = role === "champion" ? "Challenger" : "Champion";
 
   return (
     <div className="flex flex-col h-full bg-black relative">
@@ -260,57 +306,36 @@ const ContestSession = ({
 
       {/* Split screen */}
       <div className="flex flex-col sm:flex-row w-full flex-1 min-h-0 items-stretch">
-        {/* Champion side */}
-        <div className="isolate relative flex-1 border-b sm:border-b-0 sm:border-r border-white/10 overflow-hidden">
+        {/* LEFT: Your feed */}
+        <div className="isolate relative flex-1 min-h-[30vh] sm:min-h-0 border-b sm:border-b-0 sm:border-r border-white/10 overflow-hidden">
           <div className="absolute inset-0 z-0">
-            <video ref={championVideoRef} autoPlay muted={role === "champion"} playsInline className="w-full h-full object-cover" />
-          </div>
-          {!championConnected && !connecting && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black z-5">
-              <p className="text-white/60 text-sm">Waiting for Champion...</p>
-            </div>
-          )}
-          <div className="relative z-10 w-full h-full flex flex-col justify-between p-4 pointer-events-none">
-            <div className="pointer-events-auto flex items-start justify-between">
-              <span className="bg-yellow-600/80 text-white text-xs px-2 py-1 rounded flex items-center gap-1">
-                <Trophy className="h-3 w-3" /> Champion
-              </span>
-              {role === "champion" && <OneOnOneTipMeter roomName={roomName} />}
-            </div>
-            {role === "champion" && (
-              <div className="mt-auto pointer-events-auto flex flex-wrap items-center justify-center gap-2">
-                <Button variant="outline" size="sm" onClick={toggleCamera}
-                  className={`rounded-full ${!cameraOn ? "border-destructive text-destructive" : "border-white/30 text-white"} bg-black/40 hover:bg-black/60`}>
-                  {cameraOn ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
-                </Button>
-                <Button variant="outline" size="sm" onClick={toggleMic}
-                  className={`rounded-full ${!micOn ? "border-destructive text-destructive" : "border-white/30 text-white"} bg-black/40 hover:bg-black/60`}>
-                  {micOn ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
-                </Button>
+            <video
+              ref={isParticipant ? setLocalVideoElement : undefined}
+              autoPlay
+              muted
+              playsInline
+              className={`w-full h-full object-cover ${!cameraOn && isParticipant ? 'hidden' : ''}`}
+            />
+            {!cameraOn && isParticipant && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black">
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt="Your avatar" className="w-24 h-24 rounded-full object-cover border-2 border-white/20" />
+                ) : (
+                  <User className="w-16 h-16 text-muted-foreground" />
+                )}
               </div>
             )}
           </div>
-        </div>
-
-        {/* Challenger side */}
-        <div className="isolate relative flex-1 overflow-hidden">
-          <div className="absolute inset-0 z-0">
-            <video ref={challengerVideoRef} autoPlay muted={role === "challenger"} playsInline className="w-full h-full object-cover" />
-          </div>
-          {!challengerConnected && !connecting && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black z-5">
-              <p className="text-white/60 text-sm">Waiting for Challenger...</p>
-            </div>
-          )}
           <div className="relative z-10 w-full h-full flex flex-col justify-between p-4 pointer-events-none">
-            <div className="pointer-events-auto flex justify-end">
-              <span className="bg-red-600/80 text-white text-xs px-2 py-1 rounded flex items-center gap-1">
-                Challenger
+            <div className="pointer-events-auto flex items-start justify-between">
+              <span className={`${role === "champion" ? "bg-yellow-600/80" : "bg-red-600/80"} text-white text-xs px-2 py-1 rounded flex items-center gap-1`}>
+                {role === "champion" && <Trophy className="h-3 w-3" />} {myLabel}
               </span>
+              {role === "champion" && <OneOnOneTipMeter roomName={roomName} />}
             </div>
-            {role === "challenger" && (
+            {isParticipant && (
               <div className="mt-auto pointer-events-auto flex flex-wrap items-center justify-center gap-2">
-                {championId && (
+                {role === "challenger" && championId && (
                   <OneOnOneTipButton roomName={roomName} recipientId={championId} />
                 )}
                 <Button variant="outline" size="sm" onClick={toggleCamera}
@@ -325,9 +350,29 @@ const ContestSession = ({
             )}
           </div>
         </div>
+
+        {/* RIGHT: Remote feed */}
+        <div className="isolate relative flex-1 min-h-[30vh] sm:min-h-0 overflow-hidden">
+          <div className="absolute inset-0 z-0">
+            <video ref={remoteVideoRef} autoPlay playsInline className="w-full h-full object-cover" />
+            <audio ref={remoteAudioRef} autoPlay className="hidden" />
+          </div>
+          {!remoteConnected && !connecting && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black z-[5]">
+              <p className="text-white/60 text-sm">Waiting for {remoteLabel}...</p>
+            </div>
+          )}
+          <div className="relative z-10 h-full flex flex-col justify-between p-2 pointer-events-none">
+            <div className="pointer-events-auto flex justify-end">
+              <span className={`${role === "champion" ? "bg-red-600/80" : "bg-yellow-600/80"} text-white text-xs px-2 py-1 rounded flex items-center gap-1`}>
+                {role !== "champion" && <Trophy className="h-3 w-3" />} {remoteLabel}
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Spectator controls - tip buttons */}
+      {/* Spectator controls */}
       {role === "spectator" && (
         <div className="flex items-center justify-center gap-4 p-3 bg-black/80 border-t border-white/10">
           <OneOnOneTipButton roomName={roomName} recipientId={championId} />
