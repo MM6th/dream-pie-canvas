@@ -22,8 +22,16 @@ import LiveWatch from "./pages/LiveWatch";
 import LegacyLivestreamRedirect from "./pages/LegacyLivestreamRedirect";
 import NotFound from "./pages/NotFound";
 import ContestLive from "./pages/ContestLive";
+import { useContestRedirect } from "./hooks/useContestRedirect";
+import { useContestInviteRedirect } from "./hooks/useContestInviteRedirect";
 
 const queryClient = new QueryClient();
+
+const ContestRedirectHandler = () => {
+  useContestRedirect();
+  useContestInviteRedirect();
+  return null;
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -31,6 +39,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <ContestRedirectHandler />
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/films" element={<Films />} />
