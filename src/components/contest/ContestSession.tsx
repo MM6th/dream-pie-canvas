@@ -300,7 +300,7 @@ const ContestSession = ({
       </div>
 
       {/* Split screen video area */}
-      <div className="flex flex-1 min-h-0 overflow-hidden">
+      <div className="flex flex-col sm:flex-row w-full flex-1 min-h-0 items-stretch overflow-hidden">
         {/* LEFT: Champion / You */}
         <div className="isolate relative flex-1 overflow-hidden border-r border-white/10">
           <div className="absolute inset-0 z-0">
