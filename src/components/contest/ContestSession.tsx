@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Clock, Loader2, Video, VideoOff, Mic, MicOff, User, Trophy } from "lucide-react";
 import OneOnOneTipButton from "@/components/live/OneOnOneTipButton";
 import OneOnOneTipMeter from "@/components/live/OneOnOneTipMeter";
+import OneOnOneChat from "@/components/live/OneOnOneChat";
 import { toast } from "@/hooks/use-toast";
 import { Room, RoomEvent, Track, VideoPresets } from "livekit-client";
 
