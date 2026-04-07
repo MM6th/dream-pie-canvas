@@ -302,7 +302,7 @@ const ContestSession = ({
       {/* Split screen video area */}
       <div className="flex flex-col sm:flex-row w-full flex-1 min-h-0 items-stretch overflow-hidden">
         {/* LEFT: Champion / You */}
-        <div className="isolate relative flex-1 overflow-hidden border-r border-white/10">
+        <div className="isolate relative flex-1 border-b sm:border-b-0 sm:border-r border-white/10 overflow-hidden">
           <div className="absolute inset-0 z-0">
             <video
               ref={isParticipant ? setLocalVideoElement : undefined}
