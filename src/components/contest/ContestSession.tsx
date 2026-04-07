@@ -383,7 +383,7 @@ const ContestSession = ({
           </div>
           {/* Chat beneath remote video */}
           <div className="flex-1 min-h-0 overflow-hidden border-t border-white/10">
-            <OneOnOneChat roomName={`${roomName}_remote`} />
+            <OneOnOneChat roomName={roomName} />
           </div>
         </div>
       </div>
