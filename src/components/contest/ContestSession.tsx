@@ -299,12 +299,12 @@ const ContestSession = ({
         </div>
       </div>
 
-      {/* Split screen: each side is video + chat column */}
+      {/* Split screen: keep the same full-height video panel pattern as 1-on-1, with chat in a fixed row beneath */}
       <div className="flex flex-col sm:flex-row w-full flex-1 min-h-0 items-stretch overflow-hidden">
         {/* LEFT COLUMN: You (video + chat) */}
-        <div className="flex-1 flex flex-col border-b sm:border-b-0 sm:border-r border-white/10 min-h-0 overflow-hidden">
+        <div className="flex flex-1 h-full min-h-0 flex-col overflow-hidden border-b border-white/10 sm:border-b-0 sm:border-r">
           {/* Video panel */}
-          <div className="isolate relative h-[30vh] sm:flex-1 shrink-0 overflow-hidden">
+          <div className="isolate relative flex-1 min-h-0 overflow-hidden">
             <div className="absolute inset-0 z-0">
               <video
                 ref={isParticipant ? setLocalVideoElement : undefined}
@@ -353,15 +353,15 @@ const ContestSession = ({
             </div>
           </div>
           {/* Chat beneath local video */}
-          <div className="h-[20vh] sm:h-[35%] shrink-0 overflow-hidden border-t border-white/10">
+          <div className="h-36 shrink-0 overflow-hidden border-t border-white/10 sm:h-48 lg:h-52">
             <OneOnOneChat roomName={roomName} />
           </div>
         </div>
 
         {/* RIGHT COLUMN: Remote (video + chat) */}
-        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+        <div className="flex flex-1 h-full min-h-0 flex-col overflow-hidden">
           {/* Video panel */}
-          <div className="isolate relative h-[30vh] sm:flex-1 shrink-0 overflow-hidden">
+          <div className="isolate relative flex-1 min-h-0 overflow-hidden">
             <div className="absolute inset-0 z-0">
               <video ref={remoteVideoRef} autoPlay playsInline className="w-full h-full object-cover" />
               <audio ref={remoteAudioRef} autoPlay className="hidden" />
@@ -380,7 +380,7 @@ const ContestSession = ({
             </div>
           </div>
           {/* Chat beneath remote video */}
-          <div className="h-[20vh] sm:h-[35%] shrink-0 overflow-hidden border-t border-white/10">
+          <div className="h-36 shrink-0 overflow-hidden border-t border-white/10 sm:h-48 lg:h-52">
             <OneOnOneChat roomName={roomName} />
           </div>
         </div>
