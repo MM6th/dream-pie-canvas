@@ -299,82 +299,91 @@ const ContestSession = ({
         </div>
       </div>
 
-      {/* Split screen video area */}
+      {/* Split screen: each side is video + chat column */}
       <div className="flex flex-col sm:flex-row w-full flex-1 min-h-0 items-stretch overflow-hidden">
-        {/* LEFT: Champion / You */}
-        <div className="isolate relative flex-1 border-b sm:border-b-0 sm:border-r border-white/10 overflow-hidden">
-          <div className="absolute inset-0 z-0">
-            <video
-              ref={isParticipant ? setLocalVideoElement : undefined}
-              autoPlay muted playsInline
-              className={`w-full h-full object-cover ${!cameraOn && isParticipant ? 'hidden' : ''}`}
-            />
-            {!cameraOn && isParticipant && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black">
-                {avatarUrl ? (
-                  <img src={avatarUrl} alt="Your avatar" className="w-24 h-24 rounded-full object-cover border-2 border-white/20" />
-                ) : (
-                  <User className="w-16 h-16 text-muted-foreground" />
-                )}
-              </div>
-            )}
-          </div>
-          <div className="relative z-10 w-full h-full flex flex-col justify-between p-4">
-            <div className="w-full flex flex-col items-start gap-1">
-              <span className={`${role === "champion" ? "bg-yellow-600/80" : "bg-red-600/80"} text-white text-xs px-2 py-1 rounded flex items-center gap-1`}>
-                {role === "champion" && <Trophy className="h-3 w-3" />} {myLabel}
-              </span>
-              {role === "champion" && <div className="mt-6"><OneOnOneTipMeter roomName={roomName} /></div>}
-            </div>
-            {isParticipant && (
-              <div className="mt-auto w-full max-w-full">
-                <div className="flex flex-wrap items-center justify-center gap-2">
-                  {role === "challenger" && championId && (
-                    <OneOnOneTipButton roomName={roomName} recipientId={championId} />
-                  )}
-                  <Button variant="outline" size="sm" onClick={toggleCamera}
-                    className={`rounded-full ${!cameraOn ? "border-destructive text-destructive" : "border-white/30 text-white"} bg-black/40 hover:bg-black/60`}>
-                    {cameraOn ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={toggleMic}
-                    className={`rounded-full ${!micOn ? "border-destructive text-destructive" : "border-white/30 text-white"} bg-black/40 hover:bg-black/60`}>
-                    {micOn ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
-                  </Button>
-                  {role === "champion" && (
-                    <Button variant="destructive" size="sm" onClick={onEnd} className="rounded-full px-4">
-                      End Contest
-                    </Button>
+        {/* LEFT COLUMN: You (video + chat) */}
+        <div className="flex-1 flex flex-col border-b sm:border-b-0 sm:border-r border-white/10 min-h-0 overflow-hidden">
+          {/* Video panel */}
+          <div className="isolate relative h-[30vh] sm:flex-1 shrink-0 overflow-hidden">
+            <div className="absolute inset-0 z-0">
+              <video
+                ref={isParticipant ? setLocalVideoElement : undefined}
+                autoPlay muted playsInline
+                className={`w-full h-full object-cover ${!cameraOn && isParticipant ? 'hidden' : ''}`}
+              />
+              {!cameraOn && isParticipant && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black">
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt="Your avatar" className="w-24 h-24 rounded-full object-cover border-2 border-white/20" />
+                  ) : (
+                    <User className="w-16 h-16 text-muted-foreground" />
                   )}
                 </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* RIGHT: Challenger / Remote */}
-        <div className="isolate relative flex-1 overflow-hidden">
-          <div className="absolute inset-0 z-0">
-            <video ref={remoteVideoRef} autoPlay playsInline className="w-full h-full object-cover" />
-            <audio ref={remoteAudioRef} autoPlay className="hidden" />
-          </div>
-          <div className="relative z-10 h-full flex flex-col justify-between p-2 pointer-events-none">
-            <div className="pointer-events-auto flex justify-end">
-              <span className={`${role === "champion" ? "bg-red-600/80" : "bg-yellow-600/80"} text-white text-xs px-2 py-1 rounded flex items-center gap-1`}>
-                {role !== "champion" && <Trophy className="h-3 w-3" />} {remoteLabel}
-              </span>
+              )}
             </div>
-            {!remoteConnected && !connecting && (
-              <div className="absolute inset-0 flex items-center justify-center z-0">
-                <p className="text-white/60 text-sm">Waiting for {remoteLabel}...</p>
+            <div className="relative z-10 w-full h-full flex flex-col justify-between p-4">
+              <div className="w-full flex flex-col items-start gap-1">
+                <span className={`${role === "champion" ? "bg-yellow-600/80" : "bg-red-600/80"} text-white text-xs px-2 py-1 rounded flex items-center gap-1`}>
+                  {role === "champion" && <Trophy className="h-3 w-3" />} {myLabel}
+                </span>
+                {role === "champion" && <div className="mt-6"><OneOnOneTipMeter roomName={roomName} /></div>}
               </div>
-            )}
+              {isParticipant && (
+                <div className="mt-auto w-full max-w-full">
+                  <div className="flex flex-wrap items-center justify-center gap-2">
+                    {role === "challenger" && championId && (
+                      <OneOnOneTipButton roomName={roomName} recipientId={championId} />
+                    )}
+                    <Button variant="outline" size="sm" onClick={toggleCamera}
+                      className={`rounded-full ${!cameraOn ? "border-destructive text-destructive" : "border-white/30 text-white"} bg-black/40 hover:bg-black/60`}>
+                      {cameraOn ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={toggleMic}
+                      className={`rounded-full ${!micOn ? "border-destructive text-destructive" : "border-white/30 text-white"} bg-black/40 hover:bg-black/60`}>
+                      {micOn ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
+                    </Button>
+                    {role === "champion" && (
+                      <Button variant="destructive" size="sm" onClick={onEnd} className="rounded-full px-4">
+                        End Contest
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+          {/* Chat beneath local video */}
+          <div className="h-[20vh] sm:h-[35%] shrink-0 overflow-hidden border-t border-white/10">
+            <OneOnOneChat roomName={roomName} />
           </div>
         </div>
-      </div>
 
-      {/* Shared chat beneath videos */}
-      <div className="h-[25vh] sm:h-[30%] shrink-0 border-t border-white/10 overflow-hidden">
-        <OneOnOneChat roomName={roomName} />
+        {/* RIGHT COLUMN: Remote (video + chat) */}
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+          {/* Video panel */}
+          <div className="isolate relative h-[30vh] sm:flex-1 shrink-0 overflow-hidden">
+            <div className="absolute inset-0 z-0">
+              <video ref={remoteVideoRef} autoPlay playsInline className="w-full h-full object-cover" />
+              <audio ref={remoteAudioRef} autoPlay className="hidden" />
+            </div>
+            <div className="relative z-10 h-full flex flex-col justify-between p-2 pointer-events-none">
+              <div className="pointer-events-auto flex justify-end">
+                <span className={`${role === "champion" ? "bg-red-600/80" : "bg-yellow-600/80"} text-white text-xs px-2 py-1 rounded flex items-center gap-1`}>
+                  {role !== "champion" && <Trophy className="h-3 w-3" />} {remoteLabel}
+                </span>
+              </div>
+              {!remoteConnected && !connecting && (
+                <div className="absolute inset-0 flex items-center justify-center z-0">
+                  <p className="text-white/60 text-sm">Waiting for {remoteLabel}...</p>
+                </div>
+              )}
+            </div>
+          </div>
+          {/* Chat beneath remote video */}
+          <div className="h-[20vh] sm:h-[35%] shrink-0 overflow-hidden border-t border-white/10">
+            <OneOnOneChat roomName={roomName} />
+          </div>
+        </div>
       </div>
 
       {/* Spectator controls */}
