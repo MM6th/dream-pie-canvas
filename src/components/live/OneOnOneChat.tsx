@@ -18,6 +18,7 @@ interface ChatMessage {
 
 interface OneOnOneChatProps {
   roomName: string;
+  channelSuffix?: string;
 }
 
 const OneOnOneChat = ({ roomName }: OneOnOneChatProps) => {
