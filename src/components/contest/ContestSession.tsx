@@ -232,8 +232,31 @@ const ContestSession = ({
         roomRef.current = room;
 
         if (isParticipant) {
-          await room.localParticipant.enableCameraAndMicrophone();
+          // Retry enabling camera/mic — don't kill the session on failure
+          const enableWithRetry = async (retries = 3) => {
+            for (let i = 1; i <= retries; i++) {
+              try {
+                console.log(`Contest session: enableCameraAndMicrophone attempt ${i}/${retries}`);
+                await room.localParticipant.enableCameraAndMicrophone();
+                return true;
+              } catch (err: any) {
+                console.warn(`Contest session: enableCameraAndMicrophone attempt ${i} failed:`, err.message);
+                if (i < retries) {
+                  await new Promise((r) => setTimeout(r, 2000));
+                  if (cancelled) return false;
+                }
+              }
+            }
+            return false;
+          };
+
+          const enabled = await enableWithRetry();
           if (cancelled) { room.disconnect(); return; }
+
+          if (!enabled) {
+            console.warn("Contest session: could not publish tracks, staying connected as subscriber");
+            toast({ title: "Camera/mic failed to start", description: "You can still see and hear the other participant.", variant: "destructive" });
+          }
 
           // Retry attaching local camera
           const tryAttach = (retriesLeft: number) => {
@@ -268,8 +291,14 @@ const ContestSession = ({
         connectingRef.current = false;
         if (cancelled) return;
         console.error("Contest connect error:", err);
-        toast({ title: "Failed to connect", description: err.message, variant: "destructive" });
-        setTimeout(() => { if (!cancelled) onEnd(); }, 3000);
+        toast({ title: "Connection failed", description: "Retrying…", variant: "destructive" });
+        // Retry the whole connection once instead of ending the contest
+        setTimeout(() => {
+          if (!cancelled && !roomRef.current) {
+            connectingRef.current = false;
+            connect();
+          }
+        }, 3000);
       }
     };
 
