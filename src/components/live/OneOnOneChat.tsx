@@ -21,7 +21,7 @@ interface OneOnOneChatProps {
   channelSuffix?: string;
 }
 
-const OneOnOneChat = ({ roomName }: OneOnOneChatProps) => {
+const OneOnOneChat = ({ roomName, channelSuffix }: OneOnOneChatProps) => {
   const { user } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
