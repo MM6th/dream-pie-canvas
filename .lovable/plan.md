@@ -1,53 +1,66 @@
 
 
-## Fix Contest Livestream: Chat Not Rendering + Challenger Connection Broken
+## Fix Contest Livestream: 4 Issues
 
-### Root Cause
+### Issue 1: Mobile challenger stuck on black screen + redirect loop
 
-Two issues introduced in the last edit:
+**Root cause:** The `useContestRedirect` hook runs globally in `App.tsx` and polls every 15 seconds. After a contest ends (via timer auto-end or "End Contest" button), there's a race condition: `session_ended_at` is set on the bulletin post, but `useContestRedirect` checks `session_ended_at IS NULL` on the post — if the contestant navigates away to `/bulletin` and the query fires before the DB update propagates, they get redirected back. On mobile, the black screen is the same layout issue compounded by this loop.
 
-1. **Challenger connection broken**: The right side (remote) panel is missing the `isolate` class that the left side has. Without `isolate`, the `z-index` stacking context leaks, and the connecting overlay (z-30) can interfere with the video element rendering. More critically, the structural change from a single `flex-1` div to a `flex flex-col` wrapper may have disrupted the video ref attachment flow.
+**Fix:**
+- In `useContestRedirect`, add the current path check — skip redirecting if user is already on `/contest/`. Also check the `contest_sessions` table for `status = 'ended'` as a secondary guard.
+- In `ContestLive.tsx`, when `handleEndContest` fires or when the timer expires, set a flag in `sessionStorage` (e.g. `contest_ended_<postId>`) so the redirect hooks skip that post ID.
+- In `useContestRedirect` and `useContestInviteRedirect`, check sessionStorage before redirecting.
 
-2. **Chat not rendering visibly**: The `OneOnOneChat` component renders inside a `Card` with `bg-card` background. Inside the contest's dark layout, the chat sections are there but may appear collapsed because the parent `flex-1 min-h-0` container has no guaranteed minimum height when the video panel uses `shrink-0` with fixed heights. On desktop, `h-[55%]` leaves only 45% for chat, but `min-h-0` combined with `overflow-hidden` can cause the chat to collapse to zero if the flex container isn't computing height correctly.
+**Files:** `src/hooks/useContestRedirect.tsx`, `src/hooks/useContestInviteRedirect.tsx`, `src/pages/ContestLive.tsx`
 
-### Plan
+---
 
-**File: `src/components/contest/ContestSession.tsx`**
+### Issue 2: Chat sections share the same dialogue
 
-1. **Match 1-on-1 layout exactly for both sides**: Instead of splitting video and chat into separate flex children with fixed video heights, use the same `isolate relative flex-1 overflow-hidden` pattern from LiveOneOnOneSession for both video panels — video fills each panel via `absolute inset-0`.
+**Root cause:** Both `OneOnOneChat` instances use the same `roomName` and write/read from the same `room_name` column in `one_on_one_chat_messages`. The `channelSuffix` only differentiates the Supabase Realtime channel name (fixing the duplicate subscription error) but both chats still query and insert with the same `room_name`, so messages appear in both.
 
-2. **Move chat to a dedicated bottom section**: Place a single shared chat section beneath the split-screen container (not duplicated under each video panel). This mirrors how the 1-on-1 mobile layout works — chat sits below the video area as its own flex child with a fixed height.
+**Fix:**
+- Pass a different `roomName` to each chat: `{roomName}_champion` for the left chat, `{roomName}_challenger` for the right chat. This naturally separates the message storage since `OneOnOneChat` queries by `room_name`.
+- Remove the now-unnecessary `channelSuffix` prop (the room names themselves are unique).
 
-3. **Restore `isolate` on both panels**: Both left and right video panels get `isolate relative flex-1 overflow-hidden` to maintain proper stacking context.
+**Files:** `src/components/contest/ContestSession.tsx`
 
-4. **Layout structure**:
-```text
-┌─────────────────────────────────┐
-│  [Floating Timer + Label]       │  (absolute, z-20)
-├────────────────┬────────────────┤
-│                │                │
-│   Champion     │   Challenger   │  flex-1 (fills most of screen)
-│   (video)      │   (video)      │
-│   + controls   │   + label      │
-│                │                │
-├────────────────┴────────────────┤
-│   Shared Chat Section           │  h-[25vh] sm:h-[30%]
-│   (OneOnOneChat)                │
-└─────────────────────────────────┘
-```
+---
 
-5. **Ensure both panels use `absolute inset-0` for video**: This is the proven pattern from 1-on-1 that prevents collapsed screens — video fills the container regardless of whether tracks have attached yet.
+### Issue 3: Wrong icons — trophy should be PIE belt for champion, no trophy for challenge type label
 
-### Technical Details
+**Fix:**
+- Import `pieTitleBelt` from `@/assets/pie-title-belt.png` and `pieTitleTwerk` from `@/assets/pie-title-twerk.png`.
+- Replace the `Trophy` icon next to "Champion" label with the PIE belt image (`<img src={pieTitleBelt} className="h-4 w-4" />`).
+- In the floating header, replace the `Trophy` icon next to the challenge type label: use `pieTitleTwerk` for twerk-off challenges, and remove the trophy for other challenge types (just show the text).
+- Remove the `Trophy` import if no longer needed.
 
-**Key changes in `ContestSession.tsx`:**
-- Remove duplicated `OneOnOneChat` from each side panel
-- Add single `OneOnOneChat` in a bottom container with `h-[25vh] sm:h-[30%] shrink-0`
-- Both side panels: `isolate relative flex-1 overflow-hidden` (no fixed heights, no `flex-col`)
-- Video elements: `absolute inset-0 z-0` with `object-cover`
-- Controls overlay: `relative z-10 w-full h-full flex flex-col justify-between`
-- No other connection logic changes — the LiveKit code is correct and matches 1-on-1
+**Files:** `src/components/contest/ContestSession.tsx`
 
-**Files modified:**
-- `src/components/contest/ContestSession.tsx` (layout restructure only)
+---
+
+### Issue 4: Each screen needs its own tip icon and ability (separate audience contributions)
+
+**Current state:** The tip button on the champion's side tips the champion, and there's one shared tip meter. Spectators have separate tip buttons but participants don't tip each other's opponents properly.
+
+**Fix:**
+- **Champion's screen (left):** Show a `OneOnOneTipMeter` tracking tips to the champion. No tip button on your own screen.
+- **Challenger's screen (right):** Show a `OneOnOneTipMeter` tracking tips to the challenger. No tip button on your own screen.
+- **Spectator bar:** Already has separate tip buttons — keep as-is.
+- To differentiate tip tracking, use different room name prefixes for each side's tips: `{roomName}_champion_tips` and `{roomName}_challenger_tips`. Pass these as `roomName` to the respective `OneOnOneTipMeter` and `OneOnOneTipButton` components.
+- Each participant sees the opponent's tip button on the remote side: champion sees "Tip Challenger" on the right panel, challenger sees "Tip Champion" on the right panel.
+- Each side has its own tip meter in the top-left of their respective video panel.
+
+**Files:** `src/components/contest/ContestSession.tsx`
+
+---
+
+### Summary of file changes
+
+| File | Changes |
+|------|---------|
+| `src/components/contest/ContestSession.tsx` | Replace trophy icons with PIE belt images, separate chat roomNames, separate tip roomNames per side, add tip buttons/meters to both panels |
+| `src/hooks/useContestRedirect.tsx` | Add path check + sessionStorage guard to prevent redirect loops |
+| `src/hooks/useContestInviteRedirect.tsx` | Add sessionStorage guard |
+| `src/pages/ContestLive.tsx` | Set sessionStorage flag on contest end |
 
