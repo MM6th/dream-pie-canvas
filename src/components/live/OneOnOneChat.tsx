@@ -72,8 +72,9 @@ const OneOnOneChat = ({ roomName, channelSuffix }: OneOnOneChatProps) => {
 
     fetchMessages();
 
+    const channelName = `one-on-one-chat-${roomName}${channelSuffix ? `-${channelSuffix}` : ''}`;
     const channel = supabase
-      .channel(`one-on-one-chat-${roomName}`)
+      .channel(channelName)
       .on("postgres_changes", {
         event: "INSERT",
         schema: "public",
