@@ -3,12 +3,14 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useLiveKitToken } from "@/hooks/useLiveKitToken";
 import { Button } from "@/components/ui/button";
-import { Clock, Loader2, Video, VideoOff, Mic, MicOff, User, Trophy } from "lucide-react";
+import { Clock, Loader2, Video, VideoOff, Mic, MicOff, User } from "lucide-react";
 import OneOnOneTipButton from "@/components/live/OneOnOneTipButton";
 import OneOnOneTipMeter from "@/components/live/OneOnOneTipMeter";
 import OneOnOneChat from "@/components/live/OneOnOneChat";
 import { toast } from "@/hooks/use-toast";
 import { Room, RoomEvent, Track, VideoPresets } from "livekit-client";
+import pieTitleBelt from "@/assets/pie-title-belt.png";
+import pieTitleTwerk from "@/assets/pie-title-twerk.png";
 
 interface ContestSessionProps {
   roomName: string;
@@ -50,6 +52,15 @@ const ContestSession = ({
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const isParticipant = role === "champion" || role === "challenger";
+
+  // Derived room names for separated chat & tips
+  const championChatRoom = `${roomName}_champion`;
+  const challengerChatRoom = `${roomName}_challenger`;
+  const championTipRoom = `${roomName}_champion_tips`;
+  const challengerTipRoom = `${roomName}_challenger_tips`;
+
+  // Which challenge icon to show
+  const isTwerkOff = challengeType?.toLowerCase().includes("twerk");
 
   // Fetch avatar
   useEffect(() => {
@@ -289,8 +300,8 @@ const ContestSession = ({
     <div className="flex flex-col h-full bg-black relative">
       {/* Floating header */}
       <div className="absolute top-2 left-1/2 -translate-x-1/2 z-20 flex items-center gap-3">
-        <div className="flex items-center gap-1 bg-black/60 text-yellow-400 text-xs px-2 py-1 rounded">
-          <Trophy className="h-3.5 w-3.5" />
+        <div className="flex items-center gap-1.5 bg-black/60 text-yellow-400 text-xs px-2 py-1 rounded">
+          {isTwerkOff && <img src={pieTitleTwerk} className="h-4 w-4 object-contain" alt="Twerk-off" />}
           <span className="text-white font-bold">{challengeLabel}</span>
         </div>
         <div className={`flex items-center gap-2 px-4 py-1.5 rounded-full ${secondsLeft <= 60 ? "bg-destructive/80" : "bg-black/60"} text-white text-sm font-mono`}>
@@ -299,7 +310,7 @@ const ContestSession = ({
         </div>
       </div>
 
-      {/* Split screen: keep the same full-height video panel pattern as 1-on-1, with chat in a fixed row beneath */}
+      {/* Split screen */}
       <div className="flex flex-col sm:flex-row w-full flex-1 min-h-0 items-stretch overflow-hidden">
         {/* LEFT COLUMN: You (video + chat) */}
         <div className="flex flex-1 h-full min-h-0 flex-col overflow-hidden border-b border-white/10 sm:border-b-0 sm:border-r">
@@ -324,15 +335,23 @@ const ContestSession = ({
             <div className="relative z-10 w-full h-full flex flex-col justify-between p-4">
               <div className="w-full flex flex-col items-start gap-1">
                 <span className={`${role === "champion" ? "bg-yellow-600/80" : "bg-red-600/80"} text-white text-xs px-2 py-1 rounded flex items-center gap-1`}>
-                  {role === "champion" && <Trophy className="h-3 w-3" />} {myLabel}
+                  {role === "champion" && <img src={pieTitleBelt} className="h-3.5 w-3.5 object-contain" alt="Belt" />}
+                  {myLabel}
                 </span>
-                {role === "champion" && <div className="mt-6"><OneOnOneTipMeter roomName={roomName} /></div>}
+                {/* Tip meter for this side */}
+                <div className="mt-2">
+                  <OneOnOneTipMeter roomName={role === "champion" ? championTipRoom : challengerTipRoom} />
+                </div>
               </div>
               {isParticipant && (
                 <div className="mt-auto w-full max-w-full">
                   <div className="flex flex-wrap items-center justify-center gap-2">
-                    {role === "challenger" && championId && (
-                      <OneOnOneTipButton roomName={roomName} recipientId={championId} />
+                    {/* Tip button for the OTHER participant (on your own screen) */}
+                    {role === "champion" && (
+                      <OneOnOneTipButton roomName={challengerTipRoom} recipientId={challengerId} />
+                    )}
+                    {role === "challenger" && (
+                      <OneOnOneTipButton roomName={championTipRoom} recipientId={championId} />
                     )}
                     <Button variant="outline" size="sm" onClick={toggleCamera}
                       className={`rounded-full ${!cameraOn ? "border-destructive text-destructive" : "border-white/30 text-white"} bg-black/40 hover:bg-black/60`}>
@@ -352,9 +371,9 @@ const ContestSession = ({
               )}
             </div>
           </div>
-          {/* Chat beneath local video */}
+          {/* Chat beneath local video — separate room */}
           <div className="h-36 shrink-0 overflow-hidden border-t border-white/10 sm:h-48 lg:h-52">
-            <OneOnOneChat roomName={roomName} channelSuffix="champion" />
+            <OneOnOneChat roomName={championChatRoom} />
           </div>
         </div>
 
@@ -367,9 +386,13 @@ const ContestSession = ({
               <audio ref={remoteAudioRef} autoPlay className="hidden" />
             </div>
             <div className="relative z-10 h-full flex flex-col justify-between p-2 pointer-events-none">
-              <div className="pointer-events-auto flex justify-end">
+              <div className="pointer-events-auto flex items-start justify-between">
+                <div className="mt-2">
+                  <OneOnOneTipMeter roomName={role === "champion" ? challengerTipRoom : championTipRoom} />
+                </div>
                 <span className={`${role === "champion" ? "bg-red-600/80" : "bg-yellow-600/80"} text-white text-xs px-2 py-1 rounded flex items-center gap-1`}>
-                  {role !== "champion" && <Trophy className="h-3 w-3" />} {remoteLabel}
+                  {remoteLabel === "Champion" && <img src={pieTitleBelt} className="h-3.5 w-3.5 object-contain" alt="Belt" />}
+                  {remoteLabel}
                 </span>
               </div>
               {!remoteConnected && !connecting && (
@@ -379,9 +402,9 @@ const ContestSession = ({
               )}
             </div>
           </div>
-          {/* Chat beneath remote video */}
+          {/* Chat beneath remote video — separate room */}
           <div className="h-36 shrink-0 overflow-hidden border-t border-white/10 sm:h-48 lg:h-52">
-            <OneOnOneChat roomName={roomName} channelSuffix="challenger" />
+            <OneOnOneChat roomName={challengerChatRoom} />
           </div>
         </div>
       </div>
@@ -389,10 +412,10 @@ const ContestSession = ({
       {/* Spectator controls */}
       {role === "spectator" && (
         <div className="flex items-center justify-center gap-4 p-3 bg-black/80 border-t border-white/10">
-          <OneOnOneTipButton roomName={roomName} recipientId={championId} />
+          <OneOnOneTipButton roomName={championTipRoom} recipientId={championId} />
           <span className="text-white/40 text-xs">Tip Champion</span>
           <span className="text-white/20">|</span>
-          <OneOnOneTipButton roomName={roomName} recipientId={challengerId} />
+          <OneOnOneTipButton roomName={challengerTipRoom} recipientId={challengerId} />
           <span className="text-white/40 text-xs">Tip Challenger</span>
         </div>
       )}

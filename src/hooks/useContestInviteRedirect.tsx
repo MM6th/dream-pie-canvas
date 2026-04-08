@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -10,12 +10,15 @@ import { supabase } from "@/integrations/supabase/client";
 export const useContestInviteRedirect = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const redirectedRef = useRef<Set<string>>(new Set());
 
   const checkInvites = useCallback(async () => {
     if (!user?.id) return;
 
-    // Find accepted invitations for live contest sessions
+    // Don't redirect if already on a contest page
+    if (location.pathname.startsWith("/contest/")) return;
+
     const { data: invitations } = await supabase
       .from("contest_invitations")
       .select("id, bulletin_post_id, contest_session_id")
@@ -26,6 +29,9 @@ export const useContestInviteRedirect = () => {
 
     for (const inv of invitations) {
       if (redirectedRef.current.has(inv.bulletin_post_id)) continue;
+
+      // Check sessionStorage flag
+      if (sessionStorage.getItem(`contest_ended_${inv.bulletin_post_id}`)) continue;
 
       if (inv.contest_session_id) {
         const { data: session } = await supabase
@@ -42,7 +48,7 @@ export const useContestInviteRedirect = () => {
         }
       }
     }
-  }, [user?.id, navigate]);
+  }, [user?.id, navigate, location.pathname]);
 
   useEffect(() => {
     if (!user?.id) return;

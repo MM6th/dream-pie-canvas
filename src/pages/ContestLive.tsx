@@ -162,6 +162,8 @@ const ContestLive = () => {
 
   const handleEndContest = async () => {
     if (!contestData || !postId) return;
+    // Set sessionStorage flag to prevent redirect hooks from looping back
+    sessionStorage.setItem(`contest_ended_${postId}`, "true");
     await supabase
       .from("contest_sessions")
       .update({ status: "ended", ended_at: new Date().toISOString() })
