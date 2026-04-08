@@ -18,9 +18,10 @@ interface ChatMessage {
 
 interface OneOnOneChatProps {
   roomName: string;
+  channelSuffix?: string;
 }
 
-const OneOnOneChat = ({ roomName }: OneOnOneChatProps) => {
+const OneOnOneChat = ({ roomName, channelSuffix }: OneOnOneChatProps) => {
   const { user } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
@@ -71,8 +72,9 @@ const OneOnOneChat = ({ roomName }: OneOnOneChatProps) => {
 
     fetchMessages();
 
+    const channelName = `one-on-one-chat-${roomName}${channelSuffix ? `-${channelSuffix}` : ''}`;
     const channel = supabase
-      .channel(`one-on-one-chat-${roomName}`)
+      .channel(channelName)
       .on("postgres_changes", {
         event: "INSERT",
         schema: "public",
