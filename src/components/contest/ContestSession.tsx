@@ -336,8 +336,7 @@ const ContestSession = ({
       </div>
 
       {/* Centered challenge label between both screens */}
-      <div className="absolute top-12 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 pointer-events-none">
-        {isTwerkOff && <img src={pieTitleTwerk} className="h-10 w-12 object-contain" alt="Twerk-off" />}
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none">
         <span className="text-2xl sm:text-3xl font-black uppercase italic text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] tracking-wide">
           {challengeLabel}
         </span>
