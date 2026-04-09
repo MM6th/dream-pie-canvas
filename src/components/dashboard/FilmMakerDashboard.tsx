@@ -27,6 +27,7 @@ import RestrictedAccess from "@/components/dashboard/merchant/RestrictedAccess";
 import FilmProductManager from "@/components/FilmProductManager";
 import ScriptWriterCard from "@/components/ScriptWriterCard";
 import { FollowRequestsManager } from "@/components/profile/FollowRequestsManager";
+import GoLiveCard from "@/components/dashboard/GoLiveCard";
 import AdminDashboard from "@/components/admin/AdminDashboard";
 import FashionProductManager from "@/components/FashionProductManager";
 import AudioProductManager from "@/components/AudioProductManager";
@@ -182,6 +183,8 @@ const FilmMakerDashboard = ({
     <div className={`max-w-6xl mx-auto ${isMobile ? 'p-4' : 'p-6'} pt-20`}>
       {/* Approval Status Banner */}
       <ApprovalStatusBanner approvalStatus={approvalStatus} isAdmin={isAdmin} />
+
+      <GoLiveCard />
       
 
       {/* Follow Requests Card - shows when profile is private and has pending requests */}

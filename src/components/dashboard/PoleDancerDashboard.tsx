@@ -26,6 +26,7 @@ import ApprovalStatusBanner from "@/components/ApprovalStatusBanner";
 import RestrictedAccess from "@/components/dashboard/merchant/RestrictedAccess";
 import DanceProductManager from "@/components/DanceProductManager";
 import { FollowRequestsManager } from "@/components/profile/FollowRequestsManager";
+import GoLiveCard from "@/components/dashboard/GoLiveCard";
 
 interface AudioTrack {
   id: string;
@@ -175,6 +176,8 @@ const PoleDancerDashboard = ({
     <div className={`max-w-6xl mx-auto ${isMobile ? 'p-4' : 'p-6'} pt-20`}>
       {/* Approval Status Banner */}
       <ApprovalStatusBanner approvalStatus={approvalStatus} isAdmin={isAdmin} />
+
+      <GoLiveCard />
       
 
       {/* Follow Requests Card - shows when profile is private and has pending requests */}
