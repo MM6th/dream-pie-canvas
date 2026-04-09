@@ -165,6 +165,64 @@ export const UnifiedInboxModal = ({ open, onOpenChange, userId, userType }: Unif
     }
   };
 
+  const handleAcceptContestInvite = async (notification: Notification) => {
+    if (!notification.related_contest_invitation_id) return;
+    try {
+      const { error } = await supabase
+        .from("contest_invitations")
+        .update({ status: "accepted" })
+        .eq("id", notification.related_contest_invitation_id);
+      if (error) throw error;
+
+      const { data: invite } = await supabase
+        .from("contest_invitations")
+        .select("inviter_id, bulletin_post_id")
+        .eq("id", notification.related_contest_invitation_id)
+        .single();
+
+      if (invite) {
+        const { data: accepterProfile } = await supabase
+          .from("profiles")
+          .select("display_name")
+          .eq("id", userId)
+          .single();
+        const accepterName = accepterProfile?.display_name || "A user";
+
+        await supabase.from("notifications").insert({
+          user_id: invite.inviter_id,
+          type: "contest_invite_accepted",
+          title: "Invite Accepted!",
+          message: `${accepterName} accepted your contest invitation! They'll be redirected when the stream goes live.`,
+        });
+      }
+
+      await markNotificationAsRead(notification.id);
+      toast.success("Contest invitation accepted! You'll be redirected when it goes live.");
+      fetchNotifications();
+    } catch (err) {
+      console.error("Error accepting contest invite:", err);
+      toast.error("Failed to accept invitation");
+    }
+  };
+
+  const handleDeclineContestInvite = async (notification: Notification) => {
+    if (!notification.related_contest_invitation_id) return;
+    try {
+      const { error } = await supabase
+        .from("contest_invitations")
+        .update({ status: "declined" })
+        .eq("id", notification.related_contest_invitation_id);
+      if (error) throw error;
+
+      await markNotificationAsRead(notification.id);
+      toast.success("Contest invitation declined");
+      fetchNotifications();
+    } catch (err) {
+      console.error("Error declining contest invite:", err);
+      toast.error("Failed to decline invitation");
+    }
+  };
+
   const fetchMessages = async () => {
     if (!userId) return;
 
