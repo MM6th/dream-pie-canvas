@@ -28,6 +28,7 @@ export const NotificationsList = () => {
   const [userId, setUserId] = useState<string>("");
   const [productType, setProductType] = useState<string>("other");
   const [deliveryBuyerIds, setDeliveryBuyerIds] = useState<Record<string, string>>({});
+  const [invitationStatuses, setInvitationStatuses] = useState<Record<string, string>>({});
 
   useEffect(() => {
     fetchNotifications();
@@ -86,6 +87,21 @@ export const NotificationsList = () => {
             buyerMap[d.id] = d.buyer_id;
           });
           setDeliveryBuyerIds(buyerMap);
+        }
+      }
+
+      // Fetch invitation statuses for contest_invite notifications
+      const contestInviteNotifications = data?.filter(n => n.type === 'contest_invite' && n.related_contest_invitation_id) || [];
+      if (contestInviteNotifications.length > 0) {
+        const inviteIds = contestInviteNotifications.map(n => n.related_contest_invitation_id!);
+        const { data: invites } = await supabase
+          .from('contest_invitations')
+          .select('id, status')
+          .in('id', inviteIds);
+        if (invites) {
+          const statusMap: Record<string, string> = {};
+          invites.forEach(i => { statusMap[i.id] = i.status; });
+          setInvitationStatuses(statusMap);
         }
       }
     } catch (error) {
@@ -306,7 +322,7 @@ export const NotificationsList = () => {
                         )}
                         {notification.type === 'contest_invite' && 
                          notification.related_contest_invitation_id &&
-                         !notification.read && (
+                         invitationStatuses[notification.related_contest_invitation_id] === 'pending' && (
                           <div className="flex gap-2 mt-3">
                             <Button
                               variant="default"

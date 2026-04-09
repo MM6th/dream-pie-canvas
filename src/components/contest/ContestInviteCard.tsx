@@ -15,6 +15,7 @@ interface Challenge {
   challenge_type: string;
   scheduled_at: string;
   champion_user_id: string | null;
+  challenger_user_ids?: string[];
 }
 
 interface UserOption {
@@ -77,29 +78,30 @@ const ContestInviteCard = () => {
       const all = [...(championPosts || []), ...challengerPosts] as Challenge[];
       // Deduplicate
       const unique = Array.from(new Map(all.map((c) => [c.id, c])).values());
+
+      // Enrich each challenge with challenger user IDs
+      for (const challenge of unique) {
+        const { data: acceptanceData } = await supabase
+          .from("challenge_acceptances")
+          .select("user_id")
+          .eq("bulletin_post_id", challenge.id);
+        challenge.challenger_user_ids = (acceptanceData || []).map(a => a.user_id);
+      }
+
       setChallenges(unique);
     };
     fetchChallenges();
   }, [user?.id]);
 
-  // Fetch followers/users to invite
+  // Fetch all site users to invite
   useEffect(() => {
     if (!user?.id) return;
     const fetchUsers = async () => {
-      const { data } = await supabase
-        .from("profile_followers")
-        .select("follower_id")
-        .eq("merchant_id", user.id);
-
-      if (!data?.length) return;
-
-      const ids = data.map((f) => f.follower_id).filter((id) => id !== user.id);
-      if (!ids.length) return;
-
       const { data: profiles } = await supabase
         .from("profiles")
         .select("id, display_name, avatar_url")
-        .in("id", ids);
+        .neq("id", user.id)
+        .order("display_name");
 
       setUsers((profiles || []) as UserOption[]);
     };
@@ -199,7 +201,16 @@ const ContestInviteCard = () => {
   if (!challenges.length) return null;
 
   const alreadyInvited = invitations.map((i) => i.invitee_id);
-  const availableUsers = users.filter((u) => !alreadyInvited.includes(u.id));
+  // Exclude already invited + other participant(s) in the selected challenge
+  const selectedChallengeData = challenges.find(c => c.id === selectedChallenge);
+  const excludeIds = new Set(alreadyInvited);
+  if (selectedChallengeData) {
+    if (selectedChallengeData.champion_user_id) {
+      excludeIds.add(selectedChallengeData.champion_user_id);
+    }
+    (selectedChallengeData.challenger_user_ids || []).forEach(id => excludeIds.add(id));
+  }
+  const availableUsers = users.filter((u) => !excludeIds.has(u.id));
 
   return (
     <Card className="bg-card border-border backdrop-blur-sm">
