@@ -36,6 +36,7 @@ import RestrictedAccess from "@/components/dashboard/merchant/RestrictedAccess";
 import { FollowRequestsManager } from "@/components/profile/FollowRequestsManager";
 import AdminDashboard from "@/components/admin/AdminDashboard";
 import DashboardWidgets from "@/components/dashboard/merchant/DashboardWidgets";
+import GoLiveCard from "@/components/dashboard/GoLiveCard";
 
 interface AudioTrack {
   id: string;
@@ -197,6 +198,9 @@ const AudioPodcasterDashboard = ({
     <div className={`max-w-6xl mx-auto ${isMobile ? 'p-4' : 'p-6'} pt-20`}>
       {/* Approval Status Banner */}
       <ApprovalStatusBanner approvalStatus={approvalStatus} isAdmin={isAdmin} />
+
+      {/* Go Live Card - All approved merchants */}
+      <GoLiveCard />
 
       {/* Admin Dashboard - Admin Only */}
       {isAdmin && (
