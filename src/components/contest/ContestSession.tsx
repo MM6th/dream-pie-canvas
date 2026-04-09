@@ -35,6 +35,7 @@ const ContestSession = ({
   challengerId,
   durationMinutes,
   challengeType,
+  bulletinPostId,
   onEnd,
 }: ContestSessionProps) => {
   const { user } = useAuth();
@@ -51,6 +52,7 @@ const ContestSession = ({
   const [micOn, setMicOn] = useState(role !== "spectator");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [spectatorInviterId, setSpectatorInviterId] = useState<string | null>(null);
 
   const isParticipant = role === "champion" || role === "challenger";
 
