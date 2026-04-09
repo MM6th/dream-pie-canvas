@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent } from "@/components/ui/card";
-import { Check, Bell, Calendar, Eye, Reply, ChevronDown, ChevronUp } from "lucide-react";
+import { Check, Bell, Calendar, Eye, Reply, ChevronDown, ChevronUp, UserCheck, X } from "lucide-react";
 import beeperIcon from '@/assets/beeper-message.png';
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
@@ -28,6 +28,7 @@ interface Notification {
   read: boolean;
   created_at: string;
   related_delivery_id?: string | null;
+  related_contest_invitation_id?: string | null;
 }
 
 interface Message {
@@ -66,6 +67,7 @@ export const UnifiedInboxModal = ({ open, onOpenChange, userId, userType }: Unif
   const [selectedDeliveryId, setSelectedDeliveryId] = useState<string>("");
   const [productType, setProductType] = useState<string>("other");
   const [deliveryBuyerIds, setDeliveryBuyerIds] = useState<Record<string, string>>({});
+  const [invitationStatuses, setInvitationStatuses] = useState<Record<string, string>>({});
   
   // Reply composer
   const [showReplyComposer, setShowReplyComposer] = useState(false);
@@ -143,8 +145,81 @@ export const UnifiedInboxModal = ({ open, onOpenChange, userId, userType }: Unif
           setDeliveryBuyerIds(buyerMap);
         }
       }
+
+      // Fetch invitation statuses for contest_invite notifications
+      const contestInviteNotifications = data?.filter(n => n.type === 'contest_invite' && n.related_contest_invitation_id) || [];
+      if (contestInviteNotifications.length > 0) {
+        const inviteIds = contestInviteNotifications.map(n => n.related_contest_invitation_id!);
+        const { data: invites } = await supabase
+          .from('contest_invitations')
+          .select('id, status')
+          .in('id', inviteIds);
+        if (invites) {
+          const statusMap: Record<string, string> = {};
+          invites.forEach(i => { statusMap[i.id] = i.status; });
+          setInvitationStatuses(statusMap);
+        }
+      }
     } catch (error) {
       console.error("Error fetching notifications:", error);
+    }
+  };
+
+  const handleAcceptContestInvite = async (notification: Notification) => {
+    if (!notification.related_contest_invitation_id) return;
+    try {
+      const { error } = await supabase
+        .from("contest_invitations")
+        .update({ status: "accepted" })
+        .eq("id", notification.related_contest_invitation_id);
+      if (error) throw error;
+
+      const { data: invite } = await supabase
+        .from("contest_invitations")
+        .select("inviter_id, bulletin_post_id")
+        .eq("id", notification.related_contest_invitation_id)
+        .single();
+
+      if (invite) {
+        const { data: accepterProfile } = await supabase
+          .from("profiles")
+          .select("display_name")
+          .eq("id", userId)
+          .single();
+        const accepterName = accepterProfile?.display_name || "A user";
+
+        await supabase.from("notifications").insert({
+          user_id: invite.inviter_id,
+          type: "contest_invite_accepted",
+          title: "Invite Accepted!",
+          message: `${accepterName} accepted your contest invitation! They'll be redirected when the stream goes live.`,
+        });
+      }
+
+      await markNotificationAsRead(notification.id);
+      toast.success("Contest invitation accepted! You'll be redirected when it goes live.");
+      fetchNotifications();
+    } catch (err) {
+      console.error("Error accepting contest invite:", err);
+      toast.error("Failed to accept invitation");
+    }
+  };
+
+  const handleDeclineContestInvite = async (notification: Notification) => {
+    if (!notification.related_contest_invitation_id) return;
+    try {
+      const { error } = await supabase
+        .from("contest_invitations")
+        .update({ status: "declined" })
+        .eq("id", notification.related_contest_invitation_id);
+      if (error) throw error;
+
+      await markNotificationAsRead(notification.id);
+      toast.success("Contest invitation declined");
+      fetchNotifications();
+    } catch (err) {
+      console.error("Error declining contest invite:", err);
+      toast.error("Failed to decline invitation");
     }
   };
 
@@ -370,6 +445,34 @@ export const UnifiedInboxModal = ({ open, onOpenChange, userId, userType }: Unif
                                       <Eye className="w-4 h-4 mr-2" />
                                       View Details
                                     </Button>
+                                   )}
+                                  {notification.type === 'contest_invite' && 
+                                   notification.related_contest_invitation_id &&
+                                   invitationStatuses[notification.related_contest_invitation_id] === 'pending' && (
+                                    <div className="flex gap-2 mt-2">
+                                      <Button
+                                        variant="default"
+                                        size="sm"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleAcceptContestInvite(notification);
+                                        }}
+                                      >
+                                        <UserCheck className="w-4 h-4 mr-2" />
+                                        Accept
+                                      </Button>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleDeclineContestInvite(notification);
+                                        }}
+                                      >
+                                        <X className="w-4 h-4 mr-2" />
+                                        Decline
+                                      </Button>
+                                    </div>
                                   )}
                                 </div>
                               )}
