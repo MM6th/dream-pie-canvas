@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Bell, Check, Calendar, Eye } from "lucide-react";
+import { Bell, Check, Calendar, Eye, UserCheck, X } from "lucide-react";
 import { toast } from "sonner";
 import { AstrologyBirthInfoModal } from "./AstrologyBirthInfoModal";
 import { BirthInfoDetailModal } from "./BirthInfoDetailModal";
@@ -16,6 +16,7 @@ interface Notification {
   read: boolean;
   created_at: string;
   related_delivery_id?: string | null;
+  related_contest_invitation_id?: string | null;
 }
 
 export const NotificationsList = () => {
@@ -123,6 +124,66 @@ export const NotificationsList = () => {
   const handleViewBirthInfo = (deliveryId: string) => {
     setSelectedDeliveryId(deliveryId);
     setBirthInfoDetailModalOpen(true);
+  };
+
+  const handleAcceptContestInvite = async (notification: Notification) => {
+    if (!notification.related_contest_invitation_id) return;
+    try {
+      const { error } = await supabase
+        .from("contest_invitations")
+        .update({ status: "accepted" })
+        .eq("id", notification.related_contest_invitation_id);
+      if (error) throw error;
+
+      // Get invitation details to notify inviter
+      const { data: invite } = await supabase
+        .from("contest_invitations")
+        .select("inviter_id, bulletin_post_id")
+        .eq("id", notification.related_contest_invitation_id)
+        .single();
+
+      if (invite) {
+        const { data: accepterProfile } = await supabase
+          .from("profiles")
+          .select("display_name")
+          .eq("id", userId)
+          .single();
+        const accepterName = accepterProfile?.display_name || "A user";
+
+        await supabase.from("notifications").insert({
+          user_id: invite.inviter_id,
+          type: "contest_invite_accepted",
+          title: "Invite Accepted!",
+          message: `${accepterName} accepted your contest invitation! They'll be redirected when the stream goes live.`,
+        });
+      }
+
+      // Mark notification as read
+      await markAsRead(notification.id);
+      toast.success("Contest invitation accepted! You'll be redirected when it goes live.");
+      fetchNotifications();
+    } catch (err) {
+      console.error("Error accepting contest invite:", err);
+      toast.error("Failed to accept invitation");
+    }
+  };
+
+  const handleDeclineContestInvite = async (notification: Notification) => {
+    if (!notification.related_contest_invitation_id) return;
+    try {
+      const { error } = await supabase
+        .from("contest_invitations")
+        .update({ status: "declined" })
+        .eq("id", notification.related_contest_invitation_id);
+      if (error) throw error;
+
+      await markAsRead(notification.id);
+      toast.success("Contest invitation declined");
+      fetchNotifications();
+    } catch (err) {
+      console.error("Error declining contest invite:", err);
+      toast.error("Failed to decline invitation");
+    }
   };
 
   const markAsRead = async (notificationId: string) => {
