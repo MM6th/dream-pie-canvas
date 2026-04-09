@@ -2441,6 +2441,7 @@ export type Database = {
           id: string
           message: string
           read: boolean | null
+          related_contest_invitation_id: string | null
           related_delivery_id: string | null
           title: string
           type: string
@@ -2452,6 +2453,7 @@ export type Database = {
           id?: string
           message: string
           read?: boolean | null
+          related_contest_invitation_id?: string | null
           related_delivery_id?: string | null
           title: string
           type: string
@@ -2463,13 +2465,22 @@ export type Database = {
           id?: string
           message?: string
           read?: boolean | null
+          related_contest_invitation_id?: string | null
           related_delivery_id?: string | null
           title?: string
           type?: string
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "notifications_related_contest_invitation_id_fkey"
+            columns: ["related_contest_invitation_id"]
+            isOneToOne: false
+            referencedRelation: "contest_invitations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       one_on_one_chat_messages: {
         Row: {

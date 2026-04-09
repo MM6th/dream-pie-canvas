@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useLiveKitToken } from "@/hooks/useLiveKitToken";
 import AppNavBar from "@/components/AppNavBar";
 import LiveOneOnOneSession from "@/components/live/LiveOneOnOneSession";
+import ContestInviteCard from "@/components/contest/ContestInviteCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -605,6 +606,7 @@ const GoLive = () => {
                 </CardContent>
               </Card>
             )}
+            {setupPhase && <ContestInviteCard />}
           </div>
 
           {/* Chat sidebar */}

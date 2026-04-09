@@ -124,8 +124,26 @@ const ChallengeAcceptanceButtons = ({ postId, hasTitleOnTheLine, championUserId,
       user_id: user.id,
       type: 'challenge_accepted',
       title: 'Challenge Accepted!',
-      message: `You have accepted the "${challengeName}"${scheduleText}. Be sure to attend on time or risk losing a percentage of your accountability score. 🥊`
+      message: `You have accepted the "${challengeName}"${scheduleText}. Invite your supporters before the challenge begins! Be sure to attend on time or risk losing a percentage of your accountability score. 🥊`
     });
+
+    // Notify the champion (if title on the line) or post creator that a challenger has joined
+    if (championUserId && championUserId !== user.id) {
+      await supabase.from('notifications').insert({
+        user_id: championUserId,
+        type: 'challenge_accepted',
+        title: 'Challenger Confirmed!',
+        message: `A challenger has accepted your "${challengeName}"${scheduleText}. Invite your supporters before the challenge begins! 🥊`
+      });
+    }
+    if (merchantId !== user.id && merchantId !== championUserId) {
+      await supabase.from('notifications').insert({
+        user_id: merchantId,
+        type: 'challenge_accepted',
+        title: 'Challenger Confirmed!',
+        message: `A challenger has accepted the "${challengeName}"${scheduleText}. Invite your supporters before the challenge begins! 🥊`
+      });
+    }
 
     toast.success("Challenge accepted! 🥊");
     fetchAcceptances();
