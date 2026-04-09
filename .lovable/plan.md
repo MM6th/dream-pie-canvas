@@ -1,49 +1,59 @@
 
 
-## Perfect Live Challenge UI — Layout-Only Changes
+## Add Contest Invite Button to Go Live + Acceptance Notifications + Auto-Redirect
 
-**Zero changes** to LiveKit connection code (lines 105-321). All edits are in the JSX return block and props only.
+### Overview
+Add an "Invite Your People" button to the Go Live page that appears when the user has upcoming challenges with a confirmed challenger. Enhance the notification flow so both participants are reminded to invite, invitees get actionable notifications, and accepted invitees auto-redirect to the stream when it goes live.
 
-### File: `src/components/contest/ContestSession.tsx`
+### Changes
 
-**1. Tip button missing on champion's desktop**
-The tip buttons (lines 378-384) are inside `isParticipant` but currently let champion tip challenger and vice versa. Since we're removing participant-to-participant tipping (point 4), this resolves itself — tip buttons removed from participant controls entirely. Only spectators see tip buttons.
+#### 1. Go Live page — Show ContestInviteCard in setup phase
+**File: `src/pages/GoLive.tsx`**
+- Import `ContestInviteCard`
+- Below the "Stream Setup" card (inside `setupPhase`), render `<ContestInviteCard />` so the host sees their upcoming challenges and can send invites before going live
+- No changes to any connection, LiveKit, or streaming code
 
-**2. Participants cannot tip themselves**
-Already handled by the current logic (tip button targets the OTHER person), but since point 4 removes all participant tipping, this is moot.
+#### 2. Enhanced notification when challenger accepts
+**File: `src/components/ChallengeAcceptanceButtons.tsx`**
+- After a challenger accepts (line ~128), also send a notification to the **champion** (using `championUserId`) and the **post creator** (`merchantId`) telling them a challenger has confirmed and they should invite their supporters before the challenge begins
+- Message: `"A challenger has accepted your '{challengeName}'. Invite your supporters before the challenge begins!"`
+- Also send a similar notification to the accepting challenger: the existing notification already tells them to attend, but add a line encouraging them to invite their people too
 
-**3. No cross-chats — each participant locked to their own chat box**
-Currently both chat boxes render for everyone. The left chat uses `championChatRoom`, right uses `challengerChatRoom`. The fix: conditionally disable input in the chat box that doesn't belong to the current participant. Champion can only type in the champion chat; challenger only in the challenger chat. Spectators can type in neither (or whichever side they're invited to — for now, neither).
+#### 3. Better invite notification with accept/decline action
+**File: `src/components/contest/ContestInviteCard.tsx`**
+- Update the notification message sent on invite (line 153) to include the challenge title and inviter name
+- Fetch inviter's display_name and the challenge title before sending
 
-This requires adding a `readOnly` prop to `OneOnOneChat`. In `ContestSession`, pass `readOnly={role !== "champion"}` to the champion chat and `readOnly={role !== "challenger"}` to the challenger chat.
+#### 4. Accept/Decline UI in NotificationsList for contest_invite type
+**File: `src/components/NotificationsList.tsx`**
+- When rendering a notification with `type === "contest_invite"`, show Accept/Decline buttons
+- Need to extract the `bulletin_post_id` — add it to the notification metadata. Update `ContestInviteCard.sendInvite` to include `metadata` JSON field in the notification (or store `bulletin_post_id` + `inviter_id` in the message for parsing)
+- On Accept: update `contest_invitations` row to `status: 'accepted'`, send confirmation notification back to inviter
+- On Decline: update to `status: 'declined'`
 
-**4. Remove participant-to-participant tipping**
-Delete the `OneOnOneTipButton` renders inside the `isParticipant` controls block (lines 378-384). Keep only the spectator tip bar (lines 442-449).
+**Database consideration**: The `notifications` table needs a way to link back to the contest invitation. Two options:
+- Add a `metadata` JSONB column to notifications (if not already present)
+- Or encode the invitation ID in the notification message
 
-**5. Remove trophy icon from Twerk Off sign**
-Line 333 already only shows `pieTitleTwerk` for twerk-off. There's no trophy icon there currently — the label just has the twerk image + text. No change needed here; already correct.
+Let me check the notifications table schema.
 
-**6. Challenger tip meter same height as champion's**
-Currently champion's meter is at line 371-373 (inside a `flex-col items-start` with label above). Challenger's meter on the remote side is at line 419-421 inside a different layout (`flex items-start justify-between`). Fix: make both sides use the same layout — label top-left, meter below it with identical `mt-2` spacing.
+#### 5. Auto-redirect for accepted invitees (already works)
+**File: `src/hooks/useContestInviteRedirect.tsx`**
+- This hook already polls for accepted invitations with live sessions and auto-redirects. No changes needed — once the invitee accepts via the notification UI, their status becomes "accepted" and the existing hook handles the redirect.
 
-**7. Move challenge label to center between both screens**
-Remove the floating header's challenge label (lines 331-335) and replace with a centered overlay that spans the border between both screens. Use absolute positioning at `top-12 left-1/2 -translate-x-1/2` with large bold text. Keep the timer in the floating header but remove the challenge type from it.
+### Technical Details
 
-### File: `src/components/live/OneOnOneChat.tsx`
+**Notifications table check needed**: I need to verify if `notifications` has a `metadata` column or similar. If not, we'll store the `contest_invitation_id` in the notification message as a parseable format, or add a nullable `related_contest_invitation_id` column.
 
-Add optional `readOnly?: boolean` prop. When true, hide the input/send bar so the chat becomes view-only.
+**No connection code touched**: All changes are in UI components (GoLive setup section, NotificationsList rendering, ContestInviteCard notification content) and the ChallengeAcceptanceButtons notification logic.
 
----
+### File Summary
 
-### Summary of changes
-
-| # | What | Where |
-|---|------|-------|
-| 1-2,4 | Remove tip buttons from participant controls | ContestSession lines 376-384 |
-| 3 | Add `readOnly` prop to chat, pass per-role | OneOnOneChat + ContestSession |
-| 5 | No change needed (already correct) | — |
-| 6 | Mirror champion's meter layout on remote side | ContestSession lines 417-426 |
-| 7 | Move challenge label to centered overlay between screens | ContestSession lines 331-340 |
-
-**Connection code (lines 105-321) is not touched.**
+| File | Change |
+|------|--------|
+| `src/pages/GoLive.tsx` | Add ContestInviteCard below Stream Setup card |
+| `src/components/ChallengeAcceptanceButtons.tsx` | Send "invite your people" notification to champion + challenger on acceptance |
+| `src/components/contest/ContestInviteCard.tsx` | Include challenge title + inviter name in invite notification; store invitation reference |
+| `src/components/NotificationsList.tsx` | Add Accept/Decline buttons for contest_invite notifications |
+| Possible migration | Add `related_contest_invitation_id` to notifications table if no metadata column exists |
 
