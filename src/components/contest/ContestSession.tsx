@@ -413,7 +413,7 @@ const ContestSession = ({
           </div>
           {/* Chat beneath champion video */}
           <div className="h-36 shrink-0 overflow-hidden border-t border-white/10 sm:h-48 lg:h-52">
-            <OneOnOneChat roomName={championChatRoom} channelSuffix="champion" readOnly={role !== "champion" && role !== "spectator"} />
+            <OneOnOneChat roomName={championChatRoom} channelSuffix="champion" readOnly={role === "champion" ? false : (role === "spectator" && spectatorInviterId === championId) ? false : true} />
           </div>
         </div>
 
@@ -457,7 +457,7 @@ const ContestSession = ({
           </div>
           {/* Chat beneath challenger video */}
           <div className="h-36 shrink-0 overflow-hidden border-t border-white/10 sm:h-48 lg:h-52">
-            <OneOnOneChat roomName={challengerChatRoom} channelSuffix="challenger" readOnly={role !== "challenger" && role !== "spectator"} />
+            <OneOnOneChat roomName={challengerChatRoom} channelSuffix="challenger" readOnly={role === "challenger" ? false : (role === "spectator" && spectatorInviterId === challengerId) ? false : true} />
           </div>
         </div>
       </div>
