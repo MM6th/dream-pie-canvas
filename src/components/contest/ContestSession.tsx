@@ -426,19 +426,28 @@ const ContestSession = ({
           {/* Video panel */}
           <div className="isolate relative flex-1 min-h-0 overflow-hidden">
             <div className="absolute inset-0 z-0">
-              <video
-                ref={isParticipant ? setLocalVideoElement : undefined}
-                autoPlay muted playsInline
-                className={`w-full h-full object-cover ${!cameraOn && isParticipant ? 'hidden' : ''}`}
-              />
-              {!cameraOn && isParticipant && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black">
-                  {avatarUrl ? (
-                    <img src={avatarUrl} alt="Your avatar" className="w-24 h-24 rounded-full object-cover border-2 border-white/20" />
-                  ) : (
-                    <User className="w-16 h-16 text-muted-foreground" />
+              {role === "spectator" ? (
+                <>
+                  <video ref={remoteChampionVideoRef} autoPlay playsInline className="w-full h-full object-cover" />
+                  <audio ref={remoteChampionAudioRef} autoPlay className="hidden" />
+                </>
+              ) : (
+                <>
+                  <video
+                    ref={isParticipant ? setLocalVideoElement : undefined}
+                    autoPlay muted playsInline
+                    className={`w-full h-full object-cover ${!cameraOn && isParticipant ? 'hidden' : ''}`}
+                  />
+                  {!cameraOn && isParticipant && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black">
+                      {avatarUrl ? (
+                        <img src={avatarUrl} alt="Your avatar" className="w-24 h-24 rounded-full object-cover border-2 border-white/20" />
+                      ) : (
+                        <User className="w-16 h-16 text-muted-foreground" />
+                      )}
+                    </div>
                   )}
-                </div>
+                </>
               )}
             </div>
             <div className="relative z-10 w-full h-full flex flex-col justify-between p-4">
