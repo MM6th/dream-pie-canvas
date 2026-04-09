@@ -145,6 +145,21 @@ export const UnifiedInboxModal = ({ open, onOpenChange, userId, userType }: Unif
           setDeliveryBuyerIds(buyerMap);
         }
       }
+
+      // Fetch invitation statuses for contest_invite notifications
+      const contestInviteNotifications = data?.filter(n => n.type === 'contest_invite' && n.related_contest_invitation_id) || [];
+      if (contestInviteNotifications.length > 0) {
+        const inviteIds = contestInviteNotifications.map(n => n.related_contest_invitation_id!);
+        const { data: invites } = await supabase
+          .from('contest_invitations')
+          .select('id, status')
+          .in('id', inviteIds);
+        if (invites) {
+          const statusMap: Record<string, string> = {};
+          invites.forEach(i => { statusMap[i.id] = i.status; });
+          setInvitationStatuses(statusMap);
+        }
+      }
     } catch (error) {
       console.error("Error fetching notifications:", error);
     }
