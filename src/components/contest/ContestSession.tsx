@@ -410,7 +410,7 @@ const ContestSession = ({
               <audio ref={remoteAudioRef} autoPlay className="hidden" />
             </div>
             <div className="relative z-10 w-full h-full flex flex-col justify-between p-4">
-              <div className="w-full flex flex-col items-start gap-1">
+              <div className="w-full flex flex-col items-end gap-1">
                 <span className="bg-red-600/80 text-white text-xs px-2 py-1 rounded flex items-center gap-1">
                   Challenger
                 </span>
