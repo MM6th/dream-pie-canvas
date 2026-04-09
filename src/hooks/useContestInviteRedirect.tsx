@@ -33,19 +33,18 @@ export const useContestInviteRedirect = () => {
       // Check sessionStorage flag
       if (sessionStorage.getItem(`contest_ended_${inv.bulletin_post_id}`)) continue;
 
-      if (inv.contest_session_id) {
-        const { data: session } = await supabase
-          .from("contest_sessions")
-          .select("status")
-          .eq("id", inv.contest_session_id)
-          .eq("status", "live")
-          .maybeSingle();
+      // Check if there's a live session for this bulletin post
+      const { data: session } = await supabase
+        .from("contest_sessions")
+        .select("status")
+        .eq("bulletin_post_id", inv.bulletin_post_id)
+        .eq("status", "live")
+        .maybeSingle();
 
-        if (session) {
-          redirectedRef.current.add(inv.bulletin_post_id);
-          navigate(`/contest/${inv.bulletin_post_id}`);
-          return;
-        }
+      if (session) {
+        redirectedRef.current.add(inv.bulletin_post_id);
+        navigate(`/contest/${inv.bulletin_post_id}`);
+        return;
       }
     }
   }, [user?.id, navigate, location.pathname]);
