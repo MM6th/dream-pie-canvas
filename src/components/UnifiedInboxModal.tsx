@@ -445,8 +445,35 @@ export const UnifiedInboxModal = ({ open, onOpenChange, userId, userType }: Unif
                                       <Eye className="w-4 h-4 mr-2" />
                                       View Details
                                     </Button>
+                                   )}
+                                  {notification.type === 'contest_invite' && 
+                                   notification.related_contest_invitation_id &&
+                                   invitationStatuses[notification.related_contest_invitation_id] === 'pending' && (
+                                    <div className="flex gap-2 mt-2">
+                                      <Button
+                                        variant="default"
+                                        size="sm"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleAcceptContestInvite(notification);
+                                        }}
+                                      >
+                                        <UserCheck className="w-4 h-4 mr-2" />
+                                        Accept
+                                      </Button>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleDeclineContestInvite(notification);
+                                        }}
+                                      >
+                                        <X className="w-4 h-4 mr-2" />
+                                        Decline
+                                      </Button>
+                                    </div>
                                   )}
-                                </div>
                               )}
                             </div>
                           </div>
