@@ -154,7 +154,18 @@ const OneOnOneChat = ({ roomName, channelSuffix, readOnly }: OneOnOneChatProps) 
           </div>
         </ScrollArea>
 
-        {!readOnly && (user ? (
+        {readOnly ? (
+          <div className="flex gap-2 mt-2 opacity-50">
+            <Input
+              disabled
+              placeholder="View only"
+              className="text-sm h-8"
+            />
+            <Button size="icon" className="h-8 w-8" disabled>
+              <Send className="w-3 h-3" />
+            </Button>
+          </div>
+        ) : user ? (
           <div className="flex gap-2 mt-2">
             <Input
               value={newMessage}
@@ -169,7 +180,7 @@ const OneOnOneChat = ({ roomName, channelSuffix, readOnly }: OneOnOneChatProps) 
           </div>
         ) : (
           <p className="text-xs text-muted-foreground mt-2 text-center">Log in to chat</p>
-        ))}
+        )}
       </CardContent>
     </Card>
   );
