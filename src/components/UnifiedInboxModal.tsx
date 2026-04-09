@@ -28,6 +28,7 @@ interface Notification {
   read: boolean;
   created_at: string;
   related_delivery_id?: string | null;
+  related_contest_invitation_id?: string | null;
 }
 
 interface Message {
