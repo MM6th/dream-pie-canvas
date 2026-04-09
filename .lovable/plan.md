@@ -1,66 +1,49 @@
 
 
-## Fix Contest Livestream: 4 Issues
+## Perfect Live Challenge UI — Layout-Only Changes
 
-### Issue 1: Mobile challenger stuck on black screen + redirect loop
+**Zero changes** to LiveKit connection code (lines 105-321). All edits are in the JSX return block and props only.
 
-**Root cause:** The `useContestRedirect` hook runs globally in `App.tsx` and polls every 15 seconds. After a contest ends (via timer auto-end or "End Contest" button), there's a race condition: `session_ended_at` is set on the bulletin post, but `useContestRedirect` checks `session_ended_at IS NULL` on the post — if the contestant navigates away to `/bulletin` and the query fires before the DB update propagates, they get redirected back. On mobile, the black screen is the same layout issue compounded by this loop.
+### File: `src/components/contest/ContestSession.tsx`
 
-**Fix:**
-- In `useContestRedirect`, add the current path check — skip redirecting if user is already on `/contest/`. Also check the `contest_sessions` table for `status = 'ended'` as a secondary guard.
-- In `ContestLive.tsx`, when `handleEndContest` fires or when the timer expires, set a flag in `sessionStorage` (e.g. `contest_ended_<postId>`) so the redirect hooks skip that post ID.
-- In `useContestRedirect` and `useContestInviteRedirect`, check sessionStorage before redirecting.
+**1. Tip button missing on champion's desktop**
+The tip buttons (lines 378-384) are inside `isParticipant` but currently let champion tip challenger and vice versa. Since we're removing participant-to-participant tipping (point 4), this resolves itself — tip buttons removed from participant controls entirely. Only spectators see tip buttons.
 
-**Files:** `src/hooks/useContestRedirect.tsx`, `src/hooks/useContestInviteRedirect.tsx`, `src/pages/ContestLive.tsx`
+**2. Participants cannot tip themselves**
+Already handled by the current logic (tip button targets the OTHER person), but since point 4 removes all participant tipping, this is moot.
 
----
+**3. No cross-chats — each participant locked to their own chat box**
+Currently both chat boxes render for everyone. The left chat uses `championChatRoom`, right uses `challengerChatRoom`. The fix: conditionally disable input in the chat box that doesn't belong to the current participant. Champion can only type in the champion chat; challenger only in the challenger chat. Spectators can type in neither (or whichever side they're invited to — for now, neither).
 
-### Issue 2: Chat sections share the same dialogue
+This requires adding a `readOnly` prop to `OneOnOneChat`. In `ContestSession`, pass `readOnly={role !== "champion"}` to the champion chat and `readOnly={role !== "challenger"}` to the challenger chat.
 
-**Root cause:** Both `OneOnOneChat` instances use the same `roomName` and write/read from the same `room_name` column in `one_on_one_chat_messages`. The `channelSuffix` only differentiates the Supabase Realtime channel name (fixing the duplicate subscription error) but both chats still query and insert with the same `room_name`, so messages appear in both.
+**4. Remove participant-to-participant tipping**
+Delete the `OneOnOneTipButton` renders inside the `isParticipant` controls block (lines 378-384). Keep only the spectator tip bar (lines 442-449).
 
-**Fix:**
-- Pass a different `roomName` to each chat: `{roomName}_champion` for the left chat, `{roomName}_challenger` for the right chat. This naturally separates the message storage since `OneOnOneChat` queries by `room_name`.
-- Remove the now-unnecessary `channelSuffix` prop (the room names themselves are unique).
+**5. Remove trophy icon from Twerk Off sign**
+Line 333 already only shows `pieTitleTwerk` for twerk-off. There's no trophy icon there currently — the label just has the twerk image + text. No change needed here; already correct.
 
-**Files:** `src/components/contest/ContestSession.tsx`
+**6. Challenger tip meter same height as champion's**
+Currently champion's meter is at line 371-373 (inside a `flex-col items-start` with label above). Challenger's meter on the remote side is at line 419-421 inside a different layout (`flex items-start justify-between`). Fix: make both sides use the same layout — label top-left, meter below it with identical `mt-2` spacing.
 
----
+**7. Move challenge label to center between both screens**
+Remove the floating header's challenge label (lines 331-335) and replace with a centered overlay that spans the border between both screens. Use absolute positioning at `top-12 left-1/2 -translate-x-1/2` with large bold text. Keep the timer in the floating header but remove the challenge type from it.
 
-### Issue 3: Wrong icons — trophy should be PIE belt for champion, no trophy for challenge type label
+### File: `src/components/live/OneOnOneChat.tsx`
 
-**Fix:**
-- Import `pieTitleBelt` from `@/assets/pie-title-belt.png` and `pieTitleTwerk` from `@/assets/pie-title-twerk.png`.
-- Replace the `Trophy` icon next to "Champion" label with the PIE belt image (`<img src={pieTitleBelt} className="h-4 w-4" />`).
-- In the floating header, replace the `Trophy` icon next to the challenge type label: use `pieTitleTwerk` for twerk-off challenges, and remove the trophy for other challenge types (just show the text).
-- Remove the `Trophy` import if no longer needed.
-
-**Files:** `src/components/contest/ContestSession.tsx`
+Add optional `readOnly?: boolean` prop. When true, hide the input/send bar so the chat becomes view-only.
 
 ---
 
-### Issue 4: Each screen needs its own tip icon and ability (separate audience contributions)
+### Summary of changes
 
-**Current state:** The tip button on the champion's side tips the champion, and there's one shared tip meter. Spectators have separate tip buttons but participants don't tip each other's opponents properly.
+| # | What | Where |
+|---|------|-------|
+| 1-2,4 | Remove tip buttons from participant controls | ContestSession lines 376-384 |
+| 3 | Add `readOnly` prop to chat, pass per-role | OneOnOneChat + ContestSession |
+| 5 | No change needed (already correct) | — |
+| 6 | Mirror champion's meter layout on remote side | ContestSession lines 417-426 |
+| 7 | Move challenge label to centered overlay between screens | ContestSession lines 331-340 |
 
-**Fix:**
-- **Champion's screen (left):** Show a `OneOnOneTipMeter` tracking tips to the champion. No tip button on your own screen.
-- **Challenger's screen (right):** Show a `OneOnOneTipMeter` tracking tips to the challenger. No tip button on your own screen.
-- **Spectator bar:** Already has separate tip buttons — keep as-is.
-- To differentiate tip tracking, use different room name prefixes for each side's tips: `{roomName}_champion_tips` and `{roomName}_challenger_tips`. Pass these as `roomName` to the respective `OneOnOneTipMeter` and `OneOnOneTipButton` components.
-- Each participant sees the opponent's tip button on the remote side: champion sees "Tip Challenger" on the right panel, challenger sees "Tip Champion" on the right panel.
-- Each side has its own tip meter in the top-left of their respective video panel.
-
-**Files:** `src/components/contest/ContestSession.tsx`
-
----
-
-### Summary of file changes
-
-| File | Changes |
-|------|---------|
-| `src/components/contest/ContestSession.tsx` | Replace trophy icons with PIE belt images, separate chat roomNames, separate tip roomNames per side, add tip buttons/meters to both panels |
-| `src/hooks/useContestRedirect.tsx` | Add path check + sessionStorage guard to prevent redirect loops |
-| `src/hooks/useContestInviteRedirect.tsx` | Add sessionStorage guard |
-| `src/pages/ContestLive.tsx` | Set sessionStorage flag on contest end |
+**Connection code (lines 105-321) is not touched.**
 
