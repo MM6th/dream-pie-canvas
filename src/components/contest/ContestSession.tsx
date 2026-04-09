@@ -330,7 +330,7 @@ const ContestSession = ({
       {/* Floating header */}
       <div className="absolute top-2 left-1/2 -translate-x-1/2 z-20 flex items-center gap-3">
         <div className="flex items-center gap-1.5 bg-black/60 text-yellow-400 text-xs px-2 py-1 rounded">
-          {isTwerkOff && <img src={pieTitleTwerk} className="h-4 w-4 object-contain" alt="Twerk-off" />}
+          {isTwerkOff && <img src={pieTitleTwerk} className="h-7 w-9 object-contain" alt="Twerk-off" />}
           <span className="text-white font-bold">{challengeLabel}</span>
         </div>
         <div className={`flex items-center gap-2 px-4 py-1.5 rounded-full ${secondsLeft <= 60 ? "bg-destructive/80" : "bg-black/60"} text-white text-sm font-mono`}>
@@ -364,7 +364,7 @@ const ContestSession = ({
             <div className="relative z-10 w-full h-full flex flex-col justify-between p-4">
               <div className="w-full flex flex-col items-start gap-1">
                 <span className={`${role === "champion" ? "bg-yellow-600/80" : "bg-red-600/80"} text-white text-xs px-2 py-1 rounded flex items-center gap-1`}>
-                  {role === "champion" && <img src={pieTitleBelt} className="h-3.5 w-3.5 object-contain" alt="Belt" />}
+                  {role === "champion" && <img src={pieTitleBelt} className="h-6 w-8 object-contain" alt="Belt" />}
                   {myLabel}
                 </span>
                 {/* Tip meter for this side */}
@@ -420,7 +420,7 @@ const ContestSession = ({
                   <OneOnOneTipMeter roomName={role === "champion" ? challengerTipRoom : championTipRoom} />
                 </div>
                 <span className={`${role === "champion" ? "bg-red-600/80" : "bg-yellow-600/80"} text-white text-xs px-2 py-1 rounded flex items-center gap-1`}>
-                  {remoteLabel === "Champion" && <img src={pieTitleBelt} className="h-3.5 w-3.5 object-contain" alt="Belt" />}
+                  {remoteLabel === "Champion" && <img src={pieTitleBelt} className="h-6 w-8 object-contain" alt="Belt" />}
                   {remoteLabel}
                 </span>
               </div>
