@@ -1,0 +1,1 @@
+ALTER TABLE public.notifications ADD COLUMN related_contest_invitation_id UUID REFERENCES public.contest_invitations(id) ON DELETE SET NULL;
