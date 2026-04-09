@@ -67,6 +67,7 @@ export const UnifiedInboxModal = ({ open, onOpenChange, userId, userType }: Unif
   const [selectedDeliveryId, setSelectedDeliveryId] = useState<string>("");
   const [productType, setProductType] = useState<string>("other");
   const [deliveryBuyerIds, setDeliveryBuyerIds] = useState<Record<string, string>>({});
+  const [invitationStatuses, setInvitationStatuses] = useState<Record<string, string>>({});
   
   // Reply composer
   const [showReplyComposer, setShowReplyComposer] = useState(false);
