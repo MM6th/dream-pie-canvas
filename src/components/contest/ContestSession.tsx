@@ -43,6 +43,9 @@ const ContestSession = ({
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const remoteAudioRef = useRef<HTMLAudioElement>(null);
+  // Spectator needs separate refs for champion's remote feed (left panel)
+  const remoteChampionVideoRef = useRef<HTMLVideoElement>(null);
+  const remoteChampionAudioRef = useRef<HTMLAudioElement>(null);
   const roomRef = useRef<Room | null>(null);
   const connectingRef = useRef(false);
   const [connecting, setConnecting] = useState(true);
@@ -218,16 +221,46 @@ const ContestSession = ({
           videoCaptureDefaults: { resolution: VideoPresets.h720.resolution },
         });
 
-        room.on(RoomEvent.TrackSubscribed, (track) => {
+        room.on(RoomEvent.TrackSubscribed, (track, _pub, participant) => {
           if (cancelled) return;
-          if (track.source === Track.Source.Camera && remoteVideoRef.current) {
-            track.attach(remoteVideoRef.current);
-            safePlay(remoteVideoRef.current);
-            setRemoteConnected(true);
-          }
-          if (track.source === Track.Source.Microphone && remoteAudioRef.current) {
-            track.attach(remoteAudioRef.current);
-            safePlay(remoteAudioRef.current);
+          const pid = participant.identity;
+          const isChampionTrack = pid === championId;
+          const isChallengerTrack = pid === challengerId;
+
+          if (role === "spectator") {
+            // Spectator: champion tracks → left panel, challenger tracks → right panel
+            if (isChampionTrack) {
+              if (track.source === Track.Source.Camera && remoteChampionVideoRef.current) {
+                track.attach(remoteChampionVideoRef.current);
+                safePlay(remoteChampionVideoRef.current);
+              }
+              if (track.source === Track.Source.Microphone && remoteChampionAudioRef.current) {
+                track.attach(remoteChampionAudioRef.current);
+                safePlay(remoteChampionAudioRef.current);
+              }
+            }
+            if (isChallengerTrack) {
+              if (track.source === Track.Source.Camera && remoteVideoRef.current) {
+                track.attach(remoteVideoRef.current);
+                safePlay(remoteVideoRef.current);
+                setRemoteConnected(true);
+              }
+              if (track.source === Track.Source.Microphone && remoteAudioRef.current) {
+                track.attach(remoteAudioRef.current);
+                safePlay(remoteAudioRef.current);
+              }
+            }
+          } else {
+            // Participant: remote = opponent
+            if (track.source === Track.Source.Camera && remoteVideoRef.current) {
+              track.attach(remoteVideoRef.current);
+              safePlay(remoteVideoRef.current);
+              setRemoteConnected(true);
+            }
+            if (track.source === Track.Source.Microphone && remoteAudioRef.current) {
+              track.attach(remoteAudioRef.current);
+              safePlay(remoteAudioRef.current);
+            }
           }
         });
 
@@ -289,16 +322,40 @@ const ContestSession = ({
 
         // Attach already-published remote tracks
         for (const p of room.remoteParticipants.values()) {
+          const pid = p.identity;
           for (const pub of p.trackPublications.values()) {
             if (pub.isSubscribed && pub.track) {
-              if (pub.source === Track.Source.Camera && remoteVideoRef.current) {
-                pub.track.attach(remoteVideoRef.current);
-                safePlay(remoteVideoRef.current);
-                setRemoteConnected(true);
-              }
-              if (pub.source === Track.Source.Microphone && remoteAudioRef.current) {
-                pub.track.attach(remoteAudioRef.current);
-                safePlay(remoteAudioRef.current);
+              if (role === "spectator") {
+                if (pid === championId) {
+                  if (pub.source === Track.Source.Camera && remoteChampionVideoRef.current) {
+                    pub.track.attach(remoteChampionVideoRef.current);
+                    safePlay(remoteChampionVideoRef.current);
+                  }
+                  if (pub.source === Track.Source.Microphone && remoteChampionAudioRef.current) {
+                    pub.track.attach(remoteChampionAudioRef.current);
+                    safePlay(remoteChampionAudioRef.current);
+                  }
+                } else if (pid === challengerId) {
+                  if (pub.source === Track.Source.Camera && remoteVideoRef.current) {
+                    pub.track.attach(remoteVideoRef.current);
+                    safePlay(remoteVideoRef.current);
+                    setRemoteConnected(true);
+                  }
+                  if (pub.source === Track.Source.Microphone && remoteAudioRef.current) {
+                    pub.track.attach(remoteAudioRef.current);
+                    safePlay(remoteAudioRef.current);
+                  }
+                }
+              } else {
+                if (pub.source === Track.Source.Camera && remoteVideoRef.current) {
+                  pub.track.attach(remoteVideoRef.current);
+                  safePlay(remoteVideoRef.current);
+                  setRemoteConnected(true);
+                }
+                if (pub.source === Track.Source.Microphone && remoteAudioRef.current) {
+                  pub.track.attach(remoteAudioRef.current);
+                  safePlay(remoteAudioRef.current);
+                }
               }
             }
           }
@@ -334,6 +391,8 @@ const ContestSession = ({
       if (localVideoRef.current) localVideoRef.current.srcObject = null;
       if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
       if (remoteAudioRef.current) remoteAudioRef.current.srcObject = null;
+      if (remoteChampionVideoRef.current) remoteChampionVideoRef.current.srcObject = null;
+      if (remoteChampionAudioRef.current) remoteChampionAudioRef.current.srcObject = null;
       connectingRef.current = false;
     };
   }, [attachLocalCamera, roomName, user?.id]);
@@ -367,19 +426,28 @@ const ContestSession = ({
           {/* Video panel */}
           <div className="isolate relative flex-1 min-h-0 overflow-hidden">
             <div className="absolute inset-0 z-0">
-              <video
-                ref={isParticipant ? setLocalVideoElement : undefined}
-                autoPlay muted playsInline
-                className={`w-full h-full object-cover ${!cameraOn && isParticipant ? 'hidden' : ''}`}
-              />
-              {!cameraOn && isParticipant && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black">
-                  {avatarUrl ? (
-                    <img src={avatarUrl} alt="Your avatar" className="w-24 h-24 rounded-full object-cover border-2 border-white/20" />
-                  ) : (
-                    <User className="w-16 h-16 text-muted-foreground" />
+              {role === "spectator" ? (
+                <>
+                  <video ref={remoteChampionVideoRef} autoPlay playsInline className="w-full h-full object-cover" />
+                  <audio ref={remoteChampionAudioRef} autoPlay className="hidden" />
+                </>
+              ) : (
+                <>
+                  <video
+                    ref={isParticipant ? setLocalVideoElement : undefined}
+                    autoPlay muted playsInline
+                    className={`w-full h-full object-cover ${!cameraOn && isParticipant ? 'hidden' : ''}`}
+                  />
+                  {!cameraOn && isParticipant && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black">
+                      {avatarUrl ? (
+                        <img src={avatarUrl} alt="Your avatar" className="w-24 h-24 rounded-full object-cover border-2 border-white/20" />
+                      ) : (
+                        <User className="w-16 h-16 text-muted-foreground" />
+                      )}
+                    </div>
                   )}
-                </div>
+                </>
               )}
             </div>
             <div className="relative z-10 w-full h-full flex flex-col justify-between p-4">
