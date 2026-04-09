@@ -138,19 +138,30 @@ const ContestInviteCard = () => {
     if (!selectedChallenge || !selectedUser || !user?.id) return;
     setLoading(true);
     try {
-      const { error } = await supabase.from("contest_invitations").insert({
+      // Fetch challenge title and inviter name for richer notification
+      const challenge = challenges.find(c => c.id === selectedChallenge);
+      const { data: inviterProfile } = await supabase
+        .from("profiles")
+        .select("display_name")
+        .eq("id", user.id)
+        .single();
+      const inviterName = inviterProfile?.display_name || "Someone";
+      const challengeTitle = challenge?.title || "a live contest";
+
+      const { data: inviteData, error } = await supabase.from("contest_invitations").insert({
         bulletin_post_id: selectedChallenge,
         inviter_id: user.id,
         invitee_id: selectedUser,
-      });
+      }).select().single();
       if (error) throw error;
 
-      // Send notification
+      // Send notification with linked invitation ID
       await supabase.from("notifications").insert({
         user_id: selectedUser,
         type: "contest_invite",
         title: "Contest Invitation",
-        message: `You've been invited to watch a live contest! Check your contest invitations.`,
+        message: `${inviterName} has invited you to watch "${challengeTitle}" live! Accept or decline below.`,
+        related_contest_invitation_id: inviteData.id,
       });
 
       toast.success("Invitation sent!");
