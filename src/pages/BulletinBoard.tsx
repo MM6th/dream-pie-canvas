@@ -19,6 +19,26 @@ const BulletinBoard = () => {
 
   useEffect(() => {
     fetchPosts();
+
+    // Real-time subscription for bulletin post updates (e.g., session_ended_at changes)
+    const channel = supabase
+      .channel('bulletin-posts-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'bulletin_posts',
+        },
+        () => {
+          fetchPosts();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchPosts = async () => {
