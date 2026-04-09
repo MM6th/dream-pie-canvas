@@ -1,0 +1,1 @@
+ALTER TABLE public.bulletin_posts REPLICA IDENTITY FULL;
