@@ -1,0 +1,1 @@
+ALTER TABLE public.challenge_acceptances REPLICA IDENTITY FULL;
