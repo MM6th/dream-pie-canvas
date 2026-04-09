@@ -322,16 +322,40 @@ const ContestSession = ({
 
         // Attach already-published remote tracks
         for (const p of room.remoteParticipants.values()) {
+          const pid = p.identity;
           for (const pub of p.trackPublications.values()) {
             if (pub.isSubscribed && pub.track) {
-              if (pub.source === Track.Source.Camera && remoteVideoRef.current) {
-                pub.track.attach(remoteVideoRef.current);
-                safePlay(remoteVideoRef.current);
-                setRemoteConnected(true);
-              }
-              if (pub.source === Track.Source.Microphone && remoteAudioRef.current) {
-                pub.track.attach(remoteAudioRef.current);
-                safePlay(remoteAudioRef.current);
+              if (role === "spectator") {
+                if (pid === championId) {
+                  if (pub.source === Track.Source.Camera && remoteChampionVideoRef.current) {
+                    pub.track.attach(remoteChampionVideoRef.current);
+                    safePlay(remoteChampionVideoRef.current);
+                  }
+                  if (pub.source === Track.Source.Microphone && remoteChampionAudioRef.current) {
+                    pub.track.attach(remoteChampionAudioRef.current);
+                    safePlay(remoteChampionAudioRef.current);
+                  }
+                } else if (pid === challengerId) {
+                  if (pub.source === Track.Source.Camera && remoteVideoRef.current) {
+                    pub.track.attach(remoteVideoRef.current);
+                    safePlay(remoteVideoRef.current);
+                    setRemoteConnected(true);
+                  }
+                  if (pub.source === Track.Source.Microphone && remoteAudioRef.current) {
+                    pub.track.attach(remoteAudioRef.current);
+                    safePlay(remoteAudioRef.current);
+                  }
+                }
+              } else {
+                if (pub.source === Track.Source.Camera && remoteVideoRef.current) {
+                  pub.track.attach(remoteVideoRef.current);
+                  safePlay(remoteVideoRef.current);
+                  setRemoteConnected(true);
+                }
+                if (pub.source === Track.Source.Microphone && remoteAudioRef.current) {
+                  pub.track.attach(remoteAudioRef.current);
+                  safePlay(remoteAudioRef.current);
+                }
               }
             }
           }
