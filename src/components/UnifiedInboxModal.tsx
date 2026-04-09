@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent } from "@/components/ui/card";
-import { Check, Bell, Calendar, Eye, Reply, ChevronDown, ChevronUp } from "lucide-react";
+import { Check, Bell, Calendar, Eye, Reply, ChevronDown, ChevronUp, UserCheck, X } from "lucide-react";
 import beeperIcon from '@/assets/beeper-message.png';
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
