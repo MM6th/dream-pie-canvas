@@ -43,6 +43,9 @@ const ContestSession = ({
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const remoteAudioRef = useRef<HTMLAudioElement>(null);
+  // Spectator needs separate refs for champion's remote feed (left panel)
+  const remoteChampionVideoRef = useRef<HTMLVideoElement>(null);
+  const remoteChampionAudioRef = useRef<HTMLAudioElement>(null);
   const roomRef = useRef<Room | null>(null);
   const connectingRef = useRef(false);
   const [connecting, setConnecting] = useState(true);
