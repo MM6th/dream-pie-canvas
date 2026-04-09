@@ -462,14 +462,21 @@ const ContestSession = ({
         </div>
       </div>
 
-      {/* Spectator tip controls */}
-      {role === "spectator" && (
+      {/* Spectator tip controls — only for the contestant who invited them */}
+      {role === "spectator" && spectatorInviterId && (
         <div className="flex items-center justify-center gap-4 p-3 bg-black/80 border-t border-white/10">
-          <OneOnOneTipButton roomName={championTipRoom} recipientId={championId} />
-          <span className="text-white/40 text-xs">Tip Champion</span>
-          <span className="text-white/20">|</span>
-          <OneOnOneTipButton roomName={challengerTipRoom} recipientId={challengerId} />
-          <span className="text-white/40 text-xs">Tip Challenger</span>
+          {spectatorInviterId === championId && (
+            <>
+              <OneOnOneTipButton roomName={championTipRoom} recipientId={championId} />
+              <span className="text-white/40 text-xs">Tip Champion</span>
+            </>
+          )}
+          {spectatorInviterId === challengerId && (
+            <>
+              <OneOnOneTipButton roomName={challengerTipRoom} recipientId={challengerId} />
+              <span className="text-white/40 text-xs">Tip Challenger</span>
+            </>
+          )}
         </div>
       )}
 
