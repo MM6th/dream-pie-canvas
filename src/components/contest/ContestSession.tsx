@@ -221,16 +221,46 @@ const ContestSession = ({
           videoCaptureDefaults: { resolution: VideoPresets.h720.resolution },
         });
 
-        room.on(RoomEvent.TrackSubscribed, (track) => {
+        room.on(RoomEvent.TrackSubscribed, (track, _pub, participant) => {
           if (cancelled) return;
-          if (track.source === Track.Source.Camera && remoteVideoRef.current) {
-            track.attach(remoteVideoRef.current);
-            safePlay(remoteVideoRef.current);
-            setRemoteConnected(true);
-          }
-          if (track.source === Track.Source.Microphone && remoteAudioRef.current) {
-            track.attach(remoteAudioRef.current);
-            safePlay(remoteAudioRef.current);
+          const pid = participant.identity;
+          const isChampionTrack = pid === championId;
+          const isChallengerTrack = pid === challengerId;
+
+          if (role === "spectator") {
+            // Spectator: champion tracks → left panel, challenger tracks → right panel
+            if (isChampionTrack) {
+              if (track.source === Track.Source.Camera && remoteChampionVideoRef.current) {
+                track.attach(remoteChampionVideoRef.current);
+                safePlay(remoteChampionVideoRef.current);
+              }
+              if (track.source === Track.Source.Microphone && remoteChampionAudioRef.current) {
+                track.attach(remoteChampionAudioRef.current);
+                safePlay(remoteChampionAudioRef.current);
+              }
+            }
+            if (isChallengerTrack) {
+              if (track.source === Track.Source.Camera && remoteVideoRef.current) {
+                track.attach(remoteVideoRef.current);
+                safePlay(remoteVideoRef.current);
+                setRemoteConnected(true);
+              }
+              if (track.source === Track.Source.Microphone && remoteAudioRef.current) {
+                track.attach(remoteAudioRef.current);
+                safePlay(remoteAudioRef.current);
+              }
+            }
+          } else {
+            // Participant: remote = opponent
+            if (track.source === Track.Source.Camera && remoteVideoRef.current) {
+              track.attach(remoteVideoRef.current);
+              safePlay(remoteVideoRef.current);
+              setRemoteConnected(true);
+            }
+            if (track.source === Track.Source.Microphone && remoteAudioRef.current) {
+              track.attach(remoteAudioRef.current);
+              safePlay(remoteAudioRef.current);
+            }
           }
         });
 
