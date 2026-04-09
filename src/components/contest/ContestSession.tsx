@@ -391,6 +391,8 @@ const ContestSession = ({
       if (localVideoRef.current) localVideoRef.current.srcObject = null;
       if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
       if (remoteAudioRef.current) remoteAudioRef.current.srcObject = null;
+      if (remoteChampionVideoRef.current) remoteChampionVideoRef.current.srcObject = null;
+      if (remoteChampionAudioRef.current) remoteChampionAudioRef.current.srcObject = null;
       connectingRef.current = false;
     };
   }, [attachLocalCamera, roomName, user?.id]);
