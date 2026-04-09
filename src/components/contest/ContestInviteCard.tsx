@@ -108,7 +108,7 @@ const ContestInviteCard = () => {
     fetchUsers();
   }, [user?.id]);
 
-  // Fetch existing invitations for selected challenge
+  // Fetch existing invitations for selected challenge + realtime updates
   useEffect(() => {
     if (!selectedChallenge) { setInvitations([]); return; }
     const fetchInvites = async () => {
@@ -120,7 +120,6 @@ const ContestInviteCard = () => {
 
       if (!data) return;
 
-      // Enrich with profile data
       const inviteeIds = data.map((i) => i.invitee_id);
       const { data: profiles } = await supabase
         .from("profiles")
@@ -134,6 +133,25 @@ const ContestInviteCard = () => {
       setInvitations(enriched);
     };
     fetchInvites();
+
+    // Subscribe to realtime changes on contest_invitations for this challenge
+    const channel = supabase
+      .channel(`contest-invites-${selectedChallenge}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "contest_invitations",
+          filter: `bulletin_post_id=eq.${selectedChallenge}`,
+        },
+        () => fetchInvites()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [selectedChallenge, user?.id]);
 
   const sendInvite = async () => {
