@@ -19,9 +19,10 @@ interface ChatMessage {
 interface OneOnOneChatProps {
   roomName: string;
   channelSuffix?: string;
+  readOnly?: boolean;
 }
 
-const OneOnOneChat = ({ roomName, channelSuffix }: OneOnOneChatProps) => {
+const OneOnOneChat = ({ roomName, channelSuffix, readOnly }: OneOnOneChatProps) => {
   const { user } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
@@ -153,7 +154,7 @@ const OneOnOneChat = ({ roomName, channelSuffix }: OneOnOneChatProps) => {
           </div>
         </ScrollArea>
 
-        {user ? (
+        {!readOnly && (user ? (
           <div className="flex gap-2 mt-2">
             <Input
               value={newMessage}
@@ -168,7 +169,7 @@ const OneOnOneChat = ({ roomName, channelSuffix }: OneOnOneChatProps) => {
           </div>
         ) : (
           <p className="text-xs text-muted-foreground mt-2 text-center">Log in to chat</p>
-        )}
+        ))}
       </CardContent>
     </Card>
   );
