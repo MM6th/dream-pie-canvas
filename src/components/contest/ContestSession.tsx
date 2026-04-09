@@ -19,6 +19,7 @@ interface ContestSessionProps {
   challengerId: string;
   durationMinutes: number;
   challengeType: string;
+  bulletinPostId: string;
   onEnd: () => void;
 }
 
