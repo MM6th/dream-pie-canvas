@@ -474,6 +474,7 @@ export const UnifiedInboxModal = ({ open, onOpenChange, userId, userType }: Unif
                                       </Button>
                                     </div>
                                   )}
+                                </div>
                               )}
                             </div>
                           </div>
