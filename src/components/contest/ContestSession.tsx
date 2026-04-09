@@ -338,7 +338,7 @@ const ContestSession = ({
                     pub.track.attach(remoteChampionAudioRef.current);
                     safePlay(remoteChampionAudioRef.current);
                   }
-                } else if (pid === challengerId) {
+                } else if (pidUserId === challengerId) {
                   if (pub.source === Track.Source.Camera && remoteVideoRef.current) {
                     pub.track.attach(remoteVideoRef.current);
                     safePlay(remoteVideoRef.current);
