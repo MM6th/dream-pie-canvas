@@ -304,6 +304,28 @@ export const NotificationsList = () => {
                             View Details
                           </Button>
                         )}
+                        {notification.type === 'contest_invite' && 
+                         notification.related_contest_invitation_id &&
+                         !notification.read && (
+                          <div className="flex gap-2 mt-3">
+                            <Button
+                              variant="default"
+                              size="sm"
+                              onClick={() => handleAcceptContestInvite(notification)}
+                            >
+                              <UserCheck className="w-4 h-4 mr-2" />
+                              Accept
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDeclineContestInvite(notification)}
+                            >
+                              <X className="w-4 h-4 mr-2" />
+                              Decline
+                            </Button>
+                          </div>
+                        )}
                       </div>
                       {!notification.read && (
                         <Button
