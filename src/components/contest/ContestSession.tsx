@@ -374,7 +374,7 @@ const ContestSession = ({
                   <OneOnOneTipMeter roomName={championTipRoom} />
                 </div>
               </div>
-              {isParticipant && (
+              {role === "champion" && (
                 <div className="mt-auto w-full max-w-full">
                   <div className="flex flex-wrap items-center justify-center gap-2">
                     <Button variant="outline" size="sm" onClick={toggleCamera}
@@ -385,11 +385,9 @@ const ContestSession = ({
                       className={`rounded-full ${!micOn ? "border-destructive text-destructive" : "border-white/30 text-white"} bg-black/40 hover:bg-black/60`}>
                       {micOn ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
                     </Button>
-                    {role === "champion" && (
-                      <Button variant="destructive" size="sm" onClick={onEnd} className="rounded-full px-4">
-                        End Contest
-                      </Button>
-                    )}
+                    <Button variant="destructive" size="sm" onClick={onEnd} className="rounded-full px-4">
+                      End Contest
+                    </Button>
                   </div>
                 </div>
               )}
@@ -421,6 +419,20 @@ const ContestSession = ({
               {!remoteConnected && !connecting && (
                 <div className="absolute inset-0 flex items-center justify-center z-0">
                   <p className="text-white/60 text-sm">Waiting for Challenger...</p>
+                </div>
+              )}
+              {role === "challenger" && (
+                <div className="mt-auto w-full max-w-full">
+                  <div className="flex flex-wrap items-center justify-center gap-2">
+                    <Button variant="outline" size="sm" onClick={toggleCamera}
+                      className={`rounded-full ${!cameraOn ? "border-destructive text-destructive" : "border-white/30 text-white"} bg-black/40 hover:bg-black/60`}>
+                      {cameraOn ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={toggleMic}
+                      className={`rounded-full ${!micOn ? "border-destructive text-destructive" : "border-white/30 text-white"} bg-black/40 hover:bg-black/60`}>
+                      {micOn ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>
