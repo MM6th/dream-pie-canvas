@@ -1,59 +1,42 @@
 
 
-## Add Contest Invite Button to Go Live + Acceptance Notifications + Auto-Redirect
+## Fix Contest Invite Card: 3 Issues
 
-### Overview
-Add an "Invite Your People" button to the Go Live page that appears when the user has upcoming challenges with a confirmed challenger. Enhance the notification flow so both participants are reminded to invite, invitees get actionable notifications, and accepted invitees auto-redirect to the stream when it goes live.
+### Issue 1: Invite list limited to followers only
+**Root cause:** `ContestInviteCard` fetches users from `profile_followers` table (line 89-104), which only returns the current user's followers. If you have 2 followers, you see 2 users. Challengers with few followers see almost nobody.
 
-### Changes
+**Fix:** Replace the followers-only fetch with a fetch of ALL site supporter profiles. Filter out the current user and the other participant (champion or challenger) from the list.
 
-#### 1. Go Live page — Show ContestInviteCard in setup phase
-**File: `src/pages/GoLive.tsx`**
-- Import `ContestInviteCard`
-- Below the "Stream Setup" card (inside `setupPhase`), render `<ContestInviteCard />` so the host sees their upcoming challenges and can send invites before going live
-- No changes to any connection, LiveKit, or streaming code
-
-#### 2. Enhanced notification when challenger accepts
-**File: `src/components/ChallengeAcceptanceButtons.tsx`**
-- After a challenger accepts (line ~128), also send a notification to the **champion** (using `championUserId`) and the **post creator** (`merchantId`) telling them a challenger has confirmed and they should invite their supporters before the challenge begins
-- Message: `"A challenger has accepted your '{challengeName}'. Invite your supporters before the challenge begins!"`
-- Also send a similar notification to the accepting challenger: the existing notification already tells them to attend, but add a line encouraging them to invite their people too
-
-#### 3. Better invite notification with accept/decline action
 **File: `src/components/contest/ContestInviteCard.tsx`**
-- Update the notification message sent on invite (line 153) to include the challenge title and inviter name
-- Fetch inviter's display_name and the challenge title before sending
+- Change `fetchUsers` to query all profiles (supporters) instead of only `profile_followers`
+- Exclude the current user's own ID
+- When a challenge is selected, also exclude the other participant (champion_user_id for challengers, or the accepted challenger's user_id for champions)
 
-#### 4. Accept/Decline UI in NotificationsList for contest_invite type
+### Issue 2: Accept/Decline buttons not visible to invitees
+**Root cause:** The buttons are gated by `!notification.read` (line 309). If the notification gets auto-marked as read (e.g., user opens notifications panel and it marks them read), the buttons disappear before the user can act.
+
+**Fix:** Change the condition from `!notification.read` to checking the actual invitation status instead. Only hide buttons if the invitation has already been accepted or declined.
+
 **File: `src/components/NotificationsList.tsx`**
-- When rendering a notification with `type === "contest_invite"`, show Accept/Decline buttons
-- Need to extract the `bulletin_post_id` — add it to the notification metadata. Update `ContestInviteCard.sendInvite` to include `metadata` JSON field in the notification (or store `bulletin_post_id` + `inviter_id` in the message for parsing)
-- On Accept: update `contest_invitations` row to `status: 'accepted'`, send confirmation notification back to inviter
-- On Decline: update to `status: 'declined'`
+- Remove `!notification.read` from the contest_invite button condition
+- Instead, fetch the invitation status when a contest_invite notification is present, and only show buttons if status is still `pending`
+- Alternatively, track accepted/declined state locally after user clicks
 
-**Database consideration**: The `notifications` table needs a way to link back to the contest invitation. Two options:
-- Add a `metadata` JSONB column to notifications (if not already present)
-- Or encode the invitation ID in the notification message
+### Issue 3: Challenger sees champion in invite list (and vice versa)
+**Root cause:** No filtering of the other participant from the available users list.
 
-Let me check the notifications table schema.
+**Fix:** When a challenge is selected, determine who the other participant is and exclude them from the dropdown. The champion_user_id is on the challenge object. For the challenger, fetch their ID from `challenge_acceptances`.
 
-#### 5. Auto-redirect for accepted invitees (already works)
-**File: `src/hooks/useContestInviteRedirect.tsx`**
-- This hook already polls for accepted invitations with live sessions and auto-redirects. No changes needed — once the invitee accepts via the notification UI, their status becomes "accepted" and the existing hook handles the redirect.
+**File: `src/components/contest/ContestInviteCard.tsx`**
+- After selecting a challenge, compute `excludeIds` containing: current user + other participant
+- Filter `availableUsers` to exclude those IDs
 
-### Technical Details
-
-**Notifications table check needed**: I need to verify if `notifications` has a `metadata` column or similar. If not, we'll store the `contest_invitation_id` in the notification message as a parseable format, or add a nullable `related_contest_invitation_id` column.
-
-**No connection code touched**: All changes are in UI components (GoLive setup section, NotificationsList rendering, ContestInviteCard notification content) and the ChallengeAcceptanceButtons notification logic.
-
-### File Summary
+### Summary
 
 | File | Change |
 |------|--------|
-| `src/pages/GoLive.tsx` | Add ContestInviteCard below Stream Setup card |
-| `src/components/ChallengeAcceptanceButtons.tsx` | Send "invite your people" notification to champion + challenger on acceptance |
-| `src/components/contest/ContestInviteCard.tsx` | Include challenge title + inviter name in invite notification; store invitation reference |
-| `src/components/NotificationsList.tsx` | Add Accept/Decline buttons for contest_invite notifications |
-| Possible migration | Add `related_contest_invitation_id` to notifications table if no metadata column exists |
+| `src/components/contest/ContestInviteCard.tsx` | Fetch all site users (not just followers), exclude self + other participant |
+| `src/components/NotificationsList.tsx` | Show Accept/Decline based on invitation status, not notification read state |
+
+No connection code touched. No database changes needed.
 
