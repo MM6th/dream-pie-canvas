@@ -20,7 +20,6 @@ interface DashboardWidgetsProps {
 }
 
 const DashboardWidgets = ({ onSuccess, onViewStore, onBackgroundUpload, isAdmin }: DashboardWidgetsProps) => {
-  const navigate = useNavigate();
   const [isFashionModalOpen, setIsFashionModalOpen] = useState(false);
   const [isAstrologyModalOpen, setIsAstrologyModalOpen] = useState(false);
 
