@@ -34,6 +34,27 @@ const ChallengeAcceptanceButtons = ({ postId, hasTitleOnTheLine, championUserId,
 
   useEffect(() => {
     fetchAcceptances();
+
+    // Real-time subscription for acceptance changes
+    const channel = supabase
+      .channel(`challenge-acceptances-${postId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'challenge_acceptances',
+          filter: `bulletin_post_id=eq.${postId}`,
+        },
+        () => {
+          fetchAcceptances();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [postId]);
 
   const fetchAcceptances = async () => {
