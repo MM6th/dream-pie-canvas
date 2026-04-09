@@ -19,6 +19,7 @@ interface ContestSessionProps {
   challengerId: string;
   durationMinutes: number;
   challengeType: string;
+  bulletinPostId: string;
   onEnd: () => void;
 }
 
@@ -34,6 +35,7 @@ const ContestSession = ({
   challengerId,
   durationMinutes,
   challengeType,
+  bulletinPostId,
   onEnd,
 }: ContestSessionProps) => {
   const { user } = useAuth();
@@ -50,6 +52,7 @@ const ContestSession = ({
   const [micOn, setMicOn] = useState(role !== "spectator");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [spectatorInviterId, setSpectatorInviterId] = useState<string | null>(null);
 
   const isParticipant = role === "champion" || role === "challenger";
 
@@ -59,8 +62,23 @@ const ContestSession = ({
   const championTipRoom = `${roomName}_champion_tips`;
   const challengerTipRoom = `${roomName}_challenger_tips`;
 
-  // Which challenge icon to show
-  const isTwerkOff = challengeType?.toLowerCase().includes("twerk");
+  // Look up who invited this spectator so they can only tip that person
+  useEffect(() => {
+    if (role !== "spectator" || !user?.id || !bulletinPostId) return;
+    const lookup = async () => {
+      const { data } = await supabase
+        .from("contest_invitations")
+        .select("inviter_id")
+        .eq("bulletin_post_id", bulletinPostId)
+        .eq("invitee_id", user.id)
+        .eq("status", "accepted")
+        .maybeSingle();
+      if (data?.inviter_id) {
+        setSpectatorInviterId(data.inviter_id);
+      }
+    };
+    lookup();
+  }, [role, user?.id, bulletinPostId]);
 
   // Fetch avatar
   useEffect(() => {
@@ -395,7 +413,7 @@ const ContestSession = ({
           </div>
           {/* Chat beneath champion video */}
           <div className="h-36 shrink-0 overflow-hidden border-t border-white/10 sm:h-48 lg:h-52">
-            <OneOnOneChat roomName={championChatRoom} channelSuffix="champion" readOnly={role !== "champion" && role !== "spectator"} />
+            <OneOnOneChat roomName={championChatRoom} channelSuffix="champion" readOnly={role === "champion" ? false : (role === "spectator" && spectatorInviterId === championId) ? false : true} />
           </div>
         </div>
 
@@ -439,19 +457,26 @@ const ContestSession = ({
           </div>
           {/* Chat beneath challenger video */}
           <div className="h-36 shrink-0 overflow-hidden border-t border-white/10 sm:h-48 lg:h-52">
-            <OneOnOneChat roomName={challengerChatRoom} channelSuffix="challenger" readOnly={role !== "challenger" && role !== "spectator"} />
+            <OneOnOneChat roomName={challengerChatRoom} channelSuffix="challenger" readOnly={role === "challenger" ? false : (role === "spectator" && spectatorInviterId === challengerId) ? false : true} />
           </div>
         </div>
       </div>
 
-      {/* Spectator tip controls */}
-      {role === "spectator" && (
+      {/* Spectator tip controls — only for the contestant who invited them */}
+      {role === "spectator" && spectatorInviterId && (
         <div className="flex items-center justify-center gap-4 p-3 bg-black/80 border-t border-white/10">
-          <OneOnOneTipButton roomName={championTipRoom} recipientId={championId} />
-          <span className="text-white/40 text-xs">Tip Champion</span>
-          <span className="text-white/20">|</span>
-          <OneOnOneTipButton roomName={challengerTipRoom} recipientId={challengerId} />
-          <span className="text-white/40 text-xs">Tip Challenger</span>
+          {spectatorInviterId === championId && (
+            <>
+              <OneOnOneTipButton roomName={championTipRoom} recipientId={championId} />
+              <span className="text-white/40 text-xs">Tip Champion</span>
+            </>
+          )}
+          {spectatorInviterId === challengerId && (
+            <>
+              <OneOnOneTipButton roomName={challengerTipRoom} recipientId={challengerId} />
+              <span className="text-white/40 text-xs">Tip Challenger</span>
+            </>
+          )}
         </div>
       )}
 
