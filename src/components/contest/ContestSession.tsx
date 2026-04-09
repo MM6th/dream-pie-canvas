@@ -62,8 +62,23 @@ const ContestSession = ({
   const championTipRoom = `${roomName}_champion_tips`;
   const challengerTipRoom = `${roomName}_challenger_tips`;
 
-  // Which challenge icon to show
-  const isTwerkOff = challengeType?.toLowerCase().includes("twerk");
+  // Look up who invited this spectator so they can only tip that person
+  useEffect(() => {
+    if (role !== "spectator" || !user?.id || !bulletinPostId) return;
+    const lookup = async () => {
+      const { data } = await supabase
+        .from("contest_invitations")
+        .select("inviter_id")
+        .eq("bulletin_post_id", bulletinPostId)
+        .eq("invitee_id", user.id)
+        .eq("status", "accepted")
+        .maybeSingle();
+      if (data?.inviter_id) {
+        setSpectatorInviterId(data.inviter_id);
+      }
+    };
+    lookup();
+  }, [role, user?.id, bulletinPostId]);
 
   // Fetch avatar
   useEffect(() => {
