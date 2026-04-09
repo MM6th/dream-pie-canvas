@@ -224,8 +224,10 @@ const ContestSession = ({
         room.on(RoomEvent.TrackSubscribed, (track, _pub, participant) => {
           if (cancelled) return;
           const pid = participant.identity;
-          const isChampionTrack = pid === championId;
-          const isChallengerTrack = pid === challengerId;
+          // Identity format from edge function: "userId:host:roomName" or "userId:viewer:roomName"
+          const pidUserId = pid.split(":")[0];
+          const isChampionTrack = pidUserId === championId;
+          const isChallengerTrack = pidUserId === challengerId;
 
           if (role === "spectator") {
             // Spectator: champion tracks → left panel, challenger tracks → right panel
@@ -323,10 +325,11 @@ const ContestSession = ({
         // Attach already-published remote tracks
         for (const p of room.remoteParticipants.values()) {
           const pid = p.identity;
+          const pidUserId = pid.split(":")[0];
           for (const pub of p.trackPublications.values()) {
             if (pub.isSubscribed && pub.track) {
               if (role === "spectator") {
-                if (pid === championId) {
+                if (pidUserId === championId) {
                   if (pub.source === Track.Source.Camera && remoteChampionVideoRef.current) {
                     pub.track.attach(remoteChampionVideoRef.current);
                     safePlay(remoteChampionVideoRef.current);
