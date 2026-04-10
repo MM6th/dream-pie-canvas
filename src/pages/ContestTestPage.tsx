@@ -217,8 +217,10 @@ const TOTAL_FANS = 27; // 27 fans per side
 const ContestTestPage = () => {
   const navigate = useNavigate();
 
-  // Contest phase: 'idle' | 'warmup' | 'live' | 'ended'
-  const [phase, setPhase] = useState<'idle' | 'warmup' | 'live' | 'ended'>('idle');
+  // Contest phase: 'idle' | 'warmup' | 'live' | 'overtime' | 'ended'
+  const [phase, setPhase] = useState<'idle' | 'warmup' | 'live' | 'overtime' | 'ended'>('idle');
+  const OVERTIME_SECONDS = 60;
+  const [overtimeTotal, setOvertimeTotal] = useState(OVERTIME_SECONDS);
   const [timeLeft, setTimeLeft] = useState(0); // seconds
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -238,18 +240,22 @@ const ContestTestPage = () => {
   const championSample = Math.round((championFans.size / TOTAL_FANS) * 100);
   const challengerSample = Math.round((challengerFans.size / TOTAL_FANS) * 100);
 
+  // Skill decreases during overtime from 100% to 0% over the overtime period
+  const skillValue = phase === 'overtime' ? Math.round((timeLeft / overtimeTotal) * 100) : 100;
+
   // Tips/Votes tank combines tips + vote power in real-time
   const championTipVotes = Math.min(championTips + championVotePower, 100);
   const challengerTipVotes = Math.min(challengerTips + challengerVotePower, 100);
 
-  const championPower = phase === 'live' ? Math.round((championTipVotes + 100 + championSample) / 3) : 0;
-  const challengerPower = phase === 'live' ? Math.round((challengerTipVotes + 100 + challengerSample) / 3) : 0;
+  const isLiveOrOvertime = phase === 'live' || phase === 'overtime';
+  const championPower = isLiveOrOvertime ? Math.round((championTipVotes + skillValue + championSample) / 3) : 0;
+  const challengerPower = isLiveOrOvertime ? Math.round((challengerTipVotes + skillValue + challengerSample) / 3) : 0;
 
-  const championTanks = { tip: championTipVotes, skill: 100, sample: championSample, power: championPower, points: 0 };
-  const challengerTanks = { tip: challengerTipVotes, skill: 100, sample: challengerSample, power: challengerPower, points: 0 };
+  const championTanks = { tip: championTipVotes, skill: skillValue, sample: championSample, power: championPower, points: 0 };
+  const challengerTanks = { tip: challengerTipVotes, skill: skillValue, sample: challengerSample, power: challengerPower, points: 0 };
 
   const handleTip = useCallback((side: 'champion' | 'challenger', amount: number) => {
-    if (phase !== 'live') return;
+    if (phase !== 'live' && phase !== 'overtime') return;
     playDepositSound();
     if (side === 'champion') {
       setChampionTips(prev => prev + amount);
@@ -282,15 +288,18 @@ const ContestTestPage = () => {
 
   const handleStart = useCallback(() => {
     setPhase('warmup');
-    // 5-second warmup for testing
     startCountdown(5, () => {
       setPhase('live');
-      // 1:45 contest timer
       startCountdown(105, () => {
-        setPhase('ended');
+        // Auto-transition to overtime
+        setPhase('overtime');
+        setOvertimeTotal(OVERTIME_SECONDS);
+        startCountdown(OVERTIME_SECONDS, () => {
+          setPhase('ended');
+        });
       });
     });
-  }, [startCountdown]);
+  }, [startCountdown, OVERTIME_SECONDS]);
 
   const handleStop = useCallback(() => {
     clearTimer();
@@ -316,10 +325,10 @@ const ContestTestPage = () => {
     return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
   };
 
-  const timerLabel = phase === 'warmup' ? 'WARMUP' : phase === 'live' ? 'LIVE' : phase === 'ended' ? 'ENDED' : 'READY';
-  const timerBorderColor = phase === 'warmup' ? 'border-yellow-500/50' : phase === 'live' ? 'border-red-600/50' : 'border-white/20';
-  const timerIconColor = phase === 'warmup' ? 'text-yellow-500' : phase === 'live' ? 'text-red-500' : 'text-white/40';
-  const isActive = phase === 'live';
+  const timerLabel = phase === 'warmup' ? 'WARMUP' : phase === 'live' ? 'LIVE' : phase === 'overtime' ? 'OVERTIME' : phase === 'ended' ? 'ENDED' : 'READY';
+  const timerBorderColor = phase === 'warmup' ? 'border-yellow-500/50' : phase === 'overtime' ? 'border-orange-500/50' : phase === 'live' ? 'border-red-600/50' : 'border-white/20';
+  const timerIconColor = phase === 'warmup' ? 'text-yellow-500' : phase === 'overtime' ? 'text-orange-500' : phase === 'live' ? 'text-red-500' : 'text-white/40';
+  const isActive = phase === 'live' || phase === 'overtime';
   const showPollWarning = phase === 'live' && timeLeft > 0 && timeLeft <= 60;
 
   return (
@@ -330,7 +339,7 @@ const ContestTestPage = () => {
           <Timer className={`w-4 h-4 ${timerIconColor}`} />
           <div className="flex flex-col items-center">
             {phase !== 'idle' && (
-              <span className={`text-[8px] font-bold uppercase tracking-widest ${phase === 'warmup' ? 'text-yellow-400' : phase === 'live' ? 'text-red-400' : 'text-white/50'}`}>
+              <span className={`text-[8px] font-bold uppercase tracking-widest ${phase === 'warmup' ? 'text-yellow-400' : phase === 'overtime' ? 'text-orange-400 animate-pulse' : phase === 'live' ? 'text-red-400' : 'text-white/50'}`}>
                 {timerLabel}
               </span>
             )}
