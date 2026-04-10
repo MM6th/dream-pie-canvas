@@ -122,7 +122,7 @@ const ContestTestPage = () => {
       </div>
 
       {/* Challenge label overlay */}
-      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 z-40 pointer-events-none">
+      <div className="absolute top-20 left-1/2 -translate-x-1/2 z-40 pointer-events-none">
         <span className="text-2xl sm:text-3xl font-black uppercase italic text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] tracking-wide">
           Twerk Off
         </span>
