@@ -402,6 +402,8 @@ const ContestTestPage = () => {
     setPollResetKey(prev => prev + 1);
     setChampionFans(new Set());
     setChallengerFans(new Set());
+    setChampionViewers(100);
+    setChallengerViewers(100);
     setChampionPollSubmitted(false);
     setChallengerPollSubmitted(false);
     setShowTitleChange(false);
@@ -635,7 +637,15 @@ const ContestTestPage = () => {
           <Card className={`rounded-none border-x-0 border-b-0 bg-card/80 backdrop-blur-sm transition-all duration-500 ${isActive ? 'opacity-100 shadow-[0_0_12px_rgba(34,197,94,0.3)]' : 'opacity-40'}`}>
             <CardContent className="p-2 space-y-2">
               {/* Fan grid */}
-              <p className="text-[10px] font-bold text-foreground">Supporters ({championFans.size}/{TOTAL_FANS})</p>
+              <div className="flex items-center justify-between">
+                <p className="text-[10px] font-bold text-foreground">Supporters ({championFans.size}/{championViewers} viewers)</p>
+                <div className="flex items-center gap-1">
+                  <button onClick={() => setChampionViewers(v => Math.max(1, v - 50))} className="text-[8px] bg-muted px-1 rounded">-50</button>
+                  <span className="text-[8px] text-muted-foreground">{championViewers}</span>
+                  <button onClick={() => setChampionViewers(v => v + 50)} className="text-[8px] bg-muted px-1 rounded">+50</button>
+                </div>
+              </div>
+              <p className="text-[8px] text-muted-foreground">Sample: {championSample}% (ratio × log dampening)</p>
               <div className="grid grid-cols-9 gap-1">
                 {Array.from({ length: TOTAL_FANS }, (_, i) => {
                   const fanNum = i + 1;
@@ -755,7 +765,15 @@ const ContestTestPage = () => {
           {/* Challenger supporters + chat */}
           <Card className={`rounded-none border-x-0 border-b-0 bg-card/80 backdrop-blur-sm transition-all duration-500 ${isActive ? 'opacity-100 shadow-[0_0_12px_rgba(34,197,94,0.3)]' : 'opacity-40'}`}>
             <CardContent className="p-2 space-y-2">
-              <p className="text-[10px] font-bold text-foreground">Supporters ({challengerFans.size}/{TOTAL_FANS})</p>
+              <div className="flex items-center justify-between">
+                <p className="text-[10px] font-bold text-foreground">Supporters ({challengerFans.size}/{challengerViewers} viewers)</p>
+                <div className="flex items-center gap-1">
+                  <button onClick={() => setChallengerViewers(v => Math.max(1, v - 50))} className="text-[8px] bg-muted px-1 rounded">-50</button>
+                  <span className="text-[8px] text-muted-foreground">{challengerViewers}</span>
+                  <button onClick={() => setChallengerViewers(v => v + 50)} className="text-[8px] bg-muted px-1 rounded">+50</button>
+                </div>
+              </div>
+              <p className="text-[8px] text-muted-foreground">Sample: {challengerSample}% (ratio × log dampening)</p>
               <div className="grid grid-cols-9 gap-1">
                 {Array.from({ length: TOTAL_FANS }, (_, i) => {
                   const fanNum = i + 1;
