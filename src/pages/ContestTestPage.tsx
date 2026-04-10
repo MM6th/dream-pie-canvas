@@ -339,7 +339,7 @@ const ContestTestPage = () => {
           <Timer className={`w-4 h-4 ${timerIconColor}`} />
           <div className="flex flex-col items-center">
             {phase !== 'idle' && (
-              <span className={`text-[8px] font-bold uppercase tracking-widest ${phase === 'warmup' ? 'text-yellow-400' : phase === 'live' ? 'text-red-400' : 'text-white/50'}`}>
+              <span className={`text-[8px] font-bold uppercase tracking-widest ${phase === 'warmup' ? 'text-yellow-400' : phase === 'overtime' ? 'text-orange-400 animate-pulse' : phase === 'live' ? 'text-red-400' : 'text-white/50'}`}>
                 {timerLabel}
               </span>
             )}
