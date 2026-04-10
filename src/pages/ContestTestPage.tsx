@@ -175,6 +175,8 @@ const TotalPointsBar = ({ points }: { points: number }) => (
   </div>
 );
 
+const TOTAL_FANS = 27; // 27 fans per side
+
 const ContestTestPage = () => {
   const navigate = useNavigate();
 
@@ -188,8 +190,15 @@ const ContestTestPage = () => {
   const [challengerTips, setChallengerTips] = useState(0);
   const [pollResetKey, setPollResetKey] = useState(0);
 
-  const championTanks = { tip: championTips, skill: 100, sample: 0, power: 0, points: 0 };
-  const challengerTanks = { tip: challengerTips, skill: 100, sample: 0, power: 0, points: 0 };
+  // Fan/sample state — tracks which fans have "entered" per side
+  const [championFans, setChampionFans] = useState<Set<number>>(new Set());
+  const [challengerFans, setChallengerFans] = useState<Set<number>>(new Set());
+
+  const championSample = Math.round((championFans.size / TOTAL_FANS) * 100);
+  const challengerSample = Math.round((challengerFans.size / TOTAL_FANS) * 100);
+
+  const championTanks = { tip: championTips, skill: 100, sample: championSample, power: 0, points: 0 };
+  const challengerTanks = { tip: challengerTips, skill: 100, sample: challengerSample, power: 0, points: 0 };
 
   const handleTip = useCallback((side: 'champion' | 'challenger', amount: number) => {
     if (phase !== 'live') return;
