@@ -230,7 +230,7 @@ const ContestInviteCard = () => {
     }
     (selectedChallengeData.challenger_user_ids || []).forEach(id => excludeIds.add(id));
   }
-  const availableUsers = users.filter((u) => !excludeIds.has(u.id));
+  const availableUsers = users.filter((u) => !excludeIds.has(u.id) && !allBlockedIds.includes(u.id));
 
   return (
     <Card className="bg-card border-border backdrop-blur-sm">
