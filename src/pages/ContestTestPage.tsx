@@ -588,9 +588,9 @@ const ContestTestPage = () => {
               <p className="text-blue-400/50 text-xs">@champion_user</p>
             </div>
 
-            {/* Champion badge — top right */}
-            <div className="absolute top-4 right-4 z-10">
-              <span className="bg-yellow-600/80 text-white text-xs px-2 py-1 rounded flex items-center gap-1">
+            {/* Champion badge — top right, flies RIGHT to challenger side on title change */}
+            <div className={`absolute top-4 right-4 z-[80] ${showTitleChange ? 'animate-[badge-fly-right_1.5s_ease-in-out_forwards]' : ''}`}>
+              <span className={`bg-yellow-600/80 text-white text-xs px-2 py-1 rounded flex items-center gap-1 ${showTitleChange ? 'shadow-[0_0_20px_rgba(234,179,8,0.6)]' : ''}`}>
                 <img src={pieTitleBelt} className="h-6 w-8 object-contain" alt="Belt" />
                 Champion
               </span>
@@ -710,9 +710,9 @@ const ContestTestPage = () => {
               <p className="text-red-400/50 text-xs">@challenger_user</p>
             </div>
 
-            {/* Challenger badge — top right */}
-            <div className="absolute top-4 right-4 z-10">
-              <span className="bg-red-600/80 text-white text-xs px-2 py-1 rounded flex items-center gap-1">
+            {/* Challenger badge — top right, flies LEFT to champion side on title change */}
+            <div className={`absolute top-4 right-4 z-[80] ${showTitleChange ? 'animate-[badge-fly-left_1.5s_ease-in-out_forwards]' : ''}`}>
+              <span className={`bg-red-600/80 text-white text-xs px-2 py-1 rounded flex items-center gap-1 ${showTitleChange ? 'shadow-[0_0_20px_rgba(239,68,68,0.6)]' : ''}`}>
                 Challenger
               </span>
             </div>
