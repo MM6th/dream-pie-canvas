@@ -135,6 +135,7 @@ const ContestTestPage = () => {
   // Tip state
   const [championTips, setChampionTips] = useState(0);
   const [challengerTips, setChallengerTips] = useState(0);
+  const [pollResetKey, setPollResetKey] = useState(0);
 
   const championTanks = { tip: championTips, skill: 100, sample: 0, power: 0, points: 0 };
   const challengerTanks = { tip: challengerTips, skill: 100, sample: 0, power: 0, points: 0 };
@@ -189,6 +190,7 @@ const ContestTestPage = () => {
     setTimeLeft(0);
     setChampionTips(0);
     setChallengerTips(0);
+    setPollResetKey(prev => prev + 1);
   }, [clearTimer]);
 
   // Cleanup on unmount
@@ -304,7 +306,7 @@ const ContestTestPage = () => {
 
             {/* Champion poll widget — bottom left */}
             <div className="absolute bottom-4 left-3 z-10">
-              <PollWidget side="champion" disabled={!isActive} />
+              <PollWidget key={`champ-${pollResetKey}`} side="champion" disabled={!isActive} />
             </div>
 
             {/* Champion tip button — bottom center */}
@@ -395,7 +397,7 @@ const ContestTestPage = () => {
 
             {/* Challenger poll widget — bottom left */}
             <div className="absolute bottom-4 left-3 z-10">
-              <PollWidget side="challenger" disabled={!isActive} />
+              <PollWidget key={`chal-${pollResetKey}`} side="challenger" disabled={!isActive} />
             </div>
 
             {/* Challenger tip button — bottom center */}
