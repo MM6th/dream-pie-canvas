@@ -117,6 +117,7 @@ const ProfilePage = () => {
     refetch: refetchVisibility 
   } = useVisibilityCheck(userId || '');
   const { checkFollowStatus } = useFollowRequest();
+  const { isBlocked, blockUser, unblockUser, loading: blockLoading } = useBlockUser(user?.id);
 
   // Fetch posts immediately without waiting for auth
   useEffect(() => {
