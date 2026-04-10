@@ -131,9 +131,23 @@ const ContestTestPage = () => {
   const [timeLeft, setTimeLeft] = useState(0); // seconds
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // All data starts at zero
-  const championTanks = { tip: 0, skill: 100, sample: 0, power: 0, points: 0 };
-  const challengerTanks = { tip: 0, skill: 100, sample: 0, power: 0, points: 0 };
+  // Tip state
+  const [championTips, setChampionTips] = useState(0);
+  const [challengerTips, setChallengerTips] = useState(0);
+
+  const championTanks = { tip: championTips, skill: 100, sample: 0, power: 0, points: 0 };
+  const challengerTanks = { tip: challengerTips, skill: 100, sample: 0, power: 0, points: 0 };
+
+  const handleTip = useCallback((side: 'champion' | 'challenger', amount: number) => {
+    if (phase !== 'live') return;
+    const { playDepositSound } = require('@/utils/depositSound');
+    playDepositSound();
+    if (side === 'champion') {
+      setChampionTips(prev => prev + amount);
+    } else {
+      setChallengerTips(prev => prev + amount);
+    }
+  }, [phase]);
 
   const clearTimer = useCallback(() => {
     if (intervalRef.current) {
