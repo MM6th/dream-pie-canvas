@@ -288,7 +288,7 @@ const ContestTestPage = () => {
 
             {/* Champion poll widget — bottom left */}
             <div className="absolute bottom-4 left-3 z-10">
-              <PollWidget side="champion" />
+              <PollWidget side="champion" disabled={!isActive} />
             </div>
 
             {/* Champion tip button — bottom center */}
@@ -379,7 +379,7 @@ const ContestTestPage = () => {
 
             {/* Challenger poll widget — bottom left */}
             <div className="absolute bottom-4 left-3 z-10">
-              <PollWidget side="challenger" />
+              <PollWidget side="challenger" disabled={!isActive} />
             </div>
 
             {/* Challenger tip button — bottom center */}
