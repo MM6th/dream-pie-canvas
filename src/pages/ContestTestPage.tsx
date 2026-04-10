@@ -8,6 +8,7 @@ import { ArrowLeft, Play, Square, Video, Timer, Send } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
+import { CONTEST_SCORING_FORMULA } from "@/constants/contestFormulas";
 import { playDepositSound } from "@/utils/depositSound";
 
 /** Fizzy bubble keyframes — injected once */
@@ -196,18 +197,26 @@ const PowerFlowBar = ({ value }: { value: number }) => (
   </div>
 );
 
-/** Total points bar */
-const TotalPointsBar = ({ points }: { points: number }) => (
+/** Total points bar — hidden until contest ends, then revealed */
+const TotalPointsBar = ({ points, revealed }: { points: number; revealed: boolean }) => (
   <div className="space-y-1">
     <span className="text-[10px] text-white/60 font-bold uppercase tracking-wider">Total Points</span>
     <div className="w-full h-4 rounded-sm bg-white/10 overflow-hidden relative">
-      <div
-        className="h-full bg-amber-500 transition-all duration-700 rounded-sm"
-        style={{ width: `${Math.min(points, 100)}%` }}
-      />
-      <span className="absolute inset-0 flex items-center justify-center text-[10px] font-mono font-bold text-white drop-shadow">
-        {points}
-      </span>
+      {revealed ? (
+        <>
+          <div
+            className="h-full bg-amber-500 rounded-sm animate-[grow_1.5s_ease-out_forwards]"
+            style={{ width: `${Math.min(points, 100)}%` }}
+          />
+          <span className="absolute inset-0 flex items-center justify-center text-[10px] font-mono font-bold text-white drop-shadow animate-[fadeIn_0.8s_ease-in_0.5s_both]">
+            {points.toFixed(1)}
+          </span>
+        </>
+      ) : (
+        <span className="absolute inset-0 flex items-center justify-center text-[10px] font-mono font-bold text-white/30">
+          ???
+        </span>
+      )}
     </div>
   </div>
 );
@@ -251,8 +260,24 @@ const ContestTestPage = () => {
   const championPower = isLiveOrOvertime ? Math.round((championTipVotes + skillValue + championSample) / 3) : 0;
   const challengerPower = isLiveOrOvertime ? Math.round((challengerTipVotes + skillValue + challengerSample) / 3) : 0;
 
-  const championTanks = { tip: championTipVotes, skill: skillValue, sample: championSample, power: championPower, points: 0 };
-  const challengerTanks = { tip: challengerTipVotes, skill: skillValue, sample: challengerSample, power: challengerPower, points: 0 };
+  // Calculate final points using the contest formula: gifts + pollVotesWon × skill% × sampleIntensity
+  const championPoints = CONTEST_SCORING_FORMULA.calculate({
+    gifts: championTips,
+    pollVotesWon: championVotePower,
+    skillPercent: skillValue,
+    sampleIntensity: championSample,
+  });
+  const challengerPoints = CONTEST_SCORING_FORMULA.calculate({
+    gifts: challengerTips,
+    pollVotesWon: challengerVotePower,
+    skillPercent: skillValue,
+    sampleIntensity: challengerSample,
+  });
+
+  const isRevealed = phase === 'ended';
+
+  const championTanks = { tip: championTipVotes, skill: skillValue, sample: championSample, power: championPower, points: championPoints };
+  const challengerTanks = { tip: challengerTipVotes, skill: skillValue, sample: challengerSample, power: challengerPower, points: challengerPoints };
 
   const handleTip = useCallback((side: 'champion' | 'challenger', amount: number) => {
     if (phase !== 'live' && phase !== 'overtime') return;
@@ -303,6 +328,10 @@ const ContestTestPage = () => {
 
   const handleStop = useCallback(() => {
     clearTimer();
+    setPhase('ended');
+  }, [clearTimer]);
+
+  const handleReset = useCallback(() => {
     setPhase('idle');
     setTimeLeft(0);
     setChampionTips(0);
@@ -312,7 +341,7 @@ const ContestTestPage = () => {
     setPollResetKey(prev => prev + 1);
     setChampionFans(new Set());
     setChallengerFans(new Set());
-  }, [clearTimer]);
+  }, []);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -379,6 +408,10 @@ const ContestTestPage = () => {
           <Button onClick={handleStart} className="bg-green-600 hover:bg-green-700 text-white font-bold px-6 h-9 text-xs rounded-full gap-2">
             <Play className="w-4 h-4" /> Start Contest
           </Button>
+        ) : phase === 'ended' ? (
+          <Button onClick={handleReset} className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 h-9 text-xs rounded-full gap-2">
+            Reset
+          </Button>
         ) : (
           <Button onClick={handleStop} variant="destructive" className="font-bold px-6 h-9 text-xs rounded-full gap-2">
             <Square className="w-4 h-4" /> Stop Contest
@@ -436,7 +469,7 @@ const ContestTestPage = () => {
 
             {/* Total points bar — bottom area above tip button */}
             <div className="absolute bottom-14 left-14 right-14 z-10 mx-auto max-w-[200px]">
-              <TotalPointsBar points={championTanks.points} />
+              <TotalPointsBar points={championTanks.points} revealed={isRevealed} />
             </div>
 
             {/* Champion poll widget — bottom left */}
@@ -557,7 +590,7 @@ const ContestTestPage = () => {
 
             {/* Total points bar — bottom area */}
             <div className="absolute bottom-14 left-14 right-14 z-10 mx-auto max-w-[200px]">
-              <TotalPointsBar points={challengerTanks.points} />
+              <TotalPointsBar points={challengerTanks.points} revealed={isRevealed} />
             </div>
 
             {/* Challenger poll widget — bottom left */}
