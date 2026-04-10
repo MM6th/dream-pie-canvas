@@ -65,6 +65,16 @@ export const useContestRedirect = () => {
       }
 
       if (isChampion || isChallenger) {
+        // Verify a challenger actually exists before redirecting
+        const championId = post.champion_user_id || post.merchant_id;
+        const { data: allAcceptances } = await supabase
+          .from("challenge_acceptances")
+          .select("user_id")
+          .eq("bulletin_post_id", post.id);
+
+        const hasChallenger = allAcceptances?.some((a) => a.user_id !== championId);
+        if (!hasChallenger) continue;
+
         redirectedRef.current.add(post.id);
         navigate(`/contest/${post.id}`);
         return;

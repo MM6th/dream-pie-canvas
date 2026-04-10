@@ -53,6 +53,12 @@ const ContestLive = () => {
         const challengerId = acceptances?.find((a) => a.user_id !== championId)?.user_id;
 
         if (!challengerId) {
+          // Mark post as ended so redirect hooks stop targeting it
+          await supabase
+            .from("bulletin_posts")
+            .update({ session_ended_at: new Date().toISOString() })
+            .eq("id", postId);
+          sessionStorage.setItem(`contest_ended_${postId}`, "true");
           toast({ title: "No challenger found for this contest", variant: "destructive" });
           navigate("/bulletin");
           return;
