@@ -5,7 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import { ArrowLeft, Users, User, Shield, Building, Search, MessageSquare, Calendar, DollarSign, Cake, Star } from "lucide-react";
+import { ArrowLeft, Users, User, Shield, Building, Search, MessageSquare, Calendar, DollarSign, Cake, Star, Ban } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { useBlockUser } from "@/hooks/useBlockUser";
 import { getZodiacSign, calculateAge } from "@/utils/zodiacUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import AppNavBar from "@/components/AppNavBar";
@@ -47,6 +49,7 @@ const ProfilesDirectory = () => {
   const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
   const [messagingPrices, setMessagingPrices] = useState<Record<string, number>>({});
   const [followStatuses, setFollowStatuses] = useState<Record<string, FollowStatus>>({});
+  const { blockedIds, isBlocked, blockUser, unblockUser } = useBlockUser(user?.id);
 
   useEffect(() => {
     fetchProfiles();
@@ -229,6 +232,13 @@ const ProfilesDirectory = () => {
   const handleProfileClick = (profileId: string) => {
     navigate(`/profile/${profileId}`);
   };
+  const handleBlockToggle = async (profileId: string, profileName: string) => {
+    if (isBlocked(profileId)) {
+      await unblockUser(profileId);
+    } else {
+      await blockUser(profileId);
+    }
+  };
 
 
   if (loading) {
@@ -338,7 +348,7 @@ const ProfilesDirectory = () => {
                     className="bg-gray-800 border-gray-700 hover:border-gray-600 transition-colors cursor-pointer group"
                     onClick={() => handleProfileClick(profile.id)}
                   >
-                    <CardContent className="p-4 text-center h-[280px] flex flex-col justify-between">
+                    <CardContent className="p-4 text-center flex flex-col justify-between">
                       {/* Avatar */}
                       <div className="mb-4">
                         {profile.avatar_url ? (
@@ -358,7 +368,6 @@ const ProfilesDirectory = () => {
                       <h3 className="text-white font-semibold mb-1 group-hover:text-blue-300 transition-colors line-clamp-1">
                         {profile.display_name || 'Anonymous User'}
                       </h3>
-
 
                       {/* Badges */}
                       <div className="flex flex-wrap justify-center gap-1 mb-2">
@@ -380,7 +389,7 @@ const ProfilesDirectory = () => {
                         )}
                       </div>
                       
-                      {/* Skills - Separate row */}
+                      {/* Skills */}
                       {profile.skills && profile.skills.length > 0 && 
                        selectedFilter === "industries" && (
                         <div className="flex flex-wrap justify-center gap-1 mb-2 min-h-[20px]">
@@ -436,6 +445,45 @@ const ProfilesDirectory = () => {
                             onRequestSent={() => fetchFollowStatuses()}
                             className="w-full text-xs h-7"
                           />
+                        </div>
+                      )}
+
+                      {/* Block Button */}
+                      {user && user.id !== profile.id && (
+                        <div className="mt-1" onClick={(e) => e.stopPropagation()}>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className={`w-full text-xs h-7 ${isBlocked(profile.id) ? 'border-red-500 text-red-400 hover:bg-red-500/10' : 'border-gray-600 text-gray-400 hover:bg-gray-700'}`}
+                              >
+                                <Ban className="w-3 h-3 mr-1" />
+                                {isBlocked(profile.id) ? 'Unblock' : 'Block'}
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent className="bg-gray-800 border-gray-700">
+                              <AlertDialogHeader>
+                                <AlertDialogTitle className="text-white">
+                                  {isBlocked(profile.id) ? 'Unblock' : 'Block'} {profile.display_name || 'this user'}?
+                                </AlertDialogTitle>
+                                <AlertDialogDescription className="text-gray-400">
+                                  {isBlocked(profile.id)
+                                    ? 'This will allow them to follow you, see your posts, and enter your livestreams again.'
+                                    : 'This will prevent them from following you, seeing your posts, and entering your livestreams.'}
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel className="bg-gray-700 text-white border-gray-600">Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleBlockToggle(profile.id, profile.display_name || 'User')}
+                                  className={isBlocked(profile.id) ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}
+                                >
+                                  {isBlocked(profile.id) ? 'Unblock' : 'Block'}
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </div>
                       )}
 
@@ -535,7 +583,7 @@ const ProfilesDirectory = () => {
                       className="bg-gray-800 border-gray-700 hover:border-gray-600 transition-colors cursor-pointer group"
                       onClick={() => handleProfileClick(profile.id)}
                     >
-                      <CardContent className="p-4 text-center h-[280px] flex flex-col justify-between">
+                      <CardContent className="p-4 text-center flex flex-col justify-between">
                         <div className="mb-4">
                           {profile.avatar_url ? (
                             <img
@@ -553,7 +601,6 @@ const ProfilesDirectory = () => {
                         <h3 className="text-white font-semibold mb-1 group-hover:text-blue-300 transition-colors line-clamp-1">
                           {profile.display_name || 'Anonymous User'}
                         </h3>
-
 
                         <div className="flex flex-wrap justify-center gap-1 mb-2">
                           {profile.user_type === 'merchant' && profile.industry && (
@@ -629,6 +676,45 @@ const ProfilesDirectory = () => {
                               onRequestSent={() => fetchFollowStatuses()}
                               className="w-full text-xs h-7"
                             />
+                          </div>
+                        )}
+
+                        {/* Block Button */}
+                        {user && user.id !== profile.id && (
+                          <div className="mt-1" onClick={(e) => e.stopPropagation()}>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className={`w-full text-xs h-7 ${isBlocked(profile.id) ? 'border-red-500 text-red-400 hover:bg-red-500/10' : 'border-gray-600 text-gray-400 hover:bg-gray-700'}`}
+                                >
+                                  <Ban className="w-3 h-3 mr-1" />
+                                  {isBlocked(profile.id) ? 'Unblock' : 'Block'}
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent className="bg-gray-800 border-gray-700">
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle className="text-white">
+                                    {isBlocked(profile.id) ? 'Unblock' : 'Block'} {profile.display_name || 'this user'}?
+                                  </AlertDialogTitle>
+                                  <AlertDialogDescription className="text-gray-400">
+                                    {isBlocked(profile.id)
+                                      ? 'This will allow them to follow you, see your posts, and enter your livestreams again.'
+                                      : 'This will prevent them from following you, seeing your posts, and entering your livestreams.'}
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel className="bg-gray-700 text-white border-gray-600">Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => handleBlockToggle(profile.id, profile.display_name || 'User')}
+                                    className={isBlocked(profile.id) ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}
+                                  >
+                                    {isBlocked(profile.id) ? 'Unblock' : 'Block'}
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                           </div>
                         )}
 
