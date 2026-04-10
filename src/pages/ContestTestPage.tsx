@@ -318,6 +318,11 @@ const ContestTestPage = () => {
         )}
       </div>
 
+      {/* Championship belt — centered between both sides */}
+      <div className="absolute bottom-44 left-1/2 -translate-x-1/2 z-40 pointer-events-none">
+        <img src={pieTitleBelt} className="w-16 h-16 object-contain drop-shadow-lg" alt="Championship Belt" />
+      </div>
+
       {/* Split screen layout */}
       <div className="flex flex-col lg:flex-row h-screen">
         {/* ─── Champion side ─── */}
