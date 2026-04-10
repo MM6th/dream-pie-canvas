@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import pieTitleBelt from "@/assets/pie-title-belt.png";
@@ -36,28 +36,53 @@ const VerticalTank = ({
   </div>
 );
 
+/** Get slider track gradient based on value relative to 50 */
+const getSliderStyle = (value: number) => {
+  const pct = value;
+  if (value < 50) {
+    // Blue on the left portion
+    return {
+      background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${pct}%, rgba(255,255,255,0.1) ${pct}%, rgba(255,255,255,0.1) 100%)`,
+    };
+  } else if (value > 50) {
+    // Red on the right portion  
+    return {
+      background: `linear-gradient(to right, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.1) 50%, #ef4444 50%, #ef4444 ${pct}%, rgba(255,255,255,0.1) ${pct}%, rgba(255,255,255,0.1) 100%)`,
+    };
+  }
+  return { background: 'rgba(255,255,255,0.1)' };
+};
+
 /** Polling widget with 4 category sliders */
-const PollWidget = () => {
-  const categories = [
-    { label: "Outfit", value: 50 },
-    { label: "Makeup", value: 50 },
-    { label: "Personality", value: 50 },
-    { label: "Interaction", value: 50 },
-  ];
+const PollWidget = ({ side }: { side: 'champion' | 'challenger' }) => {
+  const [values, setValues] = useState({ Outfit: 50, Makeup: 50, Personality: 50, Interaction: 50 });
+
+  const handleChange = (label: string, newVal: number) => {
+    setValues(prev => ({ ...prev, [label]: newVal }));
+  };
+
+  const getValueColor = (val: number) => {
+    if (val < 50) return 'text-blue-400';
+    if (val > 50) return 'text-red-400';
+    return 'text-white/60';
+  };
+
   return (
     <div className="bg-black/40 rounded-md p-2 w-[130px] space-y-1.5">
-      {categories.map((cat) => (
-        <div key={cat.label} className="space-y-0.5">
+      {Object.entries(values).map(([label, val]) => (
+        <div key={label} className="space-y-0.5">
           <div className="flex justify-between items-center">
-            <span className="text-[9px] text-white/60 font-semibold uppercase tracking-wider">{cat.label}</span>
-            <span className="text-[9px] text-white/60 font-mono">{cat.value}</span>
+            <span className="text-[9px] text-white/60 font-semibold uppercase tracking-wider">{label}</span>
+            <span className={`text-[9px] font-mono font-bold ${getValueColor(val)}`}>{val}</span>
           </div>
           <input
             type="range"
             min={1}
             max={100}
-            defaultValue={cat.value}
-            className="w-full h-1.5 appearance-none bg-white/10 rounded-sm cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white/80"
+            value={val}
+            onChange={(e) => handleChange(label, Number(e.target.value))}
+            style={getSliderStyle(val)}
+            className="w-full h-1.5 appearance-none rounded-sm cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white/80"
           />
         </div>
       ))}
@@ -69,12 +94,12 @@ const PollWidget = () => {
 };
 
 /** Power flow horizontal bar */
-const PowerFlowBar = ({ value, color }: { value: number; color: string }) => (
+const PowerFlowBar = ({ value }: { value: number }) => (
   <div className="space-y-1">
     <span className="text-[10px] text-white/60 font-semibold uppercase tracking-wider">Power Flow</span>
     <div className="w-full h-3 rounded-sm bg-white/10 overflow-hidden">
       <div
-        className={`h-full ${color} transition-all duration-700 rounded-sm`}
+        className="h-full bg-red-500 transition-all duration-700 rounded-sm"
         style={{ width: `${value}%` }}
       />
     </div>
@@ -82,12 +107,12 @@ const PowerFlowBar = ({ value, color }: { value: number; color: string }) => (
 );
 
 /** Total points bar */
-const TotalPointsBar = ({ points, color }: { points: number; color: string }) => (
+const TotalPointsBar = ({ points }: { points: number }) => (
   <div className="space-y-1">
     <span className="text-[10px] text-white/60 font-bold uppercase tracking-wider">Total Points</span>
     <div className="w-full h-4 rounded-sm bg-white/10 overflow-hidden relative">
       <div
-        className={`h-full ${color} transition-all duration-700 rounded-sm`}
+        className="h-full bg-amber-500 transition-all duration-700 rounded-sm"
         style={{ width: `${Math.min(points, 100)}%` }}
       />
       <span className="absolute inset-0 flex items-center justify-center text-[10px] font-mono font-bold text-white drop-shadow">
@@ -100,9 +125,9 @@ const TotalPointsBar = ({ points, color }: { points: number; color: string }) =>
 const ContestTestPage = () => {
   const navigate = useNavigate();
 
-  // Dummy data for tanks
-  const championTanks = { tip: 42, skill: 100, sample: 60, power: 65, points: 78 };
-  const challengerTanks = { tip: 27, skill: 85, sample: 35, power: 45, points: 52 };
+  // All data starts at zero
+  const championTanks = { tip: 0, skill: 100, sample: 0, power: 0, points: 0 };
+  const challengerTanks = { tip: 0, skill: 100, sample: 0, power: 0, points: 0 };
 
   return (
     <div className="min-h-screen bg-background text-foreground relative">
