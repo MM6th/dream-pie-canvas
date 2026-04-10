@@ -415,6 +415,43 @@ const ProfilePage = () => {
                     />
                   )}
 
+                  {/* Block Button - show for non-own profiles */}
+                  {!isOwnProfile && user && (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={`w-full mb-4 ${isBlocked(userId || '') ? 'border-red-500 text-red-400 hover:bg-red-900/20' : 'border-gray-600 text-gray-400 hover:bg-gray-700'}`}
+                          disabled={blockLoading}
+                        >
+                          <Ban className="w-4 h-4 mr-2" />
+                          {isBlocked(userId || '') ? 'Unblock User' : 'Block User'}
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent className="bg-gray-800 border-gray-700">
+                        <AlertDialogHeader>
+                          <AlertDialogTitle className="text-white">
+                            {isBlocked(userId || '') ? 'Unblock' : 'Block'} {profile.display_name || 'this user'}?
+                          </AlertDialogTitle>
+                          <AlertDialogDescription className="text-gray-400">
+                            {isBlocked(userId || '')
+                              ? 'This user will be able to follow you, enter your livestreams, and see your posts again.'
+                              : 'This user will not be able to follow you, enter your livestreams, or see your posts in the community feed. Any existing follow connections will be removed.'}
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel className="bg-gray-700 text-white border-gray-600">Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => isBlocked(userId || '') ? unblockUser(userId || '') : blockUser(userId || '')}
+                            className={isBlocked(userId || '') ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}
+                          >
+                            {isBlocked(userId || '') ? 'Unblock' : 'Block'}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
+
                   {/* Messaging Price */}
                    {messagingPrice !== null && (
                     <div className="flex flex-col items-center gap-1 text-sm text-green-400 bg-green-900/20 border border-green-600/30 rounded-lg px-3 py-2 w-full">
