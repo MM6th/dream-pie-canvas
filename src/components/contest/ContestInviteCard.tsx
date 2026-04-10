@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useBlockUser } from "@/hooks/useBlockUser";
 import { toast } from "sonner";
 import { Trophy, Users, Send, X, Loader2 } from "lucide-react";
 
@@ -33,6 +34,7 @@ interface Invitation {
 
 const ContestInviteCard = () => {
   const { user } = useAuth();
+  const { allBlockedIds } = useBlockUser(user?.id);
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [selectedChallenge, setSelectedChallenge] = useState<string>("");
   const [users, setUsers] = useState<UserOption[]>([]);
@@ -228,7 +230,7 @@ const ContestInviteCard = () => {
     }
     (selectedChallengeData.challenger_user_ids || []).forEach(id => excludeIds.add(id));
   }
-  const availableUsers = users.filter((u) => !excludeIds.has(u.id));
+  const availableUsers = users.filter((u) => !excludeIds.has(u.id) && !allBlockedIds.includes(u.id));
 
   return (
     <Card className="bg-card border-border backdrop-blur-sm">
