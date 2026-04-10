@@ -395,10 +395,11 @@ const ContestTestPage = () => {
             </div>
           </div>
 
-          {/* Champion fans grid */}
+          {/* Champion supporters + chat */}
           <Card className="rounded-none border-x-0 border-b-0 bg-card/80 backdrop-blur-sm">
-            <CardContent className="p-2 space-y-1">
-              <p className="text-[10px] font-semibold text-muted-foreground">Champion Supporters ({championFans.size}/{TOTAL_FANS})</p>
+            <CardContent className="p-2 space-y-2">
+              {/* Fan grid */}
+              <p className="text-[10px] font-bold text-foreground">Supporters ({championFans.size}/{TOTAL_FANS})</p>
               <div className="grid grid-cols-9 gap-1">
                 {Array.from({ length: TOTAL_FANS }, (_, i) => {
                   const fanNum = i + 1;
@@ -414,16 +415,27 @@ const ContestTestPage = () => {
                             return next;
                           });
                         }}
-                        className={`w-3 h-3 rounded-full flex items-center justify-center text-[6px] font-bold flex-shrink-0 transition-colors ${entered ? 'bg-green-500 text-white' : 'bg-muted/60 text-muted-foreground hover:bg-muted'}`}
+                        className={`w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold flex-shrink-0 transition-colors border ${entered ? 'bg-green-500 border-green-400 text-white shadow-[0_0_6px_rgba(34,197,94,0.6)]' : 'bg-muted border-border text-foreground hover:bg-accent hover:border-accent'}`}
                       >
                         +
                       </button>
-                      <span className={`text-[8px] font-medium truncate ${entered ? 'text-blue-400' : 'text-muted-foreground/60'}`}>
+                      <span className={`text-[8px] font-semibold truncate ${entered ? 'text-blue-400' : 'text-muted-foreground'}`}>
                         F{fanNum}
                       </span>
                     </div>
                   );
                 })}
+              </div>
+              {/* Chat */}
+              <div className="border-t border-border/50 pt-2">
+                <p className="text-[10px] font-bold text-foreground mb-1">Champion Chat</p>
+                <div className="h-16 overflow-y-auto space-y-1 text-xs">
+                  {/* Live messages will appear here */}
+                </div>
+                <div className="flex gap-2 mt-1">
+                  <Input placeholder="Type a message..." className="text-xs h-7" readOnly />
+                  <Button size="sm" className="h-7 px-2"><Send className="w-3 h-3" /></Button>
+                </div>
               </div>
             </CardContent>
           </Card>
