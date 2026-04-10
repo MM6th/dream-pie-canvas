@@ -221,9 +221,6 @@ const AuthPage = () => {
     }
   };
 
-  const handleAboutAuthor = () => {
-    navigate('/about-author');
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800 flex items-center justify-center p-4">
@@ -255,13 +252,6 @@ const AuthPage = () => {
             {emailSent ? (
               <div className="text-center space-y-4">
                 <p className="text-green-400">Check your email to confirm your account!</p>
-                <Button
-                  onClick={handleAboutAuthor}
-                  variant="link"
-                  className="text-blue-400 hover:text-blue-300"
-                >
-                  About the Author
-                </Button>
               </div>
             ) : showForgotPassword ? (
               <div className="space-y-4">
