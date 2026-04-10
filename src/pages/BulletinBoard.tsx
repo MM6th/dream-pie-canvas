@@ -15,7 +15,7 @@ const BulletinBoard = () => {
   const navigate = useNavigate();
   const { signOut, user, loading: authLoading } = useAuth();
   const isMobile = useIsMobile();
-  const { blockedIds } = useBlockUser(user?.id);
+  const { allBlockedIds } = useBlockUser(user?.id);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -83,7 +83,7 @@ const BulletinBoard = () => {
   };
 
   // Filter out posts from blocked users (both directions)
-  const currentThoughtsPosts = posts.filter((post: any) => !blockedIds.includes(post.merchant_id));
+  const currentThoughtsPosts = posts.filter((post: any) => !allBlockedIds.includes(post.merchant_id));
   
 
 

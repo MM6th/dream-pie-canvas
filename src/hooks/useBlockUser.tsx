@@ -3,7 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 export const useBlockUser = (currentUserId: string | undefined) => {
-  const [blockedIds, setBlockedIds] = useState<string[]>([]);
+  const [blockedIds, setBlockedIds] = useState<string[]>([]); // users I blocked
+  const [blockedByIds, setBlockedByIds] = useState<string[]>([]); // users who blocked me
   const [loading, setLoading] = useState(false);
 
   const fetchBlockedUsers = useCallback(async () => {
@@ -13,13 +14,14 @@ export const useBlockUser = (currentUserId: string | undefined) => {
       .from('user_blocks')
       .select('blocked_id')
       .eq('blocker_id', currentUserId);
-    
-    // Also need to know who blocked me (for feed filtering)
-    // Use RPC since we can't SELECT where blocked_id = me (RLS only shows blocker's rows)
-    // We'll use is_blocked check at display time for the "blocked by" direction
-    // But for efficient feed filtering, let's just track our own blocks
-    // The is_blocked RPC handles bidirectional checks for follow/livestream
     setBlockedIds((myBlocks || []).map(d => d.blocked_id));
+
+    // Fetch users who blocked me
+    const { data: blockedByMe } = await supabase
+      .from('user_blocks')
+      .select('blocker_id')
+      .eq('blocked_id', currentUserId);
+    setBlockedByIds((blockedByMe || []).map(d => d.blocker_id));
   }, [currentUserId]);
 
   useEffect(() => {
@@ -27,6 +29,8 @@ export const useBlockUser = (currentUserId: string | undefined) => {
   }, [fetchBlockedUsers]);
 
   const isBlocked = (userId: string) => blockedIds.includes(userId);
+  // Combined: all user IDs that should be hidden in feeds (both directions)
+  const allBlockedIds = [...new Set([...blockedIds, ...blockedByIds])];
 
   const blockUser = async (targetId: string) => {
     if (!currentUserId) return false;
@@ -78,5 +82,5 @@ export const useBlockUser = (currentUserId: string | undefined) => {
     }
   };
 
-  return { blockedIds, isBlocked, blockUser, unblockUser, loading, refetch: fetchBlockedUsers };
+  return { blockedIds, blockedByIds, allBlockedIds, isBlocked, blockUser, unblockUser, loading, refetch: fetchBlockedUsers };
 };
