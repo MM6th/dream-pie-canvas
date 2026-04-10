@@ -21,6 +21,19 @@ import type { FollowStatus } from "@/hooks/useFollowRequest";
 import { MessageButton } from "@/components/profile/MessageButton";
 import { FollowButton } from "@/components/profile/FollowButton";
 import SixthPriceTag from "@/components/SixthPriceTag";
+import { useBlockUser } from "@/hooks/useBlockUser";
+import { Ban } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface Profile {
   id: string;
