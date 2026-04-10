@@ -535,36 +535,11 @@ const ContestTestPage = () => {
         )}
       </div>
 
-      {/* Criss-cross title change overlay — champion & challenger icons swap sides */}
+      {/* Title change announcer overlay — text only, badges animate in-place */}
       {showTitleChange && (
-        <div className="fixed inset-0 z-[100] pointer-events-none">
-          {/* Dark dramatic overlay */}
-          <div className="absolute inset-0 bg-black/70 animate-[fadeIn_0.3s_ease-out_both]" />
-          
-          {/* Champion icon — starts left, crosses to right */}
-          <div
-            className="absolute w-24 h-24 rounded-full border-4 border-blue-400 bg-blue-950 flex items-center justify-center shadow-[0_0_30px_rgba(59,130,246,0.6)]"
-            style={{ animation: 'criss-cross-left 1.5s ease-in-out forwards' }}
-          >
-            <div className="text-center">
-              <Video className="w-8 h-8 text-blue-300 mx-auto" />
-              <span className="text-[10px] text-blue-300 font-bold">Champion</span>
-            </div>
-          </div>
-
-          {/* Challenger icon — starts right, crosses to left */}
-          <div
-            className="absolute w-24 h-24 rounded-full border-4 border-red-400 bg-red-950 flex items-center justify-center shadow-[0_0_30px_rgba(239,68,68,0.6)]"
-            style={{ animation: 'criss-cross-right 1.5s ease-in-out forwards' }}
-          >
-            <div className="text-center">
-              <Video className="w-8 h-8 text-red-300 mx-auto" />
-              <span className="text-[10px] text-red-300 font-bold">Challenger</span>
-            </div>
-          </div>
-
-          {/* "AND THE NEW... CHAMPION" text */}
-          <div className="absolute top-[30%] left-1/2 -translate-x-1/2 text-center" style={{ animation: 'title-text-appear 1.2s ease-out 0.8s both' }}>
+        <div className="fixed inset-0 z-[90] pointer-events-none flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/60 animate-[fadeIn_0.3s_ease-out_both]" />
+          <div className="relative text-center" style={{ animation: 'title-text-appear 1.2s ease-out 0.3s both' }}>
             <p className="text-amber-400/80 text-lg font-bold uppercase tracking-[0.3em] mb-2 drop-shadow-[0_0_10px_rgba(251,191,36,0.5)]">
               And The New...
             </p>
