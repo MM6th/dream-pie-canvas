@@ -267,6 +267,9 @@ const ContestTestPage = () => {
   // Belt animation state
   const [beltWinner, setBeltWinner] = useState<'champion' | 'challenger' | 'tie' | null>(null);
 
+  // Criss-cross title change animation
+  const [showTitleChange, setShowTitleChange] = useState(false);
+
   // Fan/sample state — tracks which fans have "entered" per side
   const [championFans, setChampionFans] = useState<Set<number>>(new Set());
   const [challengerFans, setChallengerFans] = useState<Set<number>>(new Set());
