@@ -7,7 +7,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft, Play, Square, Video, Timer } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Progress } from "@/components/ui/progress";
-import { Progress } from "@/components/ui/progress";
 import { playDepositSound } from "@/utils/depositSound";
 
 /** Fizzy bubble keyframes — injected once */
