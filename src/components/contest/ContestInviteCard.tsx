@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useBlockUser } from "@/hooks/useBlockUser";
 import { toast } from "sonner";
 import { Trophy, Users, Send, X, Loader2 } from "lucide-react";
 
