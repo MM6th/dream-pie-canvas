@@ -288,15 +288,18 @@ const ContestTestPage = () => {
 
   const handleStart = useCallback(() => {
     setPhase('warmup');
-    // 5-second warmup for testing
     startCountdown(5, () => {
       setPhase('live');
-      // 1:45 contest timer
       startCountdown(105, () => {
-        setPhase('ended');
+        // Auto-transition to overtime
+        setPhase('overtime');
+        setOvertimeTotal(OVERTIME_SECONDS);
+        startCountdown(OVERTIME_SECONDS, () => {
+          setPhase('ended');
+        });
       });
     });
-  }, [startCountdown]);
+  }, [startCountdown, OVERTIME_SECONDS]);
 
   const handleStop = useCallback(() => {
     clearTimer();
