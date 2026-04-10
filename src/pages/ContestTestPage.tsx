@@ -240,15 +240,19 @@ const ContestTestPage = () => {
   const championSample = Math.round((championFans.size / TOTAL_FANS) * 100);
   const challengerSample = Math.round((challengerFans.size / TOTAL_FANS) * 100);
 
+  // Skill decreases during overtime from 100% to 0% over the overtime period
+  const skillValue = phase === 'overtime' ? Math.round((timeLeft / overtimeTotal) * 100) : 100;
+
   // Tips/Votes tank combines tips + vote power in real-time
   const championTipVotes = Math.min(championTips + championVotePower, 100);
   const challengerTipVotes = Math.min(challengerTips + challengerVotePower, 100);
 
-  const championPower = phase === 'live' ? Math.round((championTipVotes + 100 + championSample) / 3) : 0;
-  const challengerPower = phase === 'live' ? Math.round((challengerTipVotes + 100 + challengerSample) / 3) : 0;
+  const isLiveOrOvertime = phase === 'live' || phase === 'overtime';
+  const championPower = isLiveOrOvertime ? Math.round((championTipVotes + skillValue + championSample) / 3) : 0;
+  const challengerPower = isLiveOrOvertime ? Math.round((challengerTipVotes + skillValue + challengerSample) / 3) : 0;
 
-  const championTanks = { tip: championTipVotes, skill: 100, sample: championSample, power: championPower, points: 0 };
-  const challengerTanks = { tip: challengerTipVotes, skill: 100, sample: challengerSample, power: challengerPower, points: 0 };
+  const championTanks = { tip: championTipVotes, skill: skillValue, sample: championSample, power: championPower, points: 0 };
+  const challengerTanks = { tip: challengerTipVotes, skill: skillValue, sample: challengerSample, power: challengerPower, points: 0 };
 
   const handleTip = useCallback((side: 'champion' | 'challenger', amount: number) => {
     if (phase !== 'live') return;
