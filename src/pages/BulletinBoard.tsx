@@ -15,6 +15,7 @@ const BulletinBoard = () => {
   const navigate = useNavigate();
   const { signOut, user, loading: authLoading } = useAuth();
   const isMobile = useIsMobile();
+  const { blockedIds } = useBlockUser(user?.id);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
 
