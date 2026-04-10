@@ -343,11 +343,11 @@ const ContestTestPage = () => {
   }, [clearTimer]);
 
   const handleStart = useCallback(() => {
+    setBeltWinner(null);
     setPhase('warmup');
     startCountdown(5, () => {
       setPhase('live');
       startCountdown(105, () => {
-        // Auto-transition to overtime
         setPhase('overtime');
         setOvertimeTotal(OVERTIME_SECONDS);
         startCountdown(OVERTIME_SECONDS, () => {
@@ -372,6 +372,9 @@ const ContestTestPage = () => {
     setPollResetKey(prev => prev + 1);
     setChampionFans(new Set());
     setChallengerFans(new Set());
+    setChampionPollSubmitted(false);
+    setChallengerPollSubmitted(false);
+    setBeltWinner(null);
   }, []);
 
   // Cleanup on unmount
@@ -450,9 +453,26 @@ const ContestTestPage = () => {
         )}
       </div>
 
-      {/* Championship belt — centered between both sides */}
-      <div className="absolute bottom-44 left-1/2 -translate-x-1/2 z-40 pointer-events-none">
-        <img src={pieTitleBelt} className="w-16 h-16 object-contain drop-shadow-lg" alt="Championship Belt" />
+      {/* Championship belt — centered, flies to winner on end */}
+      <div
+        className={`absolute z-[70] pointer-events-none transition-all duration-[1.5s] ease-in-out ${
+          beltWinner === 'champion'
+            ? 'bottom-1/2 left-[25%] -translate-x-1/2 scale-150'
+            : beltWinner === 'challenger'
+            ? 'bottom-1/2 right-[25%] translate-x-1/2 left-auto scale-150'
+            : 'bottom-44 left-1/2 -translate-x-1/2 scale-100'
+        }`}
+      >
+        <img
+          src={pieTitleBelt}
+          className={`w-16 h-16 object-contain drop-shadow-lg ${beltWinner ? 'drop-shadow-[0_0_20px_rgba(255,215,0,0.8)]' : ''}`}
+          alt="Championship Belt"
+        />
+        {beltWinner && beltWinner !== 'tie' && (
+          <div className="text-center mt-1 animate-[fadeIn_0.8s_ease-in_1s_both]">
+            <span className="text-amber-400 text-xs font-bold uppercase tracking-wider drop-shadow">Winner!</span>
+          </div>
+        )}
       </div>
 
       {/* Split screen layout */}
@@ -505,7 +525,7 @@ const ContestTestPage = () => {
 
             {/* Champion poll widget — bottom left */}
             <div className="absolute bottom-4 left-3 z-10">
-              <PollWidget key={`champ-${pollResetKey}`} side="champion" disabled={!isActive} onVotePowerChange={setChampionVotePower} />
+              <PollWidget key={`champ-${pollResetKey}`} side="champion" disabled={!isActive} onVotePowerChange={setChampionVotePower} onSubmittedChange={setChampionPollSubmitted} />
             </div>
 
             {/* Champion tip button — bottom center */}
@@ -626,7 +646,7 @@ const ContestTestPage = () => {
 
             {/* Challenger poll widget — bottom left */}
             <div className="absolute bottom-4 left-3 z-10">
-              <PollWidget key={`chal-${pollResetKey}`} side="challenger" disabled={!isActive} onVotePowerChange={setChallengerVotePower} />
+              <PollWidget key={`chal-${pollResetKey}`} side="challenger" disabled={!isActive} onVotePowerChange={setChallengerVotePower} onSubmittedChange={setChallengerPollSubmitted} />
             </div>
 
             {/* Challenger tip button — bottom center */}
