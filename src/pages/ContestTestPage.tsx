@@ -36,6 +36,35 @@ const VerticalTank = ({
   </div>
 );
 
+/** Polling widget with 4 category sliders */
+const PollWidget = () => {
+  const categories = [
+    { label: "Outfit", value: 50 },
+    { label: "Makeup", value: 50 },
+    { label: "Personality", value: 50 },
+    { label: "Interaction", value: 50 },
+  ];
+  return (
+    <div className="bg-black/40 rounded-md p-2 w-[130px] space-y-1.5">
+      {categories.map((cat) => (
+        <div key={cat.label} className="space-y-0.5">
+          <div className="flex justify-between items-center">
+            <span className="text-[9px] text-white/60 font-semibold uppercase tracking-wider">{cat.label}</span>
+            <span className="text-[9px] text-white/60 font-mono">{cat.value}</span>
+          </div>
+          <input
+            type="range"
+            min={1}
+            max={100}
+            defaultValue={cat.value}
+            className="w-full h-1.5 appearance-none bg-white/10 rounded-sm cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white/80"
+          />
+        </div>
+      ))}
+    </div>
+  );
+};
+
 /** Power flow horizontal bar */
 const PowerFlowBar = ({ value, color }: { value: number; color: string }) => (
   <div className="space-y-1">
@@ -158,6 +187,11 @@ const ContestTestPage = () => {
               <TotalPointsBar points={championTanks.points} color="bg-amber-500" />
             </div>
 
+            {/* Champion poll widget — bottom left */}
+            <div className="absolute bottom-4 left-3 z-10">
+              <PollWidget />
+            </div>
+
             {/* Champion tip button — bottom center */}
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10">
               <Popover>
@@ -242,6 +276,11 @@ const ContestTestPage = () => {
             {/* Total points bar — bottom area */}
             <div className="absolute bottom-14 left-14 right-14 z-10 mx-auto max-w-[200px]">
               <TotalPointsBar points={challengerTanks.points} color="bg-gray-400" />
+            </div>
+
+            {/* Challenger poll widget — bottom left */}
+            <div className="absolute bottom-4 left-3 z-10">
+              <PollWidget />
             </div>
 
             {/* Challenger tip button — bottom center */}
