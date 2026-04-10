@@ -29,6 +29,8 @@ export const useBlockUser = (currentUserId: string | undefined) => {
   }, [fetchBlockedUsers]);
 
   const isBlocked = (userId: string) => blockedIds.includes(userId);
+  // Combined: all user IDs that should be hidden in feeds (both directions)
+  const allBlockedIds = [...new Set([...blockedIds, ...blockedByIds])];
 
   const blockUser = async (targetId: string) => {
     if (!currentUserId) return false;
@@ -80,5 +82,5 @@ export const useBlockUser = (currentUserId: string | undefined) => {
     }
   };
 
-  return { blockedIds, isBlocked, blockUser, unblockUser, loading, refetch: fetchBlockedUsers };
+  return { blockedIds, blockedByIds, allBlockedIds, isBlocked, blockUser, unblockUser, loading, refetch: fetchBlockedUsers };
 };
