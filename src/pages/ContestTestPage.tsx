@@ -26,15 +26,11 @@ const ContestTestPage = () => {
         </Button>
       </div>
 
-      {/* Challenge label overlay */}
+      {/* Challenge label overlay — exact replica */}
       <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 z-40 pointer-events-none">
-        <div className="bg-gradient-to-r from-yellow-600/90 to-amber-500/90 px-8 py-3 rounded-lg border-2 border-yellow-400/50 shadow-2xl">
-          <div className="flex items-center gap-2">
-            <Trophy className="w-6 h-6 text-yellow-200" />
-            <span className="text-2xl font-extrabold text-white tracking-wide">TWERK OFF</span>
-            <Trophy className="w-6 h-6 text-yellow-200" />
-          </div>
-        </div>
+        <span className="text-2xl sm:text-3xl font-black uppercase italic text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] tracking-wide">
+          Twerk Off
+        </span>
       </div>
 
       {/* Split screen layout */}
