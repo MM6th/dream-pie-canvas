@@ -251,6 +251,8 @@ const ContestTestPage = () => {
     setChampionTips(0);
     setChallengerTips(0);
     setPollResetKey(prev => prev + 1);
+    setChampionFans(new Set());
+    setChallengerFans(new Set());
   }, [clearTimer]);
 
   // Cleanup on unmount
