@@ -255,6 +255,13 @@ const ContestTestPage = () => {
   const [championVotePower, setChampionVotePower] = useState(0);
   const [challengerVotePower, setChallengerVotePower] = useState(0);
 
+  // Poll submission tracking
+  const [championPollSubmitted, setChampionPollSubmitted] = useState(false);
+  const [challengerPollSubmitted, setChallengerPollSubmitted] = useState(false);
+
+  // Belt animation state
+  const [beltWinner, setBeltWinner] = useState<'champion' | 'challenger' | 'tie' | null>(null);
+
   // Fan/sample state — tracks which fans have "entered" per side
   const [championFans, setChampionFans] = useState<Set<number>>(new Set());
   const [challengerFans, setChallengerFans] = useState<Set<number>>(new Set());
@@ -273,19 +280,30 @@ const ContestTestPage = () => {
   const championPower = isLiveOrOvertime ? Math.round((championTipVotes + skillValue + championSample) / 3) : 0;
   const challengerPower = isLiveOrOvertime ? Math.round((challengerTipVotes + skillValue + challengerSample) / 3) : 0;
 
-  // Calculate final points using the contest formula: gifts + pollVotesWon × skill% × sampleIntensity
-  const championPoints = CONTEST_SCORING_FORMULA.calculate({
+  // Poll penalty: unsubmitted polls deduct 15 points from that side's total
+  const POLL_PENALTY = 15;
+
+  // Calculate final points using the contest formula + poll penalty
+  const championPointsRaw = CONTEST_SCORING_FORMULA.calculate({
     gifts: championTips,
     pollVotesWon: championVotePower,
     skillPercent: skillValue,
     sampleIntensity: championSample,
   });
-  const challengerPoints = CONTEST_SCORING_FORMULA.calculate({
+  const challengerPointsRaw = CONTEST_SCORING_FORMULA.calculate({
     gifts: challengerTips,
     pollVotesWon: challengerVotePower,
     skillPercent: skillValue,
     sampleIntensity: challengerSample,
   });
+
+  // Apply penalty only at reveal time (ended phase)
+  const championPoints = phase === 'ended'
+    ? Math.max(0, championPointsRaw - (championPollSubmitted ? 0 : POLL_PENALTY))
+    : championPointsRaw;
+  const challengerPoints = phase === 'ended'
+    ? Math.max(0, challengerPointsRaw - (challengerPollSubmitted ? 0 : POLL_PENALTY))
+    : challengerPointsRaw;
 
   const isRevealed = phase === 'ended';
 
