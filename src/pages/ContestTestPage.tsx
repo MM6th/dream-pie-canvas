@@ -61,6 +61,9 @@ const PollWidget = () => {
           />
         </div>
       ))}
+      <Button size="sm" className="w-full h-5 text-[9px] font-semibold uppercase tracking-wider mt-1">
+        Submit
+      </Button>
     </div>
   );
 };
