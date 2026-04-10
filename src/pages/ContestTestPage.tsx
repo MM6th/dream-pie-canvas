@@ -395,18 +395,35 @@ const ContestTestPage = () => {
             </div>
           </div>
 
-          {/* Champion chat */}
+          {/* Champion fans grid */}
           <Card className="rounded-none border-x-0 border-b-0 bg-card/80 backdrop-blur-sm">
-            <CardContent className="p-3 space-y-2">
-              <p className="text-xs font-semibold text-muted-foreground">Champion Chat</p>
-              <div className="h-28 overflow-y-auto space-y-1.5 text-xs">
-                <div className="bg-muted/50 rounded px-2 py-1"><span className="text-blue-400 font-medium">Fan1:</span> <span className="text-foreground">Go champion! 🔥</span></div>
-                <div className="bg-muted/50 rounded px-2 py-1"><span className="text-blue-400 font-medium">Fan2:</span> <span className="text-foreground">You got this!</span></div>
-                <div className="bg-muted/50 rounded px-2 py-1"><span className="text-blue-400 font-medium">Fan3:</span> <span className="text-foreground">💪💪💪</span></div>
-              </div>
-              <div className="flex gap-2">
-                <Input placeholder="Type a message..." className="text-xs h-8" readOnly />
-                <Button size="sm" className="h-8 px-3"><Send className="w-3 h-3" /></Button>
+            <CardContent className="p-2 space-y-1">
+              <p className="text-[10px] font-semibold text-muted-foreground">Champion Supporters ({championFans.size}/{TOTAL_FANS})</p>
+              <div className="grid grid-cols-9 gap-1">
+                {Array.from({ length: TOTAL_FANS }, (_, i) => {
+                  const fanNum = i + 1;
+                  const entered = championFans.has(fanNum);
+                  return (
+                    <div key={fanNum} className="flex items-center gap-0.5">
+                      <button
+                        onClick={() => {
+                          setChampionFans(prev => {
+                            const next = new Set(prev);
+                            if (next.has(fanNum)) next.delete(fanNum);
+                            else next.add(fanNum);
+                            return next;
+                          });
+                        }}
+                        className={`w-3 h-3 rounded-full flex items-center justify-center text-[6px] font-bold flex-shrink-0 transition-colors ${entered ? 'bg-green-500 text-white' : 'bg-muted/60 text-muted-foreground hover:bg-muted'}`}
+                      >
+                        +
+                      </button>
+                      <span className={`text-[8px] font-medium truncate ${entered ? 'text-blue-400' : 'text-muted-foreground/60'}`}>
+                        F{fanNum}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
