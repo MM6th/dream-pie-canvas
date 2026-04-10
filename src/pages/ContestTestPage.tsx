@@ -4,9 +4,9 @@ import { Button } from "@/components/ui/button";
 import pieTitleBelt from "@/assets/pie-title-belt.png";
 import sixthCoinLogo from "@/assets/sixth-coin-logo.jpg";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, Play, Square, Video, Send, Timer } from "lucide-react";
+import { ArrowLeft, Play, Square, Video, Timer } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Input } from "@/components/ui/input";
+import { Progress } from "@/components/ui/progress";
 import { Progress } from "@/components/ui/progress";
 import { playDepositSound } from "@/utils/depositSound";
 
