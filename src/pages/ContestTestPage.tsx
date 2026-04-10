@@ -24,19 +24,17 @@ if (typeof document !== 'undefined' && !document.getElementById(bubbleStyleId)) 
       75% { transform: translateX(1px) scale(1.05); opacity: 0.4; }
       100% { transform: translateX(0) scale(0.8); opacity: 0; bottom: 100%; }
     }
-    @keyframes criss-cross-left {
-      0% { left: 15%; top: 50%; opacity: 0; transform: translate(-50%,-50%) scale(0.5); }
-      20% { opacity: 1; transform: translate(-50%,-50%) scale(1.2); }
-      50% { left: 85%; top: 50%; transform: translate(-50%,-50%) scale(1); }
-      80% { left: 85%; top: 50%; transform: translate(-50%,-50%) scale(1.1); opacity: 1; }
-      100% { left: 85%; top: 50%; transform: translate(-50%,-50%) scale(1); opacity: 0.9; }
+    @keyframes badge-fly-right {
+      0% { transform: translateX(0) scale(1); opacity: 1; }
+      30% { transform: translateX(20%) scale(1.3); opacity: 1; }
+      70% { transform: translateX(calc(50vw - 100%)) scale(1.4); opacity: 1; }
+      100% { transform: translateX(calc(50vw - 100%)) scale(1); opacity: 1; }
     }
-    @keyframes criss-cross-right {
-      0% { left: 85%; top: 50%; opacity: 0; transform: translate(-50%,-50%) scale(0.5); }
-      20% { opacity: 1; transform: translate(-50%,-50%) scale(1.2); }
-      50% { left: 15%; top: 50%; transform: translate(-50%,-50%) scale(1); }
-      80% { left: 15%; top: 50%; transform: translate(-50%,-50%) scale(1.1); opacity: 1; }
-      100% { left: 15%; top: 50%; transform: translate(-50%,-50%) scale(1); opacity: 0.9; }
+    @keyframes badge-fly-left {
+      0% { transform: translateX(0) scale(1); opacity: 1; }
+      30% { transform: translateX(-20%) scale(1.3); opacity: 1; }
+      70% { transform: translateX(calc(-50vw + 100%)) scale(1.4); opacity: 1; }
+      100% { transform: translateX(calc(-50vw + 100%)) scale(1); opacity: 1; }
     }
     @keyframes title-text-appear {
       0% { opacity: 0; transform: translateY(30px) scale(0.8); letter-spacing: 0.5em; }
@@ -537,36 +535,11 @@ const ContestTestPage = () => {
         )}
       </div>
 
-      {/* Criss-cross title change overlay — champion & challenger icons swap sides */}
+      {/* Title change announcer overlay — text only, badges animate in-place */}
       {showTitleChange && (
-        <div className="fixed inset-0 z-[100] pointer-events-none">
-          {/* Dark dramatic overlay */}
-          <div className="absolute inset-0 bg-black/70 animate-[fadeIn_0.3s_ease-out_both]" />
-          
-          {/* Champion icon — starts left, crosses to right */}
-          <div
-            className="absolute w-24 h-24 rounded-full border-4 border-blue-400 bg-blue-950 flex items-center justify-center shadow-[0_0_30px_rgba(59,130,246,0.6)]"
-            style={{ animation: 'criss-cross-left 1.5s ease-in-out forwards' }}
-          >
-            <div className="text-center">
-              <Video className="w-8 h-8 text-blue-300 mx-auto" />
-              <span className="text-[10px] text-blue-300 font-bold">Champion</span>
-            </div>
-          </div>
-
-          {/* Challenger icon — starts right, crosses to left */}
-          <div
-            className="absolute w-24 h-24 rounded-full border-4 border-red-400 bg-red-950 flex items-center justify-center shadow-[0_0_30px_rgba(239,68,68,0.6)]"
-            style={{ animation: 'criss-cross-right 1.5s ease-in-out forwards' }}
-          >
-            <div className="text-center">
-              <Video className="w-8 h-8 text-red-300 mx-auto" />
-              <span className="text-[10px] text-red-300 font-bold">Challenger</span>
-            </div>
-          </div>
-
-          {/* "AND THE NEW... CHAMPION" text */}
-          <div className="absolute top-[30%] left-1/2 -translate-x-1/2 text-center" style={{ animation: 'title-text-appear 1.2s ease-out 0.8s both' }}>
+        <div className="fixed inset-0 z-[90] pointer-events-none flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/60 animate-[fadeIn_0.3s_ease-out_both]" />
+          <div className="relative text-center" style={{ animation: 'title-text-appear 1.2s ease-out 0.3s both' }}>
             <p className="text-amber-400/80 text-lg font-bold uppercase tracking-[0.3em] mb-2 drop-shadow-[0_0_10px_rgba(251,191,36,0.5)]">
               And The New...
             </p>
@@ -590,9 +563,9 @@ const ContestTestPage = () => {
               <p className="text-blue-400/50 text-xs">@champion_user</p>
             </div>
 
-            {/* Champion badge — top right */}
-            <div className="absolute top-4 right-4 z-10">
-              <span className="bg-yellow-600/80 text-white text-xs px-2 py-1 rounded flex items-center gap-1">
+            {/* Champion badge — top right, flies RIGHT to challenger side on title change */}
+            <div className={`absolute top-4 right-4 z-[80] ${showTitleChange ? 'animate-[badge-fly-right_1.5s_ease-in-out_forwards]' : ''}`}>
+              <span className={`bg-yellow-600/80 text-white text-xs px-2 py-1 rounded flex items-center gap-1 ${showTitleChange ? 'shadow-[0_0_20px_rgba(234,179,8,0.6)]' : ''}`}>
                 <img src={pieTitleBelt} className="h-6 w-8 object-contain" alt="Belt" />
                 Champion
               </span>
@@ -712,9 +685,9 @@ const ContestTestPage = () => {
               <p className="text-red-400/50 text-xs">@challenger_user</p>
             </div>
 
-            {/* Challenger badge — top right */}
-            <div className="absolute top-4 right-4 z-10">
-              <span className="bg-red-600/80 text-white text-xs px-2 py-1 rounded flex items-center gap-1">
+            {/* Challenger badge — top right, flies LEFT to champion side on title change */}
+            <div className={`absolute top-4 right-4 z-[80] ${showTitleChange ? 'animate-[badge-fly-left_1.5s_ease-in-out_forwards]' : ''}`}>
+              <span className={`bg-red-600/80 text-white text-xs px-2 py-1 rounded flex items-center gap-1 ${showTitleChange ? 'shadow-[0_0_20px_rgba(239,68,68,0.6)]' : ''}`}>
                 Challenger
               </span>
             </div>
