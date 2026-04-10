@@ -328,15 +328,7 @@ const ContestTestPage = () => {
 
   const handleStop = useCallback(() => {
     clearTimer();
-    setPhase('idle');
-    setTimeLeft(0);
-    setChampionTips(0);
-    setChallengerTips(0);
-    setChampionVotePower(0);
-    setChallengerVotePower(0);
-    setPollResetKey(prev => prev + 1);
-    setChampionFans(new Set());
-    setChallengerFans(new Set());
+    setPhase('ended');
   }, [clearTimer]);
 
   // Cleanup on unmount
