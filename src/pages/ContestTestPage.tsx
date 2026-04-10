@@ -8,7 +8,7 @@ import { ArrowLeft, Play, Square, Video, Timer, Send } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
-import { CONTEST_SCORING_FORMULA } from "@/constants/contestFormulas";
+import { CONTEST_SCORING_FORMULA, SAMPLE_RATIO_FORMULA } from "@/constants/contestFormulas";
 import { playDepositSound } from "@/utils/depositSound";
 
 /** Fizzy bubble + criss-cross keyframes — injected once */
@@ -291,8 +291,13 @@ const ContestTestPage = () => {
   const [championFans, setChampionFans] = useState<Set<number>>(new Set());
   const [challengerFans, setChallengerFans] = useState<Set<number>>(new Set());
 
-  const championSample = Math.round((championFans.size / TOTAL_FANS) * 100);
-  const challengerSample = Math.round((challengerFans.size / TOTAL_FANS) * 100);
+  // Viewer counts per side (simulated — in production these come from LiveKit participant counts)
+  const [championViewers, setChampionViewers] = useState(100);
+  const [challengerViewers, setChallengerViewers] = useState(100);
+
+  // Sample intensity uses the ratio formula with log dampening
+  const championSample = SAMPLE_RATIO_FORMULA.calculate({ voters: championFans.size, viewers: championViewers });
+  const challengerSample = SAMPLE_RATIO_FORMULA.calculate({ voters: challengerFans.size, viewers: challengerViewers });
 
   // Skill decreases during overtime from 100% to 0% over the overtime period
   const skillValue = phase === 'overtime' ? Math.round((timeLeft / overtimeTotal) * 100) : 100;
@@ -397,6 +402,8 @@ const ContestTestPage = () => {
     setPollResetKey(prev => prev + 1);
     setChampionFans(new Set());
     setChallengerFans(new Set());
+    setChampionViewers(100);
+    setChallengerViewers(100);
     setChampionPollSubmitted(false);
     setChallengerPollSubmitted(false);
     setShowTitleChange(false);
@@ -630,7 +637,15 @@ const ContestTestPage = () => {
           <Card className={`rounded-none border-x-0 border-b-0 bg-card/80 backdrop-blur-sm transition-all duration-500 ${isActive ? 'opacity-100 shadow-[0_0_12px_rgba(34,197,94,0.3)]' : 'opacity-40'}`}>
             <CardContent className="p-2 space-y-2">
               {/* Fan grid */}
-              <p className="text-[10px] font-bold text-foreground">Supporters ({championFans.size}/{TOTAL_FANS})</p>
+              <div className="flex items-center justify-between">
+                <p className="text-[10px] font-bold text-foreground">Supporters ({championFans.size}/{championViewers} viewers)</p>
+                <div className="flex items-center gap-1">
+                  <button onClick={() => setChampionViewers(v => Math.max(1, v - 50))} className="text-[8px] bg-muted px-1 rounded">-50</button>
+                  <span className="text-[8px] text-muted-foreground">{championViewers}</span>
+                  <button onClick={() => setChampionViewers(v => v + 50)} className="text-[8px] bg-muted px-1 rounded">+50</button>
+                </div>
+              </div>
+              <p className="text-[8px] text-muted-foreground">Sample: {championSample}% (ratio × log dampening)</p>
               <div className="grid grid-cols-9 gap-1">
                 {Array.from({ length: TOTAL_FANS }, (_, i) => {
                   const fanNum = i + 1;
@@ -750,7 +765,15 @@ const ContestTestPage = () => {
           {/* Challenger supporters + chat */}
           <Card className={`rounded-none border-x-0 border-b-0 bg-card/80 backdrop-blur-sm transition-all duration-500 ${isActive ? 'opacity-100 shadow-[0_0_12px_rgba(34,197,94,0.3)]' : 'opacity-40'}`}>
             <CardContent className="p-2 space-y-2">
-              <p className="text-[10px] font-bold text-foreground">Supporters ({challengerFans.size}/{TOTAL_FANS})</p>
+              <div className="flex items-center justify-between">
+                <p className="text-[10px] font-bold text-foreground">Supporters ({challengerFans.size}/{challengerViewers} viewers)</p>
+                <div className="flex items-center gap-1">
+                  <button onClick={() => setChallengerViewers(v => Math.max(1, v - 50))} className="text-[8px] bg-muted px-1 rounded">-50</button>
+                  <span className="text-[8px] text-muted-foreground">{challengerViewers}</span>
+                  <button onClick={() => setChallengerViewers(v => v + 50)} className="text-[8px] bg-muted px-1 rounded">+50</button>
+                </div>
+              </div>
+              <p className="text-[8px] text-muted-foreground">Sample: {challengerSample}% (ratio × log dampening)</p>
               <div className="grid grid-cols-9 gap-1">
                 {Array.from({ length: TOTAL_FANS }, (_, i) => {
                   const fanNum = i + 1;
