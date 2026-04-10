@@ -136,12 +136,18 @@ const getSliderStyle = (value: number) => {
   return { background: 'rgba(255,255,255,0.1)' };
 };
 
-/** Polling widget with 4 category sliders */
-const PollWidget = ({ side, disabled }: { side: 'champion' | 'challenger'; disabled?: boolean }) => {
+/** Polling widget with 4 category sliders — feeds real-time vote power */
+const PollWidget = ({ side, disabled, onVotePowerChange }: { side: 'champion' | 'challenger'; disabled?: boolean; onVotePowerChange?: (power: number) => void }) => {
   const [values, setValues] = useState({ Outfit: 50, Makeup: 50, Personality: 50, Interaction: 50 });
 
   const handleChange = (label: string, newVal: number) => {
-    setValues(prev => ({ ...prev, [label]: newVal }));
+    const next = { ...values, [label]: newVal };
+    setValues(next);
+    // Calculate aggregate vote power: average deviation from 50, scaled to 0-100
+    const totalDeviation = Object.values(next).reduce((sum, v) => sum + Math.abs(v - 50), 0);
+    const maxDeviation = 4 * 50; // 200
+    const votePower = Math.round((totalDeviation / maxDeviation) * 100);
+    onVotePowerChange?.(votePower);
   };
 
   const getValueColor = (val: number) => {
@@ -221,6 +227,10 @@ const ContestTestPage = () => {
   const [challengerTips, setChallengerTips] = useState(0);
   const [pollResetKey, setPollResetKey] = useState(0);
 
+  // Real-time poll vote power (0-100) per side
+  const [championVotePower, setChampionVotePower] = useState(0);
+  const [challengerVotePower, setChallengerVotePower] = useState(0);
+
   // Fan/sample state — tracks which fans have "entered" per side
   const [championFans, setChampionFans] = useState<Set<number>>(new Set());
   const [challengerFans, setChallengerFans] = useState<Set<number>>(new Set());
@@ -228,8 +238,12 @@ const ContestTestPage = () => {
   const championSample = Math.round((championFans.size / TOTAL_FANS) * 100);
   const challengerSample = Math.round((challengerFans.size / TOTAL_FANS) * 100);
 
-  const championTanks = { tip: championTips, skill: 100, sample: championSample, power: 0, points: 0 };
-  const challengerTanks = { tip: challengerTips, skill: 100, sample: challengerSample, power: 0, points: 0 };
+  // Tips/Votes tank combines tips + vote power in real-time
+  const championTipVotes = Math.min(championTips + championVotePower, 100);
+  const challengerTipVotes = Math.min(challengerTips + challengerVotePower, 100);
+
+  const championTanks = { tip: championTipVotes, skill: 100, sample: championSample, power: 0, points: 0 };
+  const challengerTanks = { tip: challengerTipVotes, skill: 100, sample: challengerSample, power: 0, points: 0 };
 
   const handleTip = useCallback((side: 'champion' | 'challenger', amount: number) => {
     if (phase !== 'live') return;
@@ -268,8 +282,8 @@ const ContestTestPage = () => {
     // 5-second warmup for testing
     startCountdown(5, () => {
       setPhase('live');
-      // 5:00 contest timer
-      startCountdown(300, () => {
+      // 1:45 contest timer
+      startCountdown(105, () => {
         setPhase('ended');
       });
     });
@@ -281,6 +295,8 @@ const ContestTestPage = () => {
     setTimeLeft(0);
     setChampionTips(0);
     setChallengerTips(0);
+    setChampionVotePower(0);
+    setChallengerVotePower(0);
     setPollResetKey(prev => prev + 1);
     setChampionFans(new Set());
     setChallengerFans(new Set());
@@ -301,6 +317,7 @@ const ContestTestPage = () => {
   const timerBorderColor = phase === 'warmup' ? 'border-yellow-500/50' : phase === 'live' ? 'border-red-600/50' : 'border-white/20';
   const timerIconColor = phase === 'warmup' ? 'text-yellow-500' : phase === 'live' ? 'text-red-500' : 'text-white/40';
   const isActive = phase === 'live';
+  const showPollWarning = phase === 'live' && timeLeft > 0 && timeLeft <= 60;
 
   return (
     <div className="min-h-screen bg-background text-foreground relative">
@@ -320,6 +337,15 @@ const ContestTestPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Poll submission warning — flashes at 1 minute remaining */}
+      {showPollWarning && (
+        <div className="absolute top-[100px] left-1/2 -translate-x-1/2 z-[60] animate-pulse">
+          <div className="bg-yellow-500/90 text-black font-bold text-sm px-6 py-2 rounded-full shadow-lg shadow-yellow-500/30">
+            ⚠️ Submit your polls! {formatTime(timeLeft)} remaining
+          </div>
+        </div>
+      )}
 
       {/* Back button */}
       <div className="absolute top-28 left-4 z-50">
@@ -403,7 +429,7 @@ const ContestTestPage = () => {
 
             {/* Champion poll widget — bottom left */}
             <div className="absolute bottom-4 left-3 z-10">
-              <PollWidget key={`champ-${pollResetKey}`} side="champion" disabled={!isActive} />
+              <PollWidget key={`champ-${pollResetKey}`} side="champion" disabled={!isActive} onVotePowerChange={setChampionVotePower} />
             </div>
 
             {/* Champion tip button — bottom center */}
@@ -524,7 +550,7 @@ const ContestTestPage = () => {
 
             {/* Challenger poll widget — bottom left */}
             <div className="absolute bottom-4 left-3 z-10">
-              <PollWidget key={`chal-${pollResetKey}`} side="challenger" disabled={!isActive} />
+              <PollWidget key={`chal-${pollResetKey}`} side="challenger" disabled={!isActive} onVotePowerChange={setChallengerVotePower} />
             </div>
 
             {/* Challenger tip button — bottom center */}
