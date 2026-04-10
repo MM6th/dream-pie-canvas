@@ -255,7 +255,7 @@ const ContestTestPage = () => {
   const challengerTanks = { tip: challengerTipVotes, skill: skillValue, sample: challengerSample, power: challengerPower, points: 0 };
 
   const handleTip = useCallback((side: 'champion' | 'challenger', amount: number) => {
-    if (phase !== 'live') return;
+    if (phase !== 'live' && phase !== 'overtime') return;
     playDepositSound();
     if (side === 'champion') {
       setChampionTips(prev => prev + amount);
