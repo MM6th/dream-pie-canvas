@@ -542,7 +542,7 @@ const ContestTestPage = () => {
 
             {/* Total points bar — bottom area above tip button */}
             <div className="absolute bottom-14 left-14 right-14 z-10 mx-auto max-w-[200px]">
-              <TotalPointsBar points={championTanks.points} revealed={isRevealed} />
+              <TotalPointsBar points={championTanks.points} revealed={isRevealed} penalized={isRevealed && !championPollSubmitted} />
             </div>
 
             {/* Champion poll widget — bottom left */}
@@ -663,7 +663,7 @@ const ContestTestPage = () => {
 
             {/* Total points bar — bottom area */}
             <div className="absolute bottom-14 left-14 right-14 z-10 mx-auto max-w-[200px]">
-              <TotalPointsBar points={challengerTanks.points} revealed={isRevealed} />
+              <TotalPointsBar points={challengerTanks.points} revealed={isRevealed} penalized={isRevealed && !challengerPollSubmitted} />
             </div>
 
             {/* Challenger poll widget — bottom left */}
