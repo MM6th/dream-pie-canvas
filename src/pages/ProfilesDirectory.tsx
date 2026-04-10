@@ -49,6 +49,7 @@ const ProfilesDirectory = () => {
   const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
   const [messagingPrices, setMessagingPrices] = useState<Record<string, number>>({});
   const [followStatuses, setFollowStatuses] = useState<Record<string, FollowStatus>>({});
+  const { blockedIds, isBlocked, blockUser, unblockUser } = useBlockUser(user?.id);
 
   useEffect(() => {
     fetchProfiles();
