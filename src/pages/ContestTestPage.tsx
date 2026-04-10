@@ -10,17 +10,66 @@ import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { playDepositSound } from "@/utils/depositSound";
 
+/** Fizzy bubble keyframes — injected once */
+const bubbleStyleId = 'contest-bubble-styles';
+if (typeof document !== 'undefined' && !document.getElementById(bubbleStyleId)) {
+  const style = document.createElement('style');
+  style.id = bubbleStyleId;
+  style.textContent = `
+    @keyframes bubble-rise {
+      0% { transform: translateX(0) scale(1); opacity: 0.7; bottom: 0%; }
+      25% { transform: translateX(1px) scale(1.1); opacity: 0.8; }
+      50% { transform: translateX(-1px) scale(0.9); opacity: 0.6; }
+      75% { transform: translateX(1px) scale(1.05); opacity: 0.4; }
+      100% { transform: translateX(0) scale(0.8); opacity: 0; bottom: 100%; }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+/** Fizzy bubbles inside a tank */
+const TankBubbles = ({ active }: { active: boolean }) => {
+  if (!active) return null;
+  const bubbles = [
+    { size: 2, left: '20%', delay: '0s', duration: '1.2s' },
+    { size: 3, left: '50%', delay: '0.3s', duration: '1s' },
+    { size: 2, left: '70%', delay: '0.6s', duration: '1.4s' },
+    { size: 1.5, left: '35%', delay: '0.15s', duration: '0.9s' },
+    { size: 2.5, left: '60%', delay: '0.8s', duration: '1.1s' },
+    { size: 1.5, left: '15%', delay: '0.45s', duration: '1.3s' },
+  ];
+  return (
+    <>
+      {bubbles.map((b, i) => (
+        <div
+          key={i}
+          className="absolute rounded-full bg-white/40"
+          style={{
+            width: b.size,
+            height: b.size,
+            left: b.left,
+            bottom: '0%',
+            animation: `bubble-rise ${b.duration} ease-in-out ${b.delay} infinite`,
+          }}
+        />
+      ))}
+    </>
+  );
+};
+
 /** Vertical tank gauge used for Tip / Skill / Sample meters */
 const VerticalTank = ({
   label,
   value,
   color,
   bgColor,
+  bubbles = false,
 }: {
   label: string;
   value: number; // 0-100
   color: string;
   bgColor: string;
+  bubbles?: boolean;
 }) => (
   <div className="flex flex-col items-center gap-1">
     <div
@@ -29,7 +78,9 @@ const VerticalTank = ({
       <div
         className={`absolute bottom-0 left-0 right-0 ${color} transition-all duration-700`}
         style={{ height: `${value}%` }}
-      />
+      >
+        <TankBubbles active={bubbles && value > 0} />
+      </div>
     </div>
     <span className="text-[9px] text-white/70 font-medium leading-tight text-center whitespace-nowrap">
       {label}
@@ -289,7 +340,7 @@ const ContestTestPage = () => {
 
             {/* Three vertical tanks — left edge */}
             <div className="absolute left-3 top-1/2 -translate-y-1/2 z-10 flex flex-col gap-3">
-              <VerticalTank label="Tip" value={championTanks.tip} color="bg-cyan-400" bgColor="bg-cyan-900/40" />
+              <VerticalTank label="Tip" value={championTanks.tip} color="bg-cyan-400" bgColor="bg-cyan-900/40" bubbles />
               <VerticalTank label="Skill" value={championTanks.skill} color="bg-green-500" bgColor="bg-green-900/40" />
               <VerticalTank label="Sample" value={championTanks.sample} color="bg-purple-500" bgColor="bg-purple-900/40" />
             </div>
@@ -380,7 +431,7 @@ const ContestTestPage = () => {
 
             {/* Three vertical tanks — left edge */}
             <div className="absolute left-3 top-1/2 -translate-y-1/2 z-10 flex flex-col gap-3">
-              <VerticalTank label="Tip" value={challengerTanks.tip} color="bg-cyan-400" bgColor="bg-cyan-900/40" />
+              <VerticalTank label="Tip" value={challengerTanks.tip} color="bg-cyan-400" bgColor="bg-cyan-900/40" bubbles />
               <VerticalTank label="Skill" value={challengerTanks.skill} color="bg-green-500" bgColor="bg-green-900/40" />
               <VerticalTank label="Sample" value={challengerTanks.sample} color="bg-purple-500" bgColor="bg-purple-900/40" />
             </div>
