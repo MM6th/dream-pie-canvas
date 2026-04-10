@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 import pieTitleBelt from "@/assets/pie-title-belt.png";
 import sixthCoinLogo from "@/assets/sixth-coin-logo.jpg";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, Play, Square, Video, Timer } from "lucide-react";
+import { ArrowLeft, Play, Square, Video, Timer, Send } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
 import { playDepositSound } from "@/utils/depositSound";
 
 /** Fizzy bubble keyframes — injected once */
@@ -296,25 +297,30 @@ const ContestTestPage = () => {
         </Button>
       </div>
 
-      {/* Challenge label overlay */}
-      <div className="absolute top-28 left-1/2 -translate-x-1/2 z-40 pointer-events-none">
-        <span className="text-2xl sm:text-3xl font-black uppercase italic text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] tracking-wide">
+      {/* Challenge label + controls + formula — top center cluster */}
+      <div className="absolute top-28 left-1/2 -translate-x-1/2 z-40 flex flex-col items-center gap-2">
+        <span className="text-2xl sm:text-3xl font-black uppercase italic text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] tracking-wide pointer-events-none">
           Twerk Off
         </span>
+        <div className="bg-black/70 rounded-lg px-4 py-1.5 pointer-events-none">
+          <p className="text-[9px] text-white/60 font-mono text-center">
+            gifts + poll votes won × skill % × sample intensity = final points
+          </p>
+        </div>
+        {phase === 'idle' ? (
+          <Button onClick={handleStart} className="bg-green-600 hover:bg-green-700 text-white font-bold px-6 h-9 text-xs rounded-full gap-2">
+            <Play className="w-4 h-4" /> Start Contest
+          </Button>
+        ) : (
+          <Button onClick={handleStop} variant="destructive" className="font-bold px-6 h-9 text-xs rounded-full gap-2">
+            <Square className="w-4 h-4" /> Stop Contest
+          </Button>
+        )}
       </div>
 
       {/* Championship belt — centered between both sides */}
       <div className="absolute bottom-44 left-1/2 -translate-x-1/2 z-40 pointer-events-none">
         <img src={pieTitleBelt} className="w-16 h-16 object-contain drop-shadow-lg" alt="Championship Belt" />
-      </div>
-
-      {/* Formula overlay — bottom center above controls */}
-      <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-40 pointer-events-none">
-        <div className="bg-black/70 rounded-lg px-4 py-1.5">
-          <p className="text-[9px] text-white/60 font-mono text-center">
-            gifts + poll votes won × skill % × sample intensity = final points
-          </p>
-        </div>
       </div>
 
       {/* Split screen layout */}
@@ -394,10 +400,11 @@ const ContestTestPage = () => {
             </div>
           </div>
 
-          {/* Champion fans grid */}
+          {/* Champion supporters + chat */}
           <Card className="rounded-none border-x-0 border-b-0 bg-card/80 backdrop-blur-sm">
-            <CardContent className="p-2 space-y-1">
-              <p className="text-[10px] font-semibold text-muted-foreground">Champion Supporters ({championFans.size}/{TOTAL_FANS})</p>
+            <CardContent className="p-2 space-y-2">
+              {/* Fan grid */}
+              <p className="text-[10px] font-bold text-foreground">Supporters ({championFans.size}/{TOTAL_FANS})</p>
               <div className="grid grid-cols-9 gap-1">
                 {Array.from({ length: TOTAL_FANS }, (_, i) => {
                   const fanNum = i + 1;
@@ -413,16 +420,27 @@ const ContestTestPage = () => {
                             return next;
                           });
                         }}
-                        className={`w-3 h-3 rounded-full flex items-center justify-center text-[6px] font-bold flex-shrink-0 transition-colors ${entered ? 'bg-green-500 text-white' : 'bg-muted/60 text-muted-foreground hover:bg-muted'}`}
+                        className={`w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold flex-shrink-0 transition-colors border ${entered ? 'bg-green-500 border-green-400 text-white shadow-[0_0_6px_rgba(34,197,94,0.6)]' : 'bg-muted border-border text-foreground hover:bg-accent hover:border-accent'}`}
                       >
                         +
                       </button>
-                      <span className={`text-[8px] font-medium truncate ${entered ? 'text-blue-400' : 'text-muted-foreground/60'}`}>
+                      <span className={`text-[8px] font-semibold truncate ${entered ? 'text-blue-400' : 'text-muted-foreground'}`}>
                         F{fanNum}
                       </span>
                     </div>
                   );
                 })}
+              </div>
+              {/* Chat */}
+              <div className="border-t border-border/50 pt-2">
+                <p className="text-[10px] font-bold text-foreground mb-1">Champion Chat</p>
+                <div className="h-16 overflow-y-auto space-y-1 text-xs">
+                  {/* Live messages will appear here */}
+                </div>
+                <div className="flex gap-2 mt-1">
+                  <Input placeholder="Type a message..." className="text-xs h-7" readOnly />
+                  <Button size="sm" className="h-7 px-2"><Send className="w-3 h-3" /></Button>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -502,10 +520,10 @@ const ContestTestPage = () => {
             </div>
           </div>
 
-          {/* Challenger fans grid */}
+          {/* Challenger supporters + chat */}
           <Card className="rounded-none border-x-0 border-b-0 bg-card/80 backdrop-blur-sm">
-            <CardContent className="p-2 space-y-1">
-              <p className="text-[10px] font-semibold text-muted-foreground">Challenger Supporters ({challengerFans.size}/{TOTAL_FANS})</p>
+            <CardContent className="p-2 space-y-2">
+              <p className="text-[10px] font-bold text-foreground">Supporters ({challengerFans.size}/{TOTAL_FANS})</p>
               <div className="grid grid-cols-9 gap-1">
                 {Array.from({ length: TOTAL_FANS }, (_, i) => {
                   const fanNum = i + 1;
@@ -521,33 +539,29 @@ const ContestTestPage = () => {
                             return next;
                           });
                         }}
-                        className={`w-3 h-3 rounded-full flex items-center justify-center text-[6px] font-bold flex-shrink-0 transition-colors ${entered ? 'bg-green-500 text-white' : 'bg-muted/60 text-muted-foreground hover:bg-muted'}`}
+                        className={`w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold flex-shrink-0 transition-colors border ${entered ? 'bg-green-500 border-green-400 text-white shadow-[0_0_6px_rgba(34,197,94,0.6)]' : 'bg-muted border-border text-foreground hover:bg-accent hover:border-accent'}`}
                       >
                         +
                       </button>
-                      <span className={`text-[8px] font-medium truncate ${entered ? 'text-red-400' : 'text-muted-foreground/60'}`}>
+                      <span className={`text-[8px] font-semibold truncate ${entered ? 'text-red-400' : 'text-muted-foreground'}`}>
                         F{fanNum}
                       </span>
                     </div>
                   );
                 })}
               </div>
+              <div className="border-t border-border/50 pt-2">
+                <p className="text-[10px] font-bold text-foreground mb-1">Challenger Chat</p>
+                <div className="h-16 overflow-y-auto space-y-1 text-xs">
+                </div>
+                <div className="flex gap-2 mt-1">
+                  <Input placeholder="Type a message..." className="text-xs h-7" readOnly />
+                  <Button size="sm" className="h-7 px-2"><Send className="w-3 h-3" /></Button>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
-      </div>
-
-      {/* Controls bar — Start/Stop */}
-      <div className="absolute bottom-0 left-0 right-0 z-50 bg-black/80 border-t border-border/30 p-3 flex items-center justify-center gap-4">
-        {phase === 'idle' ? (
-          <Button onClick={handleStart} className="bg-green-600 hover:bg-green-700 text-white font-bold px-8 h-12 text-sm rounded-full gap-2">
-            <Play className="w-5 h-5" /> Start Contest
-          </Button>
-        ) : (
-          <Button onClick={handleStop} variant="destructive" className="font-bold px-8 h-12 text-sm rounded-full gap-2">
-            <Square className="w-5 h-5" /> Stop Contest
-          </Button>
-        )}
       </div>
     </div>
   );
