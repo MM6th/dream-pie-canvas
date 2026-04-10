@@ -207,17 +207,17 @@ const ContestTestPage = () => {
 
             {/* Power flow bar — top area below badge row */}
             <div className="absolute top-14 left-14 right-14 z-10 mx-auto max-w-[200px]">
-              <PowerFlowBar value={championTanks.power} color="bg-red-500" />
+              <PowerFlowBar value={championTanks.power} />
             </div>
 
             {/* Total points bar — bottom area above tip button */}
             <div className="absolute bottom-14 left-14 right-14 z-10 mx-auto max-w-[200px]">
-              <TotalPointsBar points={championTanks.points} color="bg-amber-500" />
+              <TotalPointsBar points={championTanks.points} />
             </div>
 
             {/* Champion poll widget — bottom left */}
             <div className="absolute bottom-4 left-3 z-10">
-              <PollWidget />
+              <PollWidget side="champion" />
             </div>
 
             {/* Champion tip button — bottom center */}
@@ -298,17 +298,17 @@ const ContestTestPage = () => {
 
             {/* Power flow bar — top area */}
             <div className="absolute top-14 left-14 right-14 z-10 mx-auto max-w-[200px]">
-              <PowerFlowBar value={challengerTanks.power} color="bg-gray-400" />
+              <PowerFlowBar value={challengerTanks.power} />
             </div>
 
             {/* Total points bar — bottom area */}
             <div className="absolute bottom-14 left-14 right-14 z-10 mx-auto max-w-[200px]">
-              <TotalPointsBar points={challengerTanks.points} color="bg-gray-400" />
+              <TotalPointsBar points={challengerTanks.points} />
             </div>
 
             {/* Challenger poll widget — bottom left */}
             <div className="absolute bottom-4 left-3 z-10">
-              <PollWidget />
+              <PollWidget side="challenger" />
             </div>
 
             {/* Challenger tip button — bottom center */}
