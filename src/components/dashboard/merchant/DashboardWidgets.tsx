@@ -25,7 +25,7 @@ const DashboardWidgets = ({ onSuccess, onViewStore, onBackgroundUpload, isAdmin 
 
   return (
     <div className="max-w-6xl mx-auto w-full overflow-x-hidden">
-      <GoLiveCard />
+      <GoLiveCard isAdmin={isAdmin} />
       {/* Astrology Products - Admin Only */}
       {isAdmin && (
         <div className="grid grid-cols-1 lg:grid-cols-1 gap-6 mb-8" data-tutorial="astrology-products">
