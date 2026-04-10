@@ -331,6 +331,18 @@ const ContestTestPage = () => {
     setPhase('ended');
   }, [clearTimer]);
 
+  const handleReset = useCallback(() => {
+    setPhase('idle');
+    setTimeLeft(0);
+    setChampionTips(0);
+    setChallengerTips(0);
+    setChampionVotePower(0);
+    setChallengerVotePower(0);
+    setPollResetKey(prev => prev + 1);
+    setChampionFans(new Set());
+    setChallengerFans(new Set());
+  }, []);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => clearTimer();
@@ -395,6 +407,10 @@ const ContestTestPage = () => {
         {phase === 'idle' ? (
           <Button onClick={handleStart} className="bg-green-600 hover:bg-green-700 text-white font-bold px-6 h-9 text-xs rounded-full gap-2">
             <Play className="w-4 h-4" /> Start Contest
+          </Button>
+        ) : phase === 'ended' ? (
+          <Button onClick={handleReset} className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 h-9 text-xs rounded-full gap-2">
+            Reset
           </Button>
         ) : (
           <Button onClick={handleStop} variant="destructive" className="font-bold px-6 h-9 text-xs rounded-full gap-2">
