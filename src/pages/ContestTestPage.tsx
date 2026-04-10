@@ -382,6 +382,23 @@ const ContestTestPage = () => {
     return () => clearTimer();
   }, [clearTimer]);
 
+  // Trigger belt animation when contest ends
+  useEffect(() => {
+    if (phase === 'ended') {
+      // Delay slightly so points render first
+      const timeout = setTimeout(() => {
+        if (championPoints > challengerPoints) {
+          setBeltWinner('champion');
+        } else if (challengerPoints > championPoints) {
+          setBeltWinner('challenger');
+        } else {
+          setBeltWinner('tie');
+        }
+      }, 800);
+      return () => clearTimeout(timeout);
+    }
+  }, [phase, championPoints, challengerPoints]);
+
   const formatTime = (s: number) => {
     const m = Math.floor(s / 60);
     const sec = s % 60;
