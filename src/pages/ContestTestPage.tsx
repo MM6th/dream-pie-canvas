@@ -54,7 +54,7 @@ const getSliderStyle = (value: number) => {
 };
 
 /** Polling widget with 4 category sliders */
-const PollWidget = ({ side }: { side: 'champion' | 'challenger' }) => {
+const PollWidget = ({ side, disabled }: { side: 'champion' | 'challenger'; disabled?: boolean }) => {
   const [values, setValues] = useState({ Outfit: 50, Makeup: 50, Personality: 50, Interaction: 50 });
 
   const handleChange = (label: string, newVal: number) => {
@@ -80,13 +80,14 @@ const PollWidget = ({ side }: { side: 'champion' | 'challenger' }) => {
             min={1}
             max={100}
             value={val}
+            disabled={disabled}
             onChange={(e) => handleChange(label, Number(e.target.value))}
             style={getSliderStyle(val)}
-            className="w-full h-1.5 appearance-none rounded-sm cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white/80"
+            className="w-full h-1.5 appearance-none rounded-sm cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white/80"
           />
         </div>
       ))}
-      <Button size="sm" className="w-full h-5 text-[9px] font-semibold uppercase tracking-wider mt-1">
+      <Button size="sm" disabled={disabled} className="w-full h-5 text-[9px] font-semibold uppercase tracking-wider mt-1">
         Submit
       </Button>
     </div>
