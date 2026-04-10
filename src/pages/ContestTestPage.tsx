@@ -537,7 +537,46 @@ const ContestTestPage = () => {
         )}
       </div>
 
-      {/* Split screen layout */}
+      {/* Criss-cross title change overlay — champion & challenger icons swap sides */}
+      {showTitleChange && (
+        <div className="fixed inset-0 z-[100] pointer-events-none">
+          {/* Dark dramatic overlay */}
+          <div className="absolute inset-0 bg-black/70 animate-[fadeIn_0.3s_ease-out_both]" />
+          
+          {/* Champion icon — starts left, crosses to right */}
+          <div
+            className="absolute w-24 h-24 rounded-full border-4 border-blue-400 bg-blue-950 flex items-center justify-center shadow-[0_0_30px_rgba(59,130,246,0.6)]"
+            style={{ animation: 'criss-cross-left 1.5s ease-in-out forwards' }}
+          >
+            <div className="text-center">
+              <Video className="w-8 h-8 text-blue-300 mx-auto" />
+              <span className="text-[10px] text-blue-300 font-bold">Champion</span>
+            </div>
+          </div>
+
+          {/* Challenger icon — starts right, crosses to left */}
+          <div
+            className="absolute w-24 h-24 rounded-full border-4 border-red-400 bg-red-950 flex items-center justify-center shadow-[0_0_30px_rgba(239,68,68,0.6)]"
+            style={{ animation: 'criss-cross-right 1.5s ease-in-out forwards' }}
+          >
+            <div className="text-center">
+              <Video className="w-8 h-8 text-red-300 mx-auto" />
+              <span className="text-[10px] text-red-300 font-bold">Challenger</span>
+            </div>
+          </div>
+
+          {/* "AND THE NEW... CHAMPION" text */}
+          <div className="absolute top-[30%] left-1/2 -translate-x-1/2 text-center" style={{ animation: 'title-text-appear 1.2s ease-out 0.8s both' }}>
+            <p className="text-amber-400/80 text-lg font-bold uppercase tracking-[0.3em] mb-2 drop-shadow-[0_0_10px_rgba(251,191,36,0.5)]">
+              And The New...
+            </p>
+            <p className="text-white text-4xl sm:text-5xl font-black uppercase tracking-[0.15em] drop-shadow-[0_0_20px_rgba(255,255,255,0.4)]">
+              CHAMPION
+            </p>
+            <img src={pieTitleBelt} className="w-20 h-20 object-contain mx-auto mt-4 drop-shadow-[0_0_20px_rgba(255,215,0,0.8)] animate-pulse" alt="Belt" />
+          </div>
+        </div>
+      )}
       <div className="flex flex-col lg:flex-row h-screen">
         {/* ─── Champion side ─── */}
         <div className="flex-1 flex flex-col border-r border-border/30">
