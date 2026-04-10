@@ -8,7 +8,7 @@ import { ArrowLeft, Play, Square, Video, Timer, Send } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
-import { CONTEST_SCORING_FORMULA } from "@/constants/contestFormulas";
+import { CONTEST_SCORING_FORMULA, SAMPLE_RATIO_FORMULA } from "@/constants/contestFormulas";
 import { playDepositSound } from "@/utils/depositSound";
 
 /** Fizzy bubble + criss-cross keyframes — injected once */
@@ -291,8 +291,13 @@ const ContestTestPage = () => {
   const [championFans, setChampionFans] = useState<Set<number>>(new Set());
   const [challengerFans, setChallengerFans] = useState<Set<number>>(new Set());
 
-  const championSample = Math.round((championFans.size / TOTAL_FANS) * 100);
-  const challengerSample = Math.round((challengerFans.size / TOTAL_FANS) * 100);
+  // Viewer counts per side (simulated — in production these come from LiveKit participant counts)
+  const [championViewers, setChampionViewers] = useState(100);
+  const [challengerViewers, setChallengerViewers] = useState(100);
+
+  // Sample intensity uses the ratio formula with log dampening
+  const championSample = SAMPLE_RATIO_FORMULA.calculate({ voters: championFans.size, viewers: championViewers });
+  const challengerSample = SAMPLE_RATIO_FORMULA.calculate({ voters: challengerFans.size, viewers: challengerViewers });
 
   // Skill decreases during overtime from 100% to 0% over the overtime period
   const skillValue = phase === 'overtime' ? Math.round((timeLeft / overtimeTotal) * 100) : 100;
