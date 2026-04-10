@@ -9,8 +9,68 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 
+/** Vertical tank gauge used for Tip / Skill / Sample meters */
+const VerticalTank = ({
+  label,
+  value,
+  color,
+  bgColor,
+}: {
+  label: string;
+  value: number; // 0-100
+  color: string;
+  bgColor: string;
+}) => (
+  <div className="flex flex-col items-center gap-1">
+    <div
+      className={`w-5 h-20 rounded-sm ${bgColor} relative overflow-hidden border border-white/10`}
+    >
+      <div
+        className={`absolute bottom-0 left-0 right-0 ${color} transition-all duration-700`}
+        style={{ height: `${value}%` }}
+      />
+    </div>
+    <span className="text-[9px] text-white/70 font-medium leading-tight text-center whitespace-nowrap">
+      {label}
+    </span>
+  </div>
+);
+
+/** Power flow horizontal bar */
+const PowerFlowBar = ({ value, color }: { value: number; color: string }) => (
+  <div className="space-y-1">
+    <span className="text-[10px] text-white/60 font-semibold uppercase tracking-wider">Power Flow</span>
+    <div className="w-full h-3 rounded-sm bg-white/10 overflow-hidden">
+      <div
+        className={`h-full ${color} transition-all duration-700 rounded-sm`}
+        style={{ width: `${value}%` }}
+      />
+    </div>
+  </div>
+);
+
+/** Total points bar */
+const TotalPointsBar = ({ points, color }: { points: number; color: string }) => (
+  <div className="space-y-1">
+    <span className="text-[10px] text-white/60 font-bold uppercase tracking-wider">Total Points</span>
+    <div className="w-full h-4 rounded-sm bg-white/10 overflow-hidden relative">
+      <div
+        className={`h-full ${color} transition-all duration-700 rounded-sm`}
+        style={{ width: `${Math.min(points, 100)}%` }}
+      />
+      <span className="absolute inset-0 flex items-center justify-center text-[10px] font-mono font-bold text-white drop-shadow">
+        {points}
+      </span>
+    </div>
+  </div>
+);
+
 const ContestTestPage = () => {
   const navigate = useNavigate();
+
+  // Dummy data for tanks
+  const championTanks = { tip: 42, skill: 100, sample: 60, power: 65, points: 78 };
+  const challengerTanks = { tip: 27, skill: 85, sample: 35, power: 45, points: 52 };
 
   return (
     <div className="min-h-screen bg-background text-foreground relative">
@@ -22,26 +82,40 @@ const ContestTestPage = () => {
         </div>
       </div>
 
-      {/* Back button — lowered below timer */}
+      {/* Back button */}
       <div className="absolute top-28 left-4 z-50">
         <Button variant="ghost" size="sm" onClick={() => navigate('/')} className="text-white bg-black/50 hover:bg-black/70 text-xs px-2 py-1">
           <ArrowLeft className="w-3 h-3 mr-1" /> Back
         </Button>
       </div>
 
-      {/* Challenge label overlay — exact replica */}
+      {/* Challenge label overlay */}
       <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 z-40 pointer-events-none">
         <span className="text-2xl sm:text-3xl font-black uppercase italic text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] tracking-wide">
           Twerk Off
         </span>
       </div>
 
+      {/* Championship belt — centered between both sides */}
+      <div className="absolute bottom-44 left-1/2 -translate-x-1/2 z-40 pointer-events-none">
+        <img src={pieTitleBelt} className="w-16 h-16 object-contain drop-shadow-lg" alt="Championship Belt" />
+      </div>
+
+      {/* Formula overlay — bottom center above controls */}
+      <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-40 pointer-events-none">
+        <div className="bg-black/70 rounded-lg px-4 py-1.5">
+          <p className="text-[9px] text-white/60 font-mono text-center">
+            gifts + poll votes won × skill % × sample intensity = final points
+          </p>
+        </div>
+      </div>
+
       {/* Split screen layout */}
       <div className="flex flex-col lg:flex-row h-screen">
-        {/* Champion side */}
+        {/* ─── Champion side ─── */}
         <div className="flex-1 flex flex-col border-r border-border/30">
-          {/* Video panel */}
           <div className="flex-1 bg-gradient-to-br from-blue-950 to-blue-900 relative flex items-center justify-center">
+            {/* Video placeholder */}
             <div className="text-center space-y-2">
               <div className="w-20 h-20 rounded-full bg-blue-800/60 border-2 border-blue-400/40 mx-auto flex items-center justify-center">
                 <Video className="w-8 h-8 text-blue-300/60" />
@@ -49,6 +123,7 @@ const ContestTestPage = () => {
               <p className="text-blue-300/80 font-semibold text-sm">Champion</p>
               <p className="text-blue-400/50 text-xs">@champion_user</p>
             </div>
+
             {/* Champion badge — top right */}
             <div className="absolute top-4 right-4 z-10">
               <span className="bg-yellow-600/80 text-white text-xs px-2 py-1 rounded flex items-center gap-1">
@@ -56,20 +131,39 @@ const ContestTestPage = () => {
                 Champion
               </span>
             </div>
+
             {/* Champion coin meter — top left */}
             <div className="absolute top-4 left-4 z-10">
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/60 min-w-[120px]">
                 <img src={sixthCoinLogo} className="w-4 h-4 rounded-full flex-shrink-0" alt="SIXTH" />
-                <Progress value={42} className="h-2 flex-1 bg-white/10 [&>div]:bg-amber-500" />
-                <span className="text-amber-400 text-xs font-mono font-medium whitespace-nowrap">42</span>
+                <Progress value={championTanks.tip} className="h-2 flex-1 bg-white/10 [&>div]:bg-amber-500" />
+                <span className="text-amber-400 text-xs font-mono font-medium whitespace-nowrap">{championTanks.tip}</span>
               </div>
             </div>
+
+            {/* Three vertical tanks — left edge */}
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 z-10 flex flex-col gap-3">
+              <VerticalTank label="Tip" value={championTanks.tip} color="bg-cyan-400" bgColor="bg-cyan-900/40" />
+              <VerticalTank label="Skill" value={championTanks.skill} color="bg-green-500" bgColor="bg-green-900/40" />
+              <VerticalTank label="Sample" value={championTanks.sample} color="bg-purple-500" bgColor="bg-purple-900/40" />
+            </div>
+
+            {/* Power flow bar — top area below badge row */}
+            <div className="absolute top-14 left-14 right-14 z-10">
+              <PowerFlowBar value={championTanks.power} color="bg-red-500" />
+            </div>
+
+            {/* Total points bar — bottom area above tip button */}
+            <div className="absolute bottom-14 left-4 right-4 z-10">
+              <TotalPointsBar points={championTanks.points} color="bg-amber-500" />
+            </div>
+
             {/* Champion tip button — bottom center */}
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10">
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className="border-amber-600/50 text-amber-400 hover:bg-amber-900/20">
-                    <img src={sixthCoinLogo} className="w-4 h-4 rounded-full mr-2" alt="SIXTH" />
+                  <Button variant="outline" size="sm" className="border-amber-600/50 text-amber-400 hover:bg-amber-900/20 text-xs h-7">
+                    <img src={sixthCoinLogo} className="w-3 h-3 rounded-full mr-1" alt="SIXTH" />
                     Tip
                   </Button>
                 </PopoverTrigger>
@@ -87,6 +181,7 @@ const ContestTestPage = () => {
               </Popover>
             </div>
           </div>
+
           {/* Champion chat */}
           <Card className="rounded-none border-x-0 border-b-0 bg-card/80 backdrop-blur-sm">
             <CardContent className="p-3 space-y-2">
@@ -104,10 +199,10 @@ const ContestTestPage = () => {
           </Card>
         </div>
 
-        {/* Challenger side */}
+        {/* ─── Challenger side ─── */}
         <div className="flex-1 flex flex-col">
-          {/* Video panel */}
           <div className="flex-1 bg-gradient-to-br from-red-950 to-red-900 relative flex items-center justify-center">
+            {/* Video placeholder */}
             <div className="text-center space-y-2">
               <div className="w-20 h-20 rounded-full bg-red-800/60 border-2 border-red-400/40 mx-auto flex items-center justify-center">
                 <Video className="w-8 h-8 text-red-300/60" />
@@ -115,26 +210,46 @@ const ContestTestPage = () => {
               <p className="text-red-300/80 font-semibold text-sm">Challenger</p>
               <p className="text-red-400/50 text-xs">@challenger_user</p>
             </div>
+
             {/* Challenger badge — top right */}
             <div className="absolute top-4 right-4 z-10">
               <span className="bg-red-600/80 text-white text-xs px-2 py-1 rounded flex items-center gap-1">
                 Challenger
               </span>
             </div>
+
             {/* Challenger coin meter — top left */}
             <div className="absolute top-4 left-4 z-10">
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/60 min-w-[120px]">
                 <img src={sixthCoinLogo} className="w-4 h-4 rounded-full flex-shrink-0" alt="SIXTH" />
-                <Progress value={27} className="h-2 flex-1 bg-white/10 [&>div]:bg-amber-500" />
-                <span className="text-amber-400 text-xs font-mono font-medium whitespace-nowrap">27</span>
+                <Progress value={challengerTanks.tip} className="h-2 flex-1 bg-white/10 [&>div]:bg-amber-500" />
+                <span className="text-amber-400 text-xs font-mono font-medium whitespace-nowrap">{challengerTanks.tip}</span>
               </div>
             </div>
+
+            {/* Three vertical tanks — left edge */}
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 z-10 flex flex-col gap-3">
+              <VerticalTank label="Tip" value={challengerTanks.tip} color="bg-cyan-400" bgColor="bg-cyan-900/40" />
+              <VerticalTank label="Skill" value={challengerTanks.skill} color="bg-green-500" bgColor="bg-green-900/40" />
+              <VerticalTank label="Sample" value={challengerTanks.sample} color="bg-purple-500" bgColor="bg-purple-900/40" />
+            </div>
+
+            {/* Power flow bar — top area */}
+            <div className="absolute top-14 left-14 right-14 z-10">
+              <PowerFlowBar value={challengerTanks.power} color="bg-gray-400" />
+            </div>
+
+            {/* Total points bar — bottom area */}
+            <div className="absolute bottom-14 left-4 right-4 z-10">
+              <TotalPointsBar points={challengerTanks.points} color="bg-gray-400" />
+            </div>
+
             {/* Challenger tip button — bottom center */}
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10">
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className="border-amber-600/50 text-amber-400 hover:bg-amber-900/20">
-                    <img src={sixthCoinLogo} className="w-4 h-4 rounded-full mr-2" alt="SIXTH" />
+                  <Button variant="outline" size="sm" className="border-amber-600/50 text-amber-400 hover:bg-amber-900/20 text-xs h-7">
+                    <img src={sixthCoinLogo} className="w-3 h-3 rounded-full mr-1" alt="SIXTH" />
                     Tip
                   </Button>
                 </PopoverTrigger>
@@ -152,6 +267,7 @@ const ContestTestPage = () => {
               </Popover>
             </div>
           </div>
+
           {/* Challenger chat */}
           <Card className="rounded-none border-x-0 border-b-0 bg-card/80 backdrop-blur-sm">
             <CardContent className="p-3 space-y-2">
