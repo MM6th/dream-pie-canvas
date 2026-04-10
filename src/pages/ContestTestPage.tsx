@@ -8,6 +8,7 @@ import { ArrowLeft, Play, Square, Video, Send, Timer } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
+import { playDepositSound } from "@/utils/depositSound";
 
 /** Vertical tank gauge used for Tip / Skill / Sample meters */
 const VerticalTank = ({
@@ -140,7 +141,6 @@ const ContestTestPage = () => {
 
   const handleTip = useCallback((side: 'champion' | 'challenger', amount: number) => {
     if (phase !== 'live') return;
-    const { playDepositSound } = require('@/utils/depositSound');
     playDepositSound();
     if (side === 'champion') {
       setChampionTips(prev => prev + amount);
