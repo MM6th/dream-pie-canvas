@@ -37,6 +37,20 @@ export const useLivestreamEntry = () => {
   const enterLivestream = async (postId: string, linkUrl: string) => {
     setLoading(true);
     try {
+      // Check if user is blocked by the stream host
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (currentUser) {
+        const blocked = await checkBlocked(postId, currentUser.id);
+        if (blocked) {
+          toast({
+            title: 'Cannot Enter',
+            description: 'You are unable to enter this livestream.',
+            variant: 'destructive',
+          });
+          return { success: false };
+        }
+      }
+
       const { data, error } = await supabase.functions.invoke('enter-livestream', {
         body: { postId },
       });
@@ -79,5 +93,5 @@ export const useLivestreamEntry = () => {
     }
   };
 
-  return { enterLivestream, checkEntry, loading };
+  return { enterLivestream, checkEntry, checkBlocked, loading };
 };
