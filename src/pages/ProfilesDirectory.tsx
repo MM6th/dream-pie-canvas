@@ -368,7 +368,44 @@ const ProfilesDirectory = () => {
                       <h3 className="text-white font-semibold mb-1 group-hover:text-blue-300 transition-colors line-clamp-1">
                         {profile.display_name || 'Anonymous User'}
                       </h3>
-
+                      {/* Block Button */}
+                      {user && user.id !== profile.id && (
+                        <div className="mt-1" onClick={(e) => e.stopPropagation()}>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className={`w-full text-xs h-7 ${isBlocked(profile.id) ? 'border-red-500 text-red-400 hover:bg-red-500/10' : 'border-gray-600 text-gray-400 hover:bg-gray-700'}`}
+                              >
+                                <Ban className="w-3 h-3 mr-1" />
+                                {isBlocked(profile.id) ? 'Unblock' : 'Block'}
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent className="bg-gray-800 border-gray-700">
+                              <AlertDialogHeader>
+                                <AlertDialogTitle className="text-white">
+                                  {isBlocked(profile.id) ? 'Unblock' : 'Block'} {profile.display_name || 'this user'}?
+                                </AlertDialogTitle>
+                                <AlertDialogDescription className="text-gray-400">
+                                  {isBlocked(profile.id)
+                                    ? 'This will allow them to follow you, see your posts, and enter your livestreams again.'
+                                    : 'This will prevent them from following you, seeing your posts, and entering your livestreams.'}
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel className="bg-gray-700 text-white border-gray-600">Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleBlockToggle(profile.id, profile.display_name || 'User')}
+                                  className={isBlocked(profile.id) ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}
+                                >
+                                  {isBlocked(profile.id) ? 'Unblock' : 'Block'}
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      )}
 
                       {/* Badges */}
                       <div className="flex flex-wrap justify-center gap-1 mb-2">
