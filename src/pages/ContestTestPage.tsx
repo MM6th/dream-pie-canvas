@@ -317,6 +317,7 @@ const ContestTestPage = () => {
   const timerBorderColor = phase === 'warmup' ? 'border-yellow-500/50' : phase === 'live' ? 'border-red-600/50' : 'border-white/20';
   const timerIconColor = phase === 'warmup' ? 'text-yellow-500' : phase === 'live' ? 'text-red-500' : 'text-white/40';
   const isActive = phase === 'live';
+  const showPollWarning = phase === 'live' && timeLeft > 0 && timeLeft <= 60;
 
   return (
     <div className="min-h-screen bg-background text-foreground relative">
