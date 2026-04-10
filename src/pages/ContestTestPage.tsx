@@ -382,6 +382,7 @@ const ContestTestPage = () => {
     setChallengerFans(new Set());
     setChampionPollSubmitted(false);
     setChallengerPollSubmitted(false);
+    setShowTitleChange(false);
     setBeltWinner(null);
   }, []);
 
