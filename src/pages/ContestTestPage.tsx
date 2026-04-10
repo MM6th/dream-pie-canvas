@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import pieTitleBelt from "@/assets/pie-title-belt.png";
+import sixthCoinLogo from "@/assets/sixth-coin-logo.jpg";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft, Camera, Mic, MicOff, Video, VideoOff, PhoneOff, Send, Timer } from "lucide-react";
 import { Input } from "@/components/ui/input";
