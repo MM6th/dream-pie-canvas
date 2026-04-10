@@ -295,7 +295,7 @@ const ContestTestPage = () => {
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10">
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm" className="border-amber-600/50 text-amber-400 hover:bg-amber-900/20 text-xs h-7">
+                  <Button variant="outline" size="sm" disabled={!isActive} className="border-amber-600/50 text-amber-400 hover:bg-amber-900/20 text-xs h-7 disabled:opacity-40">
                     <img src={sixthCoinLogo} className="w-3 h-3 rounded-full mr-1" alt="SIXTH" />
                     Tip
                   </Button>
@@ -386,7 +386,7 @@ const ContestTestPage = () => {
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10">
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm" className="border-amber-600/50 text-amber-400 hover:bg-amber-900/20 text-xs h-7">
+                  <Button variant="outline" size="sm" disabled={!isActive} className="border-amber-600/50 text-amber-400 hover:bg-amber-900/20 text-xs h-7 disabled:opacity-40">
                     <img src={sixthCoinLogo} className="w-3 h-3 rounded-full mr-1" alt="SIXTH" />
                     Tip
                   </Button>
