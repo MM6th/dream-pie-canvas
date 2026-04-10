@@ -232,6 +232,13 @@ const ProfilesDirectory = () => {
   const handleProfileClick = (profileId: string) => {
     navigate(`/profile/${profileId}`);
   };
+  const handleBlockToggle = async (profileId: string, profileName: string) => {
+    if (isBlocked(profileId)) {
+      await unblockUser(profileId);
+    } else {
+      await blockUser(profileId);
+    }
+  };
 
 
   if (loading) {
