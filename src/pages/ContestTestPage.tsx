@@ -64,29 +64,60 @@ const VerticalTank = ({
   color,
   bgColor,
   bubbles = false,
+  fusion = false,
+  glow = false,
 }: {
   label: string;
   value: number; // 0-100
   color: string;
   bgColor: string;
   bubbles?: boolean;
-}) => (
-  <div className="flex flex-col items-center gap-1">
-    <div
-      className={`w-5 h-20 rounded-sm ${bgColor} relative overflow-hidden border border-white/10`}
-    >
+  fusion?: boolean;
+  glow?: boolean;
+}) => {
+  // Fusion: multi-color gradient that shifts as value increases
+  const fusionStyle: React.CSSProperties = fusion
+    ? {
+        height: `${value}%`,
+        background: value > 0
+          ? `linear-gradient(0deg, #7c3aed ${0}%, #a855f7 ${Math.min(value, 40)}%, #f472b6 ${Math.min(value, 70)}%, #fbbf24 ${Math.min(value, 100)}%)`
+          : undefined,
+        boxShadow: value > 30
+          ? `0 0 ${4 + value / 10}px rgba(168,85,247,0.6), inset 0 0 ${value / 8}px rgba(251,191,36,0.4)`
+          : undefined,
+        transition: 'all 0.7s ease',
+      }
+    : { height: `${value}%` };
+
+  return (
+    <div className="flex flex-col items-center gap-1">
       <div
-        className={`absolute bottom-0 left-0 right-0 ${color} transition-all duration-700`}
-        style={{ height: `${value}%` }}
+        className={`w-5 h-20 rounded-sm ${bgColor} relative overflow-hidden border border-white/10 transition-shadow duration-500 ${
+          glow ? 'shadow-[0_0_10px_rgba(34,197,94,0.5),0_0_20px_rgba(34,197,94,0.2)]' : ''
+        }`}
       >
-        <TankBubbles active={bubbles && value > 0} />
+        <div
+          className={`absolute bottom-0 left-0 right-0 ${fusion ? '' : color} transition-all duration-700`}
+          style={fusionStyle}
+        >
+          <TankBubbles active={bubbles && value > 0} />
+          {/* Fusion shimmer overlay */}
+          {fusion && value > 20 && (
+            <div
+              className="absolute inset-0 animate-pulse opacity-40"
+              style={{
+                background: 'linear-gradient(180deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%)',
+              }}
+            />
+          )}
+        </div>
       </div>
+      <span className="text-[9px] text-white/70 font-medium leading-tight text-center whitespace-nowrap">
+        {label}
+      </span>
     </div>
-    <span className="text-[9px] text-white/70 font-medium leading-tight text-center whitespace-nowrap">
-      {label}
-    </span>
-  </div>
-);
+  );
+};
 
 /** Get slider track gradient based on value relative to 50 */
 const getSliderStyle = (value: number) => {
@@ -356,8 +387,8 @@ const ContestTestPage = () => {
             {/* Three vertical tanks — left edge */}
             <div className="absolute left-3 top-1/2 -translate-y-1/2 z-10 flex flex-col gap-3">
               <VerticalTank label="Tips/Votes" value={championTanks.tip} color="bg-cyan-400" bgColor="bg-cyan-900/40" bubbles />
-              <VerticalTank label="Skill" value={championTanks.skill} color="bg-green-500" bgColor="bg-green-900/40" />
-              <VerticalTank label="Sample" value={championTanks.sample} color="bg-purple-500" bgColor="bg-purple-900/40" />
+              <VerticalTank label="Skill" value={championTanks.skill} color="bg-green-500" bgColor="bg-green-900/40" glow={isActive} />
+              <VerticalTank label="Sample" value={championTanks.sample} color="bg-purple-500" bgColor="bg-purple-900/40" fusion />
             </div>
 
             {/* Power flow bar — top area below badge row */}
@@ -477,8 +508,8 @@ const ContestTestPage = () => {
             {/* Three vertical tanks — left edge */}
             <div className="absolute left-3 top-1/2 -translate-y-1/2 z-10 flex flex-col gap-3">
               <VerticalTank label="Tips/Votes" value={challengerTanks.tip} color="bg-cyan-400" bgColor="bg-cyan-900/40" bubbles />
-              <VerticalTank label="Skill" value={challengerTanks.skill} color="bg-green-500" bgColor="bg-green-900/40" />
-              <VerticalTank label="Sample" value={challengerTanks.sample} color="bg-purple-500" bgColor="bg-purple-900/40" />
+              <VerticalTank label="Skill" value={challengerTanks.skill} color="bg-green-500" bgColor="bg-green-900/40" glow={isActive} />
+              <VerticalTank label="Sample" value={challengerTanks.sample} color="bg-purple-500" bgColor="bg-purple-900/40" fusion />
             </div>
 
             {/* Power flow bar — top area */}
