@@ -210,8 +210,8 @@ const PowerFlowBar = ({ value }: { value: number }) => (
   </div>
 );
 
-/** Total points bar — hidden until contest ends, then revealed */
-const TotalPointsBar = ({ points, revealed }: { points: number; revealed: boolean }) => (
+/** Total points bar — hidden until contest ends, then revealed with penalty info */
+const TotalPointsBar = ({ points, revealed, penalized }: { points: number; revealed: boolean; penalized?: boolean }) => (
   <div className="space-y-1">
     <span className="text-[10px] text-white/60 font-bold uppercase tracking-wider">Total Points</span>
     <div className="w-full h-4 rounded-sm bg-white/10 overflow-hidden relative">
@@ -231,6 +231,11 @@ const TotalPointsBar = ({ points, revealed }: { points: number; revealed: boolea
         </span>
       )}
     </div>
+    {revealed && penalized && (
+      <span className="text-[8px] text-red-400 font-semibold animate-[fadeIn_0.8s_ease-in_1s_both]">
+        ⚠ -15 pts (poll not submitted)
+      </span>
+    )}
   </div>
 );
 
