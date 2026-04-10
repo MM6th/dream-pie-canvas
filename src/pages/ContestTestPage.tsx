@@ -217,8 +217,10 @@ const TOTAL_FANS = 27; // 27 fans per side
 const ContestTestPage = () => {
   const navigate = useNavigate();
 
-  // Contest phase: 'idle' | 'warmup' | 'live' | 'ended'
-  const [phase, setPhase] = useState<'idle' | 'warmup' | 'live' | 'ended'>('idle');
+  // Contest phase: 'idle' | 'warmup' | 'live' | 'overtime' | 'ended'
+  const [phase, setPhase] = useState<'idle' | 'warmup' | 'live' | 'overtime' | 'ended'>('idle');
+  const OVERTIME_SECONDS = 60;
+  const [overtimeTotal, setOvertimeTotal] = useState(OVERTIME_SECONDS);
   const [timeLeft, setTimeLeft] = useState(0); // seconds
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
