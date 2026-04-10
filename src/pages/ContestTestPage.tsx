@@ -196,18 +196,26 @@ const PowerFlowBar = ({ value }: { value: number }) => (
   </div>
 );
 
-/** Total points bar */
-const TotalPointsBar = ({ points }: { points: number }) => (
+/** Total points bar — hidden until contest ends, then revealed */
+const TotalPointsBar = ({ points, revealed }: { points: number; revealed: boolean }) => (
   <div className="space-y-1">
     <span className="text-[10px] text-white/60 font-bold uppercase tracking-wider">Total Points</span>
     <div className="w-full h-4 rounded-sm bg-white/10 overflow-hidden relative">
-      <div
-        className="h-full bg-amber-500 transition-all duration-700 rounded-sm"
-        style={{ width: `${Math.min(points, 100)}%` }}
-      />
-      <span className="absolute inset-0 flex items-center justify-center text-[10px] font-mono font-bold text-white drop-shadow">
-        {points}
-      </span>
+      {revealed ? (
+        <>
+          <div
+            className="h-full bg-amber-500 rounded-sm animate-[grow_1.5s_ease-out_forwards]"
+            style={{ width: `${Math.min(points, 100)}%` }}
+          />
+          <span className="absolute inset-0 flex items-center justify-center text-[10px] font-mono font-bold text-white drop-shadow animate-[fadeIn_0.8s_ease-in_0.5s_both]">
+            {points.toFixed(1)}
+          </span>
+        </>
+      ) : (
+        <span className="absolute inset-0 flex items-center justify-center text-[10px] font-mono font-bold text-white/30">
+          ???
+        </span>
+      )}
     </div>
   </div>
 );
@@ -251,8 +259,24 @@ const ContestTestPage = () => {
   const championPower = isLiveOrOvertime ? Math.round((championTipVotes + skillValue + championSample) / 3) : 0;
   const challengerPower = isLiveOrOvertime ? Math.round((challengerTipVotes + skillValue + challengerSample) / 3) : 0;
 
-  const championTanks = { tip: championTipVotes, skill: skillValue, sample: championSample, power: championPower, points: 0 };
-  const challengerTanks = { tip: challengerTipVotes, skill: skillValue, sample: challengerSample, power: challengerPower, points: 0 };
+  // Calculate final points using the contest formula: gifts + pollVotesWon × skill% × sampleIntensity
+  const championPoints = CONTEST_SCORING_FORMULA.calculate({
+    gifts: championTips,
+    pollVotesWon: championVotePower,
+    skillPercent: skillValue,
+    sampleIntensity: championSample,
+  });
+  const challengerPoints = CONTEST_SCORING_FORMULA.calculate({
+    gifts: challengerTips,
+    pollVotesWon: challengerVotePower,
+    skillPercent: skillValue,
+    sampleIntensity: challengerSample,
+  });
+
+  const isRevealed = phase === 'ended';
+
+  const championTanks = { tip: championTipVotes, skill: skillValue, sample: championSample, power: championPower, points: championPoints };
+  const challengerTanks = { tip: challengerTipVotes, skill: skillValue, sample: challengerSample, power: challengerPower, points: challengerPoints };
 
   const handleTip = useCallback((side: 'champion' | 'challenger', amount: number) => {
     if (phase !== 'live' && phase !== 'overtime') return;
@@ -436,7 +460,7 @@ const ContestTestPage = () => {
 
             {/* Total points bar — bottom area above tip button */}
             <div className="absolute bottom-14 left-14 right-14 z-10 mx-auto max-w-[200px]">
-              <TotalPointsBar points={championTanks.points} />
+              <TotalPointsBar points={championTanks.points} revealed={isRevealed} />
             </div>
 
             {/* Champion poll widget — bottom left */}
@@ -557,7 +581,7 @@ const ContestTestPage = () => {
 
             {/* Total points bar — bottom area */}
             <div className="absolute bottom-14 left-14 right-14 z-10 mx-auto max-w-[200px]">
-              <TotalPointsBar points={challengerTanks.points} />
+              <TotalPointsBar points={challengerTanks.points} revealed={isRevealed} />
             </div>
 
             {/* Challenger poll widget — bottom left */}
