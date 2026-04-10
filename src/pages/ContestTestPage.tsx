@@ -556,6 +556,8 @@ const ContestTestPage = () => {
               </div>
             </CardContent>
           </Card>
+        </div>
+      </div>
     </div>
   );
 };
