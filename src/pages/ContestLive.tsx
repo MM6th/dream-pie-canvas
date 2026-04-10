@@ -77,6 +77,17 @@ const ContestLive = () => {
             navigate("/bulletin");
             return;
           }
+
+          // Check if either contestant has blocked this spectator (or vice versa)
+          const { data: blockedByChampion } = await supabase.rpc("is_blocked", { user_a: user.id, user_b: championId });
+          const { data: blockedByChallenger } = await supabase.rpc("is_blocked", { user_a: user.id, user_b: challengerId });
+
+          if (blockedByChampion || blockedByChallenger) {
+            toast({ title: "You cannot enter this contest", description: "You are blocked by one of the participants.", variant: "destructive" });
+            navigate("/bulletin");
+            return;
+          }
+
           role = "spectator";
         }
 
