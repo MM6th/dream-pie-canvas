@@ -391,15 +391,32 @@ const ContestTestPage = () => {
     return () => clearTimer();
   }, [clearTimer]);
 
-  // Trigger belt animation when contest ends
+  // Trigger belt animation + title change ceremony when contest ends
   useEffect(() => {
     if (phase === 'ended') {
-      // Delay slightly so points render first
       const timeout = setTimeout(() => {
         if (championPoints > challengerPoints) {
           setBeltWinner('champion');
         } else if (challengerPoints > championPoints) {
           setBeltWinner('challenger');
+          // Challenger wins = belt changes hands → criss-cross + announcer
+          setTimeout(() => {
+            setShowTitleChange(true);
+            // Announcer voice via SpeechSynthesis
+            if ('speechSynthesis' in window) {
+              const utterance = new SpeechSynthesisUtterance('AND THE NEW... CHAMPION!');
+              utterance.rate = 0.8;
+              utterance.pitch = 0.7;
+              utterance.volume = 1;
+              // Pick a deep male voice if available
+              const voices = speechSynthesis.getVoices();
+              const deep = voices.find(v => v.lang.startsWith('en') && v.name.toLowerCase().includes('male')) || voices.find(v => v.lang.startsWith('en'));
+              if (deep) utterance.voice = deep;
+              speechSynthesis.speak(utterance);
+            }
+            // Auto-hide after 5 seconds
+            setTimeout(() => setShowTitleChange(false), 5000);
+          }, 1500);
         } else {
           setBeltWinner('tie');
         }
