@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { CONTEST_SCORING_FORMULA } from "@/constants/contestFormulas";
 import { playDepositSound } from "@/utils/depositSound";
 
-/** Fizzy bubble keyframes — injected once */
+/** Fizzy bubble + criss-cross keyframes — injected once */
 const bubbleStyleId = 'contest-bubble-styles';
 if (typeof document !== 'undefined' && !document.getElementById(bubbleStyleId)) {
   const style = document.createElement('style');
@@ -23,6 +23,25 @@ if (typeof document !== 'undefined' && !document.getElementById(bubbleStyleId)) 
       50% { transform: translateX(-1px) scale(0.9); opacity: 0.6; }
       75% { transform: translateX(1px) scale(1.05); opacity: 0.4; }
       100% { transform: translateX(0) scale(0.8); opacity: 0; bottom: 100%; }
+    }
+    @keyframes criss-cross-left {
+      0% { left: 15%; top: 50%; opacity: 0; transform: translate(-50%,-50%) scale(0.5); }
+      20% { opacity: 1; transform: translate(-50%,-50%) scale(1.2); }
+      50% { left: 85%; top: 50%; transform: translate(-50%,-50%) scale(1); }
+      80% { left: 85%; top: 50%; transform: translate(-50%,-50%) scale(1.1); opacity: 1; }
+      100% { left: 85%; top: 50%; transform: translate(-50%,-50%) scale(1); opacity: 0.9; }
+    }
+    @keyframes criss-cross-right {
+      0% { left: 85%; top: 50%; opacity: 0; transform: translate(-50%,-50%) scale(0.5); }
+      20% { opacity: 1; transform: translate(-50%,-50%) scale(1.2); }
+      50% { left: 15%; top: 50%; transform: translate(-50%,-50%) scale(1); }
+      80% { left: 15%; top: 50%; transform: translate(-50%,-50%) scale(1.1); opacity: 1; }
+      100% { left: 15%; top: 50%; transform: translate(-50%,-50%) scale(1); opacity: 0.9; }
+    }
+    @keyframes title-text-appear {
+      0% { opacity: 0; transform: translateY(30px) scale(0.8); letter-spacing: 0.5em; }
+      50% { opacity: 1; transform: translateY(0) scale(1.1); letter-spacing: 0.2em; }
+      100% { opacity: 1; transform: translateY(0) scale(1); letter-spacing: 0.15em; }
     }
   `;
   document.head.appendChild(style);
@@ -267,6 +286,9 @@ const ContestTestPage = () => {
   // Belt animation state
   const [beltWinner, setBeltWinner] = useState<'champion' | 'challenger' | 'tie' | null>(null);
 
+  // Criss-cross title change animation
+  const [showTitleChange, setShowTitleChange] = useState(false);
+
   // Fan/sample state — tracks which fans have "entered" per side
   const [championFans, setChampionFans] = useState<Set<number>>(new Set());
   const [challengerFans, setChallengerFans] = useState<Set<number>>(new Set());
@@ -379,6 +401,7 @@ const ContestTestPage = () => {
     setChallengerFans(new Set());
     setChampionPollSubmitted(false);
     setChallengerPollSubmitted(false);
+    setShowTitleChange(false);
     setBeltWinner(null);
   }, []);
 
@@ -387,15 +410,32 @@ const ContestTestPage = () => {
     return () => clearTimer();
   }, [clearTimer]);
 
-  // Trigger belt animation when contest ends
+  // Trigger belt animation + title change ceremony when contest ends
   useEffect(() => {
     if (phase === 'ended') {
-      // Delay slightly so points render first
       const timeout = setTimeout(() => {
         if (championPoints > challengerPoints) {
           setBeltWinner('champion');
         } else if (challengerPoints > championPoints) {
           setBeltWinner('challenger');
+          // Challenger wins = belt changes hands → criss-cross + announcer
+          setTimeout(() => {
+            setShowTitleChange(true);
+            // Announcer voice via SpeechSynthesis
+            if ('speechSynthesis' in window) {
+              const utterance = new SpeechSynthesisUtterance('AND THE NEW... CHAMPION!');
+              utterance.rate = 0.8;
+              utterance.pitch = 0.7;
+              utterance.volume = 1;
+              // Pick a deep male voice if available
+              const voices = speechSynthesis.getVoices();
+              const deep = voices.find(v => v.lang.startsWith('en') && v.name.toLowerCase().includes('male')) || voices.find(v => v.lang.startsWith('en'));
+              if (deep) utterance.voice = deep;
+              speechSynthesis.speak(utterance);
+            }
+            // Auto-hide after 5 seconds
+            setTimeout(() => setShowTitleChange(false), 5000);
+          }, 1500);
         } else {
           setBeltWinner('tie');
         }
@@ -497,7 +537,46 @@ const ContestTestPage = () => {
         )}
       </div>
 
-      {/* Split screen layout */}
+      {/* Criss-cross title change overlay — champion & challenger icons swap sides */}
+      {showTitleChange && (
+        <div className="fixed inset-0 z-[100] pointer-events-none">
+          {/* Dark dramatic overlay */}
+          <div className="absolute inset-0 bg-black/70 animate-[fadeIn_0.3s_ease-out_both]" />
+          
+          {/* Champion icon — starts left, crosses to right */}
+          <div
+            className="absolute w-24 h-24 rounded-full border-4 border-blue-400 bg-blue-950 flex items-center justify-center shadow-[0_0_30px_rgba(59,130,246,0.6)]"
+            style={{ animation: 'criss-cross-left 1.5s ease-in-out forwards' }}
+          >
+            <div className="text-center">
+              <Video className="w-8 h-8 text-blue-300 mx-auto" />
+              <span className="text-[10px] text-blue-300 font-bold">Champion</span>
+            </div>
+          </div>
+
+          {/* Challenger icon — starts right, crosses to left */}
+          <div
+            className="absolute w-24 h-24 rounded-full border-4 border-red-400 bg-red-950 flex items-center justify-center shadow-[0_0_30px_rgba(239,68,68,0.6)]"
+            style={{ animation: 'criss-cross-right 1.5s ease-in-out forwards' }}
+          >
+            <div className="text-center">
+              <Video className="w-8 h-8 text-red-300 mx-auto" />
+              <span className="text-[10px] text-red-300 font-bold">Challenger</span>
+            </div>
+          </div>
+
+          {/* "AND THE NEW... CHAMPION" text */}
+          <div className="absolute top-[30%] left-1/2 -translate-x-1/2 text-center" style={{ animation: 'title-text-appear 1.2s ease-out 0.8s both' }}>
+            <p className="text-amber-400/80 text-lg font-bold uppercase tracking-[0.3em] mb-2 drop-shadow-[0_0_10px_rgba(251,191,36,0.5)]">
+              And The New...
+            </p>
+            <p className="text-white text-4xl sm:text-5xl font-black uppercase tracking-[0.15em] drop-shadow-[0_0_20px_rgba(255,255,255,0.4)]">
+              CHAMPION
+            </p>
+            <img src={pieTitleBelt} className="w-20 h-20 object-contain mx-auto mt-4 drop-shadow-[0_0_20px_rgba(255,215,0,0.8)] animate-pulse" alt="Belt" />
+          </div>
+        </div>
+      )}
       <div className="flex flex-col lg:flex-row h-screen">
         {/* ─── Champion side ─── */}
         <div className="flex-1 flex flex-col border-r border-border/30">
