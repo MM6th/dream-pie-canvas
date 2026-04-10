@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, Camera, Mic, MicOff, Video, VideoOff, PhoneOff, Send, Trophy, Timer } from "lucide-react";
+import { ArrowLeft, Camera, Mic, MicOff, Video, VideoOff, PhoneOff, Send, Timer } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 
