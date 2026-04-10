@@ -338,6 +338,15 @@ const ContestTestPage = () => {
         </div>
       </div>
 
+      {/* Poll submission warning — flashes at 1 minute remaining */}
+      {showPollWarning && (
+        <div className="absolute top-[100px] left-1/2 -translate-x-1/2 z-[60] animate-pulse">
+          <div className="bg-yellow-500/90 text-black font-bold text-sm px-6 py-2 rounded-full shadow-lg shadow-yellow-500/30">
+            ⚠️ Submit your polls! {formatTime(timeLeft)} remaining
+          </div>
+        </div>
+      )}
+
       {/* Back button */}
       <div className="absolute top-28 left-4 z-50">
         <Button variant="ghost" size="sm" onClick={() => navigate('/')} className="text-white bg-black/50 hover:bg-black/70 text-xs px-2 py-1">
