@@ -187,6 +187,8 @@ const ContestTestPage = () => {
     clearTimer();
     setPhase('idle');
     setTimeLeft(0);
+    setChampionTips(0);
+    setChallengerTips(0);
   }, [clearTimer]);
 
   // Cleanup on unmount
