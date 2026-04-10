@@ -34,6 +34,7 @@ interface Invitation {
 
 const ContestInviteCard = () => {
   const { user } = useAuth();
+  const { allBlockedIds } = useBlockUser(user?.id);
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [selectedChallenge, setSelectedChallenge] = useState<string>("");
   const [users, setUsers] = useState<UserOption[]>([]);
