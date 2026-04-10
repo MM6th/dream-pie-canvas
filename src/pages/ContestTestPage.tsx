@@ -47,21 +47,21 @@ const ContestTestPage = () => {
               <p className="text-blue-300/80 font-semibold text-sm">Champion</p>
               <p className="text-blue-400/50 text-xs">@champion_user</p>
             </div>
-            {/* Champion badge — top left */}
-            <div className="absolute top-4 left-4 z-10 flex flex-col items-start gap-1">
+            {/* Champion badge — top right */}
+            <div className="absolute top-4 right-4 z-10">
               <span className="bg-yellow-600/80 text-white text-xs px-2 py-1 rounded flex items-center gap-1">
                 <img src={pieTitleBelt} className="h-6 w-8 object-contain" alt="Belt" />
                 Champion
               </span>
-              {/* Coin meter below badge */}
-              <div className="mt-2 w-40">
-                <div className="bg-black/60 rounded-lg p-2 space-y-1">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-yellow-400">💰 Tips</span>
-                    <span className="text-white font-bold">$42.00</span>
-                  </div>
-                  <Progress value={42} className="h-2" />
+            </div>
+            {/* Champion coin meter — top left */}
+            <div className="absolute top-4 left-4 z-10 w-40">
+              <div className="bg-black/60 rounded-lg p-2 space-y-1">
+                <div className="flex justify-between text-xs">
+                  <span className="text-yellow-400">💰 Tips</span>
+                  <span className="text-white font-bold">$42.00</span>
                 </div>
+                <Progress value={42} className="h-2" />
               </div>
             </div>
           </div>
