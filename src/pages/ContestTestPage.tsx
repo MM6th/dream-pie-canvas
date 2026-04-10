@@ -297,25 +297,25 @@ const ContestTestPage = () => {
         </Button>
       </div>
 
-      {/* Challenge label overlay */}
-      <div className="absolute top-28 left-1/2 -translate-x-1/2 z-40 pointer-events-none">
-        <span className="text-2xl sm:text-3xl font-black uppercase italic text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] tracking-wide">
+      {/* Challenge label + controls + formula — top center cluster */}
+      <div className="absolute top-28 left-1/2 -translate-x-1/2 z-40 flex flex-col items-center gap-2">
+        <span className="text-2xl sm:text-3xl font-black uppercase italic text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] tracking-wide pointer-events-none">
           Twerk Off
         </span>
-      </div>
-
-      {/* Championship belt — centered between both sides */}
-      <div className="absolute bottom-44 left-1/2 -translate-x-1/2 z-40 pointer-events-none">
-        <img src={pieTitleBelt} className="w-16 h-16 object-contain drop-shadow-lg" alt="Championship Belt" />
-      </div>
-
-      {/* Formula overlay — bottom center above controls */}
-      <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-40 pointer-events-none">
-        <div className="bg-black/70 rounded-lg px-4 py-1.5">
+        <div className="bg-black/70 rounded-lg px-4 py-1.5 pointer-events-none">
           <p className="text-[9px] text-white/60 font-mono text-center">
             gifts + poll votes won × skill % × sample intensity = final points
           </p>
         </div>
+        {phase === 'idle' ? (
+          <Button onClick={handleStart} className="bg-green-600 hover:bg-green-700 text-white font-bold px-6 h-9 text-xs rounded-full gap-2">
+            <Play className="w-4 h-4" /> Start Contest
+          </Button>
+        ) : (
+          <Button onClick={handleStop} variant="destructive" className="font-bold px-6 h-9 text-xs rounded-full gap-2">
+            <Square className="w-4 h-4" /> Stop Contest
+          </Button>
+        )}
       </div>
 
       {/* Split screen layout */}
