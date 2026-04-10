@@ -8,6 +8,7 @@ import { ArrowLeft, Play, Square, Video, Send, Timer } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
+import { playDepositSound } from "@/utils/depositSound";
 
 /** Vertical tank gauge used for Tip / Skill / Sample meters */
 const VerticalTank = ({
@@ -131,9 +132,22 @@ const ContestTestPage = () => {
   const [timeLeft, setTimeLeft] = useState(0); // seconds
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // All data starts at zero
-  const championTanks = { tip: 0, skill: 100, sample: 0, power: 0, points: 0 };
-  const challengerTanks = { tip: 0, skill: 100, sample: 0, power: 0, points: 0 };
+  // Tip state
+  const [championTips, setChampionTips] = useState(0);
+  const [challengerTips, setChallengerTips] = useState(0);
+
+  const championTanks = { tip: championTips, skill: 100, sample: 0, power: 0, points: 0 };
+  const challengerTanks = { tip: challengerTips, skill: 100, sample: 0, power: 0, points: 0 };
+
+  const handleTip = useCallback((side: 'champion' | 'challenger', amount: number) => {
+    if (phase !== 'live') return;
+    playDepositSound();
+    if (side === 'champion') {
+      setChampionTips(prev => prev + amount);
+    } else {
+      setChallengerTips(prev => prev + amount);
+    }
+  }, [phase]);
 
   const clearTimer = useCallback(() => {
     if (intervalRef.current) {
@@ -173,6 +187,8 @@ const ContestTestPage = () => {
     clearTimer();
     setPhase('idle');
     setTimeLeft(0);
+    setChampionTips(0);
+    setChallengerTips(0);
   }, [clearTimer]);
 
   // Cleanup on unmount
@@ -304,7 +320,7 @@ const ContestTestPage = () => {
                   <p className="text-xs text-muted-foreground mb-2 px-1">Send SIXTH tokens</p>
                   <div className="grid grid-cols-2 gap-2">
                     {[1, 5, 10, 25].map((amt) => (
-                      <Button key={amt} size="sm" variant="outline" className="text-amber-400 border-amber-600/30 hover:bg-amber-900/20">
+                      <Button key={amt} size="sm" variant="outline" className="text-amber-400 border-amber-600/30 hover:bg-amber-900/20" onClick={() => handleTip('champion', amt)}>
                         <img src={sixthCoinLogo} className="w-3 h-3 rounded-full mr-1" alt="" />
                         {amt}
                       </Button>
@@ -395,7 +411,7 @@ const ContestTestPage = () => {
                   <p className="text-xs text-muted-foreground mb-2 px-1">Send SIXTH tokens</p>
                   <div className="grid grid-cols-2 gap-2">
                     {[1, 5, 10, 25].map((amt) => (
-                      <Button key={amt} size="sm" variant="outline" className="text-amber-400 border-amber-600/30 hover:bg-amber-900/20">
+                      <Button key={amt} size="sm" variant="outline" className="text-amber-400 border-amber-600/30 hover:bg-amber-900/20" onClick={() => handleTip('challenger', amt)}>
                         <img src={sixthCoinLogo} className="w-3 h-3 rounded-full mr-1" alt="" />
                         {amt}
                       </Button>
