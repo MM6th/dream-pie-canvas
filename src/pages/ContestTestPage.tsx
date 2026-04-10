@@ -4,9 +4,8 @@ import { Button } from "@/components/ui/button";
 import pieTitleBelt from "@/assets/pie-title-belt.png";
 import sixthCoinLogo from "@/assets/sixth-coin-logo.jpg";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, Play, Square, Video, Send, Timer } from "lucide-react";
+import { ArrowLeft, Play, Square, Video, Timer } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { playDepositSound } from "@/utils/depositSound";
 
@@ -175,6 +174,8 @@ const TotalPointsBar = ({ points }: { points: number }) => (
   </div>
 );
 
+const TOTAL_FANS = 27; // 27 fans per side
+
 const ContestTestPage = () => {
   const navigate = useNavigate();
 
@@ -188,8 +189,15 @@ const ContestTestPage = () => {
   const [challengerTips, setChallengerTips] = useState(0);
   const [pollResetKey, setPollResetKey] = useState(0);
 
-  const championTanks = { tip: championTips, skill: 100, sample: 0, power: 0, points: 0 };
-  const challengerTanks = { tip: challengerTips, skill: 100, sample: 0, power: 0, points: 0 };
+  // Fan/sample state — tracks which fans have "entered" per side
+  const [championFans, setChampionFans] = useState<Set<number>>(new Set());
+  const [challengerFans, setChallengerFans] = useState<Set<number>>(new Set());
+
+  const championSample = Math.round((championFans.size / TOTAL_FANS) * 100);
+  const challengerSample = Math.round((challengerFans.size / TOTAL_FANS) * 100);
+
+  const championTanks = { tip: championTips, skill: 100, sample: championSample, power: 0, points: 0 };
+  const challengerTanks = { tip: challengerTips, skill: 100, sample: challengerSample, power: 0, points: 0 };
 
   const handleTip = useCallback((side: 'champion' | 'challenger', amount: number) => {
     if (phase !== 'live') return;
@@ -242,6 +250,8 @@ const ContestTestPage = () => {
     setChampionTips(0);
     setChallengerTips(0);
     setPollResetKey(prev => prev + 1);
+    setChampionFans(new Set());
+    setChallengerFans(new Set());
   }, [clearTimer]);
 
   // Cleanup on unmount
@@ -384,18 +394,35 @@ const ContestTestPage = () => {
             </div>
           </div>
 
-          {/* Champion chat */}
+          {/* Champion fans grid */}
           <Card className="rounded-none border-x-0 border-b-0 bg-card/80 backdrop-blur-sm">
-            <CardContent className="p-3 space-y-2">
-              <p className="text-xs font-semibold text-muted-foreground">Champion Chat</p>
-              <div className="h-28 overflow-y-auto space-y-1.5 text-xs">
-                <div className="bg-muted/50 rounded px-2 py-1"><span className="text-blue-400 font-medium">Fan1:</span> <span className="text-foreground">Go champion! 🔥</span></div>
-                <div className="bg-muted/50 rounded px-2 py-1"><span className="text-blue-400 font-medium">Fan2:</span> <span className="text-foreground">You got this!</span></div>
-                <div className="bg-muted/50 rounded px-2 py-1"><span className="text-blue-400 font-medium">Fan3:</span> <span className="text-foreground">💪💪💪</span></div>
-              </div>
-              <div className="flex gap-2">
-                <Input placeholder="Type a message..." className="text-xs h-8" readOnly />
-                <Button size="sm" className="h-8 px-3"><Send className="w-3 h-3" /></Button>
+            <CardContent className="p-2 space-y-1">
+              <p className="text-[10px] font-semibold text-muted-foreground">Champion Supporters ({championFans.size}/{TOTAL_FANS})</p>
+              <div className="grid grid-cols-9 gap-1">
+                {Array.from({ length: TOTAL_FANS }, (_, i) => {
+                  const fanNum = i + 1;
+                  const entered = championFans.has(fanNum);
+                  return (
+                    <div key={fanNum} className="flex items-center gap-0.5">
+                      <button
+                        onClick={() => {
+                          setChampionFans(prev => {
+                            const next = new Set(prev);
+                            if (next.has(fanNum)) next.delete(fanNum);
+                            else next.add(fanNum);
+                            return next;
+                          });
+                        }}
+                        className={`w-3 h-3 rounded-full flex items-center justify-center text-[6px] font-bold flex-shrink-0 transition-colors ${entered ? 'bg-green-500 text-white' : 'bg-muted/60 text-muted-foreground hover:bg-muted'}`}
+                      >
+                        +
+                      </button>
+                      <span className={`text-[8px] font-medium truncate ${entered ? 'text-blue-400' : 'text-muted-foreground/60'}`}>
+                        F{fanNum}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
@@ -475,17 +502,35 @@ const ContestTestPage = () => {
             </div>
           </div>
 
-          {/* Challenger chat */}
+          {/* Challenger fans grid */}
           <Card className="rounded-none border-x-0 border-b-0 bg-card/80 backdrop-blur-sm">
-            <CardContent className="p-3 space-y-2">
-              <p className="text-xs font-semibold text-muted-foreground">Challenger Chat</p>
-              <div className="h-28 overflow-y-auto space-y-1.5 text-xs">
-                <div className="bg-muted/50 rounded px-2 py-1"><span className="text-red-400 font-medium">Viewer1:</span> <span className="text-foreground">Let's go! 🎉</span></div>
-                <div className="bg-muted/50 rounded px-2 py-1"><span className="text-red-400 font-medium">Viewer2:</span> <span className="text-foreground">Show them what you got!</span></div>
-              </div>
-              <div className="flex gap-2">
-                <Input placeholder="Type a message..." className="text-xs h-8" readOnly />
-                <Button size="sm" className="h-8 px-3"><Send className="w-3 h-3" /></Button>
+            <CardContent className="p-2 space-y-1">
+              <p className="text-[10px] font-semibold text-muted-foreground">Challenger Supporters ({challengerFans.size}/{TOTAL_FANS})</p>
+              <div className="grid grid-cols-9 gap-1">
+                {Array.from({ length: TOTAL_FANS }, (_, i) => {
+                  const fanNum = i + 1;
+                  const entered = challengerFans.has(fanNum);
+                  return (
+                    <div key={fanNum} className="flex items-center gap-0.5">
+                      <button
+                        onClick={() => {
+                          setChallengerFans(prev => {
+                            const next = new Set(prev);
+                            if (next.has(fanNum)) next.delete(fanNum);
+                            else next.add(fanNum);
+                            return next;
+                          });
+                        }}
+                        className={`w-3 h-3 rounded-full flex items-center justify-center text-[6px] font-bold flex-shrink-0 transition-colors ${entered ? 'bg-green-500 text-white' : 'bg-muted/60 text-muted-foreground hover:bg-muted'}`}
+                      >
+                        +
+                      </button>
+                      <span className={`text-[8px] font-medium truncate ${entered ? 'text-red-400' : 'text-muted-foreground/60'}`}>
+                        F{fanNum}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
