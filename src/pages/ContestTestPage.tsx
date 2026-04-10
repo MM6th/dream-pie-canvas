@@ -125,17 +125,87 @@ const TotalPointsBar = ({ points }: { points: number }) => (
 const ContestTestPage = () => {
   const navigate = useNavigate();
 
+  // Contest phase: 'idle' | 'warmup' | 'live' | 'ended'
+  const [phase, setPhase] = useState<'idle' | 'warmup' | 'live' | 'ended'>('idle');
+  const [timeLeft, setTimeLeft] = useState(0); // seconds
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   // All data starts at zero
   const championTanks = { tip: 0, skill: 100, sample: 0, power: 0, points: 0 };
   const challengerTanks = { tip: 0, skill: 100, sample: 0, power: 0, points: 0 };
+
+  const clearTimer = useCallback(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  }, []);
+
+  const startCountdown = useCallback((seconds: number, onComplete: () => void) => {
+    clearTimer();
+    setTimeLeft(seconds);
+    intervalRef.current = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearTimer();
+          onComplete();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }, [clearTimer]);
+
+  const handleStart = useCallback(() => {
+    setPhase('warmup');
+    // 5-second warmup for testing
+    startCountdown(5, () => {
+      setPhase('live');
+      // 5:00 contest timer
+      startCountdown(300, () => {
+        setPhase('ended');
+      });
+    });
+  }, [startCountdown]);
+
+  const handleStop = useCallback(() => {
+    clearTimer();
+    setPhase('idle');
+    setTimeLeft(0);
+  }, [clearTimer]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => clearTimer();
+  }, [clearTimer]);
+
+  const formatTime = (s: number) => {
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+  };
+
+  const timerLabel = phase === 'warmup' ? 'WARMUP' : phase === 'live' ? 'LIVE' : phase === 'ended' ? 'ENDED' : 'READY';
+  const timerBorderColor = phase === 'warmup' ? 'border-yellow-500/50' : phase === 'live' ? 'border-red-600/50' : 'border-white/20';
+  const timerIconColor = phase === 'warmup' ? 'text-yellow-500' : phase === 'live' ? 'text-red-500' : 'text-white/40';
+  const isActive = phase === 'live';
 
   return (
     <div className="min-h-screen bg-background text-foreground relative">
       {/* Floating timer */}
       <div className="absolute top-14 left-1/2 -translate-x-1/2 z-50">
-        <div className="bg-black/80 border border-red-600/50 rounded-full px-6 py-2 flex items-center gap-2">
-          <Timer className="w-4 h-4 text-red-500" />
-          <span className="text-white font-mono text-lg font-bold">05:00</span>
+        <div className={`bg-black/80 border ${timerBorderColor} rounded-full px-6 py-2 flex items-center gap-2`}>
+          <Timer className={`w-4 h-4 ${timerIconColor}`} />
+          <div className="flex flex-col items-center">
+            {phase !== 'idle' && (
+              <span className={`text-[8px] font-bold uppercase tracking-widest ${phase === 'warmup' ? 'text-yellow-400' : phase === 'live' ? 'text-red-400' : 'text-white/50'}`}>
+                {timerLabel}
+              </span>
+            )}
+            <span className="text-white font-mono text-lg font-bold">
+              {phase === 'idle' ? '00:00' : formatTime(timeLeft)}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -352,11 +422,17 @@ const ContestTestPage = () => {
         </div>
       </div>
 
-      {/* Controls bar */}
+      {/* Controls bar — Start/Stop */}
       <div className="absolute bottom-0 left-0 right-0 z-50 bg-black/80 border-t border-border/30 p-3 flex items-center justify-center gap-4">
-        <Button variant="outline" size="icon" className="rounded-full w-10 h-10 border-muted-foreground/30"><Camera className="w-4 h-4" /></Button>
-        <Button variant="outline" size="icon" className="rounded-full w-10 h-10 border-muted-foreground/30"><Mic className="w-4 h-4" /></Button>
-        <Button variant="destructive" size="icon" className="rounded-full w-12 h-12"><PhoneOff className="w-5 h-5" /></Button>
+        {phase === 'idle' ? (
+          <Button onClick={handleStart} className="bg-green-600 hover:bg-green-700 text-white font-bold px-8 h-12 text-sm rounded-full gap-2">
+            <Play className="w-5 h-5" /> Start Contest
+          </Button>
+        ) : (
+          <Button onClick={handleStop} variant="destructive" className="font-bold px-8 h-12 text-sm rounded-full gap-2">
+            <Square className="w-5 h-5" /> Stop Contest
+          </Button>
+        )}
       </div>
     </div>
   );
