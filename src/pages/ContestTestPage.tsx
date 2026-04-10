@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import pieTitleBelt from "@/assets/pie-title-belt.png";
+import sixthCoinLogo from "@/assets/sixth-coin-logo.jpg";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft, Camera, Mic, MicOff, Video, VideoOff, PhoneOff, Send, Timer } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -55,13 +56,11 @@ const ContestTestPage = () => {
               </span>
             </div>
             {/* Champion coin meter — top left */}
-            <div className="absolute top-4 left-4 z-10 w-40">
-              <div className="bg-black/60 rounded-lg p-2 space-y-1">
-                <div className="flex justify-between text-xs">
-                  <span className="text-yellow-400">💰 Tips</span>
-                  <span className="text-white font-bold">$42.00</span>
-                </div>
-                <Progress value={42} className="h-2" />
+            <div className="absolute top-4 left-4 z-10">
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/60 min-w-[120px]">
+                <img src={sixthCoinLogo} className="w-4 h-4 rounded-full flex-shrink-0" alt="SIXTH" />
+                <Progress value={42} className="h-2 flex-1 bg-white/10 [&>div]:bg-amber-500" />
+                <span className="text-amber-400 text-xs font-mono font-medium whitespace-nowrap">42</span>
               </div>
             </div>
           </div>
@@ -101,14 +100,10 @@ const ContestTestPage = () => {
             </div>
             {/* Challenger coin meter — top left */}
             <div className="absolute top-4 left-4 z-10">
-              <div className="w-40">
-                <div className="bg-black/60 rounded-lg p-2 space-y-1">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-yellow-400">💰 Tips</span>
-                    <span className="text-white font-bold">$27.00</span>
-                  </div>
-                  <Progress value={27} className="h-2" />
-                </div>
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/60 min-w-[120px]">
+                <img src={sixthCoinLogo} className="w-4 h-4 rounded-full flex-shrink-0" alt="SIXTH" />
+                <Progress value={27} className="h-2 flex-1 bg-white/10 [&>div]:bg-amber-500" />
+                <span className="text-amber-400 text-xs font-mono font-medium whitespace-nowrap">27</span>
               </div>
             </div>
           </div>
