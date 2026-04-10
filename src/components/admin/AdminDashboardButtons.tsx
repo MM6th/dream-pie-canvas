@@ -3,7 +3,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
-import { Users, UserCheck, FileText, BookOpen } from "lucide-react";
+import { Users, UserCheck, FileText } from "lucide-react";
 
 interface AdminDashboardButtonsProps {
   onManageMerchants: () => void;
@@ -11,11 +11,6 @@ interface AdminDashboardButtonsProps {
 }
 
 const AdminDashboardButtons = ({ onManageMerchants, onManageCoverSubmissions }: AdminDashboardButtonsProps) => {
-  const navigate = useNavigate();
-
-  const handleAboutAuthorClick = () => {
-    navigate('/about-author');
-  };
 
   return (
     <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
@@ -43,13 +38,6 @@ const AdminDashboardButtons = ({ onManageMerchants, onManageCoverSubmissions }: 
             Cover Submissions
           </Button>
 
-          <Button
-            onClick={handleAboutAuthorClick}
-            className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
-          >
-            <BookOpen className="h-4 w-4" />
-            About Author Page
-          </Button>
         </div>
       </CardContent>
     </Card>

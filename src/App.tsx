@@ -7,7 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Films from "./pages/Films";
 import BulletinBoard from "./pages/BulletinBoard";
-import AboutAuthor from "./pages/AboutAuthor";
+
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentCancelled from "./pages/PaymentCancelled";
 import ProfilePage from "./pages/ProfilePage";
@@ -44,7 +44,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/films" element={<Films />} />
           <Route path="/bulletin" element={<BulletinBoard />} />
-          <Route path="/about-author" element={<AboutAuthor />} />
+          
           <Route path="/payment-success" element={<PaymentSuccess />} />
           <Route path="/payment-cancelled" element={<PaymentCancelled />} />
           <Route path="/profiles" element={<ProfilesDirectory />} />
