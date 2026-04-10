@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { CONTEST_SCORING_FORMULA } from "@/constants/contestFormulas";
 import { playDepositSound } from "@/utils/depositSound";
 
-/** Fizzy bubble keyframes — injected once */
+/** Fizzy bubble + criss-cross keyframes — injected once */
 const bubbleStyleId = 'contest-bubble-styles';
 if (typeof document !== 'undefined' && !document.getElementById(bubbleStyleId)) {
   const style = document.createElement('style');
@@ -23,6 +23,25 @@ if (typeof document !== 'undefined' && !document.getElementById(bubbleStyleId)) 
       50% { transform: translateX(-1px) scale(0.9); opacity: 0.6; }
       75% { transform: translateX(1px) scale(1.05); opacity: 0.4; }
       100% { transform: translateX(0) scale(0.8); opacity: 0; bottom: 100%; }
+    }
+    @keyframes criss-cross-left {
+      0% { left: 15%; top: 50%; opacity: 0; transform: translate(-50%,-50%) scale(0.5); }
+      20% { opacity: 1; transform: translate(-50%,-50%) scale(1.2); }
+      50% { left: 85%; top: 50%; transform: translate(-50%,-50%) scale(1); }
+      80% { left: 85%; top: 50%; transform: translate(-50%,-50%) scale(1.1); opacity: 1; }
+      100% { left: 85%; top: 50%; transform: translate(-50%,-50%) scale(1); opacity: 0.9; }
+    }
+    @keyframes criss-cross-right {
+      0% { left: 85%; top: 50%; opacity: 0; transform: translate(-50%,-50%) scale(0.5); }
+      20% { opacity: 1; transform: translate(-50%,-50%) scale(1.2); }
+      50% { left: 15%; top: 50%; transform: translate(-50%,-50%) scale(1); }
+      80% { left: 15%; top: 50%; transform: translate(-50%,-50%) scale(1.1); opacity: 1; }
+      100% { left: 15%; top: 50%; transform: translate(-50%,-50%) scale(1); opacity: 0.9; }
+    }
+    @keyframes title-text-appear {
+      0% { opacity: 0; transform: translateY(30px) scale(0.8); letter-spacing: 0.5em; }
+      50% { opacity: 1; transform: translateY(0) scale(1.1); letter-spacing: 0.2em; }
+      100% { opacity: 1; transform: translateY(0) scale(1); letter-spacing: 0.15em; }
     }
   `;
   document.head.appendChild(style);
