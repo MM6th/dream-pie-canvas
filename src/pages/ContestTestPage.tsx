@@ -242,8 +242,11 @@ const ContestTestPage = () => {
   const championTipVotes = Math.min(championTips + championVotePower, 100);
   const challengerTipVotes = Math.min(challengerTips + challengerVotePower, 100);
 
-  const championTanks = { tip: championTipVotes, skill: 100, sample: championSample, power: 0, points: 0 };
-  const challengerTanks = { tip: challengerTipVotes, skill: 100, sample: challengerSample, power: 0, points: 0 };
+  const championPower = Math.round((championTipVotes + 100 + championSample) / 3);
+  const challengerPower = Math.round((challengerTipVotes + 100 + challengerSample) / 3);
+
+  const championTanks = { tip: championTipVotes, skill: 100, sample: championSample, power: championPower, points: 0 };
+  const challengerTanks = { tip: challengerTipVotes, skill: 100, sample: challengerSample, power: challengerPower, points: 0 };
 
   const handleTip = useCallback((side: 'champion' | 'challenger', amount: number) => {
     if (phase !== 'live') return;
