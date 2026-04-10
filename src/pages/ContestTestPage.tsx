@@ -297,11 +297,15 @@ const ContestTestPage = () => {
         </Button>
       </div>
 
-      {/* Challenge label + Start/Stop — top center */}
-      <div className="absolute top-28 left-1/2 -translate-x-1/2 z-40 flex flex-col items-center gap-2">
+      {/* Challenge label — top center */}
+      <div className="absolute top-28 left-1/2 -translate-x-1/2 z-40 flex flex-col items-center">
         <span className="text-2xl sm:text-3xl font-black uppercase italic text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] tracking-wide pointer-events-none">
           Twerk Off
         </span>
+      </div>
+
+      {/* Start/Stop button — far right of challenger side */}
+      <div className="absolute top-28 right-4 z-50">
         {phase === 'idle' ? (
           <Button onClick={handleStart} className="bg-green-600 hover:bg-green-700 text-white font-bold px-6 h-9 text-xs rounded-full gap-2">
             <Play className="w-4 h-4" /> Start Contest
@@ -350,7 +354,7 @@ const ContestTestPage = () => {
             </div>
 
             {/* Three vertical tanks — left edge */}
-            <div className="absolute left-3 top-[40%] -translate-y-1/2 z-10 flex flex-col gap-3">
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 z-10 flex flex-col gap-3">
               <VerticalTank label="Tips/Votes" value={championTanks.tip} color="bg-cyan-400" bgColor="bg-cyan-900/40" bubbles />
               <VerticalTank label="Skill" value={championTanks.skill} color="bg-green-500" bgColor="bg-green-900/40" />
               <VerticalTank label="Sample" value={championTanks.sample} color="bg-purple-500" bgColor="bg-purple-900/40" />
@@ -471,7 +475,7 @@ const ContestTestPage = () => {
             </div>
 
             {/* Three vertical tanks — left edge */}
-            <div className="absolute left-3 top-[40%] -translate-y-1/2 z-10 flex flex-col gap-3">
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 z-10 flex flex-col gap-3">
               <VerticalTank label="Tips/Votes" value={challengerTanks.tip} color="bg-cyan-400" bgColor="bg-cyan-900/40" bubbles />
               <VerticalTank label="Skill" value={challengerTanks.skill} color="bg-green-500" bgColor="bg-green-900/40" />
               <VerticalTank label="Sample" value={challengerTanks.sample} color="bg-purple-500" bgColor="bg-purple-900/40" />
