@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
+import pieTitleBelt from "@/assets/pie-title-belt.png";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft, Camera, Mic, MicOff, Video, VideoOff, PhoneOff, Send, Timer } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -46,10 +47,12 @@ const ContestTestPage = () => {
               <p className="text-blue-300/80 font-semibold text-sm">Champion</p>
               <p className="text-blue-400/50 text-xs">@champion_user</p>
             </div>
-            {/* Status indicator */}
-            <div className="absolute top-3 left-3 flex items-center gap-1.5">
-              <div className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse" />
-              <span className="text-xs text-green-400 font-medium">LIVE</span>
+            {/* Champion badge — top left, matching real UI */}
+            <div className="absolute top-4 left-4 z-10">
+              <span className="bg-yellow-600/80 text-white text-xs px-2 py-1 rounded flex items-center gap-1">
+                <img src={pieTitleBelt} className="h-6 w-8 object-contain" alt="Belt" />
+                Champion
+              </span>
             </div>
             {/* Tip meter */}
             <div className="absolute bottom-3 left-3 right-3">
@@ -90,9 +93,11 @@ const ContestTestPage = () => {
               <p className="text-red-300/80 font-semibold text-sm">Challenger</p>
               <p className="text-red-400/50 text-xs">@challenger_user</p>
             </div>
-            <div className="absolute top-3 left-3 flex items-center gap-1.5">
-              <div className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse" />
-              <span className="text-xs text-green-400 font-medium">LIVE</span>
+            {/* Challenger badge — top right, matching real UI */}
+            <div className="absolute top-4 right-4 z-10">
+              <span className="bg-red-600/80 text-white text-xs px-2 py-1 rounded flex items-center gap-1">
+                Challenger
+              </span>
             </div>
             <div className="absolute bottom-3 left-3 right-3">
               <div className="bg-black/60 rounded-lg p-2 space-y-1">
