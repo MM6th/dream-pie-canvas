@@ -325,10 +325,10 @@ const ContestTestPage = () => {
     return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
   };
 
-  const timerLabel = phase === 'warmup' ? 'WARMUP' : phase === 'live' ? 'LIVE' : phase === 'ended' ? 'ENDED' : 'READY';
-  const timerBorderColor = phase === 'warmup' ? 'border-yellow-500/50' : phase === 'live' ? 'border-red-600/50' : 'border-white/20';
-  const timerIconColor = phase === 'warmup' ? 'text-yellow-500' : phase === 'live' ? 'text-red-500' : 'text-white/40';
-  const isActive = phase === 'live';
+  const timerLabel = phase === 'warmup' ? 'WARMUP' : phase === 'live' ? 'LIVE' : phase === 'overtime' ? 'OVERTIME' : phase === 'ended' ? 'ENDED' : 'READY';
+  const timerBorderColor = phase === 'warmup' ? 'border-yellow-500/50' : phase === 'overtime' ? 'border-orange-500/50' : phase === 'live' ? 'border-red-600/50' : 'border-white/20';
+  const timerIconColor = phase === 'warmup' ? 'text-yellow-500' : phase === 'overtime' ? 'text-orange-500' : phase === 'live' ? 'text-red-500' : 'text-white/40';
+  const isActive = phase === 'live' || phase === 'overtime';
   const showPollWarning = phase === 'live' && timeLeft > 0 && timeLeft <= 60;
 
   return (
