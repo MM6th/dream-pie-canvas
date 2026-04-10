@@ -138,17 +138,24 @@ const getSliderStyle = (value: number) => {
 };
 
 /** Polling widget with 4 category sliders — feeds real-time vote power */
-const PollWidget = ({ side, disabled, onVotePowerChange }: { side: 'champion' | 'challenger'; disabled?: boolean; onVotePowerChange?: (power: number) => void }) => {
+const PollWidget = ({ side, disabled, onVotePowerChange, onSubmittedChange }: { side: 'champion' | 'challenger'; disabled?: boolean; onVotePowerChange?: (power: number) => void; onSubmittedChange?: (submitted: boolean) => void }) => {
   const [values, setValues] = useState({ Outfit: 50, Makeup: 50, Personality: 50, Interaction: 50 });
+  const [submitted, setSubmitted] = useState(false);
 
   const handleChange = (label: string, newVal: number) => {
+    if (submitted) return;
     const next = { ...values, [label]: newVal };
     setValues(next);
-    // Calculate aggregate vote power: average deviation from 50, scaled to 0-100
     const totalDeviation = Object.values(next).reduce((sum, v) => sum + Math.abs(v - 50), 0);
-    const maxDeviation = 4 * 50; // 200
+    const maxDeviation = 4 * 50;
     const votePower = Math.round((totalDeviation / maxDeviation) * 100);
     onVotePowerChange?.(votePower);
+  };
+
+  const handleSubmit = () => {
+    if (submitted || disabled) return;
+    setSubmitted(true);
+    onSubmittedChange?.(true);
   };
 
   const getValueColor = (val: number) => {
@@ -158,7 +165,7 @@ const PollWidget = ({ side, disabled, onVotePowerChange }: { side: 'champion' | 
   };
 
   return (
-    <div className="bg-black/40 rounded-md p-2 w-[130px] space-y-1.5">
+    <div className={`bg-black/40 rounded-md p-2 w-[130px] space-y-1.5 ${submitted ? 'ring-1 ring-green-500/50' : ''}`}>
       {Object.entries(values).map(([label, val]) => (
         <div key={label} className="space-y-0.5">
           <div className="flex justify-between items-center">
@@ -170,16 +177,22 @@ const PollWidget = ({ side, disabled, onVotePowerChange }: { side: 'champion' | 
             min={1}
             max={100}
             value={val}
-            disabled={disabled}
+            disabled={disabled || submitted}
             onChange={(e) => handleChange(label, Number(e.target.value))}
             style={getSliderStyle(val)}
             className="w-full h-1.5 appearance-none rounded-sm cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white/80"
           />
         </div>
       ))}
-      <Button size="sm" disabled={disabled} className="w-full h-5 text-[9px] font-semibold uppercase tracking-wider mt-1">
-        Submit
-      </Button>
+      {submitted ? (
+        <div className="w-full h-5 flex items-center justify-center text-[9px] font-semibold uppercase tracking-wider text-green-400 mt-1">
+          ✓ Submitted
+        </div>
+      ) : (
+        <Button size="sm" disabled={disabled} onClick={handleSubmit} className="w-full h-5 text-[9px] font-semibold uppercase tracking-wider mt-1">
+          Submit
+        </Button>
+      )}
     </div>
   );
 };
@@ -197,8 +210,8 @@ const PowerFlowBar = ({ value }: { value: number }) => (
   </div>
 );
 
-/** Total points bar — hidden until contest ends, then revealed */
-const TotalPointsBar = ({ points, revealed }: { points: number; revealed: boolean }) => (
+/** Total points bar — hidden until contest ends, then revealed with penalty info */
+const TotalPointsBar = ({ points, revealed, penalized }: { points: number; revealed: boolean; penalized?: boolean }) => (
   <div className="space-y-1">
     <span className="text-[10px] text-white/60 font-bold uppercase tracking-wider">Total Points</span>
     <div className="w-full h-4 rounded-sm bg-white/10 overflow-hidden relative">
@@ -218,6 +231,11 @@ const TotalPointsBar = ({ points, revealed }: { points: number; revealed: boolea
         </span>
       )}
     </div>
+    {revealed && penalized && (
+      <span className="text-[8px] text-red-400 font-semibold animate-[fadeIn_0.8s_ease-in_1s_both]">
+        ⚠ -15 pts (poll not submitted)
+      </span>
+    )}
   </div>
 );
 
@@ -242,6 +260,13 @@ const ContestTestPage = () => {
   const [championVotePower, setChampionVotePower] = useState(0);
   const [challengerVotePower, setChallengerVotePower] = useState(0);
 
+  // Poll submission tracking
+  const [championPollSubmitted, setChampionPollSubmitted] = useState(false);
+  const [challengerPollSubmitted, setChallengerPollSubmitted] = useState(false);
+
+  // Belt animation state
+  const [beltWinner, setBeltWinner] = useState<'champion' | 'challenger' | 'tie' | null>(null);
+
   // Fan/sample state — tracks which fans have "entered" per side
   const [championFans, setChampionFans] = useState<Set<number>>(new Set());
   const [challengerFans, setChallengerFans] = useState<Set<number>>(new Set());
@@ -260,19 +285,30 @@ const ContestTestPage = () => {
   const championPower = isLiveOrOvertime ? Math.round((championTipVotes + skillValue + championSample) / 3) : 0;
   const challengerPower = isLiveOrOvertime ? Math.round((challengerTipVotes + skillValue + challengerSample) / 3) : 0;
 
-  // Calculate final points using the contest formula: gifts + pollVotesWon × skill% × sampleIntensity
-  const championPoints = CONTEST_SCORING_FORMULA.calculate({
+  // Poll penalty: unsubmitted polls deduct 15 points from that side's total
+  const POLL_PENALTY = 15;
+
+  // Calculate final points using the contest formula + poll penalty
+  const championPointsRaw = CONTEST_SCORING_FORMULA.calculate({
     gifts: championTips,
     pollVotesWon: championVotePower,
     skillPercent: skillValue,
     sampleIntensity: championSample,
   });
-  const challengerPoints = CONTEST_SCORING_FORMULA.calculate({
+  const challengerPointsRaw = CONTEST_SCORING_FORMULA.calculate({
     gifts: challengerTips,
     pollVotesWon: challengerVotePower,
     skillPercent: skillValue,
     sampleIntensity: challengerSample,
   });
+
+  // Apply penalty only at reveal time (ended phase)
+  const championPoints = phase === 'ended'
+    ? Math.max(0, championPointsRaw - (championPollSubmitted ? 0 : POLL_PENALTY))
+    : championPointsRaw;
+  const challengerPoints = phase === 'ended'
+    ? Math.max(0, challengerPointsRaw - (challengerPollSubmitted ? 0 : POLL_PENALTY))
+    : challengerPointsRaw;
 
   const isRevealed = phase === 'ended';
 
@@ -312,11 +348,11 @@ const ContestTestPage = () => {
   }, [clearTimer]);
 
   const handleStart = useCallback(() => {
+    setBeltWinner(null);
     setPhase('warmup');
     startCountdown(5, () => {
       setPhase('live');
       startCountdown(105, () => {
-        // Auto-transition to overtime
         setPhase('overtime');
         setOvertimeTotal(OVERTIME_SECONDS);
         startCountdown(OVERTIME_SECONDS, () => {
@@ -341,12 +377,32 @@ const ContestTestPage = () => {
     setPollResetKey(prev => prev + 1);
     setChampionFans(new Set());
     setChallengerFans(new Set());
+    setChampionPollSubmitted(false);
+    setChallengerPollSubmitted(false);
+    setBeltWinner(null);
   }, []);
 
   // Cleanup on unmount
   useEffect(() => {
     return () => clearTimer();
   }, [clearTimer]);
+
+  // Trigger belt animation when contest ends
+  useEffect(() => {
+    if (phase === 'ended') {
+      // Delay slightly so points render first
+      const timeout = setTimeout(() => {
+        if (championPoints > challengerPoints) {
+          setBeltWinner('champion');
+        } else if (challengerPoints > championPoints) {
+          setBeltWinner('challenger');
+        } else {
+          setBeltWinner('tie');
+        }
+      }, 800);
+      return () => clearTimeout(timeout);
+    }
+  }, [phase, championPoints, challengerPoints]);
 
   const formatTime = (s: number) => {
     const m = Math.floor(s / 60);
@@ -419,9 +475,26 @@ const ContestTestPage = () => {
         )}
       </div>
 
-      {/* Championship belt — centered between both sides */}
-      <div className="absolute bottom-44 left-1/2 -translate-x-1/2 z-40 pointer-events-none">
-        <img src={pieTitleBelt} className="w-16 h-16 object-contain drop-shadow-lg" alt="Championship Belt" />
+      {/* Championship belt — centered, flies to winner on end */}
+      <div
+        className={`absolute z-[70] pointer-events-none transition-all duration-[1.5s] ease-in-out ${
+          beltWinner === 'champion'
+            ? 'bottom-1/2 left-[25%] -translate-x-1/2 scale-150'
+            : beltWinner === 'challenger'
+            ? 'bottom-1/2 right-[25%] translate-x-1/2 left-auto scale-150'
+            : 'bottom-44 left-1/2 -translate-x-1/2 scale-100'
+        }`}
+      >
+        <img
+          src={pieTitleBelt}
+          className={`w-16 h-16 object-contain drop-shadow-lg ${beltWinner ? 'drop-shadow-[0_0_20px_rgba(255,215,0,0.8)]' : ''}`}
+          alt="Championship Belt"
+        />
+        {beltWinner && beltWinner !== 'tie' && (
+          <div className="text-center mt-1 animate-[fadeIn_0.8s_ease-in_1s_both]">
+            <span className="text-amber-400 text-xs font-bold uppercase tracking-wider drop-shadow">Winner!</span>
+          </div>
+        )}
       </div>
 
       {/* Split screen layout */}
@@ -469,12 +542,12 @@ const ContestTestPage = () => {
 
             {/* Total points bar — bottom area above tip button */}
             <div className="absolute bottom-14 left-14 right-14 z-10 mx-auto max-w-[200px]">
-              <TotalPointsBar points={championTanks.points} revealed={isRevealed} />
+              <TotalPointsBar points={championTanks.points} revealed={isRevealed} penalized={isRevealed && !championPollSubmitted} />
             </div>
 
             {/* Champion poll widget — bottom left */}
             <div className="absolute bottom-4 left-3 z-10">
-              <PollWidget key={`champ-${pollResetKey}`} side="champion" disabled={!isActive} onVotePowerChange={setChampionVotePower} />
+              <PollWidget key={`champ-${pollResetKey}`} side="champion" disabled={!isActive} onVotePowerChange={setChampionVotePower} onSubmittedChange={setChampionPollSubmitted} />
             </div>
 
             {/* Champion tip button — bottom center */}
@@ -590,12 +663,12 @@ const ContestTestPage = () => {
 
             {/* Total points bar — bottom area */}
             <div className="absolute bottom-14 left-14 right-14 z-10 mx-auto max-w-[200px]">
-              <TotalPointsBar points={challengerTanks.points} revealed={isRevealed} />
+              <TotalPointsBar points={challengerTanks.points} revealed={isRevealed} penalized={isRevealed && !challengerPollSubmitted} />
             </div>
 
             {/* Challenger poll widget — bottom left */}
             <div className="absolute bottom-4 left-3 z-10">
-              <PollWidget key={`chal-${pollResetKey}`} side="challenger" disabled={!isActive} onVotePowerChange={setChallengerVotePower} />
+              <PollWidget key={`chal-${pollResetKey}`} side="challenger" disabled={!isActive} onVotePowerChange={setChallengerVotePower} onSubmittedChange={setChallengerPollSubmitted} />
             </div>
 
             {/* Challenger tip button — bottom center */}
