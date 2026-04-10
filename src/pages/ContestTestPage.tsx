@@ -138,17 +138,24 @@ const getSliderStyle = (value: number) => {
 };
 
 /** Polling widget with 4 category sliders — feeds real-time vote power */
-const PollWidget = ({ side, disabled, onVotePowerChange }: { side: 'champion' | 'challenger'; disabled?: boolean; onVotePowerChange?: (power: number) => void }) => {
+const PollWidget = ({ side, disabled, onVotePowerChange, onSubmittedChange }: { side: 'champion' | 'challenger'; disabled?: boolean; onVotePowerChange?: (power: number) => void; onSubmittedChange?: (submitted: boolean) => void }) => {
   const [values, setValues] = useState({ Outfit: 50, Makeup: 50, Personality: 50, Interaction: 50 });
+  const [submitted, setSubmitted] = useState(false);
 
   const handleChange = (label: string, newVal: number) => {
+    if (submitted) return;
     const next = { ...values, [label]: newVal };
     setValues(next);
-    // Calculate aggregate vote power: average deviation from 50, scaled to 0-100
     const totalDeviation = Object.values(next).reduce((sum, v) => sum + Math.abs(v - 50), 0);
-    const maxDeviation = 4 * 50; // 200
+    const maxDeviation = 4 * 50;
     const votePower = Math.round((totalDeviation / maxDeviation) * 100);
     onVotePowerChange?.(votePower);
+  };
+
+  const handleSubmit = () => {
+    if (submitted || disabled) return;
+    setSubmitted(true);
+    onSubmittedChange?.(true);
   };
 
   const getValueColor = (val: number) => {
@@ -158,7 +165,7 @@ const PollWidget = ({ side, disabled, onVotePowerChange }: { side: 'champion' | 
   };
 
   return (
-    <div className="bg-black/40 rounded-md p-2 w-[130px] space-y-1.5">
+    <div className={`bg-black/40 rounded-md p-2 w-[130px] space-y-1.5 ${submitted ? 'ring-1 ring-green-500/50' : ''}`}>
       {Object.entries(values).map(([label, val]) => (
         <div key={label} className="space-y-0.5">
           <div className="flex justify-between items-center">
@@ -170,16 +177,22 @@ const PollWidget = ({ side, disabled, onVotePowerChange }: { side: 'champion' | 
             min={1}
             max={100}
             value={val}
-            disabled={disabled}
+            disabled={disabled || submitted}
             onChange={(e) => handleChange(label, Number(e.target.value))}
             style={getSliderStyle(val)}
             className="w-full h-1.5 appearance-none rounded-sm cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white/80"
           />
         </div>
       ))}
-      <Button size="sm" disabled={disabled} className="w-full h-5 text-[9px] font-semibold uppercase tracking-wider mt-1">
-        Submit
-      </Button>
+      {submitted ? (
+        <div className="w-full h-5 flex items-center justify-center text-[9px] font-semibold uppercase tracking-wider text-green-400 mt-1">
+          ✓ Submitted
+        </div>
+      ) : (
+        <Button size="sm" disabled={disabled} onClick={handleSubmit} className="w-full h-5 text-[9px] font-semibold uppercase tracking-wider mt-1">
+          Submit
+        </Button>
+      )}
     </div>
   );
 };
