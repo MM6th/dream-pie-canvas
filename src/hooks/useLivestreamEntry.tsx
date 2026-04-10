@@ -22,9 +22,35 @@ export const useLivestreamEntry = () => {
     return !!data;
   };
 
+  const checkBlocked = async (postId: string, userId: string): Promise<boolean> => {
+    // Get the merchant who owns the post
+    const { data: post } = await supabase
+      .from('bulletin_posts')
+      .select('merchant_id')
+      .eq('id', postId)
+      .single();
+    if (!post) return false;
+    const { data: blocked } = await supabase.rpc('is_blocked', { user_a: userId, user_b: post.merchant_id });
+    return !!blocked;
+  };
+
   const enterLivestream = async (postId: string, linkUrl: string) => {
     setLoading(true);
     try {
+      // Check if user is blocked by the stream host
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (currentUser) {
+        const blocked = await checkBlocked(postId, currentUser.id);
+        if (blocked) {
+          toast({
+            title: 'Cannot Enter',
+            description: 'You are unable to enter this livestream.',
+            variant: 'destructive',
+          });
+          return { success: false };
+        }
+      }
+
       const { data, error } = await supabase.functions.invoke('enter-livestream', {
         body: { postId },
       });
@@ -67,5 +93,5 @@ export const useLivestreamEntry = () => {
     }
   };
 
-  return { enterLivestream, checkEntry, loading };
+  return { enterLivestream, checkEntry, checkBlocked, loading };
 };

@@ -12,6 +12,13 @@ export const useFollowRequest = () => {
       return { error: 'Not authenticated' };
     }
 
+    // Check if blocked
+    const { data: blockData } = await supabase.rpc('is_blocked', { user_a: user.id, user_b: targetId });
+    if (blockData) {
+      toast.error('You cannot send a follow request to this user');
+      return { error: 'Blocked' };
+    }
+
     try {
       // Get requester's display name for the notification
       const { data: requesterProfile } = await supabase

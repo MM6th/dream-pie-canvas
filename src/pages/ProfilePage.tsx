@@ -21,6 +21,19 @@ import type { FollowStatus } from "@/hooks/useFollowRequest";
 import { MessageButton } from "@/components/profile/MessageButton";
 import { FollowButton } from "@/components/profile/FollowButton";
 import SixthPriceTag from "@/components/SixthPriceTag";
+import { useBlockUser } from "@/hooks/useBlockUser";
+import { Ban } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface Profile {
   id: string;
@@ -104,6 +117,7 @@ const ProfilePage = () => {
     refetch: refetchVisibility 
   } = useVisibilityCheck(userId || '');
   const { checkFollowStatus } = useFollowRequest();
+  const { isBlocked, blockUser, unblockUser, loading: blockLoading } = useBlockUser(user?.id);
 
   // Fetch posts immediately without waiting for auth
   useEffect(() => {
@@ -399,6 +413,43 @@ const ProfilePage = () => {
                       onRequestSent={handleRequestSent}
                       className="w-full mt-2 mb-4"
                     />
+                  )}
+
+                  {/* Block Button - show for non-own profiles */}
+                  {!isOwnProfile && user && (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={`w-full mb-4 ${isBlocked(userId || '') ? 'border-red-500 text-red-400 hover:bg-red-900/20' : 'border-gray-600 text-gray-400 hover:bg-gray-700'}`}
+                          disabled={blockLoading}
+                        >
+                          <Ban className="w-4 h-4 mr-2" />
+                          {isBlocked(userId || '') ? 'Unblock User' : 'Block User'}
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent className="bg-gray-800 border-gray-700">
+                        <AlertDialogHeader>
+                          <AlertDialogTitle className="text-white">
+                            {isBlocked(userId || '') ? 'Unblock' : 'Block'} {profile.display_name || 'this user'}?
+                          </AlertDialogTitle>
+                          <AlertDialogDescription className="text-gray-400">
+                            {isBlocked(userId || '')
+                              ? 'This user will be able to follow you, enter your livestreams, and see your posts again.'
+                              : 'This user will not be able to follow you, enter your livestreams, or see your posts in the community feed. Any existing follow connections will be removed.'}
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel className="bg-gray-700 text-white border-gray-600">Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => isBlocked(userId || '') ? unblockUser(userId || '') : blockUser(userId || '')}
+                            className={isBlocked(userId || '') ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}
+                          >
+                            {isBlocked(userId || '') ? 'Unblock' : 'Block'}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   )}
 
                   {/* Messaging Price */}

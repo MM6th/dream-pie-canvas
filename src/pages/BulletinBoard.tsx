@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useBlockUser } from "@/hooks/useBlockUser";
 import AppNavBar from "@/components/AppNavBar";
 import { supabase } from "@/integrations/supabase/client";
 import CurrentThoughtsSection from "@/components/CurrentThoughtsSection";
@@ -14,6 +15,7 @@ const BulletinBoard = () => {
   const navigate = useNavigate();
   const { signOut, user, loading: authLoading } = useAuth();
   const isMobile = useIsMobile();
+  const { blockedIds } = useBlockUser(user?.id);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -80,8 +82,8 @@ const BulletinBoard = () => {
     }
   };
 
-  // Show all posts in the community feed
-  const currentThoughtsPosts = posts;
+  // Filter out posts from blocked users (both directions)
+  const currentThoughtsPosts = posts.filter((post: any) => !blockedIds.includes(post.merchant_id));
   
 
 

@@ -4026,6 +4026,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_blocks: {
+        Row: {
+          blocked_id: string
+          blocker_id: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          blocked_id: string
+          blocker_id: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          blocked_id?: string
+          blocker_id?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: []
+      }
       user_free_resources: {
         Row: {
           accepted_at: string | null
@@ -4678,6 +4699,7 @@ export type Database = {
       }
       is_admin: { Args: { user_id: string }; Returns: boolean }
       is_approved_merchant: { Args: { user_id: string }; Returns: boolean }
+      is_blocked: { Args: { user_a: string; user_b: string }; Returns: boolean }
       tip_live_stream: {
         Args: { p_amount?: number; p_recipient_id: string; p_stream_id: string }
         Returns: boolean
