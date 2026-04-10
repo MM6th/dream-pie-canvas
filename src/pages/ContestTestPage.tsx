@@ -297,16 +297,11 @@ const ContestTestPage = () => {
         </Button>
       </div>
 
-      {/* Challenge label + controls + formula — top center cluster */}
+      {/* Challenge label + Start/Stop — top center */}
       <div className="absolute top-28 left-1/2 -translate-x-1/2 z-40 flex flex-col items-center gap-2">
         <span className="text-2xl sm:text-3xl font-black uppercase italic text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] tracking-wide pointer-events-none">
           Twerk Off
         </span>
-        <div className="bg-black/70 rounded-lg px-4 py-1.5 pointer-events-none">
-          <p className="text-[9px] text-white/60 font-mono text-center">
-            gifts + poll votes won × skill % × sample intensity = final points
-          </p>
-        </div>
         {phase === 'idle' ? (
           <Button onClick={handleStart} className="bg-green-600 hover:bg-green-700 text-white font-bold px-6 h-9 text-xs rounded-full gap-2">
             <Play className="w-4 h-4" /> Start Contest
@@ -401,7 +396,7 @@ const ContestTestPage = () => {
           </div>
 
           {/* Champion supporters + chat */}
-          <Card className="rounded-none border-x-0 border-b-0 bg-card/80 backdrop-blur-sm">
+          <Card className={`rounded-none border-x-0 border-b-0 bg-card/80 backdrop-blur-sm transition-all duration-500 ${isActive ? 'opacity-100 shadow-[0_0_12px_rgba(34,197,94,0.3)]' : 'opacity-40'}`}>
             <CardContent className="p-2 space-y-2">
               {/* Fan grid */}
               <p className="text-[10px] font-bold text-foreground">Supporters ({championFans.size}/{TOTAL_FANS})</p>
@@ -412,6 +407,7 @@ const ContestTestPage = () => {
                   return (
                     <div key={fanNum} className="flex items-center gap-0.5">
                       <button
+                        disabled={!isActive}
                         onClick={() => {
                           setChampionFans(prev => {
                             const next = new Set(prev);
@@ -420,7 +416,7 @@ const ContestTestPage = () => {
                             return next;
                           });
                         }}
-                        className={`w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold flex-shrink-0 transition-colors border ${entered ? 'bg-green-500 border-green-400 text-white shadow-[0_0_6px_rgba(34,197,94,0.6)]' : 'bg-muted border-border text-foreground hover:bg-accent hover:border-accent'}`}
+                        className={`w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold flex-shrink-0 transition-colors border disabled:cursor-not-allowed ${entered ? 'bg-green-500 border-green-400 text-white shadow-[0_0_6px_rgba(34,197,94,0.6)]' : 'bg-muted border-border text-foreground hover:bg-accent hover:border-accent'}`}
                       >
                         +
                       </button>
@@ -438,8 +434,8 @@ const ContestTestPage = () => {
                   {/* Live messages will appear here */}
                 </div>
                 <div className="flex gap-2 mt-1">
-                  <Input placeholder="Type a message..." className="text-xs h-7" readOnly />
-                  <Button size="sm" className="h-7 px-2"><Send className="w-3 h-3" /></Button>
+                  <Input placeholder="Type a message..." className="text-xs h-7" disabled={!isActive} />
+                  <Button size="sm" className="h-7 px-2" disabled={!isActive}><Send className="w-3 h-3" /></Button>
                 </div>
               </div>
             </CardContent>
@@ -521,7 +517,7 @@ const ContestTestPage = () => {
           </div>
 
           {/* Challenger supporters + chat */}
-          <Card className="rounded-none border-x-0 border-b-0 bg-card/80 backdrop-blur-sm">
+          <Card className={`rounded-none border-x-0 border-b-0 bg-card/80 backdrop-blur-sm transition-all duration-500 ${isActive ? 'opacity-100 shadow-[0_0_12px_rgba(34,197,94,0.3)]' : 'opacity-40'}`}>
             <CardContent className="p-2 space-y-2">
               <p className="text-[10px] font-bold text-foreground">Supporters ({challengerFans.size}/{TOTAL_FANS})</p>
               <div className="grid grid-cols-9 gap-1">
@@ -531,6 +527,7 @@ const ContestTestPage = () => {
                   return (
                     <div key={fanNum} className="flex items-center gap-0.5">
                       <button
+                        disabled={!isActive}
                         onClick={() => {
                           setChallengerFans(prev => {
                             const next = new Set(prev);
@@ -539,7 +536,7 @@ const ContestTestPage = () => {
                             return next;
                           });
                         }}
-                        className={`w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold flex-shrink-0 transition-colors border ${entered ? 'bg-green-500 border-green-400 text-white shadow-[0_0_6px_rgba(34,197,94,0.6)]' : 'bg-muted border-border text-foreground hover:bg-accent hover:border-accent'}`}
+                        className={`w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold flex-shrink-0 transition-colors border disabled:cursor-not-allowed ${entered ? 'bg-green-500 border-green-400 text-white shadow-[0_0_6px_rgba(34,197,94,0.6)]' : 'bg-muted border-border text-foreground hover:bg-accent hover:border-accent'}`}
                       >
                         +
                       </button>
@@ -555,8 +552,8 @@ const ContestTestPage = () => {
                 <div className="h-16 overflow-y-auto space-y-1 text-xs">
                 </div>
                 <div className="flex gap-2 mt-1">
-                  <Input placeholder="Type a message..." className="text-xs h-7" readOnly />
-                  <Button size="sm" className="h-7 px-2"><Send className="w-3 h-3" /></Button>
+                  <Input placeholder="Type a message..." className="text-xs h-7" disabled={!isActive} />
+                  <Button size="sm" className="h-7 px-2" disabled={!isActive}><Send className="w-3 h-3" /></Button>
                 </div>
               </div>
             </CardContent>
