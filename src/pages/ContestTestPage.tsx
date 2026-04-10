@@ -64,6 +64,28 @@ const ContestTestPage = () => {
                 <span className="text-amber-400 text-xs font-mono font-medium whitespace-nowrap">42</span>
               </div>
             </div>
+            {/* Champion tip button — bottom center */}
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="border-amber-600/50 text-amber-400 hover:bg-amber-900/20">
+                    <img src={sixthCoinLogo} className="w-4 h-4 rounded-full mr-2" alt="SIXTH" />
+                    Tip
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-48 p-2" align="center">
+                  <p className="text-xs text-muted-foreground mb-2 px-1">Send SIXTH tokens</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[1, 5, 10, 25].map((amt) => (
+                      <Button key={amt} size="sm" variant="outline" className="text-amber-400 border-amber-600/30 hover:bg-amber-900/20">
+                        <img src={sixthCoinLogo} className="w-3 h-3 rounded-full mr-1" alt="" />
+                        {amt}
+                      </Button>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
           </div>
           {/* Champion chat */}
           <Card className="rounded-none border-x-0 border-b-0 bg-card/80 backdrop-blur-sm">
@@ -106,6 +128,28 @@ const ContestTestPage = () => {
                 <Progress value={27} className="h-2 flex-1 bg-white/10 [&>div]:bg-amber-500" />
                 <span className="text-amber-400 text-xs font-mono font-medium whitespace-nowrap">27</span>
               </div>
+            </div>
+            {/* Challenger tip button — bottom center */}
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="border-amber-600/50 text-amber-400 hover:bg-amber-900/20">
+                    <img src={sixthCoinLogo} className="w-4 h-4 rounded-full mr-2" alt="SIXTH" />
+                    Tip
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-48 p-2" align="center">
+                  <p className="text-xs text-muted-foreground mb-2 px-1">Send SIXTH tokens</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[1, 5, 10, 25].map((amt) => (
+                      <Button key={amt} size="sm" variant="outline" className="text-amber-400 border-amber-600/30 hover:bg-amber-900/20">
+                        <img src={sixthCoinLogo} className="w-3 h-3 rounded-full mr-1" alt="" />
+                        {amt}
+                      </Button>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
           {/* Challenger chat */}
