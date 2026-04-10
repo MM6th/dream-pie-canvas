@@ -8,11 +8,18 @@ export const useBlockUser = (currentUserId: string | undefined) => {
 
   const fetchBlockedUsers = useCallback(async () => {
     if (!currentUserId) return;
-    const { data } = await supabase
+    // Fetch users I blocked
+    const { data: myBlocks } = await supabase
       .from('user_blocks')
       .select('blocked_id')
       .eq('blocker_id', currentUserId);
-    setBlockedIds((data || []).map(d => d.blocked_id));
+    
+    // Also need to know who blocked me (for feed filtering)
+    // Use RPC since we can't SELECT where blocked_id = me (RLS only shows blocker's rows)
+    // We'll use is_blocked check at display time for the "blocked by" direction
+    // But for efficient feed filtering, let's just track our own blocks
+    // The is_blocked RPC handles bidirectional checks for follow/livestream
+    setBlockedIds((myBlocks || []).map(d => d.blocked_id));
   }, [currentUserId]);
 
   useEffect(() => {
