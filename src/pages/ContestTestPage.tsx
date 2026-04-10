@@ -12,18 +12,18 @@ const ContestTestPage = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground relative">
-      {/* Floating timer header */}
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50">
+      {/* Floating timer */}
+      <div className="absolute top-14 left-1/2 -translate-x-1/2 z-50">
         <div className="bg-black/80 border border-red-600/50 rounded-full px-6 py-2 flex items-center gap-2">
           <Timer className="w-4 h-4 text-red-500" />
           <span className="text-white font-mono text-lg font-bold">05:00</span>
         </div>
       </div>
 
-      {/* Back button */}
+      {/* Back button — lowered below badge area */}
       <div className="absolute top-4 left-4 z-50">
-        <Button variant="ghost" size="sm" onClick={() => navigate('/')} className="text-white bg-black/50 hover:bg-black/70">
-          <ArrowLeft className="w-4 h-4 mr-1" /> Back to Dashboard
+        <Button variant="ghost" size="sm" onClick={() => navigate('/')} className="text-white bg-black/50 hover:bg-black/70 text-xs px-2 py-1">
+          <ArrowLeft className="w-3 h-3 mr-1" /> Back
         </Button>
       </div>
 
@@ -47,21 +47,20 @@ const ContestTestPage = () => {
               <p className="text-blue-300/80 font-semibold text-sm">Champion</p>
               <p className="text-blue-400/50 text-xs">@champion_user</p>
             </div>
-            {/* Champion badge — top left, matching real UI */}
-            <div className="absolute top-4 left-4 z-10">
+            {/* Champion badge + coin meter — top left, matching real UI */}
+            <div className="absolute top-4 left-4 z-10 flex flex-col items-start gap-1">
               <span className="bg-yellow-600/80 text-white text-xs px-2 py-1 rounded flex items-center gap-1">
                 <img src={pieTitleBelt} className="h-6 w-8 object-contain" alt="Belt" />
                 Champion
               </span>
-            </div>
-            {/* Tip meter */}
-            <div className="absolute bottom-3 left-3 right-3">
-              <div className="bg-black/60 rounded-lg p-2 space-y-1">
-                <div className="flex justify-between text-xs">
-                  <span className="text-yellow-400">💰 Tips</span>
-                  <span className="text-white font-bold">$42.00</span>
+              <div className="mt-2 w-40">
+                <div className="bg-black/60 rounded-lg p-2 space-y-1">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-yellow-400">💰 Tips</span>
+                    <span className="text-white font-bold">$42.00</span>
+                  </div>
+                  <Progress value={42} className="h-2" />
                 </div>
-                <Progress value={42} className="h-2" />
               </div>
             </div>
           </div>
@@ -93,19 +92,22 @@ const ContestTestPage = () => {
               <p className="text-red-300/80 font-semibold text-sm">Challenger</p>
               <p className="text-red-400/50 text-xs">@challenger_user</p>
             </div>
-            {/* Challenger badge — top right, matching real UI */}
+            {/* Challenger badge — top right */}
             <div className="absolute top-4 right-4 z-10">
               <span className="bg-red-600/80 text-white text-xs px-2 py-1 rounded flex items-center gap-1">
                 Challenger
               </span>
             </div>
-            <div className="absolute bottom-3 left-3 right-3">
-              <div className="bg-black/60 rounded-lg p-2 space-y-1">
-                <div className="flex justify-between text-xs">
-                  <span className="text-yellow-400">💰 Tips</span>
-                  <span className="text-white font-bold">$27.00</span>
+            {/* Challenger coin meter — top left */}
+            <div className="absolute top-4 left-4 z-10">
+              <div className="w-40">
+                <div className="bg-black/60 rounded-lg p-2 space-y-1">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-yellow-400">💰 Tips</span>
+                    <span className="text-white font-bold">$27.00</span>
+                  </div>
+                  <Progress value={27} className="h-2" />
                 </div>
-                <Progress value={27} className="h-2" />
               </div>
             </div>
           </div>
