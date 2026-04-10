@@ -82,8 +82,8 @@ const BulletinBoard = () => {
     }
   };
 
-  // Show all posts in the community feed
-  const currentThoughtsPosts = posts;
+  // Filter out posts from blocked users (both directions)
+  const currentThoughtsPosts = posts.filter((post: any) => !blockedIds.includes(post.merchant_id));
   
 
 
