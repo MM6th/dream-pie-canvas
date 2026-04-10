@@ -320,7 +320,7 @@ const ContestTestPage = () => {
                   <p className="text-xs text-muted-foreground mb-2 px-1">Send SIXTH tokens</p>
                   <div className="grid grid-cols-2 gap-2">
                     {[1, 5, 10, 25].map((amt) => (
-                      <Button key={amt} size="sm" variant="outline" className="text-amber-400 border-amber-600/30 hover:bg-amber-900/20">
+                      <Button key={amt} size="sm" variant="outline" className="text-amber-400 border-amber-600/30 hover:bg-amber-900/20" onClick={() => handleTip('champion', amt)}>
                         <img src={sixthCoinLogo} className="w-3 h-3 rounded-full mr-1" alt="" />
                         {amt}
                       </Button>
@@ -411,7 +411,7 @@ const ContestTestPage = () => {
                   <p className="text-xs text-muted-foreground mb-2 px-1">Send SIXTH tokens</p>
                   <div className="grid grid-cols-2 gap-2">
                     {[1, 5, 10, 25].map((amt) => (
-                      <Button key={amt} size="sm" variant="outline" className="text-amber-400 border-amber-600/30 hover:bg-amber-900/20">
+                      <Button key={amt} size="sm" variant="outline" className="text-amber-400 border-amber-600/30 hover:bg-amber-900/20" onClick={() => handleTip('challenger', amt)}>
                         <img src={sixthCoinLogo} className="w-3 h-3 rounded-full mr-1" alt="" />
                         {amt}
                       </Button>
