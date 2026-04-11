@@ -408,6 +408,7 @@ const ContestTestPage = () => {
     setChampionPollSubmitted(false);
     setChallengerPollSubmitted(false);
     setShowTitleChange(false);
+    setBadgesSwapped(false);
     setBeltWinner(null);
   }, []);
 
@@ -439,8 +440,11 @@ const ContestTestPage = () => {
               if (deep) utterance.voice = deep;
               speechSynthesis.speak(utterance);
             }
-            // Auto-hide after 5 seconds
-            setTimeout(() => setShowTitleChange(false), 5000);
+            // Keep badges swapped, just hide the overlay
+            setTimeout(() => {
+              setBadgesSwapped(true);
+              setShowTitleChange(false);
+            }, 5000);
           }, 1500);
         } else {
           setBeltWinner('tie');
@@ -572,7 +576,8 @@ const ContestTestPage = () => {
             </div>
 
             {/* Champion badge — top right, flies RIGHT to challenger side on title change */}
-            <div className={`absolute top-4 right-4 z-[80] ${showTitleChange ? 'animate-[badge-fly-right_1.5s_ease-in-out_forwards]' : ''}`}>
+            <div className={`absolute top-4 right-4 z-[80] ${showTitleChange ? 'animate-[badge-fly-right_1.5s_ease-in-out_forwards]' : ''}`}
+              style={badgesSwapped ? { transform: 'translateX(50vw)' } : undefined}>
               <span className={`bg-yellow-600/80 text-white text-xs px-2 py-1 rounded flex items-center gap-1 ${showTitleChange ? 'shadow-[0_0_20px_rgba(234,179,8,0.6)]' : ''}`}>
                 <img src={pieTitleBelt} className="h-6 w-8 object-contain" alt="Belt" />
                 Champion
@@ -702,7 +707,8 @@ const ContestTestPage = () => {
             </div>
 
             {/* Challenger badge — top right, flies LEFT to champion side on title change */}
-            <div className={`absolute top-4 right-4 z-[80] ${showTitleChange ? 'animate-[badge-fly-left_1.5s_ease-in-out_forwards]' : ''}`}>
+            <div className={`absolute top-4 right-4 z-[80] ${showTitleChange ? 'animate-[badge-fly-left_1.5s_ease-in-out_forwards]' : ''}`}
+              style={badgesSwapped ? { transform: 'translateX(-50vw)' } : undefined}>
               <span className={`bg-red-600/80 text-white text-xs px-2 py-1 rounded flex items-center gap-1 ${showTitleChange ? 'shadow-[0_0_20px_rgba(239,68,68,0.6)]' : ''}`}>
                 Challenger
               </span>
