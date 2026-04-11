@@ -569,8 +569,13 @@ const ContestTestPage = () => {
         </span>
       </div>
 
-      {/* Start/Stop button — far right of challenger side */}
-      <div className="absolute top-28 right-4 z-50">
+      {/* Start/Stop/Scenario buttons — far right */}
+      <div className="absolute top-28 right-4 z-50 flex gap-2">
+        {phase === 'idle' && (
+          <Button onClick={handleUnderdogScenario} className="bg-purple-600 hover:bg-purple-700 text-white font-bold px-4 h-9 text-xs rounded-full gap-1">
+            🐕 Underdog Scenario
+          </Button>
+        )}
         {phase === 'idle' ? (
           <Button onClick={handleStart} className="bg-green-600 hover:bg-green-700 text-white font-bold px-6 h-9 text-xs rounded-full gap-2">
             <Play className="w-4 h-4" /> Start Contest
