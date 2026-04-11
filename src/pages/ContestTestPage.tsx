@@ -426,6 +426,53 @@ const ContestTestPage = () => {
     setBeltWinner(null);
   }, []);
 
+  /** Underdog Scenario: auto-sets viewers, fans, and tips so the challenger
+   *  (fewer viewers but high engagement) beats the champion (many viewers,
+   *  low engagement). Then starts the contest — just submit polls & stop. */
+  const handleUnderdogScenario = useCallback(() => {
+    // Reset first
+    setPhase('idle');
+    setTimeLeft(0);
+    setPollResetKey(prev => prev + 1);
+    setChampionPollSubmitted(false);
+    setChallengerPollSubmitted(false);
+    setShowTitleChange(false);
+    setBadgesSwapped(false);
+    setBeltWinner(null);
+
+    // Champion: 500 viewers, only 3 fans voted — low engagement
+    setChampionViewers(500);
+    const champFans = new Set<number>([1, 2, 3]);
+    setChampionFans(champFans);
+    setChampionTips(15);
+
+    // Challenger: 50 viewers, 22 fans voted — high engagement (underdog)
+    setChallengerViewers(50);
+    const chalFans = new Set<number>(Array.from({ length: 22 }, (_, i) => i + 1));
+    setChallengerFans(chalFans);
+    setChallengerTips(10);
+
+    // Set vote power to simulate submitted polls with strong opinions
+    setChampionVotePower(20);  // weak poll engagement
+    setChallengerVotePower(75); // strong poll engagement
+
+    // Start the contest after a tick so state settles
+    setTimeout(() => {
+      setBeltWinner(null);
+      setPhase('warmup');
+      startCountdown(5, () => {
+        setPhase('live');
+        startCountdown(105, () => {
+          setPhase('overtime');
+          setOvertimeTotal(OVERTIME_SECONDS);
+          startCountdown(OVERTIME_SECONDS, () => {
+            setPhase('ended');
+          });
+        });
+      });
+    }, 100);
+  }, [startCountdown, OVERTIME_SECONDS]);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => clearTimer();
@@ -522,8 +569,13 @@ const ContestTestPage = () => {
         </span>
       </div>
 
-      {/* Start/Stop button — far right of challenger side */}
-      <div className="absolute top-28 right-4 z-50">
+      {/* Start/Stop/Scenario buttons — far right */}
+      <div className="absolute top-28 right-4 z-50 flex gap-2">
+        {phase === 'idle' && (
+          <Button onClick={handleUnderdogScenario} className="bg-purple-600 hover:bg-purple-700 text-white font-bold px-4 h-9 text-xs rounded-full gap-1">
+            🐕 Underdog Scenario
+          </Button>
+        )}
         {phase === 'idle' ? (
           <Button onClick={handleStart} className="bg-green-600 hover:bg-green-700 text-white font-bold px-6 h-9 text-xs rounded-full gap-2">
             <Play className="w-4 h-4" /> Start Contest
