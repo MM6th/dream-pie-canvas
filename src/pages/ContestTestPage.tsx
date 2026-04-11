@@ -84,43 +84,54 @@ const VerticalTank = ({
   bubbles = false,
   fusion = false,
   glow = false,
+  overflowing = false,
 }: {
   label: string;
-  value: number; // 0-100
+  value: number; // 0-100+ (visually capped at 100)
   color: string;
   bgColor: string;
   bubbles?: boolean;
   fusion?: boolean;
   glow?: boolean;
+  overflowing?: boolean;
 }) => {
+  const displayValue = Math.min(value, 100);
   // Fusion: multi-color gradient that shifts as value increases
   const fusionStyle: React.CSSProperties = fusion
     ? {
-        height: `${value}%`,
-        background: value > 0
-          ? `linear-gradient(0deg, #7c3aed ${0}%, #a855f7 ${Math.min(value, 40)}%, #f472b6 ${Math.min(value, 70)}%, #fbbf24 ${Math.min(value, 100)}%)`
+        height: `${displayValue}%`,
+        background: displayValue > 0
+          ? `linear-gradient(0deg, #7c3aed ${0}%, #a855f7 ${Math.min(displayValue, 40)}%, #f472b6 ${Math.min(displayValue, 70)}%, #fbbf24 ${Math.min(displayValue, 100)}%)`
           : undefined,
-        boxShadow: value > 30
-          ? `0 0 ${4 + value / 10}px rgba(168,85,247,0.6), inset 0 0 ${value / 8}px rgba(251,191,36,0.4)`
+        boxShadow: displayValue > 30
+          ? `0 0 ${4 + displayValue / 10}px rgba(168,85,247,0.6), inset 0 0 ${displayValue / 8}px rgba(251,191,36,0.4)`
           : undefined,
         transition: 'all 0.7s ease',
       }
-    : { height: `${value}%` };
+    : { height: `${displayValue}%` };
 
   return (
-    <div className="flex flex-col items-center gap-1">
+    <div className="flex flex-col items-center gap-1 relative">
+      {/* LOVE burst when tank overflows */}
+      {overflowing && (
+        <div className="absolute -top-6 left-1/2 -translate-x-1/2 z-10 animate-bounce">
+          <span className="text-[8px] font-black text-pink-400 drop-shadow-[0_0_6px_rgba(236,72,153,0.8)] whitespace-nowrap tracking-wider">
+            LOVE
+          </span>
+        </div>
+      )}
       <div
         className={`w-5 h-20 rounded-sm ${bgColor} relative overflow-hidden border border-white/10 transition-shadow duration-500 ${
           glow ? 'shadow-[0_0_10px_rgba(34,197,94,0.5),0_0_20px_rgba(34,197,94,0.2)]' : ''
-        }`}
+        } ${overflowing ? 'shadow-[0_0_12px_rgba(236,72,153,0.6),0_0_24px_rgba(236,72,153,0.3)]' : ''}`}
       >
         <div
           className={`absolute bottom-0 left-0 right-0 ${fusion ? '' : color} transition-all duration-700`}
           style={fusionStyle}
         >
-          <TankBubbles active={bubbles && value > 0} />
+          <TankBubbles active={bubbles && displayValue > 0} />
           {/* Fusion shimmer overlay */}
-          {fusion && value > 20 && (
+          {fusion && displayValue > 20 && (
             <div
               className="absolute inset-0 animate-pulse opacity-40"
               style={{
@@ -303,13 +314,16 @@ const ContestTestPage = () => {
   // Skill decreases during overtime from 100% to 0% over the overtime period
   const skillValue = phase === 'overtime' ? Math.round((timeLeft / overtimeTotal) * 100) : 100;
 
-  // Tips/Votes tank combines tips + vote power in real-time
-  const championTipVotes = Math.min(championTips + championVotePower, 100);
-  const challengerTipVotes = Math.min(challengerTips + challengerVotePower, 100);
+  // Tips/Votes tank combines tips + vote power — uncapped for scoring, visually capped at 100
+  const championTipVotesRaw = championTips + championVotePower;
+  const challengerTipVotesRaw = challengerTips + challengerVotePower;
+  const championTipVotes = Math.min(championTipVotesRaw, 100);
+  const challengerTipVotes = Math.min(challengerTipVotesRaw, 100);
 
   const isLiveOrOvertime = phase === 'live' || phase === 'overtime';
-  const championPower = isLiveOrOvertime ? Math.round((championTipVotes + skillValue + championSample) / 3) : 0;
-  const challengerPower = isLiveOrOvertime ? Math.round((challengerTipVotes + skillValue + challengerSample) / 3) : 0;
+  // Power uses uncapped tipVotes so overflow still contributes
+  const championPower = isLiveOrOvertime ? Math.round((championTipVotesRaw + skillValue + championSample) / 3) : 0;
+  const challengerPower = isLiveOrOvertime ? Math.round((challengerTipVotesRaw + skillValue + challengerSample) / 3) : 0;
 
   // Poll penalty: unsubmitted polls deduct 15 points from that side's total
   const POLL_PENALTY = 15;
@@ -338,8 +352,8 @@ const ContestTestPage = () => {
 
   const isRevealed = phase === 'ended';
 
-  const championTanks = { tip: championTipVotes, skill: skillValue, sample: championSample, power: championPower, points: championPoints };
-  const challengerTanks = { tip: challengerTipVotes, skill: skillValue, sample: challengerSample, power: challengerPower, points: challengerPoints };
+  const championTanks = { tip: championTipVotes, tipRaw: championTipVotesRaw, skill: skillValue, sample: championSample, power: championPower, points: championPoints };
+  const challengerTanks = { tip: challengerTipVotes, tipRaw: challengerTipVotesRaw, skill: skillValue, sample: challengerSample, power: challengerPower, points: challengerPoints };
 
   const handleTip = useCallback((side: 'champion' | 'challenger', amount: number) => {
     if (phase !== 'live' && phase !== 'overtime') return;
@@ -595,7 +609,7 @@ const ContestTestPage = () => {
 
             {/* Three vertical tanks — left edge */}
             <div className="absolute left-3 top-1/2 -translate-y-1/2 z-10 flex flex-col gap-3">
-              <VerticalTank label="Tips/Votes" value={championTanks.tip} color="bg-cyan-400" bgColor="bg-cyan-900/40" bubbles />
+              <VerticalTank label="Tips/Votes" value={championTanks.tip} color="bg-cyan-400" bgColor="bg-cyan-900/40" bubbles overflowing={championTanks.tipRaw > 100} />
               <VerticalTank label="Skill" value={championTanks.skill} color="bg-green-500" bgColor="bg-green-900/40" glow={isActive} />
               <VerticalTank label="Sample" value={championTanks.sample} color="bg-purple-500" bgColor="bg-purple-900/40" fusion />
             </div>
@@ -725,7 +739,7 @@ const ContestTestPage = () => {
 
             {/* Three vertical tanks — left edge */}
             <div className="absolute left-3 top-1/2 -translate-y-1/2 z-10 flex flex-col gap-3">
-              <VerticalTank label="Tips/Votes" value={challengerTanks.tip} color="bg-cyan-400" bgColor="bg-cyan-900/40" bubbles />
+              <VerticalTank label="Tips/Votes" value={challengerTanks.tip} color="bg-cyan-400" bgColor="bg-cyan-900/40" bubbles overflowing={challengerTanks.tipRaw > 100} />
               <VerticalTank label="Skill" value={challengerTanks.skill} color="bg-green-500" bgColor="bg-green-900/40" glow={isActive} />
               <VerticalTank label="Sample" value={challengerTanks.sample} color="bg-purple-500" bgColor="bg-purple-900/40" fusion />
             </div>
