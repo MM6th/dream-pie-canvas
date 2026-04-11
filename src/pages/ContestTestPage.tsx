@@ -286,6 +286,7 @@ const ContestTestPage = () => {
 
   // Criss-cross title change animation
   const [showTitleChange, setShowTitleChange] = useState(false);
+  const [badgesSwapped, setBadgesSwapped] = useState(false);
 
   // Fan/sample state — tracks which fans have "entered" per side
   const [championFans, setChampionFans] = useState<Set<number>>(new Set());
