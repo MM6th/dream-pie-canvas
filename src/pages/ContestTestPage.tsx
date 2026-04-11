@@ -27,14 +27,14 @@ if (typeof document !== 'undefined' && !document.getElementById(bubbleStyleId)) 
     @keyframes badge-fly-right {
       0% { transform: translateX(0) scale(1); opacity: 1; }
       30% { transform: translateX(20%) scale(1.3); opacity: 1; }
-      70% { transform: translateX(calc(50vw - 100%)) scale(1.4); opacity: 1; }
-      100% { transform: translateX(calc(50vw - 100%)) scale(1); opacity: 1; }
+      70% { transform: translateX(50vw) scale(1.4); opacity: 1; }
+      100% { transform: translateX(50vw) scale(1); opacity: 1; }
     }
     @keyframes badge-fly-left {
       0% { transform: translateX(0) scale(1); opacity: 1; }
       30% { transform: translateX(-20%) scale(1.3); opacity: 1; }
-      70% { transform: translateX(calc(-50vw + 100%)) scale(1.4); opacity: 1; }
-      100% { transform: translateX(calc(-50vw + 100%)) scale(1); opacity: 1; }
+      70% { transform: translateX(-50vw) scale(1.4); opacity: 1; }
+      100% { transform: translateX(-50vw) scale(1); opacity: 1; }
     }
     @keyframes title-text-appear {
       0% { opacity: 0; transform: translateY(30px) scale(0.8); letter-spacing: 0.5em; }
