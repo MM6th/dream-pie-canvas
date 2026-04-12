@@ -539,6 +539,21 @@ const ContestTestPage = () => {
     }
   }, [showPollWarning]);
 
+  // Play sample tank sound when sample meter reaches 100
+  useEffect(() => {
+    if (championSample >= 100 && !sampleFullChampionRef.current) {
+      sampleFullChampionRef.current = true;
+      playSampleTank();
+    }
+  }, [championSample]);
+
+  useEffect(() => {
+    if (challengerSample >= 100 && !sampleFullChallengerRef.current) {
+      sampleFullChallengerRef.current = true;
+      playSampleTank();
+    }
+  }, [challengerSample]);
+
   useEffect(() => {
     if (phase === 'ended') {
       const timeout = setTimeout(() => {
