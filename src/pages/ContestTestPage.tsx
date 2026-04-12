@@ -367,7 +367,7 @@ const ContestTestPage = () => {
 
   const handleTip = useCallback((side: 'champion' | 'challenger', amount: number) => {
     if (phase !== 'live' && phase !== 'overtime') return;
-    playDepositSound();
+    playCoinDeposit();
     if (side === 'champion') {
       setChampionTips(prev => prev + amount);
     } else {
@@ -400,10 +400,13 @@ const ContestTestPage = () => {
   const handleStart = useCallback(() => {
     setBeltWinner(null);
     setPhase('warmup');
+    playPrepareSound();
     startCountdown(5, () => {
       setPhase('live');
+      playStartSound();
       startCountdown(105, () => {
         setPhase('overtime');
+        playOvertime();
         setOvertimeTotal(OVERTIME_SECONDS);
         startCountdown(OVERTIME_SECONDS, () => {
           setPhase('ended');
@@ -489,28 +492,55 @@ const ContestTestPage = () => {
   }, [clearTimer]);
 
   // Trigger belt animation + title change ceremony when contest ends
+  // One-time sound refs
+  const loveChampionPlayedRef = useRef(false);
+  const loveChallengerPlayedRef = useRef(false);
+  const pollWarningPlayedRef = useRef(false);
+
+  // Reset one-time refs when contest resets
+  useEffect(() => {
+    if (phase === 'idle') {
+      loveChampionPlayedRef.current = false;
+      loveChallengerPlayedRef.current = false;
+      pollWarningPlayedRef.current = false;
+    }
+  }, [phase]);
+
+  // Play "LOVE" sound when tip/vote tank overflows past 100
+  useEffect(() => {
+    if (championTipVotesRaw > 100 && !loveChampionPlayedRef.current) {
+      loveChampionPlayedRef.current = true;
+      playLoveIt();
+    }
+  }, [championTipVotesRaw]);
+
+  useEffect(() => {
+    if (challengerTipVotesRaw > 100 && !loveChallengerPlayedRef.current) {
+      loveChallengerPlayedRef.current = true;
+      playLoveIt();
+    }
+  }, [challengerTipVotesRaw]);
+
+  // Play poll warning sound once when ≤60s remaining
+  useEffect(() => {
+    if (showPollWarning && !pollWarningPlayedRef.current) {
+      pollWarningPlayedRef.current = true;
+      playPollWarning();
+    }
+  }, [showPollWarning]);
+
   useEffect(() => {
     if (phase === 'ended') {
       const timeout = setTimeout(() => {
         if (championPoints > challengerPoints) {
           setBeltWinner('champion');
+          playChampionWins();
         } else if (challengerPoints > championPoints) {
           setBeltWinner('challenger');
+          playChallengerWins();
           // Challenger wins = belt changes hands → criss-cross + announcer
           setTimeout(() => {
             setShowTitleChange(true);
-            // Announcer voice via SpeechSynthesis
-            if ('speechSynthesis' in window) {
-              const utterance = new SpeechSynthesisUtterance('AND THE NEW... CHAMPION!');
-              utterance.rate = 0.8;
-              utterance.pitch = 0.7;
-              utterance.volume = 1;
-              // Pick a deep male voice if available
-              const voices = speechSynthesis.getVoices();
-              const deep = voices.find(v => v.lang.startsWith('en') && v.name.toLowerCase().includes('male')) || voices.find(v => v.lang.startsWith('en'));
-              if (deep) utterance.voice = deep;
-              speechSynthesis.speak(utterance);
-            }
             // Keep badges swapped, just hide the overlay
             setTimeout(() => {
               setBadgesSwapped(true);
