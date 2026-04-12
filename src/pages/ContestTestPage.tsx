@@ -473,8 +473,10 @@ const ContestTestPage = () => {
     setTimeout(() => {
       setBeltWinner(null);
       setPhase('warmup');
+      playPrepareSound();
       startCountdown(5, () => {
         setPhase('live');
+        playStartSound();
         startCountdown(105, () => {
           setPhase('overtime');
           setOvertimeTotal(OVERTIME_SECONDS);
