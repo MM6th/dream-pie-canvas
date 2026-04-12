@@ -774,7 +774,7 @@ const ContestTestPage = () => {
                           setChampionFans(prev => {
                             const next = new Set(prev);
                             if (next.has(fanNum)) next.delete(fanNum);
-                            else next.add(fanNum);
+                            else { next.add(fanNum); playSampleTank(); }
                             return next;
                           });
                         }}
@@ -903,7 +903,7 @@ const ContestTestPage = () => {
                           setChallengerFans(prev => {
                             const next = new Set(prev);
                             if (next.has(fanNum)) next.delete(fanNum);
-                            else next.add(fanNum);
+                            else { next.add(fanNum); playSampleTank(); }
                             return next;
                           });
                         }}
