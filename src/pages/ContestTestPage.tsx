@@ -126,8 +126,8 @@ const VerticalTank = ({
       {/* LOVE burst when tank overflows */}
       {overflowing && (
         <div className="absolute -top-6 left-1/2 -translate-x-1/2 z-10 animate-bounce">
-          <span className="text-[8px] font-black text-pink-400 drop-shadow-[0_0_6px_rgba(236,72,153,0.8)] whitespace-nowrap tracking-wider">
-            LOVE
+          <span className="text-lg drop-shadow-[0_0_6px_rgba(236,72,153,0.8)]">
+            ❤️
           </span>
         </div>
       )}
@@ -500,6 +500,8 @@ const ContestTestPage = () => {
   const loveChampionPlayedRef = useRef(false);
   const loveChallengerPlayedRef = useRef(false);
   const pollWarningPlayedRef = useRef(false);
+  const sampleFullChampionRef = useRef(false);
+  const sampleFullChallengerRef = useRef(false);
 
   // Reset one-time refs when contest resets
   useEffect(() => {
@@ -507,6 +509,8 @@ const ContestTestPage = () => {
       loveChampionPlayedRef.current = false;
       loveChallengerPlayedRef.current = false;
       pollWarningPlayedRef.current = false;
+      sampleFullChampionRef.current = false;
+      sampleFullChallengerRef.current = false;
     }
   }, [phase]);
 
