@@ -19,6 +19,7 @@ import {
   playOvertime,
   playChampionWins,
   playChallengerWins,
+  playWinnerContest,
 } from "@/utils/contestSounds";
 
 /** Fizzy bubble + criss-cross keyframes — injected once */
@@ -125,8 +126,8 @@ const VerticalTank = ({
       {/* LOVE burst when tank overflows */}
       {overflowing && (
         <div className="absolute -top-6 left-1/2 -translate-x-1/2 z-10 animate-bounce">
-          <span className="text-[8px] font-black text-pink-400 drop-shadow-[0_0_6px_rgba(236,72,153,0.8)] whitespace-nowrap tracking-wider">
-            LOVE
+          <span className="text-lg drop-shadow-[0_0_6px_rgba(236,72,153,0.8)]">
+            ❤️
           </span>
         </div>
       )}
@@ -499,6 +500,8 @@ const ContestTestPage = () => {
   const loveChampionPlayedRef = useRef(false);
   const loveChallengerPlayedRef = useRef(false);
   const pollWarningPlayedRef = useRef(false);
+  const sampleFullChampionRef = useRef(false);
+  const sampleFullChallengerRef = useRef(false);
 
   // Reset one-time refs when contest resets
   useEffect(() => {
@@ -506,6 +509,8 @@ const ContestTestPage = () => {
       loveChampionPlayedRef.current = false;
       loveChallengerPlayedRef.current = false;
       pollWarningPlayedRef.current = false;
+      sampleFullChampionRef.current = false;
+      sampleFullChallengerRef.current = false;
     }
   }, [phase]);
 
@@ -533,6 +538,21 @@ const ContestTestPage = () => {
       playPollWarning();
     }
   }, [showPollWarning]);
+
+  // Play sample tank sound when sample meter reaches 100
+  useEffect(() => {
+    if (championSample >= 100 && !sampleFullChampionRef.current) {
+      sampleFullChampionRef.current = true;
+      playSampleTank();
+    }
+  }, [championSample]);
+
+  useEffect(() => {
+    if (challengerSample >= 100 && !sampleFullChallengerRef.current) {
+      sampleFullChallengerRef.current = true;
+      playSampleTank();
+    }
+  }, [challengerSample]);
 
   useEffect(() => {
     if (phase === 'ended') {
@@ -775,7 +795,7 @@ const ContestTestPage = () => {
                           setChampionFans(prev => {
                             const next = new Set(prev);
                             if (next.has(fanNum)) next.delete(fanNum);
-                            else { next.add(fanNum); playSampleTank(); }
+                            else next.add(fanNum);
                             return next;
                           });
                         }}
@@ -904,7 +924,7 @@ const ContestTestPage = () => {
                           setChallengerFans(prev => {
                             const next = new Set(prev);
                             if (next.has(fanNum)) next.delete(fanNum);
-                            else { next.add(fanNum); playSampleTank(); }
+                            else next.add(fanNum);
                             return next;
                           });
                         }}

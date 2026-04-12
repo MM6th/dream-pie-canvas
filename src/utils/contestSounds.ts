@@ -10,6 +10,7 @@ const soundPaths = {
   overtime: '/sounds/overtime_time_s_up.mp3',
   championWins: '/sounds/and_still_champion_champion_wins.mp3',
   challengerWins: '/sounds/and_the_new_champion_challenger_wins.mp3',
+  winnerContest: '/sounds/winner_a_challenger_wins_contest.mp3',
 } as const;
 
 const cache = new Map<string, HTMLAudioElement>();
@@ -38,3 +39,4 @@ export const playPollWarning = () => play('pollWarning');
 export const playOvertime = () => play('overtime');
 export const playChampionWins = () => play('championWins');
 export const playChallengerWins = () => play('challengerWins');
+export const playWinnerContest = () => play('winnerContest');
