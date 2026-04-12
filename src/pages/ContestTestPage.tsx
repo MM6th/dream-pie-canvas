@@ -19,6 +19,7 @@ import {
   playOvertime,
   playChampionWins,
   playChallengerWins,
+  playWinnerContest,
 } from "@/utils/contestSounds";
 
 /** Fizzy bubble + criss-cross keyframes — injected once */
