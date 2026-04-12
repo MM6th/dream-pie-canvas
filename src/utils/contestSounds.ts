@@ -39,3 +39,4 @@ export const playPollWarning = () => play('pollWarning');
 export const playOvertime = () => play('overtime');
 export const playChampionWins = () => play('championWins');
 export const playChallengerWins = () => play('challengerWins');
+export const playWinnerContest = () => play('winnerContest');
