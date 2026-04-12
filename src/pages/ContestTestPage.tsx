@@ -521,6 +521,8 @@ const ContestTestPage = () => {
     }
   }, [challengerTipVotesRaw]);
 
+  const showPollWarning = phase === 'live' && timeLeft > 0 && timeLeft <= 60;
+
   // Play poll warning sound once when ≤60s remaining
   useEffect(() => {
     if (showPollWarning && !pollWarningPlayedRef.current) {
@@ -565,7 +567,7 @@ const ContestTestPage = () => {
   const timerBorderColor = phase === 'warmup' ? 'border-yellow-500/50' : phase === 'overtime' ? 'border-orange-500/50' : phase === 'live' ? 'border-red-600/50' : 'border-white/20';
   const timerIconColor = phase === 'warmup' ? 'text-yellow-500' : phase === 'overtime' ? 'text-orange-500' : phase === 'live' ? 'text-red-500' : 'text-white/40';
   const isActive = phase === 'live' || phase === 'overtime';
-  const showPollWarning = phase === 'live' && timeLeft > 0 && timeLeft <= 60;
+  // showPollWarning moved above (before the useEffect that needs it)
 
   return (
     <div className="min-h-screen bg-background text-foreground relative">
