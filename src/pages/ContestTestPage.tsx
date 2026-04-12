@@ -9,7 +9,17 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { CONTEST_SCORING_FORMULA, SAMPLE_RATIO_FORMULA } from "@/constants/contestFormulas";
-import { playDepositSound } from "@/utils/depositSound";
+import {
+  playPrepareSound,
+  playStartSound,
+  playCoinDeposit,
+  playLoveIt,
+  playSampleTank,
+  playPollWarning,
+  playOvertime,
+  playChampionWins,
+  playChallengerWins,
+} from "@/utils/contestSounds";
 
 /** Fizzy bubble + criss-cross keyframes — injected once */
 const bubbleStyleId = 'contest-bubble-styles';
