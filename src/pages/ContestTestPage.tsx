@@ -479,6 +479,7 @@ const ContestTestPage = () => {
         playStartSound();
         startCountdown(105, () => {
           setPhase('overtime');
+          playOvertime();
           setOvertimeTotal(OVERTIME_SECONDS);
           startCountdown(OVERTIME_SECONDS, () => {
             setPhase('ended');
