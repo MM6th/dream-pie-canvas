@@ -9,7 +9,17 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { CONTEST_SCORING_FORMULA, SAMPLE_RATIO_FORMULA } from "@/constants/contestFormulas";
-import { playDepositSound } from "@/utils/depositSound";
+import {
+  playPrepareSound,
+  playStartSound,
+  playCoinDeposit,
+  playLoveIt,
+  playSampleTank,
+  playPollWarning,
+  playOvertime,
+  playChampionWins,
+  playChallengerWins,
+} from "@/utils/contestSounds";
 
 /** Fizzy bubble + criss-cross keyframes — injected once */
 const bubbleStyleId = 'contest-bubble-styles';
@@ -357,7 +367,7 @@ const ContestTestPage = () => {
 
   const handleTip = useCallback((side: 'champion' | 'challenger', amount: number) => {
     if (phase !== 'live' && phase !== 'overtime') return;
-    playDepositSound();
+    playCoinDeposit();
     if (side === 'champion') {
       setChampionTips(prev => prev + amount);
     } else {
@@ -390,10 +400,13 @@ const ContestTestPage = () => {
   const handleStart = useCallback(() => {
     setBeltWinner(null);
     setPhase('warmup');
+    playPrepareSound();
     startCountdown(5, () => {
       setPhase('live');
+      playStartSound();
       startCountdown(105, () => {
         setPhase('overtime');
+        playOvertime();
         setOvertimeTotal(OVERTIME_SECONDS);
         startCountdown(OVERTIME_SECONDS, () => {
           setPhase('ended');
@@ -460,10 +473,13 @@ const ContestTestPage = () => {
     setTimeout(() => {
       setBeltWinner(null);
       setPhase('warmup');
+      playPrepareSound();
       startCountdown(5, () => {
         setPhase('live');
+        playStartSound();
         startCountdown(105, () => {
           setPhase('overtime');
+          playOvertime();
           setOvertimeTotal(OVERTIME_SECONDS);
           startCountdown(OVERTIME_SECONDS, () => {
             setPhase('ended');
@@ -479,28 +495,57 @@ const ContestTestPage = () => {
   }, [clearTimer]);
 
   // Trigger belt animation + title change ceremony when contest ends
+  // One-time sound refs
+  const loveChampionPlayedRef = useRef(false);
+  const loveChallengerPlayedRef = useRef(false);
+  const pollWarningPlayedRef = useRef(false);
+
+  // Reset one-time refs when contest resets
+  useEffect(() => {
+    if (phase === 'idle') {
+      loveChampionPlayedRef.current = false;
+      loveChallengerPlayedRef.current = false;
+      pollWarningPlayedRef.current = false;
+    }
+  }, [phase]);
+
+  // Play "LOVE" sound when tip/vote tank overflows past 100
+  useEffect(() => {
+    if (championTipVotesRaw > 100 && !loveChampionPlayedRef.current) {
+      loveChampionPlayedRef.current = true;
+      playLoveIt();
+    }
+  }, [championTipVotesRaw]);
+
+  useEffect(() => {
+    if (challengerTipVotesRaw > 100 && !loveChallengerPlayedRef.current) {
+      loveChallengerPlayedRef.current = true;
+      playLoveIt();
+    }
+  }, [challengerTipVotesRaw]);
+
+  const showPollWarning = phase === 'live' && timeLeft > 0 && timeLeft <= 60;
+
+  // Play poll warning sound once when ≤60s remaining
+  useEffect(() => {
+    if (showPollWarning && !pollWarningPlayedRef.current) {
+      pollWarningPlayedRef.current = true;
+      playPollWarning();
+    }
+  }, [showPollWarning]);
+
   useEffect(() => {
     if (phase === 'ended') {
       const timeout = setTimeout(() => {
         if (championPoints > challengerPoints) {
           setBeltWinner('champion');
+          playChampionWins();
         } else if (challengerPoints > championPoints) {
           setBeltWinner('challenger');
+          playChallengerWins();
           // Challenger wins = belt changes hands → criss-cross + announcer
           setTimeout(() => {
             setShowTitleChange(true);
-            // Announcer voice via SpeechSynthesis
-            if ('speechSynthesis' in window) {
-              const utterance = new SpeechSynthesisUtterance('AND THE NEW... CHAMPION!');
-              utterance.rate = 0.8;
-              utterance.pitch = 0.7;
-              utterance.volume = 1;
-              // Pick a deep male voice if available
-              const voices = speechSynthesis.getVoices();
-              const deep = voices.find(v => v.lang.startsWith('en') && v.name.toLowerCase().includes('male')) || voices.find(v => v.lang.startsWith('en'));
-              if (deep) utterance.voice = deep;
-              speechSynthesis.speak(utterance);
-            }
             // Keep badges swapped, just hide the overlay
             setTimeout(() => {
               setBadgesSwapped(true);
@@ -525,7 +570,7 @@ const ContestTestPage = () => {
   const timerBorderColor = phase === 'warmup' ? 'border-yellow-500/50' : phase === 'overtime' ? 'border-orange-500/50' : phase === 'live' ? 'border-red-600/50' : 'border-white/20';
   const timerIconColor = phase === 'warmup' ? 'text-yellow-500' : phase === 'overtime' ? 'text-orange-500' : phase === 'live' ? 'text-red-500' : 'text-white/40';
   const isActive = phase === 'live' || phase === 'overtime';
-  const showPollWarning = phase === 'live' && timeLeft > 0 && timeLeft <= 60;
+  // showPollWarning moved above (before the useEffect that needs it)
 
   return (
     <div className="min-h-screen bg-background text-foreground relative">
@@ -730,7 +775,7 @@ const ContestTestPage = () => {
                           setChampionFans(prev => {
                             const next = new Set(prev);
                             if (next.has(fanNum)) next.delete(fanNum);
-                            else next.add(fanNum);
+                            else { next.add(fanNum); playSampleTank(); }
                             return next;
                           });
                         }}
@@ -859,7 +904,7 @@ const ContestTestPage = () => {
                           setChallengerFans(prev => {
                             const next = new Set(prev);
                             if (next.has(fanNum)) next.delete(fanNum);
-                            else next.add(fanNum);
+                            else { next.add(fanNum); playSampleTank(); }
                             return next;
                           });
                         }}
