@@ -469,11 +469,7 @@ const ContestTestPage = () => {
 
             {/* Champion coin meter — top left */}
             <div className="absolute top-4 left-4 z-10">
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/60 min-w-[120px]">
-                <img src={sixthCoinLogo} className="w-4 h-4 rounded-full flex-shrink-0" alt="SIXTH" />
-                <Progress value={championTanks.tip} className="h-2 flex-1 bg-white/10 [&>div]:bg-amber-500" />
-                <span className="text-amber-400 text-xs font-mono font-medium whitespace-nowrap">{championTanks.tip}</span>
-              </div>
+              <CoinMeter value={championTanks.tip} />
             </div>
 
             {/* Three vertical tanks — left edge */}
@@ -599,11 +595,7 @@ const ContestTestPage = () => {
 
             {/* Challenger coin meter — top left */}
             <div className="absolute top-4 left-4 z-10">
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/60 min-w-[120px]">
-                <img src={sixthCoinLogo} className="w-4 h-4 rounded-full flex-shrink-0" alt="SIXTH" />
-                <Progress value={challengerTanks.tip} className="h-2 flex-1 bg-white/10 [&>div]:bg-amber-500" />
-                <span className="text-amber-400 text-xs font-mono font-medium whitespace-nowrap">{challengerTanks.tip}</span>
-              </div>
+              <CoinMeter value={challengerTanks.tip} />
             </div>
 
             {/* Three vertical tanks — left edge */}
