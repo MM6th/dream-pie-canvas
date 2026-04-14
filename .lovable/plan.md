@@ -1,48 +1,68 @@
 
 
-## Plan: Convert and Integrate Custom Audio Files into Contest UI
+## Plan: Port Contest Test UI Features to Real Live Contest Session
 
-### Audio File Mapping
+This is a large integration. To avoid breaking existing connectivity, I'll implement it incrementally across 4 steps, each building on the last.
 
-Based on the filenames and parenthetical descriptions, here's where each file belongs:
+### Key Architecture Decision: Role-Based Views
 
-| File | Trigger Point |
-|------|--------------|
-| `prepare_before_contest.m4a` | When **warmup** phase begins (5s countdown) |
-| `beging_start_contest.m4a` | When **live** phase starts (warmup ends) |
-| `SIXTH_deposit_coin_deposit.m4a` | When a **tip** is sent (replaces current `playDepositSound()`) |
-| `love_it_tips_votes_tank_fills.m4a` | When tips/votes tank **overflows** past 100 (the "LOVE" burst) |
-| `authentic_sample_tank.m4a` | When a **fan enters** the sample tank (fan button clicked) |
-| `hurry_get_out_and_vote_poll_submission_warning.m4a` | When the **poll warning** appears (≤60 seconds remaining, poll not submitted) |
-| `overtime_time_s_up.m4a` | When **overtime** phase begins (live phase ends) |
-| `and_still_champion_champion_wins.m4a` | When contest ends and **champion wins** (belt stays) |
-| `and_the_new_champion_challenger_wins.m4a` | When contest ends and **challenger wins** (replaces SpeechSynthesis announcer) |
+- **Spectators** see a split-screen with BOTH contestants' gauges (tanks, polls, power bars, total points) — similar to the test UI
+- **Participants (champion/challenger)** see only their OWN panel full-screen — no visibility into opponent's tanks, polls, or points
+- The test UI (`ContestTestPage.tsx`) remains completely untouched
 
-### Steps
+### Step 1: Extract Shared UI Components
 
-1. **Convert all 9 M4A files to MP3** using ffmpeg in the sandbox.
+Create `src/components/contest/ContestOverlays.tsx` with reusable components extracted from ContestTestPage:
+- `VerticalTank` — Tips/Votes, Skill, Sample gauges
+- `PollWidget` — 4-slider voting interface  
+- `PowerFlowBar` — horizontal power meter
+- `TotalPointsBar` — hidden-until-reveal points bar
+- `TankBubbles` — fizzy bubble animation
+- Inject the CSS keyframes (bubble-rise, badge-fly, title-text-appear)
 
-2. **Copy MP3 files to `public/sounds/`** so they can be loaded via simple URL paths without bundler overhead (audio files are runtime-loaded, not imported as modules).
+Update `ContestTestPage.tsx` to import from the shared file instead of defining locally (no visual change).
 
-3. **Create `src/utils/contestSounds.ts`** — a utility module that:
-   - Pre-creates `Audio` objects for each sound file
-   - Exports named functions: `playPrepareSound()`, `playStartSound()`, `playCoinDeposit()`, `playLoveIt()`, `playSampleTank()`, `playPollWarning()`, `playOvertime()`, `playChampionWins()`, `playChallengerWins()`
+### Step 2: Add Session Lifecycle to ContestSession
 
-4. **Update `ContestTestPage.tsx`**:
-   - Import the new sound functions
-   - Remove the `playDepositSound` import and the SpeechSynthesis block
-   - Wire each sound to its trigger:
-     - `handleStart` → `playPrepareSound()` at warmup, `playStartSound()` when live begins
-     - `handleTip` → `playCoinDeposit()` (replaces `playDepositSound()`)
-     - Tip/vote overflow detection → `playLoveIt()` (play once when crossing 100)
-     - Fan button click → `playSampleTank()`
-     - Poll warning appearance → `playPollWarning()` (play once)
-     - Overtime transition → `playOvertime()`
-     - End-of-contest effect → `playChampionWins()` or `playChallengerWins()` based on winner (removes SpeechSynthesis)
+Add contest phases (warmup → live → overtime → ended) to `ContestSession.tsx`:
+- 5s warmup with `playPrepareSound()`
+- Configurable live phase with `playStartSound()`
+- 60s overtime with `playOvertime()`, skill drain
+- Ended phase with winner reveal and audio (`playChampionWins` / `playChallengerWins` / `playWinnerContest`)
+- Poll warning at ≤60s (`playPollWarning()`)
+- Replace the simple countdown timer with the phase-aware timer (WARMUP/LIVE/OVERTIME/ENDED labels)
 
-### Technical Notes
+### Step 3: Wire Real-Time Data to Gauges (Spectator View)
 
-- Audio objects will be lazily created on first call to avoid browser autoplay restrictions.
-- Each "play once" trigger (overflow, poll warning, overtime) will use a ref flag to prevent repeated firing.
-- The existing `depositSound.ts` utility remains untouched (used elsewhere); only the contest page import changes.
+For spectators — overlay the shared components on both video panels:
+- **Tips/Votes tank**: fed from existing `OneOnOneTipMeter` real-time data (sum from `one_on_one_tips` table per room) + poll vote power
+- **Skill tank**: driven by overtime countdown (100% → 0%)
+- **Sample tank**: uses `SAMPLE_RATIO_FORMULA` with real LiveKit participant counts (voters = spectators who tipped, viewers = total spectators on that side)
+- **Poll widgets**: spectators submit polls for the contestant who invited them
+- **Power flow + Total points**: calculated from formula, hidden until ended phase
+- **Belt animation + title change ceremony**: triggered on ended phase
+- **Heart overflow**: triggers when tip+vote tank exceeds 100
+
+### Step 4: Participant (Merchant) View
+
+For champion/challenger — show only their OWN panel full-screen:
+- Their video feed fills the screen (no split)
+- Opponent's video shown as a small picture-in-picture or not at all
+- Only their own tanks, power bar, and total points visible
+- No poll widget (participants don't vote)
+- Camera/mic controls and End Contest button remain
+- Chat for their own side only
+- On ended phase: see the winner reveal and ceremony
+
+### What Stays the Same
+- All LiveKit connectivity logic (token, room, track attachment)
+- Chat isolation (champion/challenger rooms)
+- Tip isolation (champion_tips/challenger_tips rooms)
+- Spectator inviter lookup and access control
+- The test UI page (`/contest-test`) — completely preserved
+
+### Files Changed
+1. **New**: `src/components/contest/ContestOverlays.tsx` — shared visual components
+2. **Edit**: `src/pages/ContestTestPage.tsx` — import from shared file (no visual change)
+3. **Edit**: `src/components/contest/ContestSession.tsx` — add phases, overlays, role-based rendering
 
