@@ -725,7 +725,7 @@ const ContestTestPage = () => {
             </div>
 
             {/* Three vertical tanks — left edge */}
-            <div className="absolute left-3 top-[38%] -translate-y-1/2 z-10 flex flex-col gap-3">
+            <div className="absolute left-3 top-[44%] -translate-y-1/2 z-10 flex flex-col gap-3">
               <VerticalTank label="Tips/Votes" value={championTanks.tip} color="bg-cyan-400" bgColor="bg-cyan-900/40" bubbles overflowing={championTanks.tipRaw > 100} />
               <VerticalTank label="Skill" value={championTanks.skill} color="bg-green-500" bgColor="bg-green-900/40" glow={isActive} />
               <VerticalTank label="Sample" value={championTanks.sample} color="bg-purple-500" bgColor="bg-purple-900/40" fusion />
@@ -855,7 +855,7 @@ const ContestTestPage = () => {
             </div>
 
             {/* Three vertical tanks — left edge */}
-            <div className="absolute left-3 top-[38%] -translate-y-1/2 z-10 flex flex-col gap-3">
+            <div className="absolute left-3 top-[44%] -translate-y-1/2 z-10 flex flex-col gap-3">
               <VerticalTank label="Tips/Votes" value={challengerTanks.tip} color="bg-cyan-400" bgColor="bg-cyan-900/40" bubbles overflowing={challengerTanks.tipRaw > 100} />
               <VerticalTank label="Skill" value={challengerTanks.skill} color="bg-green-500" bgColor="bg-green-900/40" glow={isActive} />
               <VerticalTank label="Sample" value={challengerTanks.sample} color="bg-purple-500" bgColor="bg-purple-900/40" fusion />
