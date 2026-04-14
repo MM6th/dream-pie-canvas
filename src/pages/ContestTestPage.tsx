@@ -6,7 +6,7 @@ import sixthCoinLogo from "@/assets/sixth-coin-logo.jpg";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft, Play, Square, Video, Timer, Send } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Progress } from "@/components/ui/progress";
+
 import { Input } from "@/components/ui/input";
 import { CONTEST_SCORING_FORMULA, SAMPLE_RATIO_FORMULA } from "@/constants/contestFormulas";
 import {
