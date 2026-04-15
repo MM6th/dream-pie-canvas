@@ -618,14 +618,14 @@ const ContestSession = ({
               <VerticalTank label="Sample" value={oppTanks.sample} color="bg-purple-500" bgColor="bg-purple-900/40" fusion />
             </div>
 
-            {/* Own power flow — top left area */}
-            <div className="absolute top-14 left-14 z-10 w-[180px]">
+            {/* Own power flow — left, parallel with coin meter */}
+            <div className="absolute top-4 left-28 z-10 w-[150px]">
               <div className="text-[8px] text-white/40 text-center mb-0.5">You</div>
               <PowerFlowBar value={myTanks.power} />
             </div>
 
-            {/* Opponent power flow — top right area */}
-            <div className="absolute top-14 right-14 z-10 w-[180px]">
+            {/* Opponent power flow — right, parallel with coin meter */}
+            <div className="absolute top-4 right-28 z-10 w-[150px]">
               <div className="text-[8px] text-white/40 text-center mb-0.5">{oppLabel}</div>
               <PowerFlowBar value={oppTanks.power} />
             </div>
@@ -787,8 +787,8 @@ const ContestSession = ({
             <VerticalTank label="Sample" value={myTanks.sample} color="bg-purple-500" bgColor="bg-purple-900/40" fusion />
           </div>
 
-          {/* Power flow bar */}
-          <div className="absolute top-14 left-14 right-14 z-10 mx-auto max-w-[200px]">
+          {/* Power flow bar — left, parallel with coin meter */}
+          <div className="absolute top-4 left-28 z-10 w-[150px]">
             <PowerFlowBar value={myTanks.power} />
           </div>
 
