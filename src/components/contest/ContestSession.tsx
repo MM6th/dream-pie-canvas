@@ -169,7 +169,7 @@ const ContestSession = ({
     // Begin warmup phase
     setPhase('warmup');
     playPrepareSound();
-    startCountdown(5, () => {
+    startCountdown(WARMUP_SECONDS, () => {
       setPhase('live');
       playStartSound();
       startCountdown(LIVE_SECONDS, () => {
