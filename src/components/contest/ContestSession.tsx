@@ -787,8 +787,8 @@ const ContestSession = ({
             <VerticalTank label="Sample" value={myTanks.sample} color="bg-purple-500" bgColor="bg-purple-900/40" fusion />
           </div>
 
-          {/* Power flow bar */}
-          <div className="absolute top-14 left-14 right-14 z-10 mx-auto max-w-[200px]">
+          {/* Power flow bar — left, parallel with coin meter */}
+          <div className="absolute top-4 left-28 z-10 w-[150px]">
             <PowerFlowBar value={myTanks.power} />
           </div>
 
