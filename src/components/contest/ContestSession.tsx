@@ -49,9 +49,9 @@ const safePlay = (el: HTMLMediaElement | null) => {
 
 type Phase = "warmup" | "live" | "overtime" | "ended";
 
-const OVERTIME_SECONDS = 60;
+const WARMUP_SECONDS = 5 * 60; // 5 minutes
+const OVERTIME_SECONDS = 3 * 60; // 3 minutes
 const POLL_PENALTY = 15;
-const LIVE_SECONDS = 105; // 1m 45s
 
 const ContestSession = ({
   roomName,
