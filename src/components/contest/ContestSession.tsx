@@ -123,6 +123,7 @@ const ContestSession = ({
   const championSample = SAMPLE_RATIO_FORMULA.calculate({ voters: championTippers, viewers: Math.max(championSpectators, 1) });
   const challengerSample = SAMPLE_RATIO_FORMULA.calculate({ voters: challengerTippers, viewers: Math.max(challengerSpectators, 1) });
   const skillValue = phase === 'overtime' ? Math.round((timeLeft / OVERTIME_SECONDS) * 100) : (phase === 'ended' ? 0 : 100);
+  const LIVE_SECONDS = durationMinutes * 60;
 
   const championTipVotesRaw = championTips + championVotePower;
   const challengerTipVotesRaw = challengerTips + challengerVotePower;
