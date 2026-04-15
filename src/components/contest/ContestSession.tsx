@@ -624,8 +624,8 @@ const ContestSession = ({
               <PowerFlowBar value={myTanks.power} />
             </div>
 
-            {/* Opponent power flow — top right area */}
-            <div className="absolute top-14 right-14 z-10 w-[180px]">
+            {/* Opponent power flow — right, parallel with coin meter */}
+            <div className="absolute top-4 right-28 z-10 w-[150px]">
               <div className="text-[8px] text-white/40 text-center mb-0.5">{oppLabel}</div>
               <PowerFlowBar value={oppTanks.power} />
             </div>
