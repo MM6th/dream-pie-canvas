@@ -529,14 +529,18 @@ const ContestSession = ({
     );
   };
 
-  // ─── PARTICIPANT VIEW: full-screen own feed ───
+  // ─── PARTICIPANT VIEW: full-screen own feed + opponent stats ───
   if (isParticipant && !connecting) {
     const mySide = role === 'champion' ? 'champion' : 'challenger';
+    const oppSide = mySide === 'champion' ? 'challenger' : 'champion';
     const myTanks = mySide === 'champion' ? championTanks : challengerTanks;
+    const oppTanks = mySide === 'champion' ? challengerTanks : championTanks;
     const myPollSubmitted = mySide === 'champion' ? championPollSubmitted : challengerPollSubmitted;
+    const oppPollSubmitted = mySide === 'champion' ? challengerPollSubmitted : championPollSubmitted;
     const myChatRoom = mySide === 'champion' ? championChatRoom : challengerChatRoom;
     const myTipRoom = mySide === 'champion' ? championTipRoom : challengerTipRoom;
     const myLabel = mySide === 'champion' ? 'Champion' : 'Challenger';
+    const oppLabel = mySide === 'champion' ? 'Challenger' : 'Champion';
 
     return (
       <div className="flex flex-col h-full bg-black relative">
@@ -582,6 +586,9 @@ const ContestSession = ({
             )}
           </div>
 
+          {/* Hidden audio for remote participant (no video shown) */}
+          <audio ref={remoteAudioRef} autoPlay className="hidden" />
+
           <div className="relative z-10 w-full h-full pointer-events-none">
             {/* Badge */}
             <div className="absolute top-4 right-4 pointer-events-auto">
@@ -596,32 +603,43 @@ const ContestSession = ({
               <OneOnOneTipMeter roomName={myTipRoom} />
             </div>
 
-            {/* Own tanks */}
+            {/* Own tanks — left side */}
             <div className="absolute left-3 top-[44%] -translate-y-1/2 z-10 flex flex-col gap-3">
               <VerticalTank label="Tips/Votes" value={myTanks.tip} color="bg-cyan-400" bgColor="bg-cyan-900/40" bubbles overflowing={myTanks.tipRaw > 100} />
               <VerticalTank label="Skill" value={myTanks.skill} color="bg-green-500" bgColor="bg-green-900/40" glow={isActive} />
               <VerticalTank label="Sample" value={myTanks.sample} color="bg-purple-500" bgColor="bg-purple-900/40" fusion />
             </div>
 
-            {/* Power flow */}
-            <div className="absolute top-14 left-14 right-14 z-10 mx-auto max-w-[200px]">
+            {/* Opponent tanks — right side */}
+            <div className="absolute right-3 top-[44%] -translate-y-1/2 z-10 flex flex-col gap-3 items-end">
+              <div className="text-[9px] text-white/60 font-bold uppercase tracking-wider mb-1 text-center w-full">{oppLabel}</div>
+              <VerticalTank label="Tips/Votes" value={oppTanks.tip} color="bg-cyan-400" bgColor="bg-cyan-900/40" bubbles overflowing={oppTanks.tipRaw > 100} />
+              <VerticalTank label="Skill" value={oppTanks.skill} color="bg-green-500" bgColor="bg-green-900/40" glow={isActive} />
+              <VerticalTank label="Sample" value={oppTanks.sample} color="bg-purple-500" bgColor="bg-purple-900/40" fusion />
+            </div>
+
+            {/* Own power flow — top left area */}
+            <div className="absolute top-14 left-14 z-10 w-[180px]">
+              <div className="text-[8px] text-white/40 text-center mb-0.5">You</div>
               <PowerFlowBar value={myTanks.power} />
             </div>
 
-            {/* Total points */}
-            <div className="absolute bottom-14 left-14 right-14 z-10 mx-auto max-w-[200px]">
+            {/* Opponent power flow — top right area */}
+            <div className="absolute top-14 right-14 z-10 w-[180px]">
+              <div className="text-[8px] text-white/40 text-center mb-0.5">{oppLabel}</div>
+              <PowerFlowBar value={oppTanks.power} />
+            </div>
+
+            {/* Own total points — bottom left area */}
+            <div className="absolute bottom-14 left-14 z-10 w-[180px]">
+              <div className="text-[8px] text-white/40 text-center mb-0.5">You</div>
               <TotalPointsBar points={myTanks.points} revealed={isRevealed} penalized={isRevealed && !myPollSubmitted} />
             </div>
 
-            {/* Opponent PiP */}
-            <div className="absolute bottom-20 right-4 w-32 h-24 rounded-lg overflow-hidden border border-white/20 pointer-events-auto">
-              <video ref={remoteVideoRef} autoPlay playsInline className="w-full h-full object-cover" />
-              <audio ref={remoteAudioRef} autoPlay className="hidden" />
-              {!remoteConnected && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/70">
-                  <p className="text-white/60 text-[10px]">Waiting...</p>
-                </div>
-              )}
+            {/* Opponent total points — bottom right area */}
+            <div className="absolute bottom-14 right-14 z-10 w-[180px]">
+              <div className="text-[8px] text-white/40 text-center mb-0.5">{oppLabel}</div>
+              <TotalPointsBar points={oppTanks.points} revealed={isRevealed} penalized={isRevealed && !oppPollSubmitted} />
             </div>
 
             {/* Controls */}
