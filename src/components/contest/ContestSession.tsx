@@ -618,8 +618,8 @@ const ContestSession = ({
               <VerticalTank label="Sample" value={oppTanks.sample} color="bg-purple-500" bgColor="bg-purple-900/40" fusion />
             </div>
 
-            {/* Own power flow — top left area */}
-            <div className="absolute top-14 left-14 z-10 w-[180px]">
+            {/* Own power flow — left, parallel with coin meter */}
+            <div className="absolute top-4 left-28 z-10 w-[150px]">
               <div className="text-[8px] text-white/40 text-center mb-0.5">You</div>
               <PowerFlowBar value={myTanks.power} />
             </div>
