@@ -691,7 +691,19 @@ const ContestSession = ({
     );
   }
 
-  // ─── SPECTATOR VIEW: split-screen with both panels ───
+  // ─── SPECTATOR VIEW: single panel of their inviter's contestant ───
+  const mySide = spectatorInviterId === championId ? 'champion' : 'challenger';
+  const myVideoRef = mySide === 'champion' ? remoteChampionVideoRef : remoteVideoRef;
+  const myAudioRef = mySide === 'champion' ? remoteChampionAudioRef : remoteAudioRef;
+  const myChatRoom = mySide === 'champion' ? championChatRoom : challengerChatRoom;
+  const myTipRoom = mySide === 'champion' ? championTipRoom : challengerTipRoom;
+  const myTanks = mySide === 'champion' ? championTanks : challengerTanks;
+  const myPollSubmitted = mySide === 'champion' ? championPollSubmitted : challengerPollSubmitted;
+  const myRecipientId = mySide === 'champion' ? championId : challengerId;
+  const myLabel = mySide === 'champion' ? 'Champion' : 'Challenger';
+  const setVotePower = mySide === 'champion' ? setChampionVotePower : setChallengerVotePower;
+  const setPollSubmitted = mySide === 'champion' ? setChampionPollSubmitted : setChallengerPollSubmitted;
+
   return (
     <div className="flex flex-col h-full bg-black relative">
       {/* Timer */}
@@ -725,21 +737,17 @@ const ContestSession = ({
         </div>
       )}
 
-      {/* Championship belt */}
-      <div className={`absolute z-[70] pointer-events-none transition-all duration-[1.5s] ease-in-out ${
-        beltWinner === 'champion' ? 'bottom-1/2 left-[25%] -translate-x-1/2 scale-150'
-        : beltWinner === 'challenger' ? 'bottom-1/2 right-[25%] translate-x-1/2 left-auto scale-150'
-        : 'bottom-44 left-1/2 -translate-x-1/2 scale-100'
-      }`}>
-        <img src={pieTitleBelt} className={`w-16 h-16 object-contain drop-shadow-lg ${beltWinner ? 'drop-shadow-[0_0_20px_rgba(255,215,0,0.8)]' : ''}`} alt="Belt" />
-        {beltWinner && beltWinner !== 'tie' && (
+      {/* Belt ceremony */}
+      {beltWinner && beltWinner !== 'tie' && (
+        <div className={`absolute z-[70] pointer-events-none transition-all duration-[1.5s] ease-in-out bottom-1/2 left-1/2 -translate-x-1/2 scale-150`}>
+          <img src={pieTitleBelt} className="w-16 h-16 object-contain drop-shadow-[0_0_20px_rgba(255,215,0,0.8)]" alt="Belt" />
           <div className="text-center mt-1 animate-[fadeIn_0.8s_ease-in_1s_both]">
             <span className="text-amber-400 text-xs font-bold uppercase tracking-wider drop-shadow">Winner!</span>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
-      {/* Title change announcer */}
+      {/* Title change overlay */}
       {showTitleChange && (
         <div className="fixed inset-0 z-[90] pointer-events-none flex items-center justify-center">
           <div className="absolute inset-0 bg-black/60 animate-[fadeIn_0.3s_ease-out_both]" />
@@ -751,86 +759,69 @@ const ContestSession = ({
         </div>
       )}
 
-      {/* Split screen */}
-      <div className="flex flex-col sm:flex-row w-full flex-1 min-h-0 items-stretch overflow-hidden">
-        {/* LEFT: Champion */}
-        <div className="flex flex-1 h-full min-h-0 flex-col overflow-hidden border-b border-white/10 sm:border-b-0 sm:border-r">
-          <div className="isolate relative flex-1 min-h-0 overflow-hidden">
-            <div className="absolute inset-0 z-0">
-              <video ref={remoteChampionVideoRef} autoPlay playsInline className="w-full h-full object-cover" />
-              <audio ref={remoteChampionAudioRef} autoPlay className="hidden" />
-            </div>
-            <div className="relative z-10 w-full h-full pointer-events-none">
-              {/* Champion badge */}
-              <div className={`absolute top-4 right-4 z-[80] pointer-events-auto ${showTitleChange ? 'animate-[badge-fly-right_1.5s_ease-in-out_forwards]' : ''}`}
-                style={badgesSwapped ? { transform: 'translateX(50vw)' } : undefined}>
-                <span className={`bg-yellow-600/80 text-white text-xs px-2 py-1 rounded flex items-center gap-1 ${showTitleChange ? 'shadow-[0_0_20px_rgba(234,179,8,0.6)]' : ''}`}>
-                  <img src={pieTitleBelt} className="h-6 w-8 object-contain" alt="Belt" />
-                  Champion
-                </span>
-              </div>
-              {/* Tip meter */}
-              <div className="absolute top-4 left-4 pointer-events-auto">
-                <OneOnOneTipMeter roomName={championTipRoom} />
-              </div>
-              {/* Overlays */}
-              {renderTankOverlay('champion')}
-            </div>
-          </div>
-          <div className="h-36 shrink-0 overflow-hidden border-t border-white/10 sm:h-48 lg:h-52">
-            <OneOnOneChat roomName={championChatRoom} channelSuffix="champion" readOnly={spectatorSide !== 'champion'} />
-          </div>
+      {/* Full-screen inviter's video */}
+      <div className="flex-1 min-h-0 relative isolate overflow-hidden">
+        <div className="absolute inset-0 z-0">
+          <video ref={myVideoRef} autoPlay playsInline className="w-full h-full object-cover" />
+          <audio ref={myAudioRef} autoPlay className="hidden" />
         </div>
 
-        {/* RIGHT: Challenger */}
-        <div className="flex flex-1 h-full min-h-0 flex-col overflow-hidden">
-          <div className="isolate relative flex-1 min-h-0 overflow-hidden">
-            <div className="absolute inset-0 z-0">
-              <video ref={remoteVideoRef} autoPlay playsInline className="w-full h-full object-cover" />
-              <audio ref={remoteAudioRef} autoPlay className="hidden" />
-            </div>
-            <div className="relative z-10 w-full h-full pointer-events-none">
-              {/* Challenger badge */}
-              <div className={`absolute top-4 right-4 z-[80] pointer-events-auto ${showTitleChange ? 'animate-[badge-fly-left_1.5s_ease-in-out_forwards]' : ''}`}
-                style={badgesSwapped ? { transform: 'translateX(-50vw)' } : undefined}>
-                <span className={`bg-red-600/80 text-white text-xs px-2 py-1 rounded flex items-center gap-1 ${showTitleChange ? 'shadow-[0_0_20px_rgba(239,68,68,0.6)]' : ''}`}>
-                  Challenger
-                </span>
-              </div>
-              {/* Tip meter */}
-              <div className="absolute top-4 left-4 pointer-events-auto">
-                <OneOnOneTipMeter roomName={challengerTipRoom} />
-              </div>
-              {/* Overlays */}
-              {renderTankOverlay('challenger')}
-              {!remoteConnected && !connecting && (
-                <div className="absolute inset-0 flex items-center justify-center z-0 pointer-events-none">
-                  <p className="text-white/60 text-sm">Waiting for Challenger...</p>
-                </div>
-              )}
-            </div>
+        <div className="relative z-10 w-full h-full pointer-events-none">
+          {/* Badge */}
+          <div className="absolute top-4 right-4 pointer-events-auto">
+            <span className={`${mySide === 'champion' ? 'bg-yellow-600/80' : 'bg-red-600/80'} text-white text-xs px-2 py-1 rounded flex items-center gap-1`}>
+              {mySide === 'champion' && <img src={pieTitleBelt} className="h-6 w-8 object-contain" alt="Belt" />}
+              {myLabel}
+            </span>
           </div>
-          <div className="h-36 shrink-0 overflow-hidden border-t border-white/10 sm:h-48 lg:h-52">
-            <OneOnOneChat roomName={challengerChatRoom} channelSuffix="challenger" readOnly={spectatorSide !== 'challenger'} />
+
+          {/* Tip meter */}
+          <div className="absolute top-4 left-4 pointer-events-auto">
+            <OneOnOneTipMeter roomName={myTipRoom} />
           </div>
+
+          {/* Tanks */}
+          <div className="absolute left-3 top-[44%] -translate-y-1/2 z-10 flex flex-col gap-3">
+            <VerticalTank label="Tips/Votes" value={myTanks.tip} color="bg-cyan-400" bgColor="bg-cyan-900/40" bubbles overflowing={myTanks.tipRaw > 100} />
+            <VerticalTank label="Skill" value={myTanks.skill} color="bg-green-500" bgColor="bg-green-900/40" glow={isActive} />
+            <VerticalTank label="Sample" value={myTanks.sample} color="bg-purple-500" bgColor="bg-purple-900/40" fusion />
+          </div>
+
+          {/* Power flow bar */}
+          <div className="absolute top-14 left-14 right-14 z-10 mx-auto max-w-[200px]">
+            <PowerFlowBar value={myTanks.power} />
+          </div>
+
+          {/* Total points bar */}
+          <div className="absolute bottom-14 left-14 right-14 z-10 mx-auto max-w-[200px]">
+            <TotalPointsBar points={myTanks.points} revealed={isRevealed} penalized={isRevealed && !myPollSubmitted} />
+          </div>
+
+          {/* Poll widget */}
+          {isLiveOrOvertime && (
+            <div className="absolute bottom-4 right-3 z-10 pointer-events-auto">
+              <PollWidget
+                key={`poll-${mySide}-${pollResetKey}`}
+                side={mySide}
+                disabled={!isActive}
+                onVotePowerChange={setVotePower}
+                onSubmittedChange={setPollSubmitted}
+              />
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Spectator tip controls */}
-      {role === "spectator" && spectatorInviterId && (
+      {/* Chat */}
+      <div className="h-36 shrink-0 overflow-hidden border-t border-white/10 sm:h-48">
+        <OneOnOneChat roomName={myChatRoom} channelSuffix={mySide} readOnly={false} />
+      </div>
+
+      {/* Tip button */}
+      {spectatorInviterId && (
         <div className="flex items-center justify-center gap-4 p-3 bg-black/80 border-t border-white/10">
-          {spectatorInviterId === championId && (
-            <>
-              <OneOnOneTipButton roomName={championTipRoom} recipientId={championId} />
-              <span className="text-white/40 text-xs">Tip Champion</span>
-            </>
-          )}
-          {spectatorInviterId === challengerId && (
-            <>
-              <OneOnOneTipButton roomName={challengerTipRoom} recipientId={challengerId} />
-              <span className="text-white/40 text-xs">Tip Challenger</span>
-            </>
-          )}
+          <OneOnOneTipButton roomName={myTipRoom} recipientId={myRecipientId} />
+          <span className="text-white/40 text-xs">Tip {myLabel}</span>
         </div>
       )}
 
