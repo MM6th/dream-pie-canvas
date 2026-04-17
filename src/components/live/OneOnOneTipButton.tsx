@@ -13,17 +13,23 @@ const TEST_MODE_ENABLED = true;
 interface OneOnOneTipButtonProps {
   roomName: string;
   recipientId: string;
+  disabled?: boolean;
+  disabledReason?: string;
 }
 
 const tipAmounts = [1, 5, 10, 25];
 
-const OneOnOneTipButton = ({ roomName, recipientId }: OneOnOneTipButtonProps) => {
+const OneOnOneTipButton = ({ roomName, recipientId, disabled = false, disabledReason }: OneOnOneTipButtonProps) => {
   const { user } = useAuth();
   const [sending, setSending] = useState(false);
   const [open, setOpen] = useState(false);
 
   const handleTip = async (amount: number) => {
     if (!user) return;
+    if (disabled) {
+      toast({ title: disabledReason || "Tipping not available right now" });
+      return;
+    }
 
     setSending(true);
 
