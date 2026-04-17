@@ -629,9 +629,9 @@ const ContestSession = ({
               <VerticalTank label="Sample" value={myTanks.sample} color="bg-purple-500" bgColor="bg-purple-900/40" fusion />
             </div>
 
-            {/* Opponent tanks — right side */}
-            <div className="absolute right-3 top-[44%] -translate-y-1/2 z-10 flex flex-col gap-3 items-end">
-              <div className="text-[9px] text-white/60 font-bold uppercase tracking-wider mb-1 text-center w-full">{oppLabel}</div>
+            {/* Opponent tanks — right side (mirrors own side layout for alignment parity) */}
+            <div className="absolute right-3 top-[44%] -translate-y-1/2 z-10 flex flex-col gap-3">
+              <div className="text-[9px] text-white/60 font-bold uppercase tracking-wider mb-1 text-center">{oppLabel}</div>
               <VerticalTank label="Tips/Votes" value={oppTanks.tip} color="bg-cyan-400" bgColor="bg-cyan-900/40" bubbles overflowing={oppTanks.tipRaw > 100} />
               <VerticalTank label="Skill" value={oppTanks.skill} color="bg-green-500" bgColor="bg-green-900/40" glow={isActive} />
               <VerticalTank label="Sample" value={oppTanks.sample} color="bg-purple-500" bgColor="bg-purple-900/40" fusion />
