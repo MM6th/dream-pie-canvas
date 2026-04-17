@@ -609,8 +609,8 @@ const ContestSession = ({
           <audio ref={remoteAudioRef} autoPlay className="hidden" />
 
           <div className="relative z-10 w-full h-full pointer-events-none">
-            {/* Badge */}
-            <div className="absolute top-4 right-4 pointer-events-auto">
+            {/* Own badge — left side, below tip meter (kept away from opponent's tanks/power on the right) */}
+            <div className="absolute top-12 left-4 pointer-events-auto">
               <span className={`${mySide === 'champion' ? 'bg-yellow-600/80' : 'bg-red-600/80'} text-white text-xs px-2 py-1 rounded flex items-center gap-1`}>
                 {mySide === 'champion' && <img src={pieTitleBelt} className="h-6 w-8 object-contain" alt="Belt" />}
                 {myLabel}
