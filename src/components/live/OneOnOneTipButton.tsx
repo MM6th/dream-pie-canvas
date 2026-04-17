@@ -72,12 +72,14 @@ const OneOnOneTipButton = ({ roomName, recipientId, disabled = false, disabledRe
   };
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open && !disabled} onOpenChange={(o) => !disabled && setOpen(o)}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
           size="sm"
-          className="rounded-full border-amber-600/50 text-amber-400 hover:bg-amber-900/20 bg-black/40"
+          disabled={disabled}
+          title={disabled ? disabledReason : undefined}
+          className="rounded-full border-amber-600/50 text-amber-400 hover:bg-amber-900/20 bg-black/40 disabled:opacity-50"
         >
           <img src={sixthCoinLogo} className="w-4 h-4 rounded-full mr-1" alt="SIXTH" />
           Tip
