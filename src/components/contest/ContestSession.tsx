@@ -163,19 +163,38 @@ const ContestSession = ({
     }, 1000);
   }, [clearTimer]);
 
+  // Keep latest durationMinutes in a ref so the lifecycle effect always reads
+  // the freshest value when transitioning warmup → live, even if the prop
+  // arrived after the effect first ran.
+  const durationMinutesRef = useRef(durationMinutes);
+  useEffect(() => { durationMinutesRef.current = durationMinutes; }, [durationMinutes]);
+
+  // Guard so the lifecycle only ever starts once per mount.
+  const lifecycleStartedRef = useRef(false);
+
   // ─── Start lifecycle after connection ───
   useEffect(() => {
     if (connecting) return;
+    if (lifecycleStartedRef.current) return;
+    lifecycleStartedRef.current = true;
+
+    console.log('[Contest] Lifecycle starting. durationMinutes prop =', durationMinutes, '→ LIVE_SECONDS =', durationMinutes * 60);
+
     // Begin warmup phase
     setPhase('warmup');
     playPrepareSound();
     startCountdown(WARMUP_SECONDS, () => {
+      // Read the freshest duration at warmup-end so a late-arriving prop is honored
+      const liveSeconds = Math.max(1, (durationMinutesRef.current || 0) * 60);
+      console.log('[Contest] Warmup complete. Starting LIVE for', liveSeconds, 'seconds');
       setPhase('live');
       playStartSound();
-      startCountdown(LIVE_SECONDS, () => {
+      startCountdown(liveSeconds, () => {
+        console.log('[Contest] Live complete. Starting OVERTIME for', OVERTIME_SECONDS, 'seconds');
         setPhase('overtime');
         playOvertime();
         startCountdown(OVERTIME_SECONDS, () => {
+          console.log('[Contest] Overtime complete. Ending.');
           setPhase('ended');
         });
       });
