@@ -13,17 +13,23 @@ const TEST_MODE_ENABLED = true;
 interface OneOnOneTipButtonProps {
   roomName: string;
   recipientId: string;
+  disabled?: boolean;
+  disabledReason?: string;
 }
 
 const tipAmounts = [1, 5, 10, 25];
 
-const OneOnOneTipButton = ({ roomName, recipientId }: OneOnOneTipButtonProps) => {
+const OneOnOneTipButton = ({ roomName, recipientId, disabled = false, disabledReason }: OneOnOneTipButtonProps) => {
   const { user } = useAuth();
   const [sending, setSending] = useState(false);
   const [open, setOpen] = useState(false);
 
   const handleTip = async (amount: number) => {
     if (!user) return;
+    if (disabled) {
+      toast({ title: disabledReason || "Tipping not available right now" });
+      return;
+    }
 
     setSending(true);
 
@@ -66,12 +72,14 @@ const OneOnOneTipButton = ({ roomName, recipientId }: OneOnOneTipButtonProps) =>
   };
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open && !disabled} onOpenChange={(o) => !disabled && setOpen(o)}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
           size="sm"
-          className="rounded-full border-amber-600/50 text-amber-400 hover:bg-amber-900/20 bg-black/40"
+          disabled={disabled}
+          title={disabled ? disabledReason : undefined}
+          className="rounded-full border-amber-600/50 text-amber-400 hover:bg-amber-900/20 bg-black/40 disabled:opacity-50"
         >
           <img src={sixthCoinLogo} className="w-4 h-4 rounded-full mr-1" alt="SIXTH" />
           Tip

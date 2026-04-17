@@ -839,7 +839,12 @@ const ContestSession = ({
       {/* Tip button */}
       {spectatorInviterId && (
         <div className="flex items-center justify-center gap-4 p-3 bg-black/80 border-t border-white/10">
-          <OneOnOneTipButton roomName={myTipRoom} recipientId={myRecipientId} />
+          <OneOnOneTipButton
+            roomName={myTipRoom}
+            recipientId={myRecipientId}
+            disabled={!isActive}
+            disabledReason={phase === 'warmup' ? 'Tipping unlocks when the contest goes live' : 'Contest has ended'}
+          />
           <span className="text-white/40 text-xs">Tip {myLabel}</span>
         </div>
       )}
