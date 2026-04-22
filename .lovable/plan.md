@@ -1,68 +1,74 @@
 
+Root cause
 
-## Plan: Port Contest Test UI Features to Real Live Contest Session
+The admin-set contest duration is not the problem. The duration is being fetched and passed correctly from `src/pages/ContestLive.tsx` into `src/components/contest/ContestSession.tsx`. The console confirms that:
+- `durationMinutes prop = 7`
+- `LIVE_SECONDS = 420`
 
-This is a large integration. To avoid breaking existing connectivity, I'll implement it incrementally across 4 steps, each building on the last.
+What is blocking the contest clock from starting is the countdown handoff logic inside `ContestSession.tsx`.
 
-### Key Architecture Decision: Role-Based Views
+Current blocker
 
-- **Spectators** see a split-screen with BOTH contestants' gauges (tanks, polls, power bars, total points) — similar to the test UI
-- **Participants (champion/challenger)** see only their OWN panel full-screen — no visibility into opponent's tanks, polls, or points
-- The test UI (`ContestTestPage.tsx`) remains completely untouched
+In `ContestSession.tsx`, each phase transition starts the next countdown from inside the previous timer’s `setTimeLeft(prev => ...)` state updater:
 
-### Step 1: Extract Shared UI Components
+- warmup completion starts live
+- live completion starts overtime
+- overtime completion ends session
 
-Create `src/components/contest/ContestOverlays.tsx` with reusable components extracted from ContestTestPage:
-- `VerticalTank` — Tips/Votes, Skill, Sample gauges
-- `PollWidget` — 4-slider voting interface  
-- `PowerFlowBar` — horizontal power meter
-- `TotalPointsBar` — hidden-until-reveal points bar
-- `TankBubbles` — fizzy bubble animation
-- Inject the CSS keyframes (bubble-rise, badge-fly, title-text-appear)
+Because `startCountdown(...)` calls `setTimeLeft(newSeconds)` while the old updater is still returning `0`, the old updater can overwrite the newly assigned countdown value. That leaves the next phase starting with `timeLeft = 0`, so on the very next tick it immediately completes.
 
-Update `ContestTestPage.tsx` to import from the shared file instead of defining locally (no visual change).
+That matches the behavior you described and the logs:
+- warmup completes
+- live is announced
+- live instantly completes
+- overtime audio plays
+- overtime also instantly completes
 
-### Step 2: Add Session Lifecycle to ContestSession
+Implementation plan
 
-Add contest phases (warmup → live → overtime → ended) to `ContestSession.tsx`:
-- 5s warmup with `playPrepareSound()`
-- Configurable live phase with `playStartSound()`
-- 60s overtime with `playOvertime()`, skill drain
-- Ended phase with winner reveal and audio (`playChampionWins` / `playChallengerWins` / `playWinnerContest`)
-- Poll warning at ≤60s (`playPollWarning()`)
-- Replace the simple countdown timer with the phase-aware timer (WARMUP/LIVE/OVERTIME/ENDED labels)
+1. Refactor the phase transition logic in `src/components/contest/ContestSession.tsx`
+   - Remove nested `startCountdown(...)` calls from inside the `setTimeLeft` updater callback.
+   - Make countdown completion trigger phase changes only after the prior state update finishes.
+   - Use a safer handoff pattern such as:
+     - interval decrements time only
+     - when time reaches zero, clear interval
+     - then trigger the next phase outside the updater via effect, helper, or queued callback
 
-### Step 3: Wire Real-Time Data to Gauges (Spectator View)
+2. Preserve the admin-configured live duration exactly
+   - Keep using `durationMinutes` from `ContestLive.tsx`
+   - Convert it once to seconds for the live phase
+   - Ensure the live phase visibly starts at the configured total, not zero
 
-For spectators — overlay the shared components on both video panels:
-- **Tips/Votes tank**: fed from existing `OneOnOneTipMeter` real-time data (sum from `one_on_one_tips` table per room) + poll vote power
-- **Skill tank**: driven by overtime countdown (100% → 0%)
-- **Sample tank**: uses `SAMPLE_RATIO_FORMULA` with real LiveKit participant counts (voters = spectators who tipped, viewers = total spectators on that side)
-- **Poll widgets**: spectators submit polls for the contestant who invited them
-- **Power flow + Total points**: calculated from formula, hidden until ended phase
-- **Belt animation + title change ceremony**: triggered on ended phase
-- **Heart overflow**: triggers when tip+vote tank exceeds 100
+3. Apply the same fix to `src/pages/ContestTestPage.tsx`
+   - That page duplicates the same countdown pattern
+   - Fixing both prevents the bug from reappearing in testing while being “fixed” only in production UI
 
-### Step 4: Participant (Merchant) View
+4. Add guardrails for the lifecycle
+   - Prevent a phase from starting if its initial seconds resolve to `0`
+   - Add explicit lifecycle logs for:
+     - warmup started
+     - live started with exact seconds
+     - overtime started with exact seconds
+     - ended
+   - This will make future timing bugs obvious immediately
 
-For champion/challenger — show only their OWN panel full-screen:
-- Their video feed fills the screen (no split)
-- Opponent's video shown as a small picture-in-picture or not at all
-- Only their own tanks, power bar, and total points visible
-- No poll widget (participants don't vote)
-- Camera/mic controls and End Contest button remain
-- Chat for their own side only
-- On ended phase: see the winner reveal and ceremony
+5. Verify expected sequence
+   - Warmup reaches `00:00`
+   - Live phase starts and displays the admin-set duration
+   - Live countdown runs normally second-by-second
+   - Overtime audio only plays after live truly finishes
+   - Overtime countdown displays and runs normally
+   - Contest ends only after overtime finishes
 
-### What Stays the Same
-- All LiveKit connectivity logic (token, room, track attachment)
-- Chat isolation (champion/challenger rooms)
-- Tip isolation (champion_tips/challenger_tips rooms)
-- Spectator inviter lookup and access control
-- The test UI page (`/contest-test`) — completely preserved
+Technical details
 
-### Files Changed
-1. **New**: `src/components/contest/ContestOverlays.tsx` — shared visual components
-2. **Edit**: `src/pages/ContestTestPage.tsx` — import from shared file (no visual change)
-3. **Edit**: `src/components/contest/ContestSession.tsx` — add phases, overlays, role-based rendering
+Files to update:
+- `src/components/contest/ContestSession.tsx`
+- `src/pages/ContestTestPage.tsx`
 
+No database or Supabase schema changes are required for this fix.
+
+Expected outcome after fix:
+```text
+Warmup -> Live countdown starts at admin-set duration -> Overtime starts at 3:00 -> Ended
+```
