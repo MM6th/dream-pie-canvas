@@ -659,17 +659,36 @@ const ContestSession = ({
               <VerticalTank label="Sample" value={oppTanks.sample} color="bg-purple-500" bgColor="bg-purple-900/40" fusion />
             </div>
 
-            {/* Own power flow — right of coin meter, aligned to its height */}
-            <div className="absolute top-[10px] left-[280px] z-10 w-[150px]">
-              <div className="text-[8px] text-white/40 text-center mb-0.5">You</div>
-              <PowerFlowBar value={myTanks.power} />
-            </div>
+            {/* Own + opponent power flow.
+                Mobile: stacked, centered under the challenge title (avoids the
+                coin meter / opponent tank collision on narrow screens).
+                Desktop: original side-by-side placement next to the coin meter. */}
+            {isMobile ? (
+              <div className="absolute top-[88px] left-1/2 -translate-x-1/2 z-10 w-[80%] max-w-[280px] flex flex-col gap-1">
+                <div>
+                  <div className="text-[8px] text-white/40 text-center mb-0.5">You</div>
+                  <PowerFlowBar value={myTanks.power} />
+                </div>
+                <div>
+                  <div className="text-[8px] text-white/40 text-center mb-0.5">{oppLabel}</div>
+                  <PowerFlowBar value={oppTanks.power} />
+                </div>
+              </div>
+            ) : (
+              <>
+                {/* Own power flow — right of coin meter, aligned to its height */}
+                <div className="absolute top-[10px] left-[280px] z-10 w-[150px]">
+                  <div className="text-[8px] text-white/40 text-center mb-0.5">You</div>
+                  <PowerFlowBar value={myTanks.power} />
+                </div>
 
-            {/* Opponent power flow — right, parallel with coin meter */}
-            <div className="absolute top-4 right-28 z-10 w-[150px]">
-              <div className="text-[8px] text-white/40 text-center mb-0.5">{oppLabel}</div>
-              <PowerFlowBar value={oppTanks.power} />
-            </div>
+                {/* Opponent power flow — right, parallel with coin meter */}
+                <div className="absolute top-4 right-28 z-10 w-[150px]">
+                  <div className="text-[8px] text-white/40 text-center mb-0.5">{oppLabel}</div>
+                  <PowerFlowBar value={oppTanks.power} />
+                </div>
+              </>
+            )}
 
             {/* Own total points — bottom left area */}
             <div className="absolute bottom-14 left-14 z-10 w-[180px]">
