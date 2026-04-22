@@ -862,21 +862,31 @@ const ContestSession = ({
             <VerticalTank label="Sample" value={myTanks.sample} color="bg-purple-500" bgColor="bg-purple-900/40" fusion />
           </div>
 
-          {/* Power flow bar — left, parallel with coin meter */}
-          <div className="absolute top-4 left-28 z-10 w-[150px]">
-            <PowerFlowBar value={myTanks.power} />
-          </div>
+          {/* Power flow bar.
+              Mobile: centered under the challenge title (avoids overlap with the
+              coin meter on narrow screens — user-requested layout).
+              Desktop: original placement parallel to the coin meter. */}
+          {isMobile ? (
+            <div className="absolute top-[88px] left-1/2 -translate-x-1/2 z-10 w-[80%] max-w-[280px]">
+              <PowerFlowBar value={myTanks.power} />
+            </div>
+          ) : (
+            <div className="absolute top-4 left-28 z-10 w-[150px]">
+              <PowerFlowBar value={myTanks.power} />
+            </div>
+          )}
 
           {/* Total points bar */}
           <div className="absolute bottom-14 left-14 right-14 z-10 mx-auto max-w-[200px]">
             <TotalPointsBar points={myTanks.points} revealed={isRevealed} penalized={isRevealed && !myPollSubmitted} />
           </div>
 
-          {/* Poll widget */}
-          {isLiveOrOvertime && (
+          {/* Poll widget — desktop only inside the video overlay (mobile gets a
+              dedicated row below to guarantee visibility & tappability). */}
+          {!isMobile && isLiveOrOvertime && (
             <div className="absolute bottom-4 right-3 z-10 pointer-events-auto">
               <PollWidget
-                key={`poll-${mySide}-${pollResetKey}`}
+                key={`poll-${mySide}-${pollResetKey}-desktop`}
                 side={mySide}
                 disabled={!isActive}
                 onVotePowerChange={setVotePower}
