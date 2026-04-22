@@ -85,10 +85,22 @@ const ContestSession = ({
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [spectatorInviterId, setSpectatorInviterId] = useState<string | null>(null);
 
-  // ─── Session lifecycle ───
+  // ─── Session lifecycle (server-anchored from contest_sessions.started_at) ───
+  // Anchor — frozen on first render so all clients compute identical phase/timeLeft.
+  const anchorMs = useMemo(() => {
+    const parsed = startedAt ? Date.parse(startedAt) : NaN;
+    return Number.isFinite(parsed) ? parsed : Date.now();
+  }, [startedAt]);
   const [phase, setPhase] = useState<Phase | "connecting">("connecting");
   const [timeLeft, setTimeLeft] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // ─── Audio unlock (browsers require a user gesture before .play()) ───
+  const [audioUnlocked, setAudioUnlocked] = useState(false);
+  const handleEnterContest = useCallback(async () => {
+    await unlockContestSounds();
+    setAudioUnlocked(true);
+  }, []);
 
   // ─── Scoring state ───
   const [championTips, setChampionTips] = useState(0);
