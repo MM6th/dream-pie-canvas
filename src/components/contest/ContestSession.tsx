@@ -1,9 +1,10 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useLiveKitToken } from "@/hooks/useLiveKitToken";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
-import { Clock, Loader2, Video, VideoOff, Mic, MicOff, User, Timer } from "lucide-react";
+import { Clock, Loader2, Video, VideoOff, Mic, MicOff, User, Timer, Volume2 } from "lucide-react";
 import OneOnOneTipButton from "@/components/live/OneOnOneTipButton";
 import OneOnOneChat from "@/components/live/OneOnOneChat";
 import { toast } from "@/hooks/use-toast";
@@ -28,6 +29,7 @@ import {
   playChampionWins,
   playChallengerWins,
   playWinnerContest,
+  unlockContestSounds,
 } from "@/utils/contestSounds";
 import OneOnOneTipMeter from "@/components/live/OneOnOneTipMeter";
 
@@ -39,6 +41,8 @@ interface ContestSessionProps {
   durationMinutes: number;
   challengeType: string;
   bulletinPostId: string;
+  /** ISO timestamp from contest_sessions.started_at — single source of truth for the clock. Optional for legacy/test flows. */
+  startedAt?: string;
   onEnd: () => void;
 }
 
