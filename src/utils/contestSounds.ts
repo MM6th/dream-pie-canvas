@@ -30,6 +30,32 @@ const play = (key: keyof typeof soundPaths) => {
   }
 };
 
+/**
+ * Prime all contest audio elements during a user gesture so the browser
+ * autoplay policy lets us play them later from effects/timers (critical on
+ * desktop Chrome/Safari, where Audio.play() without a prior gesture is blocked).
+ */
+export const unlockContestSounds = async () => {
+  const keys = Object.keys(soundPaths) as (keyof typeof soundPaths)[];
+  await Promise.all(keys.map(async (key) => {
+    try {
+      let audio = cache.get(key);
+      if (!audio) {
+        audio = new Audio(soundPaths[key]);
+        cache.set(key, audio);
+      }
+      audio.muted = true;
+      audio.currentTime = 0;
+      await audio.play().catch(() => {});
+      audio.pause();
+      audio.currentTime = 0;
+      audio.muted = false;
+    } catch {
+      // ignore — best-effort unlock
+    }
+  }));
+};
+
 export const playPrepareSound = () => play('prepare');
 export const playStartSound = () => play('start');
 export const playCoinDeposit = () => play('coinDeposit');
