@@ -19,6 +19,7 @@ const ContestLive = () => {
     durationMinutes: number;
     challengeType: string;
     sessionId: string;
+    startedAt: string;
   } | null>(null);
 
   useEffect(() => {
