@@ -85,7 +85,8 @@ export const useContestRedirect = () => {
   useEffect(() => {
     if (!user?.id) return;
     checkContests();
-    const interval = setInterval(checkContests, 15000);
+    // 5s cadence so contestant + spectator land within ~5s of scheduled_at.
+    const interval = setInterval(checkContests, 5000);
     return () => clearInterval(interval);
   }, [checkContests, user?.id]);
 };
