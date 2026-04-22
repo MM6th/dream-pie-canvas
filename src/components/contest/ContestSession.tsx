@@ -155,9 +155,20 @@ const ContestSession = ({
   const startCountdown = useCallback((seconds: number, onComplete: () => void) => {
     clearTimer();
     setTimeLeft(seconds);
+    let completed = false;
     intervalRef.current = setInterval(() => {
       setTimeLeft(prev => {
-        if (prev <= 1) { clearTimer(); onComplete(); return 0; }
+        if (prev <= 1) {
+          if (!completed) {
+            completed = true;
+            clearTimer();
+            // Defer the next-phase trigger OUTSIDE the state updater so the
+            // subsequent startCountdown() call's setTimeLeft(N) is not
+            // overwritten by this updater's return value.
+            setTimeout(() => onComplete(), 0);
+          }
+          return 0;
+        }
         return prev - 1;
       });
     }, 1000);
