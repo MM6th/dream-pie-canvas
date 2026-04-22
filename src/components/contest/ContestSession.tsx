@@ -1,9 +1,10 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useLiveKitToken } from "@/hooks/useLiveKitToken";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
-import { Clock, Loader2, Video, VideoOff, Mic, MicOff, User, Timer } from "lucide-react";
+import { Clock, Loader2, Video, VideoOff, Mic, MicOff, User, Timer, Volume2 } from "lucide-react";
 import OneOnOneTipButton from "@/components/live/OneOnOneTipButton";
 import OneOnOneChat from "@/components/live/OneOnOneChat";
 import { toast } from "@/hooks/use-toast";
@@ -28,6 +29,7 @@ import {
   playChampionWins,
   playChallengerWins,
   playWinnerContest,
+  unlockContestSounds,
 } from "@/utils/contestSounds";
 import OneOnOneTipMeter from "@/components/live/OneOnOneTipMeter";
 
@@ -39,6 +41,8 @@ interface ContestSessionProps {
   durationMinutes: number;
   challengeType: string;
   bulletinPostId: string;
+  /** ISO timestamp from contest_sessions.started_at — single source of truth for the clock. Optional for legacy/test flows. */
+  startedAt?: string;
   onEnd: () => void;
 }
 
@@ -61,10 +65,12 @@ const ContestSession = ({
   durationMinutes,
   challengeType,
   bulletinPostId,
+  startedAt,
   onEnd,
 }: ContestSessionProps) => {
   const { user } = useAuth();
   const { getToken } = useLiveKitToken();
+  const isMobile = useIsMobile();
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const remoteAudioRef = useRef<HTMLAudioElement>(null);
@@ -79,10 +85,22 @@ const ContestSession = ({
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [spectatorInviterId, setSpectatorInviterId] = useState<string | null>(null);
 
-  // ─── Session lifecycle ───
+  // ─── Session lifecycle (server-anchored from contest_sessions.started_at) ───
+  // Anchor — frozen on first render so all clients compute identical phase/timeLeft.
+  const anchorMs = useMemo(() => {
+    const parsed = startedAt ? Date.parse(startedAt) : NaN;
+    return Number.isFinite(parsed) ? parsed : Date.now();
+  }, [startedAt]);
   const [phase, setPhase] = useState<Phase | "connecting">("connecting");
   const [timeLeft, setTimeLeft] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // ─── Audio unlock (browsers require a user gesture before .play()) ───
+  const [audioUnlocked, setAudioUnlocked] = useState(false);
+  const handleEnterContest = useCallback(async () => {
+    await unlockContestSounds();
+    setAudioUnlocked(true);
+  }, []);
 
   // ─── Scoring state ───
   const [championTips, setChampionTips] = useState(0);
@@ -147,72 +165,65 @@ const ContestSession = ({
   const championTanks = { tip: championTipVotes, tipRaw: championTipVotesRaw, skill: skillValue, sample: championSample, power: championPower, points: championPoints };
   const challengerTanks = { tip: challengerTipVotes, tipRaw: challengerTipVotesRaw, skill: skillValue, sample: challengerSample, power: challengerPower, points: challengerPoints };
 
-  // ─── Timer helpers ───
+  // ─── Server-anchored clock ───
+  // All clients (champion, challenger, every spectator) compute the same phase &
+  // timeLeft from anchorMs (= contest_sessions.started_at). This guarantees clocks
+  // are in unison and survives page refresh.
   const clearTimer = useCallback(() => {
     if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; }
   }, []);
 
-  const startCountdown = useCallback((seconds: number, onComplete: () => void) => {
-    clearTimer();
-    setTimeLeft(seconds);
-    let completed = false;
-    intervalRef.current = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev <= 1) {
-          if (!completed) {
-            completed = true;
-            clearTimer();
-            // Defer the next-phase trigger OUTSIDE the state updater so the
-            // subsequent startCountdown() call's setTimeLeft(N) is not
-            // overwritten by this updater's return value.
-            setTimeout(() => onComplete(), 0);
-          }
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  }, [clearTimer]);
+  const liveSecondsTotal = Math.max(1, (durationMinutes || 0) * 60);
 
-  // Keep latest durationMinutes in a ref so the lifecycle effect always reads
-  // the freshest value when transitioning warmup → live, even if the prop
-  // arrived after the effect first ran.
-  const durationMinutesRef = useRef(durationMinutes);
-  useEffect(() => { durationMinutesRef.current = durationMinutes; }, [durationMinutes]);
+  const computePhaseAndRemaining = useCallback((): { phase: Phase; remaining: number } => {
+    const elapsed = Math.max(0, Math.floor((Date.now() - anchorMs) / 1000));
+    if (elapsed < WARMUP_SECONDS) {
+      return { phase: 'warmup', remaining: WARMUP_SECONDS - elapsed };
+    }
+    const liveElapsed = elapsed - WARMUP_SECONDS;
+    if (liveElapsed < liveSecondsTotal) {
+      return { phase: 'live', remaining: liveSecondsTotal - liveElapsed };
+    }
+    const overtimeElapsed = liveElapsed - liveSecondsTotal;
+    if (overtimeElapsed < OVERTIME_SECONDS) {
+      return { phase: 'overtime', remaining: OVERTIME_SECONDS - overtimeElapsed };
+    }
+    return { phase: 'ended', remaining: 0 };
+  }, [anchorMs, liveSecondsTotal]);
 
-  // Guard so the lifecycle only ever starts once per mount.
-  const lifecycleStartedRef = useRef(false);
+  // Track which phases have already had their announcement sound played on this
+  // device, so a late joiner / refresh doesn't replay earlier announcements.
+  const announcedPhasesRef = useRef<Set<Phase>>(new Set());
 
-  // ─── Start lifecycle after connection ───
   useEffect(() => {
     if (connecting) return;
-    if (lifecycleStartedRef.current) return;
-    lifecycleStartedRef.current = true;
+    if (!audioUnlocked) return; // wait for the user gesture before starting clock+sound
 
-    console.log('[Contest] Lifecycle starting. durationMinutes prop =', durationMinutes, '→ LIVE_SECONDS =', durationMinutes * 60);
+    console.log('[Contest] Lifecycle starting. durationMinutes prop =', durationMinutes, '→ LIVE_SECONDS =', liveSecondsTotal, 'anchor =', new Date(anchorMs).toISOString());
 
-    // Begin warmup phase
-    setPhase('warmup');
-    playPrepareSound();
-    startCountdown(WARMUP_SECONDS, () => {
-      // Read the freshest duration at warmup-end so a late-arriving prop is honored
-      const liveSeconds = Math.max(1, (durationMinutesRef.current || 0) * 60);
-      console.log('[Contest] Warmup complete. Starting LIVE for', liveSeconds, 'seconds');
-      setPhase('live');
-      playStartSound();
-      startCountdown(liveSeconds, () => {
-        console.log('[Contest] Live complete. Starting OVERTIME for', OVERTIME_SECONDS, 'seconds');
-        setPhase('overtime');
-        playOvertime();
-        startCountdown(OVERTIME_SECONDS, () => {
-          console.log('[Contest] Overtime complete. Ending.');
-          setPhase('ended');
-        });
+    const tick = () => {
+      const { phase: nextPhase, remaining } = computePhaseAndRemaining();
+      setPhase(prev => {
+        if (prev !== nextPhase) {
+          // Phase transition — fire its sound exactly once per device.
+          if (!announcedPhasesRef.current.has(nextPhase)) {
+            announcedPhasesRef.current.add(nextPhase);
+            if (nextPhase === 'warmup') playPrepareSound();
+            else if (nextPhase === 'live') playStartSound();
+            else if (nextPhase === 'overtime') playOvertime();
+          }
+          console.log('[Contest] Phase →', nextPhase, 'remaining', remaining);
+        }
+        return nextPhase;
       });
-    });
+      setTimeLeft(remaining);
+    };
+
+    tick(); // immediate sync on mount/refresh
+    intervalRef.current = setInterval(tick, 1000);
     return () => clearTimer();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [connecting]);
+  }, [connecting, audioUnlocked, anchorMs, liveSecondsTotal]);
 
   // ─── Sound triggers ───
   const showPollWarning = phase === 'live' && timeLeft > 0 && timeLeft <= 60;
@@ -648,17 +659,36 @@ const ContestSession = ({
               <VerticalTank label="Sample" value={oppTanks.sample} color="bg-purple-500" bgColor="bg-purple-900/40" fusion />
             </div>
 
-            {/* Own power flow — right of coin meter, aligned to its height */}
-            <div className="absolute top-[10px] left-[280px] z-10 w-[150px]">
-              <div className="text-[8px] text-white/40 text-center mb-0.5">You</div>
-              <PowerFlowBar value={myTanks.power} />
-            </div>
+            {/* Own + opponent power flow.
+                Mobile: stacked, centered under the challenge title (avoids the
+                coin meter / opponent tank collision on narrow screens).
+                Desktop: original side-by-side placement next to the coin meter. */}
+            {isMobile ? (
+              <div className="absolute top-[88px] left-1/2 -translate-x-1/2 z-10 w-[80%] max-w-[280px] flex flex-col gap-1">
+                <div>
+                  <div className="text-[8px] text-white/40 text-center mb-0.5">You</div>
+                  <PowerFlowBar value={myTanks.power} />
+                </div>
+                <div>
+                  <div className="text-[8px] text-white/40 text-center mb-0.5">{oppLabel}</div>
+                  <PowerFlowBar value={oppTanks.power} />
+                </div>
+              </div>
+            ) : (
+              <>
+                {/* Own power flow — right of coin meter, aligned to its height */}
+                <div className="absolute top-[10px] left-[280px] z-10 w-[150px]">
+                  <div className="text-[8px] text-white/40 text-center mb-0.5">You</div>
+                  <PowerFlowBar value={myTanks.power} />
+                </div>
 
-            {/* Opponent power flow — right, parallel with coin meter */}
-            <div className="absolute top-4 right-28 z-10 w-[150px]">
-              <div className="text-[8px] text-white/40 text-center mb-0.5">{oppLabel}</div>
-              <PowerFlowBar value={oppTanks.power} />
-            </div>
+                {/* Opponent power flow — right, parallel with coin meter */}
+                <div className="absolute top-4 right-28 z-10 w-[150px]">
+                  <div className="text-[8px] text-white/40 text-center mb-0.5">{oppLabel}</div>
+                  <PowerFlowBar value={oppTanks.power} />
+                </div>
+              </>
+            )}
 
             {/* Own total points — bottom left area */}
             <div className="absolute bottom-14 left-14 z-10 w-[180px]">
@@ -715,6 +745,21 @@ const ContestSession = ({
               <p className="text-white text-4xl sm:text-5xl font-black uppercase tracking-[0.15em] drop-shadow-[0_0_20px_rgba(255,255,255,0.4)]">CHAMPION</p>
               <img src={pieTitleBelt} className="w-20 h-20 object-contain mx-auto mt-4 drop-shadow-[0_0_20px_rgba(255,215,0,0.8)] animate-pulse" alt="Belt" />
             </div>
+          </div>
+        )}
+
+        {/* Audio unlock overlay — required so desktop browsers allow contest
+            announcement sounds (Prepare/Start/Overtime/Winner) to play. */}
+        {!audioUnlocked && !connecting && (
+          <div className="absolute inset-0 z-[100] flex items-center justify-center bg-black/85 backdrop-blur-sm">
+            <button
+              onClick={handleEnterContest}
+              className="flex flex-col items-center gap-3 px-8 py-6 rounded-2xl bg-gradient-to-br from-yellow-500 to-amber-600 text-black font-bold shadow-2xl hover:scale-105 transition-transform"
+            >
+              <Volume2 className="w-10 h-10" />
+              <span className="text-lg uppercase tracking-wider">Tap to Enter Contest</span>
+              <span className="text-xs font-normal opacity-80">Enables audio announcements</span>
+            </button>
           </div>
         )}
       </div>
@@ -817,21 +862,31 @@ const ContestSession = ({
             <VerticalTank label="Sample" value={myTanks.sample} color="bg-purple-500" bgColor="bg-purple-900/40" fusion />
           </div>
 
-          {/* Power flow bar — left, parallel with coin meter */}
-          <div className="absolute top-4 left-28 z-10 w-[150px]">
-            <PowerFlowBar value={myTanks.power} />
-          </div>
+          {/* Power flow bar.
+              Mobile: centered under the challenge title (avoids overlap with the
+              coin meter on narrow screens — user-requested layout).
+              Desktop: original placement parallel to the coin meter. */}
+          {isMobile ? (
+            <div className="absolute top-[88px] left-1/2 -translate-x-1/2 z-10 w-[80%] max-w-[280px]">
+              <PowerFlowBar value={myTanks.power} />
+            </div>
+          ) : (
+            <div className="absolute top-4 left-28 z-10 w-[150px]">
+              <PowerFlowBar value={myTanks.power} />
+            </div>
+          )}
 
           {/* Total points bar */}
           <div className="absolute bottom-14 left-14 right-14 z-10 mx-auto max-w-[200px]">
             <TotalPointsBar points={myTanks.points} revealed={isRevealed} penalized={isRevealed && !myPollSubmitted} />
           </div>
 
-          {/* Poll widget */}
-          {isLiveOrOvertime && (
+          {/* Poll widget — desktop only inside the video overlay (mobile gets a
+              dedicated row below to guarantee visibility & tappability). */}
+          {!isMobile && isLiveOrOvertime && (
             <div className="absolute bottom-4 right-3 z-10 pointer-events-auto">
               <PollWidget
-                key={`poll-${mySide}-${pollResetKey}`}
+                key={`poll-${mySide}-${pollResetKey}-desktop`}
                 side={mySide}
                 disabled={!isActive}
                 onVotePowerChange={setVotePower}
@@ -841,6 +896,21 @@ const ContestSession = ({
           )}
         </div>
       </div>
+
+      {/* Mobile poll row — sits above the chat so it is always visible &
+          tappable on small screens (the in-overlay placement was clipped by
+          the chat area on phones). */}
+      {isMobile && isLiveOrOvertime && spectatorInviterId && (
+        <div className="shrink-0 px-2 py-2 bg-black/80 border-t border-white/10 flex justify-center">
+          <PollWidget
+            key={`poll-${mySide}-${pollResetKey}-mobile`}
+            side={mySide}
+            disabled={!isActive}
+            onVotePowerChange={setVotePower}
+            onSubmittedChange={setPollSubmitted}
+          />
+        </div>
+      )}
 
       {/* Chat */}
       <div className="h-36 shrink-0 overflow-hidden border-t border-white/10 sm:h-48">
@@ -866,6 +936,21 @@ const ContestSession = ({
             <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto" />
             <p className="text-white text-sm">Connecting to contest...</p>
           </div>
+        </div>
+      )}
+
+      {/* Audio unlock overlay — required so desktop browsers allow contest
+          announcement sounds (Prepare/Start/Overtime/Winner) to play. */}
+      {!audioUnlocked && !connecting && (
+        <div className="absolute inset-0 z-[100] flex items-center justify-center bg-black/85 backdrop-blur-sm">
+          <button
+            onClick={handleEnterContest}
+            className="flex flex-col items-center gap-3 px-8 py-6 rounded-2xl bg-gradient-to-br from-yellow-500 to-amber-600 text-black font-bold shadow-2xl hover:scale-105 transition-transform"
+          >
+            <Volume2 className="w-10 h-10" />
+            <span className="text-lg uppercase tracking-wider">Tap to Enter Contest</span>
+            <span className="text-xs font-normal opacity-80">Enables audio announcements</span>
+          </button>
         </div>
       )}
     </div>

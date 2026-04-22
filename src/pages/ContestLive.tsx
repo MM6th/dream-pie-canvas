@@ -19,6 +19,7 @@ const ContestLive = () => {
     durationMinutes: number;
     challengeType: string;
     sessionId: string;
+    startedAt: string;
   } | null>(null);
 
   useEffect(() => {
@@ -101,19 +102,30 @@ const ContestLive = () => {
         const durationMinutes = post.challenge_time_limit_minutes || 15;
 
         // Session creation with retry loop to handle race conditions
-        let session: { id: string; status: string } | null = null;
+        let session: { id: string; status: string; started_at: string | null } | null = null;
         const maxRetries = 5;
 
         for (let attempt = 0; attempt < maxRetries; attempt++) {
           // Try to fetch existing session first
           const { data: existing } = await supabase
             .from("contest_sessions")
-            .select("id, status")
+            .select("id, status, started_at")
             .eq("bulletin_post_id", postId)
             .maybeSingle();
 
           if (existing) {
             session = existing;
+            // Backfill started_at if missing (legacy rows) so the clock has an anchor
+            if (!existing.started_at) {
+              const nowIso = new Date().toISOString();
+              const { data: updated } = await supabase
+                .from("contest_sessions")
+                .update({ started_at: nowIso })
+                .eq("id", existing.id)
+                .select("id, status, started_at")
+                .single();
+              if (updated) session = updated;
+            }
             break;
           }
 
@@ -129,7 +141,7 @@ const ContestLive = () => {
                 status: "live",
                 started_at: new Date().toISOString(),
               })
-              .select("id, status")
+              .select("id, status, started_at")
               .single();
 
             if (!sessError && newSession) {
@@ -164,6 +176,7 @@ const ContestLive = () => {
           durationMinutes,
           challengeType: post.challenge_type || "contest",
           sessionId: session.id,
+          startedAt: session.started_at || new Date().toISOString(),
         });
       } catch (err) {
         console.error("Contest init error:", err);
@@ -223,6 +236,7 @@ const ContestLive = () => {
           durationMinutes={contestData.durationMinutes}
           challengeType={contestData.challengeType}
           bulletinPostId={postId!}
+          startedAt={contestData.startedAt}
           onEnd={handleEndContest}
         />
       </div>
