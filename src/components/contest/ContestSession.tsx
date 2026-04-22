@@ -65,10 +65,12 @@ const ContestSession = ({
   durationMinutes,
   challengeType,
   bulletinPostId,
+  startedAt,
   onEnd,
 }: ContestSessionProps) => {
   const { user } = useAuth();
   const { getToken } = useLiveKitToken();
+  const isMobile = useIsMobile();
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const remoteAudioRef = useRef<HTMLAudioElement>(null);
