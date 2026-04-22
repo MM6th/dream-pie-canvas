@@ -138,11 +138,15 @@ const ContestTestPage = () => {
   const startCountdown = useCallback((seconds: number, onComplete: () => void) => {
     clearTimer();
     setTimeLeft(seconds);
+    let completed = false;
     intervalRef.current = setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) {
-          clearTimer();
-          onComplete();
+          if (!completed) {
+            completed = true;
+            clearTimer();
+            setTimeout(() => onComplete(), 0);
+          }
           return 0;
         }
         return prev - 1;
