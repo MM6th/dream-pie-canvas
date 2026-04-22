@@ -165,72 +165,65 @@ const ContestSession = ({
   const championTanks = { tip: championTipVotes, tipRaw: championTipVotesRaw, skill: skillValue, sample: championSample, power: championPower, points: championPoints };
   const challengerTanks = { tip: challengerTipVotes, tipRaw: challengerTipVotesRaw, skill: skillValue, sample: challengerSample, power: challengerPower, points: challengerPoints };
 
-  // ─── Timer helpers ───
+  // ─── Server-anchored clock ───
+  // All clients (champion, challenger, every spectator) compute the same phase &
+  // timeLeft from anchorMs (= contest_sessions.started_at). This guarantees clocks
+  // are in unison and survives page refresh.
   const clearTimer = useCallback(() => {
     if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; }
   }, []);
 
-  const startCountdown = useCallback((seconds: number, onComplete: () => void) => {
-    clearTimer();
-    setTimeLeft(seconds);
-    let completed = false;
-    intervalRef.current = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev <= 1) {
-          if (!completed) {
-            completed = true;
-            clearTimer();
-            // Defer the next-phase trigger OUTSIDE the state updater so the
-            // subsequent startCountdown() call's setTimeLeft(N) is not
-            // overwritten by this updater's return value.
-            setTimeout(() => onComplete(), 0);
-          }
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  }, [clearTimer]);
+  const liveSecondsTotal = Math.max(1, (durationMinutes || 0) * 60);
 
-  // Keep latest durationMinutes in a ref so the lifecycle effect always reads
-  // the freshest value when transitioning warmup → live, even if the prop
-  // arrived after the effect first ran.
-  const durationMinutesRef = useRef(durationMinutes);
-  useEffect(() => { durationMinutesRef.current = durationMinutes; }, [durationMinutes]);
+  const computePhaseAndRemaining = useCallback((): { phase: Phase; remaining: number } => {
+    const elapsed = Math.max(0, Math.floor((Date.now() - anchorMs) / 1000));
+    if (elapsed < WARMUP_SECONDS) {
+      return { phase: 'warmup', remaining: WARMUP_SECONDS - elapsed };
+    }
+    const liveElapsed = elapsed - WARMUP_SECONDS;
+    if (liveElapsed < liveSecondsTotal) {
+      return { phase: 'live', remaining: liveSecondsTotal - liveElapsed };
+    }
+    const overtimeElapsed = liveElapsed - liveSecondsTotal;
+    if (overtimeElapsed < OVERTIME_SECONDS) {
+      return { phase: 'overtime', remaining: OVERTIME_SECONDS - overtimeElapsed };
+    }
+    return { phase: 'ended', remaining: 0 };
+  }, [anchorMs, liveSecondsTotal]);
 
-  // Guard so the lifecycle only ever starts once per mount.
-  const lifecycleStartedRef = useRef(false);
+  // Track which phases have already had their announcement sound played on this
+  // device, so a late joiner / refresh doesn't replay earlier announcements.
+  const announcedPhasesRef = useRef<Set<Phase>>(new Set());
 
-  // ─── Start lifecycle after connection ───
   useEffect(() => {
     if (connecting) return;
-    if (lifecycleStartedRef.current) return;
-    lifecycleStartedRef.current = true;
+    if (!audioUnlocked) return; // wait for the user gesture before starting clock+sound
 
-    console.log('[Contest] Lifecycle starting. durationMinutes prop =', durationMinutes, '→ LIVE_SECONDS =', durationMinutes * 60);
+    console.log('[Contest] Lifecycle starting. durationMinutes prop =', durationMinutes, '→ LIVE_SECONDS =', liveSecondsTotal, 'anchor =', new Date(anchorMs).toISOString());
 
-    // Begin warmup phase
-    setPhase('warmup');
-    playPrepareSound();
-    startCountdown(WARMUP_SECONDS, () => {
-      // Read the freshest duration at warmup-end so a late-arriving prop is honored
-      const liveSeconds = Math.max(1, (durationMinutesRef.current || 0) * 60);
-      console.log('[Contest] Warmup complete. Starting LIVE for', liveSeconds, 'seconds');
-      setPhase('live');
-      playStartSound();
-      startCountdown(liveSeconds, () => {
-        console.log('[Contest] Live complete. Starting OVERTIME for', OVERTIME_SECONDS, 'seconds');
-        setPhase('overtime');
-        playOvertime();
-        startCountdown(OVERTIME_SECONDS, () => {
-          console.log('[Contest] Overtime complete. Ending.');
-          setPhase('ended');
-        });
+    const tick = () => {
+      const { phase: nextPhase, remaining } = computePhaseAndRemaining();
+      setPhase(prev => {
+        if (prev !== nextPhase) {
+          // Phase transition — fire its sound exactly once per device.
+          if (!announcedPhasesRef.current.has(nextPhase)) {
+            announcedPhasesRef.current.add(nextPhase);
+            if (nextPhase === 'warmup') playPrepareSound();
+            else if (nextPhase === 'live') playStartSound();
+            else if (nextPhase === 'overtime') playOvertime();
+          }
+          console.log('[Contest] Phase →', nextPhase, 'remaining', remaining);
+        }
+        return nextPhase;
       });
-    });
+      setTimeLeft(remaining);
+    };
+
+    tick(); // immediate sync on mount/refresh
+    intervalRef.current = setInterval(tick, 1000);
     return () => clearTimer();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [connecting]);
+  }, [connecting, audioUnlocked, anchorMs, liveSecondsTotal]);
 
   // ─── Sound triggers ───
   const showPollWarning = phase === 'live' && timeLeft > 0 && timeLeft <= 60;
