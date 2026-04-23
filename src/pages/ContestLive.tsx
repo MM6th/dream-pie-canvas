@@ -45,6 +45,24 @@ const ContestLive = () => {
           return;
         }
 
+        // Block manual entry before scheduled_at — the only path into the room
+        // is the auto-redirect at the admin-set scheduled time.
+        if (post.scheduled_at) {
+          const scheduledMs = Date.parse(post.scheduled_at);
+          if (Number.isFinite(scheduledMs) && Date.now() < scheduledMs) {
+            const when = new Date(scheduledMs).toLocaleString("en-US", {
+              dateStyle: "medium",
+              timeStyle: "short",
+            });
+            toast({
+              title: "Contest hasn't started yet",
+              description: `You'll be redirected automatically at ${when}.`,
+            });
+            navigate("/bulletin");
+            return;
+          }
+        }
+
         const { data: acceptances } = await supabase
           .from("challenge_acceptances")
           .select("user_id")
@@ -101,6 +119,11 @@ const ContestLive = () => {
         const roomName = `contest_${postId}`;
         const durationMinutes = post.challenge_time_limit_minutes || 15;
 
+        // The clock anchor MUST be the admin-set scheduled time so every client
+        // (champion, challenger, all spectators) computes identical phase/timeLeft.
+        // Fall back to now() only for legacy posts with no scheduled_at.
+        const desiredStartedAt = post.scheduled_at || new Date().toISOString();
+
         // Session creation with retry loop to handle race conditions
         let session: { id: string; status: string; started_at: string | null } | null = null;
         const maxRetries = 5;
@@ -115,12 +138,13 @@ const ContestLive = () => {
 
           if (existing) {
             session = existing;
-            // Backfill started_at if missing (legacy rows) so the clock has an anchor
-            if (!existing.started_at) {
-              const nowIso = new Date().toISOString();
+            // Correct started_at if it's missing OR was anchored to "first arrival
+            // time" by the previous buggy code. We want it to equal scheduled_at
+            // so all clocks converge on the admin-set anchor.
+            if (!existing.started_at || existing.started_at !== desiredStartedAt) {
               const { data: updated } = await supabase
                 .from("contest_sessions")
-                .update({ started_at: nowIso })
+                .update({ started_at: desiredStartedAt })
                 .eq("id", existing.id)
                 .select("id, status, started_at")
                 .single();
@@ -139,7 +163,7 @@ const ContestLive = () => {
                 champion_id: championId,
                 challenger_id: challengerId,
                 status: "live",
-                started_at: new Date().toISOString(),
+                started_at: desiredStartedAt,
               })
               .select("id, status, started_at")
               .single();
