@@ -45,6 +45,24 @@ const ContestLive = () => {
           return;
         }
 
+        // Block manual entry before scheduled_at — the only path into the room
+        // is the auto-redirect at the admin-set scheduled time.
+        if (post.scheduled_at) {
+          const scheduledMs = Date.parse(post.scheduled_at);
+          if (Number.isFinite(scheduledMs) && Date.now() < scheduledMs) {
+            const when = new Date(scheduledMs).toLocaleString("en-US", {
+              dateStyle: "medium",
+              timeStyle: "short",
+            });
+            toast({
+              title: "Contest hasn't started yet",
+              description: `You'll be redirected automatically at ${when}.`,
+            });
+            navigate("/bulletin");
+            return;
+          }
+        }
+
         const { data: acceptances } = await supabase
           .from("challenge_acceptances")
           .select("user_id")
