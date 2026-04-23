@@ -971,7 +971,13 @@ export type Database = {
         Row: {
           bulletin_post_id: string
           challenger_id: string
+          challenger_overtime_choice: string | null
+          challenger_overtime_ended_at: string | null
+          challenger_overtime_started_at: string | null
           champion_id: string
+          champion_overtime_choice: string | null
+          champion_overtime_ended_at: string | null
+          champion_overtime_started_at: string | null
           created_at: string
           ended_at: string | null
           id: string
@@ -983,7 +989,13 @@ export type Database = {
         Insert: {
           bulletin_post_id: string
           challenger_id: string
+          challenger_overtime_choice?: string | null
+          challenger_overtime_ended_at?: string | null
+          challenger_overtime_started_at?: string | null
           champion_id: string
+          champion_overtime_choice?: string | null
+          champion_overtime_ended_at?: string | null
+          champion_overtime_started_at?: string | null
           created_at?: string
           ended_at?: string | null
           id?: string
@@ -995,7 +1007,13 @@ export type Database = {
         Update: {
           bulletin_post_id?: string
           challenger_id?: string
+          challenger_overtime_choice?: string | null
+          challenger_overtime_ended_at?: string | null
+          challenger_overtime_started_at?: string | null
           champion_id?: string
+          champion_overtime_choice?: string | null
+          champion_overtime_ended_at?: string | null
+          champion_overtime_started_at?: string | null
           created_at?: string
           ended_at?: string | null
           id?: string
