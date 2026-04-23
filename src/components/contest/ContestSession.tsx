@@ -876,8 +876,9 @@ const ContestSession = ({
               <TotalPointsBar points={oppTanks.points} revealed={isRevealed} penalized={isRevealed && !oppPollSubmitted} />
             </div>
 
-            {/* Controls */}
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 pointer-events-auto">
+            {/* Controls — no early-exit. Countdown is the sole authority for ending live.
+                During the wind-down/overtime an Overtime card or End Session button shows. */}
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 pointer-events-auto">
               <Button variant="outline" size="sm" onClick={toggleCamera}
                 className={`rounded-full ${!cameraOn ? "border-destructive text-destructive" : "border-white/30 text-white"} bg-black/40 hover:bg-black/60`}>
                 {cameraOn ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
@@ -886,9 +887,33 @@ const ContestSession = ({
                 className={`rounded-full ${!micOn ? "border-destructive text-destructive" : "border-white/30 text-white"} bg-black/40 hover:bg-black/60`}>
                 {micOn ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
               </Button>
-              <Button variant="destructive" size="sm" onClick={handleEndContest} className="rounded-full px-4">
-                End Contest
-              </Button>
+
+              {/* Overtime: yes/no decision card */}
+              {showOvertimeCard && (
+                <OvertimeDecisionCard
+                  submitting={overtimeSubmitting}
+                  onSubmit={submitOvertimeChoice}
+                />
+              )}
+
+              {/* In overtime, my side opted yes and is still running → End Session button */}
+              {phase === 'overtime' && myChoice === 'yes' && !myEndedAt && (
+                <Button
+                  size="sm"
+                  onClick={endMyOvertime}
+                  className="rounded-full px-4 bg-orange-600 hover:bg-orange-700 text-white"
+                >
+                  End Session
+                </Button>
+              )}
+
+              {/* My side opted out (or already ended overtime) — passive label */}
+              {((phase === 'overtime' && myChoice === 'no')
+                || (phase === 'overtime' && myChoice === 'yes' && myEndedAt)) && (
+                <span className="text-white/70 text-xs px-3 py-1 rounded-full bg-black/40 border border-white/10">
+                  Awaiting opponent…
+                </span>
+              )}
             </div>
           </div>
         </div>
