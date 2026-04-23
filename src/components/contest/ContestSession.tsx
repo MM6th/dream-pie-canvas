@@ -165,10 +165,9 @@ const ContestSession = ({
   const championTipRoom = `${roomName}_champion_tips`;
   const challengerTipRoom = `${roomName}_challenger_tips`;
 
-  // ─── Computed scoring ───
+  // ─── Computed scoring (per-side skill so overtime can be per-contestant) ───
   const championSample = SAMPLE_RATIO_FORMULA.calculate({ voters: championTippers, viewers: Math.max(championSpectators, 1) });
   const challengerSample = SAMPLE_RATIO_FORMULA.calculate({ voters: challengerTippers, viewers: Math.max(challengerSpectators, 1) });
-  const skillValue = phase === 'overtime' ? Math.round((timeLeft / OVERTIME_SECONDS) * 100) : (phase === 'ended' ? 0 : 100);
   const LIVE_SECONDS = durationMinutes * 60;
 
   const championTipVotesRaw = championTips + championVotePower;
@@ -176,32 +175,25 @@ const ContestSession = ({
   const championTipVotes = Math.min(championTipVotesRaw, 100);
   const challengerTipVotes = Math.min(challengerTipVotesRaw, 100);
 
-  const isLiveOrOvertime = phase === 'live' || phase === 'overtime';
-  const championPower = isLiveOrOvertime ? Math.round((championTipVotesRaw + skillValue + championSample) / 3) : 0;
-  const challengerPower = isLiveOrOvertime ? Math.round((challengerTipVotesRaw + skillValue + challengerSample) / 3) : 0;
-
-  const championPointsRaw = CONTEST_SCORING_FORMULA.calculate({
-    gifts: championTips, pollVotesWon: championVotePower, skillPercent: skillValue, sampleIntensity: championSample,
-  });
-  const challengerPointsRaw = CONTEST_SCORING_FORMULA.calculate({
-    gifts: challengerTips, pollVotesWon: challengerVotePower, skillPercent: skillValue, sampleIntensity: challengerSample,
-  });
-  const championPoints = phase === 'ended' ? Math.max(0, championPointsRaw - (championPollSubmitted ? 0 : POLL_PENALTY)) : championPointsRaw;
-  const challengerPoints = phase === 'ended' ? Math.max(0, challengerPointsRaw - (challengerPollSubmitted ? 0 : POLL_PENALTY)) : challengerPointsRaw;
-  const isRevealed = phase === 'ended';
-
-  const championTanks = { tip: championTipVotes, tipRaw: championTipVotesRaw, skill: skillValue, sample: championSample, power: championPower, points: championPoints };
-  const challengerTanks = { tip: challengerTipVotes, tipRaw: challengerTipVotesRaw, skill: skillValue, sample: challengerSample, power: challengerPower, points: challengerPoints };
-
-  // ─── Server-anchored clock ───
-  // All clients (champion, challenger, every spectator) compute the same phase &
-  // timeLeft from anchorMs (= contest_sessions.started_at). This guarantees clocks
-  // are in unison and survives page refresh.
+  // ─── Server-anchored clock + overtime state machine ───
   const clearTimer = useCallback(() => {
     if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; }
   }, []);
 
   const liveSecondsTotal = Math.max(1, (durationMinutes || 0) * 60);
+
+  // Per-side overtime remaining seconds (computed each tick).
+  const [championOtRemaining, setChampionOtRemaining] = useState(0);
+  const [challengerOtRemaining, setChallengerOtRemaining] = useState(0);
+
+  const computeSideOtRemaining = useCallback((startedAtIso: string | null, endedAtIso: string | null): number => {
+    if (!startedAtIso) return OVERTIME_SECONDS;
+    const startMs = Date.parse(startedAtIso);
+    if (!Number.isFinite(startMs)) return 0;
+    const endRef = endedAtIso ? Date.parse(endedAtIso) : Date.now();
+    const elapsed = Math.max(0, Math.floor((endRef - startMs) / 1000));
+    return Math.max(0, OVERTIME_SECONDS - elapsed);
+  }, []);
 
   const computePhaseAndRemaining = useCallback((): { phase: Phase; remaining: number } => {
     const elapsed = Math.max(0, Math.floor((Date.now() - anchorMs) / 1000));
@@ -212,12 +204,61 @@ const ContestSession = ({
     if (liveElapsed < liveSecondsTotal) {
       return { phase: 'live', remaining: liveSecondsTotal - liveElapsed };
     }
-    const overtimeElapsed = liveElapsed - liveSecondsTotal;
-    if (overtimeElapsed < OVERTIME_SECONDS) {
-      return { phase: 'overtime', remaining: OVERTIME_SECONDS - overtimeElapsed };
+
+    // LIVE has elapsed → consult per-contestant overtime decisions.
+    const liveOverBy = liveElapsed - liveSecondsTotal; // seconds since live ended
+    const champYes = overtime.championChoice === 'yes';
+    const chalYes = overtime.challengerChoice === 'yes';
+    const decisionsLocked = liveOverBy >= OT_GRACE_SECONDS
+      || (overtime.championChoice !== null && overtime.challengerChoice !== null);
+
+    // Nobody opted in (and decisions are locked) → end immediately.
+    if (decisionsLocked && !champYes && !chalYes) {
+      return { phase: 'ended', remaining: 0 };
     }
-    return { phase: 'ended', remaining: 0 };
-  }, [anchorMs, liveSecondsTotal]);
+
+    // At least one side has yes (or we're still in the grace window): overtime phase.
+    // Compute per-side remaining; use the larger value for the header timer.
+    const champRem = champYes ? computeSideOtRemaining(overtime.championStartedAt, overtime.championEndedAt) : 0;
+    const chalRem = chalYes ? computeSideOtRemaining(overtime.challengerStartedAt, overtime.challengerEndedAt) : 0;
+
+    const champStillRunning = champYes && (overtime.championEndedAt == null) && champRem > 0;
+    const chalStillRunning = chalYes && (overtime.challengerEndedAt == null) && chalRem > 0;
+
+    // If decisions are locked and no side is still running → ended.
+    if (decisionsLocked && !champStillRunning && !chalStillRunning) {
+      return { phase: 'ended', remaining: 0 };
+    }
+
+    return { phase: 'overtime', remaining: Math.max(champRem, chalRem) };
+  }, [anchorMs, liveSecondsTotal, overtime, computeSideOtRemaining]);
+
+  // Per-side skill (drives points & power flow during overtime).
+  const championInOt = phase === 'overtime' && overtime.championChoice === 'yes';
+  const challengerInOt = phase === 'overtime' && overtime.challengerChoice === 'yes';
+  const championSkill = phase === 'live' ? 100
+    : championInOt ? Math.round((championOtRemaining / OVERTIME_SECONDS) * 100)
+    : (phase === 'ended' || phase === 'overtime') ? 0 : 100;
+  const challengerSkill = phase === 'live' ? 100
+    : challengerInOt ? Math.round((challengerOtRemaining / OVERTIME_SECONDS) * 100)
+    : (phase === 'ended' || phase === 'overtime') ? 0 : 100;
+
+  const isLiveOrOvertime = phase === 'live' || phase === 'overtime';
+  const championPower = isLiveOrOvertime ? Math.round((championTipVotesRaw + championSkill + championSample) / 3) : 0;
+  const challengerPower = isLiveOrOvertime ? Math.round((challengerTipVotesRaw + challengerSkill + challengerSample) / 3) : 0;
+
+  const championPointsRaw = CONTEST_SCORING_FORMULA.calculate({
+    gifts: championTips, pollVotesWon: championVotePower, skillPercent: championSkill, sampleIntensity: championSample,
+  });
+  const challengerPointsRaw = CONTEST_SCORING_FORMULA.calculate({
+    gifts: challengerTips, pollVotesWon: challengerVotePower, skillPercent: challengerSkill, sampleIntensity: challengerSample,
+  });
+  const championPoints = phase === 'ended' ? Math.max(0, championPointsRaw - (championPollSubmitted ? 0 : POLL_PENALTY)) : championPointsRaw;
+  const challengerPoints = phase === 'ended' ? Math.max(0, challengerPointsRaw - (challengerPollSubmitted ? 0 : POLL_PENALTY)) : challengerPointsRaw;
+  const isRevealed = phase === 'ended';
+
+  const championTanks = { tip: championTipVotes, tipRaw: championTipVotesRaw, skill: championSkill, sample: championSample, power: championPower, points: championPoints };
+  const challengerTanks = { tip: challengerTipVotes, tipRaw: challengerTipVotesRaw, skill: challengerSkill, sample: challengerSample, power: challengerPower, points: challengerPoints };
 
   // Track which phases have already had their announcement sound played on this
   // device, so a late joiner / refresh doesn't replay earlier announcements.
@@ -233,7 +274,6 @@ const ContestSession = ({
       const { phase: nextPhase, remaining } = computePhaseAndRemaining();
       setPhase(prev => {
         if (prev !== nextPhase) {
-          // Phase transition — fire its sound exactly once per device.
           if (!announcedPhasesRef.current.has(nextPhase)) {
             announcedPhasesRef.current.add(nextPhase);
             if (nextPhase === 'warmup') playPrepareSound();
@@ -245,13 +285,18 @@ const ContestSession = ({
         return nextPhase;
       });
       setTimeLeft(remaining);
+      // Keep per-side OT remaining in sync for skill/power calculations.
+      setChampionOtRemaining(overtime.championChoice === 'yes'
+        ? computeSideOtRemaining(overtime.championStartedAt, overtime.championEndedAt) : 0);
+      setChallengerOtRemaining(overtime.challengerChoice === 'yes'
+        ? computeSideOtRemaining(overtime.challengerStartedAt, overtime.challengerEndedAt) : 0);
     };
 
     tick(); // immediate sync on mount/refresh
     intervalRef.current = setInterval(tick, 1000);
     return () => clearTimer();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [connecting, audioUnlocked, anchorMs, liveSecondsTotal]);
+  }, [connecting, audioUnlocked, anchorMs, liveSecondsTotal, overtime]);
 
   // ─── Sound triggers ───
   const showPollWarning = phase === 'live' && timeLeft > 0 && timeLeft <= 60;
