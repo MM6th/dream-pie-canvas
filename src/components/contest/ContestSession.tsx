@@ -140,6 +140,11 @@ const ContestSession = ({
   const [championTippers, setChampionTippers] = useState(0);
   const [challengerTippers, setChallengerTippers] = useState(0);
 
+  // ─── Per-contestant overtime state (server-synced via contest_sessions row) ───
+  const [overtime, setOvertime] = useState<OvertimeState>(EMPTY_OT);
+  const [overtimeSubmitting, setOvertimeSubmitting] = useState(false);
+  const otStartStampedRef = useRef(false); // local guard to avoid double-stamping started_at
+
   // Belt ceremony
   const [beltWinner, setBeltWinner] = useState<'champion' | 'challenger' | 'tie' | null>(null);
   const [showTitleChange, setShowTitleChange] = useState(false);
