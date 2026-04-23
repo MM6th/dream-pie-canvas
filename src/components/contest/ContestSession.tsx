@@ -80,6 +80,49 @@ const WARMUP_SECONDS = 5 * 60; // 5 minutes
 const OVERTIME_SECONDS = 3 * 60; // 3 minutes
 const POLL_PENALTY = 15;
 
+/**
+ * Compact overtime opt-in card. Mutually-exclusive Yes/No checkboxes + Submit.
+ * Lives inside the bottom controls row of the participant view.
+ */
+const OvertimeDecisionCard = ({
+  submitting,
+  onSubmit,
+}: {
+  submitting: boolean;
+  onSubmit: (choice: 'yes' | 'no') => void;
+}) => {
+  const [choice, setChoice] = React.useState<'yes' | 'no' | null>(null);
+  return (
+    <div className="flex items-center gap-2 px-3 py-2 rounded-full bg-black/70 border border-orange-500/50 backdrop-blur-sm">
+      <span className="text-orange-300 text-[11px] font-bold uppercase tracking-wider">Overtime?</span>
+      <label className="flex items-center gap-1 cursor-pointer text-white text-xs">
+        <Checkbox
+          checked={choice === 'yes'}
+          onCheckedChange={(v) => setChoice(v ? 'yes' : null)}
+          className="h-4 w-4"
+        />
+        Yes
+      </label>
+      <label className="flex items-center gap-1 cursor-pointer text-white text-xs">
+        <Checkbox
+          checked={choice === 'no'}
+          onCheckedChange={(v) => setChoice(v ? 'no' : null)}
+          className="h-4 w-4"
+        />
+        No
+      </label>
+      <Button
+        size="sm"
+        disabled={!choice || submitting}
+        onClick={() => choice && onSubmit(choice)}
+        className="rounded-full px-3 py-1 h-7 text-xs bg-orange-600 hover:bg-orange-700 text-white"
+      >
+        {submitting ? '…' : 'Submit'}
+      </Button>
+    </div>
+  );
+};
+
 const ContestSession = ({
   roomName,
   role,
