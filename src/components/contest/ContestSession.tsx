@@ -88,6 +88,7 @@ const ContestSession = ({
   challengeType,
   bulletinPostId,
   startedAt,
+  sessionId,
   onEnd,
 }: ContestSessionProps) => {
   const { user } = useAuth();
