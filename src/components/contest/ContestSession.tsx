@@ -696,12 +696,6 @@ const ContestSession = ({
   const timerIconColor = phase === 'warmup' ? 'text-yellow-500' : phase === 'overtime' ? 'text-orange-500' : phase === 'live' ? 'text-red-500' : 'text-white/40';
   const isActive = phase === 'live' || phase === 'overtime';
 
-  const handleEndContest = () => {
-    clearTimer();
-    setPhase('ended');
-    onEnd();
-  };
-
   // Determine which side the spectator supports
   const spectatorSide = spectatorInviterId === championId ? 'champion' : spectatorInviterId === challengerId ? 'challenger' : null;
 
