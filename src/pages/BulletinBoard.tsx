@@ -65,11 +65,13 @@ const BulletinBoard = () => {
       if (error) {
         console.error('Error fetching posts:', error);
       } else {
-        // Filter out expired live challenge posts (scheduled_at has passed)
-        const now = new Date();
+        // Hide live challenge posts only after the session has actually ended.
+        // (Previously we hid them as soon as scheduled_at passed, which made
+        // brand-new posts whose start time was a few minutes ago disappear
+        // before the contest ever ran.)
         const filtered = (data || []).filter(post => {
-          if (post.post_type === 'announcement' && post.contract_type === 'live_challenges' && post.scheduled_at) {
-            return new Date(post.scheduled_at) > now;
+          if (post.post_type === 'announcement' && post.contract_type === 'live_challenges') {
+            return !post.session_ended_at;
           }
           return true;
         });
