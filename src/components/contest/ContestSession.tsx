@@ -43,8 +43,30 @@ interface ContestSessionProps {
   bulletinPostId: string;
   /** ISO timestamp from contest_sessions.started_at — single source of truth for the clock. Optional for legacy/test flows. */
   startedAt?: string;
+  /** contest_sessions.id — required to persist per-contestant overtime state. Optional for legacy/test flows. */
+  sessionId?: string;
   onEnd: () => void;
 }
+
+type OvertimeChoice = "yes" | "no" | null;
+interface OvertimeState {
+  championChoice: OvertimeChoice;
+  challengerChoice: OvertimeChoice;
+  championStartedAt: string | null;
+  championEndedAt: string | null;
+  challengerStartedAt: string | null;
+  challengerEndedAt: string | null;
+}
+const EMPTY_OT: OvertimeState = {
+  championChoice: null,
+  challengerChoice: null,
+  championStartedAt: null,
+  championEndedAt: null,
+  challengerStartedAt: null,
+  challengerEndedAt: null,
+};
+
+const OT_GRACE_SECONDS = 10; // window after LIVE ends to lock in a "no" default
 
 const safePlay = (el: HTMLMediaElement | null) => {
   if (!el) return;
