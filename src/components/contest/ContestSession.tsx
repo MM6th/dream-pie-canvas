@@ -298,6 +298,112 @@ const ContestSession = ({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [connecting, audioUnlocked, anchorMs, liveSecondsTotal, overtime]);
 
+  // ─── Overtime row sync (initial fetch + realtime) ───
+  const applyOtRow = useCallback((row: any) => {
+    if (!row) return;
+    setOvertime({
+      championChoice: (row.champion_overtime_choice ?? null) as OvertimeChoice,
+      challengerChoice: (row.challenger_overtime_choice ?? null) as OvertimeChoice,
+      championStartedAt: row.champion_overtime_started_at ?? null,
+      championEndedAt: row.champion_overtime_ended_at ?? null,
+      challengerStartedAt: row.challenger_overtime_started_at ?? null,
+      challengerEndedAt: row.challenger_overtime_ended_at ?? null,
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!sessionId) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await (supabase.from('contest_sessions') as any)
+        .select('champion_overtime_choice, challenger_overtime_choice, champion_overtime_started_at, champion_overtime_ended_at, challenger_overtime_started_at, challenger_overtime_ended_at')
+        .eq('id', sessionId).maybeSingle();
+      if (!cancelled && data) applyOtRow(data);
+    })();
+
+    const channel = supabase
+      .channel(`contest-ot-${sessionId}`)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'contest_sessions', filter: `id=eq.${sessionId}` }, (payload: any) => {
+        applyOtRow(payload.new);
+      })
+      .subscribe();
+    return () => { cancelled = true; supabase.removeChannel(channel); };
+  }, [sessionId, applyOtRow]);
+
+  // ─── Overtime decision actions (participants only) ───
+  const mySideKey: 'champion' | 'challenger' | null = role === 'champion' ? 'champion' : role === 'challenger' ? 'challenger' : null;
+  const myChoice: OvertimeChoice = mySideKey === 'champion' ? overtime.championChoice : mySideKey === 'challenger' ? overtime.challengerChoice : null;
+  const myStartedAt = mySideKey === 'champion' ? overtime.championStartedAt : mySideKey === 'challenger' ? overtime.challengerStartedAt : null;
+  const myEndedAt = mySideKey === 'champion' ? overtime.championEndedAt : mySideKey === 'challenger' ? overtime.challengerEndedAt : null;
+  const oppChoice = mySideKey === 'champion' ? overtime.challengerChoice : mySideKey === 'challenger' ? overtime.championChoice : null;
+
+  // Decision card: last 60s of LIVE, or grace window after LIVE, or while
+  // opponent is in overtime (lets a stragger join in).
+  const elapsedNow = Math.max(0, Math.floor((Date.now() - anchorMs) / 1000));
+  const liveOverBy = elapsedNow - WARMUP_SECONDS - liveSecondsTotal;
+  const inGrace = liveOverBy >= 0 && liveOverBy < OT_GRACE_SECONDS;
+  const showOvertimeCard = isParticipant
+    && myChoice === null
+    && (
+      (phase === 'live' && timeLeft <= 60)
+      || inGrace
+      || (phase === 'overtime' && oppChoice === 'yes')
+    );
+
+  const submitOvertimeChoice = useCallback(async (choice: 'yes' | 'no') => {
+    if (!sessionId || !mySideKey || overtimeSubmitting) return;
+    setOvertimeSubmitting(true);
+    const update: any = mySideKey === 'champion'
+      ? { champion_overtime_choice: choice }
+      : { challenger_overtime_choice: choice };
+    const elapsed = Math.max(0, Math.floor((Date.now() - anchorMs) / 1000));
+    const liveEnded = elapsed >= WARMUP_SECONDS + liveSecondsTotal;
+    if (choice === 'yes' && liveEnded) {
+      const stamp = new Date().toISOString();
+      if (mySideKey === 'champion') update.champion_overtime_started_at = stamp;
+      else update.challenger_overtime_started_at = stamp;
+    }
+    const { error } = await (supabase.from('contest_sessions') as any).update(update).eq('id', sessionId);
+    setOvertimeSubmitting(false);
+    if (error) {
+      toast({ title: 'Could not submit overtime choice', description: error.message, variant: 'destructive' });
+    }
+  }, [sessionId, mySideKey, overtimeSubmitting, anchorMs, liveSecondsTotal]);
+
+  // When phase transitions to overtime and our side opted yes but no
+  // started_at exists yet, stamp it once. Other clients pick it up via realtime.
+  useEffect(() => {
+    if (!sessionId || !mySideKey || phase !== 'overtime') return;
+    if (myChoice !== 'yes' || myStartedAt) return;
+    if (otStartStampedRef.current) return;
+    otStartStampedRef.current = true;
+    const stamp = new Date().toISOString();
+    const update: any = mySideKey === 'champion'
+      ? { champion_overtime_started_at: stamp }
+      : { challenger_overtime_started_at: stamp };
+    (supabase.from('contest_sessions') as any).update(update).eq('id', sessionId);
+  }, [sessionId, mySideKey, phase, myChoice, myStartedAt]);
+
+  const endMyOvertime = useCallback(async () => {
+    if (!sessionId || !mySideKey) return;
+    if (myChoice !== 'yes' || myEndedAt) return;
+    const stamp = new Date().toISOString();
+    const update: any = mySideKey === 'champion'
+      ? { champion_overtime_ended_at: stamp }
+      : { challenger_overtime_ended_at: stamp };
+    const { error } = await (supabase.from('contest_sessions') as any).update(update).eq('id', sessionId);
+    if (error) toast({ title: 'Could not end overtime', description: error.message, variant: 'destructive' });
+  }, [sessionId, mySideKey, myChoice, myEndedAt]);
+
+  // When phase reaches 'ended' (computed from per-side state), trigger onEnd once.
+  const endedFiredRef = useRef(false);
+  useEffect(() => {
+    if (phase === 'ended' && !endedFiredRef.current) {
+      endedFiredRef.current = true;
+      setTimeout(() => onEnd(), 4500);
+    }
+  }, [phase, onEnd]);
+
   // ─── Sound triggers ───
   const showPollWarning = phase === 'live' && timeLeft > 0 && timeLeft <= 60;
 
