@@ -261,6 +261,7 @@ const ContestLive = () => {
           challengeType={contestData.challengeType}
           bulletinPostId={postId!}
           startedAt={contestData.startedAt}
+          sessionId={contestData.sessionId}
           onEnd={handleEndContest}
         />
       </div>
