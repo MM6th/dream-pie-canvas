@@ -402,14 +402,32 @@ const ContestSession = ({
       : { challenger_overtime_choice: choice };
     const elapsed = Math.max(0, Math.floor((Date.now() - anchorMs) / 1000));
     const liveEnded = elapsed >= WARMUP_SECONDS + liveSecondsTotal;
+    let stamp: string | null = null;
     if (choice === 'yes' && liveEnded) {
-      const stamp = new Date().toISOString();
+      stamp = new Date().toISOString();
       if (mySideKey === 'champion') update.champion_overtime_started_at = stamp;
       else update.challenger_overtime_started_at = stamp;
     }
+
+    // ── Optimistic local update so the UI flips immediately, even if realtime
+    // is delayed. The opponent's client still picks this up via realtime.
+    setOvertime(prev => ({
+      ...prev,
+      ...(mySideKey === 'champion'
+        ? { championChoice: choice, championStartedAt: stamp ?? prev.championStartedAt }
+        : { challengerChoice: choice, challengerStartedAt: stamp ?? prev.challengerStartedAt }),
+    }));
+
     const { error } = await (supabase.from('contest_sessions') as any).update(update).eq('id', sessionId);
     setOvertimeSubmitting(false);
     if (error) {
+      // Roll back optimistic update on failure
+      setOvertime(prev => ({
+        ...prev,
+        ...(mySideKey === 'champion'
+          ? { championChoice: null, championStartedAt: stamp ? null : prev.championStartedAt }
+          : { challengerChoice: null, challengerStartedAt: stamp ? null : prev.challengerStartedAt }),
+      }));
       toast({ title: 'Could not submit overtime choice', description: error.message, variant: 'destructive' });
     } else {
       toast({
@@ -429,6 +447,13 @@ const ContestSession = ({
     if (otStartStampedRef.current) return;
     otStartStampedRef.current = true;
     const stamp = new Date().toISOString();
+    // Optimistic — same reasoning as submitOvertimeChoice.
+    setOvertime(prev => ({
+      ...prev,
+      ...(mySideKey === 'champion'
+        ? { championStartedAt: stamp }
+        : { challengerStartedAt: stamp }),
+    }));
     const update: any = mySideKey === 'champion'
       ? { champion_overtime_started_at: stamp }
       : { challenger_overtime_started_at: stamp };
@@ -439,11 +464,25 @@ const ContestSession = ({
     if (!sessionId || !mySideKey) return;
     if (myChoice !== 'yes' || myEndedAt) return;
     const stamp = new Date().toISOString();
+    // Optimistic — flip the UI immediately.
+    setOvertime(prev => ({
+      ...prev,
+      ...(mySideKey === 'champion'
+        ? { championEndedAt: stamp }
+        : { challengerEndedAt: stamp }),
+    }));
     const update: any = mySideKey === 'champion'
       ? { champion_overtime_ended_at: stamp }
       : { challenger_overtime_ended_at: stamp };
     const { error } = await (supabase.from('contest_sessions') as any).update(update).eq('id', sessionId);
     if (error) {
+      // Roll back
+      setOvertime(prev => ({
+        ...prev,
+        ...(mySideKey === 'champion'
+          ? { championEndedAt: null }
+          : { challengerEndedAt: null }),
+      }));
       toast({ title: 'Could not end overtime', description: error.message, variant: 'destructive' });
     } else {
       toast({ title: 'Overtime ended', description: 'Your final score is locked in.' });
