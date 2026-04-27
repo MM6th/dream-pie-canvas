@@ -969,6 +969,20 @@ const ContestSession = ({
               <TotalPointsBar points={oppTanks.points} revealed={isRevealed} penalized={isRevealed && !oppPollSubmitted} />
             </div>
 
+            {/* Poll widget — contestants rate their OPPONENT (their poll feeds the
+                opponent's vote tank, mirroring how spectators rate the contestant they watch). */}
+            {isLiveOrOvertime && (
+              <div className="absolute bottom-4 right-3 z-10 pointer-events-auto">
+                <PollWidget
+                  key={`poll-participant-${oppSide}-${pollResetKey}`}
+                  side={oppSide}
+                  disabled={!isActive}
+                  onVotePowerChange={oppSide === 'champion' ? setChampionVotePower : setChallengerVotePower}
+                  onSubmittedChange={oppSide === 'champion' ? setChampionPollSubmitted : setChallengerPollSubmitted}
+                />
+              </div>
+            )}
+
             {/* Controls — no early-exit. Countdown is the sole authority for ending live.
                 During the wind-down/overtime an Overtime card or End Session button shows. */}
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 pointer-events-auto">
