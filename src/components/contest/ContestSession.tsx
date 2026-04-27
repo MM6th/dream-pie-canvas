@@ -443,7 +443,11 @@ const ContestSession = ({
       ? { champion_overtime_ended_at: stamp }
       : { challenger_overtime_ended_at: stamp };
     const { error } = await (supabase.from('contest_sessions') as any).update(update).eq('id', sessionId);
-    if (error) toast({ title: 'Could not end overtime', description: error.message, variant: 'destructive' });
+    if (error) {
+      toast({ title: 'Could not end overtime', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: 'Overtime ended', description: 'Your final score is locked in.' });
+    }
   }, [sessionId, mySideKey, myChoice, myEndedAt]);
 
   // When phase reaches 'ended' (computed from per-side state), trigger onEnd once.
