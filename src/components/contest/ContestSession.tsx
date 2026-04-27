@@ -411,6 +411,13 @@ const ContestSession = ({
     setOvertimeSubmitting(false);
     if (error) {
       toast({ title: 'Could not submit overtime choice', description: error.message, variant: 'destructive' });
+    } else {
+      toast({
+        title: choice === 'yes' ? 'Overtime confirmed' : 'No overtime',
+        description: choice === 'yes'
+          ? 'You\'ll get 3 extra minutes. End it any time with the End Overtime button.'
+          : 'Your points lock in when the live clock hits zero.',
+      });
     }
   }, [sessionId, mySideKey, overtimeSubmitting, anchorMs, liveSecondsTotal]);
 
@@ -436,7 +443,11 @@ const ContestSession = ({
       ? { champion_overtime_ended_at: stamp }
       : { challenger_overtime_ended_at: stamp };
     const { error } = await (supabase.from('contest_sessions') as any).update(update).eq('id', sessionId);
-    if (error) toast({ title: 'Could not end overtime', description: error.message, variant: 'destructive' });
+    if (error) {
+      toast({ title: 'Could not end overtime', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: 'Overtime ended', description: 'Your final score is locked in.' });
+    }
   }, [sessionId, mySideKey, myChoice, myEndedAt]);
 
   // When phase reaches 'ended' (computed from per-side state), trigger onEnd once.
@@ -931,7 +942,7 @@ const ContestSession = ({
                 {micOn ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
               </Button>
 
-              {/* Overtime: yes/no decision card */}
+              {/* Overtime: yes/no decision card (only before submission) */}
               {showOvertimeCard && (
                 <OvertimeDecisionCard
                   submitting={overtimeSubmitting}
@@ -939,20 +950,28 @@ const ContestSession = ({
                 />
               )}
 
-              {/* In overtime, my side opted yes and is still running → End Session button */}
-              {phase === 'overtime' && myChoice === 'yes' && !myEndedAt && (
+              {/* After submitting YES → button converts from "Submit" to "End Overtime".
+                  Visible during the live wind-down (waiting for OT to start) and during OT itself. */}
+              {isParticipant && myChoice === 'yes' && !myEndedAt && phase !== 'ended' && (
                 <Button
                   size="sm"
                   onClick={endMyOvertime}
-                  className="rounded-full px-4 bg-orange-600 hover:bg-orange-700 text-white"
+                  disabled={phase !== 'overtime'}
+                  className="rounded-full px-4 bg-orange-600 hover:bg-orange-700 text-white disabled:opacity-70"
                 >
-                  End Session
+                  {phase === 'overtime' ? 'End Overtime' : 'Overtime queued…'}
                 </Button>
               )}
 
-              {/* My side opted out (or already ended overtime) — passive label */}
-              {((phase === 'overtime' && myChoice === 'no')
-                || (phase === 'overtime' && myChoice === 'yes' && myEndedAt)) && (
+              {/* After submitting NO → confirmation pill, then "Awaiting opponent…" once OT starts */}
+              {isParticipant && myChoice === 'no' && phase !== 'ended' && (
+                <span className="text-white/70 text-xs px-3 py-1 rounded-full bg-black/40 border border-white/10">
+                  {phase === 'overtime' ? 'Awaiting opponent…' : 'No overtime'}
+                </span>
+              )}
+
+              {/* Already ended overtime — passive label until match closes */}
+              {isParticipant && myChoice === 'yes' && myEndedAt && phase !== 'ended' && (
                 <span className="text-white/70 text-xs px-3 py-1 rounded-full bg-black/40 border border-white/10">
                   Awaiting opponent…
                 </span>
