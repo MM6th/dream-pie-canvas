@@ -969,6 +969,20 @@ const ContestSession = ({
               <TotalPointsBar points={oppTanks.points} revealed={isRevealed} penalized={isRevealed && !oppPollSubmitted} />
             </div>
 
+            {/* Poll widget — contestants rate their OPPONENT (their poll feeds the
+                opponent's vote tank, mirroring how spectators rate the contestant they watch). */}
+            {isLiveOrOvertime && (
+              <div className="absolute bottom-4 right-3 z-10 pointer-events-auto">
+                <PollWidget
+                  key={`poll-participant-${oppSide}-${pollResetKey}`}
+                  side={oppSide}
+                  disabled={!isActive}
+                  onVotePowerChange={oppSide === 'champion' ? setChampionVotePower : setChallengerVotePower}
+                  onSubmittedChange={oppSide === 'champion' ? setChampionPollSubmitted : setChallengerPollSubmitted}
+                />
+              </div>
+            )}
+
             {/* Controls — no early-exit. Countdown is the sole authority for ending live.
                 During the wind-down/overtime an Overtime card or End Session button shows. */}
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 pointer-events-auto">
@@ -1049,7 +1063,9 @@ const ContestSession = ({
         )}
 
         {/* Audio unlock overlay — required so desktop browsers allow contest
-            announcement sounds (Prepare/Start/Overtime/Winner) to play. */}
+            announcement sounds (Prepare/Start/Overtime/Winner) to play. The
+            contest is ALREADY running in the background — this is just a
+            browser permission gate, not a manual start. */}
         {!audioUnlocked && !connecting && (
           <div className="absolute inset-0 z-[100] flex items-center justify-center bg-black/85 backdrop-blur-sm">
             <button
@@ -1057,8 +1073,8 @@ const ContestSession = ({
               className="flex flex-col items-center gap-3 px-8 py-6 rounded-2xl bg-gradient-to-br from-yellow-500 to-amber-600 text-black font-bold shadow-2xl hover:scale-105 transition-transform"
             >
               <Volume2 className="w-10 h-10" />
-              <span className="text-lg uppercase tracking-wider">Tap to Enter Contest</span>
-              <span className="text-xs font-normal opacity-80">Enables audio announcements</span>
+              <span className="text-lg uppercase tracking-wider">Tap to Enable Audio</span>
+              <span className="text-xs font-normal opacity-80">Contest is already live — your browser needs a tap to play sound</span>
             </button>
           </div>
         )}
@@ -1240,7 +1256,9 @@ const ContestSession = ({
       )}
 
       {/* Audio unlock overlay — required so desktop browsers allow contest
-          announcement sounds (Prepare/Start/Overtime/Winner) to play. */}
+          announcement sounds (Prepare/Start/Overtime/Winner) to play. The
+          contest is ALREADY running in the background — this is just a
+          browser permission gate, not a manual start. */}
       {!audioUnlocked && !connecting && (
         <div className="absolute inset-0 z-[100] flex items-center justify-center bg-black/85 backdrop-blur-sm">
           <button
@@ -1248,8 +1266,8 @@ const ContestSession = ({
             className="flex flex-col items-center gap-3 px-8 py-6 rounded-2xl bg-gradient-to-br from-yellow-500 to-amber-600 text-black font-bold shadow-2xl hover:scale-105 transition-transform"
           >
             <Volume2 className="w-10 h-10" />
-            <span className="text-lg uppercase tracking-wider">Tap to Enter Contest</span>
-            <span className="text-xs font-normal opacity-80">Enables audio announcements</span>
+            <span className="text-lg uppercase tracking-wider">Tap to Enable Audio</span>
+            <span className="text-xs font-normal opacity-80">Contest is already live — your browser needs a tap to play sound</span>
           </button>
         </div>
       )}
