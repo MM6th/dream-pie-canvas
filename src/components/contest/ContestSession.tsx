@@ -411,6 +411,13 @@ const ContestSession = ({
     setOvertimeSubmitting(false);
     if (error) {
       toast({ title: 'Could not submit overtime choice', description: error.message, variant: 'destructive' });
+    } else {
+      toast({
+        title: choice === 'yes' ? 'Overtime confirmed' : 'No overtime',
+        description: choice === 'yes'
+          ? 'You\'ll get 3 extra minutes. End it any time with the End Overtime button.'
+          : 'Your points lock in when the live clock hits zero.',
+      });
     }
   }, [sessionId, mySideKey, overtimeSubmitting, anchorMs, liveSecondsTotal]);
 
