@@ -1063,7 +1063,9 @@ const ContestSession = ({
         )}
 
         {/* Audio unlock overlay — required so desktop browsers allow contest
-            announcement sounds (Prepare/Start/Overtime/Winner) to play. */}
+            announcement sounds (Prepare/Start/Overtime/Winner) to play. The
+            contest is ALREADY running in the background — this is just a
+            browser permission gate, not a manual start. */}
         {!audioUnlocked && !connecting && (
           <div className="absolute inset-0 z-[100] flex items-center justify-center bg-black/85 backdrop-blur-sm">
             <button
@@ -1071,8 +1073,8 @@ const ContestSession = ({
               className="flex flex-col items-center gap-3 px-8 py-6 rounded-2xl bg-gradient-to-br from-yellow-500 to-amber-600 text-black font-bold shadow-2xl hover:scale-105 transition-transform"
             >
               <Volume2 className="w-10 h-10" />
-              <span className="text-lg uppercase tracking-wider">Tap to Enter Contest</span>
-              <span className="text-xs font-normal opacity-80">Enables audio announcements</span>
+              <span className="text-lg uppercase tracking-wider">Tap to Enable Audio</span>
+              <span className="text-xs font-normal opacity-80">Contest is already live — your browser needs a tap to play sound</span>
             </button>
           </div>
         )}
