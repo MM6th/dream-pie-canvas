@@ -23,6 +23,7 @@ import LegacyLivestreamRedirect from "./pages/LegacyLivestreamRedirect";
 import NotFound from "./pages/NotFound";
 import ContestLive from "./pages/ContestLive";
 import ContestTestPage from "./pages/ContestTestPage";
+import NewUserUITestPage from "./pages/NewUserUITestPage";
 import { useContestRedirect } from "./hooks/useContestRedirect";
 import { useContestInviteRedirect } from "./hooks/useContestInviteRedirect";
 
@@ -59,6 +60,7 @@ const App = () => (
           <Route path="/live/:streamId" element={<LiveWatch />} />
           <Route path="/contest/:postId" element={<ContestLive />} />
           <Route path="/contest-test" element={<ContestTestPage />} />
+          <Route path="/new-user-ui-test" element={<NewUserUITestPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
