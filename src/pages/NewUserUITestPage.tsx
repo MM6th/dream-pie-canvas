@@ -297,58 +297,140 @@ const NewChatScreen = ({
   onBack: () => void;
   onOpenMerchant: () => void;
   credentials: { username: string; email: string } | null;
-}) => (
-  <div className="flex flex-col h-full bg-slate-50">
-    {/* Header — tester's inbox */}
-    <div className="flex items-center gap-3 px-3 py-3 bg-white border-b border-slate-200">
-      <button onClick={onBack} className="p-1 -ml-1 text-slate-700"><ChevronLeft className="w-6 h-6" /></button>
-      <div className="w-10 h-10 rounded-full bg-slate-100 ring-2 ring-sky-400/60 flex items-center justify-center text-slate-500 text-sm font-semibold">
-        {credentials?.username?.[0]?.toUpperCase() ?? '·'}
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="font-semibold text-slate-800 truncate">
-          {credentials?.username || 'You'}
-        </div>
-        <div className="text-[11px] text-slate-500 truncate">Inbox</div>
-      </div>
-    </div>
+}) => {
+  const [reactions, setReactions] = useState<Record<string, number>>({});
+  const [bursts, setBursts] = useState<{ id: number; label: string; paid: boolean }[]>([]);
+  const [tokens, setTokens] = useState(0);
 
-    {/* Conversation body with dummy merchant message */}
-    <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
-      <div className="flex items-end gap-2">
-        <button onClick={onOpenMerchant} className="shrink-0">
-          <img
-            src={TEST_MERCHANT.avatar}
-            className="w-8 h-8 rounded-full object-cover ring-1 ring-slate-200"
-            alt={TEST_MERCHANT.name}
-          />
-        </button>
-        <div className="max-w-[75%]">
-          <button
-            onClick={onOpenMerchant}
-            className="text-[11px] text-slate-500 mb-1 hover:text-sky-500 transition"
-          >
-            {TEST_MERCHANT.name}
-          </button>
-          <div className="bg-white border border-slate-200 rounded-2xl rounded-bl-sm px-3 py-2 text-sm text-slate-700 shadow-sm">
-            Hey! Thanks for checking out my page 👋 Tap my avatar to view my profile.
+  const react = (key: string, label: string, paid: boolean, price = 0) => {
+    setReactions(r => ({ ...r, [key]: (r[key] ?? 0) + 1 }));
+    if (paid) setTokens(t => t + price);
+    const id = Date.now() + Math.random();
+    setBursts(b => [...b, { id, label, paid }]);
+    setTimeout(() => setBursts(b => b.filter(x => x.id !== id)), 1200);
+  };
+
+  return (
+    <div className="flex flex-col h-full bg-slate-50">
+      {/* Header — tester's inbox */}
+      <div className="flex items-center gap-3 px-3 py-3 bg-white border-b border-slate-200">
+        <button onClick={onBack} className="p-1 -ml-1 text-slate-700"><ChevronLeft className="w-6 h-6" /></button>
+        <div className="w-10 h-10 rounded-full bg-slate-100 ring-2 ring-sky-400/60 flex items-center justify-center text-slate-500 text-sm font-semibold">
+          {credentials?.username?.[0]?.toUpperCase() ?? '·'}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="font-semibold text-slate-800 truncate">
+            {credentials?.username || 'You'}
           </div>
-          <div className="text-[10px] text-slate-400 mt-1">Now</div>
+          <div className="text-[11px] text-slate-500 truncate">Inbox</div>
+        </div>
+        {tokens > 0 && (
+          <div className="text-[11px] font-semibold text-amber-600 bg-amber-100 rounded-full px-2 py-1">
+            ${tokens} sent
+          </div>
+        )}
+      </div>
+
+      {/* Conversation body with dummy merchant message */}
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 relative">
+        <div className="flex items-end gap-2">
+          <button onClick={onOpenMerchant} className="shrink-0">
+            <img
+              src={TEST_MERCHANT.avatar}
+              className="w-8 h-8 rounded-full object-cover ring-1 ring-slate-200"
+              alt={TEST_MERCHANT.name}
+            />
+          </button>
+          <div className="max-w-[75%]">
+            <button
+              onClick={onOpenMerchant}
+              className="text-[11px] text-slate-500 mb-1 hover:text-sky-500 transition"
+            >
+              {TEST_MERCHANT.name}
+            </button>
+            <div className="bg-white border border-slate-200 rounded-2xl rounded-bl-sm px-3 py-2 text-sm text-slate-700 shadow-sm">
+              Hey! Thanks for checking out my page 👋 Tap my avatar to view my profile.
+            </div>
+            <div className="text-[10px] text-slate-400 mt-1">Now</div>
+          </div>
+        </div>
+
+        {/* Reaction summary chips */}
+        {Object.keys(reactions).length > 0 && (
+          <div className="flex flex-wrap gap-2 pl-10">
+            {Object.entries(reactions).map(([k, n]) => {
+              const emoji = [...FREE_EMOJIS, ...PAID_EMOJIS].find(e => e.key === k)?.label ?? '❔';
+              return (
+                <span key={k} className="bg-white border border-slate-200 rounded-full px-2 py-0.5 text-xs shadow-sm">
+                  {emoji} {n}
+                </span>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Floating burst animations */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-2 flex justify-center">
+          {bursts.map(b => (
+            <span
+              key={b.id}
+              className={`absolute text-3xl animate-[float_1.2s_ease-out_forwards] ${
+                b.paid ? 'drop-shadow-[0_0_8px_rgba(56,189,248,0.6)]' : ''
+              }`}
+              style={{ left: `${40 + Math.random() * 20}%` }}
+            >
+              {b.label}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* Emoji rails */}
+      <div className="px-3 pt-2 pb-1 bg-white border-t border-slate-200 space-y-2">
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] text-slate-400 w-8">Free</span>
+          <div className="flex gap-2">
+            {FREE_EMOJIS.map(e => (
+              <button
+                key={e.key}
+                onClick={() => react(e.key, e.label, false)}
+                className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 active:scale-90 transition text-lg flex items-center justify-center"
+              >
+                {e.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] text-slate-400 w-8">Paid</span>
+          <div className="flex gap-2">
+            {PAID_EMOJIS.map(e => (
+              <button
+                key={e.key}
+                onClick={() => react(e.key, e.label, true, e.price)}
+                className="relative w-9 h-9 rounded-full bg-sky-100 hover:bg-sky-200 active:scale-90 transition text-lg flex items-center justify-center"
+              >
+                {e.label}
+                <span className="absolute -top-1 -right-1 bg-sky-500 text-white text-[8px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                  ${e.price}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Composer */}
+        <div className="flex items-center gap-2 pt-1 pb-2">
+          <div className="flex-1 rounded-full bg-slate-100 px-4 py-2 text-sm text-slate-400">Message…</div>
+          <button className={`w-10 h-10 rounded-full ${ACCENT} text-white flex items-center justify-center`}>
+            <Send className="w-4 h-4" />
+          </button>
         </div>
       </div>
     </div>
+  );
+};
 
-    {/* Composer */}
-    <div className="px-3 pt-2 pb-3 bg-white border-t border-slate-200">
-      <div className="flex items-center gap-2">
-        <div className="flex-1 rounded-full bg-slate-100 px-4 py-2 text-sm text-slate-400">Message…</div>
-        <button className={`w-10 h-10 rounded-full ${ACCENT} text-white flex items-center justify-center`}>
-          <Send className="w-4 h-4" />
-        </button>
-      </div>
-    </div>
-  </div>
-);
 
 
 /* ---------------- screen: test merchant profile ---------------- */
