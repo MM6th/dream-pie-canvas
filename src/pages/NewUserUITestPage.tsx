@@ -306,7 +306,7 @@ const NewProfileScreen = ({
       </div>
     </div>
 
-    <BottomNav active="dashboard" onNav={onNav} variant="inbox" />
+    <BottomNav active="dashboard" onNav={onNav} variant="profile" />
   </div>
 );
 
@@ -535,8 +535,9 @@ const NewUserUITestPage = () => {
   // Nav for the "new" (post-login) flow — routes dashboard to the empty new profile.
   const handleNewNav = (k: NavKey) => {
     if (k === 'messages') setScreen({ name: 'newInbox' });
-    else if (k === 'dashboard') setScreen({ name: 'newProfile' });
+    else if (k === 'dashboard' || k === 'following') setScreen({ name: 'newProfile' });
   };
+
 
   const renderScreen = () => {
     switch (screen.name) {
