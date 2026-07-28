@@ -348,9 +348,12 @@ const NewChatScreen = ({
             >
               {TEST_MERCHANT.name}
             </button>
-            <div className="bg-white border border-slate-200 rounded-2xl rounded-bl-sm px-3 py-2 text-sm text-slate-700 shadow-sm">
-              Hey! Thanks for checking out my page 👋 Tap my avatar to view my profile.
-            </div>
+            <button
+              onClick={onOpenMerchant}
+              className="block text-left bg-white border border-slate-200 rounded-2xl rounded-bl-sm px-3 py-2 text-sm text-slate-700 shadow-sm hover:border-sky-300 hover:bg-sky-50 transition w-full"
+            >
+              Hey! Thanks for checking out my page 👋 Tap here to view my profile.
+            </button>
             <div className="text-[10px] text-slate-400 mt-1">Now</div>
           </div>
         </div>
