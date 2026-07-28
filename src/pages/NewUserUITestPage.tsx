@@ -613,7 +613,8 @@ type Screen =
   | { name: 'login' }
   | { name: 'newInbox' }
   | { name: 'newProfile' }
-  | { name: 'newFollowing' };
+  | { name: 'newFollowing' }
+  | { name: 'newChat' };
 
 const NewUserUITestPage = () => {
   const navigate = useNavigate();
