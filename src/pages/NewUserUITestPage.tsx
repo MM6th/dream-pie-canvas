@@ -779,6 +779,7 @@ const NewUserUITestPage = () => {
           <NewChatScreen
             onBack={() => setScreen({ name: 'newInbox' })}
             onOpenMerchant={() => setScreen({ name: 'testMerchantProfile' })}
+            credentials={credentials}
           />
         );
       case 'testMerchantProfile':
