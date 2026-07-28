@@ -59,17 +59,25 @@ const ACCENT_SOFT = 'bg-sky-400/15';
 const BUBBLE = 'bg-sky-400 text-white';
 
 /* ---------------- shared header ---------------- */
-const PieHeader = ({ following }: { following: number }) => (
+const PieHeader = ({
+  following,
+  rightSlot,
+}: {
+  following: number;
+  rightSlot?: React.ReactNode;
+}) => (
   <div className="flex items-center justify-between px-5 pt-5 pb-3">
     <img src={CURRENT_USER.avatar} className="w-10 h-10 rounded-full ring-2 ring-sky-400/60 object-cover" alt="me" />
     <div className="flex items-baseline gap-1">
       <span className="text-2xl font-bold tracking-wide text-slate-800">PIE</span>
       <span className="text-xl text-sky-500">Φ</span>
     </div>
-    <div className="text-right leading-tight">
-      <div className="text-sm font-semibold text-slate-800">{following}</div>
-      <div className="text-[10px] uppercase tracking-wider text-slate-500">Following</div>
-    </div>
+    {rightSlot ?? (
+      <div className="text-right leading-tight">
+        <div className="text-sm font-semibold text-slate-800">{following}</div>
+        <div className="text-[10px] uppercase tracking-wider text-slate-500">Following</div>
+      </div>
+    )}
   </div>
 );
 
@@ -111,9 +119,27 @@ const BottomNav = ({
 };
 
 /* ---------------- screen: inbox ---------------- */
-const InboxScreen = ({ onOpen, onNav }: { onOpen: (id: string) => void; onNav: (k: NavKey) => void }) => (
+const InboxScreen = ({
+  onOpen,
+  onNav,
+  onLogin,
+}: {
+  onOpen: (id: string) => void;
+  onNav: (k: NavKey) => void;
+  onLogin: () => void;
+}) => (
   <div className="flex flex-col h-full">
-    <PieHeader following={CURRENT_USER.following} />
+    <PieHeader
+      following={CURRENT_USER.following}
+      rightSlot={
+        <button
+          onClick={onLogin}
+          className={`${ACCENT} text-white text-xs font-semibold px-3 py-1.5 rounded-full shadow hover:opacity-90 transition`}
+        >
+          Login
+        </button>
+      }
+    />
     <div className="px-5 pb-3">
       <div className="flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2.5">
         <Search className="w-4 h-4 text-slate-400" />
@@ -149,6 +175,87 @@ const InboxScreen = ({ onOpen, onNav }: { onOpen: (id: string) => void; onNav: (
           </div>
         </button>
       ))}
+    </div>
+    <BottomNav active="messages" onNav={onNav} variant="inbox" />
+  </div>
+);
+
+/* ---------------- screen: login / profile details ---------------- */
+const LoginDetailsScreen = ({
+  onBack,
+  onSubmit,
+}: {
+  onBack: () => void;
+  onSubmit: () => void;
+}) => {
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const canSubmit = username.trim().length > 0 && email.trim().length > 0;
+  return (
+    <div className="flex flex-col h-full bg-white">
+      <div className="flex items-center gap-3 px-3 py-3 border-b border-slate-200">
+        <button onClick={onBack} className="p-1 -ml-1 text-slate-700"><ChevronLeft className="w-6 h-6" /></button>
+        <div className="font-semibold text-slate-800">Profile Details</div>
+      </div>
+      <div className="flex-1 overflow-y-auto px-6 py-8 space-y-5">
+        <div>
+          <div className="text-xl font-bold text-slate-800 mb-1">Welcome to PIE</div>
+          <div className="text-xs text-slate-500">Enter your details to preview the new inbox.</div>
+        </div>
+        <div className="space-y-2">
+          <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Username</label>
+          <input
+            value={username}
+            onChange={e => setUsername(e.target.value)}
+            placeholder="your_username"
+            className="w-full rounded-xl bg-slate-100 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-400 text-slate-800 placeholder:text-slate-400"
+          />
+        </div>
+        <div className="space-y-2">
+          <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Email Address</label>
+          <input
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            type="email"
+            placeholder="you@example.com"
+            className="w-full rounded-xl bg-slate-100 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-400 text-slate-800 placeholder:text-slate-400"
+          />
+        </div>
+        <button
+          disabled={!canSubmit}
+          onClick={onSubmit}
+          className={`w-full mt-4 py-3 rounded-full font-semibold text-sm transition ${
+            canSubmit ? `${ACCENT} text-white shadow hover:opacity-90` : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+          }`}
+        >
+          Submit
+        </button>
+        <div className="text-[10px] text-slate-400 text-center pt-2">
+          Testing phase — no data is stored.
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ---------------- screen: new (empty) inbox ---------------- */
+const NewInboxScreen = ({ onNav }: { onNav: (k: NavKey) => void }) => (
+  <div className="flex flex-col h-full bg-white">
+    <PieHeader following={CURRENT_USER.following} rightSlot={<span className="w-10" />} />
+    <div className="px-5 pb-3">
+      <div className="flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2.5">
+        <Search className="w-4 h-4 text-slate-400" />
+        <input placeholder="Search Merchant" className="bg-transparent flex-1 text-sm outline-none text-slate-700 placeholder:text-slate-400" />
+      </div>
+    </div>
+    <div className="flex-1 flex flex-col items-center justify-center px-8 text-center">
+      <div className={`w-16 h-16 rounded-full ${ACCENT_SOFT} ${ACCENT_TXT} flex items-center justify-center mb-4`}>
+        <MessageSquare className="w-7 h-7" />
+      </div>
+      <div className="text-base font-semibold text-slate-800 mb-1">Your inbox is empty</div>
+      <div className="text-xs text-slate-500 max-w-[220px]">
+        New messages from merchants you follow will appear here.
+      </div>
     </div>
     <BottomNav active="messages" onNav={onNav} variant="inbox" />
   </div>
@@ -361,7 +468,9 @@ type Screen =
   | { name: 'inbox' }
   | { name: 'chat'; merchantId: string }
   | { name: 'profile' }
-  | { name: 'post' };
+  | { name: 'post' }
+  | { name: 'login' }
+  | { name: 'newInbox' };
 
 const NewUserUITestPage = () => {
   const navigate = useNavigate();
@@ -375,13 +484,28 @@ const NewUserUITestPage = () => {
   const renderScreen = () => {
     switch (screen.name) {
       case 'inbox':
-        return <InboxScreen onOpen={id => setScreen({ name: 'chat', merchantId: id })} onNav={handleNav} />;
+        return (
+          <InboxScreen
+            onOpen={id => setScreen({ name: 'chat', merchantId: id })}
+            onNav={handleNav}
+            onLogin={() => setScreen({ name: 'login' })}
+          />
+        );
       case 'chat':
         return <ChatScreen merchantId={screen.merchantId} onBack={() => setScreen({ name: 'inbox' })} />;
       case 'profile':
         return <ProfileScreen onNav={handleNav} onAddPost={() => setScreen({ name: 'post' })} />;
       case 'post':
         return <PostScreen onBack={() => setScreen({ name: 'profile' })} />;
+      case 'login':
+        return (
+          <LoginDetailsScreen
+            onBack={() => setScreen({ name: 'inbox' })}
+            onSubmit={() => setScreen({ name: 'newInbox' })}
+          />
+        );
+      case 'newInbox':
+        return <NewInboxScreen onNav={handleNav} />;
     }
   };
 
@@ -390,6 +514,8 @@ const NewUserUITestPage = () => {
     { key: 'chat', label: 'Chat' },
     { key: 'profile', label: 'Profile' },
     { key: 'post', label: 'Post UI' },
+    { key: 'login', label: 'Login' },
+    { key: 'newInbox', label: 'New Inbox' },
   ];
 
   return (
