@@ -186,7 +186,7 @@ const LoginDetailsScreen = ({
   onSubmit,
 }: {
   onBack: () => void;
-  onSubmit: () => void;
+  onSubmit: (creds: { username: string; email: string }) => void;
 }) => {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
@@ -223,7 +223,7 @@ const LoginDetailsScreen = ({
         </div>
         <button
           disabled={!canSubmit}
-          onClick={onSubmit}
+          onClick={() => onSubmit({ username: username.trim(), email: email.trim() })}
           className={`w-full mt-4 py-3 rounded-full font-semibold text-sm transition ${
             canSubmit ? `${ACCENT} text-white shadow hover:opacity-90` : 'bg-slate-200 text-slate-400 cursor-not-allowed'
           }`}
@@ -241,7 +241,7 @@ const LoginDetailsScreen = ({
 /* ---------------- screen: new (empty) inbox ---------------- */
 const NewInboxScreen = ({ onNav }: { onNav: (k: NavKey) => void }) => (
   <div className="flex flex-col h-full bg-white">
-    <PieHeader following={CURRENT_USER.following} rightSlot={<span className="w-10" />} />
+    <PieHeader following={0} rightSlot={<span className="w-10" />} />
     <div className="px-5 pb-3">
       <div className="flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2.5">
         <Search className="w-4 h-4 text-slate-400" />
@@ -258,6 +258,55 @@ const NewInboxScreen = ({ onNav }: { onNav: (k: NavKey) => void }) => (
       </div>
     </div>
     <BottomNav active="messages" onNav={onNav} variant="inbox" />
+  </div>
+);
+
+/* ---------------- screen: new (empty) profile ---------------- */
+const NewProfileScreen = ({
+  onNav,
+  credentials,
+}: {
+  onNav: (k: NavKey) => void;
+  credentials: { username: string; email: string } | null;
+}) => (
+  <div className="flex flex-col h-full bg-white">
+    <div className="flex items-center justify-between px-5 pt-5 pb-3">
+      <div className="w-10 h-10 rounded-full bg-slate-100 ring-2 ring-sky-400/60 flex items-center justify-center text-slate-500 text-lg font-semibold">
+        {credentials?.username?.[0]?.toUpperCase() ?? '·'}
+      </div>
+      <div className="flex items-baseline gap-1">
+        <span className="text-2xl font-bold tracking-wide text-slate-800">PIE</span>
+        <span className="text-xl text-sky-500">Φ</span>
+      </div>
+      <span className="w-10" />
+    </div>
+
+    <div className="flex items-center justify-around px-6 pt-2 pb-4">
+      <button className={`w-12 h-12 rounded-full ${ACCENT_SOFT} ${ACCENT_TXT} flex items-center justify-center`}><Camera className="w-5 h-5" /></button>
+      <button className={`w-12 h-12 rounded-full ${ACCENT_SOFT} ${ACCENT_TXT} flex items-center justify-center`}><Pencil className="w-5 h-5" /></button>
+      <button className={`w-12 h-12 rounded-full ${ACCENT_SOFT} ${ACCENT_TXT} flex items-center justify-center`}><Cog className="w-5 h-5" /></button>
+    </div>
+
+    <div className="px-6 pb-3">
+      <div className="text-base font-semibold text-slate-800">
+        {credentials?.username || '—'}
+      </div>
+      <div className="text-xs text-slate-500">
+        {credentials?.email || '—'}
+      </div>
+    </div>
+
+    <div className="flex-1 flex flex-col items-center justify-center px-8 text-center">
+      <div className={`w-16 h-16 rounded-full ${ACCENT_SOFT} ${ACCENT_TXT} flex items-center justify-center mb-4`}>
+        <Camera className="w-7 h-7" />
+      </div>
+      <div className="text-base font-semibold text-slate-800 mb-1">No posts yet</div>
+      <div className="text-xs text-slate-500 max-w-[240px]">
+        Photos and videos you share will appear here.
+      </div>
+    </div>
+
+    <BottomNav active="dashboard" onNav={onNav} variant="inbox" />
   </div>
 );
 
