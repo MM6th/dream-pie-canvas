@@ -427,6 +427,14 @@ const NewChatScreen = ({
           </button>
         </div>
       </div>
+
+      <style>{`
+        @keyframes newchat-float {
+          0%   { transform: translateY(0) scale(0.8); opacity: 0; }
+          20%  { opacity: 1; }
+          100% { transform: translateY(-140px) scale(1.4); opacity: 0; }
+        }
+      `}</style>
     </div>
   );
 };
