@@ -691,7 +691,8 @@ type Screen =
   | { name: 'newInbox' }
   | { name: 'newProfile' }
   | { name: 'newFollowing' }
-  | { name: 'newChat' };
+  | { name: 'newChat' }
+  | { name: 'testMerchantProfile' };
 
 const NewUserUITestPage = () => {
   const navigate = useNavigate();
