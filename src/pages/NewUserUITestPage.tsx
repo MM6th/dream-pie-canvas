@@ -289,15 +289,17 @@ const NewInboxScreen = ({
 );
 
 /* ---------------- screen: new chat (empty) ---------------- */
-const NewChatScreen = ({ onBack }: { onBack: () => void }) => (
+const NewChatScreen = ({ onBack, onOpenMerchant }: { onBack: () => void; onOpenMerchant: () => void }) => (
   <div className="flex flex-col h-full bg-slate-50">
     <div className="flex items-center gap-3 px-3 py-3 bg-white border-b border-slate-200">
       <button onClick={onBack} className="p-1 -ml-1 text-slate-700"><ChevronLeft className="w-6 h-6" /></button>
-      <img src={TEST_MERCHANT.avatar} className="w-10 h-10 rounded-full object-cover" alt={TEST_MERCHANT.name} />
-      <div className="flex-1 min-w-0">
-        <div className="font-semibold text-slate-800 truncate">{TEST_MERCHANT.name}</div>
-        <div className="text-[11px] text-slate-500">{TEST_MERCHANT.subs} subscribers</div>
-      </div>
+      <button onClick={onOpenMerchant} className="flex items-center gap-3 flex-1 min-w-0 text-left">
+        <img src={TEST_MERCHANT.avatar} className="w-10 h-10 rounded-full object-cover" alt={TEST_MERCHANT.name} />
+        <div className="flex-1 min-w-0">
+          <div className="font-semibold text-slate-800 truncate">{TEST_MERCHANT.name}</div>
+          <div className="text-[11px] text-slate-500">{TEST_MERCHANT.subs} subscribers · tap to view profile</div>
+        </div>
+      </button>
     </div>
 
     <div className="flex-1 overflow-y-auto px-4 py-6 flex flex-col items-center justify-center text-center">
@@ -320,6 +322,81 @@ const NewChatScreen = ({ onBack }: { onBack: () => void }) => (
     </div>
   </div>
 );
+
+/* ---------------- screen: test merchant profile ---------------- */
+const TestMerchantProfileScreen = ({
+  onBack,
+  onNav,
+}: {
+  onBack: () => void;
+  onNav: (k: NavKey) => void;
+}) => (
+  <div className="flex flex-col h-full bg-white">
+    {/* header */}
+    <div className="flex items-center gap-3 px-3 py-3 border-b border-slate-200">
+      <button onClick={onBack} className="p-1 -ml-1 text-slate-700"><ChevronLeft className="w-6 h-6" /></button>
+      <div className="flex-1 flex items-baseline justify-center gap-1">
+        <span className="text-2xl font-bold tracking-wide text-slate-800">PIE</span>
+        <span className="text-xl text-sky-500">Φ</span>
+      </div>
+      <span className="w-6" />
+    </div>
+
+    {/* merchant identity */}
+    <div className="flex flex-col items-center pt-6 pb-4 px-6">
+      <div className="relative">
+        <img
+          src={TEST_MERCHANT.avatar}
+          className="w-24 h-24 rounded-full object-cover ring-4 ring-sky-400/40"
+          alt={TEST_MERCHANT.name}
+        />
+        {/* Live indicator OFF */}
+        <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-slate-300 ring-2 ring-white" />
+      </div>
+      <div className="mt-3 text-lg font-semibold text-slate-800">{TEST_MERCHANT.name}</div>
+      <div className="text-xs text-slate-500">{TEST_MERCHANT.subs} subscribers</div>
+    </div>
+
+    {/* action row: Unfollow / Subscribe / Tip / Live (off) */}
+    <div className="grid grid-cols-4 gap-2 px-5 pb-5">
+      <button className="flex flex-col items-center gap-1 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 transition">
+        <UserMinus className="w-5 h-5 text-slate-700" />
+        <span className="text-[10px] font-semibold text-slate-700">Unfollow</span>
+      </button>
+      <button className={`flex flex-col items-center gap-1 py-3 rounded-xl ${ACCENT_SOFT} hover:opacity-90 transition`}>
+        <Star className={`w-5 h-5 ${ACCENT_TXT}`} />
+        <span className={`text-[10px] font-semibold ${ACCENT_TXT}`}>Subscribe</span>
+      </button>
+      <button className="flex flex-col items-center gap-1 py-3 rounded-xl bg-amber-100 hover:bg-amber-200 transition">
+        <DollarSign className="w-5 h-5 text-amber-600" />
+        <span className="text-[10px] font-semibold text-amber-700">Tip</span>
+      </button>
+      <button
+        disabled
+        aria-disabled="true"
+        title="Merchant is not live"
+        className="flex flex-col items-center gap-1 py-3 rounded-xl bg-slate-100 opacity-60 cursor-not-allowed"
+      >
+        <Radio className="w-5 h-5 text-slate-400" />
+        <span className="text-[10px] font-semibold text-slate-400">Offline</span>
+      </button>
+    </div>
+
+    {/* empty content area */}
+    <div className="flex-1 flex flex-col items-center justify-center px-8 text-center border-t border-slate-100">
+      <div className={`w-16 h-16 rounded-full ${ACCENT_SOFT} ${ACCENT_TXT} flex items-center justify-center mb-4`}>
+        <Camera className="w-7 h-7" />
+      </div>
+      <div className="text-base font-semibold text-slate-800 mb-1">No posts yet</div>
+      <div className="text-xs text-slate-500 max-w-[240px]">
+        {TEST_MERCHANT.name}'s posts and videos will appear here.
+      </div>
+    </div>
+
+    <BottomNav active="messages" onNav={onNav} variant="inbox" />
+  </div>
+);
+
 
 
 /* ---------------- screen: new (empty) profile ---------------- */
