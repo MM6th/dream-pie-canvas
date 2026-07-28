@@ -519,15 +519,23 @@ type Screen =
   | { name: 'profile' }
   | { name: 'post' }
   | { name: 'login' }
-  | { name: 'newInbox' };
+  | { name: 'newInbox' }
+  | { name: 'newProfile' };
 
 const NewUserUITestPage = () => {
   const navigate = useNavigate();
   const [screen, setScreen] = useState<Screen>({ name: 'inbox' });
+  const [credentials, setCredentials] = useState<{ username: string; email: string } | null>(null);
 
   const handleNav = (k: NavKey) => {
     if (k === 'messages') setScreen({ name: 'inbox' });
     else if (k === 'dashboard' || k === 'following') setScreen({ name: 'profile' });
+  };
+
+  // Nav for the "new" (post-login) flow — routes dashboard to the empty new profile.
+  const handleNewNav = (k: NavKey) => {
+    if (k === 'messages') setScreen({ name: 'newInbox' });
+    else if (k === 'dashboard') setScreen({ name: 'newProfile' });
   };
 
   const renderScreen = () => {
@@ -550,11 +558,17 @@ const NewUserUITestPage = () => {
         return (
           <LoginDetailsScreen
             onBack={() => setScreen({ name: 'inbox' })}
-            onSubmit={() => setScreen({ name: 'newInbox' })}
+            onSubmit={creds => {
+              // Session-only — never persisted.
+              setCredentials(creds);
+              setScreen({ name: 'newInbox' });
+            }}
           />
         );
       case 'newInbox':
-        return <NewInboxScreen onNav={handleNav} />;
+        return <NewInboxScreen onNav={handleNewNav} />;
+      case 'newProfile':
+        return <NewProfileScreen onNav={handleNewNav} credentials={credentials} />;
     }
   };
 
@@ -565,6 +579,7 @@ const NewUserUITestPage = () => {
     { key: 'post', label: 'Post UI' },
     { key: 'login', label: 'Login' },
     { key: 'newInbox', label: 'New Inbox' },
+    { key: 'newProfile', label: 'New Profile' },
   ];
 
   return (
