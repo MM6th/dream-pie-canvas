@@ -238,8 +238,24 @@ const LoginDetailsScreen = ({
   );
 };
 
-/* ---------------- screen: new (empty) inbox ---------------- */
-const NewInboxScreen = ({ onNav }: { onNav: (k: NavKey) => void }) => (
+/* ---------------- screen: new inbox (with test message) ---------------- */
+const TEST_MERCHANT = {
+  id: 'test1',
+  name: 'Test Merchant',
+  avatar: 'https://i.pravatar.cc/150?img=15',
+  subs: '1.2k',
+  lastMsg: 'Tap to open our new chat 👋',
+  when: 'Now',
+  unread: 1,
+};
+
+const NewInboxScreen = ({
+  onNav,
+  onOpen,
+}: {
+  onNav: (k: NavKey) => void;
+  onOpen: () => void;
+}) => (
   <div className="flex flex-col h-full bg-white">
     <PieHeader following={0} rightSlot={<span className="w-10" />} />
     <div className="px-5 pb-3">
@@ -248,18 +264,63 @@ const NewInboxScreen = ({ onNav }: { onNav: (k: NavKey) => void }) => (
         <input placeholder="Search Merchant" className="bg-transparent flex-1 text-sm outline-none text-slate-700 placeholder:text-slate-400" />
       </div>
     </div>
-    <div className="flex-1 flex flex-col items-center justify-center px-8 text-center">
-      <div className={`w-16 h-16 rounded-full ${ACCENT_SOFT} ${ACCENT_TXT} flex items-center justify-center mb-4`}>
-        <MessageSquare className="w-7 h-7" />
-      </div>
-      <div className="text-base font-semibold text-slate-800 mb-1">Your inbox is empty</div>
-      <div className="text-xs text-slate-500 max-w-[220px]">
-        New messages from merchants you follow will appear here.
-      </div>
+    <div className="flex-1 overflow-y-auto">
+      <button
+        onClick={onOpen}
+        className="w-full flex items-center gap-3 px-5 py-3 hover:bg-slate-50 border-b border-slate-100 text-left"
+      >
+        <img src={TEST_MERCHANT.avatar} className="w-12 h-12 rounded-full object-cover" alt={TEST_MERCHANT.name} />
+        <div className="flex-1 min-w-0">
+          <div className="flex items-baseline justify-between gap-2">
+            <span className="font-semibold text-slate-800 truncate">{TEST_MERCHANT.name}</span>
+            <span className="text-[11px] text-slate-400 shrink-0">{TEST_MERCHANT.when}</span>
+          </div>
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-sm text-slate-500 truncate">{TEST_MERCHANT.lastMsg}</span>
+            <span className={`shrink-0 w-5 h-5 rounded-full ${ACCENT} text-white text-[11px] font-bold flex items-center justify-center`}>
+              {TEST_MERCHANT.unread}
+            </span>
+          </div>
+        </div>
+      </button>
     </div>
     <BottomNav active="messages" onNav={onNav} variant="inbox" />
   </div>
 );
+
+/* ---------------- screen: new chat (empty) ---------------- */
+const NewChatScreen = ({ onBack }: { onBack: () => void }) => (
+  <div className="flex flex-col h-full bg-slate-50">
+    <div className="flex items-center gap-3 px-3 py-3 bg-white border-b border-slate-200">
+      <button onClick={onBack} className="p-1 -ml-1 text-slate-700"><ChevronLeft className="w-6 h-6" /></button>
+      <img src={TEST_MERCHANT.avatar} className="w-10 h-10 rounded-full object-cover" alt={TEST_MERCHANT.name} />
+      <div className="flex-1 min-w-0">
+        <div className="font-semibold text-slate-800 truncate">{TEST_MERCHANT.name}</div>
+        <div className="text-[11px] text-slate-500">{TEST_MERCHANT.subs} subscribers</div>
+      </div>
+    </div>
+
+    <div className="flex-1 overflow-y-auto px-4 py-6 flex flex-col items-center justify-center text-center">
+      <div className={`w-14 h-14 rounded-full ${ACCENT_SOFT} ${ACCENT_TXT} flex items-center justify-center mb-3`}>
+        <MessageSquare className="w-6 h-6" />
+      </div>
+      <div className="text-sm font-semibold text-slate-800 mb-1">Say hello 👋</div>
+      <div className="text-xs text-slate-500 max-w-[220px]">
+        This is the start of your conversation with {TEST_MERCHANT.name}.
+      </div>
+    </div>
+
+    <div className="px-3 pt-2 pb-3 bg-white border-t border-slate-200">
+      <div className="flex items-center gap-2">
+        <div className="flex-1 rounded-full bg-slate-100 px-4 py-2 text-sm text-slate-400">Message…</div>
+        <button className={`w-10 h-10 rounded-full ${ACCENT} text-white flex items-center justify-center`}>
+          <Send className="w-4 h-4" />
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
 
 /* ---------------- screen: new (empty) profile ---------------- */
 const NewProfileScreen = ({
@@ -552,7 +613,8 @@ type Screen =
   | { name: 'login' }
   | { name: 'newInbox' }
   | { name: 'newProfile' }
-  | { name: 'newFollowing' };
+  | { name: 'newFollowing' }
+  | { name: 'newChat' };
 
 const NewUserUITestPage = () => {
   const navigate = useNavigate();
@@ -601,11 +663,13 @@ const NewUserUITestPage = () => {
           />
         );
       case 'newInbox':
-        return <NewInboxScreen onNav={handleNewNav} />;
+        return <NewInboxScreen onNav={handleNewNav} onOpen={() => setScreen({ name: 'newChat' })} />;
       case 'newProfile':
         return <NewProfileScreen onNav={handleNewNav} credentials={credentials} />;
       case 'newFollowing':
         return <NewFollowingScreen onNav={handleNewNav} />;
+      case 'newChat':
+        return <NewChatScreen onBack={() => setScreen({ name: 'newInbox' })} />;
     }
   };
 
@@ -618,6 +682,7 @@ const NewUserUITestPage = () => {
     { key: 'newInbox', label: 'New Inbox' },
     { key: 'newProfile', label: 'New Profile' },
     { key: 'newFollowing', label: 'New Following' },
+    { key: 'newChat', label: 'New Chat' },
   ];
 
 
