@@ -374,10 +374,11 @@ const NewChatScreen = ({
           {bursts.map(b => (
             <span
               key={b.id}
-              className={`absolute text-3xl animate-[float_1.2s_ease-out_forwards] ${
-                b.paid ? 'drop-shadow-[0_0_8px_rgba(56,189,248,0.6)]' : ''
-              }`}
-              style={{ left: `${40 + Math.random() * 20}%` }}
+              className={`absolute text-3xl ${b.paid ? 'drop-shadow-[0_0_8px_rgba(56,189,248,0.6)]' : ''}`}
+              style={{
+                left: `${40 + Math.random() * 20}%`,
+                animation: 'newchat-float 1.2s ease-out forwards',
+              }}
             >
               {b.label}
             </span>
