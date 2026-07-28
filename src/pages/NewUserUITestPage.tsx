@@ -59,17 +59,25 @@ const ACCENT_SOFT = 'bg-sky-400/15';
 const BUBBLE = 'bg-sky-400 text-white';
 
 /* ---------------- shared header ---------------- */
-const PieHeader = ({ following }: { following: number }) => (
+const PieHeader = ({
+  following,
+  rightSlot,
+}: {
+  following: number;
+  rightSlot?: React.ReactNode;
+}) => (
   <div className="flex items-center justify-between px-5 pt-5 pb-3">
     <img src={CURRENT_USER.avatar} className="w-10 h-10 rounded-full ring-2 ring-sky-400/60 object-cover" alt="me" />
     <div className="flex items-baseline gap-1">
       <span className="text-2xl font-bold tracking-wide text-slate-800">PIE</span>
       <span className="text-xl text-sky-500">Φ</span>
     </div>
-    <div className="text-right leading-tight">
-      <div className="text-sm font-semibold text-slate-800">{following}</div>
-      <div className="text-[10px] uppercase tracking-wider text-slate-500">Following</div>
-    </div>
+    {rightSlot ?? (
+      <div className="text-right leading-tight">
+        <div className="text-sm font-semibold text-slate-800">{following}</div>
+        <div className="text-[10px] uppercase tracking-wider text-slate-500">Following</div>
+      </div>
+    )}
   </div>
 );
 
