@@ -663,11 +663,13 @@ const NewUserUITestPage = () => {
           />
         );
       case 'newInbox':
-        return <NewInboxScreen onNav={handleNewNav} />;
+        return <NewInboxScreen onNav={handleNewNav} onOpen={() => setScreen({ name: 'newChat' })} />;
       case 'newProfile':
         return <NewProfileScreen onNav={handleNewNav} credentials={credentials} />;
       case 'newFollowing':
         return <NewFollowingScreen onNav={handleNewNav} />;
+      case 'newChat':
+        return <NewChatScreen onBack={() => setScreen({ name: 'newInbox' })} />;
     }
   };
 
