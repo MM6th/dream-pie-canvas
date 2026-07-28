@@ -306,7 +306,7 @@ const NewProfileScreen = ({
       </div>
     </div>
 
-    <BottomNav active="dashboard" onNav={onNav} variant="inbox" />
+    <BottomNav active="dashboard" onNav={onNav} variant="profile" />
   </div>
 );
 
