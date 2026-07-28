@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import {
   ArrowLeft, Search, MessageSquare, Settings, LayoutDashboard,
   Users, Camera, Pencil, Cog, Video, Radio, Send, ChevronLeft,
-  Plus, Play, Megaphone, Heart, ThumbsUp, DollarSign,
+  Plus, Play, Megaphone, Heart, ThumbsUp, DollarSign, UserMinus, Star,
 } from 'lucide-react';
 
 /* ---------------- dummy data ---------------- */
