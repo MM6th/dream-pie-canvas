@@ -682,6 +682,7 @@ const NewUserUITestPage = () => {
     { key: 'newInbox', label: 'New Inbox' },
     { key: 'newProfile', label: 'New Profile' },
     { key: 'newFollowing', label: 'New Following' },
+    { key: 'newChat', label: 'New Chat' },
   ];
 
 
