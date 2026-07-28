@@ -310,6 +310,37 @@ const NewProfileScreen = ({
   </div>
 );
 
+/* ---------------- screen: new (empty) following ---------------- */
+const NewFollowingScreen = ({ onNav }: { onNav: (k: NavKey) => void }) => (
+  <div className="flex flex-col h-full bg-white">
+    <div className="flex items-center justify-between px-5 pt-5 pb-3">
+      <span className="w-10" />
+      <div className="flex items-baseline gap-1">
+        <span className="text-2xl font-bold tracking-wide text-slate-800">PIE</span>
+        <span className="text-xl text-sky-500">Φ</span>
+      </div>
+      <span className="w-10" />
+    </div>
+
+    <div className="px-6 pt-2 pb-4">
+      <div className="text-xs uppercase tracking-widest text-slate-500">Following</div>
+    </div>
+
+    <div className="flex-1 flex flex-col items-center justify-center px-8 text-center">
+      <div className={`w-16 h-16 rounded-full ${ACCENT_SOFT} ${ACCENT_TXT} flex items-center justify-center mb-4`}>
+        <Users className="w-7 h-7" />
+      </div>
+      <div className="text-base font-semibold text-slate-800 mb-1">Following no one</div>
+      <div className="text-xs text-slate-500 max-w-[240px]">
+        Merchants you follow will show up here.
+      </div>
+    </div>
+
+    <BottomNav active="following" onNav={onNav} variant="profile" />
+  </div>
+);
+
+
 /* ---------------- screen: chat ---------------- */
 const ChatScreen = ({ merchantId, onBack }: { merchantId: string; onBack: () => void }) => {
   const merchant = MERCHANTS.find(m => m.id === merchantId) ?? MERCHANTS[0];
@@ -520,7 +551,8 @@ type Screen =
   | { name: 'post' }
   | { name: 'login' }
   | { name: 'newInbox' }
-  | { name: 'newProfile' };
+  | { name: 'newProfile' }
+  | { name: 'newFollowing' };
 
 const NewUserUITestPage = () => {
   const navigate = useNavigate();
@@ -535,8 +567,10 @@ const NewUserUITestPage = () => {
   // Nav for the "new" (post-login) flow — routes dashboard to the empty new profile.
   const handleNewNav = (k: NavKey) => {
     if (k === 'messages') setScreen({ name: 'newInbox' });
-    else if (k === 'dashboard' || k === 'following') setScreen({ name: 'newProfile' });
+    else if (k === 'dashboard') setScreen({ name: 'newProfile' });
+    else if (k === 'following') setScreen({ name: 'newFollowing' });
   };
+
 
 
   const renderScreen = () => {
@@ -570,6 +604,8 @@ const NewUserUITestPage = () => {
         return <NewInboxScreen onNav={handleNewNav} />;
       case 'newProfile':
         return <NewProfileScreen onNav={handleNewNav} credentials={credentials} />;
+      case 'newFollowing':
+        return <NewFollowingScreen onNav={handleNewNav} />;
     }
   };
 
@@ -581,7 +617,9 @@ const NewUserUITestPage = () => {
     { key: 'login', label: 'Login' },
     { key: 'newInbox', label: 'New Inbox' },
     { key: 'newProfile', label: 'New Profile' },
+    { key: 'newFollowing', label: 'New Following' },
   ];
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-100 via-sky-50 to-slate-200 text-slate-800">
