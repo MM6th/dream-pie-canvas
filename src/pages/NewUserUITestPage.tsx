@@ -289,29 +289,56 @@ const NewInboxScreen = ({
 );
 
 /* ---------------- screen: new chat (empty) ---------------- */
-const NewChatScreen = ({ onBack, onOpenMerchant }: { onBack: () => void; onOpenMerchant: () => void }) => (
+const NewChatScreen = ({
+  onBack,
+  onOpenMerchant,
+  credentials,
+}: {
+  onBack: () => void;
+  onOpenMerchant: () => void;
+  credentials: { username: string; email: string } | null;
+}) => (
   <div className="flex flex-col h-full bg-slate-50">
+    {/* Header — tester's inbox */}
     <div className="flex items-center gap-3 px-3 py-3 bg-white border-b border-slate-200">
       <button onClick={onBack} className="p-1 -ml-1 text-slate-700"><ChevronLeft className="w-6 h-6" /></button>
-      <button onClick={onOpenMerchant} className="flex items-center gap-3 flex-1 min-w-0 text-left">
-        <img src={TEST_MERCHANT.avatar} className="w-10 h-10 rounded-full object-cover" alt={TEST_MERCHANT.name} />
-        <div className="flex-1 min-w-0">
-          <div className="font-semibold text-slate-800 truncate">{TEST_MERCHANT.name}</div>
-          <div className="text-[11px] text-slate-500">{TEST_MERCHANT.subs} subscribers · tap to view profile</div>
+      <div className="w-10 h-10 rounded-full bg-slate-100 ring-2 ring-sky-400/60 flex items-center justify-center text-slate-500 text-sm font-semibold">
+        {credentials?.username?.[0]?.toUpperCase() ?? '·'}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="font-semibold text-slate-800 truncate">
+          {credentials?.username || 'You'}
         </div>
-      </button>
-    </div>
-
-    <div className="flex-1 overflow-y-auto px-4 py-6 flex flex-col items-center justify-center text-center">
-      <div className={`w-14 h-14 rounded-full ${ACCENT_SOFT} ${ACCENT_TXT} flex items-center justify-center mb-3`}>
-        <MessageSquare className="w-6 h-6" />
-      </div>
-      <div className="text-sm font-semibold text-slate-800 mb-1">Say hello 👋</div>
-      <div className="text-xs text-slate-500 max-w-[220px]">
-        This is the start of your conversation with {TEST_MERCHANT.name}.
+        <div className="text-[11px] text-slate-500 truncate">Inbox</div>
       </div>
     </div>
 
+    {/* Conversation body with dummy merchant message */}
+    <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+      <div className="flex items-end gap-2">
+        <button onClick={onOpenMerchant} className="shrink-0">
+          <img
+            src={TEST_MERCHANT.avatar}
+            className="w-8 h-8 rounded-full object-cover ring-1 ring-slate-200"
+            alt={TEST_MERCHANT.name}
+          />
+        </button>
+        <div className="max-w-[75%]">
+          <button
+            onClick={onOpenMerchant}
+            className="text-[11px] text-slate-500 mb-1 hover:text-sky-500 transition"
+          >
+            {TEST_MERCHANT.name}
+          </button>
+          <div className="bg-white border border-slate-200 rounded-2xl rounded-bl-sm px-3 py-2 text-sm text-slate-700 shadow-sm">
+            Hey! Thanks for checking out my page 👋 Tap my avatar to view my profile.
+          </div>
+          <div className="text-[10px] text-slate-400 mt-1">Now</div>
+        </div>
+      </div>
+    </div>
+
+    {/* Composer */}
     <div className="px-3 pt-2 pb-3 bg-white border-t border-slate-200">
       <div className="flex items-center gap-2">
         <div className="flex-1 rounded-full bg-slate-100 px-4 py-2 text-sm text-slate-400">Message…</div>
@@ -322,6 +349,7 @@ const NewChatScreen = ({ onBack, onOpenMerchant }: { onBack: () => void; onOpenM
     </div>
   </div>
 );
+
 
 /* ---------------- screen: test merchant profile ---------------- */
 const TestMerchantProfileScreen = ({
