@@ -468,7 +468,9 @@ type Screen =
   | { name: 'inbox' }
   | { name: 'chat'; merchantId: string }
   | { name: 'profile' }
-  | { name: 'post' };
+  | { name: 'post' }
+  | { name: 'login' }
+  | { name: 'newInbox' };
 
 const NewUserUITestPage = () => {
   const navigate = useNavigate();
@@ -482,13 +484,28 @@ const NewUserUITestPage = () => {
   const renderScreen = () => {
     switch (screen.name) {
       case 'inbox':
-        return <InboxScreen onOpen={id => setScreen({ name: 'chat', merchantId: id })} onNav={handleNav} />;
+        return (
+          <InboxScreen
+            onOpen={id => setScreen({ name: 'chat', merchantId: id })}
+            onNav={handleNav}
+            onLogin={() => setScreen({ name: 'login' })}
+          />
+        );
       case 'chat':
         return <ChatScreen merchantId={screen.merchantId} onBack={() => setScreen({ name: 'inbox' })} />;
       case 'profile':
         return <ProfileScreen onNav={handleNav} onAddPost={() => setScreen({ name: 'post' })} />;
       case 'post':
         return <PostScreen onBack={() => setScreen({ name: 'profile' })} />;
+      case 'login':
+        return (
+          <LoginDetailsScreen
+            onBack={() => setScreen({ name: 'inbox' })}
+            onSubmit={() => setScreen({ name: 'newInbox' })}
+          />
+        );
+      case 'newInbox':
+        return <NewInboxScreen onNav={handleNav} />;
     }
   };
 
@@ -497,6 +514,8 @@ const NewUserUITestPage = () => {
     { key: 'chat', label: 'Chat' },
     { key: 'profile', label: 'Profile' },
     { key: 'post', label: 'Post UI' },
+    { key: 'login', label: 'Login' },
+    { key: 'newInbox', label: 'New Inbox' },
   ];
 
   return (
