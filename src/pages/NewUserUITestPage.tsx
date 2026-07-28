@@ -604,6 +604,8 @@ const NewUserUITestPage = () => {
         return <NewInboxScreen onNav={handleNewNav} />;
       case 'newProfile':
         return <NewProfileScreen onNav={handleNewNav} credentials={credentials} />;
+      case 'newFollowing':
+        return <NewFollowingScreen onNav={handleNewNav} />;
     }
   };
 
@@ -615,7 +617,9 @@ const NewUserUITestPage = () => {
     { key: 'login', label: 'Login' },
     { key: 'newInbox', label: 'New Inbox' },
     { key: 'newProfile', label: 'New Profile' },
+    { key: 'newFollowing', label: 'New Following' },
   ];
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-100 via-sky-50 to-slate-200 text-slate-800">
