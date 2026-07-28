@@ -747,7 +747,19 @@ const NewUserUITestPage = () => {
       case 'newFollowing':
         return <NewFollowingScreen onNav={handleNewNav} />;
       case 'newChat':
-        return <NewChatScreen onBack={() => setScreen({ name: 'newInbox' })} />;
+        return (
+          <NewChatScreen
+            onBack={() => setScreen({ name: 'newInbox' })}
+            onOpenMerchant={() => setScreen({ name: 'testMerchantProfile' })}
+          />
+        );
+      case 'testMerchantProfile':
+        return (
+          <TestMerchantProfileScreen
+            onBack={() => setScreen({ name: 'newChat' })}
+            onNav={handleNewNav}
+          />
+        );
     }
   };
 
@@ -761,6 +773,7 @@ const NewUserUITestPage = () => {
     { key: 'newProfile', label: 'New Profile' },
     { key: 'newFollowing', label: 'New Following' },
     { key: 'newChat', label: 'New Chat' },
+    { key: 'testMerchantProfile', label: 'Merchant Profile' },
   ];
 
 
