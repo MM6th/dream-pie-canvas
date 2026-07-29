@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
 import {
   ArrowLeft, Search, MessageSquare, Settings, LayoutDashboard,
   Users, Camera, Pencil, Cog, Video, Radio, Send, ChevronLeft,
   Plus, Play, Megaphone, Heart, ThumbsUp, DollarSign, UserMinus, Star, X,
 } from 'lucide-react';
+
 
 
 /* ---------------- dummy data ---------------- */
@@ -1068,42 +1070,69 @@ type Screen =
   | { name: 'youProfileView' };
 
 
-const STORAGE_KEY = 'pie-sandbox-state-v1';
+const SANDBOX_ID_KEY = 'pie-sandbox-id-v1';
 
-const loadSandbox = () => {
+const getSandboxId = () => {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw) as {
-      credentials: { username: string; email: string } | null;
-      activeAccount: 'you' | 'merchant';
-      postsByAccount: Record<'you' | 'merchant', ProfilePost[]>;
-    };
+    let id = localStorage.getItem(SANDBOX_ID_KEY);
+    if (!id) {
+      id = crypto.randomUUID();
+      localStorage.setItem(SANDBOX_ID_KEY, id);
+    }
+    return id;
   } catch {
-    return null;
+    return crypto.randomUUID();
   }
+};
+
+type SandboxState = {
+  credentials: { username: string; email: string } | null;
+  activeAccount: 'you' | 'merchant';
+  postsByAccount: Record<'you' | 'merchant', ProfilePost[]>;
 };
 
 const NewUserUITestPage = () => {
   const navigate = useNavigate();
-  const initial = typeof window !== 'undefined' ? loadSandbox() : null;
+  const sandboxIdRef = useRef<string>(typeof window !== 'undefined' ? getSandboxId() : '');
   const [screen, setScreen] = useState<Screen>({ name: 'inbox' });
-  const [credentials, setCredentials] = useState<{ username: string; email: string } | null>(initial?.credentials ?? null);
-  const [activeAccount, setActiveAccount] = useState<'you' | 'merchant'>(initial?.activeAccount ?? 'you');
-  const [postsByAccount, setPostsByAccount] = useState<Record<'you' | 'merchant', ProfilePost[]>>(
-    initial?.postsByAccount ?? { you: [], merchant: [] }
-  );
+  const [credentials, setCredentials] = useState<SandboxState['credentials']>(null);
+  const [activeAccount, setActiveAccount] = useState<'you' | 'merchant'>('you');
+  const [postsByAccount, setPostsByAccount] = useState<Record<'you' | 'merchant', ProfilePost[]>>({ you: [], merchant: [] });
+  const [loaded, setLoaded] = useState(false);
 
+  // Load state from Supabase on mount
   useEffect(() => {
-    try {
-      localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify({ credentials, activeAccount, postsByAccount })
-      );
-    } catch {
-      // storage quota or private mode — silently ignore
-    }
-  }, [credentials, activeAccount, postsByAccount]);
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase
+        .from('sandbox_state')
+        .select('state')
+        .eq('sandbox_id', sandboxIdRef.current)
+        .maybeSingle();
+      if (cancelled) return;
+      if (!error && data?.state) {
+        const s = data.state as SandboxState;
+        if (s.credentials) setCredentials(s.credentials);
+        if (s.activeAccount) setActiveAccount(s.activeAccount);
+        if (s.postsByAccount) setPostsByAccount(s.postsByAccount);
+      }
+      setLoaded(true);
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  // Persist to Supabase whenever state changes (after initial load)
+  useEffect(() => {
+    if (!loaded) return;
+    const payload: SandboxState = { credentials, activeAccount, postsByAccount };
+    supabase
+      .from('sandbox_state')
+      .upsert({ sandbox_id: sandboxIdRef.current, state: payload as any, updated_at: new Date().toISOString() })
+      .then(({ error }) => {
+        if (error) console.warn('sandbox_state save failed', error);
+      });
+  }, [credentials, activeAccount, postsByAccount, loaded]);
+
 
   const currentProfile =
     activeAccount === 'merchant'
