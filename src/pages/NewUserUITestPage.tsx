@@ -75,12 +75,24 @@ const BUBBLE = 'bg-sky-400 text-white';
 const PieHeader = ({
   following,
   rightSlot,
+  avatar,
+  initial,
 }: {
   following: number;
   rightSlot?: React.ReactNode;
+  avatar?: string;
+  initial?: string;
 }) => (
   <div className="flex items-center justify-between px-5 pt-5 pb-3">
-    <img src={CURRENT_USER.avatar} className="w-10 h-10 rounded-full ring-2 ring-sky-400/60 object-cover" alt="me" />
+    {avatar ? (
+      <img src={avatar} className="w-10 h-10 rounded-full ring-2 ring-sky-400/60 object-cover" alt="me" />
+    ) : initial ? (
+      <div className="w-10 h-10 rounded-full ring-2 ring-sky-400/60 bg-slate-100 flex items-center justify-center text-slate-600 font-semibold">
+        {initial}
+      </div>
+    ) : (
+      <img src={CURRENT_USER.avatar} className="w-10 h-10 rounded-full ring-2 ring-sky-400/60 object-cover" alt="me" />
+    )}
     <div className="flex items-baseline gap-1">
       <span className="text-2xl font-bold tracking-wide text-slate-800">PIE</span>
       <span className="text-xl text-sky-500">Φ</span>
