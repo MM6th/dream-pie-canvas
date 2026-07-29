@@ -1026,7 +1026,26 @@ const NewUserUITestPage = () => {
   const navigate = useNavigate();
   const [screen, setScreen] = useState<Screen>({ name: 'inbox' });
   const [credentials, setCredentials] = useState<{ username: string; email: string } | null>(null);
-  const [profilePosts, setProfilePosts] = useState<ProfilePost[]>([]);
+  const [activeAccount, setActiveAccount] = useState<'you' | 'merchant'>('you');
+  const [postsByAccount, setPostsByAccount] = useState<Record<'you' | 'merchant', ProfilePost[]>>({
+    you: [],
+    merchant: [],
+  });
+
+  const currentProfile =
+    activeAccount === 'merchant'
+      ? { username: TEST_MERCHANT.name, email: `${TEST_MERCHANT.name.toLowerCase().replace(/\s+/g, '')}@pie.app`, avatar: TEST_MERCHANT.avatar }
+      : credentials
+        ? { username: credentials.username, email: credentials.email }
+        : null;
+
+  const currentPosts = postsByAccount[activeAccount];
+  const setCurrentPosts: React.Dispatch<React.SetStateAction<ProfilePost[]>> = (updater) => {
+    setPostsByAccount(prev => ({
+      ...prev,
+      [activeAccount]: typeof updater === 'function' ? (updater as (p: ProfilePost[]) => ProfilePost[])(prev[activeAccount]) : updater,
+    }));
+  };
 
   const handleNav = (k: NavKey) => {
     if (k === 'messages') setScreen({ name: 'inbox' });
@@ -1039,6 +1058,7 @@ const NewUserUITestPage = () => {
     else if (k === 'dashboard') setScreen({ name: 'newProfile' });
     else if (k === 'following') setScreen({ name: 'newFollowing' });
   };
+
 
 
 
