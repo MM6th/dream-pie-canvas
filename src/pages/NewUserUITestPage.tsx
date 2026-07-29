@@ -516,21 +516,6 @@ const TestMerchantProfileScreen = ({
       </button>
     </div>
 
-    <div className="px-5 pb-4">
-      <button
-        onClick={onViewSupporter}
-        className="w-full flex items-center justify-between px-4 py-3 rounded-xl border border-dashed border-sky-300 bg-sky-50/60 hover:bg-sky-50 transition text-left"
-      >
-        <div>
-          <div className="text-[11px] uppercase tracking-widest text-sky-600 font-semibold">Sandbox</div>
-          <div className="text-sm font-semibold text-slate-800">
-            View {supporterUsername || 'supporter'}'s profile
-          </div>
-          <div className="text-[11px] text-slate-500">See their posts from a merchant's view</div>
-        </div>
-        <ChevronLeft className="w-5 h-5 text-sky-500 rotate-180" />
-      </button>
-    </div>
 
     <div className="flex-1 flex flex-col items-center justify-center px-8 text-center border-t border-slate-100">
       <div className={`w-16 h-16 rounded-full ${ACCENT_SOFT} ${ACCENT_TXT} flex items-center justify-center mb-4`}>
