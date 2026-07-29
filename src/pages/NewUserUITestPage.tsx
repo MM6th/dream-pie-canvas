@@ -590,15 +590,20 @@ const NewProfileScreen = ({
   return (
     <div className="flex flex-col h-full bg-white relative">
       <div className="flex items-center justify-between px-5 pt-5 pb-3">
-        <div className="w-10 h-10 rounded-full bg-slate-100 ring-2 ring-sky-400/60 flex items-center justify-center text-slate-500 text-lg font-semibold">
-          {credentials?.username?.[0]?.toUpperCase() ?? '·'}
-        </div>
+        {profile?.avatar ? (
+          <img src={profile.avatar} alt={profile.username} className="w-10 h-10 rounded-full ring-2 ring-sky-400/60 object-cover" />
+        ) : (
+          <div className="w-10 h-10 rounded-full bg-slate-100 ring-2 ring-sky-400/60 flex items-center justify-center text-slate-500 text-lg font-semibold">
+            {profile?.username?.[0]?.toUpperCase() ?? '·'}
+          </div>
+        )}
         <div className="flex items-baseline gap-1">
           <span className="text-2xl font-bold tracking-wide text-slate-800">PIE</span>
           <span className="text-xl text-sky-500">Φ</span>
         </div>
         <span className="w-10" />
       </div>
+
 
       <div className="flex items-center justify-around px-6 pt-2 pb-4">
         <button
