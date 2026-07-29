@@ -1131,7 +1131,7 @@ const NewUserUITestPage = () => {
                 if (e.target.value === 'merchant') {
                   setScreen({ name: 'testMerchantProfile' });
                 } else {
-                  setScreen({ name: credentials ? 'newProfile' : 'inbox' });
+                  setScreen(credentials ? { name: 'newProfile' } : { name: 'inbox' });
                 }
               }}
               className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-400 mb-3"
