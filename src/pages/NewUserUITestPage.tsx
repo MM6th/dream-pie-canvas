@@ -1060,7 +1060,8 @@ type Screen =
   | { name: 'newProfile' }
   | { name: 'newFollowing' }
   | { name: 'newChat' }
-  | { name: 'testMerchantProfile' };
+  | { name: 'testMerchantProfile' }
+  | { name: 'youProfileView' };
 
 
 const NewUserUITestPage = () => {
