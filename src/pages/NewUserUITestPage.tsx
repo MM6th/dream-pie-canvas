@@ -632,14 +632,8 @@ const SupporterProfileAsMerchantScreen = ({
 
 
 /* ---------------- screen: new (empty) profile ---------------- */
-type ProfilePost = {
-  id: string;
-  url: string;
-  type: 'image' | 'video';
-  caption: string;
-  paid: boolean;
-  price?: number;
-};
+
+
 
 const NewProfileScreen = ({
   onNav,
