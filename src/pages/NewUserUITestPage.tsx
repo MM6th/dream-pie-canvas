@@ -609,8 +609,12 @@ const NewProfileScreen = ({
     const f = e.target.files?.[0];
     if (!f) return;
     const isVideo = f.type.startsWith('video/');
-    setPending({ url: URL.createObjectURL(f), type: isVideo ? 'video' : 'image' });
-    setStep('caption');
+    const reader = new FileReader();
+    reader.onload = () => {
+      setPending({ url: String(reader.result), type: isVideo ? 'video' : 'image' });
+      setStep('caption');
+    };
+    reader.readAsDataURL(f);
     e.target.value = '';
   };
 
