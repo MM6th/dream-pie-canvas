@@ -3720,6 +3720,27 @@ export type Database = {
         }
         Relationships: []
       }
+      sandbox_state: {
+        Row: {
+          created_at: string
+          sandbox_id: string
+          state: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          sandbox_id: string
+          state?: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          sandbox_id?: string
+          state?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
       script_invitations: {
         Row: {
           credits_spent: number
