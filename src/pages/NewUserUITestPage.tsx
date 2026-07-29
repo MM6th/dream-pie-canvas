@@ -644,6 +644,17 @@ type ProfilePost = {
 const NewProfileScreen = ({
   onNav,
   credentials,
+  posts,
+  setPosts,
+}: {
+  onNav: (k: NavKey) => void;
+  credentials: { username: string; email: string } | null;
+  posts: ProfilePost[];
+  setPosts: React.Dispatch<React.SetStateAction<ProfilePost[]>>;
+}) => {
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  onNav,
+  credentials,
 }: {
   onNav: (k: NavKey) => void;
   credentials: { username: string; email: string } | null;
