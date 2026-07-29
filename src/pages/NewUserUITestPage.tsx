@@ -1171,7 +1171,14 @@ const NewUserUITestPage = () => {
       case 'newInbox':
         return <NewInboxScreen onNav={handleNewNav} onOpen={() => setScreen({ name: 'newChat' })} />;
       case 'newProfile':
-        return <NewProfileScreen onNav={handleNewNav} credentials={credentials} />;
+        return (
+          <NewProfileScreen
+            onNav={handleNewNav}
+            credentials={credentials}
+            posts={profilePosts}
+            setPosts={setProfilePosts}
+          />
+        );
       case 'newFollowing':
         return <NewFollowingScreen onNav={handleNewNav} />;
       case 'newChat':
@@ -1187,6 +1194,16 @@ const NewUserUITestPage = () => {
           <TestMerchantProfileScreen
             onBack={() => setScreen({ name: 'newChat' })}
             onNav={handleNewNav}
+            onViewSupporter={() => setScreen({ name: 'supporterAsMerchant' })}
+            supporterUsername={credentials?.username ?? null}
+          />
+        );
+      case 'supporterAsMerchant':
+        return (
+          <SupporterProfileAsMerchantScreen
+            onBack={() => setScreen({ name: 'testMerchantProfile' })}
+            posts={profilePosts}
+            supporterUsername={credentials?.username ?? null}
           />
         );
     }
