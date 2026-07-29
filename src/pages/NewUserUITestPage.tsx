@@ -334,11 +334,13 @@ const NewInboxScreen = ({
 const NewChatScreen = ({
   onBack,
   onOpenMerchant,
-  credentials,
+  self,
+  peer,
 }: {
   onBack: () => void;
   onOpenMerchant: () => void;
-  credentials: { username: string; email: string } | null;
+  self: ChatPerson;
+  peer: ChatPerson;
 }) => {
   const [reactions, setReactions] = useState<Record<string, number>>({});
   const [bursts, setBursts] = useState<{ id: number; label: string; paid: boolean }[]>([]);
