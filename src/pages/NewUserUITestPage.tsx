@@ -462,14 +462,13 @@ const NewChatScreen = ({
 const TestMerchantProfileScreen = ({
   onBack,
   onNav,
-  onViewSupporter,
   supporterUsername,
 }: {
   onBack: () => void;
   onNav: (k: NavKey) => void;
-  onViewSupporter: () => void;
   supporterUsername: string | null;
 }) => (
+
   <div className="flex flex-col h-full bg-white">
     <div className="flex items-center gap-3 px-3 py-3 border-b border-slate-200">
       <button onClick={onBack} className="p-1 -ml-1 text-slate-700"><ChevronLeft className="w-6 h-6" /></button>
@@ -517,21 +516,6 @@ const TestMerchantProfileScreen = ({
       </button>
     </div>
 
-    <div className="px-5 pb-4">
-      <button
-        onClick={onViewSupporter}
-        className="w-full flex items-center justify-between px-4 py-3 rounded-xl border border-dashed border-sky-300 bg-sky-50/60 hover:bg-sky-50 transition text-left"
-      >
-        <div>
-          <div className="text-[11px] uppercase tracking-widest text-sky-600 font-semibold">Sandbox</div>
-          <div className="text-sm font-semibold text-slate-800">
-            View {supporterUsername || 'supporter'}'s profile
-          </div>
-          <div className="text-[11px] text-slate-500">See their posts from a merchant's view</div>
-        </div>
-        <ChevronLeft className="w-5 h-5 text-sky-500 rotate-180" />
-      </button>
-    </div>
 
     <div className="flex-1 flex flex-col items-center justify-center px-8 text-center border-t border-slate-100">
       <div className={`w-16 h-16 rounded-full ${ACCENT_SOFT} ${ACCENT_TXT} flex items-center justify-center mb-4`}>
@@ -547,166 +531,7 @@ const TestMerchantProfileScreen = ({
   </div>
 );
 
-/* ---------------- screen: supporter profile as viewed by merchant ---------------- */
-const SupporterProfileAsMerchantScreen = ({
-  onBack,
-  posts,
-  supporterUsername,
-}: {
-  onBack: () => void;
-  posts: ProfilePost[];
-  supporterUsername: string | null;
-}) => {
-  const [following, setFollowing] = useState(false);
-  const [unlocked, setUnlocked] = useState<Record<string, boolean>>({});
-  const [lightbox, setLightbox] = useState<ProfilePost | null>(null);
-  const displayName = supporterUsername || 'Supporter';
 
-  const toggleFollow = () => {
-    setFollowing(f => {
-      const next = !f;
-      toast.success(next ? `Following ${displayName}` : `Unfollowed ${displayName}`);
-      return next;
-    });
-  };
-  const sendTip = () => toast.success(`Tip sent to ${displayName} 🎉`);
-  const openMessage = () => toast(`Message thread with ${displayName} opened`);
-
-  const handlePostTap = (p: ProfilePost) => {
-    if (p.paid && !unlocked[p.id]) {
-      setUnlocked(u => ({ ...u, [p.id]: true }));
-      toast.success(`Unlocked post for $${p.price?.toFixed(2)}`);
-      return;
-    }
-    setLightbox(p);
-  };
-
-  return (
-    <div className="flex flex-col h-full bg-white relative">
-      <div className="flex items-center gap-3 px-3 py-3 border-b border-slate-200">
-        <button onClick={onBack} className="p-1 -ml-1 text-slate-700"><ChevronLeft className="w-6 h-6" /></button>
-        <div className="flex-1 min-w-0">
-          <div className="text-sm font-semibold text-slate-800 truncate">{displayName}</div>
-          <div className="text-[11px] text-slate-500">Viewing as {TEST_MERCHANT.name}</div>
-        </div>
-        <div className="flex items-baseline gap-1">
-          <span className="text-lg font-bold tracking-wide text-slate-800">PIE</span>
-          <span className="text-base text-sky-500">Φ</span>
-        </div>
-      </div>
-
-      <div className="flex flex-col items-center pt-5 pb-3 px-6">
-        <div className="w-20 h-20 rounded-full bg-slate-100 ring-4 ring-sky-400/40 flex items-center justify-center text-slate-500 text-2xl font-semibold">
-          {supporterUsername?.[0]?.toUpperCase() ?? '·'}
-        </div>
-        <div className="mt-2 text-base font-semibold text-slate-800">{displayName}</div>
-        <div className="text-[11px] text-slate-500">Supporter</div>
-      </div>
-
-      <div className="grid grid-cols-3 gap-2 px-5 pb-4">
-        <button
-          onClick={toggleFollow}
-          className={`flex flex-col items-center gap-1 py-2.5 rounded-xl transition ${
-            following ? 'bg-slate-100 text-slate-700' : `${ACCENT_SOFT} ${ACCENT_TXT}`
-          }`}
-        >
-          {following ? <UserMinus className="w-4 h-4" /> : <Star className="w-4 h-4" />}
-          <span className="text-[10px] font-semibold">{following ? 'Unfollow' : 'Follow'}</span>
-        </button>
-        <button
-          onClick={sendTip}
-          className="flex flex-col items-center gap-1 py-2.5 rounded-xl bg-amber-100 text-amber-700 hover:bg-amber-200 transition"
-        >
-          <DollarSign className="w-4 h-4" />
-          <span className="text-[10px] font-semibold">Tip</span>
-        </button>
-        <button
-          onClick={openMessage}
-          className="flex flex-col items-center gap-1 py-2.5 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition"
-        >
-          <MessageSquare className="w-4 h-4" />
-          <span className="text-[10px] font-semibold">Message</span>
-        </button>
-      </div>
-
-      {posts.length === 0 ? (
-        <div className="flex-1 flex flex-col items-center justify-center px-8 text-center border-t border-slate-100">
-          <div className={`w-16 h-16 rounded-full ${ACCENT_SOFT} ${ACCENT_TXT} flex items-center justify-center mb-4`}>
-            <Camera className="w-7 h-7" />
-          </div>
-          <div className="text-base font-semibold text-slate-800 mb-1">No posts yet</div>
-          <div className="text-xs text-slate-500 max-w-[240px]">
-            When {supporterUsername || 'they'} share posts, they'll appear here.
-          </div>
-        </div>
-      ) : (
-        <div className="flex-1 overflow-y-auto px-4 pb-4 border-t border-slate-100 pt-3">
-          <div className="grid grid-cols-3 gap-1">
-            {posts.map(p => {
-              const isLocked = p.paid && !unlocked[p.id];
-              return (
-                <button
-                  key={p.id}
-                  onClick={() => handlePostTap(p)}
-                  className="relative aspect-square overflow-hidden rounded-md bg-slate-100 group"
-                >
-                  {p.type === 'image' ? (
-                    <img
-                      src={p.url}
-                      alt=""
-                      className={`w-full h-full object-cover ${isLocked ? 'blur-lg scale-110' : ''}`}
-                    />
-                  ) : (
-                    <video
-                      src={p.url}
-                      className={`w-full h-full object-cover ${isLocked ? 'blur-lg scale-110' : ''}`}
-                      muted
-                    />
-                  )}
-                  {isLocked && (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/25 text-white">
-                      <DollarSign className="w-5 h-5" />
-                      <span className="text-xs font-semibold">${p.price?.toFixed(2)}</span>
-                      <span className="text-[9px] mt-0.5 opacity-80">Tap to unlock</span>
-                    </div>
-                  )}
-                  {p.type === 'video' && !isLocked && (
-                    <div className="absolute top-1 right-1 bg-black/50 rounded-full p-1">
-                      <Play className="w-3 h-3 text-white" />
-                    </div>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {lightbox && (
-        <div
-          className="absolute inset-0 bg-black/90 z-50 flex flex-col"
-          onClick={() => setLightbox(null)}
-        >
-          <div className="flex justify-end p-3">
-            <button
-              className="w-9 h-9 rounded-full bg-white/10 text-white flex items-center justify-center"
-              onClick={(e) => { e.stopPropagation(); setLightbox(null); }}
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-          <div className="flex-1 flex items-center justify-center px-4 pb-6">
-            {lightbox.type === 'image' ? (
-              <img src={lightbox.url} className="max-w-full max-h-full object-contain rounded-lg" alt="" />
-            ) : (
-              <video src={lightbox.url} controls autoPlay className="max-w-full max-h-full rounded-lg" />
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
 
 
 
@@ -1187,8 +1012,8 @@ type Screen =
   | { name: 'newProfile' }
   | { name: 'newFollowing' }
   | { name: 'newChat' }
-  | { name: 'testMerchantProfile' }
-  | { name: 'supporterAsMerchant' };
+  | { name: 'testMerchantProfile' };
+
 
 const NewUserUITestPage = () => {
   const navigate = useNavigate();
@@ -1263,15 +1088,6 @@ const NewUserUITestPage = () => {
           <TestMerchantProfileScreen
             onBack={() => setScreen({ name: 'newChat' })}
             onNav={handleNewNav}
-            onViewSupporter={() => setScreen({ name: 'supporterAsMerchant' })}
-            supporterUsername={credentials?.username ?? null}
-          />
-        );
-      case 'supporterAsMerchant':
-        return (
-          <SupporterProfileAsMerchantScreen
-            onBack={() => setScreen({ name: 'testMerchantProfile' })}
-            posts={profilePosts}
             supporterUsername={credentials?.username ?? null}
           />
         );
@@ -1289,8 +1105,8 @@ const NewUserUITestPage = () => {
     { key: 'newFollowing', label: 'New Following' },
     { key: 'newChat', label: 'New Chat' },
     { key: 'testMerchantProfile', label: 'Merchant Profile' },
-    { key: 'supporterAsMerchant', label: 'Supporter (as Merchant)' },
   ];
+
 
 
   return (
