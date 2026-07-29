@@ -1060,7 +1060,8 @@ type Screen =
   | { name: 'newProfile' }
   | { name: 'newFollowing' }
   | { name: 'newChat' }
-  | { name: 'testMerchantProfile' };
+  | { name: 'testMerchantProfile' }
+  | { name: 'youProfileView' };
 
 
 const NewUserUITestPage = () => {
@@ -1157,7 +1158,13 @@ const NewUserUITestPage = () => {
         return (
           <NewChatScreen
             onBack={() => setScreen({ name: 'newInbox' })}
-            onOpenMerchant={() => setScreen({ name: 'testMerchantProfile' })}
+            onOpenMerchant={() =>
+              setScreen(
+                activeAccount === 'merchant'
+                  ? { name: 'youProfileView' }
+                  : { name: 'testMerchantProfile' }
+              )
+            }
             self={self}
             peer={peer}
           />
@@ -1171,6 +1178,28 @@ const NewUserUITestPage = () => {
             supporterUsername={credentials?.username ?? null}
           />
         );
+      case 'youProfileView': {
+        const youProfile = credentials
+          ? { username: credentials.username, email: credentials.email }
+          : null;
+        return (
+          <NewProfileScreen
+            onNav={(k) => {
+              if (k === 'messages') setScreen({ name: 'newInbox' });
+              else if (k === 'dashboard') setScreen({ name: 'newProfile' });
+              else if (k === 'following') setScreen({ name: 'newFollowing' });
+            }}
+            profile={youProfile}
+            posts={postsByAccount.you}
+            setPosts={(updater) =>
+              setPostsByAccount((prev) => ({
+                ...prev,
+                you: typeof updater === 'function' ? (updater as (p: ProfilePost[]) => ProfilePost[])(prev.you) : updater,
+              }))
+            }
+          />
+        );
+      }
     }
   };
 
