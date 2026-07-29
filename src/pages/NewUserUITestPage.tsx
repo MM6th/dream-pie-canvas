@@ -52,6 +52,17 @@ const GRID_MEDIA = [
   { type: 'video', src: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300&q=60' },
 ];
 
+type ProfilePost = {
+  id: string;
+  url: string;
+  type: 'image' | 'video';
+  caption: string;
+  paid: boolean;
+  price?: number;
+};
+
+
+
 /* ---------------- design tokens (scoped to sandbox) ---------------- */
 const ACCENT = 'bg-sky-400';
 const ACCENT_TXT = 'text-sky-400';
