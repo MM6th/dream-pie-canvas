@@ -1068,15 +1068,42 @@ type Screen =
   | { name: 'youProfileView' };
 
 
+const STORAGE_KEY = 'pie-sandbox-state-v1';
+
+const loadSandbox = () => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as {
+      credentials: { username: string; email: string } | null;
+      activeAccount: 'you' | 'merchant';
+      postsByAccount: Record<'you' | 'merchant', ProfilePost[]>;
+    };
+  } catch {
+    return null;
+  }
+};
+
 const NewUserUITestPage = () => {
   const navigate = useNavigate();
+  const initial = typeof window !== 'undefined' ? loadSandbox() : null;
   const [screen, setScreen] = useState<Screen>({ name: 'inbox' });
-  const [credentials, setCredentials] = useState<{ username: string; email: string } | null>(null);
-  const [activeAccount, setActiveAccount] = useState<'you' | 'merchant'>('you');
-  const [postsByAccount, setPostsByAccount] = useState<Record<'you' | 'merchant', ProfilePost[]>>({
-    you: [],
-    merchant: [],
-  });
+  const [credentials, setCredentials] = useState<{ username: string; email: string } | null>(initial?.credentials ?? null);
+  const [activeAccount, setActiveAccount] = useState<'you' | 'merchant'>(initial?.activeAccount ?? 'you');
+  const [postsByAccount, setPostsByAccount] = useState<Record<'you' | 'merchant', ProfilePost[]>>(
+    initial?.postsByAccount ?? { you: [], merchant: [] }
+  );
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({ credentials, activeAccount, postsByAccount })
+      );
+    } catch {
+      // storage quota or private mode — silently ignore
+    }
+  }, [credentials, activeAccount, postsByAccount]);
 
   const currentProfile =
     activeAccount === 'merchant'
