@@ -542,15 +542,16 @@ const TestMerchantProfileScreen = ({
 
 const NewProfileScreen = ({
   onNav,
-  credentials,
+  profile,
   posts,
   setPosts,
 }: {
   onNav: (k: NavKey) => void;
-  credentials: { username: string; email: string } | null;
+  profile: { username: string; email: string; avatar?: string } | null;
   posts: ProfilePost[];
   setPosts: React.Dispatch<React.SetStateAction<ProfilePost[]>>;
 }) => {
+
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [pending, setPending] = useState<{ url: string; type: 'image' | 'video' } | null>(null);
   const [step, setStep] = useState<'caption' | 'monetize' | null>(null);
