@@ -1220,6 +1220,7 @@ const NewUserUITestPage = () => {
     { key: 'newFollowing', label: 'New Following' },
     { key: 'newChat', label: 'New Chat' },
     { key: 'testMerchantProfile', label: 'Merchant Profile' },
+    { key: 'supporterAsMerchant', label: 'Supporter (as Merchant)' },
   ];
 
 
