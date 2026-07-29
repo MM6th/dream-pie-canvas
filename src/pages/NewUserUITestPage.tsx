@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
 import {
   ArrowLeft, Search, MessageSquare, Settings, LayoutDashboard,
   Users, Camera, Pencil, Cog, Video, Radio, Send, ChevronLeft,
   Plus, Play, Megaphone, Heart, ThumbsUp, DollarSign, UserMinus, Star, X,
 } from 'lucide-react';
+
 
 
 /* ---------------- dummy data ---------------- */
