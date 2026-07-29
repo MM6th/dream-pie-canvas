@@ -1130,8 +1130,13 @@ const NewUserUITestPage = () => {
             }}
           />
         );
-      case 'newInbox':
-        return <NewInboxScreen onNav={handleNewNav} onOpen={() => setScreen({ name: 'newChat' })} />;
+      case 'newInbox': {
+        const you: ChatPerson = { name: credentials?.username ?? 'You', avatar: undefined };
+        const merchant: ChatPerson = { name: TEST_MERCHANT.name, avatar: TEST_MERCHANT.avatar };
+        const self = activeAccount === 'merchant' ? merchant : you;
+        const peer = activeAccount === 'merchant' ? you : merchant;
+        return <NewInboxScreen onNav={handleNewNav} onOpen={() => setScreen({ name: 'newChat' })} self={self} peer={peer} />;
+      }
       case 'newProfile':
         return (
           <NewProfileScreen
@@ -1144,14 +1149,20 @@ const NewUserUITestPage = () => {
 
       case 'newFollowing':
         return <NewFollowingScreen onNav={handleNewNav} />;
-      case 'newChat':
+      case 'newChat': {
+        const you: ChatPerson = { name: credentials?.username ?? 'You', avatar: undefined };
+        const merchant: ChatPerson = { name: TEST_MERCHANT.name, avatar: TEST_MERCHANT.avatar };
+        const self = activeAccount === 'merchant' ? merchant : you;
+        const peer = activeAccount === 'merchant' ? you : merchant;
         return (
           <NewChatScreen
             onBack={() => setScreen({ name: 'newInbox' })}
             onOpenMerchant={() => setScreen({ name: 'testMerchantProfile' })}
-            credentials={credentials}
+            self={self}
+            peer={peer}
           />
         );
+      }
       case 'testMerchantProfile':
         return (
           <TestMerchantProfileScreen
