@@ -1187,8 +1187,8 @@ type Screen =
   | { name: 'newProfile' }
   | { name: 'newFollowing' }
   | { name: 'newChat' }
-  | { name: 'testMerchantProfile' }
-  | { name: 'supporterAsMerchant' };
+  | { name: 'testMerchantProfile' };
+
 
 const NewUserUITestPage = () => {
   const navigate = useNavigate();
