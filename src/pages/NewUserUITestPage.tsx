@@ -262,15 +262,26 @@ const TEST_MERCHANT = {
   unread: 1,
 };
 
+type ChatPerson = { name: string; avatar?: string };
+
 const NewInboxScreen = ({
   onNav,
   onOpen,
+  self,
+  peer,
 }: {
   onNav: (k: NavKey) => void;
   onOpen: () => void;
+  self: ChatPerson;
+  peer: ChatPerson;
 }) => (
   <div className="flex flex-col h-full bg-white">
-    <PieHeader following={0} rightSlot={<span className="w-10" />} />
+    <PieHeader
+      following={0}
+      rightSlot={<span className="w-10" />}
+      avatar={self.avatar}
+      initial={self.name?.[0]?.toUpperCase()}
+    />
     <div className="px-5 pb-3">
       <div className="flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2.5">
         <Search className="w-4 h-4 text-slate-400" />
@@ -282,16 +293,22 @@ const NewInboxScreen = ({
         onClick={onOpen}
         className="w-full flex items-center gap-3 px-5 py-3 hover:bg-slate-50 border-b border-slate-100 text-left"
       >
-        <img src={TEST_MERCHANT.avatar} className="w-12 h-12 rounded-full object-cover" alt={TEST_MERCHANT.name} />
+        {peer.avatar ? (
+          <img src={peer.avatar} className="w-12 h-12 rounded-full object-cover" alt={peer.name} />
+        ) : (
+          <div className="w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 font-semibold">
+            {peer.name?.[0]?.toUpperCase() ?? '·'}
+          </div>
+        )}
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline justify-between gap-2">
-            <span className="font-semibold text-slate-800 truncate">{TEST_MERCHANT.name}</span>
-            <span className="text-[11px] text-slate-400 shrink-0">{TEST_MERCHANT.when}</span>
+            <span className="font-semibold text-slate-800 truncate">{peer.name}</span>
+            <span className="text-[11px] text-slate-400 shrink-0">Now</span>
           </div>
           <div className="flex items-center justify-between gap-2">
-            <span className="text-sm text-slate-500 truncate">{TEST_MERCHANT.lastMsg}</span>
+            <span className="text-sm text-slate-500 truncate">Tap to open our new chat 👋</span>
             <span className={`shrink-0 w-5 h-5 rounded-full ${ACCENT} text-white text-[11px] font-bold flex items-center justify-center`}>
-              {TEST_MERCHANT.unread}
+              1
             </span>
           </div>
         </div>
