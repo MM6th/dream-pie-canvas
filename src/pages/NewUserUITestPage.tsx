@@ -1152,15 +1152,12 @@ const NewUserUITestPage = () => {
           <div className="space-y-2">
             <div className="text-xs uppercase tracking-widest text-slate-500 mb-1">Account</div>
             <select
-              value={
-                screen.name === 'testMerchantProfile' ? 'merchant' : 'you'
-              }
+              value={activeAccount}
               onChange={e => {
-                if (e.target.value === 'merchant') {
-                  setScreen({ name: 'testMerchantProfile' });
-                } else {
-                  setScreen(credentials ? { name: 'newProfile' } : { name: 'inbox' });
-                }
+                const next = e.target.value as 'you' | 'merchant';
+                setActiveAccount(next);
+                // Land on the profile of the newly-active account so the switch is visible.
+                setScreen({ name: 'newProfile' });
               }}
               className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-400 mb-3"
             >
@@ -1169,6 +1166,7 @@ const NewUserUITestPage = () => {
               </option>
               <option value="merchant">Test Merchant</option>
             </select>
+
 
             <div className="text-xs uppercase tracking-widest text-slate-500 mb-2">Screens</div>
             {tabs.map(t => (
