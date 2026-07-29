@@ -1122,6 +1122,26 @@ const NewUserUITestPage = () => {
         <div className="grid lg:grid-cols-[220px_1fr] gap-6">
           {/* screen selector */}
           <div className="space-y-2">
+            <div className="text-xs uppercase tracking-widest text-slate-500 mb-1">Account</div>
+            <select
+              value={
+                screen.name === 'testMerchantProfile' ? 'merchant' : 'you'
+              }
+              onChange={e => {
+                if (e.target.value === 'merchant') {
+                  setScreen({ name: 'testMerchantProfile' });
+                } else {
+                  setScreen(credentials ? { name: 'newProfile' } : { name: 'inbox' });
+                }
+              }}
+              className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-400 mb-3"
+            >
+              <option value="you">
+                You{credentials?.username ? ` (${credentials.username})` : ''}
+              </option>
+              <option value="merchant">Test Merchant</option>
+            </select>
+
             <div className="text-xs uppercase tracking-widest text-slate-500 mb-2">Screens</div>
             {tabs.map(t => (
               <button
@@ -1143,6 +1163,7 @@ const NewUserUITestPage = () => {
               Isolated prototype. Nothing here writes to the backend. Rebuilt from your PDF mockup with dummy data.
             </div>
           </div>
+
 
           {/* phone frame */}
           <div className="flex justify-center">
