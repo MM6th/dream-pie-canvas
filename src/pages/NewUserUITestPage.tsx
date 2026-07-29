@@ -653,14 +653,6 @@ const NewProfileScreen = ({
   setPosts: React.Dispatch<React.SetStateAction<ProfilePost[]>>;
 }) => {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
-  onNav,
-  credentials,
-}: {
-  onNav: (k: NavKey) => void;
-  credentials: { username: string; email: string } | null;
-}) => {
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
-  const [posts, setPosts] = useState<ProfilePost[]>([]);
   const [pending, setPending] = useState<{ url: string; type: 'image' | 'video' } | null>(null);
   const [step, setStep] = useState<'caption' | 'monetize' | null>(null);
   const [caption, setCaption] = useState('');
