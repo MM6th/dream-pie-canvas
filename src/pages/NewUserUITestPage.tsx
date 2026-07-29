@@ -1095,11 +1095,12 @@ const NewUserUITestPage = () => {
         return (
           <NewProfileScreen
             onNav={handleNewNav}
-            credentials={credentials}
-            posts={profilePosts}
-            setPosts={setProfilePosts}
+            profile={currentProfile}
+            posts={currentPosts}
+            setPosts={setCurrentPosts}
           />
         );
+
       case 'newFollowing':
         return <NewFollowingScreen onNav={handleNewNav} />;
       case 'newChat':
