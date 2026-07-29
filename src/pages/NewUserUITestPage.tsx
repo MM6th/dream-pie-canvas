@@ -522,53 +522,239 @@ const TestMerchantProfileScreen = ({
 
 
 /* ---------------- screen: new (empty) profile ---------------- */
+type ProfilePost = {
+  id: string;
+  url: string;
+  type: 'image' | 'video';
+  caption: string;
+  paid: boolean;
+  price?: number;
+};
+
 const NewProfileScreen = ({
   onNav,
   credentials,
 }: {
   onNav: (k: NavKey) => void;
   credentials: { username: string; email: string } | null;
-}) => (
-  <div className="flex flex-col h-full bg-white">
-    <div className="flex items-center justify-between px-5 pt-5 pb-3">
-      <div className="w-10 h-10 rounded-full bg-slate-100 ring-2 ring-sky-400/60 flex items-center justify-center text-slate-500 text-lg font-semibold">
-        {credentials?.username?.[0]?.toUpperCase() ?? '·'}
-      </div>
-      <div className="flex items-baseline gap-1">
-        <span className="text-2xl font-bold tracking-wide text-slate-800">PIE</span>
-        <span className="text-xl text-sky-500">Φ</span>
-      </div>
-      <span className="w-10" />
-    </div>
+}) => {
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [posts, setPosts] = useState<ProfilePost[]>([]);
+  const [pending, setPending] = useState<{ url: string; type: 'image' | 'video' } | null>(null);
+  const [step, setStep] = useState<'caption' | 'monetize' | null>(null);
+  const [caption, setCaption] = useState('');
+  const [paid, setPaid] = useState(false);
+  const [price, setPrice] = useState('');
 
-    <div className="flex items-center justify-around px-6 pt-2 pb-4">
-      <button className={`w-12 h-12 rounded-full ${ACCENT_SOFT} ${ACCENT_TXT} flex items-center justify-center`}><Camera className="w-5 h-5" /></button>
-      <button className={`w-12 h-12 rounded-full ${ACCENT_SOFT} ${ACCENT_TXT} flex items-center justify-center`}><Pencil className="w-5 h-5" /></button>
-      <button className={`w-12 h-12 rounded-full ${ACCENT_SOFT} ${ACCENT_TXT} flex items-center justify-center`}><Cog className="w-5 h-5" /></button>
-    </div>
+  const resetFlow = () => {
+    if (pending) URL.revokeObjectURL(pending.url);
+    setPending(null); setStep(null); setCaption(''); setPaid(false); setPrice('');
+  };
 
-    <div className="px-6 pb-3">
-      <div className="text-base font-semibold text-slate-800">
-        {credentials?.username || '—'}
-      </div>
-      <div className="text-xs text-slate-500">
-        {credentials?.email || '—'}
-      </div>
-    </div>
+  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    const isVideo = f.type.startsWith('video/');
+    setPending({ url: URL.createObjectURL(f), type: isVideo ? 'video' : 'image' });
+    setStep('caption');
+    e.target.value = '';
+  };
 
-    <div className="flex-1 flex flex-col items-center justify-center px-8 text-center">
-      <div className={`w-16 h-16 rounded-full ${ACCENT_SOFT} ${ACCENT_TXT} flex items-center justify-center mb-4`}>
-        <Camera className="w-7 h-7" />
-      </div>
-      <div className="text-base font-semibold text-slate-800 mb-1">No posts yet</div>
-      <div className="text-xs text-slate-500 max-w-[240px]">
-        Photos and videos you share will appear here.
-      </div>
-    </div>
+  const publish = () => {
+    if (!pending) return;
+    const p: ProfilePost = {
+      id: `${Date.now()}`,
+      url: pending.url,
+      type: pending.type,
+      caption: caption.trim(),
+      paid,
+      price: paid ? parseFloat(price) || 0 : undefined,
+    };
+    setPosts(prev => [p, ...prev]);
+    setPending(null); setStep(null); setCaption(''); setPaid(false); setPrice('');
+  };
 
-    <BottomNav active="dashboard" onNav={onNav} variant="profile" />
-  </div>
-);
+  return (
+    <div className="flex flex-col h-full bg-white relative">
+      <div className="flex items-center justify-between px-5 pt-5 pb-3">
+        <div className="w-10 h-10 rounded-full bg-slate-100 ring-2 ring-sky-400/60 flex items-center justify-center text-slate-500 text-lg font-semibold">
+          {credentials?.username?.[0]?.toUpperCase() ?? '·'}
+        </div>
+        <div className="flex items-baseline gap-1">
+          <span className="text-2xl font-bold tracking-wide text-slate-800">PIE</span>
+          <span className="text-xl text-sky-500">Φ</span>
+        </div>
+        <span className="w-10" />
+      </div>
+
+      <div className="flex items-center justify-around px-6 pt-2 pb-4">
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          className={`w-12 h-12 rounded-full ${ACCENT_SOFT} ${ACCENT_TXT} flex items-center justify-center hover:scale-105 transition`}
+          aria-label="Upload photo or video"
+        >
+          <Camera className="w-5 h-5" />
+        </button>
+        <button className={`w-12 h-12 rounded-full ${ACCENT_SOFT} ${ACCENT_TXT} flex items-center justify-center`}><Pencil className="w-5 h-5" /></button>
+        <button className={`w-12 h-12 rounded-full ${ACCENT_SOFT} ${ACCENT_TXT} flex items-center justify-center`}><Cog className="w-5 h-5" /></button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*,video/*"
+          className="hidden"
+          onChange={handleFile}
+        />
+      </div>
+
+      <div className="px-6 pb-3">
+        <div className="text-base font-semibold text-slate-800">
+          {credentials?.username || '—'}
+        </div>
+        <div className="text-xs text-slate-500">
+          {credentials?.email || '—'}
+        </div>
+      </div>
+
+      {posts.length === 0 ? (
+        <div className="flex-1 flex flex-col items-center justify-center px-8 text-center">
+          <div className={`w-16 h-16 rounded-full ${ACCENT_SOFT} ${ACCENT_TXT} flex items-center justify-center mb-4`}>
+            <Camera className="w-7 h-7" />
+          </div>
+          <div className="text-base font-semibold text-slate-800 mb-1">No posts yet</div>
+          <div className="text-xs text-slate-500 max-w-[240px]">
+            Tap the camera to share a photo or video.
+          </div>
+        </div>
+      ) : (
+        <div className="flex-1 overflow-y-auto px-4 pb-4">
+          <div className="grid grid-cols-3 gap-1">
+            {posts.map(p => (
+              <div key={p.id} className="relative aspect-square overflow-hidden rounded-md bg-slate-100">
+                {p.type === 'image' ? (
+                  <img
+                    src={p.url}
+                    alt=""
+                    className={`w-full h-full object-cover ${p.paid ? 'blur-lg scale-110' : ''}`}
+                  />
+                ) : (
+                  <video
+                    src={p.url}
+                    className={`w-full h-full object-cover ${p.paid ? 'blur-lg scale-110' : ''}`}
+                    muted
+                  />
+                )}
+                {p.paid && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/25 text-white">
+                    <DollarSign className="w-5 h-5" />
+                    <span className="text-xs font-semibold">${p.price?.toFixed(2)}</span>
+                  </div>
+                )}
+                {p.type === 'video' && !p.paid && (
+                  <div className="absolute top-1 right-1 bg-black/50 rounded-full p-1">
+                    <Play className="w-3 h-3 text-white" />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {step && pending && (
+        <div className="absolute inset-0 z-30 flex items-end sm:items-center justify-center bg-black/50" onClick={resetFlow}>
+          <div className="bg-white w-full sm:max-w-sm sm:rounded-2xl rounded-t-2xl p-5 max-h-[92%] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <button onClick={resetFlow} className="text-sm text-slate-500">Cancel</button>
+              <div className="text-sm font-semibold text-slate-800">
+                {step === 'caption' ? 'New Post' : 'Post Options'}
+              </div>
+              {step === 'caption' ? (
+                <button onClick={() => setStep('monetize')} className={`text-sm font-semibold ${ACCENT_TXT}`}>Next</button>
+              ) : (
+                <button onClick={() => setStep('caption')} className="text-sm text-slate-500">Back</button>
+              )}
+            </div>
+
+            <div className="rounded-xl overflow-hidden bg-slate-100 mb-4 flex items-center justify-center">
+              {pending.type === 'image' ? (
+                <img src={pending.url} className="w-full object-contain max-h-64" alt="preview" />
+              ) : (
+                <video src={pending.url} className="w-full max-h-64" controls />
+              )}
+            </div>
+
+            {step === 'caption' && (
+              <div>
+                <label className="text-xs font-medium text-slate-600">Current thought (optional)</label>
+                <textarea
+                  value={caption}
+                  onChange={e => setCaption(e.target.value)}
+                  rows={3}
+                  placeholder="Add a caption..."
+                  className="mt-1 w-full rounded-lg border border-slate-200 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
+                />
+              </div>
+            )}
+
+            {step === 'monetize' && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => setPaid(false)}
+                    className={`rounded-xl border p-3 text-sm font-semibold transition ${
+                      !paid ? 'border-sky-400 bg-sky-50 text-sky-600' : 'border-slate-200 text-slate-600'
+                    }`}
+                  >
+                    Free
+                  </button>
+                  <button
+                    onClick={() => setPaid(true)}
+                    className={`rounded-xl border p-3 text-sm font-semibold transition ${
+                      paid ? 'border-sky-400 bg-sky-50 text-sky-600' : 'border-slate-200 text-slate-600'
+                    }`}
+                  >
+                    Paid
+                  </button>
+                </div>
+
+                {paid && (
+                  <div>
+                    <label className="text-xs font-medium text-slate-600">Price (USD)</label>
+                    <div className="mt-1 flex items-center rounded-lg border border-slate-200 px-3 focus-within:ring-2 focus-within:ring-sky-400">
+                      <DollarSign className="w-4 h-4 text-slate-400" />
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={price}
+                        onChange={e => setPrice(e.target.value)}
+                        placeholder="4.99"
+                        className="flex-1 p-3 text-sm bg-transparent focus:outline-none"
+                      />
+                    </div>
+                    <p className="text-[11px] text-slate-500 mt-1">
+                      Paid posts appear blurred on your profile until purchased.
+                    </p>
+                  </div>
+                )}
+
+                <button
+                  onClick={publish}
+                  disabled={paid && (!price || parseFloat(price) <= 0)}
+                  className={`w-full rounded-xl ${ACCENT} text-white py-3 text-sm font-semibold disabled:opacity-50`}
+                >
+                  Post
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      <BottomNav active="dashboard" onNav={onNav} variant="profile" />
+    </div>
+  );
+};
 
 /* ---------------- screen: new (empty) following ---------------- */
 const NewFollowingScreen = ({ onNav }: { onNav: (k: NavKey) => void }) => (
