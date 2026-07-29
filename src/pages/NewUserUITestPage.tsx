@@ -1118,12 +1118,14 @@ type Screen =
   | { name: 'newProfile' }
   | { name: 'newFollowing' }
   | { name: 'newChat' }
-  | { name: 'testMerchantProfile' };
+  | { name: 'testMerchantProfile' }
+  | { name: 'supporterAsMerchant' };
 
 const NewUserUITestPage = () => {
   const navigate = useNavigate();
   const [screen, setScreen] = useState<Screen>({ name: 'inbox' });
   const [credentials, setCredentials] = useState<{ username: string; email: string } | null>(null);
+  const [profilePosts, setProfilePosts] = useState<ProfilePost[]>([]);
 
   const handleNav = (k: NavKey) => {
     if (k === 'messages') setScreen({ name: 'inbox' });
