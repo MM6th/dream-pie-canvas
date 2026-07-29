@@ -542,15 +542,16 @@ const TestMerchantProfileScreen = ({
 
 const NewProfileScreen = ({
   onNav,
-  credentials,
+  profile,
   posts,
   setPosts,
 }: {
   onNav: (k: NavKey) => void;
-  credentials: { username: string; email: string } | null;
+  profile: { username: string; email: string; avatar?: string } | null;
   posts: ProfilePost[];
   setPosts: React.Dispatch<React.SetStateAction<ProfilePost[]>>;
 }) => {
+
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [pending, setPending] = useState<{ url: string; type: 'image' | 'video' } | null>(null);
   const [step, setStep] = useState<'caption' | 'monetize' | null>(null);
@@ -589,15 +590,20 @@ const NewProfileScreen = ({
   return (
     <div className="flex flex-col h-full bg-white relative">
       <div className="flex items-center justify-between px-5 pt-5 pb-3">
-        <div className="w-10 h-10 rounded-full bg-slate-100 ring-2 ring-sky-400/60 flex items-center justify-center text-slate-500 text-lg font-semibold">
-          {credentials?.username?.[0]?.toUpperCase() ?? '·'}
-        </div>
+        {profile?.avatar ? (
+          <img src={profile.avatar} alt={profile.username} className="w-10 h-10 rounded-full ring-2 ring-sky-400/60 object-cover" />
+        ) : (
+          <div className="w-10 h-10 rounded-full bg-slate-100 ring-2 ring-sky-400/60 flex items-center justify-center text-slate-500 text-lg font-semibold">
+            {profile?.username?.[0]?.toUpperCase() ?? '·'}
+          </div>
+        )}
         <div className="flex items-baseline gap-1">
           <span className="text-2xl font-bold tracking-wide text-slate-800">PIE</span>
           <span className="text-xl text-sky-500">Φ</span>
         </div>
         <span className="w-10" />
       </div>
+
 
       <div className="flex items-center justify-around px-6 pt-2 pb-4">
         <button
@@ -620,12 +626,13 @@ const NewProfileScreen = ({
 
       <div className="px-6 pb-3">
         <div className="text-base font-semibold text-slate-800">
-          {credentials?.username || '—'}
+          {profile?.username || '—'}
         </div>
         <div className="text-xs text-slate-500">
-          {credentials?.email || '—'}
+          {profile?.email || '—'}
         </div>
       </div>
+
 
       {posts.length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center px-8 text-center">
@@ -1019,7 +1026,26 @@ const NewUserUITestPage = () => {
   const navigate = useNavigate();
   const [screen, setScreen] = useState<Screen>({ name: 'inbox' });
   const [credentials, setCredentials] = useState<{ username: string; email: string } | null>(null);
-  const [profilePosts, setProfilePosts] = useState<ProfilePost[]>([]);
+  const [activeAccount, setActiveAccount] = useState<'you' | 'merchant'>('you');
+  const [postsByAccount, setPostsByAccount] = useState<Record<'you' | 'merchant', ProfilePost[]>>({
+    you: [],
+    merchant: [],
+  });
+
+  const currentProfile =
+    activeAccount === 'merchant'
+      ? { username: TEST_MERCHANT.name, email: `${TEST_MERCHANT.name.toLowerCase().replace(/\s+/g, '')}@pie.app`, avatar: TEST_MERCHANT.avatar }
+      : credentials
+        ? { username: credentials.username, email: credentials.email }
+        : null;
+
+  const currentPosts = postsByAccount[activeAccount];
+  const setCurrentPosts: React.Dispatch<React.SetStateAction<ProfilePost[]>> = (updater) => {
+    setPostsByAccount(prev => ({
+      ...prev,
+      [activeAccount]: typeof updater === 'function' ? (updater as (p: ProfilePost[]) => ProfilePost[])(prev[activeAccount]) : updater,
+    }));
+  };
 
   const handleNav = (k: NavKey) => {
     if (k === 'messages') setScreen({ name: 'inbox' });
@@ -1032,6 +1058,7 @@ const NewUserUITestPage = () => {
     else if (k === 'dashboard') setScreen({ name: 'newProfile' });
     else if (k === 'following') setScreen({ name: 'newFollowing' });
   };
+
 
 
 
@@ -1068,11 +1095,12 @@ const NewUserUITestPage = () => {
         return (
           <NewProfileScreen
             onNav={handleNewNav}
-            credentials={credentials}
-            posts={profilePosts}
-            setPosts={setProfilePosts}
+            profile={currentProfile}
+            posts={currentPosts}
+            setPosts={setCurrentPosts}
           />
         );
+
       case 'newFollowing':
         return <NewFollowingScreen onNav={handleNewNav} />;
       case 'newChat':
@@ -1124,15 +1152,12 @@ const NewUserUITestPage = () => {
           <div className="space-y-2">
             <div className="text-xs uppercase tracking-widest text-slate-500 mb-1">Account</div>
             <select
-              value={
-                screen.name === 'testMerchantProfile' ? 'merchant' : 'you'
-              }
+              value={activeAccount}
               onChange={e => {
-                if (e.target.value === 'merchant') {
-                  setScreen({ name: 'testMerchantProfile' });
-                } else {
-                  setScreen(credentials ? { name: 'newProfile' } : { name: 'inbox' });
-                }
+                const next = e.target.value as 'you' | 'merchant';
+                setActiveAccount(next);
+                // Land on the profile of the newly-active account so the switch is visible.
+                setScreen({ name: 'newProfile' });
               }}
               className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-400 mb-3"
             >
@@ -1141,6 +1166,7 @@ const NewUserUITestPage = () => {
               </option>
               <option value="merchant">Test Merchant</option>
             </select>
+
 
             <div className="text-xs uppercase tracking-widest text-slate-500 mb-2">Screens</div>
             {tabs.map(t => (
