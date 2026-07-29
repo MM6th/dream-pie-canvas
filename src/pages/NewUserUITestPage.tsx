@@ -75,12 +75,24 @@ const BUBBLE = 'bg-sky-400 text-white';
 const PieHeader = ({
   following,
   rightSlot,
+  avatar,
+  initial,
 }: {
   following: number;
   rightSlot?: React.ReactNode;
+  avatar?: string;
+  initial?: string;
 }) => (
   <div className="flex items-center justify-between px-5 pt-5 pb-3">
-    <img src={CURRENT_USER.avatar} className="w-10 h-10 rounded-full ring-2 ring-sky-400/60 object-cover" alt="me" />
+    {avatar ? (
+      <img src={avatar} className="w-10 h-10 rounded-full ring-2 ring-sky-400/60 object-cover" alt="me" />
+    ) : initial ? (
+      <div className="w-10 h-10 rounded-full ring-2 ring-sky-400/60 bg-slate-100 flex items-center justify-center text-slate-600 font-semibold">
+        {initial}
+      </div>
+    ) : (
+      <img src={CURRENT_USER.avatar} className="w-10 h-10 rounded-full ring-2 ring-sky-400/60 object-cover" alt="me" />
+    )}
     <div className="flex items-baseline gap-1">
       <span className="text-2xl font-bold tracking-wide text-slate-800">PIE</span>
       <span className="text-xl text-sky-500">Φ</span>
@@ -262,15 +274,26 @@ const TEST_MERCHANT = {
   unread: 1,
 };
 
+type ChatPerson = { name: string; avatar?: string };
+
 const NewInboxScreen = ({
   onNav,
   onOpen,
+  self,
+  peer,
 }: {
   onNav: (k: NavKey) => void;
   onOpen: () => void;
+  self: ChatPerson;
+  peer: ChatPerson;
 }) => (
   <div className="flex flex-col h-full bg-white">
-    <PieHeader following={0} rightSlot={<span className="w-10" />} />
+    <PieHeader
+      following={0}
+      rightSlot={<span className="w-10" />}
+      avatar={self.avatar}
+      initial={self.name?.[0]?.toUpperCase()}
+    />
     <div className="px-5 pb-3">
       <div className="flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2.5">
         <Search className="w-4 h-4 text-slate-400" />
@@ -282,16 +305,22 @@ const NewInboxScreen = ({
         onClick={onOpen}
         className="w-full flex items-center gap-3 px-5 py-3 hover:bg-slate-50 border-b border-slate-100 text-left"
       >
-        <img src={TEST_MERCHANT.avatar} className="w-12 h-12 rounded-full object-cover" alt={TEST_MERCHANT.name} />
+        {peer.avatar ? (
+          <img src={peer.avatar} className="w-12 h-12 rounded-full object-cover" alt={peer.name} />
+        ) : (
+          <div className="w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 font-semibold">
+            {peer.name?.[0]?.toUpperCase() ?? '·'}
+          </div>
+        )}
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline justify-between gap-2">
-            <span className="font-semibold text-slate-800 truncate">{TEST_MERCHANT.name}</span>
-            <span className="text-[11px] text-slate-400 shrink-0">{TEST_MERCHANT.when}</span>
+            <span className="font-semibold text-slate-800 truncate">{peer.name}</span>
+            <span className="text-[11px] text-slate-400 shrink-0">Now</span>
           </div>
           <div className="flex items-center justify-between gap-2">
-            <span className="text-sm text-slate-500 truncate">{TEST_MERCHANT.lastMsg}</span>
+            <span className="text-sm text-slate-500 truncate">Tap to open our new chat 👋</span>
             <span className={`shrink-0 w-5 h-5 rounded-full ${ACCENT} text-white text-[11px] font-bold flex items-center justify-center`}>
-              {TEST_MERCHANT.unread}
+              1
             </span>
           </div>
         </div>
@@ -305,11 +334,13 @@ const NewInboxScreen = ({
 const NewChatScreen = ({
   onBack,
   onOpenMerchant,
-  credentials,
+  self,
+  peer,
 }: {
   onBack: () => void;
   onOpenMerchant: () => void;
-  credentials: { username: string; email: string } | null;
+  self: ChatPerson;
+  peer: ChatPerson;
 }) => {
   const [reactions, setReactions] = useState<Record<string, number>>({});
   const [bursts, setBursts] = useState<{ id: number; label: string; paid: boolean }[]>([]);
@@ -328,12 +359,16 @@ const NewChatScreen = ({
       {/* Header — tester's inbox */}
       <div className="flex items-center gap-3 px-3 py-3 bg-white border-b border-slate-200">
         <button onClick={onBack} className="p-1 -ml-1 text-slate-700"><ChevronLeft className="w-6 h-6" /></button>
-        <div className="w-10 h-10 rounded-full bg-slate-100 ring-2 ring-sky-400/60 flex items-center justify-center text-slate-500 text-sm font-semibold">
-          {credentials?.username?.[0]?.toUpperCase() ?? '·'}
-        </div>
+        {self.avatar ? (
+          <img src={self.avatar} className="w-10 h-10 rounded-full object-cover ring-2 ring-sky-400/60" alt={self.name} />
+        ) : (
+          <div className="w-10 h-10 rounded-full bg-slate-100 ring-2 ring-sky-400/60 flex items-center justify-center text-slate-500 text-sm font-semibold">
+            {self.name?.[0]?.toUpperCase() ?? '·'}
+          </div>
+        )}
         <div className="flex-1 min-w-0">
           <div className="font-semibold text-slate-800 truncate">
-            {credentials?.username || 'You'}
+            {self.name || 'You'}
           </div>
           <div className="text-[11px] text-slate-500 truncate">Inbox</div>
         </div>
@@ -344,22 +379,28 @@ const NewChatScreen = ({
         )}
       </div>
 
-      {/* Conversation body with dummy merchant message */}
+      {/* Conversation body with dummy peer message */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 relative">
         <div className="flex items-end gap-2">
           <button onClick={onOpenMerchant} className="shrink-0">
-            <img
-              src={TEST_MERCHANT.avatar}
-              className="w-8 h-8 rounded-full object-cover ring-1 ring-slate-200"
-              alt={TEST_MERCHANT.name}
-            />
+            {peer.avatar ? (
+              <img
+                src={peer.avatar}
+                className="w-8 h-8 rounded-full object-cover ring-1 ring-slate-200"
+                alt={peer.name}
+              />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-[11px] font-semibold text-slate-600 ring-1 ring-slate-200">
+                {peer.name?.[0]?.toUpperCase() ?? '·'}
+              </div>
+            )}
           </button>
           <div className="max-w-[75%]">
             <button
               onClick={onOpenMerchant}
               className="text-[11px] text-slate-500 mb-1 hover:text-sky-500 transition"
             >
-              {TEST_MERCHANT.name}
+              {peer.name}
             </button>
             <button
               onClick={onOpenMerchant}
@@ -1089,8 +1130,13 @@ const NewUserUITestPage = () => {
             }}
           />
         );
-      case 'newInbox':
-        return <NewInboxScreen onNav={handleNewNav} onOpen={() => setScreen({ name: 'newChat' })} />;
+      case 'newInbox': {
+        const you: ChatPerson = { name: credentials?.username ?? 'You', avatar: undefined };
+        const merchant: ChatPerson = { name: TEST_MERCHANT.name, avatar: TEST_MERCHANT.avatar };
+        const self = activeAccount === 'merchant' ? merchant : you;
+        const peer = activeAccount === 'merchant' ? you : merchant;
+        return <NewInboxScreen onNav={handleNewNav} onOpen={() => setScreen({ name: 'newChat' })} self={self} peer={peer} />;
+      }
       case 'newProfile':
         return (
           <NewProfileScreen
@@ -1103,14 +1149,20 @@ const NewUserUITestPage = () => {
 
       case 'newFollowing':
         return <NewFollowingScreen onNav={handleNewNav} />;
-      case 'newChat':
+      case 'newChat': {
+        const you: ChatPerson = { name: credentials?.username ?? 'You', avatar: undefined };
+        const merchant: ChatPerson = { name: TEST_MERCHANT.name, avatar: TEST_MERCHANT.avatar };
+        const self = activeAccount === 'merchant' ? merchant : you;
+        const peer = activeAccount === 'merchant' ? you : merchant;
         return (
           <NewChatScreen
             onBack={() => setScreen({ name: 'newInbox' })}
             onOpenMerchant={() => setScreen({ name: 'testMerchantProfile' })}
-            credentials={credentials}
+            self={self}
+            peer={peer}
           />
         );
+      }
       case 'testMerchantProfile':
         return (
           <TestMerchantProfileScreen
