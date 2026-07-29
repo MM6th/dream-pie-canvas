@@ -359,12 +359,16 @@ const NewChatScreen = ({
       {/* Header — tester's inbox */}
       <div className="flex items-center gap-3 px-3 py-3 bg-white border-b border-slate-200">
         <button onClick={onBack} className="p-1 -ml-1 text-slate-700"><ChevronLeft className="w-6 h-6" /></button>
-        <div className="w-10 h-10 rounded-full bg-slate-100 ring-2 ring-sky-400/60 flex items-center justify-center text-slate-500 text-sm font-semibold">
-          {credentials?.username?.[0]?.toUpperCase() ?? '·'}
-        </div>
+        {self.avatar ? (
+          <img src={self.avatar} className="w-10 h-10 rounded-full object-cover ring-2 ring-sky-400/60" alt={self.name} />
+        ) : (
+          <div className="w-10 h-10 rounded-full bg-slate-100 ring-2 ring-sky-400/60 flex items-center justify-center text-slate-500 text-sm font-semibold">
+            {self.name?.[0]?.toUpperCase() ?? '·'}
+          </div>
+        )}
         <div className="flex-1 min-w-0">
           <div className="font-semibold text-slate-800 truncate">
-            {credentials?.username || 'You'}
+            {self.name || 'You'}
           </div>
           <div className="text-[11px] text-slate-500 truncate">Inbox</div>
         </div>
@@ -375,22 +379,28 @@ const NewChatScreen = ({
         )}
       </div>
 
-      {/* Conversation body with dummy merchant message */}
+      {/* Conversation body with dummy peer message */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 relative">
         <div className="flex items-end gap-2">
           <button onClick={onOpenMerchant} className="shrink-0">
-            <img
-              src={TEST_MERCHANT.avatar}
-              className="w-8 h-8 rounded-full object-cover ring-1 ring-slate-200"
-              alt={TEST_MERCHANT.name}
-            />
+            {peer.avatar ? (
+              <img
+                src={peer.avatar}
+                className="w-8 h-8 rounded-full object-cover ring-1 ring-slate-200"
+                alt={peer.name}
+              />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-[11px] font-semibold text-slate-600 ring-1 ring-slate-200">
+                {peer.name?.[0]?.toUpperCase() ?? '·'}
+              </div>
+            )}
           </button>
           <div className="max-w-[75%]">
             <button
               onClick={onOpenMerchant}
               className="text-[11px] text-slate-500 mb-1 hover:text-sky-500 transition"
             >
-              {TEST_MERCHANT.name}
+              {peer.name}
             </button>
             <button
               onClick={onOpenMerchant}
