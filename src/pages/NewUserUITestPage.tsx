@@ -626,12 +626,13 @@ const NewProfileScreen = ({
 
       <div className="px-6 pb-3">
         <div className="text-base font-semibold text-slate-800">
-          {credentials?.username || '—'}
+          {profile?.username || '—'}
         </div>
         <div className="text-xs text-slate-500">
-          {credentials?.email || '—'}
+          {profile?.email || '—'}
         </div>
       </div>
+
 
       {posts.length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center px-8 text-center">
