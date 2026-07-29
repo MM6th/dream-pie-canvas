@@ -1263,15 +1263,6 @@ const NewUserUITestPage = () => {
           <TestMerchantProfileScreen
             onBack={() => setScreen({ name: 'newChat' })}
             onNav={handleNewNav}
-            onViewSupporter={() => setScreen({ name: 'supporterAsMerchant' })}
-            supporterUsername={credentials?.username ?? null}
-          />
-        );
-      case 'supporterAsMerchant':
-        return (
-          <SupporterProfileAsMerchantScreen
-            onBack={() => setScreen({ name: 'testMerchantProfile' })}
-            posts={profilePosts}
             supporterUsername={credentials?.username ?? null}
           />
         );
@@ -1289,8 +1280,8 @@ const NewUserUITestPage = () => {
     { key: 'newFollowing', label: 'New Following' },
     { key: 'newChat', label: 'New Chat' },
     { key: 'testMerchantProfile', label: 'Merchant Profile' },
-    { key: 'supporterAsMerchant', label: 'Supporter (as Merchant)' },
   ];
+
 
 
   return (
