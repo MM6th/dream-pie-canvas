@@ -462,14 +462,13 @@ const NewChatScreen = ({
 const TestMerchantProfileScreen = ({
   onBack,
   onNav,
-  onViewSupporter,
   supporterUsername,
 }: {
   onBack: () => void;
   onNav: (k: NavKey) => void;
-  onViewSupporter: () => void;
   supporterUsername: string | null;
 }) => (
+
   <div className="flex flex-col h-full bg-white">
     <div className="flex items-center gap-3 px-3 py-3 border-b border-slate-200">
       <button onClick={onBack} className="p-1 -ml-1 text-slate-700"><ChevronLeft className="w-6 h-6" /></button>
