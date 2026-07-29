@@ -1159,9 +1159,11 @@ const NewUserUITestPage = () => {
           <NewChatScreen
             onBack={() => setScreen({ name: 'newInbox' })}
             onOpenMerchant={() =>
-              setScreen({
-                name: activeAccount === 'merchant' ? 'youProfileView' : 'testMerchantProfile',
-              })
+              setScreen(
+                activeAccount === 'merchant'
+                  ? { name: 'youProfileView' }
+                  : { name: 'testMerchantProfile' }
+              )
             }
             self={self}
             peer={peer}
