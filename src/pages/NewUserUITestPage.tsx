@@ -7,7 +7,6 @@ import {
   ArrowLeft, Search, MessageSquare, Settings, LayoutDashboard,
   Users, Camera, Pencil, Cog, Video, Radio, Send, ChevronLeft,
   Plus, Play, Megaphone, Heart, ThumbsUp, DollarSign, UserMinus, Star, X,
-  Globe,
 } from 'lucide-react';
 
 
@@ -64,13 +63,6 @@ type ProfilePost = {
   caption: string;
   paid: boolean;
   price?: number;
-};
-
-type ProfileDraft = {
-  username: string;
-  email: string;
-  bio?: string;
-  website?: string;
 };
 
 
@@ -453,6 +445,7 @@ const NewChatScreen = ({
         </div>
       </div>
 
+      {/* Emoji rails */}
       <div className="px-3 pt-2 pb-1 bg-white border-t border-slate-200 space-y-2">
         <div className="flex items-center gap-2">
           <span className="text-[10px] text-slate-400 w-8">Free</span>
@@ -582,108 +575,8 @@ const TestMerchantProfileScreen = ({
 );
 
 
-/* ---------------- screen: edit profile ---------------- */
-const EditProfileScreen = ({
-  initial,
-  onBack,
-  onSave,
-}: {
-  initial: ProfileDraft | null;
-  onBack: () => void;
-  onSave: (draft: ProfileDraft) => void;
-}) => {
-  const [username, setUsername] = useState(initial?.username ?? '');
-  const [email, setEmail] = useState(initial?.email ?? '');
-  const [bio, setBio] = useState(initial?.bio ?? '');
-  const [website, setWebsite] = useState(initial?.website ?? '');
-  const canSave = username.trim().length > 0 && email.trim().length > 0;
 
-  return (
-    <div className="flex flex-col h-full bg-white">
-      <div className="flex items-center justify-between px-3 py-3 border-b border-slate-200">
-        <button onClick={onBack} className="p-1 -ml-1 text-slate-700"><ChevronLeft className="w-6 h-6" /></button>
-        <div className="font-semibold text-slate-800">Edit Profile</div>
-        <button
-          disabled={!canSave}
-          onClick={() =>
-            onSave({
-              username: username.trim(),
-              email: email.trim(),
-              bio: bio.trim() || undefined,
-              website: website.trim() || undefined,
-            })
-          }
-          className={`text-sm font-semibold ${canSave ? ACCENT_TXT : 'text-slate-400'}`}
-        >
-          Save
-        </button>
-      </div>
 
-      <div className="flex-1 overflow-y-auto px-6 py-6 space-y-5">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-20 h-20 rounded-full bg-slate-100 ring-2 ring-sky-400/60 flex items-center justify-center text-slate-500 text-2xl font-semibold">
-            {username?.[0]?.toUpperCase() ?? '·'}
-          </div>
-          <button
-            onClick={() => toast('Avatar upload will be enabled when Supabase is active.')}
-            className="text-sm font-semibold text-sky-500"
-          >
-            Change avatar
-          </button>
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Username</label>
-          <input
-            value={username}
-            onChange={e => setUsername(e.target.value)}
-            placeholder="your_username"
-            className="w-full rounded-xl bg-slate-100 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-400 text-slate-800 placeholder:text-slate-400"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Email Address</label>
-          <input
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            type="email"
-            placeholder="you@example.com"
-            className="w-full rounded-xl bg-slate-100 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-400 text-slate-800 placeholder:text-slate-400"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Bio</label>
-          <textarea
-            value={bio}
-            onChange={e => setBio(e.target.value)}
-            rows={4}
-            placeholder="Tell people about yourself..."
-            className="w-full rounded-xl bg-slate-100 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-400 text-slate-800 placeholder:text-slate-400 resize-none"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Website</label>
-          <div className="flex items-center rounded-xl bg-slate-100 px-3 focus-within:ring-2 focus-within:ring-sky-400">
-            <Globe className="w-4 h-4 text-slate-400" />
-            <input
-              value={website}
-              onChange={e => setWebsite(e.target.value)}
-              placeholder="https://your-site.com"
-              className="flex-1 bg-transparent px-3 py-3 text-sm outline-none text-slate-800 placeholder:text-slate-400"
-            />
-          </div>
-        </div>
-
-        <div className="text-[10px] text-slate-400 text-center pt-2">
-          Saving is wired up and will persist once Supabase is reactivated.
-        </div>
-      </div>
-    </div>
-  );
-};
 
 
 /* ---------------- screen: new (empty) profile ---------------- */
@@ -695,13 +588,11 @@ const NewProfileScreen = ({
   profile,
   posts,
   setPosts,
-  onEditProfile,
 }: {
   onNav: (k: NavKey) => void;
-  profile: (ProfileDraft & { avatar?: string }) | null;
+  profile: { username: string; email: string; avatar?: string } | null;
   posts: ProfilePost[];
   setPosts: React.Dispatch<React.SetStateAction<ProfilePost[]>>;
-  onEditProfile: () => void;
 }) => {
 
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -769,13 +660,7 @@ const NewProfileScreen = ({
         >
           <Camera className="w-5 h-5" />
         </button>
-        <button
-          onClick={onEditProfile}
-          className={`w-12 h-12 rounded-full ${ACCENT_SOFT} ${ACCENT_TXT} flex items-center justify-center hover:scale-105 transition`}
-          aria-label="Edit profile information"
-        >
-          <Pencil className="w-5 h-5" />
-        </button>
+        <button className={`w-12 h-12 rounded-full ${ACCENT_SOFT} ${ACCENT_TXT} flex items-center justify-center`}><Pencil className="w-5 h-5" /></button>
         <button className={`w-12 h-12 rounded-full ${ACCENT_SOFT} ${ACCENT_TXT} flex items-center justify-center`}><Cog className="w-5 h-5" /></button>
         <input
           ref={fileInputRef}
@@ -793,21 +678,6 @@ const NewProfileScreen = ({
         <div className="text-xs text-slate-500">
           {profile?.email || '—'}
         </div>
-        {profile?.bio && (
-          <div className="mt-2 text-xs text-slate-600 leading-relaxed">
-            {profile.bio}
-          </div>
-        )}
-        {profile?.website && (
-          <a
-            href={profile.website}
-            target="_blank"
-            rel="noreferrer"
-            className="mt-1 inline-block text-xs text-sky-500 hover:underline truncate max-w-full"
-          >
-            {profile.website}
-          </a>
-        )}
       </div>
 
 
@@ -1201,8 +1071,7 @@ type Screen =
   | { name: 'newFollowing' }
   | { name: 'newChat' }
   | { name: 'testMerchantProfile' }
-  | { name: 'youProfileView' }
-  | { name: 'editProfile' };
+  | { name: 'youProfileView' };
 
 
 const SANDBOX_ID_KEY = 'pie-sandbox-id-v1';
@@ -1224,7 +1093,6 @@ type SandboxState = {
   credentials: { username: string; email: string } | null;
   activeAccount: 'you' | 'merchant';
   postsByAccount: Record<'you' | 'merchant', ProfilePost[]>;
-  profilesByAccount: Record<'you' | 'merchant', ProfileDraft | null>;
 };
 
 const NewUserUITestPage = () => {
@@ -1234,7 +1102,6 @@ const NewUserUITestPage = () => {
   const [credentials, setCredentials] = useState<SandboxState['credentials']>(null);
   const [activeAccount, setActiveAccount] = useState<'you' | 'merchant'>('you');
   const [postsByAccount, setPostsByAccount] = useState<Record<'you' | 'merchant', ProfilePost[]>>({ you: [], merchant: [] });
-  const [profilesByAccount, setProfilesByAccount] = useState<Record<'you' | 'merchant', ProfileDraft | null>>({ you: null, merchant: null });
   const [loaded, setLoaded] = useState(false);
 
   // Load state from Supabase on mount
@@ -1252,11 +1119,6 @@ const NewUserUITestPage = () => {
         if (s.credentials) setCredentials(s.credentials);
         if (s.activeAccount) setActiveAccount(s.activeAccount);
         if (s.postsByAccount) setPostsByAccount(s.postsByAccount);
-        if (s.profilesByAccount) {
-          setProfilesByAccount(s.profilesByAccount);
-        } else if (s.credentials) {
-          setProfilesByAccount({ you: s.credentials, merchant: null });
-        }
       }
       setLoaded(true);
     })();
@@ -1266,27 +1128,22 @@ const NewUserUITestPage = () => {
   // Persist to Supabase whenever state changes (after initial load)
   useEffect(() => {
     if (!loaded) return;
-    const payload: SandboxState = { credentials, activeAccount, postsByAccount, profilesByAccount };
+    const payload: SandboxState = { credentials, activeAccount, postsByAccount };
     supabase
       .from('sandbox_state')
       .upsert({ sandbox_id: sandboxIdRef.current, state: payload as any, updated_at: new Date().toISOString() })
       .then(({ error }) => {
         if (error) console.warn('sandbox_state save failed', error);
       });
-  }, [credentials, activeAccount, postsByAccount, profilesByAccount, loaded]);
+  }, [credentials, activeAccount, postsByAccount, loaded]);
 
 
-  const baseProfile: ProfileDraft | null =
+  const currentProfile =
     activeAccount === 'merchant'
-      ? { username: TEST_MERCHANT.name, email: `${TEST_MERCHANT.name.toLowerCase().replace(/\s+/g, '')}@pie.app` }
+      ? { username: TEST_MERCHANT.name, email: `${TEST_MERCHANT.name.toLowerCase().replace(/\s+/g, '')}@pie.app`, avatar: TEST_MERCHANT.avatar }
       : credentials
         ? { username: credentials.username, email: credentials.email }
         : null;
-
-  const currentProfile: (ProfileDraft & { avatar?: string }) | null =
-    activeAccount === 'merchant'
-      ? (profilesByAccount.merchant ?? { ...baseProfile!, avatar: TEST_MERCHANT.avatar })
-      : (profilesByAccount.you ?? baseProfile);
 
   const currentPosts = postsByAccount[activeAccount];
   const setCurrentPosts: React.Dispatch<React.SetStateAction<ProfilePost[]>> = (updater) => {
@@ -1334,7 +1191,6 @@ const NewUserUITestPage = () => {
             onSubmit={creds => {
               // Session-only — never persisted.
               setCredentials(creds);
-              setProfilesByAccount(prev => ({ ...prev, you: creds }));
               setScreen({ name: 'newInbox' });
             }}
           />
@@ -1353,7 +1209,6 @@ const NewUserUITestPage = () => {
             profile={currentProfile}
             posts={currentPosts}
             setPosts={setCurrentPosts}
-            onEditProfile={() => setScreen({ name: 'editProfile' })}
           />
         );
 
@@ -1406,25 +1261,9 @@ const NewUserUITestPage = () => {
                 you: typeof updater === 'function' ? (updater as (p: ProfilePost[]) => ProfilePost[])(prev.you) : updater,
               }))
             }
-            onEditProfile={() => {}}
           />
         );
       }
-      case 'editProfile':
-        return (
-          <EditProfileScreen
-            initial={currentProfile}
-            onBack={() => setScreen({ name: 'newProfile' })}
-            onSave={draft => {
-              if (activeAccount === 'you') {
-                setCredentials({ username: draft.username, email: draft.email });
-              }
-              setProfilesByAccount(prev => ({ ...prev, [activeAccount]: draft }));
-              toast.success('Profile saved (testing)');
-              setScreen({ name: 'newProfile' });
-            }}
-          />
-        );
     }
   };
 
@@ -1439,7 +1278,6 @@ const NewUserUITestPage = () => {
     { key: 'newFollowing', label: 'New Following' },
     { key: 'newChat', label: 'New Chat' },
     { key: 'testMerchantProfile', label: 'Merchant Profile' },
-    { key: 'editProfile', label: 'Edit Profile' },
   ];
 
 
