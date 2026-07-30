@@ -594,12 +594,14 @@ const TestMerchantProfileScreen = ({
 
 const NewProfileScreen = ({
   onNav,
+  onEdit,
   profile,
   posts,
   setPosts,
 }: {
   onNav: (k: NavKey) => void;
-  profile: { username: string; email: string; avatar?: string } | null;
+  onEdit: () => void;
+  profile: ProfileInfo | null;
   posts: ProfilePost[];
   setPosts: React.Dispatch<React.SetStateAction<ProfilePost[]>>;
 }) => {
