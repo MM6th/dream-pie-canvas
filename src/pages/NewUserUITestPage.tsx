@@ -671,7 +671,13 @@ const NewProfileScreen = ({
         >
           <Camera className="w-5 h-5" />
         </button>
-        <button className={`w-12 h-12 rounded-full ${ACCENT_SOFT} ${ACCENT_TXT} flex items-center justify-center`}><Pencil className="w-5 h-5" /></button>
+        <button
+          onClick={onEdit}
+          className={`w-12 h-12 rounded-full ${ACCENT_SOFT} ${ACCENT_TXT} flex items-center justify-center hover:scale-105 active:scale-95 transition`}
+          aria-label="Edit profile"
+        >
+          <Pencil className="w-5 h-5" />
+        </button>
         <button className={`w-12 h-12 rounded-full ${ACCENT_SOFT} ${ACCENT_TXT} flex items-center justify-center`}><Cog className="w-5 h-5" /></button>
         <input
           ref={fileInputRef}
