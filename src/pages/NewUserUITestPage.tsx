@@ -1709,7 +1709,7 @@ const NewUserUITestPage = () => {
             onOpenMerchant={() =>
               setScreen(
                 activeAccount === 'merchant'
-                  ? { name: 'youProfileView' }
+                  ? { name: 'youPublicProfile' }
                   : { name: 'testMerchantProfile' }
               )
             }
