@@ -997,12 +997,20 @@ const EditProfileScreen = ({
 };
 
 /* ---------------- screen: settings ---------------- */
-const SettingsScreen = ({ onBack }: { onBack: () => void }) => {
+const SettingsScreen = ({
+  onBack,
+  profile,
+  onSaveProfile,
+}: {
+  onBack: () => void;
+  profile: ProfileInfo | null;
+  onSaveProfile: (p: ProfileInfo) => void;
+}) => {
   const [notifications, setNotifications] = useState(true);
   const [privateAccount, setPrivateAccount] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
-  const [subEnabled, setSubEnabled] = useState(false);
-  const [subPrice, setSubPrice] = useState('4.99');
+  const [subEnabled, setSubEnabled] = useState(!!profile?.subscriptionEnabled);
+  const [subPrice, setSubPrice] = useState(profile?.subscriptionPrice ?? '4.99');
 
 
   const ToggleRow = ({
