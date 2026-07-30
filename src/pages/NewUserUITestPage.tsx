@@ -964,6 +964,64 @@ const EditProfileScreen = ({
   );
 };
 
+/* ---------------- screen: settings ---------------- */
+const SettingsScreen = ({ onBack }: { onBack: () => void }) => {
+  const [notifications, setNotifications] = useState(true);
+  const [privateAccount, setPrivateAccount] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
+
+  const ToggleRow = ({
+    icon,
+    label,
+    value,
+    onChange,
+  }: {
+    icon: React.ReactNode;
+    label: string;
+    value: boolean;
+    onChange: (v: boolean) => void;
+  }) => (
+    <button
+      onClick={() => onChange(!value)}
+      className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-slate-100 text-slate-700 text-sm transition hover:bg-slate-200"
+    >
+      <div className="flex items-center gap-3">
+        {icon}
+        <span>{label}</span>
+      </div>
+      <div className={`w-10 h-6 rounded-full p-1 transition ${value ? ACCENT : 'bg-slate-300'}`}>
+        <div className={`w-4 h-4 rounded-full bg-white transition transform ${value ? 'translate-x-4' : 'translate-x-0'}`} />
+      </div>
+    </button>
+  );
+
+  return (
+    <div className="flex flex-col h-full bg-white">
+      <div className="flex items-center justify-between px-3 py-3 border-b border-slate-200">
+        <button onClick={onBack} className="p-1 -ml-1 text-slate-700"><ChevronLeft className="w-6 h-6" /></button>
+        <div className="font-semibold text-slate-800">Settings</div>
+        <span className="w-6" />
+      </div>
+      <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        <div className="space-y-3">
+          <div className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Preferences</div>
+          <div className="space-y-2">
+            <ToggleRow icon={<Bell className="w-5 h-5" />} label="Notifications" value={notifications} onChange={setNotifications} />
+            <ToggleRow icon={<Lock className="w-5 h-5" />} label="Private Account" value={privateAccount} onChange={setPrivateAccount} />
+            <ToggleRow icon={<Moon className="w-5 h-5" />} label="Dark Mode" value={darkMode} onChange={setDarkMode} />
+          </div>
+        </div>
+        <div className="space-y-3">
+          <div className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Support</div>
+          <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-100 text-slate-700 text-sm transition hover:bg-slate-200">
+            <HelpCircle className="w-5 h-5" /> Help Center
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 /* ---------------- screen: new (empty) following ---------------- */
 const NewFollowingScreen = ({ onNav }: { onNav: (k: NavKey) => void }) => (
   <div className="flex flex-col h-full bg-white">
