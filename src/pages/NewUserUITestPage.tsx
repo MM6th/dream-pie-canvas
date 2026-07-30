@@ -1499,6 +1499,8 @@ const NewUserUITestPage = () => {
             }}
           />
         );
+      case 'settings':
+        return <SettingsScreen onBack={() => setScreen({ name: 'newProfile' })} />;
     }
   };
 
