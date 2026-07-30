@@ -866,6 +866,7 @@ const EditProfileScreen = ({
   onSave: (updated: ProfileInfo) => void;
 }) => {
   const [form, setForm] = useState<ProfileInfo>(profile);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setForm(profile);
@@ -880,6 +881,12 @@ const EditProfileScreen = ({
     toast('Profile updated', { description: 'Preview saved for this session. Will sync to Supabase when the backend is active.' });
   };
 
+  const handleAvatarPick = (file: File) => {
+    const reader = new FileReader();
+    reader.onloadend = () => update('avatar', reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
   return (
     <div className="flex flex-col h-full bg-white">
       <div className="flex items-center justify-between px-3 py-3 border-b border-slate-200">
@@ -889,19 +896,42 @@ const EditProfileScreen = ({
       </div>
       <div className="flex-1 overflow-y-auto px-6 py-6 space-y-5">
         <div className="flex flex-col items-center gap-3">
-          {form.avatar ? (
-            <img src={form.avatar} alt="avatar" className="w-20 h-20 rounded-full object-cover ring-4 ring-sky-400/40" />
-          ) : (
-            <div className="w-20 h-20 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 text-2xl font-semibold">
-              {form.username?.[0]?.toUpperCase() ?? '·'}
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="relative group"
+            aria-label="Upload avatar photo"
+          >
+            {form.avatar ? (
+              <img src={form.avatar} alt="avatar" className="w-20 h-20 rounded-full object-cover ring-4 ring-sky-400/40" />
+            ) : (
+              <div className="w-20 h-20 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 text-2xl font-semibold">
+                {form.username?.[0]?.toUpperCase() ?? '·'}
+              </div>
+            )}
+            <div className="absolute inset-0 rounded-full bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+              <Camera className="w-6 h-6 text-white" />
             </div>
-          )}
+          </button>
           <input
-            value={form.avatar}
-            onChange={e => update('avatar', e.target.value)}
-            placeholder="Avatar image URL"
-            className="w-full rounded-xl bg-slate-100 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-sky-400 text-slate-800 placeholder:text-slate-400"
+            type="file"
+            accept="image/*"
+            capture="environment"
+            ref={fileInputRef}
+            className="hidden"
+            onChange={e => {
+              const file = e.target.files?.[0];
+              if (file) handleAvatarPick(file);
+              if (e.target) e.target.value = '';
+            }}
           />
+          {form.avatar && (
+            <button
+              onClick={() => update('avatar', '')}
+              className="text-xs text-slate-500 hover:text-red-500 transition"
+            >
+              Remove photo
+            </button>
+          )}
         </div>
         <div className="space-y-2">
           <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Display Name</label>
