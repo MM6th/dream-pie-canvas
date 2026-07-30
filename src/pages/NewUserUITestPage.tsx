@@ -1200,7 +1200,8 @@ type Screen =
   | { name: 'newFollowing' }
   | { name: 'newChat' }
   | { name: 'testMerchantProfile' }
-  | { name: 'youProfileView' };
+  | { name: 'youProfileView' }
+  | { name: 'editProfile' };
 
 
 const SANDBOX_ID_KEY = 'pie-sandbox-id-v1';
