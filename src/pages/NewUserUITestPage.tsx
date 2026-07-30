@@ -1526,6 +1526,7 @@ type Screen =
   | { name: 'newChat' }
   | { name: 'testMerchantProfile' }
   | { name: 'youProfileView' }
+  | { name: 'youPublicProfile' }
   | { name: 'editProfile' }
   | { name: 'settings' };
 
