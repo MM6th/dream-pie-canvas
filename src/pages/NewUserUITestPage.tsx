@@ -65,6 +65,15 @@ type ProfilePost = {
   price?: number;
 };
 
+type ProfileInfo = {
+  username: string;
+  email: string;
+  displayName: string;
+  bio: string;
+  avatar: string;
+  website: string;
+};
+
 
 
 /* ---------------- design tokens (scoped to sandbox) ---------------- */
