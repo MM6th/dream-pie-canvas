@@ -690,7 +690,10 @@ const NewProfileScreen = ({
 
       <div className="px-6 pb-3">
         <div className="text-base font-semibold text-slate-800">
-          {profile?.username || '—'}
+          {profile?.displayName || profile?.username || '—'}
+        </div>
+        <div className="text-xs text-slate-500">
+          {profile?.username ? `@${profile.username}` : '—'}
         </div>
         <div className="text-xs text-slate-500">
           {profile?.email || '—'}
