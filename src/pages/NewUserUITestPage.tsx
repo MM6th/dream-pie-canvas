@@ -1096,11 +1096,12 @@ const SettingsScreen = ({
                 Supporters pay this monthly to unlock your paid posts. You keep 90%.
               </p>
               <button
-                onClick={() =>
+                onClick={() => {
+                  if (profile) onSaveProfile({ ...profile, subscriptionEnabled: subEnabled, subscriptionPrice: subPrice });
                   toast('Subscription price saved', {
-                    description: `$${subPrice || '0.00'}/mo — preview only until the backend is active.`,
-                  })
-                }
+                    description: `$${subPrice || '0.00'}/mo — visible on your public profile.`,
+                  });
+                }}
                 className={`w-full py-2.5 rounded-full text-sm font-semibold ${ACCENT} text-white shadow hover:opacity-90 transition`}
               >
                 Save Price
