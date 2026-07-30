@@ -1759,7 +1759,23 @@ const NewUserUITestPage = () => {
           />
         );
       case 'settings':
-        return <SettingsScreen onBack={() => setScreen({ name: 'newProfile' })} />;
+        return (
+          <SettingsScreen
+            onBack={() => setScreen({ name: 'newProfile' })}
+            profile={currentProfile}
+            onSaveProfile={(updated) => setProfiles(prev => ({ ...prev, [activeAccount]: updated }))}
+          />
+        );
+      case 'youPublicProfile':
+        return (
+          <PublicProfileScreen
+            onBack={() => setScreen({ name: 'newInbox' })}
+            onNav={handleNewNav}
+            profile={profiles.you}
+            posts={postsByAccount.you}
+            viewerName={TEST_MERCHANT.name}
+          />
+        );
     }
   };
 
@@ -1776,6 +1792,7 @@ const NewUserUITestPage = () => {
     { key: 'newFollowing', label: 'New Following' },
     { key: 'newChat', label: 'New Chat' },
     { key: 'testMerchantProfile', label: 'Merchant Profile' },
+    { key: 'youPublicProfile', label: 'You Profile (Public)' },
   ];
 
 
