@@ -999,6 +999,9 @@ const SettingsScreen = ({ onBack }: { onBack: () => void }) => {
   const [notifications, setNotifications] = useState(true);
   const [privateAccount, setPrivateAccount] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
+  const [subEnabled, setSubEnabled] = useState(false);
+  const [subPrice, setSubPrice] = useState('4.99');
+
 
   const ToggleRow = ({
     icon,
@@ -1042,8 +1045,60 @@ const SettingsScreen = ({ onBack }: { onBack: () => void }) => {
           </div>
         </div>
         <div className="space-y-3">
+          <div className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Monetization</div>
+          <ToggleRow
+            icon={<Star className="w-5 h-5" />}
+            label="Offer Subscriptions"
+            value={subEnabled}
+            onChange={setSubEnabled}
+          />
+          {subEnabled && (
+            <div className="rounded-xl bg-slate-100 p-4 space-y-3">
+              <div className="text-sm text-slate-700 font-medium">Monthly subscription price</div>
+              <div className="flex items-center gap-2">
+                <span className="text-slate-500 text-sm">$</span>
+                <input
+                  value={subPrice}
+                  onChange={(e) => setSubPrice(e.target.value.replace(/[^0-9.]/g, ''))}
+                  inputMode="decimal"
+                  placeholder="4.99"
+                  className="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-sky-400"
+                />
+                <span className="text-slate-500 text-sm">/mo</span>
+              </div>
+              <div className="flex gap-2">
+                {['4.99', '9.99', '14.99'].map((p) => (
+                  <button
+                    key={p}
+                    onClick={() => setSubPrice(p)}
+                    className={`flex-1 py-2 rounded-lg text-xs font-semibold transition ${
+                      subPrice === p ? `${ACCENT} text-white` : 'bg-white text-slate-600 border border-slate-300'
+                    }`}
+                  >
+                    ${p}
+                  </button>
+                ))}
+              </div>
+              <p className="text-[11px] text-slate-500">
+                Supporters pay this monthly to unlock your paid posts. You keep 90%.
+              </p>
+              <button
+                onClick={() =>
+                  toast('Subscription price saved', {
+                    description: `$${subPrice || '0.00'}/mo — preview only until the backend is active.`,
+                  })
+                }
+                className={`w-full py-2.5 rounded-full text-sm font-semibold ${ACCENT} text-white shadow hover:opacity-90 transition`}
+              >
+                Save Price
+              </button>
+            </div>
+          )}
+        </div>
+        <div className="space-y-3">
           <div className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Support</div>
           <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-100 text-slate-700 text-sm transition hover:bg-slate-200">
+
             <HelpCircle className="w-5 h-5" /> Help Center
           </button>
         </div>
