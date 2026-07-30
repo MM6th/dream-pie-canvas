@@ -1223,6 +1223,7 @@ type SandboxState = {
   credentials: { username: string; email: string } | null;
   activeAccount: 'you' | 'merchant';
   postsByAccount: Record<'you' | 'merchant', ProfilePost[]>;
+  profiles: Record<'you' | 'merchant', ProfileInfo>;
 };
 
 const NewUserUITestPage = () => {
