@@ -999,6 +999,9 @@ const SettingsScreen = ({ onBack }: { onBack: () => void }) => {
   const [notifications, setNotifications] = useState(true);
   const [privateAccount, setPrivateAccount] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
+  const [subEnabled, setSubEnabled] = useState(false);
+  const [subPrice, setSubPrice] = useState('4.99');
+
 
   const ToggleRow = ({
     icon,
