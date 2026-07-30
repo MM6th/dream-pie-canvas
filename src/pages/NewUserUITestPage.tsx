@@ -65,6 +65,15 @@ type ProfilePost = {
   price?: number;
 };
 
+type ProfileInfo = {
+  username: string;
+  email: string;
+  displayName: string;
+  bio: string;
+  avatar: string;
+  website: string;
+};
+
 
 
 /* ---------------- design tokens (scoped to sandbox) ---------------- */
@@ -585,12 +594,14 @@ const TestMerchantProfileScreen = ({
 
 const NewProfileScreen = ({
   onNav,
+  onEdit,
   profile,
   posts,
   setPosts,
 }: {
   onNav: (k: NavKey) => void;
-  profile: { username: string; email: string; avatar?: string } | null;
+  onEdit: () => void;
+  profile: ProfileInfo | null;
   posts: ProfilePost[];
   setPosts: React.Dispatch<React.SetStateAction<ProfilePost[]>>;
 }) => {
@@ -660,7 +671,13 @@ const NewProfileScreen = ({
         >
           <Camera className="w-5 h-5" />
         </button>
-        <button className={`w-12 h-12 rounded-full ${ACCENT_SOFT} ${ACCENT_TXT} flex items-center justify-center`}><Pencil className="w-5 h-5" /></button>
+        <button
+          onClick={onEdit}
+          className={`w-12 h-12 rounded-full ${ACCENT_SOFT} ${ACCENT_TXT} flex items-center justify-center hover:scale-105 active:scale-95 transition`}
+          aria-label="Edit profile"
+        >
+          <Pencil className="w-5 h-5" />
+        </button>
         <button className={`w-12 h-12 rounded-full ${ACCENT_SOFT} ${ACCENT_TXT} flex items-center justify-center`}><Cog className="w-5 h-5" /></button>
         <input
           ref={fileInputRef}
@@ -673,7 +690,10 @@ const NewProfileScreen = ({
 
       <div className="px-6 pb-3">
         <div className="text-base font-semibold text-slate-800">
-          {profile?.username || '—'}
+          {profile?.displayName || profile?.username || '—'}
+        </div>
+        <div className="text-xs text-slate-500">
+          {profile?.username ? `@${profile.username}` : '—'}
         </div>
         <div className="text-xs text-slate-500">
           {profile?.email || '—'}
@@ -822,6 +842,115 @@ const NewProfileScreen = ({
       )}
 
       <BottomNav active="dashboard" onNav={onNav} variant="profile" />
+    </div>
+  );
+};
+
+/* ---------------- screen: edit profile ---------------- */
+const EditProfileScreen = ({
+  profile,
+  onBack,
+  onSave,
+}: {
+  profile: ProfileInfo;
+  onBack: () => void;
+  onSave: (updated: ProfileInfo) => void;
+}) => {
+  const [form, setForm] = useState<ProfileInfo>(profile);
+
+  useEffect(() => {
+    setForm(profile);
+  }, [profile]);
+
+  const update = (field: keyof ProfileInfo, value: string) => {
+    setForm(f => ({ ...f, [field]: value }));
+  };
+
+  const handleSave = () => {
+    onSave(form);
+    toast('Profile updated', { description: 'Preview saved for this session. Will sync to Supabase when the backend is active.' });
+  };
+
+  return (
+    <div className="flex flex-col h-full bg-white">
+      <div className="flex items-center justify-between px-3 py-3 border-b border-slate-200">
+        <button onClick={onBack} className="p-1 -ml-1 text-slate-700"><ChevronLeft className="w-6 h-6" /></button>
+        <div className="font-semibold text-slate-800">Edit Profile</div>
+        <span className="w-6" />
+      </div>
+      <div className="flex-1 overflow-y-auto px-6 py-6 space-y-5">
+        <div className="flex flex-col items-center gap-3">
+          {form.avatar ? (
+            <img src={form.avatar} alt="avatar" className="w-20 h-20 rounded-full object-cover ring-4 ring-sky-400/40" />
+          ) : (
+            <div className="w-20 h-20 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 text-2xl font-semibold">
+              {form.username?.[0]?.toUpperCase() ?? '·'}
+            </div>
+          )}
+          <input
+            value={form.avatar}
+            onChange={e => update('avatar', e.target.value)}
+            placeholder="Avatar image URL"
+            className="w-full rounded-xl bg-slate-100 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-sky-400 text-slate-800 placeholder:text-slate-400"
+          />
+        </div>
+        <div className="space-y-2">
+          <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Display Name</label>
+          <input
+            value={form.displayName}
+            onChange={e => update('displayName', e.target.value)}
+            placeholder="How you want to appear"
+            className="w-full rounded-xl bg-slate-100 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-400 text-slate-800 placeholder:text-slate-400"
+          />
+        </div>
+        <div className="space-y-2">
+          <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Username</label>
+          <input
+            value={form.username}
+            onChange={e => update('username', e.target.value)}
+            placeholder="your_username"
+            className="w-full rounded-xl bg-slate-100 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-400 text-slate-800 placeholder:text-slate-400"
+          />
+        </div>
+        <div className="space-y-2">
+          <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Email Address</label>
+          <input
+            value={form.email}
+            onChange={e => update('email', e.target.value)}
+            type="email"
+            placeholder="you@example.com"
+            className="w-full rounded-xl bg-slate-100 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-400 text-slate-800 placeholder:text-slate-400"
+          />
+        </div>
+        <div className="space-y-2">
+          <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Bio</label>
+          <textarea
+            value={form.bio}
+            onChange={e => update('bio', e.target.value)}
+            rows={3}
+            placeholder="Tell people a little about you..."
+            className="w-full rounded-xl bg-slate-100 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-400 text-slate-800 placeholder:text-slate-400 resize-none"
+          />
+        </div>
+        <div className="space-y-2">
+          <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Website</label>
+          <input
+            value={form.website}
+            onChange={e => update('website', e.target.value)}
+            placeholder="https://your-website.com"
+            className="w-full rounded-xl bg-slate-100 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-400 text-slate-800 placeholder:text-slate-400"
+          />
+        </div>
+        <button
+          onClick={handleSave}
+          className={`w-full mt-2 py-3 rounded-full font-semibold text-sm transition ${ACCENT} text-white shadow hover:opacity-90`}
+        >
+          Save Profile
+        </button>
+        <div className="text-[10px] text-slate-400 text-center">
+          Changes are saved in this preview only. They will be written to Supabase when the backend is active.
+        </div>
+      </div>
     </div>
   );
 };
@@ -1071,7 +1200,8 @@ type Screen =
   | { name: 'newFollowing' }
   | { name: 'newChat' }
   | { name: 'testMerchantProfile' }
-  | { name: 'youProfileView' };
+  | { name: 'youProfileView' }
+  | { name: 'editProfile' };
 
 
 const SANDBOX_ID_KEY = 'pie-sandbox-id-v1';
@@ -1093,7 +1223,26 @@ type SandboxState = {
   credentials: { username: string; email: string } | null;
   activeAccount: 'you' | 'merchant';
   postsByAccount: Record<'you' | 'merchant', ProfilePost[]>;
+  profiles: Record<'you' | 'merchant', ProfileInfo>;
 };
+const makeBaseProfiles = (creds: { username: string; email: string } | null): Record<'you' | 'merchant', ProfileInfo> => ({
+  you: {
+    username: creds?.username ?? '',
+    email: creds?.email ?? '',
+    displayName: creds?.username ?? '',
+    bio: '',
+    avatar: '',
+    website: '',
+  },
+  merchant: {
+    username: TEST_MERCHANT.name,
+    email: `${TEST_MERCHANT.name.toLowerCase().replace(/\s+/g, '')}@pie.app`,
+    displayName: TEST_MERCHANT.name,
+    bio: '',
+    avatar: TEST_MERCHANT.avatar,
+    website: '',
+  },
+});
 
 const NewUserUITestPage = () => {
   const navigate = useNavigate();
@@ -1102,6 +1251,7 @@ const NewUserUITestPage = () => {
   const [credentials, setCredentials] = useState<SandboxState['credentials']>(null);
   const [activeAccount, setActiveAccount] = useState<'you' | 'merchant'>('you');
   const [postsByAccount, setPostsByAccount] = useState<Record<'you' | 'merchant', ProfilePost[]>>({ you: [], merchant: [] });
+  const [profiles, setProfiles] = useState<Record<'you' | 'merchant', ProfileInfo>>(() => makeBaseProfiles(null));
   const [loaded, setLoaded] = useState(false);
 
   // Load state from Supabase on mount
@@ -1119,6 +1269,7 @@ const NewUserUITestPage = () => {
         if (s.credentials) setCredentials(s.credentials);
         if (s.activeAccount) setActiveAccount(s.activeAccount);
         if (s.postsByAccount) setPostsByAccount(s.postsByAccount);
+        setProfiles(s.profiles ?? makeBaseProfiles(s.credentials ?? null));
       }
       setLoaded(true);
     })();
@@ -1128,23 +1279,27 @@ const NewUserUITestPage = () => {
   // Persist to Supabase whenever state changes (after initial load)
   useEffect(() => {
     if (!loaded) return;
-    const payload: SandboxState = { credentials, activeAccount, postsByAccount };
+    const payload: SandboxState = { credentials, activeAccount, postsByAccount, profiles };
     supabase
       .from('sandbox_state')
       .upsert({ sandbox_id: sandboxIdRef.current, state: payload as any, updated_at: new Date().toISOString() })
       .then(({ error }) => {
         if (error) console.warn('sandbox_state save failed', error);
       });
-  }, [credentials, activeAccount, postsByAccount, loaded]);
+  }, [credentials, activeAccount, postsByAccount, profiles, loaded]);
 
+  // Seed the "you" profile when credentials are first entered.
+  useEffect(() => {
+    if (!credentials) return;
+    setProfiles(prev => {
+      if (prev.you.username === '' && prev.you.email === '') {
+        return { ...prev, you: { ...prev.you, username: credentials.username, email: credentials.email, displayName: credentials.username } };
+      }
+      return prev;
+    });
+  }, [credentials]);
 
-  const currentProfile =
-    activeAccount === 'merchant'
-      ? { username: TEST_MERCHANT.name, email: `${TEST_MERCHANT.name.toLowerCase().replace(/\s+/g, '')}@pie.app`, avatar: TEST_MERCHANT.avatar }
-      : credentials
-        ? { username: credentials.username, email: credentials.email }
-        : null;
-
+  const currentProfile = profiles[activeAccount];
   const currentPosts = postsByAccount[activeAccount];
   const setCurrentPosts: React.Dispatch<React.SetStateAction<ProfilePost[]>> = (updater) => {
     setPostsByAccount(prev => ({
@@ -1206,6 +1361,7 @@ const NewUserUITestPage = () => {
         return (
           <NewProfileScreen
             onNav={handleNewNav}
+            onEdit={() => setScreen({ name: 'editProfile' })}
             profile={currentProfile}
             posts={currentPosts}
             setPosts={setCurrentPosts}
@@ -1243,9 +1399,6 @@ const NewUserUITestPage = () => {
           />
         );
       case 'youProfileView': {
-        const youProfile = credentials
-          ? { username: credentials.username, email: credentials.email }
-          : null;
         return (
           <NewProfileScreen
             onNav={(k) => {
@@ -1253,7 +1406,8 @@ const NewUserUITestPage = () => {
               else if (k === 'dashboard') setScreen({ name: 'newProfile' });
               else if (k === 'following') setScreen({ name: 'newFollowing' });
             }}
-            profile={youProfile}
+            onEdit={() => setScreen({ name: 'editProfile' })}
+            profile={profiles.you}
             posts={postsByAccount.you}
             setPosts={(updater) =>
               setPostsByAccount((prev) => ({
@@ -1264,6 +1418,17 @@ const NewUserUITestPage = () => {
           />
         );
       }
+      case 'editProfile':
+        return (
+          <EditProfileScreen
+            profile={currentProfile}
+            onBack={() => setScreen({ name: 'newProfile' })}
+            onSave={(updated) => {
+              setProfiles(prev => ({ ...prev, [activeAccount]: updated }));
+              setScreen({ name: 'newProfile' });
+            }}
+          />
+        );
     }
   };
 
@@ -1275,6 +1440,7 @@ const NewUserUITestPage = () => {
     { key: 'login', label: 'Login' },
     { key: 'newInbox', label: 'New Inbox' },
     { key: 'newProfile', label: 'New Profile' },
+    { key: 'editProfile', label: 'Edit Profile' },
     { key: 'newFollowing', label: 'New Following' },
     { key: 'newChat', label: 'New Chat' },
     { key: 'testMerchantProfile', label: 'Merchant Profile' },
