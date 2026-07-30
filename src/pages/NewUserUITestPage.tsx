@@ -1251,6 +1251,7 @@ const NewUserUITestPage = () => {
   const [credentials, setCredentials] = useState<SandboxState['credentials']>(null);
   const [activeAccount, setActiveAccount] = useState<'you' | 'merchant'>('you');
   const [postsByAccount, setPostsByAccount] = useState<Record<'you' | 'merchant', ProfilePost[]>>({ you: [], merchant: [] });
+  const [profiles, setProfiles] = useState<Record<'you' | 'merchant', ProfileInfo>>(() => makeBaseProfiles(null));
   const [loaded, setLoaded] = useState(false);
 
   // Load state from Supabase on mount
@@ -1268,6 +1269,7 @@ const NewUserUITestPage = () => {
         if (s.credentials) setCredentials(s.credentials);
         if (s.activeAccount) setActiveAccount(s.activeAccount);
         if (s.postsByAccount) setPostsByAccount(s.postsByAccount);
+        setProfiles(s.profiles ?? makeBaseProfiles(s.credentials ?? null));
       }
       setLoaded(true);
     })();
@@ -1277,23 +1279,27 @@ const NewUserUITestPage = () => {
   // Persist to Supabase whenever state changes (after initial load)
   useEffect(() => {
     if (!loaded) return;
-    const payload: SandboxState = { credentials, activeAccount, postsByAccount };
+    const payload: SandboxState = { credentials, activeAccount, postsByAccount, profiles };
     supabase
       .from('sandbox_state')
       .upsert({ sandbox_id: sandboxIdRef.current, state: payload as any, updated_at: new Date().toISOString() })
       .then(({ error }) => {
         if (error) console.warn('sandbox_state save failed', error);
       });
-  }, [credentials, activeAccount, postsByAccount, loaded]);
+  }, [credentials, activeAccount, postsByAccount, profiles, loaded]);
 
+  // Seed the "you" profile when credentials are first entered.
+  useEffect(() => {
+    if (!credentials) return;
+    setProfiles(prev => {
+      if (prev.you.username === '' && prev.you.email === '') {
+        return { ...prev, you: { ...prev.you, username: credentials.username, email: credentials.email, displayName: credentials.username } };
+      }
+      return prev;
+    });
+  }, [credentials]);
 
-  const currentProfile =
-    activeAccount === 'merchant'
-      ? { username: TEST_MERCHANT.name, email: `${TEST_MERCHANT.name.toLowerCase().replace(/\s+/g, '')}@pie.app`, avatar: TEST_MERCHANT.avatar }
-      : credentials
-        ? { username: credentials.username, email: credentials.email }
-        : null;
-
+  const currentProfile = profiles[activeAccount];
   const currentPosts = postsByAccount[activeAccount];
   const setCurrentPosts: React.Dispatch<React.SetStateAction<ProfilePost[]>> = (updater) => {
     setPostsByAccount(prev => ({
