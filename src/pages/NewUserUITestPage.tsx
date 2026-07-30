@@ -846,6 +846,115 @@ const NewProfileScreen = ({
   );
 };
 
+/* ---------------- screen: edit profile ---------------- */
+const EditProfileScreen = ({
+  profile,
+  onBack,
+  onSave,
+}: {
+  profile: ProfileInfo;
+  onBack: () => void;
+  onSave: (updated: ProfileInfo) => void;
+}) => {
+  const [form, setForm] = useState<ProfileInfo>(profile);
+
+  useEffect(() => {
+    setForm(profile);
+  }, [profile]);
+
+  const update = (field: keyof ProfileInfo, value: string) => {
+    setForm(f => ({ ...f, [field]: value }));
+  };
+
+  const handleSave = () => {
+    onSave(form);
+    toast('Profile updated', { description: 'Preview saved for this session. Will sync to Supabase when the backend is active.' });
+  };
+
+  return (
+    <div className="flex flex-col h-full bg-white">
+      <div className="flex items-center justify-between px-3 py-3 border-b border-slate-200">
+        <button onClick={onBack} className="p-1 -ml-1 text-slate-700"><ChevronLeft className="w-6 h-6" /></button>
+        <div className="font-semibold text-slate-800">Edit Profile</div>
+        <span className="w-6" />
+      </div>
+      <div className="flex-1 overflow-y-auto px-6 py-6 space-y-5">
+        <div className="flex flex-col items-center gap-3">
+          {form.avatar ? (
+            <img src={form.avatar} alt="avatar" className="w-20 h-20 rounded-full object-cover ring-4 ring-sky-400/40" />
+          ) : (
+            <div className="w-20 h-20 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 text-2xl font-semibold">
+              {form.username?.[0]?.toUpperCase() ?? '·'}
+            </div>
+          )}
+          <input
+            value={form.avatar}
+            onChange={e => update('avatar', e.target.value)}
+            placeholder="Avatar image URL"
+            className="w-full rounded-xl bg-slate-100 px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-sky-400 text-slate-800 placeholder:text-slate-400"
+          />
+        </div>
+        <div className="space-y-2">
+          <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Display Name</label>
+          <input
+            value={form.displayName}
+            onChange={e => update('displayName', e.target.value)}
+            placeholder="How you want to appear"
+            className="w-full rounded-xl bg-slate-100 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-400 text-slate-800 placeholder:text-slate-400"
+          />
+        </div>
+        <div className="space-y-2">
+          <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Username</label>
+          <input
+            value={form.username}
+            onChange={e => update('username', e.target.value)}
+            placeholder="your_username"
+            className="w-full rounded-xl bg-slate-100 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-400 text-slate-800 placeholder:text-slate-400"
+          />
+        </div>
+        <div className="space-y-2">
+          <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Email Address</label>
+          <input
+            value={form.email}
+            onChange={e => update('email', e.target.value)}
+            type="email"
+            placeholder="you@example.com"
+            className="w-full rounded-xl bg-slate-100 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-400 text-slate-800 placeholder:text-slate-400"
+          />
+        </div>
+        <div className="space-y-2">
+          <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Bio</label>
+          <textarea
+            value={form.bio}
+            onChange={e => update('bio', e.target.value)}
+            rows={3}
+            placeholder="Tell people a little about you..."
+            className="w-full rounded-xl bg-slate-100 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-400 text-slate-800 placeholder:text-slate-400 resize-none"
+          />
+        </div>
+        <div className="space-y-2">
+          <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Website</label>
+          <input
+            value={form.website}
+            onChange={e => update('website', e.target.value)}
+            placeholder="https://your-website.com"
+            className="w-full rounded-xl bg-slate-100 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-400 text-slate-800 placeholder:text-slate-400"
+          />
+        </div>
+        <button
+          onClick={handleSave}
+          className={`w-full mt-2 py-3 rounded-full font-semibold text-sm transition ${ACCENT} text-white shadow hover:opacity-90`}
+        >
+          Save Profile
+        </button>
+        <div className="text-[10px] text-slate-400 text-center">
+          Changes are saved in this preview only. They will be written to Supabase when the backend is active.
+        </div>
+      </div>
+    </div>
+  );
+};
+
 /* ---------------- screen: new (empty) following ---------------- */
 const NewFollowingScreen = ({ onNav }: { onNav: (k: NavKey) => void }) => (
   <div className="flex flex-col h-full bg-white">
