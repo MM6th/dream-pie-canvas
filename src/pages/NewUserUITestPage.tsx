@@ -1440,6 +1440,7 @@ const NewUserUITestPage = () => {
     { key: 'login', label: 'Login' },
     { key: 'newInbox', label: 'New Inbox' },
     { key: 'newProfile', label: 'New Profile' },
+    { key: 'editProfile', label: 'Edit Profile' },
     { key: 'newFollowing', label: 'New Following' },
     { key: 'newChat', label: 'New Chat' },
     { key: 'testMerchantProfile', label: 'Merchant Profile' },
