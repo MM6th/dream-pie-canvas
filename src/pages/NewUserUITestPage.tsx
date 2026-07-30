@@ -1045,8 +1045,6 @@ const SettingsScreen = ({ onBack }: { onBack: () => void }) => {
           </div>
         </div>
         <div className="space-y-3">
-          <div className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Support</div>
-        <div className="space-y-3">
           <div className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Monetization</div>
           <ToggleRow
             icon={<Star className="w-5 h-5" />}
