@@ -683,9 +683,13 @@ const NewProfileScreen = ({
 
       {posts.length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center px-8 text-center">
-          <div className={`w-16 h-16 rounded-full ${ACCENT_SOFT} ${ACCENT_TXT} flex items-center justify-center mb-4`}>
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className={`w-16 h-16 rounded-full ${ACCENT_SOFT} ${ACCENT_TXT} flex items-center justify-center mb-4 hover:scale-105 active:scale-95 transition`}
+            aria-label="Upload photo or video"
+          >
             <Camera className="w-7 h-7" />
-          </div>
+          </button>
           <div className="text-base font-semibold text-slate-800 mb-1">No posts yet</div>
           <div className="text-xs text-slate-500 max-w-[240px]">
             Tap the camera to share a photo or video.
