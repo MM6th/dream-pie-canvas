@@ -1210,7 +1210,8 @@ type Screen =
   | { name: 'newChat' }
   | { name: 'testMerchantProfile' }
   | { name: 'youProfileView' }
-  | { name: 'editProfile' };
+  | { name: 'editProfile' }
+  | { name: 'settings' };
 
 
 const SANDBOX_ID_KEY = 'pie-sandbox-id-v1';
