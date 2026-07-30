@@ -1361,6 +1361,7 @@ const NewUserUITestPage = () => {
         return (
           <NewProfileScreen
             onNav={handleNewNav}
+            onEdit={() => setScreen({ name: 'editProfile' })}
             profile={currentProfile}
             posts={currentPosts}
             setPosts={setCurrentPosts}
@@ -1398,9 +1399,6 @@ const NewUserUITestPage = () => {
           />
         );
       case 'youProfileView': {
-        const youProfile = credentials
-          ? { username: credentials.username, email: credentials.email }
-          : null;
         return (
           <NewProfileScreen
             onNav={(k) => {
@@ -1408,7 +1406,8 @@ const NewUserUITestPage = () => {
               else if (k === 'dashboard') setScreen({ name: 'newProfile' });
               else if (k === 'following') setScreen({ name: 'newFollowing' });
             }}
-            profile={youProfile}
+            onEdit={() => setScreen({ name: 'editProfile' })}
+            profile={profiles.you}
             posts={postsByAccount.you}
             setPosts={(updater) =>
               setPostsByAccount((prev) => ({
@@ -1419,6 +1418,17 @@ const NewUserUITestPage = () => {
           />
         );
       }
+      case 'editProfile':
+        return (
+          <EditProfileScreen
+            profile={currentProfile}
+            onBack={() => setScreen({ name: 'newProfile' })}
+            onSave={(updated) => {
+              setProfiles(prev => ({ ...prev, [activeAccount]: updated }));
+              setScreen({ name: 'newProfile' });
+            }}
+          />
+        );
     }
   };
 
