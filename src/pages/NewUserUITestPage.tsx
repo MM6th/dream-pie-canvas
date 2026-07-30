@@ -1060,7 +1060,10 @@ const SettingsScreen = ({
             icon={<Star className="w-5 h-5" />}
             label="Offer Subscriptions"
             value={subEnabled}
-            onChange={setSubEnabled}
+            onChange={(v) => {
+              setSubEnabled(v);
+              if (profile) onSaveProfile({ ...profile, subscriptionEnabled: v, subscriptionPrice: subPrice });
+            }}
           />
           {subEnabled && (
             <div className="rounded-xl bg-slate-100 p-4 space-y-3">
