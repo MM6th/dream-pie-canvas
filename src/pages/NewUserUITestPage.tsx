@@ -1225,6 +1225,24 @@ type SandboxState = {
   postsByAccount: Record<'you' | 'merchant', ProfilePost[]>;
   profiles: Record<'you' | 'merchant', ProfileInfo>;
 };
+const makeBaseProfiles = (creds: { username: string; email: string } | null): Record<'you' | 'merchant', ProfileInfo> => ({
+  you: {
+    username: creds?.username ?? '',
+    email: creds?.email ?? '',
+    displayName: creds?.username ?? '',
+    bio: '',
+    avatar: '',
+    website: '',
+  },
+  merchant: {
+    username: TEST_MERCHANT.name,
+    email: `${TEST_MERCHANT.name.toLowerCase().replace(/\s+/g, '')}@pie.app`,
+    displayName: TEST_MERCHANT.name,
+    bio: '',
+    avatar: TEST_MERCHANT.avatar,
+    website: '',
+  },
+});
 
 const NewUserUITestPage = () => {
   const navigate = useNavigate();
