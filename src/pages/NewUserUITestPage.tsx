@@ -73,6 +73,8 @@ type ProfileInfo = {
   bio: string;
   avatar: string;
   website: string;
+  subscriptionEnabled?: boolean;
+  subscriptionPrice?: string;
 };
 
 
@@ -589,6 +591,165 @@ const TestMerchantProfileScreen = ({
 
 
 
+/* ---------------- screen: public (visitor) view of an account ---------------- */
+const PublicProfileScreen = ({
+  onBack,
+  onNav,
+  profile,
+  posts,
+  viewerName,
+}: {
+  onBack: () => void;
+  onNav: (k: NavKey) => void;
+  profile: ProfileInfo | null;
+  posts: ProfilePost[];
+  viewerName: string;
+}) => {
+  const [following, setFollowing] = useState(true);
+  const [subscribed, setSubscribed] = useState(false);
+  const [isLive, setIsLive] = useState(false);
+  const [unlocked, setUnlocked] = useState<Record<string, boolean>>({});
+
+  const name = profile?.displayName || profile?.username || 'You';
+  const price = profile?.subscriptionPrice || '4.99';
+  const subsOffered = !!profile?.subscriptionEnabled;
+
+  return (
+    <div className="flex flex-col h-full bg-white">
+      <div className="flex items-center gap-3 px-3 py-3 border-b border-slate-200">
+        <button onClick={onBack} className="p-1 -ml-1 text-slate-700"><ChevronLeft className="w-6 h-6" /></button>
+        <div className="flex-1 flex items-baseline justify-center gap-1">
+          <span className="text-2xl font-bold tracking-wide text-slate-800">PIE</span>
+          <span className="text-xl text-sky-500">Φ</span>
+        </div>
+        <span className="w-6" />
+      </div>
+
+      <div className="flex flex-col items-center pt-6 pb-4 px-6">
+        <div className="relative">
+          {profile?.avatar ? (
+            <img src={profile.avatar} alt={name} className="w-24 h-24 rounded-full object-cover ring-4 ring-sky-400/40" />
+          ) : (
+            <div className="w-24 h-24 rounded-full bg-slate-200 ring-4 ring-sky-400/40 flex items-center justify-center text-2xl font-bold text-slate-500">
+              {name.slice(0, 1).toUpperCase()}
+            </div>
+          )}
+          <span className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full ring-2 ring-white ${isLive ? 'bg-rose-500' : 'bg-slate-300'}`} />
+        </div>
+        <div className="mt-3 text-lg font-semibold text-slate-800">{name}</div>
+        <div className="text-xs text-slate-500">
+          {subsOffered ? `Subscription $${price}/mo` : 'No subscription offered'}
+        </div>
+        <div className="text-[11px] text-slate-400 mt-1">Viewing as {viewerName}</div>
+      </div>
+
+      <div className="grid grid-cols-4 gap-2 px-5 pb-4">
+        <button
+          onClick={() => {
+            setFollowing(f => !f);
+            toast(following ? `Unfollowed ${name}` : `Now following ${name}`);
+          }}
+          className={`flex flex-col items-center gap-1 py-3 rounded-xl transition ${following ? 'bg-slate-100 hover:bg-slate-200' : `${ACCENT_SOFT} hover:opacity-90`}`}
+        >
+          {following
+            ? <UserMinus className="w-5 h-5 text-slate-700" />
+            : <Users className={`w-5 h-5 ${ACCENT_TXT}`} />}
+          <span className={`text-[10px] font-semibold ${following ? 'text-slate-700' : ACCENT_TXT}`}>
+            {following ? 'Unfollow' : 'Follow'}
+          </span>
+        </button>
+
+        <button
+          disabled={!subsOffered}
+          onClick={() => {
+            setSubscribed(s => !s);
+            toast(subscribed ? `Subscription to ${name} cancelled` : `Subscribed to ${name}`, {
+              description: subscribed ? undefined : `$${price}/mo — paid posts unlocked.`,
+            });
+          }}
+          className={`flex flex-col items-center gap-1 py-3 rounded-xl transition ${
+            !subsOffered
+              ? 'bg-slate-100 opacity-60 cursor-not-allowed'
+              : subscribed
+                ? 'bg-emerald-100 hover:bg-emerald-200'
+                : `${ACCENT_SOFT} hover:opacity-90`
+          }`}
+        >
+          <Star className={`w-5 h-5 ${!subsOffered ? 'text-slate-400' : subscribed ? 'text-emerald-600' : ACCENT_TXT}`} />
+          <span className={`text-[10px] font-semibold ${!subsOffered ? 'text-slate-400' : subscribed ? 'text-emerald-700' : ACCENT_TXT}`}>
+            {subscribed ? 'Subscribed' : subsOffered ? `$${price}` : 'Subscribe'}
+          </span>
+        </button>
+
+        <button
+          onClick={() => toast(`Tip sent to ${name}`, { description: 'Preview only — no charge in the sandbox.' })}
+          className="flex flex-col items-center gap-1 py-3 rounded-xl bg-amber-100 hover:bg-amber-200 transition"
+        >
+          <DollarSign className="w-5 h-5 text-amber-600" />
+          <span className="text-[10px] font-semibold text-amber-700">Tip</span>
+        </button>
+
+        <button
+          onClick={() => {
+            setIsLive(l => !l);
+            toast(isLive ? `${name} went offline` : `${name} is live now`);
+          }}
+          title="Toggle live state (testing)"
+          className={`flex flex-col items-center gap-1 py-3 rounded-xl transition ${isLive ? 'bg-rose-100 hover:bg-rose-200' : 'bg-slate-100 hover:bg-slate-200'}`}
+        >
+          <Radio className={`w-5 h-5 ${isLive ? 'text-rose-600' : 'text-slate-400'}`} />
+          <span className={`text-[10px] font-semibold ${isLive ? 'text-rose-700' : 'text-slate-400'}`}>
+            {isLive ? 'Live' : 'Offline'}
+          </span>
+        </button>
+      </div>
+
+      <div className="flex-1 overflow-y-auto border-t border-slate-100">
+        {posts.length === 0 ? (
+          <div className="h-full flex flex-col items-center justify-center px-8 text-center">
+            <div className={`w-16 h-16 rounded-full ${ACCENT_SOFT} ${ACCENT_TXT} flex items-center justify-center mb-4`}>
+              <Camera className="w-7 h-7" />
+            </div>
+            <div className="text-base font-semibold text-slate-800 mb-1">No posts yet</div>
+            <div className="text-xs text-slate-500 max-w-[240px]">{name}'s posts and videos will appear here.</div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-1 p-1">
+            {posts.map(p => {
+              const locked = p.paid && !subscribed && !unlocked[p.id];
+              return (
+                <button
+                  key={p.id}
+                  onClick={() => {
+                    if (!locked) return;
+                    setUnlocked(u => ({ ...u, [p.id]: true }));
+                    toast('Post unlocked', { description: `$${(p.price ?? 0).toFixed(2)} — preview only.` });
+                  }}
+                  className="relative aspect-square overflow-hidden rounded-lg bg-slate-100"
+                >
+                  {p.type === 'video' ? (
+                    <video src={p.url} className={`w-full h-full object-cover ${locked ? 'blur-lg scale-110' : ''}`} muted />
+                  ) : (
+                    <img src={p.url} alt={p.caption} className={`w-full h-full object-cover ${locked ? 'blur-lg scale-110' : ''}`} />
+                  )}
+                  {locked && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/30 text-white">
+                      <Lock className="w-5 h-5 mb-1" />
+                      <span className="text-[10px] font-semibold">${(p.price ?? 0).toFixed(2)}</span>
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      <BottomNav active="messages" onNav={onNav} variant="inbox" />
+    </div>
+  );
+};
+
 /* ---------------- screen: new (empty) profile ---------------- */
 
 
@@ -995,12 +1156,20 @@ const EditProfileScreen = ({
 };
 
 /* ---------------- screen: settings ---------------- */
-const SettingsScreen = ({ onBack }: { onBack: () => void }) => {
+const SettingsScreen = ({
+  onBack,
+  profile,
+  onSaveProfile,
+}: {
+  onBack: () => void;
+  profile: ProfileInfo | null;
+  onSaveProfile: (p: ProfileInfo) => void;
+}) => {
   const [notifications, setNotifications] = useState(true);
   const [privateAccount, setPrivateAccount] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
-  const [subEnabled, setSubEnabled] = useState(false);
-  const [subPrice, setSubPrice] = useState('4.99');
+  const [subEnabled, setSubEnabled] = useState(!!profile?.subscriptionEnabled);
+  const [subPrice, setSubPrice] = useState(profile?.subscriptionPrice ?? '4.99');
 
 
   const ToggleRow = ({
@@ -1050,7 +1219,10 @@ const SettingsScreen = ({ onBack }: { onBack: () => void }) => {
             icon={<Star className="w-5 h-5" />}
             label="Offer Subscriptions"
             value={subEnabled}
-            onChange={setSubEnabled}
+            onChange={(v) => {
+              setSubEnabled(v);
+              if (profile) onSaveProfile({ ...profile, subscriptionEnabled: v, subscriptionPrice: subPrice });
+            }}
           />
           {subEnabled && (
             <div className="rounded-xl bg-slate-100 p-4 space-y-3">
@@ -1083,11 +1255,12 @@ const SettingsScreen = ({ onBack }: { onBack: () => void }) => {
                 Supporters pay this monthly to unlock your paid posts. You keep 90%.
               </p>
               <button
-                onClick={() =>
+                onClick={() => {
+                  if (profile) onSaveProfile({ ...profile, subscriptionEnabled: subEnabled, subscriptionPrice: subPrice });
                   toast('Subscription price saved', {
-                    description: `$${subPrice || '0.00'}/mo — preview only until the backend is active.`,
-                  })
-                }
+                    description: `$${subPrice || '0.00'}/mo — visible on your public profile.`,
+                  });
+                }}
                 className={`w-full py-2.5 rounded-full text-sm font-semibold ${ACCENT} text-white shadow hover:opacity-90 transition`}
               >
                 Save Price
@@ -1353,6 +1526,7 @@ type Screen =
   | { name: 'newChat' }
   | { name: 'testMerchantProfile' }
   | { name: 'youProfileView' }
+  | { name: 'youPublicProfile' }
   | { name: 'editProfile' }
   | { name: 'settings' };
 
@@ -1535,7 +1709,7 @@ const NewUserUITestPage = () => {
             onOpenMerchant={() =>
               setScreen(
                 activeAccount === 'merchant'
-                  ? { name: 'youProfileView' }
+                  ? { name: 'youPublicProfile' }
                   : { name: 'testMerchantProfile' }
               )
             }
@@ -1585,7 +1759,23 @@ const NewUserUITestPage = () => {
           />
         );
       case 'settings':
-        return <SettingsScreen onBack={() => setScreen({ name: 'newProfile' })} />;
+        return (
+          <SettingsScreen
+            onBack={() => setScreen({ name: 'newProfile' })}
+            profile={currentProfile}
+            onSaveProfile={(updated) => setProfiles(prev => ({ ...prev, [activeAccount]: updated }))}
+          />
+        );
+      case 'youPublicProfile':
+        return (
+          <PublicProfileScreen
+            onBack={() => setScreen({ name: 'newInbox' })}
+            onNav={handleNewNav}
+            profile={profiles.you}
+            posts={postsByAccount.you}
+            viewerName={TEST_MERCHANT.name}
+          />
+        );
     }
   };
 
@@ -1602,6 +1792,7 @@ const NewUserUITestPage = () => {
     { key: 'newFollowing', label: 'New Following' },
     { key: 'newChat', label: 'New Chat' },
     { key: 'testMerchantProfile', label: 'Merchant Profile' },
+    { key: 'youPublicProfile', label: 'You Profile (Public)' },
   ];
 
 
