@@ -1371,6 +1371,7 @@ const NewUserUITestPage = () => {
           <NewProfileScreen
             onNav={handleNewNav}
             onEdit={() => setScreen({ name: 'editProfile' })}
+            onSettings={() => setScreen({ name: 'settings' })}
             profile={currentProfile}
             posts={currentPosts}
             setPosts={setCurrentPosts}
@@ -1416,6 +1417,7 @@ const NewUserUITestPage = () => {
               else if (k === 'following') setScreen({ name: 'newFollowing' });
             }}
             onEdit={() => setScreen({ name: 'editProfile' })}
+            onSettings={() => setScreen({ name: 'settings' })}
             profile={profiles.you}
             posts={postsByAccount.you}
             setPosts={(updater) =>
