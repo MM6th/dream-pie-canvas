@@ -73,6 +73,8 @@ type ProfileInfo = {
   bio: string;
   avatar: string;
   website: string;
+  subscriptionEnabled?: boolean;
+  subscriptionPrice?: string;
 };
 
 
