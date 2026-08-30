@@ -3,7 +3,9 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import AuthPage from "@/components/AuthPage";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
+import { useExperience } from "@/hooks/useExperience";
+import ExperienceChooser from "@/components/ExperienceChooser";
 import { useApprovalStatus } from "@/hooks/useApprovalStatus";
 import { toast } from "@/hooks/use-toast";
 import StoreView from "@/pages/views/StoreView";
@@ -31,6 +33,8 @@ interface VideoTrack {
 const Index = () => {
   const { user, loading, signOut } = useAuth();
   const { isAdmin, isApproved } = useApprovalStatus();
+  const { experience, setExperience } = useExperience();
+  
   
   const navigate = useNavigate();
   const [userProfile, setUserProfile] = useState<any>(null);
@@ -283,6 +287,23 @@ const Index = () => {
 
   if (!user) {
     return <AuthPage />;
+  }
+
+  // Signed in but hasn't picked which version of the app to use.
+  if (!experience) {
+    return (
+      <ExperienceChooser
+        onChoose={(choice) => {
+          setExperience(choice);
+          if (choice === 'new') navigate('/app');
+        }}
+        onSignOut={handleSignOut}
+      />
+    );
+  }
+
+  if (experience === 'new') {
+    return <Navigate to="/app" replace />;
   }
 
 

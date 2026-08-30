@@ -24,6 +24,7 @@ import NotFound from "./pages/NotFound";
 import ContestLive from "./pages/ContestLive";
 import ContestTestPage from "./pages/ContestTestPage";
 import NewUserUITestPage from "./pages/NewUserUITestPage";
+import NewApp from "./pages/NewApp";
 import { useContestRedirect } from "./hooks/useContestRedirect";
 import { useContestInviteRedirect } from "./hooks/useContestInviteRedirect";
 
@@ -61,6 +62,7 @@ const App = () => (
           <Route path="/contest/:postId" element={<ContestLive />} />
           <Route path="/contest-test" element={<ContestTestPage />} />
           <Route path="/new-user-ui-test" element={<NewUserUITestPage />} />
+          <Route path="/app" element={<NewApp />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

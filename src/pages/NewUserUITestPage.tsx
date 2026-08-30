@@ -1571,14 +1571,26 @@ const makeBaseProfiles = (creds: { username: string; email: string } | null): Re
   },
 });
 
-const NewUserUITestPage = () => {
+const NewUserUITestPage = ({
+  mode = 'sandbox',
+  identity = null,
+  stateKey,
+}: {
+  mode?: 'sandbox' | 'app';
+  identity?: { username: string; email: string } | null;
+  stateKey?: string;
+} = {}) => {
   const navigate = useNavigate();
-  const sandboxIdRef = useRef<string>(typeof window !== 'undefined' ? getSandboxId() : '');
-  const [screen, setScreen] = useState<Screen>({ name: 'inbox' });
-  const [credentials, setCredentials] = useState<SandboxState['credentials']>(null);
+  const sandboxIdRef = useRef<string>(
+    stateKey ?? (typeof window !== 'undefined' ? getSandboxId() : '')
+  );
+  const [screen, setScreen] = useState<Screen>(
+    mode === 'app' ? { name: 'newProfile' } : { name: 'inbox' }
+  );
+  const [credentials, setCredentials] = useState<SandboxState['credentials']>(identity);
   const [activeAccount, setActiveAccount] = useState<'you' | 'merchant'>('you');
   const [postsByAccount, setPostsByAccount] = useState<Record<'you' | 'merchant', ProfilePost[]>>({ you: [], merchant: [] });
-  const [profiles, setProfiles] = useState<Record<'you' | 'merchant', ProfileInfo>>(() => makeBaseProfiles(null));
+  const [profiles, setProfiles] = useState<Record<'you' | 'merchant', ProfileInfo>>(() => makeBaseProfiles(identity));
   const [loaded, setLoaded] = useState(false);
 
   // Load state from Supabase on mount
@@ -1593,7 +1605,7 @@ const NewUserUITestPage = () => {
       if (cancelled) return;
       if (!error && data?.state) {
         const s = data.state as SandboxState;
-        if (s.credentials) setCredentials(s.credentials);
+        if (s.credentials && mode !== 'app') setCredentials(s.credentials);
         if (s.activeAccount) setActiveAccount(s.activeAccount);
         if (s.postsByAccount) setPostsByAccount(s.postsByAccount);
         setProfiles(s.profiles ?? makeBaseProfiles(s.credentials ?? null));
@@ -1796,6 +1808,17 @@ const NewUserUITestPage = () => {
   ];
 
 
+
+  // Live app mode: full-screen mobile experience, no sandbox chrome.
+  if (mode === 'app') {
+    return (
+      <div className="min-h-screen bg-slate-900 flex justify-center">
+        <div className="w-full max-w-[430px] bg-white min-h-screen overflow-hidden">
+          {renderScreen()}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-100 via-sky-50 to-slate-200 text-slate-800">
