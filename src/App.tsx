@@ -24,6 +24,7 @@ import NotFound from "./pages/NotFound";
 import ContestLive from "./pages/ContestLive";
 import ContestTestPage from "./pages/ContestTestPage";
 import NewUserUITestPage from "./pages/NewUserUITestPage";
+import NewApp from "./pages/NewApp";
 import { useContestRedirect } from "./hooks/useContestRedirect";
 import { useContestInviteRedirect } from "./hooks/useContestInviteRedirect";
 
