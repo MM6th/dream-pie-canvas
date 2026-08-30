@@ -25,13 +25,13 @@ const NewApp = () => {
     (async () => {
       const { data } = await supabase
         .from('profiles')
-        .select('display_name, username')
+        .select('display_name')
         .eq('id', user.id)
         .maybeSingle();
       if (cancelled) return;
-      const p = data as { display_name?: string | null; username?: string | null } | null;
+      const p = data as { display_name?: string | null } | null;
       setIdentity({
-        username: p?.display_name || p?.username || user.email?.split('@')[0] || 'You',
+        username: p?.display_name || user.email?.split('@')[0] || 'You',
         email: user.email ?? '',
       });
       setReady(true);
