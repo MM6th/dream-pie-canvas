@@ -285,6 +285,23 @@ const Index = () => {
     return <AuthPage />;
   }
 
+  // Signed in but hasn't picked which version of the app to use.
+  if (!experience) {
+    return (
+      <ExperienceChooser
+        onChoose={(choice) => {
+          setExperience(choice);
+          if (choice === 'new') navigate('/app');
+        }}
+        onSignOut={handleSignOut}
+      />
+    );
+  }
+
+  if (experience === 'new') {
+    return <Navigate to="/app" replace />;
+  }
+
 
   if (currentView === "store") {
     if (!user) {
