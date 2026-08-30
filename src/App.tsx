@@ -62,6 +62,7 @@ const App = () => (
           <Route path="/contest/:postId" element={<ContestLive />} />
           <Route path="/contest-test" element={<ContestTestPage />} />
           <Route path="/new-user-ui-test" element={<NewUserUITestPage />} />
+          <Route path="/app" element={<NewApp />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
