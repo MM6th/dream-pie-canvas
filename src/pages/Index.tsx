@@ -33,6 +33,8 @@ interface VideoTrack {
 const Index = () => {
   const { user, loading, signOut } = useAuth();
   const { isAdmin, isApproved } = useApprovalStatus();
+  const { experience, setExperience } = useExperience();
+  
   
   const navigate = useNavigate();
   const [userProfile, setUserProfile] = useState<any>(null);
