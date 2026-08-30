@@ -1584,7 +1584,9 @@ const NewUserUITestPage = ({
   const sandboxIdRef = useRef<string>(
     stateKey ?? (typeof window !== 'undefined' ? getSandboxId() : '')
   );
-  const [screen, setScreen] = useState<Screen>({ name: mode === 'app' ? 'newProfile' : 'inbox' });
+  const [screen, setScreen] = useState<Screen>(
+    mode === 'app' ? { name: 'newProfile' } : { name: 'inbox' }
+  );
   const [credentials, setCredentials] = useState<SandboxState['credentials']>(identity);
   const [activeAccount, setActiveAccount] = useState<'you' | 'merchant'>('you');
   const [postsByAccount, setPostsByAccount] = useState<Record<'you' | 'merchant', ProfilePost[]>>({ you: [], merchant: [] });
