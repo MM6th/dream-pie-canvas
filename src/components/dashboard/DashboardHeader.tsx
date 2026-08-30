@@ -195,6 +195,7 @@ const DashboardHeader = ({
         {/* Inbox, Credits, Help & Sign Out */}
         <div className="flex flex-col items-end gap-2">
           <div className="flex items-center gap-1">
+            <ExperienceSwitcher />
             {user && (
               <NotificationBellButton userId={user.id} userType={userType || ''} />
             )}
