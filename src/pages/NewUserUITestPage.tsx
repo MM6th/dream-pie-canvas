@@ -1807,6 +1807,17 @@ const NewUserUITestPage = ({
 
 
 
+  // Live app mode: full-screen mobile experience, no sandbox chrome.
+  if (mode === 'app') {
+    return (
+      <div className="min-h-screen bg-slate-900 flex justify-center">
+        <div className="w-full max-w-[430px] bg-white min-h-screen overflow-hidden">
+          {renderScreen()}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-100 via-sky-50 to-slate-200 text-slate-800">
       <div className="max-w-6xl mx-auto px-6 py-6">
