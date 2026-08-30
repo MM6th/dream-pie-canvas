@@ -1603,7 +1603,7 @@ const NewUserUITestPage = ({
       if (cancelled) return;
       if (!error && data?.state) {
         const s = data.state as SandboxState;
-        if (s.credentials) setCredentials(s.credentials);
+        if (s.credentials && mode !== 'app') setCredentials(s.credentials);
         if (s.activeAccount) setActiveAccount(s.activeAccount);
         if (s.postsByAccount) setPostsByAccount(s.postsByAccount);
         setProfiles(s.profiles ?? makeBaseProfiles(s.credentials ?? null));
