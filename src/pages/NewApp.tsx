@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { LogOut } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import NewUserUITestPage from '@/pages/NewUserUITestPage';
 import ExperienceSwitcher from '@/components/ExperienceSwitcher';
+import { Button } from '@/components/ui/button';
 
 /**
  * The redesigned PIE app, running as a real experience (not the admin sandbox).
