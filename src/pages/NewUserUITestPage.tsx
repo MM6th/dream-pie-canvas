@@ -1571,14 +1571,24 @@ const makeBaseProfiles = (creds: { username: string; email: string } | null): Re
   },
 });
 
-const NewUserUITestPage = () => {
+const NewUserUITestPage = ({
+  mode = 'sandbox',
+  identity = null,
+  stateKey,
+}: {
+  mode?: 'sandbox' | 'app';
+  identity?: { username: string; email: string } | null;
+  stateKey?: string;
+} = {}) => {
   const navigate = useNavigate();
-  const sandboxIdRef = useRef<string>(typeof window !== 'undefined' ? getSandboxId() : '');
-  const [screen, setScreen] = useState<Screen>({ name: 'inbox' });
-  const [credentials, setCredentials] = useState<SandboxState['credentials']>(null);
+  const sandboxIdRef = useRef<string>(
+    stateKey ?? (typeof window !== 'undefined' ? getSandboxId() : '')
+  );
+  const [screen, setScreen] = useState<Screen>({ name: mode === 'app' ? 'newProfile' : 'inbox' });
+  const [credentials, setCredentials] = useState<SandboxState['credentials']>(identity);
   const [activeAccount, setActiveAccount] = useState<'you' | 'merchant'>('you');
   const [postsByAccount, setPostsByAccount] = useState<Record<'you' | 'merchant', ProfilePost[]>>({ you: [], merchant: [] });
-  const [profiles, setProfiles] = useState<Record<'you' | 'merchant', ProfileInfo>>(() => makeBaseProfiles(null));
+  const [profiles, setProfiles] = useState<Record<'you' | 'merchant', ProfileInfo>>(() => makeBaseProfiles(identity));
   const [loaded, setLoaded] = useState(false);
 
   // Load state from Supabase on mount
