@@ -15,6 +15,7 @@ import { NotificationBellButton } from "@/components/NotificationBellButton";
 import { MessageCreditsIcon } from "@/components/messaging/MessageCreditsIcon";
 import TokenCalculatorCard from "@/components/TokenCalculatorCard";
 import sixthCoinLogo from "@/assets/sixth-coin-logo.jpg";
+import ExperienceSwitcher from "@/components/ExperienceSwitcher";
 
 // Calculate current quarter and year
 const getCurrentQuarterLabel = () => {
